@@ -120,7 +120,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             self._specviz = Specviz(app=self.app)
         return self._specviz
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None):
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
+                 use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -136,6 +137,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         function : {'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
             If provided and not ``None`` and ``data_label`` points to cube-like data, the cube will
             be collapsed with the provided function.  Otherwise the entire cube will be returned.
+        use_display_units: bool, optional
+            Whether to convert to the display units defined in the <unit-conversion> plugin.
 
         Returns
         -------
@@ -144,7 +147,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
 
         """
         return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-                              function=function)
+                              function=function, use_display_units=use_display_units)
 
 
 def layer_is_cube_image_data(layer):

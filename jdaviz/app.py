@@ -870,7 +870,8 @@ class Application(VuetifyTemplate, HubListener):
         return regions
 
     def get_subsets(self, subset_name=None, spectral_only=False,
-                    spatial_only=False, object_only=False):
+                    spatial_only=False, object_only=False,
+                    use_display_units=False):
         """
         Returns all branches of glue subset tree in the form that subset plugin can recognize.
 
@@ -885,6 +886,8 @@ class Application(VuetifyTemplate, HubListener):
         object_only : bool
             Return only object relevant information and
             leave out the region class name and glue_state.
+        use_display_units: bool, optional
+            Whether to convert to the display units defined in the <unit-conversion> plugin.
 
         Returns
         -------
@@ -910,7 +913,7 @@ class Application(VuetifyTemplate, HubListener):
                 subset_region = self._get_roi_subset_definition(subset.subset_state)
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
-                subset_region = self._get_range_subset_bounds(subset.subset_state)
+                subset_region = self._get_range_subset_bounds(subset.subset_state, use_display_units)
             else:
                 # subset.subset_state can be an instance of MaskSubsetState
                 # or something else we do not know how to handle
@@ -951,17 +954,20 @@ class Application(VuetifyTemplate, HubListener):
                 regions_no_dups += region
         return regions_no_dups
 
-    def _get_range_subset_bounds(self, subset_state):
-        # TODO: Use global display units
+    def _get_range_subset_bounds(self, subset_state, use_display_units):
         # units = dc[0].data.coords.spectral_axis.unit
         viewer = self.get_viewer(self._jdaviz_helper. _default_spectrum_viewer_reference_name)
         data = viewer.data()
-        if viewer:
-            units = u.Unit(viewer.state.x_display_unit)
-        elif data and len(data) > 0 and isinstance(data[0], Spectrum1D):
+        if data and len(data) > 0 and isinstance(data[0], Spectrum1D):
             units = data[0].spectral_axis.unit
         else:
             raise ValueError("Unable to find spectral axis units")
+        if use_display_units:
+            # converting may result in flipping order (wavelength <-> frequency)
+            ret_units = self._get_display_unit('spectral')
+            subset_bounds = [(subset_state.lo * units).to(ret_units, u.spectral()),
+                             (subset_state.hi * units).to(ret_units, u.spectral())]
+            return SpectralRegion(min(subset_bounds), max(subset_bounds))
         return SpectralRegion(subset_state.lo * units, subset_state.hi * units)
 
     def _get_roi_subset_definition(self, subset_state):
@@ -1065,6 +1071,14 @@ class Application(VuetifyTemplate, HubListener):
 
             elif isinstance(subset_state, RangeSubsetState):
                 return self._get_range_subset_bounds(subset_state)
+
+    def _get_display_unit(self, axis):
+        if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:
+            raise ValueError("cannot detect unit conversion plugin")
+        try:
+            return getattr(self._jdaviz_helper.plugins.get('Unit Conversion')._obj, f'{axis}_unit_selected')
+        except AttributeError:
+            raise ValueError(f"could not find display unit for axis='{axis}'")
 
     def add_data(self, data, data_label=None, notify_done=True):
         """

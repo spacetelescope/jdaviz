@@ -407,7 +407,22 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None):
+    def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
+                  use_display_units=False):
+        def _handle_display_units(data, use_display_units):
+            if use_display_units:
+                if isinstance(data, Spectrum1D):
+                    spectral_unit = self.app._get_display_unit('spectral')
+                    flux_unit = self.app._get_display_unit('flux')
+                    # TODO: any other attributes (meta, wcs, etc)?
+                    # TODO: implement uncertainty.to upstream
+                    data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit, u.spectral()),
+                                      flux=data.flux.to(flux_unit),
+                                      uncertainty=data.uncertainty.__class__(data.uncertainty.quantity.to(flux_unit)))
+                else:  # pragma: nocover
+                    raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
+            return data
+
         list_of_valid_function_values = ('minimum', 'maximum', 'mean',
                                          'median', 'sum')
         if function and function not in list_of_valid_function_values:
@@ -454,7 +469,7 @@ class ConfigHelper(HubListener):
             else:
                 data = data.get_object(cls=cls, **object_kwargs)
 
-            return data
+            return _handle_display_units(data, use_display_units)
 
         if not cls and subset_to_apply:
             raise AttributeError(f"A valid cls must be provided to"
@@ -477,9 +492,9 @@ class ConfigHelper(HubListener):
                             warnings.warn(f"Not able to get {data_label} returned with"
                                           f" subset {subsets.label} applied of type {cls}."
                                           f" Exception: {e}")
-        return data
+        return _handle_display_units(data, use_display_units)
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None):
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None, use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -492,6 +507,8 @@ class ConfigHelper(HubListener):
             The type that data will be returned as.
         subset_to_apply : str, optional
             Subset that is to be applied to data before it is returned.
+        use_display_units: bool, optional
+            Whether to convert to the display units defined in the <unit-conversion> plugin.
 
         Returns
         -------
@@ -499,7 +516,8 @@ class ConfigHelper(HubListener):
             Data is returned as type cls with subsets applied.
 
         """
-        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply)
+        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
+                              use_display_units=use_display_units)
 
 
 class ImageConfigHelper(ConfigHelper):
