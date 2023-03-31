@@ -83,8 +83,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     assert label_mouseover.as_text() == ('Cursor 6.50000e+00, 3.00000e+00',
                                          'Wave 6.00000e+00 pixel',
                                          'Flux -3.59571e+00')
-    # FIXME: as_text() has data but mouseover UI not displaying.
-    assert label_mouseover.icon == ''
+    assert label_mouseover.icon == 'b'
 
 
 def test_1d_parser(specviz2d_helper, spectrum1d):
