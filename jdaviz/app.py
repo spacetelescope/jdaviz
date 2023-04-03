@@ -906,7 +906,7 @@ class Application(VuetifyTemplate, HubListener):
             if isinstance(subset.subset_state, CompositeSubsetState):
                 # Region composed of multiple ROI or Range subset
                 # objects that must be traversed
-                subset_region = self.get_sub_regions(subset.subset_state)
+                subset_region = self.get_sub_regions(subset.subset_state, use_display_units)
             elif isinstance(subset.subset_state, RoiSubsetState):
                 # 3D regions represented as a dict including an
                 # AstropyRegion object if possible
@@ -997,12 +997,12 @@ class Application(VuetifyTemplate, HubListener):
                  "glue_state": subset_state.__class__.__name__,
                  "region": roi_as_region}]
 
-    def get_sub_regions(self, subset_state):
+    def get_sub_regions(self, subset_state, use_display_units):
 
         if isinstance(subset_state, CompositeSubsetState):
             if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
-                one = self.get_sub_regions(subset_state.state1)
-                two = self.get_sub_regions(subset_state.state2)
+                one = self.get_sub_regions(subset_state.state1, use_display_units)
+                two = self.get_sub_regions(subset_state.state2, use_display_units)
 
                 if (isinstance(one, list) and "glue_state" in one[0] and
                         one[0]["glue_state"] == "RoiSubsetState"):
@@ -1063,7 +1063,7 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
-                return self.get_sub_regions(subset_state.state1)
+                return self.get_sub_regions(subset_state.state1, use_display_units)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI or Range.
@@ -1071,7 +1071,7 @@ class Application(VuetifyTemplate, HubListener):
                 return self._get_roi_subset_definition(subset_state)
 
             elif isinstance(subset_state, RangeSubsetState):
-                return self._get_range_subset_bounds(subset_state)
+                return self._get_range_subset_bounds(subset_state, use_display_units)
 
     def _get_display_unit(self, axis):
         if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
