@@ -233,6 +233,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                                     (self.state.x_min, self.state.y_max),
                                     (self.state.x_max, self.state.y_max),
                                     (self.state.x_max, self.state.y_min)))
+
         return zoom_limits
 
     def set_compass(self, image):

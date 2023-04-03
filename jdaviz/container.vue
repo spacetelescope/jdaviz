@@ -9,7 +9,7 @@
       :icons="icons"
       :viewer_icons="viewer_icons"
       :layer_icons="layer_icons"
-      @resize="$emit('resize')"
+      @resize="(e) => $emit('resize', e)"
       :closefn="closefn"
       @data-item-visibility="$emit('data-item-visibility', $event)"
       @data-item-unload="$emit('data-item-unload', $event)"
@@ -21,7 +21,7 @@
       :key="viewer.id"
       :title="viewer.config === 'cubeviz' ? viewer.reference : viewer.id"
       :tab-id="viewer.id"
-      @resize="$emit('resize')"
+      @resize="(e) => $emit('resize', e)"
       @destroy="destroy($event, viewer.id)"
       style="display: flex; flex-flow: column; height: 100%; overflow-y: auto; overflow-x: hidden"
     >
@@ -58,7 +58,7 @@
 
         </div>
 
-        <v-card tile flat style="flex: 1; margin-top: -2px; overflow-y: hidden;">
+        <v-card tile flat style="flex: 1; margin-top: -2px; overflow: hidden;">
           <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
             <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
@@ -80,7 +80,11 @@
             </div>
           </div>
 
-          <jupyter-widget :widget="viewer.widget" style="width: 100%; height: 100%"></jupyter-widget>
+          <jupyter-widget
+            :widget="viewer.widget"
+            :ref="'viewer-widget-'+viewer.id"
+            :style="'width: 100%; height: 100%; overflow: hidden; transform: rotateY('+viewer_rotateY(viewer.canvas_flip_horizontal)+') rotate('+viewer.canvas_angle+'deg)'"
+          ></jupyter-widget>
         </v-card>
     </gl-component>
   </component>
@@ -111,6 +115,10 @@
   border-bottom-left-radius: 4px; 
   border-top-left-radius: 4px;
 }
+.imviz div.v-card.v-card--flat.v-sheet.v-sheet--tile {
+  /* black background beyond edges of canvas for canvas rotation */
+  background-color: black
+}
 </style>
 
 <script>
@@ -122,6 +130,11 @@ module.exports = {
       return this.$children[0];
     };
   },
+  watch: {
+    stack(new_stack, old_stack) {
+      this.$emit('resize')
+    }
+  },
   methods: {
     computeChildrenPath() {
       return this.$parent.computeChildrenPath();
@@ -131,6 +144,13 @@ module.exports = {
        * between a user closing a tab or a re-render. However, when the user closes a tab, the
        * source of the event is a vue component. We can use that distinction as a close signal. */
       source.$root && this.closefn(viewerId);
+    },
+    viewer_rotateY(canvas_flip_horizontal) {
+      if (canvas_flip_horizontal) {
+        return '180deg'
+      } else {
+        return '0deg'
+      }
     }
   },
   computed: {

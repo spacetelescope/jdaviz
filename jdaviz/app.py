@@ -1407,7 +1407,7 @@ class Application(VuetifyTemplate, HubListener):
 
         Returns
         -------
-        `~glue_jupyter.bqplot.common.BqplotBaseView`
+        viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The viewer class instance.
         """
         viewer_item = self._viewer_item_by_reference(reference)
@@ -1782,6 +1782,8 @@ class Application(VuetifyTemplate, HubListener):
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
+            'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
+            'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,

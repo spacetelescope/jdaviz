@@ -27,6 +27,7 @@ tray:
   - imviz-line-profile-xy
   - imviz-aper-phot-simple
   - imviz-catalogs
+  - imviz-rotate-canvas
   - g-export-plot
 viewer_area:
   - container: col
