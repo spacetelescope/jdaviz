@@ -9,6 +9,9 @@ New Features
 Cubeviz
 ^^^^^^^
 
+* get_data now supports ``function=True`` to adopt the collapse-function from the spectrum viewer
+  [#2117].
+
 Imviz
 ^^^^^
 
