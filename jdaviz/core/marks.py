@@ -485,6 +485,9 @@ class ShadowLabelFixedY(Label, ShadowMixin):
 
 
 class PluginMark():
+    xunit = None
+    yunit = None
+
     def update_xy(self, x, y):
         self.x = np.asarray(x)
         self.y = np.asarray(y)
@@ -492,6 +495,18 @@ class PluginMark():
     def append_xy(self, x, y):
         self.x = np.append(self.x, x)
         self.y = np.append(self.y, y)
+
+    def set_x_unit(self, unit):
+        unit = u.Unit(unit)
+        if self.xunit is not None:
+            self.x = (self.x * self.xunit).to_value(unit, u.spectral())
+        self.xunit = unit
+
+    def set_y_unit(self, unit):
+        unit = u.Unit(unit)
+        if self.yunit is not None:
+            self.y = (self.y * self.yunit).to_value(unit)
+        self.yunit = unit
 
     def clear(self):
         self.update_xy([], [])
