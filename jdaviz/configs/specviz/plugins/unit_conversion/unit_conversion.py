@@ -86,7 +86,14 @@ class UnitConversion(PluginTemplateMixin):
         if x_unit != self.spectral_unit.selected:
             x_unit = _valid_glue_display_unit(x_unit, self.spectrum_viewer, 'x')
             x_u = u.Unit(x_unit)
-            self.spectral_unit.choices = create_spectral_equivalencies_list(x_u)
+            choices = create_spectral_equivalencies_list(x_u)
+            # ensure that original entry is in the list of choices
+            if not np.any([x_u == u.Unit(choice) for choice in choices]):
+                choices = [x_unit] + choices
+            self.spectral_unit.choices = choices
+            # in addition to the jdaviz options, allow the user to set any glue-valid unit
+            # which would then be appended on to the list of choices going forward
+            self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)  # noqa
             self.spectral_unit.selected = x_unit
             if not len(self.flux_unit.choices):
                 # in case flux_unit was triggered first (but could not be set because there
@@ -107,6 +114,7 @@ class UnitConversion(PluginTemplateMixin):
             y_unit = _valid_glue_display_unit(y_unit, self.spectrum_viewer, 'y')
             y_u = u.Unit(y_unit)
             choices = create_flux_equivalencies_list(y_u, x_u)
+            # ensure that original entry is in the list of choices
             if not np.any([y_u == u.Unit(choice) for choice in choices]):
                 choices = [y_unit] + choices
             self.flux_unit.choices = choices

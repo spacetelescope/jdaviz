@@ -652,10 +652,15 @@ class UnitSelectPluginComponent(SelectPluginComponent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_observe('items', lambda _: self._clear_cache('unit_choices'))
+        self._addl_unit_strings = []
 
     @cached_property
     def unit_choices(self):
         return [u.Unit(lbl) for lbl in self.labels]
+
+    @property
+    def addl_unit_choices(self):
+        return [u.Unit(choice) for choice in self._addl_unit_strings]
 
     def _selected_changed(self, event):
         self._clear_cache()
@@ -670,8 +675,15 @@ class UnitSelectPluginComponent(SelectPluginComponent):
             self.selected = event['old']
             raise ValueError(f"{event['new']} could not be converted to a valid unit, reverting selection to {event['old']}")  # noqa
         if new_u not in self.unit_choices:
-            self.selected = event['old']
-            raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
+            if new_u in self.addl_unit_choices:
+                # append this one (as the valid string representation) to the list of user-choices
+                addl_index = self.addl_unit_choices.index(new_u)
+                self.choices = self.choices + [self._addl_unit_strings[addl_index]]
+                # clear the cache so we can find the appropriate entry in unit_choices
+                self._clear_cache('unit_choices')
+            else:
+                self.selected = event['old']
+                raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
 
         # convert to default string representation from the valid choices
         ind = self.unit_choices.index(new_u)
