@@ -1,9 +1,7 @@
 import numpy as np
 from traitlets import observe
 
-from jdaviz.configs.mosviz.plugins.viewers import MosvizProfile2DView
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
+from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -78,8 +76,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
-        self.hub.subscribe(self, GlobalDisplayUnitChanged,
-                           handler=self._on_global_display_unit_changed)
 
     def _create_viewer_callbacks(self, viewer):
         if not self.plugin_opened:
@@ -125,20 +121,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 viewer.add_event_callback(callback, events=['keydown'])
             else:
                 viewer.remove_event_callback(callback)
-
-    def _on_global_display_unit_changed(self, msg):
-        for viewer_id, mark in self.marks.items():
-            viewer = self.app.get_viewer_by_id(viewer_id)
-            if isinstance(viewer, SpecvizProfileView):
-                axis_map = {'spectral': 'x', 'flux': 'y'}
-            elif isinstance(viewer,
-                            (MosvizProfile2DView)):
-                axis_map = {'spectral': 'x'}
-            else:
-                return
-            axis = axis_map.get(msg.axis, None)
-            if axis is not None:
-                getattr(mark, f'set_{axis}_unit')(msg.unit)
 
     def _on_viewer_key_event(self, viewer, data):
         if data['event'] == 'keydown' and data['key'] == 'm':

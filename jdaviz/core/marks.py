@@ -7,6 +7,7 @@ from copy import deepcopy
 from glue.core import HubListener
 from specutils import Spectrum1D
 
+from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 SpectralMarksChangedMessage,
                                 RedshiftMessage)
@@ -485,8 +486,19 @@ class ShadowLabelFixedY(Label, ShadowMixin):
 
 
 class PluginMark():
-    xunit = None
-    yunit = None
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.xunit = None
+        self.yunit = None
+        # whether to update existing marks when global display units are changed
+        self.auto_update_units = True
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed)
+        self._update_units()
+
+    @property
+    def hub(self):
+        return self.viewer.hub
 
     def update_xy(self, x, y):
         self.x = np.asarray(x)
@@ -496,17 +508,44 @@ class PluginMark():
         self.x = np.append(self.x, x)
         self.y = np.append(self.y, y)
 
-    def set_x_unit(self, unit):
+    def _update_units(self):
+        if not self.auto_update_units:
+            return
+        if self.xunit is None:
+            self.set_x_unit()
+        if self.yunit is None:
+            self.set_y_unit()
+
+    def set_x_unit(self, unit=None):
+        if unit is None:
+            unit = self.viewer.state.x_display_unit
         unit = u.Unit(unit)
         if self.xunit is not None:
-            self.x = (self.x * self.xunit).to_value(unit, u.spectral())
+            x = (self.x * self.xunit).to_value(unit, u.spectral())
+            self.xunit = unit
+            self.x = x
         self.xunit = unit
 
-    def set_y_unit(self, unit):
+    def set_y_unit(self, unit=None):
+        if unit is None:
+            unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
         if self.yunit is not None:
             self.y = (self.y * self.yunit).to_value(unit)
         self.yunit = unit
+
+    def _on_global_display_unit_changed(self, msg):
+        if not self.auto_update_units:
+            return
+        if self.viewer.__class__.__name__ == 'SpecvizProfileView':
+            axis_map = {'spectral': 'x', 'flux': 'y'}
+        elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
+            axis_map = {'spectral': 'x'}
+        else:
+            return
+        axis = axis_map.get(msg.axis, None)
+        if axis is not None:
+            getattr(self, f'set_{axis}_unit')(msg.unit)
 
     def clear(self):
         self.update_xy([], [])
@@ -514,18 +553,24 @@ class PluginMark():
 
 class PluginLine(Lines, PluginMark, HubListener):
     def __init__(self, viewer, x=[], y=[], **kwargs):
+        self.viewer = viewer
         # color is same blue as import button
         super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
 
 
 class PluginScatter(Scatter, PluginMark, HubListener):
     def __init__(self, viewer, x=[], y=[], **kwargs):
+        self.viewer = viewer
         # color is same blue as import button
         super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
 
 
 class LineAnalysisContinuum(PluginLine):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # units do not need to be updated because the plugin itself reruns
+        # the computation and automatically changes the arrays themselves
+        self.auto_update_units = False
 
 
 class LineAnalysisContinuumCenter(LineAnalysisContinuum):
