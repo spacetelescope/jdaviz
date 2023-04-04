@@ -28,7 +28,7 @@ from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
-           'BasePluginComponent', 'SelectPluginComponent',
+           'BasePluginComponent', 'SelectPluginComponent', 'UnitSelectPluginComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin',
@@ -101,7 +101,32 @@ def _subset_type(subset):
         return 'spectral'
 
 
-class TemplateMixin(VuetifyTemplate, HubListener):
+class ViewerPropertiesMixin:
+    # assumes that self.app is defined by the class
+    @cached_property
+    def spectrum_viewer(self):
+        if hasattr(self, '_default_spectrum_viewer_reference_name'):
+            viewer_reference = self._default_spectrum_viewer_reference_name
+        else:
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_spectrum_viewer=True
+            )
+
+        return self.app.get_viewer(viewer_reference)
+
+    @cached_property
+    def spectrum_2d_viewer(self):
+        if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
+            viewer_reference = self._default_spectrum_2d_viewer_reference_name
+        else:
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_spectrum_2d_viewer=True
+            )
+
+        return self.app.get_viewer(viewer_reference)
+
+
+class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
@@ -293,7 +318,7 @@ class PluginTemplateMixin(TemplateMixin):
         show_widget(self, loc=loc, title=title)
 
 
-class BasePluginComponent(HubListener):
+class BasePluginComponent(HubListener, ViewerPropertiesMixin):
     """
     This base class handles attaching traitlets from the plugin itself to logic
     handled within the component, support for caching and clearing caches on properties,
@@ -375,28 +400,6 @@ class BasePluginComponent(HubListener):
                 for vid, viewer in self.app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
 
-    @cached_property
-    def spectrum_viewer(self):
-        if hasattr(self, '_default_spectrum_viewer_reference_name'):
-            viewer_reference = self._default_spectrum_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_spectrum_viewer=True
-            )
-
-        return self._plugin.app.get_viewer(viewer_reference)
-
-    @cached_property
-    def spectrum_2d_viewer(self):
-        if hasattr(self, '_default_spectrum_2d_viewer_reference_name'):
-            viewer_reference = self._default_spectrum_2d_viewer_reference_name
-        else:
-            viewer_reference = self.app._get_first_viewer_reference_name(
-                require_spectrum_2d_viewer=True
-            )
-
-        return self._plugin.app.get_viewer(viewer_reference)
-
 
 class SelectPluginComponent(BasePluginComponent, HasTraits):
     """
@@ -460,7 +463,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def __repr__(self):
         if hasattr(self, 'multiselect'):
             return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
-        return f"<selected={self.selected} choices={self.choices}>"
+        return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
         return self.selected == other
@@ -472,6 +475,10 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     @property
     def choices(self):
         return self.labels
+
+    @choices.setter
+    def choices(self, choices=[]):
+        self.items = [{'label': choice} for choice in choices]
 
     @property
     def is_multiselect(self):
@@ -639,6 +646,48 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             if event['new'] not in self.labels + ['']:
                 self.selected = event['old']
                 raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
+
+
+class UnitSelectPluginComponent(SelectPluginComponent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_observe('items', lambda _: self._clear_cache('unit_choices'))
+        self._addl_unit_strings = []
+
+    @cached_property
+    def unit_choices(self):
+        return [u.Unit(lbl) for lbl in self.labels]
+
+    @property
+    def addl_unit_choices(self):
+        return [u.Unit(choice) for choice in self._addl_unit_strings]
+
+    def _selected_changed(self, event):
+        self._clear_cache()
+        if event['new'] in self.labels + ['']:
+            # the string is an exact match, no converting necessary
+            return
+        elif not len(self.labels):
+            raise ValueError("no valid unit choices")
+        try:
+            new_u = u.Unit(event['new'])
+        except ValueError:
+            self.selected = event['old']
+            raise ValueError(f"{event['new']} could not be converted to a valid unit, reverting selection to {event['old']}")  # noqa
+        if new_u not in self.unit_choices:
+            if new_u in self.addl_unit_choices:
+                # append this one (as the valid string representation) to the list of user-choices
+                addl_index = self.addl_unit_choices.index(new_u)
+                self.choices = self.choices + [self._addl_unit_strings[addl_index]]
+                # clear the cache so we can find the appropriate entry in unit_choices
+                self._clear_cache('unit_choices')
+            else:
+                self.selected = event['old']
+                raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
+
+        # convert to default string representation from the valid choices
+        ind = self.unit_choices.index(new_u)
+        self.selected = self.labels[ind]
 
 
 class LayerSelect(SelectPluginComponent):
@@ -1483,11 +1532,14 @@ class DatasetSelect(SelectPluginComponent):
         # from the data collection
         return self.get_object(cls=self.default_data_cls)
 
-    def selected_spectrum_for_spatial_subset(self, spatial_subset=SPATIAL_DEFAULT_TEXT):
+    def selected_spectrum_for_spatial_subset(self,
+                                             spatial_subset=SPATIAL_DEFAULT_TEXT,
+                                             use_display_units=True):
         if spatial_subset == SPATIAL_DEFAULT_TEXT:
             spatial_subset = None
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
-                                                    subset_to_apply=spatial_subset)
+                                                    subset_to_apply=spatial_subset,
+                                                    use_display_units=use_display_units)
 
     def _is_valid_item(self, data):
         def not_from_plugin(data):

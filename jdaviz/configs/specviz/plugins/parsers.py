@@ -76,14 +76,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             raise ValueError(f"Length of data labels list ({len(data_label)}) is different"
                              f" than length of list of data ({len(data)})")
 
-    # If there's already visible data in the viewer, convert units if needed
-    current_unit = None
-    if spectrum_viewer_reference_name in app.get_viewer_reference_names():
-        sv = app.get_viewer(spectrum_viewer_reference_name)
-        for layer_state in sv.state.layers:
-            if layer_state.visible:
-                current_unit = sv.state.x_display_unit
-
     with app.data_collection.delay_link_manager_update():
         # these are used to build a combined spectrum with all
         # input spectra included (taken from https://github.com/spacetelescope/
@@ -97,10 +89,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
             wave_units = spec.spectral_axis.unit
             flux_units = spec.flux.unit
-
-            if current_unit is not None and spec.spectral_axis.unit != current_unit:
-                spec = Spectrum1D(flux=spec.flux,
-                                  spectral_axis=spec.spectral_axis.to(current_unit))
 
             # Make metadata layout conform with other viz.
             spec.meta = standardize_metadata(spec.meta)
