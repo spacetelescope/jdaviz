@@ -25,7 +25,7 @@ Mosviz
 Specviz
 ^^^^^^^
 
-* Re-enabled unit conversion support. [#2048]
+* Re-enabled unit conversion support. [#2127]
 
 Specviz2d
 ^^^^^^^^^
