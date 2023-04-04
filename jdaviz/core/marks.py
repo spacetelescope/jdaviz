@@ -551,6 +551,12 @@ class PluginMark():
         self.update_xy([], [])
 
 
+class LinesAutoUnit(PluginMark, Lines, HubListener):
+    def __init__(self, viewer, *args, **kwargs):
+        self.viewer = viewer
+        super().__init__(*args, **kwargs)
+
+
 class PluginLine(Lines, PluginMark, HubListener):
     def __init__(self, viewer, x=[], y=[], **kwargs):
         self.viewer = viewer
@@ -589,9 +595,9 @@ class LineAnalysisContinuumRight(LineAnalysisContinuumLeft):
     pass
 
 
-class LineUncertainties(Lines):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+class LineUncertainties(LinesAutoUnit):
+    def __init__(self, viewer, *args, **kwargs):
+        super().__init__(viewer, *args, **kwargs)
 
 
 class ScatterMask(Scatter):
