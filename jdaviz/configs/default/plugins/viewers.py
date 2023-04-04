@@ -115,8 +115,6 @@ class JdavizViewerMixin:
                         return "mdi-chart-bell-curve", ""
             return "", suffix
 
-            return '', ''
-
         visible_layers = {}
         for layer in self.state.layers[::-1]:
             if layer.visible:

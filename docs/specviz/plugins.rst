@@ -118,15 +118,8 @@ To export the table into the notebook via the API, call
 Unit Conversion
 ===============
 
-.. note::
-
-    This plugin is temporarily disabled. Effort to improve it is being
-    tracked at https://github.com/spacetelescope/jdaviz/issues/1972 .
-
 The spectral flux density and spectral axis units can be converted
-using the Unit Conversion plugin.  The Spectrum1D object to be
-converted is the currently selected spectrum in the spectrum viewer :guilabel:`Data`
-icon in the viewer toolbar.
+using the Unit Conversion plugin.
 
 Select the frequency, wavelength, or energy unit in the
 :guilabel:`New Spectral Axis Unit` pulldown
@@ -135,11 +128,8 @@ Select the frequency, wavelength, or energy unit in the
 Select the flux density unit in the :guilabel:`New Flux Unit` pulldown
 (e.g., Jansky, W/(Hz/m2), ph/(Angstrom cm2 s)).
 
-The :guilabel:`Apply` button will convert the flux density and/or
-spectral axis units and create a new Spectrum1D object that
-is automatically switched to in the spectrum viewer.
-The name of the new Spectrum1D object is "_units_copy_" plus
-the flux and spectral units of the spectrum.
+Note that this affects the default units in all viewers and plugins, where applicable,
+but does not affect the underlying data.
 
 .. _line-lists:
 

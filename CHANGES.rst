@@ -41,6 +41,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+* Re-enabled unit conversion support. [#2048]
+
 Specviz2d
 ^^^^^^^^^
 
