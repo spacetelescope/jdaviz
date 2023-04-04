@@ -1,3 +1,4 @@
+import astropy.units as u
 from glue.core.message import Message
 
 __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
@@ -6,7 +7,8 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'SliceSelectSliceMessage',
            'SliceToolStateMessage',
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
-           'MarkersChangedMessage', 'CanvasRotationChangedMessage']
+           'MarkersChangedMessage', 'CanvasRotationChangedMessage',
+           'GlobalDisplayUnitChanged']
 
 
 class NewViewerMessage(Message):
@@ -337,3 +339,19 @@ class CanvasRotationChangedMessage(Message):
     @property
     def flip_horizontal(self):
         return self._flip_horizontal
+
+
+class GlobalDisplayUnitChanged(Message):
+    '''Message generated when the global app-wide display unit is changed'''
+    def __init__(self, axis, unit, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._axis = axis
+        self._unit = unit
+
+    @property
+    def axis(self):
+        return self._axis
+
+    @property
+    def unit(self):
+        return u.Unit(self._unit)
