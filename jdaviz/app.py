@@ -1031,7 +1031,6 @@ class Application(VuetifyTemplate, HubListener):
         else:
             spec_region = SpectralRegion(subset_state.lo * units, subset_state.hi * units)
 
-        spec_region = SpectralRegion(subset_state.lo * units, subset_state.hi * units)
         if not simplify_spectral:
             return [{"name": subset_state.__class__.__name__,
                      "glue_state": subset_state.__class__.__name__,

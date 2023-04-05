@@ -2,6 +2,7 @@ import numpy as np
 from astropy import units as u
 from traitlets import List, Unicode, observe
 
+from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, UnitSelectPluginComponent, PluginUserApi
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
@@ -122,12 +123,18 @@ class UnitConversion(PluginTemplateMixin):
 
     @observe('spectral_unit_selected')
     def _on_spectral_unit_changed(self, *args):
+        self.hub.broadcast(GlobalDisplayUnitChanged('spectral',
+                                                    self.spectral_unit.selected,
+                                                    sender=self))
         xunit = _valid_glue_display_unit(self.spectral_unit.selected, self.spectrum_viewer, 'x')
         if self.spectrum_viewer.state.x_display_unit != xunit:
             self.spectrum_viewer.state.x_display_unit = xunit
 
     @observe('flux_unit_selected')
     def _on_flux_unit_changed(self, *args):
+        self.hub.broadcast(GlobalDisplayUnitChanged('flux',
+                                                    self.flux_unit.selected,
+                                                    sender=self))
         yunit = _valid_glue_display_unit(self.flux_unit.selected, self.spectrum_viewer, 'y')
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
