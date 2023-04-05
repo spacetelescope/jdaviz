@@ -3,13 +3,15 @@ import time
 import warnings
 
 import numpy as np
+import astropy.units as u
 from astropy.units import UnitsWarning
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from traitlets import Bool, Float, observe, Any, Int
 from specutils.spectra.spectrum1d import Spectrum1D
 
-from jdaviz.core.events import AddDataMessage, SliceToolStateMessage, SliceSelectSliceMessage
+from jdaviz.core.events import (AddDataMessage, SliceToolStateMessage,
+                                SliceSelectSliceMessage, GlobalDisplayUnitChanged)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -83,10 +85,18 @@ class Slice(PluginTemplateMixin):
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_data_added)
 
+        # update internal wavelength when x display unit is changed (preserving slice)
+        self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
+                                   handler=self._on_global_display_unit_changed)
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('slice', 'wavelength',
                                            'show_indicator', 'show_wavelength'))
+
+    @property
+    def slice_indicator(self):
+        return self.spectrum_viewer.slice_indicator
 
     def _watch_viewer(self, viewer, watch=True):
         if isinstance(viewer, BqplotImageView):
@@ -125,11 +135,7 @@ class Slice(PluginTemplateMixin):
         self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
 
     def _update_data(self, x_all):
-        if hasattr(x_all, 'unit'):
-            self.wavelength_unit = str(x_all.unit)
-            x_all = x_all.value
-
-        self._x_all = x_all
+        self._x_all = x_all.value
 
         if self.wavelength == -1:
             if len(x_all):
@@ -141,6 +147,9 @@ class Slice(PluginTemplateMixin):
 
         # force wavelength to update from the current slider value
         self._on_slider_updated({'new': self.slice})
+
+        # update data held inside slice indicator and force reverting to original active status
+        self.slice_indicator._update_data(x_all)
 
     def _viewer_slices_changed(self, value):
         # the slices attribute on the viewer state was changed,
@@ -156,6 +165,15 @@ class Slice(PluginTemplateMixin):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UnitsWarning)
             self.slice = msg.slice
+
+    def _on_global_display_unit_changed(self, msg):
+        if msg.axis != 'spectral':
+            return
+        prev_unit = self.wavelength_unit
+        self.wavelength_unit = msg.unit.to_string()
+        if self._x_all is None or prev_unit == '':
+            return
+        self._update_data((self._x_all * u.Unit(prev_unit)).to(msg.unit, u.spectral()))
 
     @observe('wavelength')
     def _on_wavelength_updated(self, event):

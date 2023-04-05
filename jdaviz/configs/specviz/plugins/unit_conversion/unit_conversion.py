@@ -54,7 +54,7 @@ class UnitConversion(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.config not in ['specviz']:
+        if self.config not in ['specviz', 'cubeviz']:
             # TODO [specviz2d, mosviz] x_display_unit is not implemented in glue for image viewer
             # used by spectrum-2d-viewer
             # TODO [mosviz]: add to yaml file
