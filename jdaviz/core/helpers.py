@@ -423,8 +423,7 @@ class ConfigHelper(HubListener):
                         # and would result in a unit-conversion error if attempting to convert
                         # to the display units.  This should only ever be temporary during
                         # app intialization.
-                        return data
-                    flux_unit = self.app._get_display_unit('flux')
+                        return data                    flux_unit = self.app._get_display_unit('flux')
                     # TODO: any other attributes (meta, wcs, etc)?
                     # TODO: implement uncertainty.to upstream
                     new_uncert = data.uncertainty.__class__(data.uncertainty.quantity.to(flux_unit)) if data.uncertainty is not None else None  # noqa
