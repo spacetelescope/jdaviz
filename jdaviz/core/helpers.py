@@ -415,6 +415,12 @@ class ConfigHelper(HubListener):
                     spectral_unit = self.app._get_display_unit('spectral')
                     if not spectral_unit:
                         return data
+                    if self.app.config == 'cubeviz' and spectral_unit == 'deg':
+                        # this happens before the correct axis is set for the spectrum-viewer
+                        # and would result in a unit-conversion error if attempting to convert
+                        # to the display units.  This should only ever be temporary during
+                        # app intialization.
+                        return data
                     flux_unit = self.app._get_display_unit('flux')
                     # TODO: any other attributes (meta, wcs, etc)?
                     # TODO: implement uncertainty.to upstream
