@@ -293,7 +293,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     assert label_mouseover.icon == ''
 
     # Convert the wavelength axis to micron
-    new_spectral_axis = "micron"
+    new_spectral_axis = "um"
     spec_viewer.state.x_display_unit = new_spectral_axis
     spec_viewer.set_plot_axes()
 
