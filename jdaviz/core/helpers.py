@@ -418,10 +418,11 @@ class ConfigHelper(HubListener):
                     flux_unit = self.app._get_display_unit('flux')
                     # TODO: any other attributes (meta, wcs, etc)?
                     # TODO: implement uncertainty.to upstream
+                    new_uncert = data.uncertainty.__class__(data.uncertainty.quantity.to(flux_unit)) if data.uncertainty is not None else None  # noqa
                     data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
                                                                           u.spectral()),
                                       flux=data.flux.to(flux_unit),
-                                      uncertainty=data.uncertainty.__class__(data.uncertainty.quantity.to(flux_unit)))  # noqa
+                                      uncertainty=new_uncert)
                 else:  # pragma: nocover
                     raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
             return data
