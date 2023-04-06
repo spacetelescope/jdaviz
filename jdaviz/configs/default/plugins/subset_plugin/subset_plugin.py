@@ -15,10 +15,12 @@ __all__ = ['SubsetPlugin']
 
 SUBSET_MODES = {
     'replace': ReplaceMode,
-    'add': OrMode,
-    'and': AndMode,
-    'xor': XorMode,
-    'remove': AndNotMode
+    'OrState': OrMode,
+    'AndState': AndMode,
+    'XorState': XorMode,
+    'AndNotState': AndNotMode,
+    'RangeSubsetState': RangeSubsetState,
+    'RoiSubsetState': RoiSubsetState
 }
 
 
@@ -32,6 +34,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     show_region_info = Bool(True).tag(sync=True)
     subset_types = List([]).tag(sync=True)
     subset_definitions = List([]).tag(sync=True)
+    glue_state_types = List([]).tag(sync=True)
     has_subset_details = Bool(False).tag(sync=True)
 
     subplugins_opened = Any().tag(sync=True)
@@ -54,6 +57,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                           'subset_items',
                                           'subset_selected',
                                           default_text="Create New")
+        self.subset_states = []
 
     def _sync_selected_from_state(self, *args):
         if not hasattr(self, 'subset_select'):
@@ -91,6 +95,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     def _sync_selected_from_ui(self, change):
         self.subset_definitions = []
         self.subset_types = []
+        self.glue_state_types = []
         self.is_editable = False
 
         if not hasattr(self, 'subset_select'):
@@ -113,78 +118,74 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             self.session.edit_subset_mode = self.mode_selected
     '''
 
-    def _unpack_nested_subset(self, subset_state):
-        '''
-        Navigate through the tree of subset states for composite
-        subsets made up of multiple regions.
-        '''
-        if isinstance(subset_state, CompositeSubsetState):
-            self._unpack_nested_subset(subset_state.state1)
-            self._unpack_nested_subset(subset_state.state2)
-            self.is_editable = False
-        else:
-            if subset_state is not None:
-                self._get_subset_subregion_definition(subset_state)
+    def _unpack_get_subsets_for_ui(self):
+        """
+        Convert what app.get_subsets returns into something the UI of this plugin
+        can display.
 
-    def _get_subset_subregion_definition(self, subset_state):
+        Returns
+        -------
+
         """
-        Get the type and parameters for a single region in the subset. Note that
-        the string type and operation (if in a composite subset) need to be stored
-        separately from the float parameters for display reasons.
-        """
-        subset_type = ''
-        subset_definition = []
-        self.is_editable = False
+        subset_information = self.app.get_subsets(self.subset_selected, simplify_spectral=False)
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
-
-        if isinstance(subset_state, RoiSubsetState):
-            if isinstance(subset_state.roi, CircularROI):
-                x, y = subset_state.roi.get_center()
-                r = subset_state.roi.radius
-                subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
-                                     {"name": "Y Center", "att": "yc", "value": y, "orig": y},
-                                     {"name": "Radius", "att": "radius", "value": r, "orig": r}]
-                self.is_editable = True
-
-            elif isinstance(subset_state.roi, RectangularROI):
-                for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
-                    real_att = att.lower()
-                    val = getattr(subset_state.roi, real_att)
-                    subset_definition.append(
-                        {"name": att, "att": real_att, "value": val, "orig": val})
-                theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
-                subset_definition.append(
-                    {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
-                self.is_editable = True
-
-            elif isinstance(subset_state.roi, EllipticalROI):
-                xc = subset_state.roi.xc
-                yc = subset_state.roi.yc
-                rx = subset_state.roi.radius_x
-                ry = subset_state.roi.radius_y
-                theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
-                subset_definition = [
-                    {"name": "X Center", "att": "xc", "value": xc, "orig": xc},
-                    {"name": "Y Center", "att": "yc", "value": yc, "orig": yc},
-                    {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
-                    {"name": "Y Radius", "att": "radius_y", "value": ry, "orig": ry},
-                    {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
-                self.is_editable = True
-
-            subset_type = subset_state.roi.__class__.__name__
-
-        elif isinstance(subset_state, RangeSubsetState):
-            lo = subset_state.lo
-            hi = subset_state.hi
-            subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo, "orig": lo},
-                                 {"name": "Upper bound", "att": "hi", "value": hi, "orig": hi}]
+        if not subset_information:
+            return
+        if len(subset_information) == 1:
             self.is_editable = True
-            subset_type = "Range"
+        else:
+            self.is_editable = False
 
-        if len(subset_definition) > 0 and subset_definition not in self.subset_definitions:
-            # Note: .append() does not work for List traitlet.
-            self.subset_definitions = self.subset_definitions + [subset_definition]
-            self.subset_types = self.subset_types + [subset_type]
+        for spec in subset_information:
+            subset_definition = []
+            subset_type = ''
+            subset_state = spec["subset_state"]
+            glue_state = spec["glue_state"]
+            if isinstance(subset_state, RoiSubsetState):
+                if isinstance(subset_state.roi, CircularROI):
+                    x, y = subset_state.roi.get_center()
+                    r = subset_state.roi.radius
+                    subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
+                                         {"name": "Y Center", "att": "yc", "value": y, "orig": y},
+                                         {"name": "Radius", "att": "radius", "value": r, "orig": r}]
+
+                elif isinstance(subset_state.roi, RectangularROI):
+                    for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
+                        real_att = att.lower()
+                        val = getattr(subset_state.roi, real_att)
+                        subset_definition.append(
+                            {"name": att, "att": real_att, "value": val, "orig": val})
+                    theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
+                    subset_definition.append(
+                        {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
+
+                elif isinstance(subset_state.roi, EllipticalROI):
+                    xc = subset_state.roi.xc
+                    yc = subset_state.roi.yc
+                    rx = subset_state.roi.radius_x
+                    ry = subset_state.roi.radius_y
+                    theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
+                    subset_definition = [
+                        {"name": "X Center", "att": "xc", "value": xc, "orig": xc},
+                        {"name": "Y Center", "att": "yc", "value": yc, "orig": yc},
+                        {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
+                        {"name": "Y Radius", "att": "radius_y", "value": ry, "orig": ry},
+                        {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
+
+                subset_type = subset_state.roi.__class__.__name__
+
+            elif isinstance(subset_state, RangeSubsetState):
+                lo = subset_state.lo
+                hi = subset_state.hi
+                subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo, "orig": lo},
+                                     {"name": "Upper bound", "att": "hi", "value": hi, "orig": hi}]
+                subset_type = "Range"
+            if len(subset_definition) > 0:
+                # Note: .append() does not work for List traitlet.
+                self.subset_definitions = self.subset_definitions + [subset_definition]
+                self.subset_types = self.subset_types + [subset_type]
+                self.glue_state_types = self.glue_state_types + [glue_state]
+                self.subset_states = self.subset_states + [subset_state]
 
     def _get_subset_definition(self, *args):
         """
@@ -193,40 +194,35 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         """
         self.subset_definitions = []
         self.subset_types = []
+        self.glue_state_types = []
+        self.subset_states = []
 
-        self._unpack_nested_subset(self.subset_select.selected_subset_state)
+        self._unpack_get_subsets_for_ui()
 
     def vue_update_subset(self, *args):
-        if not self.is_editable:  # no-op
-            return
-
-        subset_state = self.subset_select.selected_subset_state
-
-        # Composite region cannot be edited, so just grab first element.
-        subset_type = self.subset_types[0]
-        subset_definition = self.subset_definitions[0]
-
-        try:
-            if subset_type == "Range":
-                sbst_obj = subset_state
-            else:
-                sbst_obj = subset_state.roi
-
-            for d_att in subset_definition:
+        for index, sub in enumerate(self.subset_definitions):
+            sub_states = self.subset_states[index]
+            for d_att in sub:
                 if d_att["att"] == 'theta':  # Humans use degrees but glue uses radians
                     d_val = np.radians(d_att["value"])
                 else:
-                    d_val = d_att["value"]
-
-                setattr(sbst_obj, d_att["att"], d_val)
-
-            # Force glue to update the Subset. This is the same call used in
-            # glue.core.edit_subset_mode.EditSubsetMode.update() but we do not
-            # want to deal with all the contract stuff tied to the update() method.
-            self.session.edit_subset_mode._combine_data(subset_state, override_mode=ReplaceMode)
-        except Exception as err:  # pragma: no cover
-            self.hub.broadcast(SnackbarMessage(
-                f"Failed to update Subset: {repr(err)}", color='error', sender=self))
+                    d_val = float(d_att["value"])
+                if float(d_att["orig"]) != d_val:
+                    if self.subset_types[index] == "Range":
+                        setattr(sub_states, d_att["att"], d_val)
+                    else:
+                        setattr(sub_states.roi, d_att["att"], d_val)
+            try:
+                # TODO: This commented out section is "more correct" because it
+                #  adds the changed subregion to the data_collection.subset_groups
+                #  tree. However, it still needs improvement and the section below
+                #  allows updating similar to `main`.
+                # self.session.edit_subset_mode._combine_data(sub_states,
+                # override_mode=SUBSET_MODES[self.glue_state_types[index]])
+                self.session.edit_subset_mode._combine_data(sub_states, override_mode=ReplaceMode)
+            except Exception as err:  # pragma: no cover
+                self.hub.broadcast(SnackbarMessage(
+                    f"Failed to update Subset: {repr(err)}", color='error', sender=self))
 
     def vue_recenter_subset(self, *args):
         # Composite region cannot be edited. This only works for Imviz.
@@ -295,6 +291,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         elif isinstance(subset_state, RangeSubsetState):
             cen = (subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo
+
+        elif isinstance(subset_state, CompositeSubsetState):
+            cen = None
 
         else:  # pragma: no cover
             raise NotImplementedError(
