@@ -47,7 +47,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
-    assert flux_viewer.state.slices == (0, 0, 1)
+    assert flux_viewer.state.slices == (0, 0, 0)
     # Slice 0 has 8 pixels, this is Slice 1
     assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
