@@ -19,8 +19,8 @@ jobs:
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
         sync-labels: ''
-    # Special action for a special day.
-    - name: Special comment
-      uses: pllim/action-special_pr_comment@main
-      with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Special action for a special day. Until next year!
+    #- name: Special comment
+    #  uses: pllim/action-special_pr_comment@main
+    #  with:
+    #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
