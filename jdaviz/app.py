@@ -828,7 +828,7 @@ class Application(VuetifyTemplate, HubListener):
         return regions
 
     def get_subsets(self, subset_name=None, spectral_only=False,
-                    spatial_only=False, object_only=False):
+                    spatial_only=False, object_only=False, simplify_spectral=True):
         """
         Returns all branches of glue subset tree in the form that subset plugin can recognize.
 
@@ -843,6 +843,8 @@ class Application(VuetifyTemplate, HubListener):
         object_only : bool
             Return only object relevant information and
             leave out the region class name and glue_state.
+        simplify_spectral : bool
+            Return a composite spectral subset collapsed to a simplified SpectralRegion.
 
         Returns
         -------
@@ -861,26 +863,36 @@ class Application(VuetifyTemplate, HubListener):
             if isinstance(subset.subset_state, CompositeSubsetState):
                 # Region composed of multiple ROI or Range subset
                 # objects that must be traversed
-                subset_region = self.get_sub_regions(subset.subset_state)
+                subset_region = self.get_sub_regions(subset.subset_state, simplify_spectral)
             elif isinstance(subset.subset_state, RoiSubsetState):
                 # 3D regions represented as a dict including an
                 # AstropyRegion object if possible
                 subset_region = self._get_roi_subset_definition(subset.subset_state)
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
-                subset_region = self._get_range_subset_bounds(subset.subset_state)
+                subset_region = self._get_range_subset_bounds(subset.subset_state,
+                                                              simplify_spectral)
             else:
                 # subset.subset_state can be an instance of MaskSubsetState
                 # or something else we do not know how to handle
                 all_subsets[label] = None
                 continue
 
-            if isinstance(subset_region, SpectralRegion):
-                subset_region = self._remove_duplicate_bounds(subset_region)
+            # Is the subset spectral or spatial?
+            is_spectral = self._is_subset_spectral(subset_region)
 
-            if spectral_only and isinstance(subset_region, SpectralRegion):
-                all_subsets[label] = subset_region
-            elif spatial_only and not isinstance(subset_region, SpectralRegion):
+            # Remove duplicate spectral regions
+            if is_spectral and isinstance(subset_region, SpectralRegion):
+                subset_region = self._remove_duplicate_bounds(subset_region)
+            elif is_spectral:
+                subset_region = self._remove_duplicate_bounds_in_dict(subset_region)
+
+            if spectral_only and is_spectral:
+                if object_only and not simplify_spectral:
+                    all_subsets[label] = [reg['region'] for reg in subset_region]
+                else:
+                    all_subsets[label] = subset_region
+            elif spatial_only and not is_spectral:
                 if object_only:
                     all_subsets[label] = [reg['region'] for reg in subset_region]
                 else:
@@ -899,6 +911,29 @@ class Application(VuetifyTemplate, HubListener):
         else:
             return all_subsets
 
+    def _remove_duplicate_bounds_in_dict(self, subset_region):
+        new_subset_region = []
+        for elem in subset_region:
+            if not new_subset_region:
+                new_subset_region.append(elem)
+                continue
+            unique = True
+            for elem2 in new_subset_region:
+                if (elem['region'].lower == elem2['region'].lower and elem['region'].upper == elem2['region'].upper and
+                        elem['glue_state'] == elem2['glue_state']):
+                    unique = False
+            if unique:
+                new_subset_region.append(elem)
+        return new_subset_region
+
+    def _is_subset_spectral(self, subset_region):
+        if isinstance(subset_region, SpectralRegion):
+            return True
+        elif isinstance(subset_region, list) and len(subset_region) > 0:
+            if isinstance(subset_region[0]['region'], SpectralRegion):
+                return True
+        return False
+
     def _remove_duplicate_bounds(self, spec_regions):
         regions_no_dups = None
 
@@ -909,7 +944,7 @@ class Application(VuetifyTemplate, HubListener):
                 regions_no_dups += region
         return regions_no_dups
 
-    def _get_range_subset_bounds(self, subset_state):
+    def _get_range_subset_bounds(self, subset_state, simplify_spectral=True):
         # TODO: Use global display units
         # units = dc[0].data.coords.spectral_axis.unit
         viewer = self.get_viewer(self._jdaviz_helper. _default_spectrum_viewer_reference_name)
@@ -920,7 +955,14 @@ class Application(VuetifyTemplate, HubListener):
             units = data[0].spectral_axis.unit
         else:
             raise ValueError("Unable to find spectral axis units")
-        return SpectralRegion(subset_state.lo * units, subset_state.hi * units)
+
+        spec_region = SpectralRegion(subset_state.lo * units, subset_state.hi * units)
+        if not simplify_spectral:
+            return [{"name": subset_state.__class__.__name__,
+                     "glue_state": subset_state.__class__.__name__,
+                     "region": spec_region,
+                     "subset_state": subset_state}]
+        return spec_region
 
     def _get_roi_subset_definition(self, subset_state):
         _around_decimals = 6
@@ -946,17 +988,17 @@ class Application(VuetifyTemplate, HubListener):
 
         return [{"name": subset_state.roi.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
-                 "region": roi_as_region}]
+                 "region": roi_as_region,
+                 "subset_state": subset_state}]
 
-    def get_sub_regions(self, subset_state):
+    def get_sub_regions(self, subset_state, simplify_spectral=True):
 
         if isinstance(subset_state, CompositeSubsetState):
             if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
-                one = self.get_sub_regions(subset_state.state1)
-                two = self.get_sub_regions(subset_state.state2)
+                one = self.get_sub_regions(subset_state.state1, simplify_spectral)
+                two = self.get_sub_regions(subset_state.state2, simplify_spectral)
 
-                if (isinstance(one, list) and "glue_state" in one[0] and
-                        one[0]["glue_state"] == "RoiSubsetState"):
+                if isinstance(one, list) and "glue_state" in one[0]:
                     one[0]["glue_state"] = subset_state.__class__.__name__
 
                 if isinstance(subset_state.state2, InvertState):
@@ -1014,7 +1056,7 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
-                return self.get_sub_regions(subset_state.state1)
+                return self.get_sub_regions(subset_state.state1, simplify_spectral)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI or Range.
@@ -1022,7 +1064,7 @@ class Application(VuetifyTemplate, HubListener):
                 return self._get_roi_subset_definition(subset_state)
 
             elif isinstance(subset_state, RangeSubsetState):
-                return self._get_range_subset_bounds(subset_state)
+                return self._get_range_subset_bounds(subset_state, simplify_spectral)
 
     def add_data(self, data, data_label=None, notify_done=True):
         """
