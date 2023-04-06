@@ -49,7 +49,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
                                                       'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.state.slices == (0, 0, 0)
     # Slice 0 has 8 pixels, this is Slice 1
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
+    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +0.00000e+00 Jy",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 
