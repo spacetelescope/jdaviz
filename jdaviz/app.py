@@ -919,7 +919,8 @@ class Application(VuetifyTemplate, HubListener):
                 continue
             unique = True
             for elem2 in new_subset_region:
-                if (elem['region'].lower == elem2['region'].lower and elem['region'].upper == elem2['region'].upper and
+                if (elem['region'].lower == elem2['region'].lower and
+                        elem['region'].upper == elem2['region'].upper and
                         elem['glue_state'] == elem2['glue_state']):
                     unique = False
             if unique:
