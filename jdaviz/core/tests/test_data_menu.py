@@ -111,3 +111,15 @@ def test_auto_config_detection(uri, expected_helper):
     fn = download_file(url, cache=True)
     helper_name = identify_helper(fn)
     assert helper_name == expected_helper
+
+
+@pytest.mark.remote_data
+@pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
+def test_auto_config_manga():
+    # Check that MaNGA cubes go to cubeviz. This file is
+    # originally from
+    # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz
+    URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits'
+    fn = download_file(URL, cache=True)
+    helper_name = identify_helper(fn)
+    assert helper_name == 'cubeviz'

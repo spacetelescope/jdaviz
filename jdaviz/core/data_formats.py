@@ -259,6 +259,14 @@ def identify_helper(filename, ext=1):
             elif n_axes == 1:
                 return 'specviz'
 
+    try:
+        # try using the specutils registry:
+        valid_format, config = identify_data(filename)
+        return config
+    except ValueError:
+        # if file type not recognized:
+        pass
+
     if n_axes == 2 and not has_spectral_axis:
         # at this point, non-spectral 2D data are likely images:
         return 'imviz'
