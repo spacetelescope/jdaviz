@@ -268,7 +268,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         self.colors = ["#c75109" if self._active else "#007BA1"]
         self.opacities = [1.0 if self._active else 0.9]
 
-    def _on_change_state(self, msg):
+    def _on_change_state(self, msg={}):
         if isinstance(msg, dict):
             changes = msg
         else:

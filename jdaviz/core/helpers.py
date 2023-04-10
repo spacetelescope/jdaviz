@@ -413,6 +413,8 @@ class ConfigHelper(HubListener):
             if use_display_units:
                 if isinstance(data, Spectrum1D):
                     spectral_unit = self.app._get_display_unit('spectral')
+                    if not spectral_unit:
+                        return data
                     flux_unit = self.app._get_display_unit('flux')
                     # TODO: any other attributes (meta, wcs, etc)?
                     # TODO: implement uncertainty.to upstream
