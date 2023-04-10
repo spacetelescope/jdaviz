@@ -507,7 +507,10 @@ def test_load_valid_not_valid(imviz_helper):
 
 @pytest.mark.skipif(HAS_ROMAN_DATAMODELS, reason="roman_datamodels is installed")
 def test_roman_no_roman(imviz_helper):
+    from asdf.exceptions import AsdfConversionWarning
+
     filename = get_pkg_data_filename('data/roman_wfi_image_model.asdf')
-    with pytest.raises(ImportError,
+    with pytest.warns(AsdfConversionWarning, match=r".*not recognized"), \
+         pytest.raises(ImportError,
                        match="Roman ASDF detected but roman-datamodels is not installed"):
         imviz_helper.load_data(filename)
