@@ -1,6 +1,30 @@
+import pytest
 import numpy as np
 
 from glue.core.roi import XRangeROI
+from astropy.utils.data import download_file
+
+from jdaviz.core.data_formats import identify_helper
+
+# URIs to example JWST/HST files on MAST, and their
+# corresponding jdaviz helpers:
+example_uri_helper = [
+     ['mast:HST/product/id4301ouq_drz.fits', 'imviz'],
+     ['mast:HST/product/ldq601030_x1dsum.fits', 'specviz'],
+     ['mast:HST/product/o4xw01dkq_flt.fits', 'specviz2d'],
+     ['mast:JWST/product/jw01324-o001_s00094_niriss_f200w-gr150c-gr150r_x1d.fits',
+      'specviz'],
+     ['mast:JWST/product/jw01324-o006_s00005_nirspec_f100lp-g140h_s2d.fits',
+      'specviz2d'],
+     ['mast:JWST/product/jw01345-o001_t021_nircam_clear-f200w_i2d.fits', 'imviz'],
+     ['mast:JWST/product/jw01373-o028_t001_nirspec_g395h-f290lp_s3d.fits',
+      'cubeviz'],
+     ['mast:JWST/product/jw01373-o031_t007_miri_ch1-shortmediumlong_s3d.fits',
+      'cubeviz'],
+     ['mast:JWST/product/jw01783-o004_t008_nircam_clear-f444w_i2d.fits', 'imviz'],
+     ['mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits',
+      'specviz']
+]
 
 
 def test_data_menu_toggles(specviz_helper, spectrum1d):
@@ -75,3 +99,27 @@ def test_visibility_toggle(imviz_helper):
                             visible=True)
     assert iv.layers[0].visible is True
     assert po.stretch_preset.value == 90
+
+
+@pytest.mark.remote_data
+@pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
+@pytest.mark.parametrize(
+    "uri, expected_helper", example_uri_helper
+)
+def test_auto_config_detection(uri, expected_helper):
+    url = f'https://mast.stsci.edu/api/v0.1/Download/file/?uri={uri}'
+    fn = download_file(url, cache=True)
+    helper_name = identify_helper(fn)
+    assert helper_name == expected_helper
+
+
+@pytest.mark.remote_data
+@pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
+def test_auto_config_manga():
+    # Check that MaNGA cubes go to cubeviz. This file is
+    # originally from
+    # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz
+    URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits'
+    fn = download_file(URL, cache=True)
+    helper_name = identify_helper(fn)
+    assert helper_name == 'cubeviz'

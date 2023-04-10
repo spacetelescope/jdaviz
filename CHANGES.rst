@@ -6,6 +6,8 @@ New Features
 
 * Model fitting results are logged in a table within the plugin [#2093].
 
+* Auto-identify a configuration/helper for a given data file [#2124]
+
 Cubeviz
 ^^^^^^^
 
