@@ -1,12 +1,10 @@
-from packaging.version import Version
-
 import numpy as np
 import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
-from astropy.utils.data import download_file
+from astropy.utils.data import download_file, get_pkg_data_filename
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
@@ -16,15 +14,7 @@ from stdatamodels import asdf_in_fits
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
-    parse_data, _validate_fits_image2d, _validate_bunit, _parse_image)
-
-try:
-    # check for version of roman_datamodels
-    import roman_datamodels
-    RDM_LT_0_14_2 = Version(roman_datamodels.__version__) < Version('0.14.2')
-except ImportError:
-    # If roman_datamodels not installed, assume Roman-specific tests can be skipped
-    RDM_LT_0_14_2 = True
+    parse_data, _validate_fits_image2d, _validate_bunit, _parse_image, HAS_ROMAN_DATAMODELS)
 
 
 @pytest.mark.parametrize(
@@ -515,12 +505,9 @@ def test_load_valid_not_valid(imviz_helper):
     assert_allclose(imviz_helper.app.data_collection[0].get_component('DATA').data, 1)
 
 
-@pytest.mark.skipif(RDM_LT_0_14_2, reason="roman_datamodels not installed or version too old")
-def test_roman_wfi(imviz_helper, roman_wfi_image):
-
-    imviz_helper.load_data(roman_wfi_image)
-
-    data = imviz_helper.app.data_collection[0]
-
-    assert data.shape == (20, 20)
-    assert isinstance(data.coords, GWCS)
+@pytest.mark.skipif(HAS_ROMAN_DATAMODELS, reason="roman_datamodels is installed")
+def test_roman_no_roman(imviz_helper):
+    filename = get_pkg_data_filename('data/roman_wfi_image_model.asdf')
+    with pytest.raises(ImportError,
+                       match="Roman ASDF detected but roman-datamodels is not installed"):
+        imviz_helper.load_data(filename)

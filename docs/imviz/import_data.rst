@@ -107,18 +107,16 @@ Roman datamodels
 You can also load Nancy Grace Roman Space Telescope (hereafter, Roman) data products, which are
 provided as ASDF files. If an ASDF file has a ``roman`` attribute, Jdaviz will
 open it with `roman-datamodels <https://github.com/spacetelescope/roman_datamodels>`_.
-If ``roman-datamodels`` is not available, jdaviz falls back on the
-`asdf package <https://github.com/asdf-format/asdf>`_.
+You must run ``pip install roman-datamodels`` separately as it is not automatically installed
+by Jdaviz.
 
 .. code-block:: python
 
     from jdaviz import Imviz
 
-    path = "WFI01_cal.asdf"
     imviz = Imviz()
-    imviz.load_data(path, data_label='roman_wfi_01')
+    imviz.load_data("WFI01_cal.asdf")
     imviz.show()
-
 
 .. _imviz-import-catalogs-api:
 

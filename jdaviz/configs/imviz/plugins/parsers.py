@@ -19,7 +19,9 @@ from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 try:
     from roman_datamodels import datamodels as rdd
 except ImportError:
-    rdd = None
+    HAS_ROMAN_DATAMODELS = False
+else:
+    HAS_ROMAN_DATAMODELS = True
 
 __all__ = ['parse_data']
 
@@ -47,7 +49,6 @@ def parse_data(app, file_obj, ext=None, data_label=None):
 
     """
     if isinstance(file_obj, str):
-        file_obj_lower = file_obj.lower()
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
 
@@ -61,6 +62,8 @@ def parse_data(app, file_obj, ext=None, data_label=None):
             # file_obj_lower is only used for checking extensions,
             # file_obj is passed for parsing and is not modified here:
             file_obj_lower = source_url.split('/')[-1].lower()
+        else:
+            file_obj_lower = file_obj.lower()
 
         if file_obj_lower.endswith(('.jpg', '.jpeg', '.png')):
             from skimage.io import imread
@@ -72,22 +75,21 @@ def parse_data(app, file_obj, ext=None, data_label=None):
                 pf = rgb2gray(im)
             pf = pf[::-1, :]  # Flip it
             _parse_image(app, pf, data_label, ext=ext)
-        elif file_obj_lower.endswith('.asdf'):
-            # First check if file might be a Roman data product:
-            with asdf.open(file_obj) as asdf_file:
-                # This is a convention of roman data products:
-                is_roman_data_prod = 'roman' in asdf_file
 
-            if is_roman_data_prod and rdd is not None:
-                pf = rdd.open(file_obj)
-                _parse_image(app, pf, data_label, ext=ext)
-            else:
-                with asdf.open(file_obj) as pf:
-                    try:
+        elif file_obj_lower.endswith('.asdf'):
+            # First check if file might be a Roman data product.
+            with asdf.open(file_obj) as asdf_file:
+                # This is a convention of roman data products.
+                if 'roman' in asdf_file:
+                    if not HAS_ROMAN_DATAMODELS:
+                        raise ImportError(
+                            "Roman ASDF detected but roman-datamodels is not installed.")
+                    with rdd.open(asdf_file) as pf:
                         _parse_image(app, pf, data_label, ext=ext)
-                    except NotImplementedError:
-                        raise NotImplementedError("Parsing Roman ASDF data products "
-                                                  "requires the `roman_datamodels` package.")
+                # Not Roman but also not really supported. Might still work though.
+                else:  # pragma: no cover
+                    _parse_image(app, asdf_file, data_label, ext=ext)
+
         else:  # Assume FITS
             with fits.open(file_obj) as pf:
                 _parse_image(app, pf, data_label, ext=ext)
@@ -143,15 +145,15 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
         _validate_fits_image2d(file_obj)
         data_iter = _hdu_to_glue_data(file_obj, data_label)
 
-    # Roman 2-D datamodels
-    elif rdd is not None and issubclass(file_obj.__class__, rdd.DataModel):
-        data_iter = _roman_2d_to_glue_data(file_obj, data_label, ext=ext)
-
     elif isinstance(file_obj, NDData):
         data_iter = _nddata_to_glue_data(file_obj, data_label)
 
     elif isinstance(file_obj, np.ndarray):
         data_iter = _ndarray_to_glue_data(file_obj, data_label)
+
+    # Roman 2D datamodels
+    elif HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
+        data_iter = _roman_2d_to_glue_data(file_obj, data_label, ext=ext)
 
     else:
         raise NotImplementedError(f'Imviz does not support {file_obj}')
@@ -305,37 +307,38 @@ def _jwst2data(file_obj, ext, data_label):
 
     return data, new_data_label
 
-# ---- Functions that handle input from Roman ASDF files -----
 
+# ---- Functions that handle input from Roman ASDF files -----
 
 def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
 
     if ext == '*' or ext is None:
-        ext_list = ['data', 'dq', 'err', 'var_poisson', 'var_rnoise']
-    elif isinstance(ext, list):
+        # NOTE: Update as needed. Should cover all the image extensions available.
+        ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
+    elif isinstance(ext, (list, tuple)):
         ext_list = ext
     else:
-        ext_list = [ext]
+        ext_list = (ext, )
 
-    meta = getattr(file_obj, 'meta')
+    meta = getattr(file_obj, 'meta', {})
     coords = getattr(meta, 'wcs', None)
 
-    for ext in ext_list:
-        comp_label = ext.lower()
+    for cur_ext in ext_list:
+        comp_label = cur_ext.upper()
         new_data_label = f'{data_label}[{comp_label}]'
         data = Data(coords=coords, label=new_data_label)
 
         # This could be a quantity or a ndarray:
-        ext_values = getattr(file_obj, ext)
+        ext_values = getattr(file_obj, cur_ext)
         bunit = getattr(ext_values, 'unit', '')
         component = Component.autotyped(np.array(ext_values), units=bunit)
         data.add_component(component=component, label=comp_label)
-        data.meta.update(dict(meta))
+        data.meta.update(standardize_metadata(dict(meta)))
 
         yield data, new_data_label
 
-# ---- Functions that handle input from non-JWST, non-Roman FITS files -----
 
+# ---- Functions that handle input from non-JWST, non-Roman FITS files -----
 
 def _hdu_to_glue_data(hdu, data_label, hdulist=None):
     data, data_label = _hdu2data(hdu, data_label, hdulist)

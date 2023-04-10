@@ -88,8 +88,8 @@ class Imviz(ImageConfigHelper):
             * ``'filename.png'`` (requires ``scikit-image``; grayscale only)
             * JWST ASDF-in-FITS file (requires ``stdatamodels`` and ``gwcs``; ``data`` or given
               ``ext`` + GWCS)
-            * Roman ASDF file or `~roman_datamodels.datamodels.ImageModel`
-              (requires ``roman_datamodels``)
+            * Roman ASDF file or `roman_datamodels.datamodels.ImageModel`
+              (requires ``roman-datamodels``)
             * `~astropy.io.fits.HDUList` object (first image extension found
               is loaded unless ``ext`` keyword is also given)
             * `~astropy.io.fits.ImageHDU` object
