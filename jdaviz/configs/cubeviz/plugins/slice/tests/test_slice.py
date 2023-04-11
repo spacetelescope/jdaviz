@@ -114,3 +114,20 @@ def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
 
     sl.show_wavelength = False
     assert indicator.label.visible is False
+
+
+@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
+def test_init_slice(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    sl = cubeviz_helper.plugins['Slice']
+    assert sl.slice == 1
+    assert fv.state.slices == (0, 0, 1)
+
+    # make sure adding new data doesn't revert slice to 0
+    mm = cubeviz_helper.plugins['Moment Maps']
+    mm.calculate_moment(add_data=True)
+
+    assert sl.slice == 1
+    assert fv.state.slices == (0, 0, 1)
