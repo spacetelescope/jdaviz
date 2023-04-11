@@ -154,38 +154,44 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
 
     # Load spectra
     level3_path = Path(data_obj)
-    for file_path in glob.iglob(str(level3_path / '*')):
+    for p in sorted(level3_path.glob('*.fits*')):
+        file_path = str(p)
         if 'x1d' in file_path or 'c1d' in file_path:
             spectra_1d.append(file_path)
         elif 's2d' in file_path:
             spectra_2d.append(file_path)
 
-    spectra_1d.sort()
-    spectra_2d.sort()
-    mos_spec1d_parser(app, spectra_1d)
+    n_specs = mos_spec1d_parser(app, spectra_1d)
     mos_spec2d_parser(app, spectra_2d)
 
     # Load images, if present
     image_path = None
 
     # Potential names of subdirectories where images are stored
-    for image_dir_name in ["cutouts", "mosviz_cutouts", "images"]:
-        if os.path.isdir(Path(str(level3_path / image_dir_name))):
-            image_path = Path(str(level3_path / image_dir_name))
+    for image_dir_name in ("cutouts", "mosviz_cutouts", "images"):
+        cur_path = level3_path / image_dir_name
+        if cur_path.is_dir():
+            image_path = cur_path
             break
     if image_path is not None:
-        images = sorted([file_path for file_path in glob.iglob(str(image_path / '*'))])
+        images = sorted(image_path.glob('*.fits*'))
+        n_images = len(images)
 
         # The amount of images needs to be equal to the amount of rows
         # of the other columns in the table
-        if len(images) == len(spectra_1d):
-            mos_image_parser(app, images)
+        if n_images == 1:
+            if n_specs > 1:
+                kwargs = {'share_image': n_specs}
+            else:
+                kwargs = {}
+            mos_image_parser(app, str(images[0]), **kwargs)
+        elif n_images == n_specs:
+            mos_image_parser(app, list(map(str, images)))
         else:
-            msg = ("The number of images in this directory does not match the"
-                   " number of spectra 1d and 2d files, please make the "
-                   "amounts equal or load images separately.")
-            msg = SnackbarMessage(msg, color='warning', sender=app)
-            app.hub.broadcast(msg)
+            app.hub.broadcast(SnackbarMessage(
+                "The number of images in this directory does not match the "
+                "number of spectra 1d and 2d files, please make the "
+                "amounts equal or load images separately.", color='warning', sender=app))
 
     mos_meta_parser(app)
 
@@ -205,8 +211,13 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
         the mosviz table.
     data_labels : str, optional
         The label applied to the glue data component.
-    """
 
+    Returns
+    -------
+    n_specs : int
+        Number of data objects loaded.
+
+    """
     if isinstance(data_labels, str):
         data_labels = [data_labels]
 
@@ -269,6 +280,12 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         The extension in the FITS file that contains the data to be loaded.
     transpose : bool, optional
         Flag to transpose the data array before loading.
+
+    Returns
+    -------
+    n_specs : int
+        Number of data objects loaded.
+
     """
     spectrum_2d_viewer_reference_name = (
         app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
@@ -476,8 +493,10 @@ def mos_meta_parser(app, data_obj=None, ids=None):
     with app.data_collection.delay_link_manager_update():
 
         current_columns = [comp.label for comp in app.data_collection['MOS Table'].main_components]
+        has_1d = "1D Spectra" in current_columns
+
         # source name can be taken from 1d spectra
-        if "1D Spectra" in current_columns:
+        if has_1d:
             names = _get_source_identifiers(app, "1D Spectra", data_obj, ids)
             _add_to_table(app, names, "Identifier")
 
@@ -490,8 +509,20 @@ def mos_meta_parser(app, data_obj=None, ids=None):
 
             _add_to_table(app, filters_gratings, "Filter/Grating")
 
-        # source name and coordinates are taken from image headers, if present
-        if "Images" in current_columns:
+        # Grab target sky coordinates from 1D spectrum, if possible.
+        # This has to happen after Filter/Grating because columns are insertion-ordered.
+        if has_1d:
+            ra = query_metadata_by_component(app, "SRCRA", "1D Spectra", False)
+            dec = query_metadata_by_component(app, "SRCDEC", "1D Spectra", False)
+            if all(ra) and all(dec):
+                _add_to_table(app, ra, "R.A.")
+                _add_to_table(app, dec, "Dec.")
+
+        # Refresh current_columns for Images check
+        current_columns = [comp.label for comp in app.data_collection['MOS Table'].main_components]
+
+        # If not in 1D spectrum, source coordinates are taken from image headers, if present.
+        if "R.A." not in current_columns and "Images" in current_columns:
             ra = query_metadata_by_component(app, "OBJ_RA", "Images", FALLBACK_NAME)
             dec = query_metadata_by_component(app, "OBJ_DEC", "Images", FALLBACK_NAME)
             _add_to_table(app, ra, "R.A.")

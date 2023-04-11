@@ -590,7 +590,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         """
         self.app.load_data(file_obj=None, parser_reference="mosviz-metadata-parser")
 
-    def load_1d_spectra(self, data_obj, data_labels=None):
+    def load_1d_spectra(self, data_obj, data_labels=None, add_redshift_column=False):
         """
         Load and parse a set of 1D spectra objects.
 
@@ -604,12 +604,15 @@ class Mosviz(ConfigHelper, LineListMixin):
             String representing the label for the data item loaded via
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
+        add_redshift_column : bool
+            Add redshift column to Mosviz table.
         """
         super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
                           data_labels=data_labels)
-        self._add_redshift_column()
+        if add_redshift_column:
+            self._add_redshift_column()
 
-    def load_2d_spectra(self, data_obj, data_labels=None):
+    def load_2d_spectra(self, data_obj, data_labels=None, add_redshift_column=False):
         """
         Load and parse a set of 2D spectra objects.
 
@@ -623,22 +626,28 @@ class Mosviz(ConfigHelper, LineListMixin):
             String representing the label for the data item loaded via
             ``data_obj``. Can be a list of strings representing data labels
             for each item in ``data_obj`` if  ``data_obj`` is a list.
+        add_redshift_column : bool
+            Add redshift column to Mosviz table.
         """
         super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
                           data_labels=data_labels)
-        self._add_redshift_column()
+        if add_redshift_column:
+            self._add_redshift_column()
 
-    def load_jwst_directory(self, data_obj, data_labels=None, instrument=None):
+    def load_jwst_directory(self, data_obj, data_labels=None, instrument=None,
+                            add_redshift_column=False):
+        """Load NIRISS or NIRCam data from a directory."""
         self.app.auto_link = False
         super().load_data(data_obj, parser_reference="mosviz-niriss-parser",
                           instrument=instrument)
 
         self.link_table_data(data_obj)
-        self._add_redshift_column()
+        if add_redshift_column:
+            self._add_redshift_column()
 
         self.app.auto_link = True
 
-    def load_images(self, data_obj, data_labels=None, share_image=0):
+    def load_images(self, data_obj, data_labels=None, share_image=0, add_redshift_column=False):
         """
         Load and parse a set of image objects. If providing a file path, it
         must be readable by ``astropy.io.fits``.
@@ -659,10 +668,13 @@ class Mosviz(ConfigHelper, LineListMixin):
             different row in the table does not reload the displayed image.
             Currently, if non-zero, the provided number must match the number of
             spectra.
+        add_redshift_column : bool
+            Add redshift column to Mosviz table.
         """
         super().load_data(data_obj, parser_reference="mosviz-image-parser",
                           data_labels=data_labels, share_image=share_image)
-        self._add_redshift_column()
+        if add_redshift_column:
+            self._add_redshift_column()
 
     def get_column_names(self, visible=None):
         """

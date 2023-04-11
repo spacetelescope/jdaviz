@@ -30,6 +30,9 @@ Imviz
 Mosviz
 ^^^^^^
 
+- NIRSpec automatic loader now can take a single image as input, instead of requiring
+  the number of cutouts to be the same as the number of 1D spectra. [#2146]
+
 Specviz
 ^^^^^^^
 
