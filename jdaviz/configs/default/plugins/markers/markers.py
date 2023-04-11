@@ -139,7 +139,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
 
             x, y = row_info['axes_x'], row_info['axes_y']
-            # TODO: will need to test/update when adding support for display units
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
     def clear_table(self):
