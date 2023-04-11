@@ -217,6 +217,10 @@ class JdavizViewerMixin:
         return self.jdaviz_app._jdaviz_helper
 
     @property
+    def hub(self):
+        return self.session.hub
+
+    @property
     def reference_id(self):
         return self._reference_id
 
