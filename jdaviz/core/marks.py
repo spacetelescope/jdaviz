@@ -518,6 +518,8 @@ class PluginMark():
 
     def set_x_unit(self, unit=None):
         if unit is None:
+            if not hasattr(self.viewer.state, 'x_display_unit'):
+                return
             unit = self.viewer.state.x_display_unit
         unit = u.Unit(unit)
         if self.xunit is not None:
@@ -528,6 +530,8 @@ class PluginMark():
 
     def set_y_unit(self, unit=None):
         if unit is None:
+            if not hasattr(self.viewer.state, 'y_display_unit'):
+                return
             unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
         if self.yunit is not None:
@@ -537,7 +541,7 @@ class PluginMark():
     def _on_global_display_unit_changed(self, msg):
         if not self.auto_update_units:
             return
-        if self.viewer.__class__.__name__ == 'SpecvizProfileView':
+        if self.viewer.__class__.__name__ in ['SpecvizProfileView', 'CubevizProfileView']:
             axis_map = {'spectral': 'x', 'flux': 'y'}
         elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
             axis_map = {'spectral': 'x'}
