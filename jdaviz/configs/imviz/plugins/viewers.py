@@ -3,6 +3,7 @@ import numpy as np
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
 from glue.core.link_helpers import LinkSame
+from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz import wcs_utils
@@ -14,7 +15,38 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 
-__all__ = ['ImvizImageView']
+__all__ = ['ImvizImageView', 'ImvizHistogramView']
+
+
+@viewer_registry("imviz-histogram-viewer", label="Histogram (Imviz)")
+class ImvizHistogramView(JdavizViewerMixin, BqplotHistogramView):
+    # TODO: Use Jdaviz tools? Generalize and move to configs/default?
+    tools_nested = [
+                    ['jdaviz:homezoom'],
+                    ['bqplot:panzoom'],
+                    ['bqplot:xrange']
+                   ]
+    default_class = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.update_n_bin(25)  # Started out 15, not sure what set it
+
+    def update_n_bin(self, n_bin):
+        # TODO: Do we really need this method? Better way to expose viewer settings?
+        self.state.hist_n_bin = n_bin
+
+    def update_limits(self):
+        # TODO: Make this less hacky. Basically we want some reasonable min/max for X-axis.
+        # hv = imviz.app.get_viewer_by_id('imviz-1')
+        # hv.update_limits()
+        im_cuts = self.jdaviz_helper.default_viewer.cuts
+        self.state.hist_x_min = im_cuts[0]
+        self.state.hist_x_max = im_cuts[1]
+
+    # TODO: Need this so Imviz does not crash. Maybe there is a better way?
+    def on_limits_change(self, *args):
+        pass
 
 
 @viewer_registry("imviz-image-viewer", label="Image 2D (Imviz)")

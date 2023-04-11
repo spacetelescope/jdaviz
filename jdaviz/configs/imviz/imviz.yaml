@@ -37,3 +37,6 @@ viewer_area:
           - name: imviz-0
             plot: imviz-image-viewer
             reference: imviz-0
+          - name: imviz-1
+            plot: imviz-histogram-viewer
+            reference: imviz-1
