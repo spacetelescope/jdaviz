@@ -41,7 +41,7 @@
         <v-col v-if="has_comments" cols=6 class="text--secondary"><U>Comment</U></v-col>
       </v-row>
       <v-row
-        v-for="item in metadata.filter((item) => item.join().toLowerCase().indexOf(metadata_filter.toLowerCase()) !== -1)"
+        v-for="item in metadata.filter((item) => {return metadata_filter === null || item.join().toLowerCase().indexOf(metadata_filter.toLowerCase()) !== -1})"
         :key="item[0]"
         no-gutters>
         <v-col cols=6><B>{{ item[0] }}</B></v-col>
