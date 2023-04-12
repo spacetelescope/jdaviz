@@ -222,8 +222,17 @@ You can do a release from your fork directly without a clean code check-out.
      Specviz2d
      ^^^^^^^^^
 
-#. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+#. Commit your changes of the, uh, change log with a message, "Back to development: A.C.dev"
    and push directly to ``main``.
+
+#. For this commit, if you are doing a "major" release, also do this so ``setuptools-scm``
+   is able to report the dev version properly. This is needed because it cannot grab
+   the new release tag from a release branch:
+
+.. code-block:: bash
+
+     git tag -a vA.C.dev -m "Back to development: A.C.dev"
+     git push upstream vA.C.dev
 
 #. Follow procedures for :ref:`release-milestones` and :ref:`release-labels`.
 
@@ -626,6 +635,14 @@ You can create a clean checkout as follows (requires
      git add CHANGES.rst
      git commit -m "Back to development: A.B.dev"
 
+#. For this commit, if you are doing a "major" release, also do this so ``setuptools-scm``
+   is able to report the dev version properly. This is needed because it cannot grab
+   the new release tag from a release branch:
+
+.. code-block:: bash
+
+     git tag -a vA.B.dev -m "Back to development: A.B.dev"
+
 #. Push out the updated code and tag. If applicable, change ``origin`` to point to
    the remote that points to the repository being released:
 
@@ -633,6 +650,7 @@ You can create a clean checkout as follows (requires
 
      git push origin main
      git push origin vX.Y.Z
+     git push origin vA.B.dev
 
 #. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
    and `create a new GitHub release <https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository>`_
