@@ -32,7 +32,7 @@ API Changes
 -----------
 
 - Add ``get_subsets()`` method to app level to centralize subset information
-  retrieval. [#2087, #2116]
+  retrieval. [#2087, #2116, #2138]
 
 Cubeviz
 ^^^^^^^
