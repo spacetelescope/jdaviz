@@ -7,7 +7,6 @@ from astropy.utils.data import download_file
 from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
 
 
-@pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
 @pytest.mark.parametrize('instrument_arg', ('nirspec', None))
 def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
@@ -83,7 +82,6 @@ def test_nirspec_parser(mosviz_helper, tmp_path, instrument_arg):
                                              data_label=data_label)
 
 
-@pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
 def test_nirspec_level2_parser(mosviz_helper, tmp_path):
     '''
@@ -105,7 +103,6 @@ def test_nirspec_level2_parser(mosviz_helper, tmp_path):
 
 
 @pytest.mark.remote_data
-@pytest.mark.filterwarnings('ignore', match="'(MJy/sr)^2' did not parse as fits unit")
 def test_niriss_parser(mosviz_helper, tmp_path):
     '''
     Tests loading a NIRISS dataset
@@ -177,7 +174,6 @@ def test_niriss_parser(mosviz_helper, tmp_path):
 
 
 @pytest.mark.remote_data
-@pytest.mark.filterwarnings('ignore', match="'(MJy/sr)^2' did not parse as fits unit")
 def test_nircam_parser(mosviz_helper, tmp_path):
     '''
     Tests loading a NIRCam dataset
@@ -216,8 +212,6 @@ def test_missing_srctype(mosviz_helper, tmp_path):
 
     This dataset was our original simulated NIRISS dataset that is missing SRCTYPE.
 
-    NOTE: Under some conditions, a warning is raised when TemporaryDirectory attempts to
-    clean itself up. Most likely a race condition between TempDir and pytest
     '''
 
     # Download data
