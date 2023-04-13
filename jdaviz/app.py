@@ -894,7 +894,8 @@ class Application(VuetifyTemplate, HubListener):
         simplify_spectral : bool
             Return a composite spectral subset collapsed to a simplified SpectralRegion.
         use_display_units: bool, optional
-            Whether to convert to the display units defined in the <unit-conversion> plugin.
+            Whether to convert to the display units defined in the
+            :ref:`Unit Conversion <unit-conversion>` plugin.
 
         Returns
         -------

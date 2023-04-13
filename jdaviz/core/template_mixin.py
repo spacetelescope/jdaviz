@@ -28,6 +28,7 @@ from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
+           'ViewerPropertiesMixin',
            'BasePluginComponent', 'SelectPluginComponent', 'UnitSelectPluginComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',

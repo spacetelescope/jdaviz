@@ -128,10 +128,16 @@ class Specviz(ConfigHelper, LineListMixin):
 
             return output_spectra
 
-    def get_spectral_regions(self):
+    def get_spectral_regions(self, use_display_units=False):
         """
         A simple wrapper around the app-level call to retrieve only spectral
         subsets, which are now returned as SpectralRegions by default.
+
+        Parameters
+        ----------
+        use_display_units : bool, optional
+            Whether to convert to the display units defined in the
+            :ref:`Unit Conversion <unit-conversion>` plugin.
 
         Returns
         -------
@@ -139,7 +145,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        return self.app.get_subsets(spectral_only=True)
+        return self.app.get_subsets(spectral_only=True, use_display_units=use_display_units)
 
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis

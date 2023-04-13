@@ -293,17 +293,21 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     assert label_mouseover.icon == ''
 
     # Convert the wavelength axis to micron
-    new_spectral_axis = "micron"
-    spec_viewer.state.x_display_unit = new_spectral_axis
-    spec_viewer.set_plot_axes()
+    new_spectral_axis = "um"
+    specviz_helper.plugins['Unit Conversion'].spectral_unit = new_spectral_axis
 
     spec_viewer.apply_roi(XRangeROI(0.6, 0.7))
 
     # Retrieve the Subset
-    subsets = specviz_helper.get_spectral_regions()
+    subsets = specviz_helper.get_spectral_regions(use_display_units=False)
     reg = subsets.get('Subset 1')
-    assert reg.lower.unit == u.micron
-    assert reg.upper.unit == u.micron
+    assert reg.lower.unit == u.Angstrom
+    assert reg.upper.unit == u.Angstrom
+
+    subsets = specviz_helper.get_spectral_regions(use_display_units=True)
+    reg = subsets.get('Subset 1')
+    assert reg.lower.unit == u.um
+    assert reg.upper.unit == u.um
 
     # Coordinates info panel should show new unit
     label_mouseover._viewer_mouse_event(spec_viewer,
