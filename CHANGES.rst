@@ -72,6 +72,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Fixed several data loader bugs for uncommon use cases. [#2146]
+
 Specviz
 ^^^^^^^
 

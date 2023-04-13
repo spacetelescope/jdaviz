@@ -1,3 +1,4 @@
+import os
 import warnings
 from copy import deepcopy
 from pathlib import Path
@@ -18,7 +19,8 @@ from jdaviz.configs.specviz import Specviz
 from jdaviz.configs.specviz.helper import _apply_redshift_to_spectra
 from jdaviz.configs.specviz2d import Specviz2d
 from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
-from jdaviz.configs.mosviz.plugins.parsers import FALLBACK_NAME
+from jdaviz.configs.mosviz.plugins.parsers import (
+    FALLBACK_NAME, mos_spec1d_parser, mos_spec2d_parser)
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 
 __all__ = ['Mosviz']
@@ -406,7 +408,7 @@ class Mosviz(ConfigHelper, LineListMixin):
 
     def load_data(self, spectra_1d=None, spectra_2d=None, images=None,
                   spectra_1d_label=None, spectra_2d_label=None,
-                  images_label=None, *args, **kwargs):
+                  images_label=None, directory=None, instrument=None):
         """
         Load and parse a set of MOS spectra and images.
 
@@ -445,43 +447,53 @@ class Mosviz(ConfigHelper, LineListMixin):
         directory : str, optional
             Instead of loading lists of spectra and images, the path to a directory
             containing all files for a single JWST observation may be given.
+            If this is provided, all the above inputs are ignored.
 
         instrument : {'niriss', 'nircam', 'nirspec'}, optional
-            Required if ``directory`` is specified. Value is not case sensitive.
+            Required and only used if ``directory`` is specified. Value is not case sensitive.
         """
         # Link data after everything is loaded
         self.app.auto_link = False
         allow_link_table = True
 
-        directory = kwargs.pop('directory', None)
-        instrument = kwargs.pop('instrument', None)
-        if instrument is not None:
+        if isinstance(instrument, str):
             instrument = instrument.lower()
 
-        if directory is not None and Path(directory).is_dir():
-            if instrument not in ('nirspec', 'niriss', 'nircam'):
-                raise ValueError(
-                    "Ambiguous MOS Instrument: Only JWST NIRSpec, NIRCam, and "
-                    f"NIRISS folder parsing are currently supported but got '{instrument}'")
-            if instrument == "nirspec":
-                super().load_data(directory, parser_reference="mosviz-nirspec-directory-parser")
-            else:  # niriss or nircam
-                self.load_jwst_directory(directory, instrument=instrument)
-        elif directory is not None and is_zipfile(str(directory)):
-            raise TypeError("Please extract your data first and provide the directory")
+        if images is not None and not isinstance(images, (list, tuple)):
+            single_image = True
+        else:
+            single_image = False
+
+        if directory is not None:
+            if is_zipfile(str(directory)):
+                raise TypeError("Please extract your data first and provide the directory")
+            elif os.path.isdir(directory):
+                if instrument not in ('nirspec', 'niriss', 'nircam'):
+                    raise ValueError(
+                        "Ambiguous MOS Instrument: Only JWST NIRSpec, NIRCam, and "
+                        f"NIRISS folder parsing are currently supported but got '{instrument}'")
+                if instrument == "nirspec":
+                    super().load_data(directory, parser_reference="mosviz-nirspec-directory-parser")
+                else:  # niriss or nircam
+                    self.load_jwst_directory(directory, instrument=instrument)
+            else:
+                raise NotImplementedError(f"{directory} is not a directory")
+
+        # For the following, always load in this order: 1d, 2d, images, metadata
 
         elif (spectra_1d is not None and spectra_2d is not None
                 and images is not None):
-            # If we have a single image for multiple spectra, tell the table viewer
-            if not isinstance(images, (list, tuple)) and isinstance(spectra_1d, (list, tuple)):
+            n_specs = self.load_1d_spectra(spectra_1d, spectra_1d_label)
+            self.load_2d_spectra(spectra_2d, spectra_2d_label)
+
+            # If we have a single image for multiple spectra, tell the table viewer.
+            if single_image and n_specs > 1:
                 self._shared_image = True
                 self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
-                self.load_images(images, images_label, share_image=len(spectra_1d))
+                self.load_images(images, images_label, share_image=n_specs)
             else:
                 self.load_images(images, images_label)
 
-            self.load_2d_spectra(spectra_2d, spectra_2d_label)
-            self.load_1d_spectra(spectra_1d, spectra_1d_label)
             self.load_metadata()
 
         elif spectra_1d is not None and spectra_2d is not None:
@@ -490,13 +502,29 @@ class Mosviz(ConfigHelper, LineListMixin):
             self.load_metadata()
 
         elif spectra_1d and images:
-            self.load_1d_spectra(spectra_1d, spectra_1d_label)
-            self.load_images(images, images_label)
+            n_specs = self.load_1d_spectra(spectra_1d, spectra_1d_label)
+
+            # If we have a single image for multiple spectra, tell the table viewer.
+            if single_image and n_specs > 1:
+                self._shared_image = True
+                self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
+                self.load_images(images, images_label, share_image=n_specs)
+            else:
+                self.load_images(images, images_label)
+
             allow_link_table = False
 
         elif spectra_2d and images:
-            self.load_2d_spectra(spectra_2d, spectra_2d_label)
-            self.load_images(images, images_label)
+            n_specs = self.load_2d_spectra(spectra_2d, spectra_2d_label)
+
+            # If we have a single image for multiple spectra, tell the table viewer.
+            if single_image and n_specs > 1:
+                self._shared_image = True
+                self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
+                self.load_images(images, images_label, share_image=n_specs)
+            else:
+                self.load_images(images, images_label)
+
             allow_link_table = False
 
         elif spectra_1d:
@@ -508,10 +536,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             allow_link_table = False
 
         else:
-            self.app.hub.broadcast(SnackbarMessage(
-                "Warning: Please set valid values for the load_data() method",
-                color='warning', sender=self))
-            return
+            raise NotImplementedError("Please set valid values for the Mosviz.load_data() method")
 
         if allow_link_table:
             self.link_table_data(None)
@@ -534,8 +559,8 @@ class Mosviz(ConfigHelper, LineListMixin):
         self.app.get_viewer(self._default_table_viewer_reference_name).figure_widget.highlighted = 0
 
         # Notify the user that this all loaded successfully
-        loaded_msg = SnackbarMessage("MOS data loaded successfully", color="success", sender=self)
-        self.app.hub.broadcast(loaded_msg)
+        self.app.hub.broadcast(SnackbarMessage(
+            "MOS data loaded successfully", color="success", sender=self))
 
         self._default_visible_columns = self.get_column_names(True)
 
@@ -606,11 +631,17 @@ class Mosviz(ConfigHelper, LineListMixin):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         add_redshift_column : bool
             Add redshift column to Mosviz table.
+
+        Returns
+        -------
+        n_specs : int
+            Number of data objects loaded.
+
         """
-        super().load_data(data_obj, parser_reference="mosviz-spec1d-parser",
-                          data_labels=data_labels)
+        n_specs = mos_spec1d_parser(self.app, data_obj, data_labels=data_labels)
         if add_redshift_column:
             self._add_redshift_column()
+        return n_specs
 
     def load_2d_spectra(self, data_obj, data_labels=None, add_redshift_column=False):
         """
@@ -628,11 +659,17 @@ class Mosviz(ConfigHelper, LineListMixin):
             for each item in ``data_obj`` if  ``data_obj`` is a list.
         add_redshift_column : bool
             Add redshift column to Mosviz table.
+
+        Returns
+        -------
+        n_specs : int
+            Number of data objects loaded.
+
         """
-        super().load_data(data_obj, parser_reference="mosviz-spec2d-parser",
-                          data_labels=data_labels)
+        n_specs = mos_spec2d_parser(self.app, data_obj, data_labels=data_labels)
         if add_redshift_column:
             self._add_redshift_column()
+        return n_specs
 
     def load_jwst_directory(self, data_obj, data_labels=None, instrument=None,
                             add_redshift_column=False):

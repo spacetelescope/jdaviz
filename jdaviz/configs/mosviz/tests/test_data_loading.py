@@ -209,7 +209,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     label_mouseover._viewer_mouse_event(spec2d_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 10, 'y': 100}})
     assert label_mouseover.as_text() == ('Pixel x=00010.0 y=00100.0 Value +8.12986e-01', '', '')
-    assert label_mouseover.icon == 'b'
+    assert label_mouseover.icon == 'c'
 
     # need to trigger a mouseleave or mouseover to reset the traitlets
     label_mouseover._viewer_mouse_event(spec1d_viewer, {'event': 'mouseenter'})
@@ -218,7 +218,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     assert label_mouseover.as_text() == ('Cursor 7.00000e+03, 1.70000e+02',
                                          'Wave 6.88889e+03 Angstrom (4 pix)',
                                          'Flux 1.35436e+01 Jy')
-    assert label_mouseover.icon == 'c'
+    assert label_mouseover.icon == 'b'
 
 
 def test_zip_error(mosviz_helper, tmp_path):
@@ -232,3 +232,11 @@ def test_zip_error(mosviz_helper, tmp_path):
 
     with pytest.raises(TypeError, match="Please extract"):
         mosviz_helper.load_data(directory=str(zip_path))
+
+
+def test_invalid_inputs(mosviz_helper):
+    with pytest.raises(NotImplementedError, match=r".*not a directory"):
+        mosviz_helper.load_data(directory="foo")
+
+    with pytest.raises(NotImplementedError, match="Please set valid values"):
+        mosviz_helper.load_data()
