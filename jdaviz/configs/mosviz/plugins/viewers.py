@@ -6,6 +6,7 @@ from specutils import Spectrum1D
 from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,
                                 TableClickMessage)
+from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
@@ -15,7 +16,7 @@ __all__ = ['MosvizImageView', 'MosvizProfile2DView',
 
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
-class MosvizImageView(JdavizViewerMixin, BqplotImageView):
+class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewerMixin):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
@@ -28,7 +29,11 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.init_astrowidgets_api()
         self._subscribe_to_layers_update()
+
+        self.state.show_axes = False  # Axes are wrong anyway
+        self.figure.fig_margin = {'left': 0, 'bottom': 0, 'top': 0, 'right': 0}
 
     def data(self, cls=None):
         return [layer_state.layer  # .get_object(cls=cls or self.default_class)
@@ -36,15 +41,21 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView):
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
 
-    def set_plot_axes(self):
-        self.figure.axes[1].tick_format = None
-        self.figure.axes[0].tick_format = None
+    def _mark_targets(self):
+        table_data = self.jdaviz_app.data_collection['MOS Table']
 
-        self.figure.axes[1].label = "y: pixels"
-        self.figure.axes[0].label = "x: pixels"
+        if ("R.A." not in table_data.component_ids() or
+                "Dec." not in table_data.component_ids()):
+            return
 
-        # Make it so y axis label is not covering tick numbers.
-        self.figure.axes[1].label_offset = "-50"
+        from astropy.coordinates import SkyCoord
+        from astropy.table import QTable
+
+        ra = table_data["R.A."]
+        dec = table_data["Dec."]
+        sky = SkyCoord(ra, dec, unit='deg')
+        t = QTable({'coord': sky})
+        self.add_markers(t, use_skycoord=True, marker_name='Targets')
 
 
 @viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (Mosviz)")
@@ -134,7 +145,7 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
         else:
             components_str = [cid.label for cid in self.figure_widget.data.main_components]
             hidden = []
-            for colname in ['Images', '1D Spectra', '2D Spectra']:
+            for colname in ('Images', '1D Spectra', '2D Spectra'):
                 if colname in components_str:
                     hidden.append(self.figure_widget.data.id[colname])
             self.figure_widget.hidden_components = hidden

@@ -180,6 +180,8 @@ def mos_nirspec_directory_parser(app, data_obj, data_labels=None):
         # The amount of images needs to be equal to the amount of rows
         # of the other columns in the table
         if n_images == 1:
+            app._jdaviz_helper._shared_image = True
+            app.get_viewer(app._jdaviz_helper._default_table_viewer_reference_name)._shared_image = True  # noqa: E501
             if n_specs > 1:
                 kwargs = {'share_image': n_specs}
             else:

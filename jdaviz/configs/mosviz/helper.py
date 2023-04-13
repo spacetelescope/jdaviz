@@ -290,31 +290,32 @@ class Mosviz(ConfigHelper, LineListMixin):
     def _handle_image_zoom(self, msg):
         mos_data = self.app.data_collection['MOS Table']
 
+        if mos_data.find_component_id("Images") is None:
+            return
+
+        imview = self.app.get_viewer(self._default_image_viewer_reference_name)
+
         # trigger zooming the image, if there is an image
-        if mos_data.find_component_id("Images") is not None:
-            if msg.shared_image:
-                center, height = self._zoom_to_object_params(msg)
-            else:
-                try:
-                    center, height = self._zoom_to_slit_params(msg)
-                except IndexError:
-                    # If there's nothing in the spectrum2d viewer, we can't get slit info
-                    return
+        if msg.shared_image:
+            center, height = self._zoom_to_object_params(msg)
+        else:
+            center, height = self._zoom_to_slit_params(msg)
 
-            if center is None or height is None:
-                # Can't zoom if we couldn't figure out where to zoom (e.g. if RA/Dec not in table)
-                return
-
-            imview = self.app.get_viewer(self._default_image_viewer_reference_name)
-
-            image_axis_ratio = ((imview.axis_x.scale.max - imview.axis_x.scale.min) /
-                                (imview.axis_y.scale.max - imview.axis_y.scale.min))
+        if height is not None:
+            image_axis_ratio = (abs(imview.state.x_max - imview.state.x_min) /
+                                abs(imview.state.y_max - imview.state.y_min))
+            xh = image_axis_ratio * height
+            cur_xcen = (imview.state.x_min + imview.state.x_max) * 0.5
+            cur_ycen = (imview.state.y_min + imview.state.y_max) * 0.5
 
             with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                imview.state.x_min = center[0] - image_axis_ratio*height
-                imview.state.y_min = center[1] - height
-                imview.state.x_max = center[0] + image_axis_ratio*height
-                imview.state.y_max = center[1] + height
+                imview.state.x_min = cur_xcen - xh
+                imview.state.y_min = cur_ycen - height
+                imview.state.x_max = cur_xcen + xh
+                imview.state.y_max = cur_ycen + height
+
+        if center is not None:
+            imview.center_on(center)
 
     def _handle_flipped_data(self):
         # Workaround for flipped data
@@ -327,7 +328,6 @@ class Mosviz(ConfigHelper, LineListMixin):
     def _zoom_to_object_params(self, msg):
 
         table_data = self.app.data_collection['MOS Table']
-        imview = self.app.get_viewer(self._default_image_viewer_reference_name)
         specview = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
 
         if ("R.A." not in table_data.component_ids() or
@@ -340,12 +340,16 @@ class Mosviz(ConfigHelper, LineListMixin):
         if (ra == FALLBACK_NAME) or (dec == FALLBACK_NAME):
             return None, None
 
-        pixel_height = 0.5*(specview.axis_y.scale.max - specview.axis_y.scale.min)
-        point = SkyCoord(ra*u.deg, dec*u.deg)
+        try:
+            pixel_height = abs(specview.axis_y.scale.max - specview.axis_y.scale.min) * 0.5
+        except Exception:
+            pixel_height = None
+        else:
+            if pixel_height < 1:
+                pixel_height = None
+        sky = SkyCoord(ra, dec, unit='deg')
 
-        pix = imview.layers[0].layer.coords.world_to_pixel(point)
-
-        return pix, pixel_height
+        return sky, pixel_height
 
     def _zoom_to_slit_params(self, msg):
         imview = self.app.get_viewer(self._default_image_viewer_reference_name)
@@ -353,20 +357,15 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         try:
             sky_region = jwst_header_to_skyregion(specview.layers[0].layer.meta)
-        except KeyError:
+        except Exception:
             # If the header didn't have slit params, can't zoom to it.
             return None, None
-        ra = sky_region.center.ra.deg
-        dec = sky_region.center.dec.deg
 
-        pix = imview.layers[0].layer.coords.world_to_pixel(sky_region.center)
-
-        # Height of slit in decimal degrees
-        height = sky_region.height.deg
-
-        upper = imview.layers[0].layer.coords.world_to_pixel(SkyCoord(ra*u.deg,
-                                                             (dec + height)*u.deg))
-        pixel_height = upper[1] - pix[1]
+        sky = sky_region.center
+        w = imview.layers[0].layer.coords
+        pix = w.world_to_pixel(sky)
+        upper = w.world_to_pixel(SkyCoord(sky.ra, sky.dec + sky_region.height))
+        pixel_height = abs(upper[1] - pix[1])  # y
 
         return pix, pixel_height
 
@@ -487,10 +486,13 @@ class Mosviz(ConfigHelper, LineListMixin):
             self.load_2d_spectra(spectra_2d, spectra_2d_label)
 
             # If we have a single image for multiple spectra, tell the table viewer.
-            if single_image and n_specs > 1:
+            if single_image:
                 self._shared_image = True
                 self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
-                self.load_images(images, images_label, share_image=n_specs)
+                if n_specs > 1:
+                    self.load_images(images, images_label, share_image=n_specs)
+                else:
+                    self.load_images(images, images_label)
             else:
                 self.load_images(images, images_label)
 
@@ -505,10 +507,13 @@ class Mosviz(ConfigHelper, LineListMixin):
             n_specs = self.load_1d_spectra(spectra_1d, spectra_1d_label)
 
             # If we have a single image for multiple spectra, tell the table viewer.
-            if single_image and n_specs > 1:
+            if single_image:
                 self._shared_image = True
                 self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
-                self.load_images(images, images_label, share_image=n_specs)
+                if n_specs > 1:
+                    self.load_images(images, images_label, share_image=n_specs)
+                else:
+                    self.load_images(images, images_label)
             else:
                 self.load_images(images, images_label)
 
@@ -518,10 +523,13 @@ class Mosviz(ConfigHelper, LineListMixin):
             n_specs = self.load_2d_spectra(spectra_2d, spectra_2d_label)
 
             # If we have a single image for multiple spectra, tell the table viewer.
-            if single_image and n_specs > 1:
+            if single_image:
                 self._shared_image = True
                 self.app.get_viewer(self._default_table_viewer_reference_name)._shared_image = True
-                self.load_images(images, images_label, share_image=n_specs)
+                if n_specs > 1:
+                    self.load_images(images, images_label, share_image=n_specs)
+                else:
+                    self.load_images(images, images_label)
             else:
                 self.load_images(images, images_label)
 
