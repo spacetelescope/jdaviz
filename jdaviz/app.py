@@ -886,8 +886,9 @@ class Application(VuetifyTemplate, HubListener):
         object_only : bool
             Return only object relevant information and
             leave out the region class name and glue_state.
-        use_display_units: bool, optional
-            Whether to convert to the display units defined in the <unit-conversion> plugin.
+        use_display_units : bool, optional
+            Whether to convert to the display units defined in the
+            :ref:`Unit Conversion <unit-conversion>` plugin.
 
         Returns
         -------
