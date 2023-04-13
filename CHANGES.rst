@@ -4,17 +4,17 @@
 New Features
 ------------
 
-* Model fitting results are logged in a table within the plugin [#2093].
+- Model fitting results are logged in a table within the plugin. [#2093]
 
-* Auto-identify a configuration/helper for a given data file [#2124]
+- Auto-identify a configuration/helper for a given data file. [#2124]
 
-* Exact-text filtering for metadata plugin [#2147].
+- Exact-text filtering for metadata plugin. [#2147]
 
 Cubeviz
 ^^^^^^^
 
-* get_data now supports ``function=True`` to adopt the collapse-function from the spectrum viewer
-  [#2117].
+- ``get_data`` now supports ``function=True`` to adopt the collapse-function from the spectrum viewer.
+  [#2117]
 
 Imviz
 ^^^^^
