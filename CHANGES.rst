@@ -8,6 +8,8 @@ New Features
 
 * Auto-identify a configuration/helper for a given data file [#2124]
 
+* Exact-text filtering for metadata plugin [#2147].
+
 Cubeviz
 ^^^^^^^
 

@@ -25,13 +25,23 @@
 
     <j-plugin-section-header>Metadata</j-plugin-section-header>
     <div v-if="has_metadata">
+      <v-row>
+        <v-text-field
+          v-model='metadata_filter'
+          append-icon='mdi-magnify'
+          style="padding: 0px 8px"
+          clearable
+          hide-details
+        ></v-text-field>
+      </v-row>
+  
       <v-row no-gutters>
         <v-col cols=6><U><B>Key</B></U></v-col>
         <v-col cols=6><U>Value</U></v-col>
         <v-col v-if="has_comments" cols=6 class="text--secondary"><U>Comment</U></v-col>
       </v-row>
       <v-row
-        v-for="item in metadata"
+        v-for="item in metadata.filter((item) => {return metadata_filter === null || item.join().toLowerCase().indexOf(metadata_filter.toLowerCase()) !== -1})"
         :key="item[0]"
         no-gutters>
         <v-col cols=6><B>{{ item[0] }}</B></v-col>

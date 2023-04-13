@@ -1,4 +1,4 @@
-from traitlets import Bool, List, observe
+from traitlets import Any, Bool, List, observe
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin
@@ -34,6 +34,7 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
     show_primary = Bool(False).tag(sync=True)
     has_comments = Bool(False).tag(sync=True)
     metadata = List([]).tag(sync=True)
+    metadata_filter = Any().tag(sync=True)  # string or None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
