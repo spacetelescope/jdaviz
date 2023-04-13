@@ -171,7 +171,8 @@ class Slice(PluginTemplateMixin):
             return
         prev_unit = self.wavelength_unit
         self.wavelength_unit = msg.unit.to_string()
-        if self._x_all is None or prev_unit == '':
+        # original unit during init can be blank or deg (before axis is set correctly)
+        if self._x_all is None or prev_unit in ['deg', '']:
             return
         self._update_data((self._x_all * u.Unit(prev_unit)).to(msg.unit, u.spectral()))
 
