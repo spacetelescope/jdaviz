@@ -529,8 +529,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     def _compute_redshift_for_selected_line(self):
         index = self.line_items.index(self.selected_line)
         line_mark = self.line_marks[index]
-        rest_value = (line_mark.rest_value * line_mark._x_unit).to_value(u.AA,
-                                                                         equivalencies=u.spectral())
+        rest_value = (line_mark.rest_value * line_mark.xunit).to_value(u.AA,
+                                                                       equivalencies=u.spectral())
         return (self.results_centroid - rest_value) / rest_value
 
     @observe('sync_identify')
