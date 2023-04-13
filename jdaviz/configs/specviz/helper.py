@@ -135,8 +135,8 @@ class Specviz(ConfigHelper, LineListMixin):
 
         Parameters
         ----------
-        use_display_units: bool, optional
-            Whether to convert to the display units defined in the <unit-conversion> plugin.
+        use_display_units : bool, optional
+            Whether to convert to the display units defined in the Unit Conversion plugin.
 
         Returns
         -------

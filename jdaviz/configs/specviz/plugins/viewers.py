@@ -492,7 +492,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         # Set axes labels for the spectrum viewer
         flux_unit_type = "Flux density"
         x_disp_unit = self.state.x_display_unit
-        x_unit = u.Unit(x_disp_unit) if x_disp_unit is not None else u.dimensionless_unscaled
+        x_unit = u.Unit(x_disp_unit) if x_disp_unit else u.dimensionless_unscaled
         if x_unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
         elif x_unit.is_equivalent(u.Hz):
