@@ -361,8 +361,10 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         result = super().add_data(data, color, alpha, **layer_state)
 
         if reset_plot_axes:
-            self.state.x_display_unit = data.get_component(self.state.x_att.label).units
-            self.state.y_display_unit = data.get_component("flux").units
+            x_units = data.get_component(self.state.x_att.label).units
+            y_units = data.get_component("flux").units
+            self.state.x_display_unit = x_units if len(x_units) else None
+            self.state.y_display_unit = y_units if len(y_units) else None
             self.set_plot_axes()
 
         self._plot_uncertainties()
@@ -489,7 +491,8 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
     def set_plot_axes(self):
         # Set axes labels for the spectrum viewer
         flux_unit_type = "Flux density"
-        x_unit = u.Unit(self.state.x_display_unit)
+        x_disp_unit = self.state.x_display_unit
+        x_unit = u.Unit(x_disp_unit) if x_disp_unit is not None else u.dimensionless_unscaled
         if x_unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
         elif x_unit.is_equivalent(u.Hz):
