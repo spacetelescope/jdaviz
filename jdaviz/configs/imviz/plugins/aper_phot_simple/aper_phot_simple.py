@@ -25,6 +25,10 @@ from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
 
+# TODO: This plugin needs to show params wrt ref data because that is how glue
+#       defined it, but then it needs to do internal calculation using region
+#       that took account of the dither.
+
 
 @tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
 class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin, PlotMixin):

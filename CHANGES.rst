@@ -52,6 +52,10 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fixed inaccurate results when aperture photometry is performed on non-reference data
+  that are of a different pixel scale or are rotated w.r.t. the reference data when
+  linked by WCS. [#2154]
+
 Mosviz
 ^^^^^^
 

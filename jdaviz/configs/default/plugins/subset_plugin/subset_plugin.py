@@ -370,7 +370,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             data = self.dataset.selected_dc_item
             comp = data.get_component(data.main_components[0])
             comp_data = comp.data
-            phot_aperstats = ApertureStats(comp_data, aperture)
+            phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords)
 
             # Centroid was calculated in selected data, which might or might not be
             # the reference data. However, Subset is always defined w.r.t.

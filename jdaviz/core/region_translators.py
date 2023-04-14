@@ -32,7 +32,7 @@ def _get_region_from_spatial_subset(plugin_obj, subset_label):
         The plugin is assumed to have a special setup that gives
         it access to these attributes: ``app`` and ``dataset_selected``.
         The ``app._jdaviz_helper.default_viewer`` attribute must also
-        exist and point to an image viewer that has a ``_get_real_xy``
+        exist and point to an image viewer that has a ``get_link_type``
         method.
 
     subset_label : str
@@ -41,7 +41,8 @@ def _get_region_from_spatial_subset(plugin_obj, subset_label):
     Returns
     -------
     reg : `regions.Region`
-        An equivalent ``regions`` shape.
+        An equivalent ``regions`` shape. This can be a pixel or sky
+        region, so the plugin needs to be able to deal with both.
 
     Raises
     ------
@@ -59,18 +60,19 @@ def _get_region_from_spatial_subset(plugin_obj, subset_label):
                 if sbst.data.label == plugin_obj.dataset_selected:
                     reg = sbst.data.get_selection_definition(
                         subset_id=subset_label, format='astropy-regions')
-                    # Works around https://github.com/glue-viz/glue-astronomy/issues/52
-                    # Assume it is always pixel region, not sky region. Even with multiple
-                    # viewers, they all seem to share the same reference image even when it is
-                    # not loaded in all the viewers, so use default viewer.
-                    viewer = plugin_obj.app._jdaviz_helper.default_viewer
 
-                    x, y, _, _ = viewer._get_real_xy(
-                        plugin_obj.app.data_collection[plugin_obj.dataset_selected],
-                        reg.center.x, reg.center.y)
-                    reg.center.x = x
-                    reg.center.y = y
-                    return reg
+                    # Works around https://github.com/glue-viz/glue-astronomy/issues/52
+                    # Even with multiple viewers, they all seem to share the same
+                    # reference image even when it is not loaded in all the viewers,
+                    # so use default viewer.
+                    viewer = plugin_obj.app._jdaviz_helper.default_viewer
+                    link_type = viewer.get_link_type(plugin_obj.dataset_selected)
+
+                    if link_type == 'wcs':
+                        return reg.to_sky(
+                            plugin_obj.app.data_collection[plugin_obj.dataset_selected].coords)
+                    else:  # pixels or self
+                        return reg
     else:
         raise ValueError(f'Subset "{subset_label}" not found')
 

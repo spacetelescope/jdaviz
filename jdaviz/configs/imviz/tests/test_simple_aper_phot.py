@@ -1,11 +1,13 @@
 import pytest
 import numpy as np
 from astropy import units as u
+from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose, assert_array_equal
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
-from regions import CircleAnnulusPixelRegion, PixCoord
+from regions import CircleAnnulusPixelRegion, CirclePixelRegion, RectanglePixelRegion, PixCoord
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
@@ -182,6 +184,59 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1  # Old table discarded due to incompatible column
         assert_array_equal(tbl['sky_center'], None)
+
+
+class TestAdvancedAperPhot:
+    @pytest.fixture(autouse=True)
+    def setup_class(self, imviz_helper):
+        # Reference image
+        fn_1 = get_pkg_data_filename('data/gauss100_fits_wcs.fits')
+        imviz_helper.load_data(fn_1)
+        # Different pixel scale
+        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
+        # Different pixel scale + rotated
+        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
+
+        # Reference image again but without any WCS
+        data = fits.getdata(fn_1, ext=0)
+        imviz_helper.load_data(data, data_label='no_wcs')
+
+        # Link them by WCS
+        imviz_helper.link_data(link_type='wcs')
+
+        # Regions to be used for aperture photometry
+        regions = []
+        positions = [(145.1, 168.3), (84.7, 224.1), (48.3, 200.3)]
+        for x, y in positions:
+            regions.append(CirclePixelRegion(center=PixCoord(x=x, y=y), radius=5))
+        regions.append(RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=5))
+        imviz_helper.load_regions(regions)
+
+        self.imviz = imviz_helper
+        self.viewer = imviz_helper.default_viewer
+        self.phot_plugin = imviz_helper.plugins["Imviz Simple Aperture Photometry"]._obj
+
+        # Data has a mean background of 5.
+        self.phot_plugin.bg_subset_selected = 'Manual'
+        self.phot_plugin.background_value = 5.0
+
+    @pytest.mark.parametrize('data_label', [
+        'gauss100_fits_wcs[PRIMARY,1]',
+        'gauss100_fits_wcs_block_reduced[PRIMARY,1]',
+        'gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]',
+        'no_wcs'])
+    @pytest.mark.parametrize(('subset_label', 'expected_sum'), [
+        ('Subset 1', 738.8803424408962),
+        ('Subset 2', 348.33262363800094),
+        ('Subset 3', 857.5194857987592),
+        ('Subset 4', 762.3263959884644)])
+    def test_aperphot(self, data_label, subset_label, expected_sum):
+        """All data should give similar result for the same Subset."""
+        self.phot_plugin.dataset_selected = data_label
+        self.phot_plugin.subset_selected = subset_label
+        self.phot_plugin.vue_do_aper_phot()
+        tbl = self.imviz.get_aperture_photometry_results()
+        assert_allclose(tbl['sum'][-1], expected_sum)
 
 
 def test_annulus_background(imviz_helper):
