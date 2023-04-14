@@ -74,6 +74,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- drop support for Python 3.8 [#2152]
+
 3.4.1 (unreleased)
 ==================
 
