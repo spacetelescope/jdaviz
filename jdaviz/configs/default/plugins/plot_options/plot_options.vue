@@ -186,6 +186,13 @@
       <glue-float-field label="Stretch VMax" :value.sync="stretch_vmax_value" />
     </glue-state-sync-wrapper>
 
+    <v-row v-if="config==='imviz' && stretch_function_sync.in_subscribed_states">
+      <!-- NOTE: the internal bqplot widget defaults to 480 pixels, so if choosing something else,
+           we will likely need to override that with custom CSS rules in order to avoid the initial
+           rendering of the plot from overlapping with content below -->
+      <jupyter-widget :widget="stretch_histogram" style="width: 100%; height: 480px" />
+    </v-row>
+
     <!-- IMAGE:IMAGE -->
     <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
     <glue-state-sync-wrapper :sync="image_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_visible')">

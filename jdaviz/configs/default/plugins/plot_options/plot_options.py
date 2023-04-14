@@ -1,5 +1,8 @@
 import os
 
+import bqplot
+from astropy.visualization import PercentileInterval
+from ipywidgets import widget_serialization
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
@@ -12,6 +15,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
                                         PlotOptionsSyncState)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.utils import bqplot_clear_figure
 
 __all__ = ['PlotOptions']
 
@@ -132,6 +136,8 @@ class PlotOptions(PluginTemplateMixin):
     stretch_vmax_value = Float().tag(sync=True)
     stretch_vmax_sync = Dict().tag(sync=True)
 
+    stretch_histogram = Any().tag(sync=True, **widget_serialization)
+
     subset_visible_value = Bool().tag(sync=True)
     subset_visible_sync = Dict().tag(sync=True)
 
@@ -251,6 +257,7 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
+        self._stretch_histogram_fig = bqplot.Figure(padding_y=0)
 
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'subset_visible_value', 'subset_visible_sync',
@@ -358,3 +365,65 @@ class PlotOptions(PluginTemplateMixin):
         attr_name = data.get('name')
         value = data.get('value')
         setattr(self, attr_name, value)
+
+    @observe('plugin_opened', 'layer_selected', 'viewer_selected',
+             'stretch_preset_value', 'stretch_vmin_value', 'stretch_vmax_value')
+    def _update_stretch_histogram(self, *args):
+        if self.config != 'imviz':
+            return
+        if not hasattr(self, 'viewer'):
+            return
+        if not self.plugin_opened or not self.viewer.selected or not self.layer.selected:
+            return
+
+        if self.multiselect and (len(self.viewer.selected) > 1 or len(self.layer.selected) > 1):
+            # TODO: add support for multi-layer/viewer
+            bqplot_clear_figure(self._stretch_histogram_fig)
+            return
+
+        viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
+        data = self.layer.selected_obj[0][0].layer if self.multiselect else self.layer.selected_obj[0].layer  # noqa
+        comp = data.get_component(data.main_components[0])
+
+        # Viewer limits. This takes account of Imviz linking.
+        xy_limits = viewer._get_zoom_limits(data).astype(int)
+        x_limits = xy_limits[:, 0]
+        y_limits = xy_limits[:, 1]
+        x_min = x_limits.min()
+        x_max = x_limits.max()
+        y_min = y_limits.min()
+        y_max = y_limits.max()
+
+        # TODO: This only works with Imviz currently. Need to generalize.
+        # TODO: If there is performance issues, can try downsample like Compass.
+        sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
+        interval = PercentileInterval(95)
+        hist_lims = interval.get_limits(sub_data)
+
+        bqplot_clear_figure(self._stretch_histogram_fig)
+
+        hist_x_sc = bqplot.LinearScale()
+        hist_y_sc = bqplot.LinearScale()
+
+        # TODO: Let user change the number of bins?
+        hist_plot = bqplot.Hist(sample=sub_data, bins=50, colors="gray",
+                                scales={"sample": hist_x_sc, "count": hist_y_sc})
+        hist_plot.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+
+        # TODO: Let user change X-axis limits.
+        hist_plot.scales['sample'].min = hist_lims[0]
+        hist_plot.scales['sample'].max = hist_lims[1]
+
+        self._stretch_histogram_fig.marks = [hist_plot]
+        self._stretch_histogram_fig.axes = [bqplot.Axis(scale=hist_x_sc,
+                                                        tick_format='0.1e',
+                                                        label='Value'),
+                                            bqplot.Axis(scale=hist_y_sc,
+                                                        orientation='vertical',
+                                                        label='N')]
+
+        # TODO: Draw viewer cut levels as vertical lines?
+        #       If we do this, we need to redraw when Plot Option changes?
+
+        self.stretch_histogram = self._stretch_histogram_fig
+        self.bqplot_figs_resize = [self._stretch_histogram_fig]
