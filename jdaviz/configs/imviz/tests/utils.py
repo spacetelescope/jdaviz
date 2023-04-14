@@ -240,12 +240,10 @@ def create_example_gwcs(shape):
 
 def create_wfi_image_model(image_shape, **kwargs):
     """
-    Create a dummy Roman WFI Image datamodel instance with valid values
+    Create a dummy Roman WFI ImageModel instance with valid values
     for attributes required by the schema.
 
     Requires roman_datamodels >= 0.14.2
-
-    Adapted from:https://github.com/spacetelescope/roman_datamodels/blob/932afed416e02bf0e684973f03548eeefe973b9e/src/roman_datamodels/testing/factories.py#L1224
 
     Parameters
     ----------
@@ -260,52 +258,12 @@ def create_wfi_image_model(image_shape, **kwargs):
     data_model : `roman_datamodels.datamodel.ImageModel`
 
     """  # noqa: E501
-    from roman_datamodels import datamodels as rdd, stnode
-    from roman_datamodels.random_utils import (
-        generate_array_float32, generate_array_uint32, generate_array_uint16
-    )
-    from roman_datamodels.testing.factories import (
-        create_meta, create_cal_logs, create_photometry
-    )
-    count_rate_lims = dict(min=0, max=1e4)
-    raw = {
-        "data": generate_array_float32(
-            image_shape, units=u.electron / u.s, **count_rate_lims
-        ),
-        "dq": generate_array_uint32(image_shape),
-        "err": generate_array_float32(
-            image_shape, units=u.electron / u.s, **count_rate_lims
-        ),
-        "meta": create_meta(),
-        "var_flat": generate_array_float32(
-            image_shape, units=u.electron**2 / u.s**2, **count_rate_lims
-        ),
-        "var_poisson": generate_array_float32(
-            image_shape, units=u.electron**2 / u.s**2, **count_rate_lims
-        ),
-        "var_rnoise": generate_array_float32(
-            image_shape, units=u.electron**2 / u.s**2, **count_rate_lims
-        ),
-        "amp33": generate_array_uint16((2, image_shape[0] + 8, 128), units=u.DN),
-        "border_ref_pix_right": generate_array_float32(
-            (2, image_shape[0] + 8, 4), units=u.DN, **count_rate_lims
-        ),
-        "border_ref_pix_left": generate_array_float32(
-            (2, image_shape[0] + 8, 4), units=u.DN, **count_rate_lims
-        ),
-        "border_ref_pix_top": generate_array_float32(
-            (2, 4, image_shape[1] + 8), units=u.DN, **count_rate_lims
-        ),
-        "border_ref_pix_bottom": generate_array_float32(
-            (2, 4, image_shape[1] + 8), units=u.DN, **count_rate_lims
-        ),
-        "dq_border_ref_pix_right": generate_array_uint32((image_shape[0] + 8, 4)),
-        "dq_border_ref_pix_left": generate_array_uint32((image_shape[0] + 8, 4)),
-        "dq_border_ref_pix_top": generate_array_uint32((4, image_shape[1] + 8)),
-        "dq_border_ref_pix_bottom": generate_array_uint32((4, image_shape[1] + 8)),
-        "cal_logs": create_cal_logs(),
-    }
-    raw.update(kwargs)
-    raw["meta"]["photometry"] = create_photometry()
-    raw["meta"]["wcs"] = create_example_gwcs(image_shape)
-    return rdd.ImageModel(stnode.WfiImage(raw))
+    from roman_datamodels import datamodels as rdd
+    from roman_datamodels.maker_utils import mk_level2_image
+
+    wfi_image = mk_level2_image(shape=image_shape, **kwargs)
+
+    # introduce synthetic gwcs:
+    wfi_image["meta"]["wcs"] = create_example_gwcs(image_shape)
+
+    return rdd.ImageModel(wfi_image)
