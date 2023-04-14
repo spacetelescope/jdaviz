@@ -30,18 +30,19 @@ import sys
 import datetime
 import importlib.metadata as importlib_metadata
 
+if sys.version_info < (3, 11):
+    import tomli as tomllib
+else:
+    import tomllib
+
 try:
     from sphinx_astropy.conf.v1 import *  # noqa
 except ImportError:
     print('ERROR: the documentation requires the sphinx-astropy package to be installed')
     sys.exit(1)
 
-# Get configuration information from setup.cfg
-from configparser import ConfigParser
-conf = ConfigParser()
-
-conf.read(os.path.join(os.pardir, 'setup.cfg'))
-setup_cfg = conf['metadata']
+with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as configuration_file:
+    metadata = tomllib.load(configuration_file)
 
 # -- General configuration ----------------------------------------------------
 
@@ -136,8 +137,8 @@ rst_epilog += """
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = setup_cfg['name']
-author = setup_cfg['author']
+project = metadata['project']['name']
+author = metadata['project']['authors'][0]['name']
 copyright = '{0}, {1}'.format(
     datetime.datetime.now().year, author)
 
@@ -219,18 +220,18 @@ man_pages = [('index', project.lower(), project + u' Documentation',
 
 # -- Options for the edit_on_github extension ---------------------------------
 
-if setup_cfg.get('edit_on_github').lower() == 'true':
+if metadata['tool']['sphinx']['edit_on_github']:
 
     extensions += ['sphinx_astropy.ext.edit_on_github']
 
-    edit_on_github_project = setup_cfg['github_project']
+    edit_on_github_project = metadata['tool']['sphinx']['github_project']
     edit_on_github_branch = "main"
 
     edit_on_github_source_root = ""
     edit_on_github_doc_root = "docs"
 
 # -- Resolving issue number to links in changelog -----------------------------
-github_issues_url = 'https://github.com/{0}/issues/'.format(setup_cfg['github_project'])
+github_issues_url = 'https://github.com/{0}/issues/'.format(metadata['tool']['sphinx']['github_project'])
 
 # -- Turn on nitpicky mode for sphinx (to warn about references not found) ----
 nitpicky = True
