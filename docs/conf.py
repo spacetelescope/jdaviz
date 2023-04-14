@@ -268,6 +268,7 @@ intersphinx_mapping['specutils'] = ('https://specutils.readthedocs.io/en/stable/
 intersphinx_mapping['specreduce'] = ('https://specreduce.readthedocs.io/en/stable/', None)
 intersphinx_mapping['photutils'] = ('https://photutils.readthedocs.io/en/stable/', None)
 intersphinx_mapping['traitlets'] = ('https://traitlets.readthedocs.io/en/stable/', None)
+intersphinx_mapping['roman_datamodels'] = ('https://roman-datamodels.readthedocs.io/en/stable/', None)
 
 # Options for linkcheck
 linkcheck_ignore = ['https://github.com/spacetelescope/jdaviz/settings/branches']

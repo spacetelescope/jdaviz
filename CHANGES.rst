@@ -23,6 +23,10 @@ Imviz
 
 - New canvas rotation plugin to rotate displayed image without affecting actual data. [#1983]
 
+- Preliminary support for Roman ASDF data products. This requires
+  ``roman-datamodels`` to be installed separately by the user. [#1822]
+
+
 Mosviz
 ^^^^^^
 

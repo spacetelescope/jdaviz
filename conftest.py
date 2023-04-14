@@ -33,5 +33,6 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
     PYTEST_HEADER_MODULES['asdf'] = 'asdf'
     PYTEST_HEADER_MODULES['stdatamodels'] = 'stdatamodels'
+    PYTEST_HEADER_MODULES['roman_datamodels'] = 'roman_datamodels'
 
     TESTED_VERSIONS['jdaviz'] = __version__

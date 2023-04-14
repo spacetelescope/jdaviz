@@ -7,7 +7,7 @@ from astropy.io import fits
 from astropy.modeling import models
 from astropy.nddata import NDData
 from astropy.wcs import WCS
-from gwcs import coordinate_frames as cf
+from gwcs import coordinate_frames as cf, wcs as gwcs_wcs
 
 __all__ = ['BaseImviz_WCS_NoWCS', 'BaseImviz_WCS_WCS', 'BaseImviz_WCS_GWCS', 'BaseImviz_GWCS_GWCS']
 
@@ -201,3 +201,69 @@ class BaseImviz_GWCS_GWCS:
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)
         self.viewer.state._set_axes_aspect_ratio(1)
+
+
+# --- This was used to generate data/roman_wfi_image_model.asdf ---
+
+def create_example_gwcs(shape):
+    # Example adapted from photutils:
+    #   https://github.com/astropy/photutils/blob/
+    #   2825356f1d876cacefb3a03d104a4c563065375f/photutils/datasets/make.py#L821
+    rho = np.pi / 3.0
+    # Roman plate scale:
+    scale = (0.11 * (u.arcsec / u.pixel)).to_value(u.deg / u.pixel)
+
+    shift_by_crpix = (models.Shift((-shape[1] / 2) + 1)
+                      & models.Shift((-shape[0] / 2) + 1))
+
+    cd_matrix = np.array([[-scale * np.cos(rho), scale * np.sin(rho)],
+                          [scale * np.sin(rho), scale * np.cos(rho)]])
+
+    rotation = models.AffineTransformation2D(cd_matrix, translation=[0, 0])
+    rotation.inverse = models.AffineTransformation2D(
+        np.linalg.inv(cd_matrix), translation=[0, 0])
+
+    tan = models.Pix2Sky_TAN()
+    celestial_rotation = models.RotateNative2Celestial(197.8925, -1.36555556, 180.0)
+
+    det2sky = shift_by_crpix | rotation | tan | celestial_rotation
+    det2sky.name = 'linear_transform'
+
+    detector_frame = cf.Frame2D(name='detector', axes_names=('x', 'y'), unit=(u.pix, u.pix))
+
+    sky_frame = cf.CelestialFrame(reference_frame=ICRS(), name='icrs', unit=(u.deg, u.deg))
+
+    pipeline = [(detector_frame, det2sky), (sky_frame, None)]
+
+    return gwcs_wcs.WCS(pipeline)
+
+
+def create_wfi_image_model(image_shape, **kwargs):
+    """
+    Create a dummy Roman WFI ImageModel instance with valid values
+    for attributes required by the schema.
+
+    Requires roman_datamodels >= 0.14.2
+
+    Parameters
+    ----------
+    image_shape : tuple
+        Shape of the synthetic image to produce.
+
+    **kwargs
+        Additional or overridden attributes.
+
+    Returns
+    -------
+    data_model : `roman_datamodels.datamodel.ImageModel`
+
+    """  # noqa: E501
+    from roman_datamodels import datamodels as rdd
+    from roman_datamodels.maker_utils import mk_level2_image
+
+    wfi_image = mk_level2_image(shape=image_shape, **kwargs)
+
+    # introduce synthetic gwcs:
+    wfi_image["meta"]["wcs"] = create_example_gwcs(image_shape)
+
+    return rdd.ImageModel(wfi_image)

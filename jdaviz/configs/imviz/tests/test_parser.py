@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
-from astropy.utils.data import download_file
+from astropy.utils.data import download_file, get_pkg_data_filename
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
@@ -14,7 +14,7 @@ from stdatamodels import asdf_in_fits
 
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
-    parse_data, _validate_fits_image2d, _validate_bunit, _parse_image)
+    parse_data, _validate_fits_image2d, _validate_bunit, _parse_image, HAS_ROMAN_DATAMODELS)
 
 
 @pytest.mark.parametrize(
@@ -503,3 +503,14 @@ def test_load_valid_not_valid(imviz_helper):
     assert (len(imviz_helper.app.data_collection) == 1
             and imviz_helper.app.data_collection.labels == ['valid'])
     assert_allclose(imviz_helper.app.data_collection[0].get_component('DATA').data, 1)
+
+
+@pytest.mark.skipif(HAS_ROMAN_DATAMODELS, reason="roman_datamodels is installed")
+def test_roman_no_roman(imviz_helper):
+    from asdf.exceptions import AsdfConversionWarning
+
+    filename = get_pkg_data_filename('data/roman_wfi_image_model.asdf')
+    with pytest.warns(AsdfConversionWarning, match=r".*not recognized"), \
+         pytest.raises(ImportError,
+                       match="Roman ASDF detected but roman-datamodels is not installed"):
+        imviz_helper.load_data(filename)
