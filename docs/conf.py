@@ -220,18 +220,18 @@ man_pages = [('index', project.lower(), project + u' Documentation',
 
 # -- Options for the edit_on_github extension ---------------------------------
 
-if metadata['tool']['sphinx']['edit_on_github']:
+if metadata['tool']['build_sphinx']['edit_on_github']:
 
     extensions += ['sphinx_astropy.ext.edit_on_github']
 
-    edit_on_github_project = metadata['tool']['sphinx']['github_project']
+    edit_on_github_project = metadata['tool']['build_sphinx']['github_project']
     edit_on_github_branch = "main"
 
     edit_on_github_source_root = ""
     edit_on_github_doc_root = "docs"
 
 # -- Resolving issue number to links in changelog -----------------------------
-github_issues_url = 'https://github.com/{0}/issues/'.format(metadata['tool']['sphinx']['github_project'])
+github_issues_url = 'https://github.com/{0}/issues/'.format(metadata['tool']['build_sphinx']['github_project'])
 
 # -- Turn on nitpicky mode for sphinx (to warn about references not found) ----
 nitpicky = True

@@ -170,6 +170,6 @@ exclude_lines = [
     "def _ipython_key_completions_",
 ]
 
-[tool.sphinx]
+[tool.build_sphinx]
 edit-on-github = true
 github_project = "spacetelescope/jdaviz"
