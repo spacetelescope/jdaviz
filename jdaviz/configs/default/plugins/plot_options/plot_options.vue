@@ -187,6 +187,11 @@
     </glue-state-sync-wrapper>
 
     <v-row v-if="config==='imviz' && stretch_function_sync.in_subscribed_states">
+      <v-switch
+        v-model="stretch_hist_zoom_limits"
+        class="hide-input"
+        label="Limit histogram to current zoom limits"
+      ></v-switch>
       <!-- NOTE: the internal bqplot widget defaults to 480 pixels, so if choosing something else,
            we will likely need to override that with custom CSS rules in order to avoid the initial
            rendering of the plot from overlapping with content below -->

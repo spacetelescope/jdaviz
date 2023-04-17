@@ -64,6 +64,8 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Specviz
     * ``stretch_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
+    * ``stretch_hist_zoom_limits`` : whether to show the histogram for the current zoom
+      limits instead of all data within the layer.  Only exposed for Imviz.
     * ``image_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       whether the image bitmap is visible; not exposed for Specviz.
     * ``image_color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -136,6 +138,7 @@ class PlotOptions(PluginTemplateMixin):
     stretch_vmax_value = Float().tag(sync=True)
     stretch_vmax_sync = Dict().tag(sync=True)
 
+    stretch_hist_zoom_limits = Bool().tag(sync=True)
     stretch_histogram = Any().tag(sync=True, **widget_serialization)
 
     subset_visible_value = Bool().tag(sync=True)
@@ -320,7 +323,7 @@ class PlotOptions(PluginTemplateMixin):
             expose += ['collapse_function']
         if self.config != "imviz":
             expose += ['axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
-                       'line_as_steps', 'uncertainty_visible']
+                       'line_as_steps', 'uncertainty_visible', 'stretch_hist_zoom_limits']
         if self.config != "specviz":
             expose += ['subset_color',
                        'stretch_function', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
@@ -367,7 +370,7 @@ class PlotOptions(PluginTemplateMixin):
         setattr(self, attr_name, value)
 
     @observe('plugin_opened', 'layer_selected', 'viewer_selected',
-             'stretch_preset_value', 'stretch_vmin_value', 'stretch_vmax_value')
+             'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, *args):
         if self.config != 'imviz':
             return
@@ -385,18 +388,22 @@ class PlotOptions(PluginTemplateMixin):
         data = self.layer.selected_obj[0][0].layer if self.multiselect else self.layer.selected_obj[0].layer  # noqa
         comp = data.get_component(data.main_components[0])
 
-        # Viewer limits. This takes account of Imviz linking.
-        xy_limits = viewer._get_zoom_limits(data).astype(int)
-        x_limits = xy_limits[:, 0]
-        y_limits = xy_limits[:, 1]
-        x_min = x_limits.min()
-        x_max = x_limits.max()
-        y_min = y_limits.min()
-        y_max = y_limits.max()
+        if self.stretch_hist_zoom_limits:
+            # Viewer limits. This takes account of Imviz linking.
+            xy_limits = viewer._get_zoom_limits(data).astype(int)
+            x_limits = xy_limits[:, 0]
+            y_limits = xy_limits[:, 1]
+            x_min = x_limits.min()
+            x_max = x_limits.max()
+            y_min = y_limits.min()
+            y_max = y_limits.max()
 
-        # TODO: This only works with Imviz currently. Need to generalize.
-        # TODO: If there is performance issues, can try downsample like Compass.
-        sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
+            # TODO: This only works with Imviz currently. Need to generalize.
+            # TODO: If there is performance issues, can try downsample like Compass.
+            sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
+        else:
+            sub_data = comp.data.ravel()
+
         interval = PercentileInterval(95)
         hist_lims = interval.get_limits(sub_data)
 
