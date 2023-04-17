@@ -108,7 +108,7 @@ def test_visibility_toggle(imviz_helper):
 )
 def test_auto_config_detection(uri, expected_helper):
     url = f'https://mast.stsci.edu/api/v0.1/Download/file/?uri={uri}'
-    fn = download_file(url, cache=True)
+    fn = download_file(url, cache=True, timeout=100)
     helper_name = identify_helper(fn)
     assert helper_name == expected_helper
 
@@ -120,6 +120,6 @@ def test_auto_config_manga():
     # originally from
     # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz
     URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits'
-    fn = download_file(URL, cache=True)
+    fn = download_file(URL, cache=True, timeout=100)
     helper_name = identify_helper(fn)
     assert helper_name == 'cubeviz'
