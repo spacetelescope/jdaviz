@@ -68,7 +68,13 @@ class PluginMark():
         self.auto_update_units = True
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
-        self._update_units()
+
+        if not self.auto_update_units:
+            return
+        if self.xunit is None:
+            self.set_x_unit()
+        if self.yunit is None:
+            self.set_y_unit()
 
     @property
     def hub(self):
@@ -81,14 +87,6 @@ class PluginMark():
     def append_xy(self, x, y):
         self.x = np.append(self.x, x)
         self.y = np.append(self.y, y)
-
-    def _update_units(self):
-        if not self.auto_update_units:
-            return
-        if self.xunit is None:
-            self.set_x_unit()
-        if self.yunit is None:
-            self.set_y_unit()
 
     def set_x_unit(self, unit=None):
         if unit is None:
