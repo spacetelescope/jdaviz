@@ -83,6 +83,9 @@ class UnitConversion(PluginTemplateMixin):
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:
             return
+        if x_unit == 'deg' and self.app.config == 'cubeviz':
+            # original unit during init can be deg (before axis is set correctly)
+            return
         self.spectrum_viewer.set_plot_axes()
         if x_unit != self.spectral_unit.selected:
             x_unit = _valid_glue_display_unit(x_unit, self.spectrum_viewer, 'x')

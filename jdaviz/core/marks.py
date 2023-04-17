@@ -59,11 +59,75 @@ class OffscreenLinesMarks(HubListener):
         self.right.text = [f'{oob_right} \u25b6' if oob_right > 0 else '']
 
 
-class BaseSpectrumVerticalLine(Lines, HubListener):
+class PluginMark():
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.xunit = None
+        self.yunit = None
+        # whether to update existing marks when global display units are changed
+        self.auto_update_units = True
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed)
+
+        if self.xunit is None:
+            self.set_x_unit()
+        if self.yunit is None:
+            self.set_y_unit()
+
+    @property
+    def hub(self):
+        return self.viewer.hub
+
+    def update_xy(self, x, y):
+        self.x = np.asarray(x)
+        self.y = np.asarray(y)
+
+    def append_xy(self, x, y):
+        self.x = np.append(self.x, x)
+        self.y = np.append(self.y, y)
+
+    def set_x_unit(self, unit=None):
+        if unit is None:
+            if not hasattr(self.viewer.state, 'x_display_unit'):
+                return
+            unit = self.viewer.state.x_display_unit
+        unit = u.Unit(unit)
+        if self.xunit is not None:
+            x = (self.x * self.xunit).to_value(unit, u.spectral())
+            self.xunit = unit
+            self.x = x
+        self.xunit = unit
+
+    def set_y_unit(self, unit=None):
+        if unit is None:
+            if not hasattr(self.viewer.state, 'y_display_unit'):
+                return
+            unit = self.viewer.state.y_display_unit
+        unit = u.Unit(unit)
+        if self.yunit is not None:
+            self.y = (self.y * self.yunit).to_value(unit)
+        self.yunit = unit
+
+    def _on_global_display_unit_changed(self, msg):
+        if not self.auto_update_units:
+            return
+        if self.viewer.__class__.__name__ in ['SpecvizProfileView', 'CubevizProfileView']:
+            axis_map = {'spectral': 'x', 'flux': 'y'}
+        elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
+            axis_map = {'spectral': 'x'}
+        else:
+            return
+        axis = axis_map.get(msg.axis, None)
+        if axis is not None:
+            getattr(self, f'set_{axis}_unit')(msg.unit)
+
+    def clear(self):
+        self.update_xy([], [])
+
+
+class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
     def __init__(self, viewer, x, **kwargs):
-        # we'll store the current units so that we can automatically update the
-        # positioning on a change to the x-units
-        self._x_unit = viewer.state.reference_data.get_object(cls=Spectrum1D).spectral_axis.unit
+        self.viewer = viewer
 
         # the location of the marker will need to update automatically if the
         # underlying data changes (through a unit conversion, for example)
@@ -84,14 +148,14 @@ class BaseSpectrumVerticalLine(Lines, HubListener):
 
     def _update_data(self, x_all):
         # the x-units may have changed.  We want to convert the internal self.x
-        # from self._x_unit to the new units (x_all.unit)
+        # from self.xunit to the new units (x_all.unit)
         new_unit = x_all.unit
-        if new_unit == self._x_unit:
+        if new_unit == self.xunit:
             return
-        old_quant = self.x[0]*self._x_unit
+        old_quant = self.x[0]*self.xunit
         x = old_quant.to_value(x_all.unit, equivalencies=u.spectral())
         self.x = [x, x]
-        self._x_unit = new_unit
+        self.xunit = new_unit
 
 
 class SpectralLine(BaseSpectrumVerticalLine):
@@ -111,7 +175,7 @@ class SpectralLine(BaseSpectrumVerticalLine):
         # setting redshift will set self.x and enable the obs_value property,
         # but to do that we need x_unit set first (would normally be assigned
         # in the super init)
-        self._x_unit = viewer.state.reference_data.get_object(cls=Spectrum1D).spectral_axis.unit
+        self.xunit = u.Unit(viewer.state.x_display_unit)
         self.redshift = redshift
 
         viewer.session.hub.subscribe(self, LineIdentifyMessage,
@@ -132,6 +196,11 @@ class SpectralLine(BaseSpectrumVerticalLine):
     def obs_value(self):
         return self.x[0]
 
+    def set_x_unit(self, unit=None):
+        prev_unit = self.xunit
+        super().set_x_unit(unit=unit)
+        self._rest_value = (self._rest_value * prev_unit).to_value(unit, u.spectral())
+
     @property
     def redshift(self):
         return self._redshift
@@ -139,16 +208,16 @@ class SpectralLine(BaseSpectrumVerticalLine):
     @redshift.setter
     def redshift(self, redshift):
         self._redshift = redshift
-        if str(self._x_unit.physical_type) == 'length':
+        if str(self.xunit.physical_type) == 'length':
             obs_value = self._rest_value*(1+redshift)
-        elif str(self._x_unit.physical_type) == 'frequency':
+        elif str(self.xunit.physical_type) == 'frequency':
             obs_value = self._rest_value/(1+redshift)
         else:
             # catch all for anything else (wavenumber, energy, etc)
-            rest_angstrom = (self._rest_value*self._x_unit).to_value(u.Angstrom,
-                                                                     equivalencies=u.spectral())
+            rest_angstrom = (self._rest_value*self.xunit).to_value(u.Angstrom,
+                                                                   equivalencies=u.spectral())
             obs_angstrom = rest_angstrom*(1+redshift)
-            obs_value = (obs_angstrom*u.Angstrom).to_value(self._x_unit,
+            obs_value = (obs_angstrom*u.Angstrom).to_value(self.xunit,
                                                            equivalencies=u.spectral())
         self.x = [obs_value, obs_value]
 
@@ -169,14 +238,14 @@ class SpectralLine(BaseSpectrumVerticalLine):
 
     def _update_data(self, x_all):
         new_unit = x_all.unit
-        if new_unit == self._x_unit:
+        if new_unit == self.xunit:
             return
 
-        old_quant = self._rest_value*self._x_unit
+        old_quant = self._rest_value*self.xunit
         self._rest_value = old_quant.to_value(new_unit, equivalencies=u.spectral())
         # re-compute self.x from current redshift (instead of converting that as well)
         self.redshift = self._redshift
-        self._x_unit = new_unit
+        self.xunit = new_unit
 
 
 class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
@@ -483,76 +552,6 @@ class ShadowLabelFixedY(Label, ShadowMixin):
             # then the position of the label on the plot has changed, so re-determine whether
             # it should be aligned to the left or right
             self._update_align()
-
-
-class PluginMark():
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.xunit = None
-        self.yunit = None
-        # whether to update existing marks when global display units are changed
-        self.auto_update_units = True
-        self.hub.subscribe(self, GlobalDisplayUnitChanged,
-                           handler=self._on_global_display_unit_changed)
-        self._update_units()
-
-    @property
-    def hub(self):
-        return self.viewer.hub
-
-    def update_xy(self, x, y):
-        self.x = np.asarray(x)
-        self.y = np.asarray(y)
-
-    def append_xy(self, x, y):
-        self.x = np.append(self.x, x)
-        self.y = np.append(self.y, y)
-
-    def _update_units(self):
-        if not self.auto_update_units:
-            return
-        if self.xunit is None:
-            self.set_x_unit()
-        if self.yunit is None:
-            self.set_y_unit()
-
-    def set_x_unit(self, unit=None):
-        if unit is None:
-            if not hasattr(self.viewer.state, 'x_display_unit'):
-                return
-            unit = self.viewer.state.x_display_unit
-        unit = u.Unit(unit)
-        if self.xunit is not None:
-            x = (self.x * self.xunit).to_value(unit, u.spectral())
-            self.xunit = unit
-            self.x = x
-        self.xunit = unit
-
-    def set_y_unit(self, unit=None):
-        if unit is None:
-            if not hasattr(self.viewer.state, 'y_display_unit'):
-                return
-            unit = self.viewer.state.y_display_unit
-        unit = u.Unit(unit)
-        if self.yunit is not None:
-            self.y = (self.y * self.yunit).to_value(unit)
-        self.yunit = unit
-
-    def _on_global_display_unit_changed(self, msg):
-        if not self.auto_update_units:
-            return
-        if self.viewer.__class__.__name__ in ['SpecvizProfileView', 'CubevizProfileView']:
-            axis_map = {'spectral': 'x', 'flux': 'y'}
-        elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
-            axis_map = {'spectral': 'x'}
-        else:
-            return
-        axis = axis_map.get(msg.axis, None)
-        if axis is not None:
-            getattr(self, f'set_{axis}_unit')(msg.unit)
-
-    def clear(self):
-        self.update_xy([], [])
 
 
 class LinesAutoUnit(PluginMark, Lines, HubListener):
