@@ -415,9 +415,10 @@ class PlotOptions(PluginTemplateMixin):
             hist_x_sc = bqplot.LinearScale()
             hist_y_sc = bqplot.LinearScale()
             # TODO: Let user change the number of bins?
-            hist_mark = bqplot.Hist(sample=sub_data, bins=50, colors="gray",
-                                    scales={"sample": hist_x_sc, "count": hist_y_sc})
-            hist_mark.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+            # TODO: Let user set y-scale to log
+            hist_mark = bqplot.Bins(sample=sub_data, bins=50, colors="gray",
+                                    scales={'x': hist_x_sc,
+                                            'y': hist_y_sc})
 
             self.stretch_histogram.marks = [hist_mark]
             self.stretch_histogram.axes = [bqplot.Axis(scale=hist_x_sc,
@@ -435,9 +436,8 @@ class PlotOptions(PluginTemplateMixin):
             hist_mark.sample = sub_data
 
             # TODO: Let user change the number of bins?
+            # TODO: Let user set y-scale to log
 
         interval = PercentileInterval(95)
         hist_lims = interval.get_limits(sub_data)
-
-        hist_mark.scales['sample'].min = hist_lims[0]
-        hist_mark.scales['sample'].max = hist_lims[1]
+        hist_mark.min, hist_mark.max = hist_lims
