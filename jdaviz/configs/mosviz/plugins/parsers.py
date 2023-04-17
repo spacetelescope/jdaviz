@@ -1,6 +1,5 @@
 from collections.abc import Iterable
 import csv
-import glob
 import os
 from pathlib import Path
 import warnings
@@ -699,7 +698,7 @@ def _id_files_by_datamodl(label_dict, filepaths, catalog_key=None):
         if fp.is_dir():
             # Potential names of subdirectories where images are stored
             if fp.name in ("cutouts", "mosviz_cutouts", "images"):
-                images = sorted([file_path for file_path in glob.iglob(str(fp / '*'))])
+                images = sorted(fp.glob('*.fits*'))
                 label_dict['Direct Image'] = images
             else:
                 continue
