@@ -69,8 +69,6 @@ class PluginMark():
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
 
-        if not self.auto_update_units:
-            return
         if self.xunit is None:
             self.set_x_unit()
         if self.yunit is None:
