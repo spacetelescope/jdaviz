@@ -260,7 +260,6 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
-        self._stretch_histogram_fig = bqplot.Figure(padding_y=0)
 
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'subset_visible_value', 'subset_visible_sync',
@@ -373,15 +372,21 @@ class PlotOptions(PluginTemplateMixin):
              'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, *args):
         if self.config != 'imviz':
+            # currently only supported for imviz (adding other configs should also update the
+            # v-if in plot_options.vue as well as stretch_hist_zoom_limits in user_api above)
             return
         if not hasattr(self, 'viewer'):
+            # plugin hasn't been fully initialized yet
             return
         if not self.plugin_opened or not self.viewer.selected or not self.layer.selected:
+            # no need to make updates, updates will be redrawn when plugin is opened
+            # NOTE: this won't update when the plugin is shown but not open in the tray
             return
 
         if self.multiselect and (len(self.viewer.selected) > 1 or len(self.layer.selected) > 1):
+            # currently only support single-layer/viewer.  For now we'll just clear and return.
             # TODO: add support for multi-layer/viewer
-            bqplot_clear_figure(self._stretch_histogram_fig)
+            bqplot_clear_figure(self.stretch_histogram)
             return
 
         viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
@@ -399,38 +404,40 @@ class PlotOptions(PluginTemplateMixin):
             y_max = y_limits.max()
 
             # TODO: This only works with Imviz currently. Need to generalize.
-            # TODO: If there is performance issues, can try downsample like Compass.
             sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
         else:
             sub_data = comp.data.ravel()
 
+        if self.stretch_histogram is None:
+            # first time the figure is requested, need to build from scratch
+            self.stretch_histogram = bqplot.Figure(padding_y=0)
+
+            hist_x_sc = bqplot.LinearScale()
+            hist_y_sc = bqplot.LinearScale()
+            # TODO: Let user change the number of bins?
+            hist_mark = bqplot.Hist(sample=sub_data, bins=50, colors="gray",
+                                    scales={"sample": hist_x_sc, "count": hist_y_sc})
+            hist_mark.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+
+            self.stretch_histogram.marks = [hist_mark]
+            self.stretch_histogram.axes = [bqplot.Axis(scale=hist_x_sc,
+                                                       tick_format='0.1e',
+                                                       label='Value'),
+                                           bqplot.Axis(scale=hist_y_sc,
+                                                       orientation='vertical',
+                                                       label='N')]
+
+            self.bqplot_figs_resize = [self.stretch_histogram]
+
+        else:
+            hist_mark = self.stretch_histogram.marks[0]
+            # NOTE: this is the bulk of the expense (for large sub_data)
+            hist_mark.sample = sub_data
+
+            # TODO: Let user change the number of bins?
+
         interval = PercentileInterval(95)
         hist_lims = interval.get_limits(sub_data)
 
-        bqplot_clear_figure(self._stretch_histogram_fig)
-
-        hist_x_sc = bqplot.LinearScale()
-        hist_y_sc = bqplot.LinearScale()
-
-        # TODO: Let user change the number of bins?
-        hist_plot = bqplot.Hist(sample=sub_data, bins=50, colors="gray",
-                                scales={"sample": hist_x_sc, "count": hist_y_sc})
-        hist_plot.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
-
-        # TODO: Let user change X-axis limits.
-        hist_plot.scales['sample'].min = hist_lims[0]
-        hist_plot.scales['sample'].max = hist_lims[1]
-
-        self._stretch_histogram_fig.marks = [hist_plot]
-        self._stretch_histogram_fig.axes = [bqplot.Axis(scale=hist_x_sc,
-                                                        tick_format='0.1e',
-                                                        label='Value'),
-                                            bqplot.Axis(scale=hist_y_sc,
-                                                        orientation='vertical',
-                                                        label='N')]
-
-        # TODO: Draw viewer cut levels as vertical lines?
-        #       If we do this, we need to redraw when Plot Option changes?
-
-        self.stretch_histogram = self._stretch_histogram_fig
-        self.bqplot_figs_resize = [self._stretch_histogram_fig]
+        hist_mark.scales['sample'].min = hist_lims[0]
+        hist_mark.scales['sample'].max = hist_lims[1]
