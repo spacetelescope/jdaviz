@@ -370,7 +370,7 @@ class PlotOptions(PluginTemplateMixin):
 
     @observe('plugin_opened', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
-    def _update_stretch_histogram(self, *args):
+    def _update_stretch_histogram(self, msg={}):
         if self.config != 'imviz':
             # currently only supported for imviz (adding other configs should also update the
             # v-if in plot_options.vue as well as stretch_hist_zoom_limits in user_api above)
@@ -382,6 +382,11 @@ class PlotOptions(PluginTemplateMixin):
             # no need to make updates, updates will be redrawn when plugin is opened
             # NOTE: this won't update when the plugin is shown but not open in the tray
             return
+        if not isinstance(msg, dict) and not self.stretch_hist_zoom_limits:
+            # then this is from the limits callbacks and we don't want to waste resources
+            # IMPORTANT: this assumes the only non-observe callback to this method comes
+            # from state callbacks from zoom limits.
+            return
 
         if self.multiselect and (len(self.viewer.selected) > 1 or len(self.layer.selected) > 1):
             # currently only support single-layer/viewer.  For now we'll just clear and return.
@@ -390,6 +395,20 @@ class PlotOptions(PluginTemplateMixin):
             return
 
         viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
+
+        # manage viewer zoom limit callbacks
+        if ((isinstance(msg, dict) and msg.get('name') == 'viewer_selected')
+                or not self.stretch_hist_zoom_limits):
+            vs = viewer.state
+            for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
+                vs.add_callback(attr, self._update_stretch_histogram)
+        if isinstance(msg, dict) and msg.get('name') == 'viewer_selected':
+            viewer_label_old = msg.get('old')[0] if self.multiselect else msg.get('old')
+            if len(viewer_label_old):
+                vs_old = self.app.get_viewer(viewer_label_old).state
+                for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
+                    vs_old.remove_callback(attr, self._update_stretch_histogram)
+
         data = self.layer.selected_obj[0][0].layer if self.multiselect else self.layer.selected_obj[0].layer  # noqa
         comp = data.get_component(data.main_components[0])
 
