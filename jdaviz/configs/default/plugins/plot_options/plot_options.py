@@ -419,12 +419,11 @@ class PlotOptions(PluginTemplateMixin):
                 xy_limits = viewer._get_zoom_limits(data).astype(int)
                 x_limits = xy_limits[:, 0]
                 y_limits = xy_limits[:, 1]
-                x_min = x_limits.min()
+                x_min = max(x_limits.min(), 0)
                 x_max = x_limits.max()
-                y_min = y_limits.min()
+                y_min = max(y_limits.min(), 0)
                 y_max = y_limits.max()
 
-                # TODO: this doesn't seem to exactly match the full image when zoom is reset
                 sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
 
             else:
