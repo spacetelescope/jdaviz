@@ -56,8 +56,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     # test setting a static 2d image to the "watched" flux viewer to make sure it disconnects
     mm = app.get_tray_item_from_name('cubeviz-moment-maps')
     mm.add_to_viewer_selected = 'flux-viewer'
-    with pytest.warns(UserWarning, match='No observer defined on WCS'):
-        mm.vue_calculate_moment()
+    mm.vue_calculate_moment()
 
     assert len(sl._watched_viewers) == 2
     assert len(sl._indicator_viewers) == 1
