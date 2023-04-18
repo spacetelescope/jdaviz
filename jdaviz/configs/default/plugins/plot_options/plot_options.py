@@ -444,6 +444,10 @@ class PlotOptions(PluginTemplateMixin):
             # include all data, regardless of zoom limits
             sub_data = comp.data.ravel()
 
+        # filter out nans (or else bqplot will fail)
+        if np.any(np.isnan(sub_data)):
+            sub_data = sub_data[~np.isnan(sub_data)]
+
         if self.stretch_histogram is None:
             # first time the figure is requested, need to build from scratch
             self.stretch_histogram = bqplot.Figure(padding_y=0)
