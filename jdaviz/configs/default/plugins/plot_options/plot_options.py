@@ -435,17 +435,20 @@ class PlotOptions(PluginTemplateMixin):
             hist_y_sc = bqplot.LinearScale()
             # TODO: Let user change the number of bins?
             # TODO: Let user set y-scale to log
-            hist_mark = bqplot.Bins(sample=sub_data, bins=50, colors="gray",
+            hist_mark = bqplot.Bins(sample=sub_data, bins=25,
+                                    density=True, colors="gray",
                                     scales={'x': hist_x_sc,
                                             'y': hist_y_sc})
 
             self.stretch_histogram.marks = [hist_mark]
             self.stretch_histogram.axes = [bqplot.Axis(scale=hist_x_sc,
+                                                       num_ticks=3,
                                                        tick_format='0.1e',
-                                                       label='Value'),
+                                                       label='pixel value'),
                                            bqplot.Axis(scale=hist_y_sc,
+                                                       num_ticks=2,
                                                        orientation='vertical',
-                                                       label='N')]
+                                                       label='density')]
 
             self.bqplot_figs_resize = [self.stretch_histogram]
 
