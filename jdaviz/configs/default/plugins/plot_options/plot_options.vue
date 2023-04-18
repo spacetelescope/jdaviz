@@ -187,15 +187,16 @@
     </glue-state-sync-wrapper>
 
     <v-row v-if="stretch_function_sync.in_subscribed_states">
+      <!-- z-index to ensure on top of the jupyter widget with negative margin-top -->
       <v-switch
         v-model="stretch_hist_zoom_limits"
         class="hide-input"
         label="Limit histogram to current zoom limits"
+        style="z-index: 1"
       ></v-switch>
-      <!-- NOTE: the internal bqplot widget defaults to 480 pixels, so if choosing something else,
-           we will likely need to override that with custom CSS rules in order to avoid the initial
-           rendering of the plot from overlapping with content below -->
-      <jupyter-widget :widget="stretch_histogram" style="width: 100%; height: 480px" />
+      <!-- NOTE: height defined here should match that in the custom CSS rules
+           below for the bqplot class -->
+      <jupyter-widget :widget="stretch_histogram" class="stretch-hist" style="width: 100%; height: 320px; margin-top: -60px; margin-bottom: -40px" />
     </v-row>
 
     <!-- IMAGE:IMAGE -->
@@ -397,10 +398,13 @@ module.exports = {
 }
 </script>
 
-<style>
+<style scoped>
 .color-menu {
     font-size: 16px;
     padding-left: 16px;
     border: 2px solid rgba(0,0,0,0.54);
+}
+.stretch-hist > .bqplot {
+  height: 320px !important;
 }
 </style>
