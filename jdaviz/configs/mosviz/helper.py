@@ -304,14 +304,14 @@ class Mosviz(ConfigHelper, LineListMixin):
         if height is not None:
             image_axis_ratio = (abs(imview.state.x_max - imview.state.x_min) /
                                 abs(imview.state.y_max - imview.state.y_min))
-            xh = image_axis_ratio * height
+            x_height = image_axis_ratio * height
             cur_xcen = (imview.state.x_min + imview.state.x_max) * 0.5
             cur_ycen = (imview.state.y_min + imview.state.y_max) * 0.5
 
             with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                imview.state.x_min = cur_xcen - xh
+                imview.state.x_min = cur_xcen - x_height
                 imview.state.y_min = cur_ycen - height
-                imview.state.x_max = cur_xcen + xh
+                imview.state.x_max = cur_xcen + x_height
                 imview.state.y_max = cur_ycen + height
 
         if center is not None:

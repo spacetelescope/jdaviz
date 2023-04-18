@@ -1,3 +1,5 @@
+from astropy.coordinates import SkyCoord
+from astropy.table import QTable
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
@@ -48,9 +50,6 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewe
         if ("R.A." not in table_data.component_ids() or
                 "Dec." not in table_data.component_ids()):
             return
-
-        from astropy.coordinates import SkyCoord
-        from astropy.table import QTable
 
         ra = table_data["R.A."]
         dec = table_data["Dec."]
