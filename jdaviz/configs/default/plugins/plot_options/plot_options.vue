@@ -186,7 +186,7 @@
       <glue-float-field label="Stretch VMax" :value.sync="stretch_vmax_value" />
     </glue-state-sync-wrapper>
 
-    <v-row v-if="config==='imviz' && stretch_function_sync.in_subscribed_states">
+    <v-row v-if="stretch_function_sync.in_subscribed_states">
       <v-switch
         v-model="stretch_hist_zoom_limits"
         class="hide-input"

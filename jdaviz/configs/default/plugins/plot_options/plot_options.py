@@ -1,6 +1,7 @@
 import os
-
 import bqplot
+import numpy as np
+
 from astropy.visualization import PercentileInterval
 from ipywidgets import widget_serialization
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
@@ -65,7 +66,7 @@ class PlotOptions(PluginTemplateMixin):
     * ``stretch_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``stretch_hist_zoom_limits`` : whether to show the histogram for the current zoom
-      limits instead of all data within the layer.  Only exposed for Imviz.
+      limits instead of all data within the layer; not exposed for Specviz.
     * ``image_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       whether the image bitmap is visible; not exposed for Specviz.
     * ``image_color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -322,10 +323,11 @@ class PlotOptions(PluginTemplateMixin):
             expose += ['collapse_function']
         if self.config != "imviz":
             expose += ['axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
-                       'line_as_steps', 'uncertainty_visible', 'stretch_hist_zoom_limits']
+                       'line_as_steps', 'uncertainty_visible']
         if self.config != "specviz":
             expose += ['subset_color',
                        'stretch_function', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
+                       'stretch_hist_zoom_limits',
                        'image_visible', 'image_color_mode',
                        'image_color', 'image_colormap', 'image_opacity',
                        'image_contrast', 'image_bias',
@@ -371,9 +373,8 @@ class PlotOptions(PluginTemplateMixin):
     @observe('plugin_opened', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, msg={}):
-        if self.config != 'imviz':
-            # currently only supported for imviz (adding other configs should also update the
-            # v-if in plot_options.vue as well as stretch_hist_zoom_limits in user_api above)
+        if not self.stretch_function_sync.get('in_subscribed_states'):
+            # no (image) viewer with stretch function options
             return
         if not hasattr(self, 'viewer'):
             # plugin hasn't been fully initialized yet
@@ -413,18 +414,34 @@ class PlotOptions(PluginTemplateMixin):
         comp = data.get_component(data.main_components[0])
 
         if self.stretch_hist_zoom_limits:
-            # Viewer limits. This takes account of Imviz linking.
-            xy_limits = viewer._get_zoom_limits(data).astype(int)
-            x_limits = xy_limits[:, 0]
-            y_limits = xy_limits[:, 1]
-            x_min = x_limits.min()
-            x_max = x_limits.max()
-            y_min = y_limits.min()
-            y_max = y_limits.max()
+            if hasattr(viewer, '_get_zoom_limits'):
+                # Viewer limits. This takes account of Imviz linking.
+                xy_limits = viewer._get_zoom_limits(data).astype(int)
+                x_limits = xy_limits[:, 0]
+                y_limits = xy_limits[:, 1]
+                x_min = x_limits.min()
+                x_max = x_limits.max()
+                y_min = y_limits.min()
+                y_max = y_limits.max()
 
-            # TODO: This only works with Imviz currently. Need to generalize.
-            sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
+                # TODO: this doesn't seem to exactly match the full image when zoom is reset
+                sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
+
+            else:
+                # spectrum-2d-viewer, for example.  We'll assume the viewer
+                # limits correspond to the fixed data components from glue
+                # and filter directly.
+                x_data = data.get_component(data.components[1]).data
+                y_data = data.get_component(data.components[0]).data
+
+                inds = np.where((x_data >= viewer.state.x_min) &
+                                (x_data <= viewer.state.x_max) &
+                                (y_data >= viewer.state.y_min) &
+                                (y_data <= viewer.state.y_max))
+
+                sub_data = comp.data[inds].ravel()
         else:
+            # include all data, regardless of zoom limits
             sub_data = comp.data.ravel()
 
         if self.stretch_histogram is None:
@@ -454,9 +471,7 @@ class PlotOptions(PluginTemplateMixin):
 
         else:
             hist_mark = self.stretch_histogram.marks[0]
-            # NOTE: this is the bulk of the expense (for large sub_data)
             hist_mark.sample = sub_data
-
             # TODO: Let user change the number of bins?
             # TODO: Let user set y-scale to log
 
