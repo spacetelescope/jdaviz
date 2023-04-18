@@ -41,6 +41,7 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewe
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
 
+    # NOTE: This is currently only for debugging. It is not used in app.
     def _mark_targets(self):
         table_data = self.jdaviz_app.data_collection['MOS Table']
 
