@@ -120,7 +120,7 @@ directory that contains all the files for the dataset to be loaded:
     mosviz.load_data(spectra_1d=spectra_1d, spectra_2d=spectra_2d, images=images)
     mosviz.show()
 
-Alternative, if you want all the spectra to share a single image (e.g., a mosaic):
+Alternatively, if you want all the spectra to share a single image (e.g., a mosaic):
 
 .. code-block:: python
 
