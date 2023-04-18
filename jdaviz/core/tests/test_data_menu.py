@@ -12,7 +12,7 @@ example_uri_helper = [
      ['mast:HST/product/id4301ouq_drz.fits', 'imviz'],
      ['mast:HST/product/ldq601030_x1dsum.fits', 'specviz'],
      ['mast:HST/product/o4xw01dkq_flt.fits', 'specviz2d'],
-     ['mast:JWST/product/jw01324-o001_s00094_niriss_f200w-gr150c-gr150r_x1d.fits',
+     ['mast:JWST/product/jw02072-c1003_s00002_nirspec_clear-prism-s200a1_x1d.fits',
       'specviz'],
      ['mast:JWST/product/jw01324-o006_s00005_nirspec_f100lp-g140h_s2d.fits',
       'specviz2d'],
@@ -108,7 +108,7 @@ def test_visibility_toggle(imviz_helper):
 )
 def test_auto_config_detection(uri, expected_helper):
     url = f'https://mast.stsci.edu/api/v0.1/Download/file/?uri={uri}'
-    fn = download_file(url, cache=True, timeout=100)
+    fn = download_file(url, timeout=100)
     helper_name = identify_helper(fn)
     assert helper_name == expected_helper
 
