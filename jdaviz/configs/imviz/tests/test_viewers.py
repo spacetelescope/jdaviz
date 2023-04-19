@@ -30,6 +30,13 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
     assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
 
 
+def test_get_viewer_created(imviz_helper):
+    # This viewer has no reference but has ID.
+    viewer1 = imviz_helper.create_image_viewer()
+    viewer2 = imviz_helper.app.get_viewer('imviz-1')
+    assert viewer1 is viewer2
+
+
 def test_destroy_viewer_invalid(imviz_helper):
     assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
 
