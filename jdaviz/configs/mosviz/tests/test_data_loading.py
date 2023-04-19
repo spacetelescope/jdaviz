@@ -31,10 +31,9 @@ def test_load_spectrum1d(mosviz_helper, spectrum1d):
         mosviz_helper.load_1d_spectra([1, 2, 3])
 
 
-@pytest.mark.filterwarnings('ignore')
 def test_load_image(mosviz_helper, mos_image):
     label = "Test Image"
-    mosviz_helper.load_images(mos_image, data_labels=label)
+    mosviz_helper.load_images(mos_image, data_labels=label, add_redshift_column=True)
 
     assert len(mosviz_helper.app.data_collection) == 2
     assert mosviz_helper.app.data_collection[0].label == "MOS Table"
@@ -55,7 +54,7 @@ def test_load_image(mosviz_helper, mos_image):
 
 def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
-    mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels)
+    mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels, add_redshift_column=True)
 
     # +1 for the table viewer
     assert len(mosviz_helper.app.data_collection) == len(spectrum_collection) + 1
@@ -76,7 +75,7 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
     spectra = [spectrum1d] * 3
 
     labels = [f"Test Spectrum 1D {i}" for i in range(3)]
-    mosviz_helper.load_1d_spectra(spectra, data_labels=labels)
+    mosviz_helper.load_1d_spectra(spectra, data_labels=labels, add_redshift_column=True)
 
     assert len(mosviz_helper.app.data_collection) == 4
     assert mosviz_helper.app.data_collection[0].label == "MOS Table"
@@ -92,7 +91,6 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
     assert isinstance(data[labels[0]], Spectrum1D)
 
 
-@pytest.mark.filterwarnings('ignore')
 def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
 
     label = "Test 2D Spectrum"
@@ -112,7 +110,6 @@ def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
     assert data[label].shape == (1024, 15)
 
 
-@pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('label', [None, "Test Label"])
 def test_load_multi_image_spec(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d, label):
     spectra1d = [spectrum1d] * 3
@@ -169,7 +166,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     # Test that loading is still possible after previous crash:
     # https://github.com/spacetelescope/jdaviz/issues/364
     with pytest.raises(ValueError, match="incompatible with the dimensions of this data:"):
-        mosviz_helper.load_data(spectra1d, spectra2d, images=[])
+        mosviz_helper.load_data(spectra1d, spectra2d, images=[mos_image, mos_image])
 
     mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
 
@@ -212,7 +209,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     label_mouseover._viewer_mouse_event(spec2d_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 10, 'y': 100}})
     assert label_mouseover.as_text() == ('Pixel x=00010.0 y=00100.0 Value +8.12986e-01', '', '')
-    assert label_mouseover.icon == 'b'
+    assert label_mouseover.icon == 'c'
 
     # need to trigger a mouseleave or mouseover to reset the traitlets
     label_mouseover._viewer_mouse_event(spec1d_viewer, {'event': 'mouseenter'})
@@ -221,7 +218,7 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
     assert label_mouseover.as_text() == ('Cursor 7.00000e+03, 1.70000e+02',
                                          'Wave 6.88889e+03 Angstrom (4 pix)',
                                          'Flux 1.35436e+01 Jy')
-    assert label_mouseover.icon == 'c'
+    assert label_mouseover.icon == 'b'
 
 
 def test_zip_error(mosviz_helper, tmp_path):
@@ -235,3 +232,11 @@ def test_zip_error(mosviz_helper, tmp_path):
 
     with pytest.raises(TypeError, match="Please extract"):
         mosviz_helper.load_data(directory=str(zip_path))
+
+
+def test_invalid_inputs(mosviz_helper):
+    with pytest.raises(NotImplementedError, match=r".*not a directory"):
+        mosviz_helper.load_data(directory="foo")
+
+    with pytest.raises(NotImplementedError, match="Please set valid values"):
+        mosviz_helper.load_data()

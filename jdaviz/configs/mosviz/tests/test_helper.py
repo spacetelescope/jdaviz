@@ -7,13 +7,12 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.specviz2d.helper import Specviz2d
 
 
-@pytest.mark.filterwarnings('ignore')
 def test_viewer_axis_link(mosviz_helper, mos_spectrum1d, mos_spectrum2d):
     label1d = "Test 1D Spectrum"
     mosviz_helper.load_1d_spectra(mos_spectrum1d, data_labels=label1d)
 
     label2d = "Test 2D Spectrum"
-    mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label2d)
+    mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label2d, add_redshift_column=True)
 
     table = mosviz_helper.app.get_viewer('table-viewer')
     table.widget_table.vue_on_row_clicked(0)
@@ -30,7 +29,7 @@ def test_viewer_axis_link(mosviz_helper, mos_spectrum1d, mos_spectrum2d):
 
 def test_to_csv(tmp_path, mosviz_helper, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
-    mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels)
+    mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels, add_redshift_column=True)
 
     mosviz_helper.to_csv(filename=str(tmp_path / "MOS_data.csv"))
 
@@ -49,7 +48,6 @@ def test_to_csv(tmp_path, mosviz_helper, spectrum_collection):
     assert found_rows == 5
 
 
-@pytest.mark.filterwarnings('ignore')
 def test_table_scrolling(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     spectra1d = [spectrum1d] * 2
     spectra2d = [mos_spectrum2d] * 2
@@ -69,7 +67,6 @@ def test_table_scrolling(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     assert table.widget_table.highlighted == 1
 
 
-@pytest.mark.filterwarnings('ignore')
 def test_column_visibility(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     spectra1d = [spectrum1d] * 2
     spectra2d = [mos_spectrum2d] * 2
@@ -92,7 +89,6 @@ def test_column_visibility(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d)
     assert 'Redshift' not in mosviz_helper.get_column_names(True)
 
 
-@pytest.mark.filterwarnings('ignore')
 def test_custom_columns(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     spectra1d = [spectrum1d] * 2
     spectra2d = [mos_spectrum2d] * 2
@@ -122,7 +118,6 @@ def test_custom_columns(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     assert "Redshift" not in mosviz_helper.get_column_names(True)
 
 
-@pytest.mark.filterwarnings('ignore')
 def test_redshift_column(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     spectra1d = [spectrum1d] * 2
     spectra2d = [mos_spectrum2d] * 2
@@ -130,11 +125,12 @@ def test_redshift_column(mosviz_helper, mos_image, spectrum1d, mos_spectrum2d):
     mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image)
 
     mosviz_helper.update_column("Redshift", 0.1, row=0)
-    assert_allclose(list(mosviz_helper.specviz.get_spectra().values())[0].redshift.value, 0.1)
+    all_spectra = mosviz_helper.specviz.get_spectra(apply_slider_redshift=True)
+    assert_allclose(list(all_spectra.values())[0].redshift.value, 0.1)
     assert isinstance(mosviz_helper.specviz2d, Specviz2d)
-    assert_allclose(mosviz_helper.get_spectrum_1d().redshift.value, 0.1)
-    assert_allclose(mosviz_helper.get_spectrum_2d().redshift.value, 0.1)
-    assert_allclose(mosviz_helper.get_spectrum_1d(row=1).redshift.value, 0.0)
+    assert_allclose(mosviz_helper.get_spectrum_1d(apply_slider_redshift=True).redshift.value, 0.1)
+    assert_allclose(mosviz_helper.get_spectrum_2d(apply_slider_redshift=True).redshift.value, 0.1)
+    assert_allclose(mosviz_helper.get_spectrum_1d(apply_slider_redshift=True, row=1).redshift.value, 0.0)  # noqa: E501
 
 
 def test_plugin_user_apis(mosviz_helper):
