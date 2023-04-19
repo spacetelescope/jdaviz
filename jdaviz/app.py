@@ -572,25 +572,24 @@ class Application(VuetifyTemplate, HubListener):
 
         Notes
         -----
-            This is only used in cases where the viewers have been pre-defined
-            in the configuration file. Otherwise, viewers are not stored via
-            reference.
+        If viewer does not have a reference, it is going to try to look
+        up the viewer using the given reference as ID.
 
         Parameters
         ----------
         viewer_reference : str
             The reference to the viewer defined with the ``reference`` key
-            in the yaml configuration file.
+            in the YAML configuration file.
 
         Returns
         -------
-        `~glue_jupyter.bqplot.common.BqplotBaseView`
+        viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The viewer class instance.
         """
-        return self._viewer_by_reference(viewer_reference)
+        return self._viewer_by_reference(viewer_reference, fallback_to_id=True)
 
     def get_viewer_by_id(self, vid):
-        """Like :meth:`get_viewer` but use ID instead of reference name.
+        """Like :meth:`get_viewer` but use ID directly instead of reference name.
         This is useful when reference name is `None`.
         """
         return self._viewer_store.get(vid)
@@ -1460,7 +1459,7 @@ class Application(VuetifyTemplate, HubListener):
 
         return viewer_item
 
-    def _viewer_by_reference(self, reference):
+    def _viewer_by_reference(self, reference, fallback_to_id=False):
         """
         Viewer instance by reference defined in the yaml configuration file.
 
@@ -1475,6 +1474,9 @@ class Application(VuetifyTemplate, HubListener):
             The viewer class instance.
         """
         viewer_item = self._viewer_item_by_reference(reference)
+
+        if viewer_item is None and fallback_to_id:
+            return self._viewer_by_id(reference)
 
         return self._viewer_store[viewer_item['id']]
 
