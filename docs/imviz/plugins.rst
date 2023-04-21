@@ -230,6 +230,10 @@ an interactively selected region. A typical workflow is as follows:
 
 .. note::
 
+    The shape you see drawn from :ref:`imviz_defining_spatial_regions` is not
+    exactly the aperture mask being used by ``photutils``. This is because
+    ``photutils`` uses sub-pixel sampling that is not reflected in the display.
+
     Masking and weights by uncertainty are currently not supported.
     However, if NaN exists in data, it will be treated as 0.
 
