@@ -86,6 +86,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- move build configuration to ``pyproject.toml`` as defined in PEP621 [#1661]
+
 - drop support for Python 3.8 [#2152]
 
 3.4.1 (unreleased)
