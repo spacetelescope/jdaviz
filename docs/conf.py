@@ -30,6 +30,8 @@ import sys
 import datetime
 import importlib.metadata as importlib_metadata
 
+from pathlib import Path
+
 if sys.version_info < (3, 11):
     import tomli as tomllib
 else:
