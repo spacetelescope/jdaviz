@@ -19,75 +19,26 @@ permissions:
 jobs:
   # Github Actions supports ubuntu, windows, and macos virtual environments:
   # https://help.github.com/en/actions/reference/virtual-environments-for-github-hosted-runners
-  ci_tests:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow_failure }}
-    strategy:
-      matrix:
-        include:
-          - name: Code style checks
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: codestyle
-            allow_failure: false
-
-          - name: PEP 517
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: pep517
-            allow_failure: false
-
-          - name: Security audit
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: securityaudit
-            allow_failure: false
-
-          - name: Python 3.10 with coverage checking, all deps, and remote data
-            os: ubuntu-latest
-            python: '3.10'
-            toxenv: py310-test-alldeps-cov
-            toxposargs: --remote-data
-            allow_failure: false
-
-          - name: OS X - Python 3.9
-            os: macos-latest
-            python: 3.9
-            toxenv: py39-test
-            allow_failure: false
-
-          - name: Windows - Python 3.8
-            os: windows-latest
-            python: 3.8
-            toxenv: py38-test
-            allow_failure: false
-
-          # This also runs on cron but we want to make sure new changes
-          # won't break this job at the PR stage.
-          - name: Python 3.11 with latest dev versions of key dependencies, and remote data
-            os: ubuntu-latest
-            python: '3.11'
-            toxenv: py311-test-devdeps
-            toxposargs: --remote-data --run-slow
-            allow_failure: true
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-    - name: Set up python ${{ matrix.python }} on ${{ matrix.os }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python }}
-    - name: Install base dependencies
-      run: python -m pip install --upgrade pip tox
-    - name: Test/run with tox
-      run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
-    - name: Upload coverage to codecov
-      if: "contains(matrix.toxenv, '-cov')"
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        verbose: true
+  check:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      envs: |
+        - linux: codestyle
+        - linux: securityaudit
+        - linux: pep517
+  test:
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/tox.yml@v1
+    with:
+      envs: |
+        - linux: py310-test-alldeps-cov
+          python-version: 3.10
+          posargs: --remote-data
+          coverage: codecov
+        - macos: py39-test
+          python-version: 3.9
+        - windows: py38-test
+          python-version: 3.8
+        # This also runs on cron but we want to make sure new changes won't break this job at the PR stage.
+        - linux: py311-test-devdeps
+          python-version: 3.11
+          posargs: --remote-data --run-slow
