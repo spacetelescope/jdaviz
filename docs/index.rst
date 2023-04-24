@@ -39,7 +39,7 @@ contextual information like on-sky views of the spectrograph slit.
    Recordings and instructional notebooks from live Jdaviz tutorials can be found at
    `the JWebbinar website <https://www.stsci.edu/jwst/science-execution/jwebbinars>`_
    under the "Materials and Videos" expandable section. Scroll down to the bottom of that section
-   to find materials from the most recent session (JWebbinar 24).
+   to find materials from the most recent session (JWebbinar 24, March 2023).
 
 .. _jdaviz_instrument_table:
 
