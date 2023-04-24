@@ -121,6 +121,11 @@ If you uncover any issues or bugs, you can
 if they are not already reported. For faster responses, however, we encourage you to
 submit a `JWST Help Desk Ticket <https://jwsthelp.stsci.edu>`_.
 
+Recordings and instructional notebooks from live Jdaviz tutorials (as part of the JWebbinars series)
+can be found at `the JWebbinar website <https://www.stsci.edu/jwst/science-execution/jwebbinars>`_
+under the "Materials and Videos" expandable section. Scroll down to the bottom of that section to
+find materials from the most recent session (JWebbinar 24).
+
 License & Attribution
 ---------------------
 
