@@ -29,7 +29,7 @@ Imviz
 - Added the ability to load DS9 region files (``.reg``) using the ``IMPORT DATA``
   button. However, this only works after loading at least one image into Imviz. [#2164]
 
-- Added the ability to add circular annulus regions. However, once added, they
+- Added the ability to add circular annulus regions via API. However, once added, they
   are currently not easily editable. [#2164]
 
 - Added new tools to recenter a spatial region by clicking on the new desired
