@@ -26,6 +26,11 @@ Imviz
 - Preliminary support for Roman ASDF data products. This requires
   ``roman-datamodels`` to be installed separately by the user. [#1822]
 
+- Added the ability to load DS9 region files (``.reg``) using the ``IMPORT DATA``
+  button. However, this only works after loading at least one image into Imviz. [#2164]
+
+- Added the ability to add circular annulus regions. However, once added, they
+  are currently not easily editable. [#2164]
 
 Mosviz
 ^^^^^^

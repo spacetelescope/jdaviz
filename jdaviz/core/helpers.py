@@ -609,12 +609,17 @@ class ImageConfigHelper(ConfigHelper):
             If not requested, return `None`.
 
         """
+        if len(self.app.data_collection) == 0:
+            raise ValueError('Cannot load regions without data.')
+
+        from glue_astronomy.translators.regions import _annulus_to_subset_state
         from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                         EllipticalAperture, SkyEllipticalAperture,
                                         RectangularAperture, SkyRectangularAperture)
         from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
                              EllipsePixelRegion, EllipseSkyRegion,
-                             RectanglePixelRegion, RectangleSkyRegion)
+                             RectanglePixelRegion, RectangleSkyRegion,
+                             CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
         from jdaviz.core.region_translators import regions2roi, aperture2regions
 
         # If user passes in one region obj instead of list, try to be smart.
@@ -662,6 +667,15 @@ class ImageConfigHelper(ConfigHelper):
                 self.app.session.edit_subset_mode._mode = NewMode
                 self.default_viewer.apply_roi(state)
                 self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+
+            # Special handling for annulus that cannot be hand-drawn.
+            elif isinstance(region, (CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
+                if isinstance(region, CircleAnnulusSkyRegion):
+                    if data.coords is None:
+                        raise ValueError(f'WCS must be provided for {region}')
+                    region = region.to_pixel(data.coords)
+                state = _annulus_to_subset_state(region, data)
+                self.app.data_collection.new_subset_group(subset_state=state)
 
             # Last resort: Masked Subset that is static (if data is not a cube)
             elif data.ndim == 2:

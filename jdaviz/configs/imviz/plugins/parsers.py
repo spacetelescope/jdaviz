@@ -90,6 +90,10 @@ def parse_data(app, file_obj, ext=None, data_label=None):
                 else:  # pragma: no cover
                     _parse_image(app, asdf_file, data_label, ext=ext)
 
+        elif file_obj_lower.endswith('.reg'):
+            # This will load DS9 regions as Subset but only if there is already data.
+            app._jdaviz_helper.load_regions_from_file(file_obj)
+
         else:  # Assume FITS
             with fits.open(file_obj) as pf:
                 _parse_image(app, pf, data_label, ext=ext)
