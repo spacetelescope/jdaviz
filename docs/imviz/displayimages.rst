@@ -224,6 +224,25 @@ Activate this tool and select the desired region from :ref:`imviz_defining_spati
 above. Then, click on where you want to move the region. Once you are done,
 remember to deactivate this tool to avoid accidentally moving it again.
 
+.. _imviz_click_to_create_annulus:
+
+Click to Create New Annulus
+---------------------------
+
+This tool allows the user to quickly create a new circular annulus region in an image viewer.
+Activate this tool and select an existing circular, elliptical, or rectangular region
+from :ref:`imviz_defining_spatial_regions` above. Then, click on where you want the
+new annulus. A new circular annulus would be created based on the selected region;
+for example, if the selected region is a circle with radius of 15 pixels,
+the new annulus will have an inner radius of 15 and an outer radius of 20 pixels.
+Similarly, the inner radius of the annulus would be based on the longer dimension
+of an ellipse or a rectangle, if they were selected instead.
+Once you are done, remember to deactivate this tool to avoid accidentally creating more regions.
+
+In a future release, the annulus created would be editable via the
+:ref:`imviz-subset-plugin` plugin; until then, if you want complete control of all
+the annulus parameters, please see :ref:`imviz-import-regions-api`.
+
 Blinking
 ========
 

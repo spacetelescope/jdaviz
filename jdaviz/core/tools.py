@@ -5,7 +5,10 @@ from echo import delay_callback
 from glue.config import viewer_tool
 from glue.core import HubListener
 from glue.core.edit_subset_mode import ReplaceMode
+from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
+from glue.core.subset import RoiSubsetState
 from glue.viewers.common.tool import Tool
+from glue_astronomy.translators.regions import _annulus_to_subset_state
 from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               HomeTool, BqplotPanZoomMode,
                                               BqplotPanZoomXMode, BqplotPanZoomYMode,
@@ -14,6 +17,7 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               BqplotYRangeMode, BqplotSelectionTool,
                                               INTERACT_COLOR)
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
+from regions import CircleAnnulusPixelRegion, PixCoord
 
 from jdaviz.core.events import LineIdentifyMessage, SpectralMarksChangedMessage
 
@@ -357,3 +361,56 @@ class ClickToMoveSpatialRegion(CheckableTool):
         # glue.core.edit_subset_mode.EditSubsetMode.update() but we do not
         # want to deal with all the contract stuff tied to the update() method.
         self.viewer.session.edit_subset_mode._combine_data(subset_state, override_mode=ReplaceMode)
+
+
+@viewer_tool
+class ClickToCreateCircularAnnulus(CheckableTool):
+
+    icon = 'glue_spawn'  # TODO: New icon?
+    tool_id = 'jdaviz:clicktocreatecircularannulus'
+    action_text = 'Create a circular annulus'
+    tool_tip = 'Click to create a circular annulus based on a selected region in Subset Tools'
+
+    def activate(self):
+        # This is copied from glue-jupyter's BqplotSelectionTool (but we don't inherit
+        # from that because that in turn inherits from InteractCheckableTool which requires
+        # setting self.interact)
+        self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        subset_plg = self.viewer.jdaviz_helper.plugins["Subset Tools"]._obj
+        if subset_plg.subset_selected == 'Create New':
+            return
+
+        subset_state = subset_plg.subset_select.selected_subset_state
+        if not isinstance(subset_state, RoiSubsetState):
+            return
+
+        roi = subset_state.roi
+        if isinstance(roi, CircularROI):
+            inner_r = roi.radius
+        elif isinstance(roi, EllipticalROI):
+            inner_r = max(roi.radius_x, roi.radius_y)
+        elif isinstance(roi, RectangularROI):
+            inner_r = max(roi.width(), roi.height()) * 0.5
+        else:
+            return
+
+        # Hardcode the outer radius for now. Hopefully can edit in Subset Tools later.
+        outer_r = inner_r + 5
+
+        # Extract data coordinates - these are pixels in the reference image.
+        # NOTE: We always use the reference image pixel coordinates because
+        # Subset is defined w.r.t. reference image.
+        x = data['domain']['x']
+        y = data['domain']['y']
+
+        reg = CircleAnnulusPixelRegion(
+            center=PixCoord(x=x, y=y), inner_radius=inner_r, outer_radius=outer_r)
+        annulus_sbst = _annulus_to_subset_state(reg, self.viewer.state.reference_data)
+
+        # Create new annulus subset.
+        self.viewer.session.application.data_collection.new_subset_group(subset_state=annulus_sbst)

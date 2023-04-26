@@ -32,8 +32,8 @@ Imviz
 - Added the ability to add circular annulus regions. However, once added, they
   are currently not easily editable. [#2164]
 
-- Added a new tool to recenter a spatial region by clicking on the new desired
-  center. [#2164]
+- Added new tools to recenter a spatial region by clicking on the new desired
+  center, and to create a new annulus region based on another selected region. [#2164]
 
 Mosviz
 ^^^^^^
