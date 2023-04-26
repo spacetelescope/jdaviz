@@ -8,7 +8,6 @@ from glue.core.edit_subset_mode import ReplaceMode
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from glue.core.subset import RoiSubsetState
 from glue.viewers.common.tool import Tool
-from glue_astronomy.translators.regions import _annulus_to_subset_state
 from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               HomeTool, BqplotPanZoomMode,
                                               BqplotPanZoomXMode, BqplotPanZoomYMode,
@@ -398,6 +397,10 @@ class ClickToCreateCircularAnnulus(CheckableTool):
             inner_r = max(roi.width(), roi.height()) * 0.5
         else:
             return
+
+        # We should not expose hidden function import in top-level
+        # in case upstream yanks it someday.
+        from glue_astronomy.translators.regions import _annulus_to_subset_state
 
         # Hardcode the outer radius for now. Hopefully can edit in Subset Tools later.
         outer_r = inner_r + 5
