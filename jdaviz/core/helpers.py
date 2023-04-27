@@ -231,6 +231,12 @@ class ConfigHelper(HubListener):
         elif models is None:
             models = self.fitted_models
 
+        data_shapes = {}
+        for label in models:
+            data_label = label.split(" (")[0]
+            if data_label not in data_shapes:
+                data_shapes[data_label] = self.app.data_collection[data_label].data.shape
+
         param_dict = {}
         parameters_cube = {}
         param_x_y = {}
@@ -241,7 +247,7 @@ class ConfigHelper(HubListener):
             # looks for that style and separates out the pertinent information.
             if " (" in label:
                 label_split = label.split(" (")
-                model_name = label_split[0] + "_3d"
+                model_name = label_split[0]
                 x = int(label_split[1].split(", ")[0])
                 y = int(label_split[1].split(", ")[1][:-1])
 
@@ -268,10 +274,7 @@ class ConfigHelper(HubListener):
         # on whether the model in question is 3d or 1d, respectively.
         for model_name in param_dict:
             if model_name in param_x_y:
-                x_size = len(param_x_y[model_name]['x'])
-                y_size = len(param_x_y[model_name]['y'])
-
-                parameters_cube[model_name] = {x: np.zeros(shape=(x_size, y_size))
+                parameters_cube[model_name] = {x: np.zeros(shape=data_shapes[model_name][:2])
                                                for x in param_dict[model_name]}
             else:
                 parameters_cube[model_name] = {x: 0
@@ -282,7 +285,7 @@ class ConfigHelper(HubListener):
         for label in models:
             if " (" in label:
                 label_split = label.split(" (")
-                model_name = label_split[0] + "_3d"
+                model_name = label_split[0]
 
                 # If the get_models method is used to build a dictionary of
                 # models and a value is set for the x or y parameters, that
