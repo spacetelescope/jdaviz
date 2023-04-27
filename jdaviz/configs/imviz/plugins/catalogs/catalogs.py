@@ -12,6 +12,7 @@ from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         SelectPluginComponent)
+from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Catalogs']
 
@@ -238,3 +239,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
 
     def vue_do_clear(self, *args, **kwargs):
         self.clear()
+
+    @property
+    def user_api(self):
+        expose = ['catalog', 'search']
+        return PluginUserApi(self, expose)
