@@ -157,6 +157,14 @@ This plugin only considers pixel locations, not sky coordinates.
 Simple Aperture Photometry
 ==========================
 
+.. warning::
+
+    Regardless of your workflow, any WCS distortion in an image is ignored.
+
+    When you have multiple images linked by WCS and they have different
+    pixel scales or sky orientation, the selected aperture may be incorrectly defined
+    for images that are not the reference image (usually the first loaded one).
+
 This plugin performs simple aperture photometry
 and plots a radial profile for one object within
 an interactively selected region. A typical workflow is as follows:
