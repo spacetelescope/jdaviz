@@ -13,6 +13,7 @@ from astropy.nddata import CCDData, NDData
 from astropy.io import fits
 from astropy import units as u
 from astropy.coordinates import Angle
+from astropy.time import Time
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
@@ -686,8 +687,13 @@ class Application(VuetifyTemplate, HubListener):
                         if cls is not None:
                             handler, _ = data_translator.get_handler_for(cls)
                             try:
-                                layer_data = handler.to_object(layer_data,
-                                                               statistic=statistic)
+                                if cls == Spectrum1D:
+                                    # if this is a spectrum, apply the `statistic`:
+                                    layer_data = handler.to_object(layer_data,
+                                                                   statistic=statistic)
+                                else:
+                                    # otherwise simply translate to an object:
+                                    layer_data = handler.to_object(layer_data)
                             except IncompatibleAttribute:
                                 continue
 
@@ -878,8 +884,9 @@ class Application(VuetifyTemplate, HubListener):
                 all_subsets[label] = None
                 continue
 
-            # Is the subset spectral or spatial?
+            # Is the subset spectral, spatial, temporal?
             is_spectral = self._is_subset_spectral(subset_region)
+            is_temporal = self._is_subset_temporal(subset_region)
 
             # Remove duplicate spectral regions
             if is_spectral and isinstance(subset_region, SpectralRegion):
@@ -899,6 +906,12 @@ class Application(VuetifyTemplate, HubListener):
                     all_subsets[label] = subset_region
             elif not spectral_only and not spatial_only:
                 if object_only and not isinstance(subset_region, SpectralRegion):
+                    all_subsets[label] = [reg['region'] for reg in subset_region]
+                else:
+                    all_subsets[label] = subset_region
+
+            if not (spectral_only or spatial_only) and is_temporal:
+                if object_only:
                     all_subsets[label] = [reg['region'] for reg in subset_region]
                 else:
                     all_subsets[label] = subset_region
@@ -932,6 +945,14 @@ class Application(VuetifyTemplate, HubListener):
             return True
         elif isinstance(subset_region, list) and len(subset_region) > 0:
             if isinstance(subset_region[0]['region'], SpectralRegion):
+                return True
+        return False
+
+    def _is_subset_temporal(self, subset_region):
+        if isinstance(subset_region, Time):
+            return True
+        elif isinstance(subset_region, list) and len(subset_region) > 0:
+            if isinstance(subset_region[0]['region'], Time):
                 return True
         return False
 
