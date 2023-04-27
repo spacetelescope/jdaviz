@@ -94,6 +94,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed get_model_parameters error when retrieving parameters for a cube fit. [2171]
+
 Imviz
 ^^^^^
 
