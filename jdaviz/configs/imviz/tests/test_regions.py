@@ -1,13 +1,17 @@
+import glue_astronomy
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.utils.data import get_pkg_data_filename
+from packaging.version import Version
 from photutils.aperture import CircularAperture, SkyCircularAperture
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
                      EllipsePixelRegion, PointSkyRegion, PolygonPixelRegion,
-                     CircleAnnulusSkyRegion, Regions)
+                     CircleAnnulusPixelRegion, CircleAnnulusSkyRegion, Regions)
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
+
+GLUE_ASTRONOMY_LT_0_7_1 = not (Version(glue_astronomy.__version__) >= Version("0.7.1.dev"))
 
 
 class BaseRegionHandler:
@@ -230,10 +234,16 @@ class TestGetInteractiveRegions(BaseImviz_WCS_NoWCS):
         new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
         self.viewer.apply_subset_state(new_subset)
 
-        # Annulus is no longer accessible by API but also should not crash Imviz.
+        # In older glue-astronomy, annulus is no longer accessible by API
+        # but also should not crash Imviz.
         subsets = self.imviz.get_interactive_regions()
         assert len(self.imviz.app.data_collection.subset_groups) == 3
-        assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
+        if GLUE_ASTRONOMY_LT_0_7_1:
+            expected_subset_keys = ['Subset 1', 'Subset 2']
+        else:
+            expected_subset_keys = ['Subset 1', 'Subset 2', 'Subset 3']
+            assert isinstance(subsets['Subset 3'], CircleAnnulusPixelRegion)
+        assert list(subsets.keys()) == expected_subset_keys, subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
 
