@@ -1,7 +1,6 @@
 import os
 
 import numpy as np
-import asdf
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
@@ -56,8 +55,8 @@ def parse_data(app, file_obj, ext=None, data_label=None):
         # astropy.utils.data.download_file, the path has no file extension.
         # Here we check if the file is in the download cache, and if it is,
         # we look up the file extension from the source URL:
-        path_to_url_mapping = {v: k for k, v in cache_contents().items()}
-        if file_obj in path_to_url_mapping:
+        if file_obj.endswith('contents'):
+            path_to_url_mapping = {v: k for k, v in cache_contents().items() if file_obj}
             source_url = path_to_url_mapping[file_obj]
             # file_obj_lower is only used for checking extensions,
             # file_obj is passed for parsing and is not modified here:
@@ -77,19 +76,12 @@ def parse_data(app, file_obj, ext=None, data_label=None):
             _parse_image(app, pf, data_label, ext=ext)
 
         elif file_obj_lower.endswith('.asdf'):
-            # First check if file might be a Roman data product.
-            with asdf.open(file_obj) as asdf_file:
-                # This is a convention of roman data products.
-                if 'roman' in asdf_file:
-                    if not HAS_ROMAN_DATAMODELS:
-                        raise ImportError(
-                            "Roman ASDF detected but roman-datamodels is not installed.")
-                    with rdd.open(asdf_file) as pf:
-                        _parse_image(app, pf, data_label, ext=ext)
-                # Not Roman but also not really supported. Might still work though.
-                else:  # pragma: no cover
-                    _parse_image(app, asdf_file, data_label, ext=ext)
-
+            if not HAS_ROMAN_DATAMODELS:
+                raise ImportError(
+                    "ASDF detected but roman-datamodels is not installed."
+                )
+            with rdd.open(file_obj) as pf:
+                _parse_image(app, pf, data_label, ext=ext)
         else:  # Assume FITS
             with fits.open(file_obj) as pf:
                 _parse_image(app, pf, data_label, ext=ext)
