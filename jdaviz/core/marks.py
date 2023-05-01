@@ -2,7 +2,7 @@ import numpy as np
 
 from astropy import units as u
 from bqplot import LinearScale
-from bqplot.marks import Lines, Label, Scatter
+from bqplot.marks import Lines, Label, Scatter, OHLC
 from copy import deepcopy
 from glue.core import HubListener
 from specutils import Spectrum1D
@@ -529,7 +529,7 @@ class LineAnalysisContinuumRight(LineAnalysisContinuumLeft):
     pass
 
 
-class LineUncertainties(Lines):
+class LineUncertainties(OHLC):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
