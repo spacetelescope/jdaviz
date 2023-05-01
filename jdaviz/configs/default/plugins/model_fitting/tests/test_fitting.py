@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.io.registry.base import IORegistryError
 from astropy.modeling import models, parameters as params
 from astropy.nddata import StdDevUncertainty
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs import WCS
 from numpy.testing import assert_allclose, assert_array_equal
 from specutils.spectra import Spectrum1D
@@ -75,6 +76,30 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
             match="invalid model component label 'invalid-string'"):
         plugin.comp_label = 'invalid-string'
         plugin.vue_add_model({})
+
+
+@pytest.mark.filterwarnings(r"ignore:Model is linear in parameters.*")
+def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
+    flux = np.ones((3, 4, 5))
+    flux[2, 2, :] = [1, 2, 3, 4, 5]
+    cubeviz_helper.load_data(Spectrum1D(flux=flux * u.nJy, wcs=spectral_cube_wcs),
+                             data_label='test')
+    plugin = cubeviz_helper.plugins["Model Fitting"]
+    plugin.create_model_component("Linear1D", "L")
+    plugin.cube_fit = True
+    plugin.calculate_fit()
+
+    params = cubeviz_helper.get_model_parameters()
+    slope_res = np.zeros((4, 3))
+    slope_res[2, 2] = 1.0
+    slope_res = slope_res * u.nJy / u.Hz
+    intercept_res = np.ones((4, 3))
+    intercept_res[2, 2] = 0
+    intercept_res = intercept_res * u.nJy
+    assert_quantity_allclose(params['cube-fit model']['slope'], slope_res,
+                             atol=1e-10 * u.nJy / u.Hz)
+    assert_quantity_allclose(params['cube-fit model']['intercept'], intercept_res,
+                             atol=1e-10 * u.nJy)
 
 
 @pytest.mark.parametrize('unc', ('zeros', None))
