@@ -179,7 +179,7 @@ def multi_order_spectrum_list(spectrum1d, spectral_orders=10):
     return SpectrumList(sc)
 
 
-def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4)):
+def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4), with_uncerts=False):
 
     flux = np.arange(np.prod(shape)).reshape(shape) * fluxunit
     wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
@@ -187,13 +187,24 @@ def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4)):
                 "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
                 "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
     w = WCS(wcs_dict)
+    if with_uncerts:
+        uncert = StdDevUncertainty(np.abs(np.random.normal(flux) * u.Jy))
 
-    return Spectrum1D(flux=flux, wcs=w)
+        return Spectrum1D(flux=flux,
+                          uncertainty=uncert,
+                          wcs=w)
+    else:
+        return Spectrum1D(flux=flux, wcs=w)
 
 
 @pytest.fixture
 def spectrum1d_cube():
     return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy)
+
+
+@pytest.fixture
+def spectrum1d_cube_with_uncerts():
+    return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, with_uncerts=True)
 
 
 @pytest.fixture

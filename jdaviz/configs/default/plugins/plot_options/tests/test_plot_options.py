@@ -1,4 +1,6 @@
 import pytest
+from numpy import allclose
+from numpy.testing import assert_allclose
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -58,19 +60,31 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
 
 
 @pytest.mark.filterwarnings('ignore')
-def test_stretch_histogram(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube)
+def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
+    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
     po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
     po.open_in_tray()  # forces histogram to draw
 
-    # default selection for viewer should be flux-viewer (first in list) and nothing for layer
-    assert po.multiselect is False
-    assert po.viewer.multiselect is False
-    assert po.layer.multiselect is False
-    assert po.viewer.selected == 'flux-viewer'
-    assert po.layer.selected == 'Unknown spectrum object[FLUX]'
-
     assert po.stretch_histogram is not None
+
+    flux_cube_sample = po.stretch_histogram.marks[0].sample
+
+    # changing viewer should change results
+    po.viewer.selected = 'uncert-viewer'
+    assert not allclose(po.stretch_histogram.marks[0].sample, flux_cube_sample)
+
+    po.viewer.selected = 'flux-viewer'
+    assert_allclose(po.stretch_histogram.marks[0].sample, flux_cube_sample)
+
+    # change viewer limits
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv.state.x_max = 0.5 * fv.state.x_max
+    # viewer limits should not be affected by default
+    assert_allclose(po.stretch_histogram.marks[0].sample, flux_cube_sample)
+
+    # set to listen to viewer limits, the length of the samples will change
+    po.stretch_hist_zoom_limits = True
+    assert len(po.stretch_histogram.marks[0].sample) != len(flux_cube_sample)
 
 
 @pytest.mark.filterwarnings('ignore')
