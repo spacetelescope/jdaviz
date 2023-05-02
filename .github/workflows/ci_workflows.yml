@@ -57,10 +57,10 @@ jobs:
             toxenv: py39-test
             allow_failure: false
 
-          - name: Windows - Python 3.8
+          - name: Windows - Python 3.9
             os: windows-latest
-            python: 3.8
-            toxenv: py38-test
+            python: 3.9
+            toxenv: py39-test
             allow_failure: false
 
           # This also runs on cron but we want to make sure new changes
