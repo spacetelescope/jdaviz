@@ -58,6 +58,22 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
 
 
 @pytest.mark.filterwarnings('ignore')
+def test_stretch_histogram(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
+    po.open_in_tray()  # forces histogram to draw
+
+    # default selection for viewer should be flux-viewer (first in list) and nothing for layer
+    assert po.multiselect is False
+    assert po.viewer.multiselect is False
+    assert po.layer.multiselect is False
+    assert po.viewer.selected == 'flux-viewer'
+    assert po.layer.selected == 'Unknown spectrum object[FLUX]'
+
+    assert po.stretch_histogram is not None
+
+
+@pytest.mark.filterwarnings('ignore')
 def test_user_api(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
     po = cubeviz_helper.plugins['Plot Options']

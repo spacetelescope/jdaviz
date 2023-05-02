@@ -373,23 +373,26 @@ class PlotOptions(PluginTemplateMixin):
     @observe('plugin_opened', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, msg={}):
-        if not self.stretch_function_sync.get('in_subscribed_states'):
+        if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
             # no (image) viewer with stretch function options
             return
-        if not hasattr(self, 'viewer'):
+        if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet
             return
-        if not self.plugin_opened or not self.viewer.selected or not self.layer.selected:
+        if (not self.plugin_opened
+                or not self.viewer.selected
+                or not self.layer.selected):  # pragma: no cover
             # no need to make updates, updates will be redrawn when plugin is opened
             # NOTE: this won't update when the plugin is shown but not open in the tray
             return
-        if not isinstance(msg, dict) and not self.stretch_hist_zoom_limits:
+        if not isinstance(msg, dict) and not self.stretch_hist_zoom_limits:  # pragma: no cover
             # then this is from the limits callbacks and we don't want to waste resources
             # IMPORTANT: this assumes the only non-observe callback to this method comes
             # from state callbacks from zoom limits.
             return
 
-        if self.multiselect and (len(self.viewer.selected) > 1 or len(self.layer.selected) > 1):
+        if self.multiselect and (len(self.viewer.selected) > 1
+                                 or len(self.layer.selected) > 1):  # pragma: no cover
             # currently only support single-layer/viewer.  For now we'll just clear and return.
             # TODO: add support for multi-layer/viewer
             bqplot_clear_figure(self.stretch_histogram)
