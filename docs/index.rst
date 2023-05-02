@@ -24,6 +24,11 @@ spectra, typically the output of a multi-object spectrograph (e.g.,
 JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
 contextual information like on-sky views of the spectrograph slit.
 
+.. warning::
+
+   As of ``jdaviz`` version 3.5, python 3.8 is no longer supported. Please use python 3.9 or
+   greater to get the latest bug fixes and feature additions for ``jdaviz``.
+
 .. note::
 
    ``jdaviz`` is one tool that is part of STScI's larger
