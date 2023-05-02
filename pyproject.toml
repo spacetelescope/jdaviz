@@ -171,5 +171,5 @@ exclude_lines = [
 ]
 
 [tool.build_sphinx]
-edit-on-github = true
+edit_on_github = true
 github_project = "spacetelescope/jdaviz"
