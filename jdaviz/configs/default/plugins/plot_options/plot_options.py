@@ -482,5 +482,6 @@ class PlotOptions(PluginTemplateMixin):
             # TODO: Let user set y-scale to log
 
         interval = PercentileInterval(95)
-        hist_lims = interval.get_limits(sub_data)
-        hist_mark.min, hist_mark.max = hist_lims
+        if len(sub_data) > 0:
+            hist_lims = interval.get_limits(sub_data)
+            hist_mark.min, hist_mark.max = hist_lims
