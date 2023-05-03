@@ -3,6 +3,7 @@
 #
 """This module handles calculations based on world coordinate system (WCS)."""
 
+import warnings
 import base64
 import math
 from io import BytesIO
@@ -10,7 +11,17 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
+from astropy import coordinates as coord
 from astropy.coordinates import SkyCoord
+from astropy.io import fits
+from astropy.modeling import models
+from astropy.nddata import NDDataArray
+from astropy.wcs.utils import proj_plane_pixel_scales
+from astropy.wcs import WCS as FitsWCS, FITSFixedWarning
+
+from gwcs import coordinate_frames as cf
+from gwcs.wcs import WCS as GWCS
+
 from matplotlib.patches import Polygon
 
 __all__ = ['get_compass_info', 'draw_compass_mpl']
@@ -275,3 +286,133 @@ def data_outside_gwcs_bounding_box(data, x, y):
         if not (bb_xmin <= x <= bb_xmax and bb_ymin <= y <= bb_ymax):
             outside_bounding_box = True  # Has to be Python bool, not Numpy bool_
     return outside_bounding_box
+
+
+def get_fits_wcs_from_file(filename):
+    header = fits.getheader(filename)
+    with warnings.catch_warnings():
+        # Ignore a warning on using DATE-OBS in place of MJD-OBS
+        warnings.filterwarnings('ignore', message="'datfix' made the change",
+                                category=FITSFixedWarning)
+        wcs = FitsWCS(header)
+
+    return wcs
+
+
+def rotated_gwcs(
+    center_world_coord,
+    rotation_angle,
+    pixel_scales,
+    refdata_shape=(2, 2)
+):
+    # based on ``gwcs_simple_imaging_units`` in gwcs:
+    #   https://github.com/spacetelescope/gwcs/blob/
+    #   eec9a2b6de8356495f405de3dc6531538589ce5d/gwcs/tests/conftest.py#L165
+    rho = rotation_angle
+    sin_rho = np.sin(rho.to_value(u.rad))
+    cos_rho = np.cos(rho.to_value(u.rad))
+    rotation_matrix = np.array([[cos_rho, -sin_rho],
+                                [sin_rho, cos_rho]])
+
+    # "rescale" the pixel scales. Scaling constant was tuned so that the
+    # synthetic image is about the same size on the sky as the input image
+    rescale_pixel_scale = np.array(refdata_shape) / 1000
+
+    shift_by_crpix = (
+        models.Shift(-refdata_shape[1] / 2 * u.pixel) &
+        models.Shift(-refdata_shape[0] / 2 * u.pixel)
+    )
+    # multiplying by +/-1 can flip east/west
+    flip_east_west = models.Multiply(-1) & models.Multiply(1)
+    rotation = models.AffineTransformation2D(
+        rotation_matrix * u.deg, translation=[0, 0] * u.deg
+    )
+    rotation.input_units_equivalencies = {
+        "x": u.pixel_scale(pixel_scales[0] * rescale_pixel_scale[0]),
+        "y": u.pixel_scale(pixel_scales[1] * rescale_pixel_scale[1])
+    }
+    rotation.inverse = models.AffineTransformation2D(
+        np.linalg.inv(rotation_matrix) * u.pix, translation=[0, 0] * u.pix
+    )
+    rotation.inverse.input_units_equivalencies = {
+        "x": u.pixel_scale(1 / (pixel_scales[0] * rescale_pixel_scale[0])),
+        "y": u.pixel_scale(1 / (pixel_scales[1] * rescale_pixel_scale[1]))
+    }
+    tan = models.Pix2Sky_TAN()
+    celestial_rotation = models.RotateNative2Celestial(
+        center_world_coord.ra, center_world_coord.dec, 180 * u.deg
+    )
+
+    det2sky = (
+        shift_by_crpix | flip_east_west | rotation |
+        tan | celestial_rotation
+    )
+    det2sky.name = "linear_transform"
+
+    detector_frame = cf.Frame2D(
+        name="detector",
+        axes_names=("x", "y"),
+        unit=(u.pix, u.pix)
+    )
+    sky_frame = cf.CelestialFrame(
+        reference_frame=coord.ICRS(),
+        name='icrs',
+        unit=(u.deg, u.deg)
+    )
+    pipeline = [
+        (detector_frame, det2sky),
+        (sky_frame, None)
+    ]
+
+    return GWCS(pipeline)
+
+
+def get_rotated_nddata_from_fits(filename, rotation_angle, refdata_shape=(2, 2)):
+    """
+    Create a synthetic NDDataArray which stores GWCS that approximate
+    the FITS WCS in ``filename`` rotated by ``rotation_angle``.
+
+    Parameters
+    ----------
+    filename : path-like, str
+        FITS file to use as reference
+    rotation_angle : `~astropy.units.Quantity`
+        Angle to rotate the image counter-clockwise from its
+        original orientation
+    refdata_shape : tuple
+        Shape of the reference data array
+
+    Returns
+    -------
+    ndd : `~astropy.nddata.NDDataArray`
+        Data are all NaNs, wcs are rotated.
+    """
+    # get the FITS WCS from the file:
+    wcs = get_fits_wcs_from_file(filename)
+
+    # get the world coordinates of the central pixel
+    real_image_shape = np.array(wcs.array_shape)
+    central_pixel_coord = real_image_shape / 2 * u.pix
+    central_world_coord = wcs.pixel_to_world(*central_pixel_coord)
+
+    # compute the x/y plate scales from the WCS:
+    pixel_scales = [
+        value * unit / u.pix
+        for value, unit in zip(
+            proj_plane_pixel_scales(wcs), wcs.wcs.cunit
+        )
+    ]
+
+    # create a GWCS centered on ``filename``,
+    # and rotated by ``rotation_angle``:
+    new_rotated_gwcs = rotated_gwcs(
+        central_world_coord, rotation_angle, pixel_scales
+    )
+
+    # create an all-nan NDDataArray with the rotated GWCS:
+    ndd = NDDataArray(
+        data=np.nan * np.ones(refdata_shape),
+        wcs=new_rotated_gwcs,
+    )
+
+    return ndd

@@ -133,6 +133,10 @@ module.exports = {
       }
       return inViewer
     },
+    wcsOnlyItemInViewer(item) {
+      const wcsOnly = Object.keys(this.$props.viewer.wcs_only_layers).includes(item.name)
+      return wcsOnly
+    },
     itemIsVisible(item, returnExtraItems) {
       if (this.$props.viewer.config === 'mosviz') {
         if (this.$props.viewer.reference === 'spectrum-viewer' && item.type !== '1d spectrum') {
@@ -168,6 +172,8 @@ module.exports = {
         } else if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
           return (item.ndims === 2 || item.type==='trace') && this.dataItemInViewer(item, returnExtraItems)
         }
+      } else if (this.$props.viewer.config === 'imviz') {
+        return this.dataItemInViewer(item, returnExtraItems) && !this.wcsOnlyItemInViewer(item)
       }
       // for any situation not covered above, default to showing the entry
       return this.dataItemInViewer(item, returnExtraItems)

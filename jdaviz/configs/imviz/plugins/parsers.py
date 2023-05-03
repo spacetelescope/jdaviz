@@ -375,13 +375,21 @@ def _nddata_to_glue_data(ndd, data_label):
         arr = getattr(ndd, attrib)
         if arr is None:
             continue
-        comp_label = attrib.upper()
-        cur_label = f'{data_label}[{comp_label}]'
-        cur_data = Data(label=cur_label)
+        cur_data = Data()
         cur_data.meta.update(standardize_metadata(ndd.meta))
         if ndd.wcs is not None:
             cur_data.coords = ndd.wcs
         raw_arr = arr
+
+        wcs_only = np.all(np.isnan(raw_arr))
+        cur_data.meta.update({'WCS-ONLY': wcs_only})
+
+        cur_label = f'{data_label}'
+        comp_label = attrib.upper()
+        if not wcs_only:
+            cur_label += f'[{comp_label}]'
+        cur_data.label = cur_label
+
         if attrib == 'data':
             bunit = ndd.unit or ''
         elif attrib == 'uncertainty':

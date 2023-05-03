@@ -13,7 +13,7 @@
     </div>
     <div v-else>
       <j-tooltip tipid="viewer-data-enable">
-        <v-btn 
+        <v-btn v-if="this.$props.item.type !== 'wcs-only'"
           icon
           color="default"
           @click="selectClicked">
@@ -74,7 +74,6 @@ module.exports = {
         visible: prevVisibleState != 'visible' || (!this.multi_select && this.$props.item.type !== 'trace'),
         replace: !this.multi_select && this.$props.item.type !== 'trace'
       })
-
     }
   },
   computed: {

@@ -51,7 +51,8 @@ from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage)
+                                ViewerAddedMessage, ViewerRemovedMessage,
+                                ChangeRefDataMessage)
 from jdaviz.core.style_widget import StyleWidget
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
@@ -302,6 +303,8 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_layers_changed)
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._on_layers_changed)
+        self.hub.subscribe(self, ChangeRefDataMessage,
+                           handler=self._on_refdata_changed)
 
     @property
     def hub(self):
@@ -410,14 +413,92 @@ class Application(VuetifyTemplate, HubListener):
     def _on_layers_changed(self, msg):
         if hasattr(msg, 'data'):
             layer_name = msg.data.label
+            is_wcs_only = msg.data.meta.get('WCS-ONLY', False)
+            is_ref_data = getattr(msg._viewer.state.reference_data, 'label', '') == layer_name
         elif hasattr(msg, 'subset'):
             layer_name = msg.subset.label
+            is_wcs_only = is_ref_data = False
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
+        wcs_only_refdata_icon = 'mdi-compass-outline'
+        wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
+        n_wcs_layers = len([icon.startswith('mdi') for icon in self.state.layer_icons])
         if layer_name not in self.state.layer_icons:
-            self.state.layer_icons = {**self.state.layer_icons,
-                                      layer_name: alpha_index(len(self.state.layer_icons))}
+            if is_wcs_only:
+                self.state.layer_icons = {**self.state.layer_icons,
+                                          layer_name: wcs_only_refdata_icon if is_ref_data
+                                          else wcs_only_not_refdata_icon}
+            else:
+                self.state.layer_icons = {**self.state.layer_icons,
+                                          layer_name: alpha_index(len(self.state.layer_icons) - n_wcs_layers)}
+
+    def _on_refdata_changed(self, msg):
+        is_wcs_only = (
+            msg.old.meta.get('WCS-ONLY', False) or
+            msg.new.meta.get('WCS-ONLY', False)
+        )
+
+        if not is_wcs_only:
+            return
+
+        wcs_only_refdata_icon = 'mdi-compass-outline'
+        wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
+
+        def switch_icon(old_icon, new_icon):
+            if old_icon != new_icon:
+                return new_icon
+            return old_icon
+
+        new_layer_icons = {}
+        for i, (layer_name, layer_icon) in enumerate(self.state.layer_icons.items()):
+            if layer_name == msg.old.label:
+                new_layer_icons[layer_name] = switch_icon(
+                    layer_icon, wcs_only_not_refdata_icon
+                )
+            elif layer_name == msg.new.label:
+                new_layer_icons[layer_name] = switch_icon(
+                    layer_icon, wcs_only_refdata_icon
+                )
+            else:
+                new_layer_icons[layer_name] = layer_icon
+
+        self.state.layer_icons = new_layer_icons
+
+    def _change_reference_data(self, new_refdata_label):
+        """
+        Change reference data to Data with ``data_label``
+        """
+        if self.config != 'imviz':
+            # this method is only meant for imviz for now
+            return
+
+        viewer_reference = self._get_first_viewer_reference_name()
+        viewer = self.get_viewer(viewer_reference)
+        old_refdata = viewer.state.reference_data
+
+        if new_refdata_label == old_refdata.label:
+            # if there's no refdata change, don't do anything:
+            return
+
+        [new_refdata] = [
+            data for data in self.data_collection
+            if data.label == new_refdata_label
+        ]
+
+        self._viewer_store[viewer_reference].state.reference_data = new_refdata
+
+        change_refdata_message = ChangeRefDataMessage(
+            new_refdata,
+            viewer,
+            viewer_id=viewer_reference,
+            sender=self,
+            old=old_refdata,
+            new=new_refdata
+        )
+        self.hub.broadcast(change_refdata_message)
+
+        viewer.state.reset_limits()
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -693,6 +774,14 @@ class Application(VuetifyTemplate, HubListener):
                     #  output data type
                     elif len(layer_data.shape) == 2:
                         layer_data = layer_data.get_object(cls=CCDData)
+
+                    is_wcs_only = (
+                        np.all(np.isnan(layer_data.data)) and
+                        layer_data.meta.get('WCS-ONLY', False)
+                    )
+
+                    if is_wcs_only:
+                        continue
 
                     data[label] = layer_data
 
@@ -1637,7 +1726,7 @@ class Application(VuetifyTemplate, HubListener):
         visible : bool
             Whether to set the layer(s) to visible.
         replace : bool
-            Whether to disable the visilility of all other layers in the viewer
+            Whether to disable the visibility of all other layers in the viewer
         """
         viewer_item = self._get_viewer_item(viewer_reference)
         viewer_id = viewer_item['id']
@@ -1690,6 +1779,14 @@ class Application(VuetifyTemplate, HubListener):
             for id in selected_items:
                 if id != data_id:
                     selected_items[id] = 'hidden'
+
+        # remove wcs-only data from selected items,
+        # add to wcs_only_layers:
+        for layer in viewer.layers:
+            if layer.layer.data.label == data_label and layer.layer.meta.get('WCS-ONLY', False):
+                layer.visible = False
+                viewer_item['wcs_only_layers'].append(data_label)
+                selected_items.pop(data_id)
 
         # Sets the plot axes labels to be the units of the most recently
         # active data.
@@ -1770,11 +1867,15 @@ class Application(VuetifyTemplate, HubListener):
     def _create_data_item(data):
         ndims = len(data.shape)
         wcsaxes = data.meta.get('WCSAXES', None)
+        wcs_only = data.meta.get('WCS-ONLY', False)
         if wcsaxes is None:
             # then we'll need to determine type another way, we want to avoid
             # this when we can though since its not as cheap
             component_ids = [str(c) for c in data.component_ids()]
-        if data.label == 'MOS Table':
+
+        if wcs_only:
+            typ = 'wcs-only'
+        elif data.label == 'MOS Table':
             typ = 'table'
         elif 'Trace' in data.meta:
             typ = 'trace'
@@ -1888,6 +1989,7 @@ class Application(VuetifyTemplate, HubListener):
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
+            'wcs_only_layers': viewer.state.wcs_only_layers,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
             'config': self.config,  # give viewer access to app config/layout
