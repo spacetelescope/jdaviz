@@ -485,8 +485,10 @@ class Application(VuetifyTemplate, HubListener):
                                           layer_name: wcs_only_refdata_icon if is_ref_data
                                           else wcs_only_not_refdata_icon}
             else:
-                self.state.layer_icons = {**self.state.layer_icons,
-                                          layer_name: alpha_index(len(self.state.layer_icons) - n_wcs_layers)}
+                self.state.layer_icons = {
+                    **self.state.layer_icons,
+                    layer_name: alpha_index(len(self.state.layer_icons) - n_wcs_layers)
+                }
 
     def _on_refdata_changed(self, msg):
         is_wcs_only = (
@@ -2204,6 +2206,8 @@ class Application(VuetifyTemplate, HubListener):
 
         self.state.viewer_icons.setdefault(vid, len(self.state.viewer_icons)+1)
 
+        wcs_only_layers = getattr(viewer.state, 'wcs_only_layers', [])
+
         return {
             'id': vid,
             'name': name or vid,
@@ -2213,7 +2217,7 @@ class Application(VuetifyTemplate, HubListener):
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
-            'wcs_only_layers': viewer.state.wcs_only_layers,
+            'wcs_only_layers': wcs_only_layers,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
             'config': self.config,  # give viewer access to app config/layout

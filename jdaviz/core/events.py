@@ -8,7 +8,7 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'SliceToolStateMessage',
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
            'MarkersChangedMessage', 'CanvasRotationChangedMessage',
-           'GlobalDisplayUnitChanged', 'ChangeDataMessage']
+           'GlobalDisplayUnitChanged', 'ChangeRefDataMessage']
 
 
 class NewViewerMessage(Message):

@@ -1,7 +1,6 @@
 from echo import delay_callback
 import numpy as np
 
-from glue.core.data import BaseData
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
