@@ -505,7 +505,7 @@ def test_load_valid_not_valid(imviz_helper):
     assert_allclose(imviz_helper.app.data_collection[0].get_component('DATA').data, 1)
 
 
-@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is installed")
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def test_roman_parser(imviz_helper):
     filename = get_pkg_data_filename('data/roman_wfi_image_model.asdf')
     imviz_helper.load_data(filename)
