@@ -104,8 +104,10 @@ Cubeviz
 Imviz
 ^^^^^
 
-* Do not hide previous results in aperture photometry when there is a failure, but rather show
+- Do not hide previous results in aperture photometry when there is a failure, but rather show
   the failure message within the plugin UI to indicate the shown results are "out of date". [#2112]
+
+- More efficient parser for Roman data products in Imviz [#2176]
 
 Mosviz
 ^^^^^^
