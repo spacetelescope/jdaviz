@@ -37,7 +37,7 @@ def test_view_dict(imviz_helper):
     assert mv.has_metadata
     assert mv.metadata == [
         ('BAR', '10.0', ''), ('BOZO', 'None', ''), ('EXTNAME', 'SCI', ''),
-        ('EXTVER', '1', ''), ('FOO', '', '')]
+        ('EXTVER', '1', ''), ('FOO', '', ''), ('WCS-ONLY', 'False', '')]
 
     mv.dataset_selected = 'has_nested_meta[DATA]'
     assert not mv.has_primary
@@ -46,7 +46,9 @@ def test_view_dict(imviz_helper):
     assert mv.has_metadata
     assert mv.metadata == [
         ('EXTNAME', 'ASDF', ''), ('REF.bar', '10.0', ''),
-        ('REF.foo.1', '', ''), ('REF.foo.2.0', '1', ''), ('REF.foo.2.1', '2', '')]
+        ('REF.foo.1', '', ''), ('REF.foo.2.0', '1', ''), ('REF.foo.2.1', '2', ''),
+        ('WCS-ONLY', 'False', '')
+    ]
 
     mv.dataset_selected = 'has_primary[DATA,1]'
     assert mv.has_primary

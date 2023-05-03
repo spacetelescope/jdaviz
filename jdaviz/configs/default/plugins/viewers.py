@@ -117,7 +117,10 @@ class JdavizViewerMixin:
 
         visible_layers = {}
         for layer in self.state.layers[::-1]:
-            layer_is_wcs_only = layer.layer.meta.get('WCS-ONLY', False)
+            layer_is_wcs_only = (
+                    hasattr(layer.layer, 'meta') and
+                    layer.layer.meta.get('WCS-ONLY', False)
+            )
             if layer.visible and not layer_is_wcs_only:
                 prefix_icon, suffix = _get_layer_info(layer)
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),

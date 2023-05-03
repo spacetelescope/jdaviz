@@ -342,7 +342,19 @@ def get_reference_image_data(app):
     viewer_reference = app._get_first_viewer_reference_name(require_image_viewer=True)
     viewer = app.get_viewer(viewer_reference)
     refdata = viewer.state.reference_data
-    iref = app.data_collection.index(refdata) if refdata in app.data_collection else None
+
+    if refdata is not None:
+        iref = app.data_collection.index(refdata)
+        return refdata, iref
+
+    # if reference data not found above, fall back on old method:
+    for i, data in enumerate(app.data_collection):
+        if layer_is_image_data(data):
+            iref = i
+            refdata = data
+            break
+    if refdata is None:
+        raise ValueError(f'No valid reference data found in collection: {app.data_collection}')
     return refdata, iref
 
 

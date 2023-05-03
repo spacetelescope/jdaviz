@@ -371,7 +371,10 @@ def _nddata_to_glue_data(ndd, data_label):
     if ndd.data.ndim != 2:
         raise ValueError(f'Imviz cannot load this NDData with ndim={ndd.data.ndim}')
 
-    for attrib in ['data', 'mask', 'uncertainty']:
+    for attrib, sub_attrib in zip(
+            ['data', 'mask', 'uncertainty'],
+            ['data', None, 'array']
+    ):
         arr = getattr(ndd, attrib)
         if arr is None:
             continue
@@ -381,7 +384,11 @@ def _nddata_to_glue_data(ndd, data_label):
             cur_data.coords = ndd.wcs
         raw_arr = arr
 
-        wcs_only = np.all(np.isnan(raw_arr))
+        if sub_attrib is not None:
+            base_arr = getattr(raw_arr, sub_attrib)
+        else:
+            base_arr = raw_arr
+        wcs_only = np.all(np.isnan(base_arr))
         cur_data.meta.update({'WCS-ONLY': wcs_only})
 
         cur_label = f'{data_label}'

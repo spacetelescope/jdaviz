@@ -423,7 +423,10 @@ class Application(VuetifyTemplate, HubListener):
 
         wcs_only_refdata_icon = 'mdi-compass-outline'
         wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
-        n_wcs_layers = len([icon.startswith('mdi') for icon in self.state.layer_icons])
+        n_wcs_layers = (
+            len([icon.startswith('mdi') for icon in self.state.layer_icons])
+            if is_wcs_only else 0
+        )
         if layer_name not in self.state.layer_icons:
             if is_wcs_only:
                 self.state.layer_icons = {**self.state.layer_icons,
@@ -777,13 +780,15 @@ class Application(VuetifyTemplate, HubListener):
                     elif len(layer_data.shape) == 2:
                         layer_data = layer_data.get_object(cls=CCDData)
 
-                    is_wcs_only = (
-                        np.all(np.isnan(layer_data.data)) and
-                        layer_data.meta.get('WCS-ONLY', False)
-                    )
+                        is_wcs_only = (
+                            # then check if it's all NaNs:
+                            np.all(np.isnan(layer_data.data)) and
+                            # finally check that metadata confirms this is a WCS-ONLY object:
+                            layer_data.meta.get('WCS-ONLY', False)
+                        )
 
-                    if is_wcs_only:
-                        continue
+                        if is_wcs_only:
+                            continue
 
                     data[label] = layer_data
 
@@ -1785,7 +1790,8 @@ class Application(VuetifyTemplate, HubListener):
         # remove wcs-only data from selected items,
         # add to wcs_only_layers:
         for layer in viewer.layers:
-            if layer.layer.data.label == data_label and layer.layer.meta.get('WCS-ONLY', False):
+            is_wcs_only = getattr(layer.layer, 'meta', {}).get('WCS-ONLY', False)
+            if layer.layer.data.label == data_label and is_wcs_only:
                 layer.visible = False
                 viewer_item['wcs_only_layers'].append(data_label)
                 selected_items.pop(data_id)
