@@ -1,6 +1,7 @@
 from echo import delay_callback
 import numpy as np
 
+from glue.core.data import BaseData
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
@@ -56,6 +57,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.wcs_only_layers = []
 
     def reset_limits(self, *event):
         if self.reference_data is None:  # Nothing to do

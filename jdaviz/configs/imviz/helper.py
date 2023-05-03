@@ -145,7 +145,6 @@ class Imviz(ImageConfigHelper):
                     kw['data_label'] = None
                 else:
                     kw['data_label'] = data_label
-
                 self.app.load_data(filepath, parser_reference='imviz-data-parser', **kw)
 
         elif isinstance(data, np.ndarray) and data.ndim >= 3:
@@ -344,8 +343,18 @@ def split_filename_with_fits_ext(filename):
     return filepath, ext, data_label
 
 
-def layer_is_image_data(layer):
+def layer_is_2d(layer):
+    # returns True for subclasses of BaseData with ndim=2, both for
+    # layers that are WCS-only as well as images containing data:
     return isinstance(layer, BaseData) and layer.ndim == 2
+
+
+def layer_is_image_data(layer):
+    return layer_is_2d(layer) and not layer.meta.get('WCS-ONLY', False)
+
+
+def layer_is_wcs_only(layer):
+    return layer_is_2d(layer) and layer.meta.get('WCS-ONLY', False)
 
 
 def layer_is_table_data(layer):
@@ -362,16 +371,13 @@ def get_top_layer_index(viewer):
 
 
 def get_reference_image_data(app):
-    """Return the first 2D image data in collection and its index to use as reference."""
-    refdata = None
-    iref = 0
-    for i, data in enumerate(app.data_collection):
-        if layer_is_image_data(data):
-            iref = i
-            refdata = data
-            break
-    if refdata is None:
-        raise ValueError(f'No valid reference data found in collection: {app.data_collection}')
+    """
+    Return the reference data in the first image viewer and its index
+    """
+    viewer_reference = app._get_first_viewer_reference_name(require_image_viewer=True)
+    viewer = app.get_viewer(viewer_reference)
+    refdata = viewer.state.reference_data
+    iref = app.data_collection.index(refdata) if refdata in app.data_collection else None
     return refdata, iref
 
 
@@ -461,7 +467,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
             continue
 
         # We are not touching any existing Subsets. They keep their own links.
-        if not layer_is_image_data(data):
+        if not layer_is_2d(data):
             continue
 
         if data in data_already_linked:

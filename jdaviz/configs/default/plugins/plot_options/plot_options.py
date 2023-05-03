@@ -386,7 +386,11 @@ class PlotOptions(PluginTemplateMixin):
             return is_profile(state) or is_scatter(state)
 
         def is_image(state):
-            return isinstance(state, BqplotImageLayerState)
+            wcs_only = (
+                hasattr(state, 'wcs_only_layers') and
+                self.layer.selected in state.wcs_only_layers
+            )
+            return isinstance(state, BqplotImageLayerState) and not wcs_only
 
         def not_image(state):
             return not is_image(state)
