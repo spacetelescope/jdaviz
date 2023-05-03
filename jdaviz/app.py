@@ -478,7 +478,10 @@ class Application(VuetifyTemplate, HubListener):
 
         wcs_only_refdata_icon = 'mdi-compass-outline'
         wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
-        n_wcs_layers = len([icon.startswith('mdi') for icon in self.state.layer_icons])
+        n_wcs_layers = (
+            len([icon.startswith('mdi') for icon in self.state.layer_icons])
+            if is_wcs_only else 0
+        )
         if layer_name not in self.state.layer_icons:
             if is_wcs_only:
                 self.state.layer_icons = {**self.state.layer_icons,
@@ -763,7 +766,6 @@ class Application(VuetifyTemplate, HubListener):
         This is useful when reference name is `None`.
         """
         return self._viewer_store.get(vid)
-
 
     def get_subsets(self, subset_name=None, spectral_only=False,
                     spatial_only=False, object_only=False,
@@ -1953,7 +1955,8 @@ class Application(VuetifyTemplate, HubListener):
         # remove wcs-only data from selected items,
         # add to wcs_only_layers:
         for layer in viewer.layers:
-            if layer.layer.data.label == data_label and layer.layer.meta.get('WCS-ONLY', False):
+            is_wcs_only = getattr(layer.layer, 'meta', {}).get('WCS-ONLY', False)
+            if layer.layer.data.label == data_label and is_wcs_only:
                 layer.visible = False
                 viewer_item['wcs_only_layers'].append(data_label)
                 selected_items.pop(data_id)
