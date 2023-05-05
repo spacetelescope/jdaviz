@@ -10,6 +10,8 @@ New Features
 
 - Exact-text filtering for metadata plugin. [#2147]
 
+- Update Subset Plugin to utilize ``get_subsets()``. [#2157]
+
 Cubeviz
 ^^^^^^^
 
