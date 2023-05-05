@@ -45,44 +45,26 @@
       </v-expansion-panels>
     </v-row>
 
-    <!-- Composite region cannot be edited, so just grab first element. -->
-    <div v-if="is_editable">
-      <v-row v-for="(item, index2) in subset_definitions[0]"
-       class="pt-0 pb-0 mt-0 mb-0">
+    <!-- Show all subregions of a subset, including Glue state and subset type. -->
+    <div v-for="(region, index) in subset_definitions">
+      <v-row no-gutters>
+          <v-col>Subset type: {{ subset_types[index] }}</v-col>
+      </v-row>
+      <v-row no-gutters>
+          <v-col>Glue state: {{ glue_state_types[index] }}</v-col>
+      </v-row>
+      <v-row v-for="(item, index2) in region">
         <v-text-field
           :label="item.name"
           v-model.number="item.value"
           type="number"
+          :disabled="!is_editable"
         ></v-text-field>
       </v-row>
+    </div>
 
       <v-row justify="end" no-gutters>
-        <v-btn color="primary" text @click="update_subset">Update</v-btn>
+        <v-btn color="primary" text @click="update_subset" :disabled="!is_editable">Update</v-btn>
       </v-row>
-    </div>
-
-    <div v-if="show_region_info">
-      <j-plugin-section-header>Subset Region Definition</j-plugin-section-header>
-      <div v-if="subset_definitions.length">
-        <v-row v-for="(subset_definition, index) in subset_definitions" no-gutters>
-          <v-col>
-            <v-row class="pt-0 pb-0 mt-0 mb-0">
-              <v-col>Subset type:</v-col>
-              <v-col>{{ subset_types[index] }}</v-col>
-            </v-row>
-            <v-row v-for="(item, index2) in subset_definition"
-             class="pt-0 pb-0 mt-0 mb-0" no-gutters>
-              <v-col>{{ item.name }}:</v-col>
-              <v-col>
-                <j-number-uncertainty
-                  :value="item.orig"
-                  :defaultDigs="6"
-                ></j-number-uncertainty>
-              </v-col>
-            </v-row>
-          </v-col>
-        </v-row>
-      </div>
-    </div>
   </j-tray-plugin>
 </template>

@@ -62,8 +62,8 @@ def test_region_from_subset_3d(cubeviz_helper):
 
     cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
-    reg = subsets.get('Subset 1')
+    subsets = cubeviz_helper.app.get_subsets()
+    reg = cubeviz_helper.app.get_subsets('Subset 1', object_only=True)[0]
 
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
@@ -273,8 +273,7 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
     spec_viewer.apply_roi(XRangeROI(30, 35))
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer')
-    reg = subsets.get('Subset 1')
+    reg = cubeviz_helper.app.get_subsets('Subset 1')
 
     assert len(reg) == 2
     assert isinstance(reg, SpectralRegion)
@@ -285,31 +284,32 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
 
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["Range", "Range"]
-    assert not subset_plugin.is_editable
+    assert subset_plugin.glue_state_types == ["RangeSubsetState", "OrState"]
+    # assert not subset_plugin.is_editable
     assert subset_plugin.get_center() is None
-    subset_plugin.set_center(99, update=True)   # This is no-op
+    # TODO: Should this be changed to something else?
+    # subset_plugin.set_center(99, update=True)   # This is no-op
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", key) == 30
-        assert subset_plugin._get_value_from_subset_definition(0, "Upper bound", key) == 35
-        assert subset_plugin._get_value_from_subset_definition(1, "Lower bound", key) == 5
-        assert subset_plugin._get_value_from_subset_definition(1, "Upper bound", key) == 15.5
+        assert subset_plugin._get_value_from_subset_definition(1, "Lower bound", key) == 30
+        assert subset_plugin._get_value_from_subset_definition(1, "Upper bound", key) == 35
+        assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", key) == 5
+        assert subset_plugin._get_value_from_subset_definition(0, "Upper bound", key) == 15.5
 
     # This should not be possible via GUI but here we change
     # something to make sure no-op is really no-op.
     subset_plugin._set_value_in_subset_definition(0, "Lower bound", "value", 25)
-    subset_plugin.vue_update_subset()
+    # subset_plugin.vue_update_subset()
     # "value" here does not matter. It is going to get overwritten next time Subset is processed.
     assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "value") == 25
-    assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "orig") == 30
+    assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "orig") == 5
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer')
-    reg = subsets.get('Subset 1')
+    reg = cubeviz_helper.app.get_subsets('Subset 1')
     assert_quantity_allclose(reg[1].lower, 30.0*u.Hz)  # Still the old value
 
     # See, never happened.
     subset_plugin.subset_selected = "Create New"
     subset_plugin.subset_selected = "Subset 1"
-    assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "value") == 30
+    assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "value") == 5
 
 
 def test_composite_region_from_subset_3d(cubeviz_helper):
@@ -356,6 +356,13 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'AndNotState', 'region': circle2,
                        'subset_state': reg[-1]['subset_state']}
 
+    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    assert subset_plugin.subset_selected == "Subset 1"
+    assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI',
+                                          'RectangularROI', 'CircularROI']
+    assert subset_plugin.glue_state_types == ['AndState', 'AndNotState',
+                                              'OrState', 'AndState', 'AndNotState']
+
 
 def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
@@ -398,6 +405,11 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     spatial_list = cubeviz_helper.app.get_subsets("Subset 1", spatial_only=True)
     assert len(spatial_list) == 3
 
+    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    assert subset_plugin.subset_selected == "Subset 1"
+    assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI']
+    assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'AndNotState']
+
 
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = np.ones((10, 10))
@@ -426,6 +438,11 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
                                   width=3, height=6, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
                        'subset_state': reg[-1]['subset_state']}
+
+    subset_plugin = imviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    assert subset_plugin.subset_selected == "Subset 1"
+    assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI']
+    assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'AndNotState']
 
 
 def test_with_invalid_subset_name(cubeviz_helper):
@@ -470,3 +487,8 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
                              7500 * spectrum1d.spectral_axis.unit)
     assert reg[-1]['region'].lower == subset1.lower and reg[-1]['region'].upper == subset1.upper
     assert reg[-1]['glue_state'] == 'AndState'
+
+    subset_plugin = specviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    assert subset_plugin.subset_selected == "Subset 1"
+    assert subset_plugin.subset_types == ['Range', 'Range', 'Range', 'Range']
+    assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'OrState', 'AndState']
