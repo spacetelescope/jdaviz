@@ -16,6 +16,8 @@ New Features
 
 - Vertical (y-range) zoom tool for all spectrum and spectrum-2d viewers. [#2206]
 
+- Allow Subset Plugin to edit composite subsets. [#2182]
+
 Cubeviz
 ^^^^^^^
 
