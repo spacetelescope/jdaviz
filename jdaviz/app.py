@@ -439,13 +439,8 @@ class Application(VuetifyTemplate, HubListener):
                 }
 
     def _on_refdata_changed(self, msg):
-        is_wcs_only = (
-            msg.old.meta.get('WCS-ONLY', False) or
-            msg.new.meta.get('WCS-ONLY', False)
-        )
-
-        if not is_wcs_only:
-            return
+        old_is_wcs_only = msg.old.meta.get('WCS-ONLY', False)
+        new_is_wcs_only = msg.new.meta.get('WCS-ONLY', False)
 
         wcs_only_refdata_icon = 'mdi-compass-outline'
         wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
@@ -457,11 +452,11 @@ class Application(VuetifyTemplate, HubListener):
 
         new_layer_icons = {}
         for i, (layer_name, layer_icon) in enumerate(self.state.layer_icons.items()):
-            if layer_name == msg.old.label:
+            if layer_name == msg.old.label and old_is_wcs_only:
                 new_layer_icons[layer_name] = switch_icon(
                     layer_icon, wcs_only_not_refdata_icon
                 )
-            elif layer_name == msg.new.label:
+            elif layer_name == msg.new.label and new_is_wcs_only:
                 new_layer_icons[layer_name] = switch_icon(
                     layer_icon, wcs_only_refdata_icon
                 )
@@ -480,7 +475,7 @@ class Application(VuetifyTemplate, HubListener):
 
         viewer_reference = self._get_first_viewer_reference_name()
         viewer = self.get_viewer(viewer_reference)
-        old_refdata = viewer.state.reference_data
+        old_refdata = self._viewer_store[viewer_reference].state.reference_data
 
         if new_refdata_label == old_refdata.label:
             # if there's no refdata change, don't do anything:
@@ -491,8 +486,6 @@ class Application(VuetifyTemplate, HubListener):
             if data.label == new_refdata_label
         ]
 
-        self._viewer_store[viewer_reference].state.reference_data = new_refdata
-
         change_refdata_message = ChangeRefDataMessage(
             new_refdata,
             viewer,
@@ -501,9 +494,11 @@ class Application(VuetifyTemplate, HubListener):
             old=old_refdata,
             new=new_refdata
         )
+
+        self._viewer_store[viewer_reference].state.reference_data = new_refdata
         self.hub.broadcast(change_refdata_message)
 
-        viewer.state.reset_limits()
+        self._viewer_store[viewer_reference].state.reset_limits()
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
