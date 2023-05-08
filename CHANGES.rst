@@ -12,6 +12,8 @@ New Features
 
 - Update Subset Plugin to utilize ``get_subsets()``. [#2157]
 
+- Histogram showing image values in stretch limits section of plot options plugin. [#2153]
+
 Cubeviz
 ^^^^^^^
 

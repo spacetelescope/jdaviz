@@ -1,5 +1,9 @@
 import os
+import bqplot
+import numpy as np
 
+from astropy.visualization import PercentileInterval
+from ipywidgets import widget_serialization
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
@@ -12,6 +16,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
                                         PlotOptionsSyncState)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.utils import bqplot_clear_figure
 
 __all__ = ['PlotOptions']
 
@@ -60,6 +65,8 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Specviz
     * ``stretch_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
+    * ``stretch_hist_zoom_limits`` : whether to show the histogram for the current zoom
+      limits instead of all data within the layer; not exposed for Specviz.
     * ``image_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       whether the image bitmap is visible; not exposed for Specviz.
     * ``image_color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -131,6 +138,9 @@ class PlotOptions(PluginTemplateMixin):
 
     stretch_vmax_value = Float().tag(sync=True)
     stretch_vmax_sync = Dict().tag(sync=True)
+
+    stretch_hist_zoom_limits = Bool().tag(sync=True)
+    stretch_histogram = Any().tag(sync=True, **widget_serialization)
 
     subset_visible_value = Bool().tag(sync=True)
     subset_visible_sync = Dict().tag(sync=True)
@@ -317,6 +327,7 @@ class PlotOptions(PluginTemplateMixin):
         if self.config != "specviz":
             expose += ['subset_color',
                        'stretch_function', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
+                       'stretch_hist_zoom_limits',
                        'image_visible', 'image_color_mode',
                        'image_color', 'image_colormap', 'image_opacity',
                        'image_contrast', 'image_bias',
@@ -358,3 +369,119 @@ class PlotOptions(PluginTemplateMixin):
         attr_name = data.get('name')
         value = data.get('value')
         setattr(self, attr_name, value)
+
+    @observe('plugin_opened', 'layer_selected', 'viewer_selected',
+             'stretch_hist_zoom_limits')
+    def _update_stretch_histogram(self, msg={}):
+        if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
+            # no (image) viewer with stretch function options
+            return
+        if not hasattr(self, 'viewer'):  # pragma: no cover
+            # plugin hasn't been fully initialized yet
+            return
+        if (not self.plugin_opened
+                or not self.viewer.selected
+                or not self.layer.selected):  # pragma: no cover
+            # no need to make updates, updates will be redrawn when plugin is opened
+            # NOTE: this won't update when the plugin is shown but not open in the tray
+            return
+        if not isinstance(msg, dict) and not self.stretch_hist_zoom_limits:  # pragma: no cover
+            # then this is from the limits callbacks and we don't want to waste resources
+            # IMPORTANT: this assumes the only non-observe callback to this method comes
+            # from state callbacks from zoom limits.
+            return
+
+        if self.multiselect and (len(self.viewer.selected) > 1
+                                 or len(self.layer.selected) > 1):  # pragma: no cover
+            # currently only support single-layer/viewer.  For now we'll just clear and return.
+            # TODO: add support for multi-layer/viewer
+            bqplot_clear_figure(self.stretch_histogram)
+            return
+
+        viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
+
+        # manage viewer zoom limit callbacks
+        if ((isinstance(msg, dict) and msg.get('name') == 'viewer_selected')
+                or not self.stretch_hist_zoom_limits):
+            vs = viewer.state
+            for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
+                vs.add_callback(attr, self._update_stretch_histogram)
+        if isinstance(msg, dict) and msg.get('name') == 'viewer_selected':
+            viewer_label_old = msg.get('old')[0] if self.multiselect else msg.get('old')
+            if len(viewer_label_old):
+                vs_old = self.app.get_viewer(viewer_label_old).state
+                for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
+                    vs_old.remove_callback(attr, self._update_stretch_histogram)
+
+        data = self.layer.selected_obj[0][0].layer if self.multiselect else self.layer.selected_obj[0].layer  # noqa
+        comp = data.get_component(data.main_components[0])
+
+        if self.stretch_hist_zoom_limits:
+            if hasattr(viewer, '_get_zoom_limits'):
+                # Viewer limits. This takes account of Imviz linking.
+                xy_limits = viewer._get_zoom_limits(data).astype(int)
+                x_limits = xy_limits[:, 0]
+                y_limits = xy_limits[:, 1]
+                x_min = max(x_limits.min(), 0)
+                x_max = x_limits.max()
+                y_min = max(y_limits.min(), 0)
+                y_max = y_limits.max()
+
+                sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
+
+            else:
+                # spectrum-2d-viewer, for example.  We'll assume the viewer
+                # limits correspond to the fixed data components from glue
+                # and filter directly.
+                x_data = data.get_component(data.components[1]).data
+                y_data = data.get_component(data.components[0]).data
+
+                inds = np.where((x_data >= viewer.state.x_min) &
+                                (x_data <= viewer.state.x_max) &
+                                (y_data >= viewer.state.y_min) &
+                                (y_data <= viewer.state.y_max))
+
+                sub_data = comp.data[inds].ravel()
+        else:
+            # include all data, regardless of zoom limits
+            sub_data = comp.data.ravel()
+
+        # filter out nans (or else bqplot will fail)
+        if np.any(np.isnan(sub_data)):
+            sub_data = sub_data[~np.isnan(sub_data)]
+
+        if self.stretch_histogram is None:
+            # first time the figure is requested, need to build from scratch
+            self.stretch_histogram = bqplot.Figure(padding_y=0)
+
+            hist_x_sc = bqplot.LinearScale()
+            hist_y_sc = bqplot.LinearScale()
+            # TODO: Let user change the number of bins?
+            # TODO: Let user set y-scale to log
+            hist_mark = bqplot.Bins(sample=sub_data, bins=25,
+                                    density=True, colors="gray",
+                                    scales={'x': hist_x_sc,
+                                            'y': hist_y_sc})
+
+            self.stretch_histogram.marks = [hist_mark]
+            self.stretch_histogram.axes = [bqplot.Axis(scale=hist_x_sc,
+                                                       num_ticks=3,
+                                                       tick_format='0.1e',
+                                                       label='pixel value'),
+                                           bqplot.Axis(scale=hist_y_sc,
+                                                       num_ticks=2,
+                                                       orientation='vertical',
+                                                       label='density')]
+
+            self.bqplot_figs_resize = [self.stretch_histogram]
+
+        else:
+            hist_mark = self.stretch_histogram.marks[0]
+            hist_mark.sample = sub_data
+            # TODO: Let user change the number of bins?
+            # TODO: Let user set y-scale to log
+
+        interval = PercentileInterval(95)
+        if len(sub_data) > 0:
+            hist_lims = interval.get_limits(sub_data)
+            hist_mark.min, hist_mark.max = hist_lims
