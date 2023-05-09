@@ -845,7 +845,7 @@ class Application(VuetifyTemplate, HubListener):
         spectral_only : bool
             Return only spectral subsets.
         spatial_only : bool
-            Return only spatial subsets, except masked subset state (this is unusual).
+            Return only spatial subsets, except masked subsets (uncommon).
         object_only : bool
             Return only object relevant information and
             leave out the region class name and glue_state.
