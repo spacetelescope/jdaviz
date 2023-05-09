@@ -242,7 +242,6 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     sky = image.coords.pixel_to_world(x, y).icrs
                 except Exception:  # WCS might not be celestial
                     coords_status = False
-                    self.reset_coords_display()
 
         elif isinstance(viewer, CubevizImageView):
             # TODO: This assumes data_collection[0] is the main reference
