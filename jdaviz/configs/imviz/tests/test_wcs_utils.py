@@ -1,7 +1,9 @@
+import pytest
 import gwcs
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import ICRS
+from astropy.utils.data import get_pkg_data_filename
 from astropy.modeling import models
 from astropy.wcs import WCS
 from gwcs import coordinate_frames as cf
@@ -104,3 +106,60 @@ def test_simple_gwcs():
                                   1262.0057201165127, 606.2863901330095,
                                   155.2870478938214, -86.89813081941797))
     assert not result[-1]
+
+
+@pytest.mark.remote_data
+@pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
+def test_non_wcs_layer_labels(imviz_helper):
+    # load a real image w/ WCS:
+    real_image_path = get_pkg_data_filename('tutorials/FITS-images/HorseHead.fits')
+    imviz_helper.load_data(real_image_path)
+
+    # load a WCS-only layer:
+    ndd = wcs_utils._get_rotated_nddata_from_label(
+        app=imviz_helper.app,
+        data_label=imviz_helper.app.data_collection[0].label,
+        rotation_angle=0*u.deg
+    )
+    imviz_helper.load_data(ndd)
+
+    # confirm that only the image is labeled:
+    assert len(imviz_helper.app.state.layer_icons) == 2
+
+    # confirm the WCS-only layer is logged:
+    viewer = imviz_helper.app.get_viewer('imviz-0')
+    assert len(viewer.state.wcs_only_layers) == 1
+
+    # load a second WCS-only layer:
+    ndd2 = wcs_utils._get_rotated_nddata_from_label(
+        app=imviz_helper.app,
+        data_label=imviz_helper.app.data_collection[0].label,
+        rotation_angle=45*u.deg
+    )
+    imviz_helper.load_data(ndd2)
+    assert len(imviz_helper.app.state.layer_icons) == 3
+    assert len(viewer.state.wcs_only_layers) == 2
+
+    wcs_only_refdata_icon = 'mdi-compass-outline'
+    wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
+
+    for i, data in enumerate(imviz_helper.app.data_collection):
+        viewer = imviz_helper.app.get_viewer("imviz-0")
+
+        if i == 0:
+            # first entry is image data:
+            assert imviz_helper.app.state.layer_icons[data.label] == 'a'
+            assert viewer.state.reference_data.label == data.label
+        else:
+            # icon before setting as refdata:
+            before_icon = imviz_helper.app.state.layer_icons[data.label]
+
+            # set as refdata:
+            imviz_helper.app._change_reference_data(data.label)
+            assert viewer.state.reference_data.label == data.label
+
+            # icon after setting as refdata:
+            after_icon = imviz_helper.app.state.layer_icons[data.label]
+
+            assert before_icon == wcs_only_not_refdata_icon
+            assert after_icon == wcs_only_refdata_icon

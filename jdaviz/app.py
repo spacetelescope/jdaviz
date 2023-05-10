@@ -1788,7 +1788,7 @@ class Application(VuetifyTemplate, HubListener):
             is_wcs_only = getattr(layer.layer, 'meta', {}).get('WCS-ONLY', False)
             if layer.layer.data.label == data_label and is_wcs_only:
                 layer.visible = False
-                viewer_item['wcs_only_layers'].append(data_label)
+                viewer.state.wcs_only_layers.append(data_label)
                 selected_items.pop(data_id)
 
         # Sets the plot axes labels to be the units of the most recently

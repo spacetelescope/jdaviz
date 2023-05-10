@@ -373,7 +373,7 @@ def _nddata_to_glue_data(ndd, data_label):
 
     for attrib, sub_attrib in zip(
             ['data', 'mask', 'uncertainty'],
-            ['data', None, 'array']
+            [None, None, 'array']
     ):
         arr = getattr(ndd, attrib)
         if arr is None:
@@ -385,11 +385,16 @@ def _nddata_to_glue_data(ndd, data_label):
         raw_arr = arr
 
         if sub_attrib is not None:
+            # since NDDataArray.uncertainty may be an object like
+            # StdDevUncertainty, we need to take another attr
+            # like StdDevUncertainty.array:
             base_arr = getattr(raw_arr, sub_attrib)
         else:
             base_arr = raw_arr
         wcs_only = np.all(np.isnan(base_arr))
-        cur_data.meta.update({'WCS-ONLY': wcs_only})
+
+        if 'WCS-ONLY' not in cur_data.meta or not cur_data.meta.get('WCS-ONLY'):
+            cur_data.meta.update({'WCS-ONLY': wcs_only})
 
         cur_label = f'{data_label}'
         comp_label = attrib.upper()

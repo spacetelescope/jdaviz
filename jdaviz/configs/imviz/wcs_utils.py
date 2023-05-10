@@ -288,8 +288,8 @@ def data_outside_gwcs_bounding_box(data, x, y):
     return outside_bounding_box
 
 
-def _get_fits_wcs_from_file(filename):
-    header = fits.getheader(filename)
+def _get_fits_wcs_from_file(filename, ext=None):
+    header = fits.getheader(filename, ext=ext)
     with warnings.catch_warnings():
         # Ignore a warning on using DATE-OBS in place of MJD-OBS
         warnings.filterwarnings('ignore', message="'datfix' made the change",
@@ -369,9 +369,9 @@ def rotated_gwcs(
     return GWCS(pipeline)
 
 
-def _prepare_rotated_nddata(wcs, rotation_angle, refdata_shape):
+def _prepare_rotated_nddata(image_data, wcs, rotation_angle, refdata_shape):
     # get the world coordinates of the central pixel
-    real_image_shape = np.array(wcs.array_shape)
+    real_image_shape = np.array(np.shape(image_data))
     central_pixel_coord = real_image_shape / 2 * u.pix
     central_world_coord = wcs.pixel_to_world(*central_pixel_coord)
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
@@ -401,7 +401,7 @@ def _prepare_rotated_nddata(wcs, rotation_angle, refdata_shape):
     return ndd
 
 
-def _get_rotated_nddata_from_fits(filename, rotation_angle, refdata_shape=(2, 2)):
+def _get_rotated_nddata_from_fits(filename, rotation_angle, refdata_shape=(2, 2), ext=None):
     """
     Create a synthetic NDDataArray which stores GWCS that approximate
     the FITS WCS in ``filename`` rotated by ``rotation_angle``.
@@ -425,12 +425,14 @@ def _get_rotated_nddata_from_fits(filename, rotation_angle, refdata_shape=(2, 2)
         Data are all NaNs, wcs are rotated.
     """
     # get the FITS WCS from the file:
-    wcs = _get_fits_wcs_from_file(filename)
+    wcs = _get_fits_wcs_from_file(filename, ext=ext)
 
     return _prepare_rotated_nddata(wcs, rotation_angle, refdata_shape)
 
 
-def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shape=(2, 2)):
+def _get_rotated_nddata_from_label(
+        app, data_label, rotation_angle, refdata_shape=(2, 2), main_component_idx=0
+):
     """
     Create a synthetic NDDataArray which stores GWCS that approximate
     the WCS in the coords attr of the Data object with label ``data_label``
@@ -457,9 +459,9 @@ def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shap
         Data are all NaNs, wcs are rotated.
     """
     # get the WCS from the Data object's coords attribute:
-    [wcs] = [
-        data.coords for data in app.data_collection
+    [data] = [
+        data for data in app.data_collection
         if data.label == data_label
     ]
-
-    return _prepare_rotated_nddata(wcs, rotation_angle, refdata_shape)
+    image = data[data.main_components[main_component_idx]]
+    return _prepare_rotated_nddata(image, data.coords, rotation_angle, refdata_shape)
