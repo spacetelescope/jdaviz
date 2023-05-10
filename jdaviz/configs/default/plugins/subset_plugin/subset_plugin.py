@@ -1,4 +1,5 @@
 import numpy as np
+import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
@@ -7,7 +8,7 @@ from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetSt
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from traitlets import Any, List, Unicode, Bool, observe
 
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 
@@ -52,6 +53,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                    handler=self._sync_selected_from_state)
         self.session.hub.subscribe(self, SubsetUpdateMessage,
                                    handler=self._on_subset_update)
+        self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
+                                   handler=self._on_display_unit_changed)
 
         self.subset_select = SubsetSelect(self,
                                           'subset_items',
@@ -198,6 +201,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_states = []
 
         self._unpack_get_subsets_for_ui()
+
+    def _on_display_unit_changed(self, msg):
+        # We only care about the spectral units, since flux units don't affect spectral subsets
+        if msg.axis == "spectral":
+            self.spectral_display_unit = msg.unit
 
     def vue_update_subset(self, *args):
         for index, sub in enumerate(self.subset_definitions):
