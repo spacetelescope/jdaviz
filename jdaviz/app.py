@@ -845,7 +845,7 @@ class Application(VuetifyTemplate, HubListener):
         spectral_only : bool
             Return only spectral subsets.
         spatial_only : bool
-            Return only spatial subsets.
+            Return only spatial subsets, except masked subsets (uncommon).
         object_only : bool
             Return only object relevant information and
             leave out the region class name and glue_state.
@@ -856,7 +856,7 @@ class Application(VuetifyTemplate, HubListener):
         -------
         data : dict
             A dict with keys representing the subset name and values as astropy regions
-            objects
+            objects.
         """
 
         dc = self.data_collection
