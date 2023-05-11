@@ -61,6 +61,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                           'subset_selected',
                                           default_text="Create New")
         self.subset_states = []
+        self.spectral_display_unit = None
 
     def _sync_selected_from_state(self, *args):
         if not hasattr(self, 'subset_select'):
@@ -130,7 +131,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         -------
 
         """
-        subset_information = self.app.get_subsets(self.subset_selected, simplify_spectral=False)
+        subset_information = self.app.get_subsets(self.subset_selected, simplify_spectral=False,
+                                                  use_display_units=True)
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
         if not subset_information:
             return
@@ -178,10 +180,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 subset_type = subset_state.roi.__class__.__name__
 
             elif isinstance(subset_state, RangeSubsetState):
-                lo = subset_state.lo
-                hi = subset_state.hi
-                subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo, "orig": lo},
-                                     {"name": "Upper bound", "att": "hi", "value": hi, "orig": hi}]
+                lo = spec['region'].lower
+                hi = spec['region'].upper
+                subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo.value,
+                                      "orig": lo.value, "unit": str(lo.unit)},
+                                     {"name": "Upper bound", "att": "hi", "value": hi.value,
+                                      "orig": hi.value, "unit": str(hi.unit)}]
                 subset_type = "Range"
             if len(subset_definition) > 0:
                 # Note: .append() does not work for List traitlet.
@@ -206,6 +210,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         # We only care about the spectral units, since flux units don't affect spectral subsets
         if msg.axis == "spectral":
             self.spectral_display_unit = msg.unit
+            if self.subset_selected != self.subset_select.default_text:
+                self._get_subset_definition(self.subset_selected)
 
     def vue_update_subset(self, *args):
         for index, sub in enumerate(self.subset_definitions):
@@ -215,6 +221,17 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     d_val = np.radians(d_att["value"])
                 else:
                     d_val = float(d_att["value"])
+
+                # Convert from display unit to original unit if necessary
+                if self.subset_types[index] == "Range":
+                    if self.spectral_display_unit is not None:
+                        x_att = sub_states.att
+                        base_units = self.app.data_collection[0].get_component(x_att).units
+                        if self.spectral_display_unit != base_units:
+                            d_val = d_val*u.Unit(self.spectral_display_unit)
+                            d_val = d_val.to(u.Unit(base_units))
+                            d_val = d_val.value
+
                 if float(d_att["orig"]) != d_val:
                     if self.subset_types[index] == "Range":
                         setattr(sub_states, d_att["att"], d_val)

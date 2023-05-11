@@ -59,6 +59,7 @@
           v-model.number="item.value"
           type="number"
           :disabled="!is_editable"
+          :suffix="item.unit"
         ></v-text-field>
       </v-row>
     </div>
