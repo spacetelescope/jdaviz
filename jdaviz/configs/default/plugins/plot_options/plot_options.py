@@ -6,8 +6,10 @@ from astropy.visualization import PercentileInterval
 from ipywidgets import widget_serialization
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
+from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState
+from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerState
 from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -126,6 +128,52 @@ class PlotOptions(PluginTemplateMixin):
     uncertainty_visible_value = Int().tag(sync=True)
     uncertainty_visible_sync = Dict().tag(sync=True)
 
+    # scatter/marker options
+    marker_visible_value = Bool().tag(sync=True)
+    marker_visible_sync = Dict().tag(sync=True)
+
+    marker_fill_value = Bool().tag(sync=True)
+    marker_fill_sync = Dict().tag(sync=True)
+
+    marker_opacity_value = Float().tag(sync=True)
+    marker_opacity_sync = Dict().tag(sync=True)
+
+    marker_size_mode_value = Unicode().tag(sync=True)
+    marker_size_mode_sync = Dict().tag(sync=True)
+
+    marker_size_value = Float().tag(sync=True)
+    marker_size_sync = Dict().tag(sync=True)
+
+    marker_size_scale_value = Float().tag(sync=True)
+    marker_size_scale_sync = Dict().tag(sync=True)
+
+    marker_size_col_value = Unicode().tag(sync=True)
+    marker_size_col_sync = Dict().tag(sync=True)
+
+    marker_size_vmin_value = Float().tag(sync=True)
+    marker_size_vmin_sync = Dict().tag(sync=True)
+
+    marker_size_vmax_value = Float().tag(sync=True)
+    marker_size_vmax_sync = Dict().tag(sync=True)
+
+    marker_color_mode_value = Unicode().tag(sync=True)
+    marker_color_mode_sync = Dict().tag(sync=True)
+
+    marker_color_value = Any().tag(sync=True)
+    marker_color_sync = Dict().tag(sync=True)
+
+    marker_color_col_value = Unicode().tag(sync=True)
+    marker_color_col_sync = Dict().tag(sync=True)
+
+    marker_colormap_value = Unicode().tag(sync=True)
+    marker_colormap_sync = Dict().tag(sync=True)
+
+    marker_colormap_vmin_value = Float().tag(sync=True)
+    marker_colormap_vmin_sync = Dict().tag(sync=True)
+
+    marker_colormap_vmax_value = Float().tag(sync=True)
+    marker_colormap_vmax_sync = Dict().tag(sync=True)
+
     # image viewer/layer options
     stretch_function_value = Unicode().tag(sync=True)
     stretch_function_sync = Dict().tag(sync=True)
@@ -209,6 +257,12 @@ class PlotOptions(PluginTemplateMixin):
         def not_profile(state):
             return not is_profile(state)
 
+        def is_scatter(state):
+            return isinstance(state, (ScatterViewerState, BqplotScatterLayerState))
+
+        def supports_line(state):
+            return is_profile(state) or is_scatter(state)
+
         def is_image(state):
             return isinstance(state, BqplotImageLayerState)
 
@@ -228,10 +282,15 @@ class PlotOptions(PluginTemplateMixin):
             # exclude for scatter layers where the marker is shown instead of the line
             return getattr(state, 'line_visible', True)
 
+        def state_attr_for_line_visible(state):
+            if is_scatter(state):
+                return 'line_visible'
+            return 'visible'
+
         # Profile/line viewer/layer options:
-        self.line_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
+        self.line_visible = PlotOptionsSyncState(self, self.viewer, self.layer, state_attr_for_line_visible,  # noqa
                                                  'line_visible_value', 'line_visible_sync',
-                                                 state_filter=is_profile)
+                                                 state_filter=supports_line)
         self.collapse_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'function',
                                                       'collapse_func_value', 'collapse_func_sync')
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
@@ -242,11 +301,60 @@ class PlotOptions(PluginTemplateMixin):
                                                state_filter=line_visible)
         self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
                                                  'line_opacity_value', 'line_opacity_sync',
-                                                 state_filter=is_profile)
+                                                 state_filter=supports_line)
         self.line_as_steps = PlotOptionsSyncState(self, self.viewer, self.layer, 'as_steps',
                                                   'line_as_steps_value', 'line_as_steps_sync')
         self.uncertainty_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty',  # noqa
                                                         'uncertainty_visible_value', 'uncertainty_visible_sync')  # noqa
+
+        # Scatter/marker options:
+        self.marker_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
+                                                   'marker_visible_value', 'marker_visible_sync',
+                                                   state_filter=is_scatter)
+        self.marker_fill = PlotOptionsSyncState(self, self.viewer, self.layer, 'fill',
+                                                'marker_fill_value', 'marker_fill_sync',
+                                                state_filter=is_scatter)
+        self.marker_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
+                                                   'marker_opacity_value', 'marker_opacity_sync',
+                                                   state_filter=is_scatter)
+        self.marker_size_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'size_mode',
+                                                     'marker_size_mode_value', 'marker_size_mode_sync',  # noqa
+                                                     state_filter=is_scatter)
+        self.marker_size = PlotOptionsSyncState(self, self.viewer, self.layer, 'size',
+                                                'marker_size_value', 'marker_size_sync',
+                                                state_filter=is_scatter)
+        self.marker_size_scale = PlotOptionsSyncState(self, self.viewer, self.layer, 'size_scaling',
+                                                      'marker_size_scale_value', 'marker_size_scale_sync',  # noqa
+                                                      state_filter=is_scatter)
+        self.marker_size_col = PlotOptionsSyncState(self, self.viewer, self.layer, 'size_att',
+                                                    'marker_size_col_value', 'marker_size_col_sync',
+                                                    state_filter=is_scatter)
+        self.marker_size_vmin = PlotOptionsSyncState(self, self.viewer, self.layer, 'size_vmin',
+                                                     'marker_size_vmin_value', 'marker_size_vmin_sync',  # noqa
+                                                     state_filter=is_scatter)
+        self.marker_size_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'size_vmax',
+                                                     'marker_size_vmax_value', 'marker_size_vmax_sync',  # noqa
+                                                     state_filter=is_scatter)
+
+        # TODO: remove marker_ prefix if these also apply to the lines?
+        self.marker_color_mode = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap_mode',
+                                                      'marker_color_mode_value', 'marker_color_mode_sync',  # noqa
+                                                      state_filter=is_scatter)
+        self.marker_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
+                                                 'marker_color_value', 'marker_color_sync',
+                                                 state_filter=is_scatter)
+        self.marker_color_col = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap_att',
+                                                     'marker_color_col_value', 'marker_color_col_sync',  # noqa
+                                                     state_filter=is_scatter)
+        self.marker_colormap = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap',
+                                                    'marker_colormap_value', 'marker_colormap_sync',
+                                                    state_filter=is_scatter)
+        self.marker_colormap_vmin = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap_vmin',
+                                                         'marker_colormap_vmin_value', 'marker_colormap_vmin_sync',  # noqa
+                                                         state_filter=is_scatter)
+        self.marker_colormap_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'cmap_vmax',
+                                                         'marker_colormap_vmax_value', 'marker_colormap_vmax_sync',  # noqa
+                                                         state_filter=is_scatter)
 
         # Image viewer/layer options:
         self.stretch_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',

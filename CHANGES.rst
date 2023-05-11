@@ -18,6 +18,8 @@ New Features
 
 - Allow Subset Plugin to edit composite subsets. [#2182]
 
+- Support for Scatter plots/markers in plot options. [#2193]
+
 Cubeviz
 ^^^^^^^
 
