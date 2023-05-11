@@ -1,59 +1,68 @@
 <template>
   <div style="display: contents">
-    <div v-if="isSelected">
-      <j-tooltip :tipid="multi_select ? 'viewer-data-select' : 'viewer-data-radio'">
-        <v-btn 
-          icon
-          :color="visibleState==='visible' ? 'accent' : 'default'"
-          @click="selectClicked">
-            <v-icon v-if="multi_select || item.type==='trace'">{{visibleState!=='hidden' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
-            <v-icon v-else>{{visibleState!=='hidden' ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
-        </v-btn>
-      </j-tooltip>
-    </div>
-    <div v-else>
-      <j-tooltip tipid="viewer-data-enable">
-        <v-btn 
-          icon
-          color="default"
-          @click="selectClicked">
-            <v-icon>mdi-plus</v-icon>
-        </v-btn>
-      </j-tooltip>
-    </div>
 
-    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
-      <j-layer-viewer-icon span_style="margin-left: 4px; margin-right: 2px" :icon="icon" color="#000000DE"></j-layer-viewer-icon>      
-      <div class="text-ellipsis-middle" style="font-weight: 500">
-        <span>
-          {{itemNamePrefix}}
-        </span>
-        <span>
-          {{itemNameExtension}}
-        </span>
+    <v-col cols=1 style="padding: 0" align-self="center">
+      <div v-if="isSelected">
+        <j-tooltip :tipid="multi_select ? 'viewer-data-select' : 'viewer-data-radio'">
+          <v-btn 
+            icon
+            :color="visibleState==='visible' ? 'accent' : 'default'"
+            @click="selectClicked">
+              <v-icon v-if="multi_select || item.type==='trace'">{{visibleState!=='hidden' ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
+              <v-icon v-else>{{visibleState!=='hidden' ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
+          </v-btn>
+        </j-tooltip>
       </div>
-    </j-tooltip>
+      <div v-else>
+        <j-tooltip tipid="viewer-data-enable">
+          <v-btn 
+            icon
+            color="default"
+            @click="selectClicked">
+              <v-icon>mdi-plus</v-icon>
+          </v-btn>
+        </j-tooltip>
+      </div>
+    </v-col>
 
-    <div v-if="isSelected && isUnloadable" style="right: 2px">
-      <j-tooltip tipid='viewer-data-disable'>
-        <v-btn
-          icon
-          @click="$emit('data-item-unload', {
-            id: viewer.id,
-            item_id: item.id
-          })"
-        ><v-icon>mdi-close</v-icon></v-btn>
+    <v-col cols=9 style="padding: 0" align-self="center">
+      <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
+        <j-layer-viewer-icon span_style="margin-left: 4px; margin-right: 2px" :icon="icon" color="#000000DE"></j-layer-viewer-icon>      
+        <div class="text-ellipsis-middle" style="font-weight: 500">
+          <span>
+            {{itemNamePrefix}}
+          </span>
+          <span>
+            {{itemNameExtension}}
+          </span>
+        </div>
       </j-tooltip>
-    </div>
+    </v-col>
 
-    <div v-if="isDeletable" style="right: 2px">
-      <j-tooltip tipid='viewer-data-delete'>
-        <v-btn
-          icon
-          @click="$emit('data-item-remove', {item_name: item.name})"
-        ><v-icon>mdi-delete</v-icon></v-btn>
-      </j-tooltip>
-    </div>
+    <v-col cols=1 style="padding: 0" align-self="center">
+      <div v-if="isSelected && isUnloadable">
+        <j-tooltip tipid='viewer-data-disable'>
+          <v-btn
+            icon
+            @click="$emit('data-item-unload', {
+              id: viewer.id,
+              item_id: item.id
+            })"
+          ><v-icon>mdi-close</v-icon></v-btn>
+        </j-tooltip>
+      </div>
+    </v-col>
+    <v-col cols=1 style="padding: 0" align-self="center">
+      <div v-if="isDeletable">
+        <j-tooltip tipid='viewer-data-delete'>
+          <v-btn
+            icon
+            @click="$emit('data-item-remove', {item_name: item.name})"
+          ><v-icon>mdi-delete</v-icon></v-btn>
+        </j-tooltip>
+      </div>
+    </v-col>
+
   </div>
 </template>
 
