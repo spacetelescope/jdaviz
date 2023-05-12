@@ -172,6 +172,7 @@ def test_user_api(specviz2d_helper):
     pext.bg_sub_add_results.auto = True
 
 
+@pytest.mark.skip(reason='filenames changed')
 @pytest.mark.remote_data
 @pytest.mark.skipif(GWCS_LT_0_18_1, reason='Needs GWCS 0.18.1 or later')
 def test_spectrum_on_top(specviz2d_helper):
