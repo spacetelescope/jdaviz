@@ -271,7 +271,7 @@ class Specviz(ConfigHelper, LineListMixin):
             self._default_spectrum_viewer_reference_name
         ).figure.axes[axis].tick_format = fmt
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None):
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None, spectral_to_spatial=None):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -284,6 +284,9 @@ class Specviz(ConfigHelper, LineListMixin):
             The type that data will be returned as.
         subset_to_apply : str, optional
             Subset that is to be applied to data before it is returned.
+        spectral_to_spatial : str, optional
+            Spectral subset to be applied to spatial subset. Only possible if this is
+            a specviz instance inside cubeviz.
 
         Returns
         -------
@@ -302,4 +305,4 @@ class Specviz(ConfigHelper, LineListMixin):
             function = None
 
         return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-                              function=function)
+                              function=function, spectral_to_spatial=spectral_to_spatial)

@@ -120,7 +120,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             self._specviz = Specviz(app=self.app)
         return self._specviz
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None):
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
+                 spectral_to_spatial=None):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -138,6 +139,9 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             If True, will collapse according to the current collapse function defined in the
             spectrum viewer.  If provided as a string, the cube will be collapsed with the provided
             function.  If False, None, or not passed, the entire cube will be returned.
+        spectral_to_spatial : str, optional
+            Spectral subset to be applied to spatial subset. Only possible if function is
+            set to True.
 
         Returns
         -------
@@ -147,7 +151,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         """
         if function is True:
             return self.specviz.get_data(data_label=data_label, cls=cls,
-                                         subset_to_apply=subset_to_apply)
+                                         subset_to_apply=subset_to_apply,
+                                         spectral_to_spatial=spectral_to_spatial)
         elif function is False:
             function = None
         return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,

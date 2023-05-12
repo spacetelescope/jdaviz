@@ -22,6 +22,7 @@ from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
 from specutils import Spectrum1D
+from specutils.manipulation import extract_region
 
 
 from jdaviz.app import Application
@@ -410,7 +411,8 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None):
+    def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
+                  spectral_to_spatial=None):
         list_of_valid_function_values = ('minimum', 'maximum', 'mean',
                                          'median', 'sum')
         if function and function not in list_of_valid_function_values:
@@ -480,9 +482,15 @@ class ConfigHelper(HubListener):
                             warnings.warn(f"Not able to get {data_label} returned with"
                                           f" subset {subsets.label} applied of type {cls}."
                                           f" Exception: {e}")
+        # Apply spectral subset to spatial subset if applicable
+        if spectral_to_spatial:
+            sr = self.app.get_subsets(spectral_to_spatial)
+            if sr:
+                data = extract_region(data, sr, return_single_spectrum=True)
+
         return data
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None):
+    def get_data(self, data_label=None, cls=None, subset_to_apply=None, spectral_to_spatial=None):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -495,6 +503,8 @@ class ConfigHelper(HubListener):
             The type that data will be returned as.
         subset_to_apply : str, optional
             Subset that is to be applied to data before it is returned.
+        spectral_to_spatial : str, optional
+            Spectral subset to be applied to spatial subset.
 
         Returns
         -------
@@ -502,7 +512,8 @@ class ConfigHelper(HubListener):
             Data is returned as type cls with subsets applied.
 
         """
-        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply)
+        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
+                              spectral_to_spatial=spectral_to_spatial)
 
 
 class ImageConfigHelper(ConfigHelper):
