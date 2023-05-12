@@ -30,6 +30,7 @@ Imviz
 - Preliminary support for Roman ASDF data products. This requires
   ``roman-datamodels`` to be installed separately by the user. [#1822]
 
+- Canvas Rotation plugin is now disabled for non-Chromium based browsers [#2192]
 
 Mosviz
 ^^^^^^

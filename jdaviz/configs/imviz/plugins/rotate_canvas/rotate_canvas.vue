@@ -1,16 +1,16 @@
 <template>
-  <j-tray-plugin        
+  <j-tray-plugin  
     description="Rotate viewer canvas to any orientation (note: this does not affect the underlying data)."
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'"
+    :disabled_msg="isChromium() ? '' : 'Image rotation is not supported by your browser. Please see our docs for more information.'"
     :popout_button="popout_button">
-
     <plugin-viewer-select
       :items="viewer_items"
       :selected.sync="viewer_selected"
       label="Viewer"
       hint="Select viewer."
     />
-    
+
     <v-row>
       <span style="line-height: 36px">Presets:</span>
       <j-tooltip tooltipcontent="reset rotation and flip">
@@ -62,3 +62,23 @@
 
   </j-tray-plugin>
 </template>
+
+<script>
+module.exports = {
+  methods: {
+    isChromium() {
+      try {
+        for (brand_version_pair of navigator.userAgentData.brands) {
+            if (brand_version_pair.brand == "Chromium"){
+                return true;
+            }
+        }
+        return false;
+      }
+      catch {
+        return false
+      }
+    }
+  }
+}
+</script>

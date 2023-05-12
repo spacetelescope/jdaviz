@@ -318,6 +318,8 @@ right or the left, as well as a slider and input to set the angle and a switch t
 axes should be flipped horizontally after applying the rotation (a vertical flip can be achieved
 via a 180 deg rotation and a horizontal flip).
 
+Due to browser limitations, Canvas Rotation is only available on Chromium-based browsers.
+
 
 .. _imviz-export-plot:
 
