@@ -345,8 +345,9 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('trace_dataset_selected')
     def _trace_dataset_selected(self, msg=None):
-        if not hasattr(self, 'trace_dataset'):
+        if not hasattr(self, 'trace_dataset') or (hasattr(msg, 'new') and msg.new == ''):
             # happens when first initializing plugin outside of tray
+            # or when all data is deleted from 2D viewer
             return
 
         width = self.trace_dataset.selected_obj.shape[0]
