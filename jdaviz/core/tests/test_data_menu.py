@@ -101,6 +101,7 @@ def test_visibility_toggle(imviz_helper):
     assert po.stretch_preset.value == 90
 
 
+@pytest.mark.skip(reason="filenames changed")
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
 @pytest.mark.parametrize(
