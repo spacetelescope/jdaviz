@@ -12,6 +12,11 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Added the ability to load DS9 region files (``.reg``) using the ``IMPORT DATA``
+  button. However, this only works after loading at least one image into Imviz. [#2201]
+
+- Added support for new ``CircularAnnulusROI`` subset from glue. [#2201]
+
 Mosviz
 ^^^^^^
 

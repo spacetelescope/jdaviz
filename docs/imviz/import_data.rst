@@ -43,6 +43,9 @@ application. A notification will appear to let users know if the data import
 was successful. Afterward, the new data set can be found in the :guilabel:`Data`
 tab of each viewer's options menu as described in :ref:`cubeviz-selecting-data`.
 
+Once data is loaded, you may use the :guilabel:`Import Data` button again
+to load regions from a ``.reg`` file; also see :ref:`imviz-import-regions-api`.
+
 .. _imviz-import-api:
 
 Importing data via the API
