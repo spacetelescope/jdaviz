@@ -1,17 +1,18 @@
 <template>
   <v-container class="tray-plugin" style="padding-left: 24px; padding-right: 24px; padding-top: 12px">
+    <v-row>
+      <div style="width: calc(100% - 32px)">
+        <j-docs-link :link="link">{{ description }}</j-docs-link>
+      </div>
+      <div style="width: 32px">
+        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
+      </div>
+    </v-row>
+    
     <v-row v-if="isDisabled()">
       <span> {{ getDisabledMsg() }}</span>
     </v-row>
     <div v-else>
-      <v-row>
-        <div style="width: calc(100% - 32px)">
-          <j-docs-link :link="link">{{ description }}</j-docs-link>
-        </div>
-        <div style="width: 32px">
-          <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
-        </div>
-      </v-row>
       <slot></slot>
     </div>
   </v-container>
