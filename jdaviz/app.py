@@ -180,6 +180,10 @@ class ApplicationState(State):
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
 
+    style_widget = CallbackProperty(
+        '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
+    )
+
 
 class Application(VuetifyTemplate, HubListener):
     """
