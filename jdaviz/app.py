@@ -989,8 +989,9 @@ class Application(VuetifyTemplate, HubListener):
         _around_decimals = 6
         roi = subset_state.roi
         roi_as_region = None
+
         if isinstance(roi, CircularROI):
-            x, y = roi.get_center()
+            x, y = roi.center()
             r = roi.radius
             roi_as_region = CirclePixelRegion(PixCoord(x, y), r)
 

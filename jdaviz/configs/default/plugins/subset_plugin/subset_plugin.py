@@ -143,7 +143,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             glue_state = spec["glue_state"]
             if isinstance(subset_state, RoiSubsetState):
                 if isinstance(subset_state.roi, CircularROI):
-                    x, y = subset_state.roi.get_center()
+                    x, y = subset_state.roi.center()
                     r = subset_state.roi.radius
                     subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
                                          {"name": "Y Center", "att": "yc", "value": y, "orig": y},
@@ -267,39 +267,13 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             depending on the Subset type, if applicable.
             If Subset is not editable, this returns `None`.
 
-        Raises
-        ------
-        NotImplementedError
-            Subset type is not supported.
-
         """
         # Composite region cannot be edited.
         if not self.is_editable:  # no-op
             return
 
         subset_state = self.subset_select.selected_subset_state
-
-        if isinstance(subset_state, RoiSubsetState):
-            sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
-                cen = sbst_obj.get_center()
-            elif isinstance(sbst_obj, RectangularROI):
-                cen = sbst_obj.center()
-            else:  # pragma: no cover
-                raise NotImplementedError(
-                    f'Getting center of {sbst_obj.__class__} is not supported')
-
-        elif isinstance(subset_state, RangeSubsetState):
-            cen = (subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo
-
-        elif isinstance(subset_state, CompositeSubsetState):
-            cen = None
-
-        else:  # pragma: no cover
-            raise NotImplementedError(
-                f'Getting center of {subset_state.__class__} is not supported')
-
-        return cen
+        return subset_state.center()
 
     def set_center(self, new_cen, update=False):
         """Set the desired center for the selected Subset, if applicable.
@@ -346,7 +320,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')
 
         elif isinstance(subset_state, RangeSubsetState):
-            dx = new_cen - ((subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo)
+            dx = new_cen - subset_state.center()
             self._set_value_in_subset_definition(0, "Lower bound", "value", subset_state.lo + dx)
             self._set_value_in_subset_definition(0, "Upper bound", "value", subset_state.hi + dx)
 
