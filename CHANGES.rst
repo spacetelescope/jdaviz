@@ -30,6 +30,11 @@ Imviz
 - Added support for new ``CircularAnnulusROI`` subset from glue, including
   a new draw tool. [#2201, #2240]
 
+- Added new tool to recenter a spatial region by clicking on the new desired
+  center while having the region selected. With this new tool, the "drag to update"
+  feature is disabled because "drag to update" only works on a few types of Subsets
+  while this new tool is universal. [#2202]
+
 Mosviz
 ^^^^^^
 

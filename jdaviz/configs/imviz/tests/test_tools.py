@@ -1,6 +1,6 @@
 import numpy as np
 from numpy.testing import assert_allclose
-from regions import RectanglePixelRegion
+from regions import RectanglePixelRegion, PixCoord
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
@@ -100,6 +100,43 @@ class TestSinglePixelRegion(BaseImviz_WCS_WCS):
                 and reg.width == 1 and reg.height == 1)
 
         t.deactivate()
+
+
+def test_click_move_subset(imviz_helper):
+    a = np.zeros((10, 10))
+    reg = RectanglePixelRegion(PixCoord(x=5, y=1), width=2, height=3)
+    imviz_helper.load_data(a, data_label="a")
+    imviz_helper.load_regions(reg)
+    subset_plg = imviz_helper.plugins["Subset Tools"]._obj
+    t = imviz_helper.default_viewer.toolbar.tools['jdaviz:clicktomovespatialregion']
+    t.activate()
+
+    # Even when activate, should not do anything if the Subset is not selected.
+    assert subset_plg.subset_selected == 'Create New'
+    t.on_mouse_event({'event': 'click', 'domain': {'x': 3, 'y': 4}})
+    assert (isinstance(reg, RectanglePixelRegion) and reg.center.x == 5 and reg.center.y == 1
+            and reg.width == 2 and reg.height == 3)
+
+    # Click to move.
+    subset_plg.subset_selected = 'Subset 1'
+    t.on_mouse_event({'event': 'click', 'domain': {'x': 3, 'y': 4}})
+    regions = imviz_helper.get_interactive_regions()
+    assert len(regions) == 1  # Make sure no new Subset created
+    reg = regions['Subset 1']
+    assert (isinstance(reg, RectanglePixelRegion) and reg.center.x == 3 and reg.center.y == 4
+            and reg.width == 2 and reg.height == 3)
+    # Make sure Subset Tools plugin also updates.
+    assert subset_plg.get_center() == (3, 4)
+
+    # Should not do anything when deactivated.
+    t.deactivate()
+
+    # FIXME: It still moved in the test but does not move in actual Imviz usage.
+    # t.on_mouse_event({'event': 'click', 'domain': {'x': 10, 'y': 10}})
+    # regions = imviz_helper.get_interactive_regions()
+    # reg = regions['Subset 1']
+    # assert (isinstance(reg, RectanglePixelRegion) and reg.center.x == 3 and reg.center.y == 4
+    #         and reg.width == 2 and reg.height == 3)
 
 
 def test_blink(imviz_helper):

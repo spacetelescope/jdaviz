@@ -214,6 +214,16 @@ the reference image, which might not be the image you are viewing.
 
     Creating too many single-pixel regions may affect performance.
 
+.. _imviz_click_to_move_spatial_region:
+
+Click to Move (Recenter)
+------------------------
+
+This tool allows the user to click to move a spatial region in an image viewer.
+Activate this tool and select the desired region from :ref:`imviz_defining_spatial_regions`
+above. Then, click on where you want to move the region. Once you are done,
+remember to deactivate this tool to avoid accidentally moving it again.
+
 Blinking
 ========
 

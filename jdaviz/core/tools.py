@@ -4,6 +4,7 @@ import numpy as np
 from echo import delay_callback
 from glue.config import viewer_tool
 from glue.core import HubListener
+from glue.core.edit_subset_mode import ReplaceMode
 from glue.viewers.common.tool import Tool
 from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               HomeTool, BqplotPanZoomMode,
@@ -420,3 +421,40 @@ class SinglePixelRegion(CheckableTool):
             return roi
 
         return reg
+
+
+@viewer_tool
+class ClickToMoveSpatialRegion(CheckableTool):
+
+    icon = os.path.join(ICON_DIR, 'pan.svg')  # TODO: New icon?
+    tool_id = 'jdaviz:clicktomovespatialregion'
+    action_text = 'Move a spatial region'
+    tool_tip = 'Click to move a spatial region selected in Subset Tools'
+
+    def activate(self):
+        # This is copied from glue-jupyter's BqplotSelectionTool (but we don't inherit
+        # from that because that in turn inherits from InteractCheckableTool which requires
+        # setting self.interact)
+        self.viewer.add_event_callback(self.on_mouse_event, events=['click'])
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+
+    def on_mouse_event(self, data):
+        subset_plg = self.viewer.jdaviz_helper.plugins["Subset Tools"]._obj
+        if subset_plg.subset_selected == 'Create New':
+            return
+
+        # Extract data coordinates - these are pixels in the reference image.
+        # NOTE: We always use the reference image pixel coordinates because
+        # Subset is defined w.r.t. reference image.
+        x = data['domain']['x']
+        y = data['domain']['y']
+
+        subset_state = subset_plg.subset_select.selected_subset_state
+        subset_state.move_to(x, y)
+
+        # Force glue to update the Subset. This is the same call used in
+        # glue.core.edit_subset_mode.EditSubsetMode.update() but we do not
+        # want to deal with all the contract stuff tied to the update() method.
+        self.viewer.session.edit_subset_mode._combine_data(subset_state, override_mode=ReplaceMode)
