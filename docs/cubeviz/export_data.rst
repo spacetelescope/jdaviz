@@ -83,7 +83,7 @@ where the mask (if available) is as defined in
 
 .. code-block:: python
 
-    mydata.write("mydata.fits", format="jdaviz-cube")
+    mydata.write("mydata.fits", format="wcs1d-fits", hdu=1)
 
 Data can also be accessed directly from ``data_collection`` using the following code:
 

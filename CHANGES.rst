@@ -53,6 +53,9 @@ API Changes
 Cubeviz
 ^^^^^^^
 
+- Custom Spectrum1D writer format ``jdaviz-cube`` is removed. Use ``wcs1d-fits`` from
+  ``specutils`` instead. [#2094]
+
 Imviz
 ^^^^^
 
