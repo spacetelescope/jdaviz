@@ -51,7 +51,7 @@ from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage)
+                                ViewerAddedMessage, ViewerRemovedMessage, ViewerRenamedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
@@ -593,6 +593,44 @@ class Application(VuetifyTemplate, HubListener):
         This is useful when reference name is `None`.
         """
         return self._viewer_store.get(vid)
+
+    def _rename_viewer(self, old_reference, new_reference):
+        """
+        Rename a viewer.  If the ID and reference match, the ID will also be updated,
+        otherwise it will be kept.
+
+        CAUTION: use with caution as this does not currently update default
+        viewer reference names stored in helpers and could break behavior.
+
+        Parameters
+        ----------
+        old_reference : str
+            The current reference of the viewer
+        new_reference : str
+            The desired new reference name of the viewer
+        """
+        if new_reference in self.get_viewer_reference_names():
+            raise ValueError(f"viewer with reference='{new_reference}' already exists")
+        if new_reference in self.get_viewer_ids():
+            raise ValueError(f"viewer with id='{new_reference}' already exists")
+
+        viewer_item = self._get_viewer_item(old_reference)
+        old_id = viewer_item['id']
+
+        self._viewer_store[old_id]._reference_id = new_reference
+
+        viewer_item['reference'] = new_reference
+
+        if viewer_item['name'] == old_reference:
+            viewer_item['name'] = new_reference
+
+        if viewer_item['id'] == old_reference:
+            # update the id as well
+            viewer_item['id'] = new_reference
+            self._viewer_store[new_reference] = self._viewer_store.pop(old_id)
+            self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
+
+        self.hub.broadcast(ViewerRenamedMessage(old_reference, new_reference, sender=self))
 
     def get_data_from_viewer(self, viewer_reference, data_label=None,
                              cls='default', include_subsets=True):

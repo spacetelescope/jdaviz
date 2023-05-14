@@ -1,6 +1,7 @@
 from glue.core.message import Message
 
-__all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'LoadDataMessage',
+__all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'ViewerRenamedMessage',
+           'LoadDataMessage',
            'AddDataMessage', 'SnackbarMessage', 'RemoveDataMessage',
            'AddLineListMessage', 'RowLockMessage',
            'SliceSelectSliceMessage',
@@ -55,6 +56,23 @@ class ViewerRemovedMessage(Message):
     @property
     def viewer_id(self):
         return self._viewer_id
+
+
+class ViewerRenamedMessage(Message):
+    """Message emitted after a viewer is destroyed by the application."""
+    def __init__(self, old_viewer_ref, new_viewer_ref, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._old_viewer_ref = old_viewer_ref
+        self._new_viewer_ref = new_viewer_ref
+
+    @property
+    def old_viewer_ref(self):
+        return self._old_viewer_ref
+
+    @property
+    def new_viewer_ref(self):
+        return self._new_viewer_ref
 
 
 class LoadDataMessage(Message):

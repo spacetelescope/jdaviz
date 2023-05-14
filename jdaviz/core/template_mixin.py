@@ -23,7 +23,7 @@ from ipypopout import PopoutButton
 
 from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage)
+                                ViewerAddedMessage, ViewerRemovedMessage, ViewerRenamedMessage)
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 
 
@@ -1221,6 +1221,7 @@ class ViewerSelect(SelectPluginComponent):
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
         self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
+        self.hub.subscribe(self, ViewerRenamedMessage, handler=self._on_viewers_changed)
 
         # initialize viewer_items from original viewers
         self._on_viewers_changed()
