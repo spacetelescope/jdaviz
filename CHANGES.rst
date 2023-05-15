@@ -74,6 +74,8 @@ Cubeviz
 - Fixed get_model_parameters error when retrieving parameters for a cube fit. This
   also removed the "_3d" previously appended to model labels in the returned dict. [#2171]
 
+- Fixes detection of spatial vs spectral subsets for composite subsets. [#2207]
+
 Imviz
 ^^^^^
 

@@ -1,5 +1,4 @@
 from glue.core import BaseData
-from glue.core.subset import RoiSubsetState, RangeSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
@@ -7,6 +6,7 @@ from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
 from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.utils import get_subset_type
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
 
@@ -109,7 +109,11 @@ class CubevizProfileView(SpecvizProfileView):
     def _is_spatial_subset(self, layer):
         # spatial subset layers will have the same data-label as the collapsed flux cube
         ref_data_label = self.state.reference_data.label
-        return (isinstance(getattr(layer.layer, 'subset_state', None), RoiSubsetState)
+
+        subset_state = getattr(layer.layer, 'subset_state', None)
+        if subset_state is None:
+            return False
+        return (get_subset_type(subset_state) == 'spatial'
                 and layer.layer.data.label == ref_data_label)
 
     def _get_spatial_subset_layers(self):
@@ -117,7 +121,11 @@ class CubevizProfileView(SpecvizProfileView):
 
     def _is_spectral_subset(self, layer):
         ref_data_label = self.layers[0].layer.data.label
-        return (isinstance(getattr(layer.layer, 'subset_state', None), RangeSubsetState)
+
+        subset_state = getattr(layer.layer, 'subset_state', None)
+        if subset_state is None:
+            return False
+        return (get_subset_type(subset_state) == 'spectral'
                 and layer.layer.data.label == ref_data_label)
 
     def _get_spectral_subset_layers(self):
@@ -153,14 +161,15 @@ class CubevizProfileView(SpecvizProfileView):
         """
         super()._expected_subset_layer_default(layer_state)
 
-        if not (self._is_spatial_subset(layer_state) or self._is_spectral_subset(layer_state)):
+        subset_type = get_subset_type(layer_state.layer)
+        if subset_type is None:
             return
 
         this_mark = self._get_marks_for_layers([layer_state])[0]
 
         new_marks = []
 
-        if isinstance(layer_state.layer.subset_state, RoiSubsetState):
+        if subset_type == 'spatial':
             layer_state.linewidth = 1
 
             # need to add marks for every intersection between THIS spatial subset and ALL spectral

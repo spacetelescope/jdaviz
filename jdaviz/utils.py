@@ -8,9 +8,11 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from ipyvue import watch
 from glue.config import settings
+from glue.core.subset import RangeSubsetState, RoiSubsetState
+
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
-           'standardize_metadata', 'ColorCycler', 'alpha_index']
+           'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type']
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'
@@ -260,3 +262,32 @@ class ColorCycler:
 
     def reset(self):
         self.counter = -1
+
+
+def get_subset_type(subset):
+    """
+    Determine the subset type of a subset or layer
+
+    Parameters
+    ----------
+    subset : should have ``subset_state`` as an attribute, otherwise will return ``None``.
+
+    Returns
+    -------
+    subset_type : str or None
+        'spatial', 'spectral', or None
+    """
+    if not hasattr(subset, 'subset_state'):
+        return None
+
+    while hasattr(subset.subset_state, 'state1'):
+        # this assumes no mixing between spatial and spectral subsets and just
+        # taking the first component (down the hierarchical tree) to determine the type
+        subset = subset.subset_state.state1
+
+    if isinstance(subset.subset_state, RoiSubsetState):
+        return 'spatial'
+    elif isinstance(subset.subset_state, RangeSubsetState):
+        return 'spectral'
+    else:
+        return None
