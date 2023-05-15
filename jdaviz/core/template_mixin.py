@@ -15,7 +15,6 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
-from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
@@ -94,18 +93,6 @@ def show_widget(widget, loc, title):  # pragma: no cover
 
     else:
         raise ValueError(f"Unrecognized display location: {loc}")
-
-
-def _subset_type(subset):
-    while hasattr(subset.subset_state, 'state1'):
-        # this assumes no mixing between spatial and spectral subsets and just
-        # taking the first component (down the hierarchical tree) to determine the type
-        subset = subset.subset_state.state1
-
-    if isinstance(subset.subset_state, RoiSubsetState):
-        return 'spatial'
-    else:
-        return 'spectral'
 
 
 class ViewerPropertiesMixin:
@@ -1028,10 +1015,10 @@ class SubsetSelect(SelectPluginComponent):
 
     def _is_valid_item(self, subset):
         def is_spectral(subset):
-            return _subset_type(subset) == 'spectral'
+            return get_subset_type(subset) == 'spectral'
 
         def is_spatial(subset):
-            return _subset_type(subset) == 'spatial'
+            return get_subset_type(subset) == 'spatial'
 
         def is_not_composite(subset):
             return not hasattr(subset.subset_state, 'state1')

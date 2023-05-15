@@ -1931,6 +1931,13 @@ class Application(VuetifyTemplate, HubListener):
             if data_item['name'] == msg.data.label:
                 self.state.data_items.remove(data_item)
 
+        # TODO: Fix bug with DataCollectionDeleteMessage not working with
+        #  a handler in cubeviz/plugins/viewers.py. This code is a temporary
+        #  workaround for that.
+        if self.config == 'cubeviz':
+            viewer = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+            viewer._check_if_data_removed(msg=msg)
+
         self._clear_object_cache(msg.data.label)
 
     @staticmethod
