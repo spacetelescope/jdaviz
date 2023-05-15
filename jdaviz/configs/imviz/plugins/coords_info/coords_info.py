@@ -20,16 +20,18 @@ from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 
 __all__ = ['CoordsInfo']
 
-_supported_viewer_classes = (SpecvizProfileView,
-                             ImvizImageView,
-                             CubevizImageView,
-                             MosvizImageView,
-                             MosvizProfile2DView)
-
 
 @tool_registry('g-coords-info')
 class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     template_file = __file__, "coords_info.vue"
+
+    _supported_viewer_classes = (SpecvizProfileView,
+                                 ImvizImageView,
+                                 CubevizImageView,
+                                 MosvizImageView,
+                                 MosvizProfile2DView)
+
+    _viewer_classes_with_marker = (SpecvizProfileView,)
 
     dataset_icon = Unicode("").tag(sync=True)  # option for layer (auto, none, or specific layer)
     icon = Unicode("").tag(sync=True)  # currently exposed layer
@@ -57,7 +59,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         # subscribe/unsubscribe to mouse events across all existing viewers
         viewer_refs = []
         for viewer in self.app._viewer_store.values():
-            if isinstance(viewer, _supported_viewer_classes):
+            if isinstance(viewer, self._supported_viewer_classes):
                 self._create_viewer_callbacks(viewer)
                 viewer_refs.append(viewer.reference_id)
 
@@ -72,8 +74,20 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
+    def _create_marks_for_viewer(self, viewer, id=None):
+        if id is None:
+            id = viewer.reference_id
+        if id in self._marks:
+            return
+        self._marks[id] = PluginScatter(viewer,
+                                        marker='rectangle', stroke_width=1,
+                                        visible=False)
+        viewer.figure.marks = viewer.figure.marks + [self._marks[id]]
+
     def _create_viewer_callbacks(self, viewer):
-        if isinstance(viewer, _supported_viewer_classes):
+        if isinstance(viewer, self._supported_viewer_classes):
+            if isinstance(viewer, self._viewer_classes_with_marker):
+                self._create_marks_for_viewer(viewer)
             callback = self._viewer_callback(viewer, self._viewer_mouse_event)
             viewer.add_event_callback(callback, events=['mousemove', 'mouseleave', 'mouseenter'])
 
@@ -94,11 +108,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         # create marks for each of the spectral viewers (will need a listener event to create marks
         # for new viewers if dynamic creation of spectral viewers is ever supported)
         for id, viewer in self.app._viewer_store.items():
-            if isinstance(viewer, SpecvizProfileView):
-                self._marks[id] = PluginScatter(viewer,
-                                                marker='rectangle', stroke_width=1,
-                                                visible=False)
-                viewer.figure.marks = viewer.figure.marks + [self._marks[id]]
+            if isinstance(viewer, self._viewer_classes_with_marker):
+                self._create_marks_for_viewer(viewer, id)
         return self._marks
 
     def as_text(self):
