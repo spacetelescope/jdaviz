@@ -28,6 +28,7 @@ from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
+from jdaviz.utils import get_subset_type
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
@@ -1014,8 +1015,8 @@ class SubsetSelect(SelectPluginComponent):
             for layer in viewer.layers:
                 if layer.layer.label == subset.label:
                     color = layer.state.color
-                    subset_type = _subset_type(subset)
-                    return {"label": subset.label, "color": color, "type": subset_type}
+                    type = get_subset_type(subset)
+                    return {"label": subset.label, "color": color, "type": type}
         return {"label": subset.label, "color": False, "type": False}
 
     def _delete_subset(self, subset):
@@ -1026,9 +1027,6 @@ class SubsetSelect(SelectPluginComponent):
             self._apply_default_selection()
 
     def _is_valid_item(self, subset):
-        def is_spectral(subset):
-            return _subset_type(subset) == 'spectral'
-
         def is_spatial(subset):
             return _subset_type(subset) == 'spatial'
 
@@ -1044,6 +1042,9 @@ class SubsetSelect(SelectPluginComponent):
         return super()._is_valid_item(subset, locals())
 
     def _update_subset(self, subset, attribute=None):
+        if self._allowed_type is not None and get_subset_type(subset) != self._allowed_type:
+            return
+
         if subset.label not in self.labels:
             # NOTE: this logic will need to be revisited if generic renaming of subsets is added
             # see https://github.com/spacetelescope/jdaviz/pull/1175#discussion_r829372470
@@ -1511,7 +1512,7 @@ class DatasetSelect(SelectPluginComponent):
         # for changes in style, etc, we'll try to filter out extra messages in advance.
         def _subset_update(msg):
             if msg.attribute == 'subset_state':
-                if _subset_type(msg.subset) == 'spatial':
+                if get_subset_type(msg.subset) == 'spatial':
                     self._on_data_changed()
 
         self.hub.subscribe(self, SubsetUpdateMessage,
@@ -1624,7 +1625,7 @@ class DatasetSelect(SelectPluginComponent):
         if getattr(self, '_include_spatial_subsets', False):
             # allow for spatial subsets to be listed
             self.items = self.items + [_dc_to_dict(subset) for subset in self.app.data_collection.subset_groups  # noqa
-                                       if _subset_type(subset) == 'spatial']
+                                       if get_subset_type(subset) == 'spatial']
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)

@@ -1,6 +1,5 @@
 import numpy as np
 
-from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerState
@@ -9,7 +8,7 @@ from glue_jupyter.table import TableViewer
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.registries import viewer_registry
-from jdaviz.utils import ColorCycler
+from jdaviz.utils import ColorCycler, get_subset_type
 
 __all__ = ['JdavizViewerMixin']
 
@@ -112,7 +111,8 @@ class JdavizViewerMixin:
             # want to include the collapse function *unless* the layer is a spectral subset
             for subset in self.jdaviz_app.data_collection.subset_groups:
                 if subset.label == layer.layer.label:
-                    if isinstance(subset.subset_state, RoiSubsetState):
+                    subset_type = get_subset_type(subset)
+                    if subset_type == 'spatial':
                         return "mdi-chart-scatter-plot", suffix
                     else:
                         return "mdi-chart-bell-curve", ""
