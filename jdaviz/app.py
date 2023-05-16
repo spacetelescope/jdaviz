@@ -1704,6 +1704,29 @@ class Application(VuetifyTemplate, HubListener):
                 viewer.on_limits_change()  # Trigger compass redraw
 
     def vue_data_item_remove(self, event):
+        # Determine whether it's safe to remove the data
+        for viewer in self._viewer_store.values():
+            layers = list(viewer.layers)
+
+            # If this viewer is empty, it's independent to the current dataset. Ignoring...
+            if len(layers) == 0:
+                continue
+
+            # Check for valid "Survivor" dataset
+            survivor_found = False
+            for layer in layers:
+                layer_props = layer.properties['layer']
+                if (layer_props.label != event['item_name'] and  # Actively removing this
+                        not hasattr(layer_props, 'subset_state') and  # Subsets can't exist alone
+                        'Plugin' not in layer_props.meta):  # Neither can plugin data
+
+                    # This layer is a valid "survivor" dataset. It's safe to remove
+                    survivor_found = True
+                    break
+            if not survivor_found:
+                raise RuntimeError("Cannot remove all base data")
+
+        # Survivors found for all viewers. Dataset can be safely removed
         self.data_collection.remove(self.data_collection[event['item_name']])
 
     def vue_close_snackbar_message(self, event):
