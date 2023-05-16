@@ -23,7 +23,7 @@
     </v-row>
 
     <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
-    <v-row v-if="config=='imviz' && is_editable">
+    <v-row v-if="config=='imviz' && is_centerable">
       <v-expansion-panels accordion v-model="subplugins_opened">
         <v-expansion-panel>
           <v-expansion-panel-header >
@@ -58,13 +58,12 @@
           :label="item.name"
           v-model.number="item.value"
           type="number"
-          :disabled="!is_editable"
         ></v-text-field>
       </v-row>
     </div>
 
       <v-row justify="end" no-gutters>
-        <v-btn color="primary" text @click="update_subset" :disabled="!is_editable">Update</v-btn>
+        <v-btn color="primary" text @click="update_subset">Update</v-btn>
       </v-row>
   </j-tray-plugin>
 </template>

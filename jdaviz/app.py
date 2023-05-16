@@ -909,8 +909,6 @@ class Application(VuetifyTemplate, HubListener):
             # Remove duplicate spectral regions
             if is_spectral and isinstance(subset_region, SpectralRegion):
                 subset_region = self._remove_duplicate_bounds(subset_region)
-            elif is_spectral:
-                subset_region = self._remove_duplicate_bounds_in_dict(subset_region)
 
             if spectral_only and is_spectral:
                 if object_only and not simplify_spectral:
@@ -941,22 +939,6 @@ class Application(VuetifyTemplate, HubListener):
             raise ValueError(f"{subset_name} not in {all_subset_names}")
         else:
             return all_subsets
-
-    def _remove_duplicate_bounds_in_dict(self, subset_region):
-        new_subset_region = []
-        for elem in subset_region:
-            if not new_subset_region:
-                new_subset_region.append(elem)
-                continue
-            unique = True
-            for elem2 in new_subset_region:
-                if (elem['region'].lower == elem2['region'].lower and
-                        elem['region'].upper == elem2['region'].upper and
-                        elem['glue_state'] == elem2['glue_state']):
-                    unique = False
-            if unique:
-                new_subset_region.append(elem)
-        return new_subset_region
 
     def _is_subset_spectral(self, subset_region):
         if isinstance(subset_region, SpectralRegion):
@@ -1060,7 +1042,6 @@ class Application(VuetifyTemplate, HubListener):
                         return new_spec
                     else:
                         if isinstance(two, list):
-                            # two[0]['glue_state'] = subset_state.state2.__class__.__name__
                             two[0]['glue_state'] = "AndNotState"
                         # Return two first so that we preserve the chronology of how
                         # subset regions are applied.
@@ -1068,15 +1049,27 @@ class Application(VuetifyTemplate, HubListener):
                 elif subset_state.op is operator.and_:
                     # This covers the AND subset mode
 
-                    # Example of how this works:
-                    # a = SpectralRegion(4 * u.um, 7 * u.um)
-                    # b = SpectralRegion(5 * u.um, 6 * u.um)
+                    # Example of how this works with "one" being the AND region
+                    # and "two" being two Range subsets connected by an OR state:
+                    # one = SpectralRegion(4.5 * u.um, 7.5 * u.um)
+                    # two = SpectralRegion(4 * u.um, 5 * u.um) + SpectralRegion(7 * u.um, 8 * u.um)
                     #
-                    # b.invert(a.lower, a.upper)
+                    # oppo = two.invert(one.lower, one.upper)
+                    # Spectral Region, 1 sub-regions:
+                    #   (5.0 um, 7.0 um)
+                    #
+                    # oppo.invert(one.lower, one.upper)
                     # Spectral Region, 2 sub-regions:
-                    #   (4.0 um, 5.0 um)   (6.0 um, 7.0 um)
+                    #   (4.5 um, 5.0 um)   (7.0 um, 7.5 um)
                     if isinstance(two, SpectralRegion):
-                        return two.invert(one.lower, one.upper)
+                        # Taking an AND state of an empty region is allowed
+                        # but there is no way for SpectralRegion to display that information.
+                        # Instead, we raise a ValueError
+                        if one.upper.value < two.lower.value or one.lower.value > two.upper.value:
+                            raise ValueError("AND mode should overlap with existing subset")
+                        oppo = two.invert(one.lower, one.upper)
+
+                        return oppo.invert(one.lower, one.upper)
                     else:
                         return two + one
                 elif subset_state.op is operator.or_:
@@ -1089,10 +1082,38 @@ class Application(VuetifyTemplate, HubListener):
                     elif two:
                         return two
                 elif subset_state.op is operator.xor:
-                    # This covers the XOR case which is currently not working
-                    return None
-                else:
-                    return None
+                    # This covers the ADD subset mode
+
+                    # Example of how this works, with "one" acting
+                    # as the XOR region and "two" as two ranges joined
+                    # by an OR:
+                    # a = SpectralRegion(4 * u.um, 5 * u.um)
+                    # b = SpectralRegion(6 * u.um, 9 * u.um)
+                    #
+                    # one = SpectralRegion(4.5 * u.um, 12 * u.um)
+                    # two = a + b
+
+                    # two.invert(one.lower, one.upper)
+                    # Spectral Region, 2 sub-regions:
+                    #   (5.0 um, 6.0 um)    (9.0 um, 12.0 um)
+
+                    # one.invert(two.lower, two.upper)
+                    # Spectral Region, 1 sub-regions:
+                    #   (4.0 um, 4.5 um)
+
+                    # two.invert(one.lower, one.upper) + one.invert(two.lower, two.upper)
+                    # Spectral Region, 3 sub-regions:
+                    #   (4.0 um, 4.5 um)    (5.0 um, 6.0 um)    (9.0 um, 12.0 um)
+
+                    if isinstance(two, SpectralRegion):
+                        if one.lower > two.lower:
+                            # If one.lower is less than two.lower, it will be included
+                            # in the two.invert() call. Otherwise, we can add it like this.
+                            return (two.invert(one.lower, one.upper) +
+                                    one.invert(two.lower, two.upper))
+                        return two.invert(one.lower, one.upper)
+                    else:
+                        return two + one
             else:
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None

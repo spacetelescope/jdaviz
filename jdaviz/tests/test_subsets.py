@@ -5,7 +5,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from glue.core import Data
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, XRangeROI
 
-from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode
+from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
 from numpy.testing import assert_allclose
@@ -38,7 +38,7 @@ def test_region_from_subset_2d(cubeviz_helper):
 
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["EllipticalROI"]
-    assert subset_plugin.is_editable
+    assert subset_plugin.is_centerable
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "X Center", key) == 1
         assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 3.5
@@ -76,7 +76,7 @@ def test_region_from_subset_3d(cubeviz_helper):
 
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["RectangularROI"]
-    assert subset_plugin.is_editable
+    assert subset_plugin.is_centerable
     assert subset_plugin.get_center() == (2.25, 1.55)
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "Xmin", key) == 1
@@ -127,7 +127,7 @@ def test_region_from_subset_3d(cubeviz_helper):
     cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=3, yc=4, radius=2.4))
     assert subset_plugin.subset_selected == "Subset 2"
     assert subset_plugin.subset_types == ["CircularROI"]
-    assert subset_plugin.is_editable
+    assert subset_plugin.is_centerable
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "X Center", key) == 3
         assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 4
@@ -154,7 +154,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
 
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["Range"]
-    assert subset_plugin.is_editable
+    assert subset_plugin.is_centerable
     assert_allclose(subset_plugin.get_center(), 10.25)
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", key) == 5
@@ -285,31 +285,26 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ["Range", "Range"]
     assert subset_plugin.glue_state_types == ["RangeSubsetState", "OrState"]
-    # assert not subset_plugin.is_editable
+
+    # Make sure that certain things are not possible because we are
+    # dealing with a composite spectral subset
+    subset_plugin.set_center(99, update=True)   # This is no-op
     assert subset_plugin.get_center() is None
-    # TODO: Should this be changed to something else?
-    # subset_plugin.set_center(99, update=True)   # This is no-op
+
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(1, "Lower bound", key) == 30
         assert subset_plugin._get_value_from_subset_definition(1, "Upper bound", key) == 35
         assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", key) == 5
         assert subset_plugin._get_value_from_subset_definition(0, "Upper bound", key) == 15.5
 
-    # This should not be possible via GUI but here we change
-    # something to make sure no-op is really no-op.
-    subset_plugin._set_value_in_subset_definition(0, "Lower bound", "value", 25)
-    # subset_plugin.vue_update_subset()
-    # "value" here does not matter. It is going to get overwritten next time Subset is processed.
-    assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "value") == 25
-    assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "orig") == 5
+    # We will now update one of the bounds of the composite subset
+    subset_plugin._set_value_in_subset_definition(1, "Lower bound", "value", 25)
+    subset_plugin.vue_update_subset()
+    assert subset_plugin._get_value_from_subset_definition(1, "Lower bound", "value") == 25
+    assert subset_plugin._get_value_from_subset_definition(1, "Lower bound", "orig") == 25
 
     reg = cubeviz_helper.app.get_subsets('Subset 1')
-    assert_quantity_allclose(reg[1].lower, 30.0*u.Hz)  # Still the old value
-
-    # See, never happened.
-    subset_plugin.subset_selected = "Create New"
-    subset_plugin.subset_selected = "Subset 1"
-    assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "value") == 5
+    assert_quantity_allclose(reg[1].lower, 25.0*u.Hz)  # It is now the updated value
 
 
 def test_composite_region_from_subset_3d(cubeviz_helper):
@@ -410,6 +405,22 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI']
     assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'AndNotState']
 
+    # This should be prevented since radius must be positive
+    subset_plugin._set_value_in_subset_definition(0, "Radius", "value", 0)
+    subset_plugin.vue_update_subset()
+
+    # This should also be prevented since a rectangle must have positive width
+    # and length
+    subset_plugin._set_value_in_subset_definition(1, "Xmin", "value", 0)
+    subset_plugin._set_value_in_subset_definition(1, "Xmax", "value", 0)
+    subset_plugin.vue_update_subset()
+
+    # Make sure changes were not propagated
+    reg = cubeviz_helper.app.get_subsets("Subset 1")
+    assert reg[0]['subset_state'].roi.radius == 5
+    assert reg[1]['subset_state'].roi.xmin == 25
+    assert reg[1]['subset_state'].roi.xmax == 30
+
 
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = np.ones((10, 10))
@@ -492,3 +503,50 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ['Range', 'Range', 'Range', 'Range']
     assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'OrState', 'AndState']
+
+
+def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d)
+    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+
+    viewer.apply_roi(XRangeROI(6200, 6800))
+    specviz_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(XRangeROI(7200, 7600))
+
+    specviz_helper.app.session.edit_subset_mode.mode = XorMode
+    viewer.apply_roi(XRangeROI(6200, 7600))
+
+    reg = specviz_helper.app.get_subsets("Subset 1")
+    assert reg.lower.value == 6800 and reg.upper.value == 7200
+
+    subset_plugin = specviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+
+    # We will now update one of the bounds of the composite subset
+    subset_plugin._set_value_in_subset_definition(0, "Lower bound", "value", 6000)
+    subset_plugin.vue_update_subset()
+
+    # Since we updated one of the Range objects and it's lower bound
+    # is now lower than the XOR region bound, the region from 6000 to
+    # 6200 should now be visible in the viewer.
+    reg = specviz_helper.app.get_subsets("Subset 1")
+    assert reg[0].lower.value == 6000 and reg[0].upper.value == 6200
+    assert reg[1].lower.value == 6800 and reg[1].upper.value == 7200
+
+    # This makes it so that only spectral regions within this bound
+    # are visible, so the API should reflect that.
+    specviz_helper.app.session.edit_subset_mode.mode = AndMode
+    viewer.apply_roi(XRangeROI(6600, 7400))
+
+    reg = specviz_helper.app.get_subsets("Subset 1")
+    assert reg.lower.value == 6800 and reg[0].upper.value == 7200
+
+    # This should be prevented by the _check_inputs method
+    subset_plugin._set_value_in_subset_definition(0, "Lower bound", "value", 8000)
+    subset_plugin.vue_update_subset()
+    reg2 = specviz_helper.app.get_subsets("Subset 1")
+    assert reg.lower.value == reg2.lower.value
+    assert reg.upper.value == reg2.upper.value
+
+    viewer.apply_roi(XRangeROI(7800, 8000))
+    with pytest.raises(ValueError, match="AND mode should overlap with existing subset"):
+        specviz_helper.app.get_subsets("Subset 1")
