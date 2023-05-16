@@ -144,7 +144,11 @@ module.exports = {
       // only allow deleting products from plugins.  We might want to allow some non-plugin
       // data to also be deleted in the future, but would probably need more advanced logic
       // to ensure essential data isn't removed that would break the app.
-      return !this.isSelected && (this.$props.viewer.config === 'mosviz' ? false : true)
+      notSelected = !this.isSelected
+      isMosviz = this.$props.viewer.config === 'mosviz'
+      isCubeviz = this.$props.viewer.config === 'cubeviz'
+      isPluginData = !(this.$props.item.meta.Plugin === undefined)
+      return notSelected && !isMosviz && !(isCubeviz && !isPluginData)
     },
     selectTipId() {
       if (this.multi_select) {
