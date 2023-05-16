@@ -2,6 +2,7 @@ import pytest
 
 from jdaviz import Application, Specviz
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
+from glue.core.roi import XRangeROI
 
 
 # This applies to all viz but testing with Imviz should be enough.
@@ -140,3 +141,14 @@ def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
     dc = specviz_helper.app.data_collection
     assert dc[0].label == "this used to break (1)"
     assert dc[1].label == "this used to break (2)"
+
+
+def test_vue_remove_data(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d, data_label="data1")
+    specviz_helper.load_spectrum(spectrum1d, data_label="data2")
+    specviz_helper.app.vue_data_item_remove({'item_name': 'data1'})
+    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(7000, 7100))
+    with pytest.raises(RuntimeError, match="Cannot remove all base data"):
+        specviz_helper.app.vue_data_item_remove({'item_name': 'data2'})
+    specviz_helper.load_spectrum(spectrum1d, data_label="data3")
+    specviz_helper.app.vue_data_item_remove({'item_name': 'data2'})
