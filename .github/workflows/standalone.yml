@@ -5,6 +5,7 @@ on:
     branches:
     - main
     - 'v*'
+    - 'pyinstaller_v2'
     tags:
     - 'v*'
   pull_request:
@@ -25,6 +26,12 @@ jobs:
       matrix:
         os: [ubuntu, windows, macos]
     steps:
+    - name: Import Certificates (macOS)
+      uses: apple-actions/import-codesign-certs@v1
+      if: ${{ matrix.os == 'macos' }}
+      with:
+        p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
+        p12-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
@@ -40,6 +47,8 @@ jobs:
       run: pip install pyinstaller
 
     - name: Create standalone binary
+      env:
+        DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
       run: (cd standalone; pyinstaller ./jdaviz.spec)
 
     - name: Run jdaviz cmd in background

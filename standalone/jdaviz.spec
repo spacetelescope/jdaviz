@@ -1,15 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
 from pathlib import Path
+import os
 
 import bqplot
 import debugpy
 import glue
+import jdaviz
 import glue_jupyter
 import ipypopout
 import photutils
 import regions
 from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_submodules
+
+codesign_identity = os.environ.get("DEVELOPER_ID_APPLICATION")
 
 datas = [
     (Path(sys.prefix) / "share" / "jupyter", "./share/jupyter"),
@@ -74,8 +78,9 @@ exe = EXE(
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
-    codesign_identity=None,
+    codesign_identity=codesign_identity,
     entitlements_file=None,
+
 )
 coll = COLLECT(
     exe,
@@ -87,3 +92,8 @@ coll = COLLECT(
     upx_exclude=[],
     name="jdaviz-cli",
 )
+app = BUNDLE(exe, coll,
+         name='jdaviz.app',
+         icon=None,
+         bundle_identifier='edu.stsci.jdaviz',
+         version=jdaviz.__version__)
