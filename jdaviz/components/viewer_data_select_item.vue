@@ -121,14 +121,15 @@ module.exports = {
         // forbid unloading the original reference cube
         // this logic might need to be generalized if supporting custom data labels
         // per-cube or renaming data labels
+        const extension = this.itemNameExtension
         if (this.$props.viewer.reference === 'flux-viewer') {
-          return this.$props.item.name.indexOf('[FLUX]') === -1
+          return ['SCI', 'FLUX'].indexOf(extension) !== -1
         } else if (this.$props.viewer.reference === 'uncert-viewer') {
-          return this.$props.item.name.indexOf('[IVAR]') === -1
+          return ['IVAR', 'ERR'].indexOf(extension) !== -1
         } else if (this.$props.viewer.reference === 'mask-viewer') {
-          return this.$props.item.name.indexOf('[MASK]') === -1
+          return ['MASK', 'DQ'].indexOf(extension) !== -1
         } else if (this.$props.viewer.reference === 'spectrum-viewer') {
-          return this.$props.item.name.indexOf('[FLUX]') === -1          
+          return ['SCI', 'FLUX'].indexOf(extension) !== -1
         }
       } else if (this.$props.viewer.config === 'specviz2d') {
         if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
