@@ -90,7 +90,7 @@ class CubevizProfileView(SpecvizProfileView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:selectslice', 'jdaviz:selectline'],

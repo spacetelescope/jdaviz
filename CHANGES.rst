@@ -14,6 +14,8 @@ New Features
 
 - Histogram showing image values in stretch limits section of plot options plugin. [#2153]
 
+- Vertical (y-range) zoom tool for all spectrum and spectrum-2d viewers. [#2206]
+
 Cubeviz
 ^^^^^^^
 
