@@ -408,7 +408,6 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     # This should be prevented since radius must be positive
     subset_plugin._set_value_in_subset_definition(0, "Radius", "value", 0)
     subset_plugin.vue_update_subset()
-    # assert subset_plugin._get_value_from_subset_definition(0, "Radius", "value") == 5
 
     # This should also be prevented since a rectangle must have positive width
     # and length
