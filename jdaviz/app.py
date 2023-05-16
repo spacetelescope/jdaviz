@@ -52,6 +52,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
+from jdaviz.core.style_widget import StyleWidget
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
@@ -179,6 +180,10 @@ class ApplicationState(State):
     stack_items = ListCallbackProperty(
         docstring="Nested collection of viewers constructed to support the "
                   "Golden Layout viewer area.")
+
+    style_widget = CallbackProperty(
+        '', docstring="Jupyter widget that won't be displayed but can apply css to the app"
+    )
 
 
 class Application(VuetifyTemplate, HubListener):
@@ -350,6 +355,20 @@ class Application(VuetifyTemplate, HubListener):
         if val not in _verbosity_levels:
             raise ValueError(f'Invalid verbosity: {val}')
         self._history_verbosity = val
+
+    def set_style_template_file(self, path):
+        """
+        Sets the path to a vue file containing a <style> tag that will be applied on top of the
+        style defined in ``app.vue``.  This is useful for config-specific or downstream styling
+        at the app-level.
+
+        Parameters
+        ----------
+        path : str or tuple
+            Path to a ``.vue`` file containing style rules to inject into the app.
+        """
+        style_widget = StyleWidget(path)
+        self.state.style_widget = "IPY_MODEL_" + style_widget.model_id
 
     def _on_snackbar_message(self, msg):
         """
