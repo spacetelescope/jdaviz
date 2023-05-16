@@ -18,6 +18,8 @@ New Features
 
 - Allow Subset Plugin to edit composite subsets. [#2182]
 
+- Allow secondary data products to be removed from the app (except for Mosviz) [#2194]
+
 Cubeviz
 ^^^^^^^
 
