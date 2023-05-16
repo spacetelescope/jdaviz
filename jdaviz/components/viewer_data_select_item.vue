@@ -25,7 +25,7 @@
       </div>
     </v-col>
 
-    <v-col cols=9 style="padding: 0" align-self="center">
+    <v-col cols=10 style="padding: 0" align-self="center">
       <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
         <j-layer-viewer-icon span_style="margin-left: 4px; margin-right: 2px" :icon="icon" color="#000000DE"></j-layer-viewer-icon>      
         <div class="text-ellipsis-middle" style="font-weight: 500">
@@ -51,8 +51,6 @@
           ><v-icon>mdi-close</v-icon></v-btn>
         </j-tooltip>
       </div>
-    </v-col>
-    <v-col cols=1 style="padding: 0" align-self="center">
       <div v-if="isDeletable">
         <j-tooltip tipid='viewer-data-delete'>
           <v-btn
@@ -145,7 +143,7 @@ module.exports = {
       // only allow deleting products from plugins.  We might want to allow some non-plugin
       // data to also be deleted in the future, but would probably need more advanced logic
       // to ensure essential data isn't removed that would break the app.
-      return (this.$props.viewer.config === 'mosviz' ? false : true)
+      return !this.isSelected && (this.$props.viewer.config === 'mosviz' ? false : true)
     },
     selectTipId() {
       if (this.multi_select) {
