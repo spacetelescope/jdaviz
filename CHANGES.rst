@@ -14,6 +14,8 @@ New Features
 
 - Histogram showing image values in stretch limits section of plot options plugin. [#2153]
 
+- Subset Plugin now respects the chosen display unit after using Unit Conversion. [#2195]
+
 Cubeviz
 ^^^^^^^
 
