@@ -1,3 +1,5 @@
+import os
+
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -58,7 +60,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
                 # support writing without save dialog
                 # https://github.com/bqplot/bqplot/pull/1397
                 def on_img_received(data):
-                    with open(filename, 'bw') as f:
+                    with open(os.path.expanduser(filename), 'bw') as f:
                         f.write(data)
                 viewer.figure.get_png_data(on_img_received)
         elif filetype == "svg":

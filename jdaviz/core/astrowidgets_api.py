@@ -1,5 +1,6 @@
 import gwcs
 import numpy as np
+import os
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.wcs import NoConvergence
@@ -51,7 +52,7 @@ class AstrowidgetsImageViewerMixin:
 
         # https://github.com/bqplot/bqplot/pull/1397
         def on_png_received(data):
-            with open(filename, 'bw') as f:
+            with open(os.path.expanduser(filename), 'bw') as f:
                 f.write(data)
 
         self.figure.get_png_data(on_png_received)
