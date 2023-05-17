@@ -106,7 +106,7 @@
 
 
     <!-- PROFILE/LINE -->
-    <j-plugin-section-header v-if="line_width_sync.in_subscribed_states || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
+    <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && line_visible_value) || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
     <glue-state-sync-wrapper v-if="config === 'cubeviz'" :sync="collapse_func_sync" :multiselect="multiselect" @unmix-state="unmix_state('function')">
       <v-select
         :menu-props="{ left: true }"

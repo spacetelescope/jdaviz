@@ -298,7 +298,7 @@ class PlotOptions(PluginTemplateMixin):
                                                state_filter=not_image_or_spatial_subset)
         self.line_width = PlotOptionsSyncState(self, self.viewer, self.layer, 'linewidth',
                                                'line_width_value', 'line_width_sync',
-                                               state_filter=line_visible)
+                                               state_filter=supports_line)
         self.line_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
                                                  'line_opacity_value', 'line_opacity_sync',
                                                  state_filter=supports_line)
