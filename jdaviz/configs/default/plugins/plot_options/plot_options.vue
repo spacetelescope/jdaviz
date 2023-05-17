@@ -59,6 +59,15 @@
     />
 
     <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
+    <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_visible')">
+      <span>
+        <v-btn icon @click.stop="marker_visible_value = !marker_visible_value">
+          <v-icon>mdi-eye{{ marker_visible_value ? '' : '-off' }}</v-icon>
+        </v-btn>
+        Show Marker
+      </span>
+    </glue-state-sync-wrapper>
+
     <glue-state-sync-wrapper :sync="line_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_visible')">
       <span>
         <v-btn icon @click.stop="line_visible_value = !line_visible_value">
@@ -97,7 +106,7 @@
 
 
     <!-- PROFILE/LINE -->
-    <j-plugin-section-header v-if="line_width_sync.in_subscribed_states || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
+    <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && line_visible_value) || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
     <glue-state-sync-wrapper v-if="config === 'cubeviz'" :sync="collapse_func_sync" :multiselect="multiselect" @unmix-state="unmix_state('function')">
       <v-select
         :menu-props="{ left: true }"
@@ -152,6 +161,157 @@
         label="Plot uncertainties"
         />
     </glue-state-sync-wrapper>
+
+    <!-- MARKER/SCATTER -->
+    <div v-if="marker_visible_sync.in_subscribed_states">
+      <j-plugin-section-header>Marker</j-plugin-section-header>
+      <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_fill_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_fill')">
+        <v-switch
+          v-model="marker_fill_value"
+          label="Fill Marker"
+          />
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_opacity')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Opacity</v-subheader>
+          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="marker_opacity_value" hide-details class="no-hint" />
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_size_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_size_mode')">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="marker_size_mode_sync.choices"
+          v-model="marker_size_mode_value"
+          label="Size Mode"
+          class="no-hint"
+        ></v-select>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value==='Fixed'" :sync="marker_size_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_size')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Size</v-subheader>
+          <glue-throttled-slider wait="300" max="10" step="0.1" :value.sync="marker_size_value" hide-details class="no-hint" />
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_size_scale_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_size_scale')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Scale</v-subheader>
+          <glue-throttled-slider wait="300" max="10" step="0.1" :value.sync="marker_size_scale_value" hide-details class="no-hint" />
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_col_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_size_col')">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="marker_size_col_sync.choices"
+          v-model="marker_size_col_value"
+          label="Column"
+          class="no-hint"
+        ></v-select>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_size_vmin')">
+        <v-text-field
+          ref="marker_size_vmin"
+          type="number"
+          label="vmin"
+          v-model.number="marker_size_vmin_value"
+          type="number"
+          step="0.01"
+        ></v-text-field>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_size_vmax')">
+        <v-text-field
+          ref="marker_size_vmax"
+          type="number"
+          label="vmax"
+          v-model.number="marker_size_vmax_value"
+          type="number"
+          step="0.01"
+        ></v-text-field>
+      </glue-state-sync-wrapper>
+
+
+      <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_color_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_color_mode')">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="marker_color_mode_sync.choices"
+          v-model="marker_color_mode_value"
+          label="Color Mode"
+          class="no-hint"
+        ></v-select>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value==='Fixed'" :sync="marker_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_color')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Color</v-subheader>
+          <v-menu>
+            <template v-slot:activator="{ on }">
+                <span class="color-menu"
+                      :style="`background:${marker_color_value}`"
+                      @click.stop="on.click"
+                >&nbsp;</span>
+            </template>
+            <div @click.stop="" style="text-align: end; background-color: white">
+                <v-color-picker :value="marker_color_value"
+                                @update:color="throttledSetValue('marker_color_value', $event.hexa)"></v-color-picker>
+            </div>
+          </v-menu>
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_color_col_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_color_col')">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="marker_color_col_sync.choices"
+          v-model="marker_color_col_value"
+          label="Column"
+          class="no-hint"
+        ></v-select>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_colormap')">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="marker_colormap_sync.choices"
+          v-model="marker_colormap_value"
+          label="Colormap"
+          class="no-hint"
+        ></v-select>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_colormap_vmin')">
+        <v-text-field
+          ref="marker_colormap_vmin"
+          type="number"
+          label="vmin"
+          v-model.number="marker_colormap_vmin_value"
+          type="number"
+          step="0.01"
+        ></v-text-field>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_colormap_vmax')">
+        <v-text-field
+          ref="marker_colormap_vmax"
+          type="number"
+          label="vmax"
+          v-model.number="marker_colormap_vmax_value"
+          type="number"
+          step="0.01"
+        ></v-text-field>
+      </glue-state-sync-wrapper>
+    </div>
+
 
     <!-- IMAGE -->
     <!-- IMAGE:STRETCH -->
