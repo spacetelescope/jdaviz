@@ -296,6 +296,9 @@ class Specviz(ConfigHelper, LineListMixin):
         """
         spatial_subset = kwargs.pop("spatial_subset", None)
         function = kwargs.pop("function", None)
+        if len(kwargs) > 0:
+            raise ValueError(f'kwargs {[x for x in kwargs.keys()]} are not valid')
+
         if self.app.config == 'cubeviz':
             # then this is a specviz instance inside cubeviz and we want to default to the
             # viewer's collapse function
@@ -308,8 +311,5 @@ class Specviz(ConfigHelper, LineListMixin):
         else:
             function = None
 
-        # return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-        #                       function=function, spectral_to_spatial=spectral_to_spatial)
-        # print(function)
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
                               spectral_subset=spectral_subset, function=function, cls=cls)

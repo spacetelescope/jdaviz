@@ -411,8 +411,6 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    # def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
-    #               spectral_to_spatial=None):
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
                   function=None, cls=None):
         list_of_valid_function_values = ('minimum', 'maximum', 'mean',
@@ -476,7 +474,8 @@ class ConfigHelper(HubListener):
             raise AttributeError(f"A valid cls must be provided to"
                                  f" apply subset {spectral_subset} to data. "
                                  f"Instead, {cls} was given.")
-        subset_to_apply = spatial_subset if spatial_subset else spectral_subset if spectral_subset else None
+        subset_to_apply = (spatial_subset if spatial_subset
+                           else spectral_subset if spectral_subset else None)
         # Loop through each subset
         for subsets in self.app.data_collection.subset_groups:
             # If name matches the name in subsets_to_apply, continue
@@ -501,7 +500,6 @@ class ConfigHelper(HubListener):
 
         return data
 
-    # def get_data(self, data_label=None, cls=None, subset_to_apply=None, spectral_to_spatial=None):
     def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None, cls=None):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
