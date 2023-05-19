@@ -4,6 +4,8 @@ from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from specutils import Spectrum1D
 
+from glue.core.roi import XRangeROI
+
 
 def test_nested_helper(cubeviz_helper):
     '''Ensures the Cubeviz helper is always returned, even after the Specviz helper is called'''
@@ -65,3 +67,31 @@ def test_valid_function(cubeviz_helper, spectrum1d_cube):
     assert cubeviz_helper.get_data(data_label="test[FLUX]").flux.ndim == 3
     # but calling through specviz automatically collapses
     assert cubeviz_helper.specviz.get_data(data_label="test[FLUX]").flux.ndim == 1
+
+
+def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
+    data_label = "test"
+    cubeviz_helper.load_data(spectrum1d_cube_larger, data_label)
+    cubeviz_helper._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
+
+    spec_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_spectrum_viewer_reference_name)
+    spec_viewer.apply_roi(XRangeROI(4.62440061e-07, 4.62520112e-07))
+
+    data_label = data_label + "[FLUX]"
+    # This will be the same if function is None or True
+    spatial_with_spec = cubeviz_helper.get_data(data_label=data_label,
+                                                spatial_subset="Subset 1",
+                                                spectral_subset="Subset 2")
+    assert spatial_with_spec.flux.ndim == 1
+    assert list(spatial_with_spec.mask) == [False, False, True, True, False,
+                                            False, False, False, False, False]
+    assert max(list(spatial_with_spec.flux.value)) == 157.
+    assert min(list(spatial_with_spec.flux.value)) == 13.
+
+    spatial_with_spec = cubeviz_helper.get_data(data_label=data_label,
+                                                spatial_subset="Subset 1",
+                                                spectral_subset="Subset 2",
+                                                function='minimum')
+    assert max(list(spatial_with_spec.flux.value)) == 78.
+    assert min(list(spatial_with_spec.flux.value)) == 6.
+
