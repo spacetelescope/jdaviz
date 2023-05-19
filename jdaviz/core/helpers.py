@@ -411,8 +411,10 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
-                  spectral_to_spatial=None):
+    # def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
+    #               spectral_to_spatial=None):
+    def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
+                  function=None, cls=None):
         list_of_valid_function_values = ('minimum', 'maximum', 'mean',
                                          'median', 'sum')
         if function and function not in list_of_valid_function_values:
@@ -420,9 +422,14 @@ class ConfigHelper(HubListener):
                              f" function values {list_of_valid_function_values}")
 
         list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
-        if subset_to_apply and subset_to_apply not in list_of_valid_subset_names:
-            raise ValueError(f"Subset {subset_to_apply} not in list of valid"
+        if spatial_subset and spatial_subset not in list_of_valid_subset_names:
+            raise ValueError(f"Subset {spatial_subset} not in list of valid"
                              f" subset names {list_of_valid_subset_names}")
+        elif spectral_subset and spectral_subset not in list_of_valid_subset_names:
+            raise ValueError(f"Subset {spectral_subset} not in list of valid"
+                             f" subset names {list_of_valid_subset_names}")
+
+        # TODO: check if spectral is spectral and spatial is spatial
 
         if data_label and data_label not in self.app.data_collection.labels:
             raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
@@ -451,7 +458,7 @@ class ConfigHelper(HubListener):
         if cls == Spectrum1D:
             object_kwargs['statistic'] = function
 
-        if not subset_to_apply:
+        if not spatial_subset and not spectral_subset:
             if 'Trace' in data.meta:
                 if cls is not None:  # pragma: no cover
                     raise ValueError("cls not supported for Trace object")
@@ -461,11 +468,15 @@ class ConfigHelper(HubListener):
 
             return data
 
-        if not cls and subset_to_apply:
+        if not cls and spatial_subset:
             raise AttributeError(f"A valid cls must be provided to"
-                                 f" apply subset {subset_to_apply} to data. "
+                                 f" apply subset {spatial_subset} to data. "
                                  f"Instead, {cls} was given.")
-
+        elif not cls and spectral_subset:
+            raise AttributeError(f"A valid cls must be provided to"
+                                 f" apply subset {spectral_subset} to data. "
+                                 f"Instead, {cls} was given.")
+        subset_to_apply = spatial_subset if spatial_subset else spectral_subset if spectral_subset else None
         # Loop through each subset
         for subsets in self.app.data_collection.subset_groups:
             # If name matches the name in subsets_to_apply, continue
@@ -483,14 +494,15 @@ class ConfigHelper(HubListener):
                                           f" subset {subsets.label} applied of type {cls}."
                                           f" Exception: {e}")
         # Apply spectral subset to spatial subset if applicable
-        if spectral_to_spatial:
-            sr = self.app.get_subsets(spectral_to_spatial)
+        if spatial_subset and spectral_subset:
+            sr = self.app.get_subsets(spectral_subset)
             if sr:
                 data = extract_region(data, sr, return_single_spectrum=True)
 
         return data
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None, spectral_to_spatial=None):
+    # def get_data(self, data_label=None, cls=None, subset_to_apply=None, spectral_to_spatial=None):
+    def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None, cls=None):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -512,8 +524,10 @@ class ConfigHelper(HubListener):
             Data is returned as type cls with subsets applied.
 
         """
-        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-                              spectral_to_spatial=spectral_to_spatial)
+        # return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
+        #                       spectral_to_spatial=spectral_to_spatial)
+        return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
+                              spectral_subset=spectral_subset, function=None, cls=None)
 
 
 class ImageConfigHelper(ConfigHelper):

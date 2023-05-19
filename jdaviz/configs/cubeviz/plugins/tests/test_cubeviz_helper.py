@@ -29,7 +29,7 @@ def test_invalid_function(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
 
     with pytest.raises(ValueError, match='function 42 not in list of valid '):
-        cubeviz_helper.get_data(data_label="test[FLUX]", subset_to_apply='Subset 1', function=42)
+        cubeviz_helper.get_data(data_label="test[FLUX]", spatial_subset='Subset 1', function=42)
 
     # Also make sure specviz redshift slider warning does not show up.
     # https://github.com/spacetelescope/jdaviz/issues/2029
@@ -41,20 +41,20 @@ def test_valid_function(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
 
     results_cube = cubeviz_helper.get_data(data_label="test[FLUX]",
-                                           subset_to_apply='Subset 1')
+                                           spatial_subset='Subset 1')
     assert results_cube.flux.ndim == 3
     results_false = cubeviz_helper.get_data(data_label="test[FLUX]",
-                                            subset_to_apply='Subset 1', function=False)
+                                            spatial_subset='Subset 1', function=False)
     assert results_false.flux.ndim == 3
 
     results_def = cubeviz_helper.get_data(data_label="test[FLUX]",
-                                          subset_to_apply='Subset 1', function=True)
+                                          spatial_subset='Subset 1', function=True)
     assert results_def.flux.ndim == 1
 
     results_min = cubeviz_helper.get_data(data_label="test[FLUX]",
-                                          subset_to_apply='Subset 1', function="minimum")
+                                          spatial_subset='Subset 1', function="minimum")
     results_max = cubeviz_helper.get_data(data_label="test[FLUX]",
-                                          subset_to_apply='Subset 1', function="maximum")
+                                          spatial_subset='Subset 1', function="maximum")
     assert isinstance(results_min, Spectrum1D)
     assert_quantity_allclose(results_min.flux,
                              [6., 14.] * u.Jy, atol=1e-5 * u.Jy)

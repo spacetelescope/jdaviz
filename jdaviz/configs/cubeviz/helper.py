@@ -120,8 +120,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             self._specviz = Specviz(app=self.app)
         return self._specviz
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
-                 spectral_to_spatial=None):
+    def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None, function=None,
+                 cls=None):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -149,14 +149,15 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        if function is True:
-            return self.specviz.get_data(data_label=data_label, cls=cls,
-                                         subset_to_apply=subset_to_apply,
-                                         spectral_to_spatial=spectral_to_spatial)
+        if function:
+            return self.specviz.get_data(data_label=data_label, spectral_subset=spectral_subset,
+                                         cls=cls, spatial_subset=spatial_subset, function=function)
+        elif function is None and spectral_subset and spatial_subset:
+            function = True
         elif function is False:
             function = None
-        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-                              function=function)
+        return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
+                              spectral_subset=spectral_subset, function=function, cls=cls)
 
 
 def layer_is_cube_image_data(layer):

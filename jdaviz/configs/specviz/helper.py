@@ -79,7 +79,7 @@ class Specviz(ConfigHelper, LineListMixin):
 
         if data_label is not None:
             spectrum = get_data_method(data_label=data_label,
-                                       subset_to_apply=subset_to_apply,
+                                       spectral_subset=subset_to_apply,
                                        cls=Spectrum1D)
             spectra[data_label] = spectrum
         else:
@@ -88,7 +88,7 @@ class Specviz(ConfigHelper, LineListMixin):
                 if subset_to_apply is not None:
                     if lyr.label == subset_to_apply:
                         spectrum = get_data_method(data_label=lyr.data.label,
-                                                   subset_to_apply=subset_to_apply,
+                                                   spectral_subset=subset_to_apply,
                                                    cls=Spectrum1D,
                                                    **function_kwargs)
                         spectra[lyr.data.label] = spectrum
@@ -97,7 +97,7 @@ class Specviz(ConfigHelper, LineListMixin):
                 else:
                     if isinstance(lyr, GroupedSubset):
                         spectrum = get_data_method(data_label=lyr.data.label,
-                                                   subset_to_apply=lyr.label,
+                                                   spectral_subset=lyr.label,
                                                    cls=Spectrum1D,
                                                    **function_kwargs)
                         spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
@@ -271,7 +271,7 @@ class Specviz(ConfigHelper, LineListMixin):
             self._default_spectrum_viewer_reference_name
         ).figure.axes[axis].tick_format = fmt
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None, spectral_to_spatial=None):
+    def get_data(self, data_label=None, spectral_subset=None, cls=None, **kwargs):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -294,15 +294,22 @@ class Specviz(ConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
+        spatial_subset = kwargs.pop("spatial_subset", None)
+        function = kwargs.pop("function", None)
         if self.app.config == 'cubeviz':
             # then this is a specviz instance inside cubeviz and we want to default to the
             # viewer's collapse function
             default_sp_viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-            function = getattr(default_sp_viewer.state, 'function', None)
+            if function is True or function is None:
+                function = getattr(default_sp_viewer.state, 'function', None)
+
             if cls is None:
                 cls = Spectrum1D
         else:
             function = None
 
-        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-                              function=function, spectral_to_spatial=spectral_to_spatial)
+        # return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
+        #                       function=function, spectral_to_spatial=spectral_to_spatial)
+        # print(function)
+        return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
+                              spectral_subset=spectral_subset, function=function, cls=cls)
