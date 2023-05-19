@@ -74,7 +74,7 @@ def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper.load_data(spectrum1d_cube_larger, data_label)
     cubeviz_helper._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
 
-    spec_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_spectrum_viewer_reference_name)
+    spec_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_spectrum_viewer_reference_name) # noqa
     spec_viewer.apply_roi(XRangeROI(4.62440061e-07, 4.62520112e-07))
 
     data_label = data_label + "[FLUX]"
@@ -94,4 +94,3 @@ def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
                                                 function='minimum')
     assert max(list(spatial_with_spec.flux.value)) == 78.
     assert min(list(spatial_with_spec.flux.value)) == 6.
-
