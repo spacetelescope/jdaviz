@@ -60,7 +60,7 @@
 <script>
 
 module.exports = {
-  props: ['item', 'icon', 'multi_select', 'viewer'],
+  props: ['item', 'icon', 'multi_select', 'viewer', 'n_data_entries'],
   methods: {
     selectClicked() {
       prevVisibleState = this.visibleState
@@ -133,10 +133,8 @@ module.exports = {
       return true
     },
     isDeletable() {
-      // only allow deleting products from plugins.  We might want to allow some non-plugin
-      // data to also be deleted in the future, but would probably need more advanced logic
-      // to ensure essential data isn't removed that would break the app.
-      if (this.$props.item.meta.Plugin === undefined) {
+      // also add logic to forbid deleting in mosviz/cubeviz/etc
+      if (this.$props.item.meta.Plugin === undefined && this.$props.n_data_entries <= 1) {
         return false
       }
       // for any exceptions not above, enable deleting
