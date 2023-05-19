@@ -133,12 +133,12 @@ module.exports = {
       return true
     },
     isDeletable() {
-      // also add logic to forbid deleting in mosviz/cubeviz/etc
-      if (this.$props.item.meta.Plugin === undefined && this.$props.n_data_entries <= 1) {
-        return false
-      }
-      // for any exceptions not above, enable deleting
-      return !this.isSelected
+      isLastDataset = (this.$props.n_data_entries <= 1)
+      notSelected = !this.isSelected
+      isMosviz = this.$props.viewer.config === 'mosviz'
+      isCubeviz = this.$props.viewer.config === 'cubeviz'
+      isPluginData = !(this.$props.item.meta.Plugin === undefined)
+      return notSelected && (isPluginData || (!isLastDataset && !isMosviz && !isCubeviz))
     },
     selectTipId() {
       if (this.multi_select) {
