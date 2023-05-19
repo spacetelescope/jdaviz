@@ -50,7 +50,7 @@
       <j-tooltip tipid='viewer-data-delete'>
         <v-btn
           icon
-          @click="$emit('data-item-remove', {item_name: item.name})"
+          @click="$emit('data-item-remove', {item_name: item.name, viewer_id: viewer.id})"
         ><v-icon>mdi-delete</v-icon></v-btn>
       </j-tooltip>
     </div>

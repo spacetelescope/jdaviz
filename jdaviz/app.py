@@ -1704,6 +1704,10 @@ class Application(VuetifyTemplate, HubListener):
                 viewer.on_limits_change()  # Trigger compass redraw
 
     def vue_data_item_remove(self, event):
+        # Hack for disappearing subsets. Temporarily add the data back to the viewer to
+        # transfer ownership of subsets
+        self.add_data_to_viewer(event['viewer_id'], event['item_name'], visible = False)
+
         self.data_collection.remove(self.data_collection[event['item_name']])
 
     def vue_close_snackbar_message(self, event):
