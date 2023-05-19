@@ -50,6 +50,7 @@
             :icon="layer_icons[item.name]"
             :viewer="viewer"
             :multi_select="multi_select"
+            :n_data_entries="nDataEntries"
             @data-item-visibility="$emit('data-item-visibility', $event)"
             @data-item-unload="$emit('data-item-unload', $event)"
             @data-item-remove="$emit('data-item-remove', $event)"
@@ -79,6 +80,7 @@
               :icon="layer_icons[item.name]"
               :viewer="viewer"
               :multi_select="multi_select"
+              :n_data_entries="nDataEntries"
               @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
             ></j-viewer-data-select-item>
@@ -197,6 +199,10 @@ module.exports = {
     },
     extraDataItems() {
       return this.$props.data_items.filter((item) => this.itemIsVisible(item, true))
+    },
+    nDataEntries() {
+      // return number of data entries in the entire plugin that were NOT created by a plugin
+      return this.$props.data_items.filter((item) => item.meta.Plugin === undefined).length
     },
   }
 };
