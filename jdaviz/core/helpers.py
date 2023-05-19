@@ -476,6 +476,7 @@ class ConfigHelper(HubListener):
                                  f"Instead, {cls} was given.")
         subset_to_apply = (spatial_subset if spatial_subset
                            else spectral_subset if spectral_subset else None)
+        spec_sub = None
         # Loop through each subset
         for subsets in self.app.data_collection.subset_groups:
             # If name matches the name in subsets_to_apply, continue
@@ -492,11 +493,22 @@ class ConfigHelper(HubListener):
                             warnings.warn(f"Not able to get {data_label} returned with"
                                           f" subset {subsets.label} applied of type {cls}."
                                           f" Exception: {e}")
+            elif (spatial_subset and spectral_subset and
+                  subsets.label.lower() == spectral_subset.lower()):
+                # Same logic as if statement
+                spec_sub = [spec_sub_data for spec_sub_data in subsets.subsets if
+                            spec_sub_data.data.label == data_label][0]
         # Apply spectral subset to spatial subset if applicable
         if spatial_subset and spectral_subset:
-            sr = self.app.get_subsets(spectral_subset)
-            if sr:
-                data = extract_region(data, sr, return_single_spectrum=True)
+            handler, _ = data_translator.get_handler_for(cls)
+            try:
+                spec_subset = handler.to_object(spec_sub, **object_kwargs)
+            except Exception as e:
+                warnings.warn(f"Not able to get {data_label} returned with"
+                              f" subset {subsets.label} applied of type {cls}."
+                              f" Exception: {e}")
+            # Return collapsed Spectrum1D object with spectral subset mask applied
+            data.mask = ~spec_subset.mask
 
         return data
 
