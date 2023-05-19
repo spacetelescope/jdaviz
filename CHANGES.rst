@@ -20,7 +20,7 @@ New Features
 
 - Support for Scatter plots/markers in plot options. [#2193]
 
-- Allow user-loaded data to be removed from the app (except for mosviz and cubeviz)
+- Allow user-loaded data to be removed from the app (in specviz and imviz)
   so long as it is not the only user-loaded data [#2211]
 
 Cubeviz
