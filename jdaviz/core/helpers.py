@@ -504,7 +504,7 @@ class ConfigHelper(HubListener):
                 spec_subset = handler.to_object(spec_sub, **object_kwargs)
             except Exception as e:
                 warnings.warn(f"Not able to get {data_label} returned with"
-                              f" subset {subsets.label} applied of type {cls}."
+                              f" subset {spectral_subset} applied of type {cls}."
                               f" Exception: {e}")
             # Return collapsed Spectrum1D object with spectral subset mask applied
             data.mask = ~spec_subset.mask
