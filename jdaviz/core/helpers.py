@@ -22,7 +22,6 @@ from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
 from specutils import Spectrum1D
-from specutils.manipulation import extract_region
 
 
 from jdaviz.app import Application
@@ -521,12 +520,12 @@ class ConfigHelper(HubListener):
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
+        spatial_subset : str, optional
+            Spatial subset applied to data.
+        spectral_subset : str, optional
+            Spectral subset applied to data.
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
-        subset_to_apply : str, optional
-            Subset that is to be applied to data before it is returned.
-        spectral_to_spatial : str, optional
-            Spectral subset to be applied to spatial subset.
 
         Returns
         -------
@@ -534,8 +533,6 @@ class ConfigHelper(HubListener):
             Data is returned as type cls with subsets applied.
 
         """
-        # return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-        #                       spectral_to_spatial=spectral_to_spatial)
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
                               spectral_subset=spectral_subset, function=None, cls=None)
 

@@ -280,13 +280,10 @@ class Specviz(ConfigHelper, LineListMixin):
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
+        spectral_subset : str, optional
+            Spectral subset applied to data.
         cls : `~specutils.Spectrum1D`, optional
             The type that data will be returned as.
-        subset_to_apply : str, optional
-            Subset that is to be applied to data before it is returned.
-        spectral_to_spatial : str, optional
-            Spectral subset to be applied to spatial subset. Only possible if this is
-            a specviz instance inside cubeviz.
 
         Returns
         -------

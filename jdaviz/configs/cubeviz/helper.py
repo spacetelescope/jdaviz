@@ -130,18 +130,18 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
-            The type that data will be returned as.
-        subset_to_apply : str, optional
-            Subset that is to be applied to data before it is returned.
+        spatial_subset : str, optional
+            Spatial subset applied to data.
+        spectral_subset : str, optional
+            Spectral subset applied to data.
         function : {True, False, 'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
             Ignored if ``data_label`` does not point to cube-like data.
             If True, will collapse according to the current collapse function defined in the
             spectrum viewer.  If provided as a string, the cube will be collapsed with the provided
-            function.  If False, None, or not passed, the entire cube will be returned.
-        spectral_to_spatial : str, optional
-            Spectral subset to be applied to spatial subset. Only possible if function is
-            set to True.
+            function.  If False, None, or not passed, the entire cube will be returned (unless there
+            are values for ``spatial_subset`` and ``spectral_subset``).
+        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+            The type that data will be returned as.
 
         Returns
         -------
