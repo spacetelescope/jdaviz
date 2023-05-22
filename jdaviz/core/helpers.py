@@ -514,7 +514,7 @@ class ConfigHelper(HubListener):
     def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None, cls=None):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
-        subset_to_apply.
+        spatial_subsets and/or spectral_subsets.
 
         Parameters
         ----------
