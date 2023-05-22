@@ -149,7 +149,10 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        if (function or function is None) and spectral_subset and spatial_subset:
+        if function is not False and spectral_subset and spatial_subset:
+            return self.specviz.get_data(data_label=data_label, spectral_subset=spectral_subset,
+                                         cls=cls, spatial_subset=spatial_subset, function=function)
+        elif function and spatial_subset:
             return self.specviz.get_data(data_label=data_label, spectral_subset=spectral_subset,
                                          cls=cls, spatial_subset=spatial_subset, function=function)
         elif function is False and (spectral_subset and spatial_subset):
