@@ -305,6 +305,8 @@ class Specviz(ConfigHelper, LineListMixin):
 
             if cls is None:
                 cls = Spectrum1D
+        elif spatial_subset or function:
+            raise ValueError('kwargs spatial subset and function are not valid in specviz')
         else:
             function = None
 
