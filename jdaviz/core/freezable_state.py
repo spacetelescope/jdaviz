@@ -56,7 +56,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.wcs_only_layers = []
+        self.wcs_only_layers = []  # For Imviz rotation use.
 
     def reset_limits(self, *event):
         if self.reference_data is None:  # Nothing to do

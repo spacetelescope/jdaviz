@@ -1,15 +1,15 @@
-import pytest
 import gwcs
 import numpy as np
+import pytest
 from astropy import units as u
 from astropy.coordinates import ICRS
-from astropy.utils.data import get_pkg_data_filename
 from astropy.modeling import models
 from astropy.wcs import WCS
 from gwcs import coordinate_frames as cf
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz import wcs_utils
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_GWCS
 
 
 def test_simple_fits_wcs():
@@ -108,58 +108,76 @@ def test_simple_gwcs():
     assert not result[-1]
 
 
-@pytest.mark.remote_data
-@pytest.mark.filterwarnings(r"ignore::astropy.wcs.wcs.FITSFixedWarning")
-def test_non_wcs_layer_labels(imviz_helper):
-    # load a real image w/ WCS:
-    real_image_path = get_pkg_data_filename('tutorials/FITS-images/HorseHead.fits')
-    imviz_helper.load_data(real_image_path)
+# TODO: Add more tests.
+class TestWCSOnly(BaseImviz_WCS_GWCS):
 
-    # load a WCS-only layer:
-    ndd = wcs_utils._get_rotated_nddata_from_label(
-        app=imviz_helper.app,
-        data_label=imviz_helper.app.data_collection[0].label,
-        rotation_angle=0*u.deg
-    )
-    imviz_helper.load_data(ndd)
+    # TODO: Replace private API calls with more public ones when available.
+    def test_non_wcs_layer_labels(self):
+        self.imviz.link_data(link_type="wcs")
+        assert len(self.imviz.app.data_collection) == 3
 
-    # confirm that only the image is labeled:
-    assert len(imviz_helper.app.state.layer_icons) == 2
+        # Load a WCS-only layer, bypassing normal labeling scheme.
+        ndd = wcs_utils._get_rotated_nddata_from_label(
+            app=self.imviz.app,
+            data_label="fits_wcs[DATA]",
+            rotation_angle=5 * u.deg
+        )
+        self.imviz.load_data(ndd, data_label=self.imviz.app._wcs_only_label)
+        assert self.imviz.app.data_collection[3].label == self.imviz.app._wcs_only_label
 
-    # confirm the WCS-only layer is logged:
-    viewer = imviz_helper.app.get_viewer('imviz-0')
-    assert len(viewer.state.wcs_only_layers) == 1
+        # Confirm that all data in collection are labeled.
+        assert len(self.imviz.app.state.layer_icons) == 4  # 3 + 1
 
-    # load a second WCS-only layer:
-    ndd2 = wcs_utils._get_rotated_nddata_from_label(
-        app=imviz_helper.app,
-        data_label=imviz_helper.app.data_collection[0].label,
-        rotation_angle=45*u.deg
-    )
-    imviz_helper.load_data(ndd2)
-    assert len(imviz_helper.app.state.layer_icons) == 3
-    assert len(viewer.state.wcs_only_layers) == 2
+        # Confirm the WCS-only layer is logged.
+        assert len(self.viewer.state.wcs_only_layers) == 1
 
-    wcs_only_refdata_icon = 'mdi-compass-outline'
-    wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
+        # Load a second WCS-only layer.
+        ndd2 = wcs_utils._get_rotated_nddata_from_label(
+            app=self.imviz.app,
+            data_label="fits_wcs[DATA]",
+            rotation_angle=45 * u.deg
+        )
+        self.imviz.load_data(ndd2, data_label="rot: 45.00 deg")
+        assert self.imviz.app.data_collection[4].label == "rot: 45.00 deg"
 
-    for i, data in enumerate(imviz_helper.app.data_collection):
-        viewer = imviz_helper.app.get_viewer("imviz-0")
+        # Confirm that all data in collection are labeled.
+        assert len(self.imviz.app.data_collection) == 5  # 3 + 2
+        assert len(self.imviz.app.state.layer_icons) == 5
 
-        if i == 0:
-            # first entry is image data:
-            assert imviz_helper.app.state.layer_icons[data.label] == 'a'
-            assert viewer.state.reference_data.label == data.label
-        else:
-            # icon before setting as refdata:
-            before_icon = imviz_helper.app.state.layer_icons[data.label]
+        # Confirm the WCS-only layer is logged.
+        assert len(self.viewer.state.wcs_only_layers) == 2
 
-            # set as refdata:
-            imviz_helper.app._change_reference_data(data.label)
-            assert viewer.state.reference_data.label == data.label
+        # First entry is image data and the default reference data.
+        assert self.imviz.app.state.layer_icons["fits_wcs[DATA]"] == "a"
+        assert self.viewer.state.reference_data.label == "fits_wcs[DATA]"
 
-            # icon after setting as refdata:
-            after_icon = imviz_helper.app.state.layer_icons[data.label]
+        wcs_only_refdata_icon = "mdi-compass-outline"
+        wcs_only_not_refdata_icon = "mdi-compass-off-outline"
 
-            assert before_icon == wcs_only_not_refdata_icon
-            assert after_icon == wcs_only_refdata_icon
+        # Now we change the reference data.
+        for i in (3, 4):
+            data_label = self.imviz.app.data_collection[i].label
+
+            # Icon before setting this WCS-only data as reference data.
+            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_not_refdata_icon
+
+            # Set it as reference data.
+            self.imviz.app._change_reference_data(data_label)
+            assert self.viewer.state.reference_data.label == data_label
+
+            # Icon after setting it as reference data.
+            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_refdata_icon
+
+        # Change reference back to normal data.
+        self.imviz.app._change_reference_data("fits_wcs[DATA]")
+        assert self.viewer.state.reference_data.label == "fits_wcs[DATA]"
+        for i in (3, 4):
+            data_label = self.imviz.app.data_collection[i].label
+            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_not_refdata_icon
+
+
+def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):
+    a = np.zeros((2, 2), dtype=np.int8)
+    imviz_helper.load_data(a, data_label="no_wcs")
+    with pytest.raises(ValueError, match=r".*has no WCS for rotation"):
+        wcs_utils._get_rotated_nddata_from_label(imviz_helper.app, "no_wcs", 0 * u.deg)

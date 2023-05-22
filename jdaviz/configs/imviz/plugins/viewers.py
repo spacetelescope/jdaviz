@@ -1,5 +1,6 @@
 import numpy as np
 
+from glue.core.link_helpers import LinkSame
 import astropy.units as u
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
@@ -280,15 +281,25 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if len(self.session.application.data_collection) == 0:
             raise ValueError('No reference data for link look-up')
 
-        # TODO: Brett Morris might want to look at this for
-        # https://github.com/spacetelescope/jdaviz/pull/2179
-        #     ref_label = self.state.reference_data ???
-        #
-        # The original links were created against data_collection[0], not necessarily
-        # against the current viewer reference_data
-        ref_label = self.session.application.data_collection[0].label
+        ref_label = self.state.reference_data.label
+        if data_label == ref_label:
+            return 'self'
 
-        return self.jdaviz_helper.get_link_type(ref_label, data_label)
+        link_type = None
+        for elink in self.session.application.data_collection.external_links:
+            elink_labels = (elink.data1.label, elink.data2.label)
+            if (data_label in elink_labels and
+                    (ref_label in elink_labels or ref_label == self.jdaviz_app._wcs_only_label)):
+                if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
+                    link_type = 'pixels'
+                else:  # If not pixels, must be WCS
+                    link_type = 'wcs'
+                break  # Might have duplicate, just grab first match
+
+        if link_type is None:
+            raise ValueError(f'{data_label} not found in data collection external links')
+
+        return link_type
 
     def _get_center_skycoord(self, data=None):
         if data is None:
