@@ -20,11 +20,6 @@ class Imviz(ImageConfigHelper):
     _default_configuration = 'imviz'
     _default_viewer_reference_name = "image-viewer"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.app._link_type = None
-        self.app._wcs_use_affine = None
-
     def create_image_viewer(self, viewer_name=None):
         """Create a new image viewer.
 
@@ -180,11 +175,22 @@ class Imviz(ImageConfigHelper):
 
         # find the current label(s) - TODO: replace this by calling default label functionality
         # above instead of having to refind it
-        applied_labels = [label for label in self.app.data_collection.labels if label not in prev_data_labels]  # noqa
+        applied_labels = []
+        applied_visible = []
+        for data in self.app.data_collection:
+            label = data.label
+            if label not in prev_data_labels:
+                applied_labels.append(label)
+                if not data.meta.get(self.app._wcs_only_label, False):
+                    applied_visible.append(True)
+                else:
+                    applied_visible.append(False)
 
         if show_in_viewer is True:
             show_in_viewer = f"{self.app.config}-0"
 
+        # NOTE: We will never try to batch load WCS-only, but if we do, add extra logic
+        #       in batch_load within core/helpers.py module.
         if self._in_batch_load and show_in_viewer:
             for applied_label in applied_labels:
                 self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
@@ -198,8 +204,8 @@ class Imviz(ImageConfigHelper):
             # NOTE: this will not add entries that were skipped with do_link=False
             # but the batch_load context manager will handle that logic
             if show_in_viewer:
-                for applied_label in applied_labels:
-                    self.app.add_data_to_viewer(show_in_viewer, applied_label)
+                for applied_label, visible in zip(applied_labels, applied_visible):
+                    self.app.add_data_to_viewer(show_in_viewer, applied_label, visible=visible)
         else:
             warnings.warn(AstropyDeprecationWarning("do_link=False is deprecated in v3.1 and will "
                                                     "be removed in a future release.  Use with "
@@ -314,12 +320,14 @@ def layer_is_2d(layer):
     return isinstance(layer, BaseData) and layer.ndim == 2
 
 
+# NOTE: Sync with app._wcs_only_label as needed.
 def layer_is_image_data(layer):
-    return layer_is_2d(layer) and not layer.meta.get('WCS-ONLY', False)
+    return layer_is_2d(layer) and not layer.meta.get("_WCS_ONLY", False)
 
 
+# NOTE: Sync with app._wcs_only_label as needed.
 def layer_is_wcs_only(layer):
-    return layer_is_2d(layer) and layer.meta.get('WCS-ONLY', False)
+    return layer_is_2d(layer) and layer.meta.get("_WCS_ONLY", False)
 
 
 def layer_is_table_data(layer):
@@ -339,9 +347,7 @@ def get_reference_image_data(app):
     """
     Return the reference data in the first image viewer and its index
     """
-    viewer_reference = app._get_first_viewer_reference_name(require_image_viewer=True)
-    viewer = app.get_viewer(viewer_reference)
-    refdata = viewer.state.reference_data
+    refdata = app._jdaviz_helper.default_viewer.state.reference_data
 
     if refdata is not None:
         iref = app.data_collection.index(refdata)
@@ -423,15 +429,17 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     else:
         link_plugin = None
 
+    data_already_linked = []
     if link_type == app._link_type and wcs_use_affine == app._wcs_use_affine:
-        data_already_linked = [link.data2 for link in app.data_collection.external_links]
+        for link in app.data_collection.external_links:
+            if link.data1.label != app._wcs_only_label:
+                data_already_linked.append(link.data2)
     else:
         for viewer in app._viewer_store.values():
             if len(viewer._marktags):
                 raise ValueError(f"cannot change link_type (from '{app._link_type}' to "
                                  f"'{link_type}') when markers are present. "
                                  f" Clear markers with viewer.reset_markers() first")
-        data_already_linked = []
 
     refdata, iref = get_reference_image_data(app)
     links_list = []
@@ -452,6 +460,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
             continue
 
         ids1 = data.pixel_component_ids
+        new_links = []
         try:
             if link_type == 'pixels':
                 new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]

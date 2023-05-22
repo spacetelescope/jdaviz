@@ -236,6 +236,12 @@ class Application(VuetifyTemplate, HubListener):
         # data loading
         self.auto_link = kwargs.pop('auto_link', True)
 
+        # Imviz linking
+        self._wcs_only_label = "_WCS_ONLY"
+        if self.config == "imviz":
+            self._link_type = None
+            self._wcs_use_affine = None
+
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
         #  handler to generate the appropriate viewer instance.
@@ -413,7 +419,7 @@ class Application(VuetifyTemplate, HubListener):
     def _on_layers_changed(self, msg):
         if hasattr(msg, 'data'):
             layer_name = msg.data.label
-            is_wcs_only = msg.data.meta.get('WCS-ONLY', False)
+            is_wcs_only = msg.data.meta.get(self._wcs_only_label, False)
             is_ref_data = getattr(msg._viewer.state.reference_data, 'label', '') == layer_name
         elif hasattr(msg, 'subset'):
             layer_name = msg.subset.label
@@ -439,8 +445,8 @@ class Application(VuetifyTemplate, HubListener):
                 }
 
     def _on_refdata_changed(self, msg):
-        old_is_wcs_only = msg.old.meta.get('WCS-ONLY', False)
-        new_is_wcs_only = msg.new.meta.get('WCS-ONLY', False)
+        old_is_wcs_only = msg.old.meta.get(self._wcs_only_label, False)
+        new_is_wcs_only = msg.data.meta.get(self._wcs_only_label, False)
 
         wcs_only_refdata_icon = 'mdi-compass-outline'
         wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
@@ -456,7 +462,7 @@ class Application(VuetifyTemplate, HubListener):
                 new_layer_icons[layer_name] = switch_icon(
                     layer_icon, wcs_only_not_refdata_icon
                 )
-            elif layer_name == msg.new.label and new_is_wcs_only:
+            elif layer_name == msg.data.label and new_is_wcs_only:
                 new_layer_icons[layer_name] = switch_icon(
                     layer_icon, wcs_only_refdata_icon
                 )
@@ -470,35 +476,32 @@ class Application(VuetifyTemplate, HubListener):
         Change reference data to Data with ``data_label``
         """
         if self.config != 'imviz':
-            # this method is only meant for imviz for now
+            # this method is only meant for Imviz for now
             return
 
-        viewer_reference = self._get_first_viewer_reference_name()
-        viewer = self.get_viewer(viewer_reference)
-        old_refdata = self._viewer_store[viewer_reference].state.reference_data
+        viewer_id = f'{self.config}-0'  # Same as the ID in imviz.destroy_viewer()
+        viewer = self._jdaviz_helper.default_viewer
+        old_refdata = viewer.state.reference_data
 
         if new_refdata_label == old_refdata.label:
             # if there's no refdata change, don't do anything:
             return
 
-        [new_refdata] = [
-            data for data in self.data_collection
-            if data.label == new_refdata_label
-        ]
-
-        change_refdata_message = ChangeRefDataMessage(
+        new_refdata = self.data_collection[new_refdata_label]
+        viewer.state.reference_data = new_refdata
+        self.hub.broadcast(ChangeRefDataMessage(
             new_refdata,
             viewer,
-            viewer_id=viewer_reference,
-            sender=self,
+            viewer_id=viewer_id,
             old=old_refdata,
-            new=new_refdata
-        )
+            sender=self))
 
-        self._viewer_store[viewer_reference].state.reference_data = new_refdata
-        self.hub.broadcast(change_refdata_message)
+        # Re-link
+        self._jdaviz_helper.link_data(link_type=self._link_type,
+                                      wcs_use_affine=self._wcs_use_affine,
+                                      error_on_fail=True)
 
-        self._viewer_store[viewer_reference].state.reset_limits()
+        viewer.state.reset_limits()
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -775,12 +778,7 @@ class Application(VuetifyTemplate, HubListener):
                     elif len(layer_data.shape) == 2:
                         layer_data = layer_data.get_object(cls=CCDData)
 
-                        is_wcs_only = (
-                            # then check if it's all NaNs:
-                            np.all(np.isnan(layer_data.data)) and
-                            # finally check that metadata confirms this is a WCS-ONLY object:
-                            layer_data.meta.get('WCS-ONLY', False)
-                        )
+                        is_wcs_only = layer_data.meta.get(self._wcs_only_label, False)
 
                         if is_wcs_only:
                             continue
@@ -1782,10 +1780,10 @@ class Application(VuetifyTemplate, HubListener):
                 if id != data_id:
                     selected_items[id] = 'hidden'
 
-        # remove wcs-only data from selected items,
+        # remove WCS-only data from selected items,
         # add to wcs_only_layers:
         for layer in viewer.layers:
-            is_wcs_only = getattr(layer.layer, 'meta', {}).get('WCS-ONLY', False)
+            is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
             if layer.layer.data.label == data_label and is_wcs_only:
                 layer.visible = False
                 viewer.state.wcs_only_layers.append(data_label)
@@ -1866,11 +1864,10 @@ class Application(VuetifyTemplate, HubListener):
 
         self._clear_object_cache(msg.data.label)
 
-    @staticmethod
-    def _create_data_item(data):
+    def _create_data_item(self, data):
         ndims = len(data.shape)
         wcsaxes = data.meta.get('WCSAXES', None)
-        wcs_only = data.meta.get('WCS-ONLY', False)
+        wcs_only = data.meta.get(self._wcs_only_label, False)
         if wcsaxes is None:
             # then we'll need to determine type another way, we want to avoid
             # this when we can though since its not as cheap

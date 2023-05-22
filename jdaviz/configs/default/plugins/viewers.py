@@ -119,7 +119,7 @@ class JdavizViewerMixin:
         for layer in self.state.layers[::-1]:
             layer_is_wcs_only = (
                     hasattr(layer.layer, 'meta') and
-                    layer.layer.meta.get('WCS-ONLY', False)
+                    layer.layer.meta.get(self.jdaviz_app._wcs_only_label, False)
             )
             if layer.visible and not layer_is_wcs_only:
                 prefix_icon, suffix = _get_layer_info(layer)

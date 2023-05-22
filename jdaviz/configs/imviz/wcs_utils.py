@@ -3,7 +3,6 @@
 #
 """This module handles calculations based on world coordinate system (WCS)."""
 
-import warnings
 import base64
 import math
 from io import BytesIO
@@ -13,11 +12,9 @@ import numpy as np
 from astropy import units as u
 from astropy import coordinates as coord
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
 from astropy.modeling import models
-from astropy.nddata import NDDataArray
+from astropy.nddata import NDData
 from astropy.wcs.utils import proj_plane_pixel_scales
-from astropy.wcs import WCS as FitsWCS, FITSFixedWarning
 
 from gwcs import coordinate_frames as cf
 from gwcs.wcs import WCS as GWCS
@@ -288,18 +285,7 @@ def data_outside_gwcs_bounding_box(data, x, y):
     return outside_bounding_box
 
 
-def _get_fits_wcs_from_file(filename, ext=None):
-    header = fits.getheader(filename, ext=ext)
-    with warnings.catch_warnings():
-        # Ignore a warning on using DATE-OBS in place of MJD-OBS
-        warnings.filterwarnings('ignore', message="'datfix' made the change",
-                                category=FITSFixedWarning)
-        wcs = FitsWCS(header)
-
-    return wcs
-
-
-def rotated_gwcs(
+def _rotated_gwcs(
     center_world_coord,
     rotation_angle,
     pixel_scales,
@@ -317,6 +303,7 @@ def rotated_gwcs(
 
     # "rescale" the pixel scales. Scaling constant was tuned so that the
     # synthetic image is about the same size on the sky as the input image
+    # for some arbitrary test data. If need re-tuning, ask Brett Morris.
     rescale_pixel_scale = np.array(refdata_shape) / 1000
 
     shift_by_crpix = (
@@ -324,7 +311,7 @@ def rotated_gwcs(
         models.Shift(-refdata_shape[1] / 2 * u.pixel)
     )
 
-    # multiplying by +/-1 can flip north/south or east/west
+    # Multiplying by +/-1 can flip north/south or east/west.
     flip_axes = models.Multiply(cdelt_signs[0]) & models.Multiply(cdelt_signs[1])
     rotation = models.AffineTransformation2D(
         rotation_matrix * u.deg, translation=[0, 0] * u.deg
@@ -369,16 +356,16 @@ def rotated_gwcs(
     return GWCS(pipeline)
 
 
-def _prepare_rotated_nddata(image_data, wcs, rotation_angle, refdata_shape):
+def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape,
+                            wcs_only_key="_WCS_ONLY"):
     # get the world coordinates of the central pixel
-    real_image_shape = np.array(np.shape(image_data))
-    central_pixel_coord = real_image_shape / 2 * u.pix
+    central_pixel_coord = (np.array(real_image_shape) * 0.5) * u.pix
     central_world_coord = wcs.pixel_to_world(*central_pixel_coord)
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
 
     # compute the x/y plate scales from the WCS:
     pixel_scales = [
-        value * unit / u.pix
+        value * (unit / u.pix)
         for value, unit in zip(
             proj_plane_pixel_scales(wcs), wcs.wcs.cunit
         )
@@ -389,52 +376,23 @@ def _prepare_rotated_nddata(image_data, wcs, rotation_angle, refdata_shape):
 
     # create a GWCS centered on ``filename``,
     # and rotated by ``rotation_angle``:
-    new_rotated_gwcs = rotated_gwcs(
+    new_rotated_gwcs = _rotated_gwcs(
         central_world_coord, rotation_angle, pixel_scales, cdelt_signs
     )
 
-    # create an all-nan NDDataArray with the rotated GWCS:
-    ndd = NDDataArray(
-        data=np.nan * np.ones(refdata_shape),
+    # create a fake NDData (we use arange so data boundaries show up in Imviz
+    # if it ever is accidentally exposed) with the rotated GWCS:
+    ndd = NDData(
+        data=np.arange(np.prod(refdata_shape), dtype=np.int8).reshape(refdata_shape),
         wcs=new_rotated_gwcs,
+        meta={wcs_only_key: True}
     )
     return ndd
 
 
-def _get_rotated_nddata_from_fits(filename, rotation_angle, refdata_shape=(2, 2), ext=None):
+def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shape=(2, 2)):
     """
-    Create a synthetic NDDataArray which stores GWCS that approximate
-    the FITS WCS in ``filename`` rotated by ``rotation_angle``.
-
-    This method is useful for ensuring that future datasets are loaded
-    in the correct orientation.
-
-    Parameters
-    ----------
-    filename : path-like, str
-        FITS file to use as reference
-    rotation_angle : `~astropy.units.Quantity`
-        Angle to rotate the image counter-clockwise from its
-        original orientation
-    refdata_shape : tuple
-        Shape of the reference data array
-
-    Returns
-    -------
-    ndd : `~astropy.nddata.NDDataArray`
-        Data are all NaNs, wcs are rotated.
-    """
-    # get the FITS WCS from the file:
-    wcs = _get_fits_wcs_from_file(filename, ext=ext)
-
-    return _prepare_rotated_nddata(wcs, rotation_angle, refdata_shape)
-
-
-def _get_rotated_nddata_from_label(
-        app, data_label, rotation_angle, refdata_shape=(2, 2), main_component_idx=0
-):
-    """
-    Create a synthetic NDDataArray which stores GWCS that approximate
+    Create a synthetic NDData which stores GWCS that approximate
     the WCS in the coords attr of the Data object with label ``data_label``
     loaded into ``app``.
 
@@ -444,24 +402,27 @@ def _get_rotated_nddata_from_label(
     Parameters
     ----------
     app : `~jdaviz.Application`
-        App instance containing ``data_label``
+        App instance containing ``data_label``.
     data_label : str
-        Data label for the Data to rotate
+        Data label for the Data to rotate.
     rotation_angle : `~astropy.units.Quantity`
         Angle to rotate the image counter-clockwise from its
-        original orientation
+        original orientation.
     refdata_shape : tuple
-        Shape of the reference data array
+        Shape of the reference data array.
 
     Returns
     -------
-    ndd : `~astropy.nddata.NDDataArray`
-        Data are all NaNs, wcs are rotated.
+    ndd : `~astropy.nddata.NDData`
+        Contains rotated WCS and meaningless data.
+
+    Raises
+    ------
+    ValueError
+        Data has no WCS.
     """
-    # get the WCS from the Data object's coords attribute:
-    [data] = [
-        data for data in app.data_collection
-        if data.label == data_label
-    ]
-    image = data[data.main_components[main_component_idx]]
-    return _prepare_rotated_nddata(image, data.coords, rotation_angle, refdata_shape)
+    data = app.data_collection[data_label]
+    if data.coords is None:
+        raise ValueError(f"{data_label} has no WCS for rotation.")
+    return _prepare_rotated_nddata(data.shape, data.coords, rotation_angle, refdata_shape,
+                                   wcs_only_key=app._wcs_only_label)

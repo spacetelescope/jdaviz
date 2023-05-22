@@ -112,14 +112,13 @@ class RemoveDataMessage(Message):
 
 
 class ChangeRefDataMessage(Message):
-    def __init__(self, data, viewer, viewer_id=None, old=None, new=None, *args, **kwargs):
+    def __init__(self, data, viewer, viewer_id=None, old=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._data = data
         self._viewer = viewer
         self._viewer_id = viewer_id
         self._old = old
-        self._new = new
 
     @property
     def data(self):
@@ -136,10 +135,6 @@ class ChangeRefDataMessage(Message):
     @property
     def old(self):
         return self._old
-
-    @property
-    def new(self):
-        return self._new
 
 
 class SnackbarMessage(Message):

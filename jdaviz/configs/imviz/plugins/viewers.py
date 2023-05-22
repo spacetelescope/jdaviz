@@ -293,16 +293,15 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if len(self.session.application.data_collection) == 0:
             raise ValueError('No reference data for link look-up')
 
-        # the original links were created against data_collection[0], not necessarily
-        # against the current viewer reference_data
-        ref_label = self.session.application.data_collection[0].label
+        ref_label = self.state.reference_data.label
         if data_label == ref_label:
             return 'self'
 
         link_type = None
         for elink in self.session.application.data_collection.external_links:
             elink_labels = (elink.data1.label, elink.data2.label)
-            if data_label in elink_labels and ref_label in elink_labels:
+            if (data_label in elink_labels and
+                    (ref_label in elink_labels or ref_label == self.jdaviz_app._wcs_only_label)):
                 if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
                     link_type = 'pixels'
                 else:  # If not pixels, must be WCS
