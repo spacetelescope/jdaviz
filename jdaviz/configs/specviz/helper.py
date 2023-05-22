@@ -308,6 +308,7 @@ class Specviz(ConfigHelper, LineListMixin):
         elif spatial_subset or function:
             raise ValueError('kwargs spatial subset and function are not valid in specviz')
         else:
+            spatial_subset = None
             function = None
 
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset,

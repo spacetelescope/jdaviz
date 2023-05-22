@@ -511,30 +511,25 @@ class ConfigHelper(HubListener):
 
         return data
 
-    def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None, cls=None):
+    def get_data(self, data_label=None, cls=None):
         """
-        Returns data with name equal to data_label of type cls with subsets applied from
-        spatial_subsets and/or spectral_subsets.
+        Returns data with name equal to data_label of type cls.
 
         Parameters
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
-        spatial_subset : str, optional
-            Spatial subset applied to data.
-        spectral_subset : str, optional
-            Spectral subset applied to data.
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
 
         Returns
         -------
         data : cls
-            Data is returned as type cls with subsets applied.
+            Data is returned as type cls.
 
         """
-        return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
-                              spectral_subset=spectral_subset, function=None, cls=None)
+        return self._get_data(data_label=data_label, spatial_subset=None,
+                              spectral_subset=None, function=None, cls=None)
 
 
 class ImageConfigHelper(ConfigHelper):
