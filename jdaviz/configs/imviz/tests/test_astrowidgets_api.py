@@ -14,8 +14,8 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS
 
 
-# TODO: Remove skip when https://github.com/bqplot/bqplot/issues/1393 is resolved.
-@pytest.mark.skip(reason="Cannot test due to file dialog popup")
+# TODO: Remove skip when https://github.com/bqplot/bqplot/pull/1397/files#r726500097 is resolved.
+@pytest.mark.skip(reason="Cannot test due to async JS callback")
 class TestSave(BaseImviz_WCS_NoWCS):
 
     def test_save(self, tmpdir):
@@ -23,7 +23,7 @@ class TestSave(BaseImviz_WCS_NoWCS):
         self.viewer.save(filename)
 
         # This only tests that something saved, not the content.
-        assert os.path.isfile(os.path.join(tmpdir.strpath, 'myimage.png'))
+        assert os.path.isfile(f'{filename}.png')
 
 
 class TestCenterOffset(BaseImviz_WCS_NoWCS):

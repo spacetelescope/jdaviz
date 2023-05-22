@@ -62,6 +62,10 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Saving a plot to a PNG (via the astrowidgets API or export plot plugin API) with a provided
+  filename will no longer show the file dialog.  If the given file exists, it is silently
+  overwritten. [#929]
+
 Mosviz
 ^^^^^^
 
