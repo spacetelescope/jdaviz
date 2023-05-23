@@ -517,7 +517,7 @@ class ConfigHelper(HubListener):
                               f" Exception: {e}")
             if spatial_subset or function:
                 # Return collapsed Spectrum1D object with spectral subset mask applied
-                data.mask = ~spec_subset.mask
+                data.mask = spec_subset.mask
             else:
                 data = spec_subset
 
