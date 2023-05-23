@@ -1,6 +1,7 @@
 import warnings
 
 from astropy import units as u
+from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
 
@@ -76,6 +77,7 @@ class Specviz(ConfigHelper, LineListMixin):
         get_data_method = self.app._jdaviz_helper.get_data
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         function_kwargs = {'function': getattr(viewer.state, "function")} if self.app.config == 'cubeviz' else {}  # noqa
+        all_subsets = self.app.get_subsets(object_only=True)
 
         if data_label is not None:
             spectrum = get_data_method(data_label=data_label,
@@ -85,7 +87,6 @@ class Specviz(ConfigHelper, LineListMixin):
         else:
             for layer_state in viewer.state.layers:
                 lyr = layer_state.layer
-                print(lyr.label, type(lyr))
                 if subset_to_apply is not None:
                     if lyr.label == subset_to_apply:
                         spectrum = get_data_method(data_label=lyr.data.label,
@@ -96,9 +97,17 @@ class Specviz(ConfigHelper, LineListMixin):
                     else:
                         continue
                 else:
-                    if isinstance(lyr, GroupedSubset):
+                    if (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
+                            isinstance(all_subsets[lyr.label][0], Region)):
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    spatial_subset=lyr.label,
+                                                   cls=Spectrum1D,
+                                                   **function_kwargs)
+                        spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
+                    elif (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
+                            isinstance(all_subsets[lyr.label], SpectralRegion)):
+                        spectrum = get_data_method(data_label=lyr.data.label,
+                                                   spectral_subset=lyr.label,
                                                    cls=Spectrum1D,
                                                    **function_kwargs)
                         spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
