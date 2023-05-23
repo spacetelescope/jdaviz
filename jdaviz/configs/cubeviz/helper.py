@@ -149,15 +149,16 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        if function is not False and spectral_subset and spatial_subset:
+        # If function is a value ('sum' or 'minimum') or True and spatial and spectral
+        # are set, then we collapse the cube along the spatial subset using the function, then
+        # we apply the mask from the spectral subset.
+        # If function is any value other than False, we use specviz
+        if (function is not False and spectral_subset and spatial_subset) or function:
             return self.specviz.get_data(data_label=data_label, spectral_subset=spectral_subset,
                                          cls=cls, spatial_subset=spatial_subset, function=function)
-        elif function and spatial_subset:
-            return self.specviz.get_data(data_label=data_label, spectral_subset=spectral_subset,
-                                         cls=cls, spatial_subset=spatial_subset, function=function)
-        elif function is False and (spectral_subset and spatial_subset):
+        elif function is False and spectral_subset:
             raise ValueError("function cannot be False if spectral_subset"
-                             " and spatial_subset have values")
+                             " is set")
         elif function is False:
             function = None
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset,

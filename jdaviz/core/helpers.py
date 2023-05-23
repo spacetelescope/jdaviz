@@ -15,13 +15,14 @@ import numpy as np
 import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.nddata import CCDData
+from regions.core.core import Region
 from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectralRegion
 
 
 from jdaviz.app import Application
@@ -426,8 +427,6 @@ class ConfigHelper(HubListener):
             raise ValueError(f"Subset {spectral_subset} not in list of valid"
                              f" subset names {list_of_valid_subset_names}")
 
-        # TODO: check if spectral is spectral and spatial is spatial
-
         if data_label and data_label not in self.app.data_collection.labels:
             raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
         elif not data_label and len(self.app.data_collection) > 1:
@@ -439,7 +438,16 @@ class ConfigHelper(HubListener):
         if cls is not None and not isclass(cls):
             raise TypeError(
                 "cls in get_data must be a class or None.")
+
+        # Check if spectral is spectral and spatial is spatial
+        all_subsets = self.app.get_subsets(object_only=True)
         data = self.app.data_collection[data_label]
+        if spatial_subset and not isinstance(all_subsets[spatial_subset][0],
+                                             Region):
+            raise ValueError(f"{spatial_subset} is not a spatial subset.")
+        if spectral_subset and not isinstance(all_subsets[spectral_subset],
+                                              SpectralRegion):
+            raise ValueError(f"{spectral_subset} is not a spectral subset.")
 
         if not cls:
             if 'Trace' in data.meta:
@@ -484,7 +492,6 @@ class ConfigHelper(HubListener):
                 for subset in subsets.subsets:
                     # If the subset applies to data with the same name as data_label, continue
                     if subset.data.label == data_label:
-
                         handler, _ = data_translator.get_handler_for(cls)
                         try:
                             data = handler.to_object(subset, **object_kwargs)
