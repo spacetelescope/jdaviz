@@ -102,11 +102,14 @@ def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
                                                      function=True)
 
     with pytest.raises(ValueError, match=f'{spectral_subset} is not a spatial subset.'):
-        cubeviz_helper.get_data(data_label=data_label, spatial_subset=spectral_subset, function=True)
+        cubeviz_helper.get_data(data_label=data_label, spatial_subset=spectral_subset,
+                                function=True)
     with pytest.raises(ValueError, match=f'{spatial_subset} is not a spectral subset.'):
-        cubeviz_helper.get_data(data_label=data_label, spectral_subset=spatial_subset, function=True)
+        cubeviz_helper.get_data(data_label=data_label, spectral_subset=spatial_subset,
+                                function=True)
     with pytest.raises(ValueError, match='function cannot be False if spectral_subset'):
-        cubeviz_helper.get_data(data_label=data_label, spectral_subset=spectral_subset, function=False)
+        cubeviz_helper.get_data(data_label=data_label, spectral_subset=spectral_subset,
+                                function=False)
 
     collapse_with_spectral2 = cubeviz_helper.get_data(data_label=data_label,
                                                       function=True)
