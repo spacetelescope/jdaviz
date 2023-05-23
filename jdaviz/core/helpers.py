@@ -413,6 +413,7 @@ class ConfigHelper(HubListener):
 
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
                   function=None, cls=None):
+        # Start validity checks
         list_of_valid_function_values = ('minimum', 'maximum', 'mean',
                                          'median', 'sum')
         if function and function not in list_of_valid_function_values:
@@ -439,15 +440,8 @@ class ConfigHelper(HubListener):
             raise TypeError(
                 "cls in get_data must be a class or None.")
 
-        # Check if spectral is spectral and spatial is spatial
-        all_subsets = self.app.get_subsets(object_only=True)
+        # End validity checks and start data retrieval
         data = self.app.data_collection[data_label]
-        if spatial_subset and not isinstance(all_subsets[spatial_subset][0],
-                                             Region):
-            raise ValueError(f"{spatial_subset} is not a spatial subset.")
-        if spectral_subset and not isinstance(all_subsets[spectral_subset],
-                                              SpectralRegion):
-            raise ValueError(f"{spectral_subset} is not a spectral subset.")
 
         if not cls:
             if 'Trace' in data.meta:
@@ -481,40 +475,51 @@ class ConfigHelper(HubListener):
             raise AttributeError(f"A valid cls must be provided to"
                                  f" apply subset {spectral_subset} to data. "
                                  f"Instead, {cls} was given.")
-        subset_to_apply = (spatial_subset if spatial_subset
-                           else spectral_subset if spectral_subset else None)
-        spec_sub = None
-        # Loop through each subset
-        for subsets in self.app.data_collection.subset_groups:
-            # If name matches the name in subsets_to_apply, continue
-            if subsets.label.lower() == subset_to_apply.lower():
-                # Loop through each data a subset applies to
-                for subset in subsets.subsets:
-                    # If the subset applies to data with the same name as data_label, continue
-                    if subset.data.label == data_label:
-                        handler, _ = data_translator.get_handler_for(cls)
-                        try:
-                            data = handler.to_object(subset, **object_kwargs)
-                        except Exception as e:
-                            warnings.warn(f"Not able to get {data_label} returned with"
-                                          f" subset {subsets.label} applied of type {cls}."
-                                          f" Exception: {e}")
-            elif (spatial_subset and spectral_subset and
-                  subsets.label.lower() == spectral_subset.lower()):
-                # Same logic as if statement
-                spec_sub = [spec_sub_data for spec_sub_data in subsets.subsets if
-                            spec_sub_data.data.label == data_label][0]
-        # Apply spectral subset to spatial subset if applicable
-        if spatial_subset and spectral_subset:
+
+        # Now we work on applying subsets to the data
+        all_subsets = self.app.get_subsets(object_only=True)
+
+        # Handle spatial subset
+        if spatial_subset and not isinstance(all_subsets[spatial_subset][0],
+                                             Region):
+            raise ValueError(f"{spatial_subset} is not a spatial subset.")
+        elif spatial_subset:
+            real_spatial = [sub for subsets in self.app.data_collection.subset_groups
+                            for sub in subsets.subsets
+                            if sub.data.label == data_label and subsets.label == spatial_subset][0]
             handler, _ = data_translator.get_handler_for(cls)
             try:
-                spec_subset = handler.to_object(spec_sub, **object_kwargs)
+                data = handler.to_object(real_spatial, **object_kwargs)
+            except Exception as e:
+                warnings.warn(f"Not able to get {data_label} returned with"
+                              f" subset {spatial_subset} applied of type {cls}."
+                              f" Exception: {e}")
+        elif function:
+            # This covers the case where cubeviz.get_data is called using a spectral_subset
+            # with function set.
+            data = data.get_object(cls=cls, **object_kwargs)
+
+        # Handle spectral subset, including case where spatial subset is also set
+        if spectral_subset and not isinstance(all_subsets[spectral_subset],
+                                              SpectralRegion):
+            raise ValueError(f"{spectral_subset} is not a spectral subset.")
+        elif spectral_subset:
+            real_spectral = [sub for subsets in self.app.data_collection.subset_groups
+                             for sub in subsets.subsets
+                             if sub.data.label == data_label and subsets.label == spectral_subset][0] # noqa
+
+            handler, _ = data_translator.get_handler_for(cls)
+            try:
+                spec_subset = handler.to_object(real_spectral, **object_kwargs)
             except Exception as e:
                 warnings.warn(f"Not able to get {data_label} returned with"
                               f" subset {spectral_subset} applied of type {cls}."
                               f" Exception: {e}")
-            # Return collapsed Spectrum1D object with spectral subset mask applied
-            data.mask = ~spec_subset.mask
+            if spatial_subset or function:
+                # Return collapsed Spectrum1D object with spectral subset mask applied
+                data.mask = ~spec_subset.mask
+            else:
+                data = spec_subset
 
         return data
 

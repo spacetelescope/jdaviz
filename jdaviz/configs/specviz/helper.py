@@ -85,6 +85,7 @@ class Specviz(ConfigHelper, LineListMixin):
         else:
             for layer_state in viewer.state.layers:
                 lyr = layer_state.layer
+                print(lyr.label, type(lyr))
                 if subset_to_apply is not None:
                     if lyr.label == subset_to_apply:
                         spectrum = get_data_method(data_label=lyr.data.label,
@@ -97,7 +98,7 @@ class Specviz(ConfigHelper, LineListMixin):
                 else:
                     if isinstance(lyr, GroupedSubset):
                         spectrum = get_data_method(data_label=lyr.data.label,
-                                                   spectral_subset=lyr.label,
+                                                   spatial_subset=lyr.label,
                                                    cls=Spectrum1D,
                                                    **function_kwargs)
                         spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
