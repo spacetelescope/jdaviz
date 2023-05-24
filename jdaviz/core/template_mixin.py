@@ -1413,7 +1413,7 @@ class DatasetSelect(SelectPluginComponent):
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
         manual_options: list
-            list of options to provide that are not automatically populated by subsets.  If
+            list of options to provide that are not automatically populated by datasets.  If
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
         """
