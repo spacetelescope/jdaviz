@@ -8,7 +8,7 @@ from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe
 from glue.core.data import Data
 
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
@@ -168,6 +168,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # set the filter on the viewer options
         self._update_viewer_filters()
+
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed)
 
     @property
     def user_api(self):
@@ -336,6 +339,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
 
+        # TODO: can we simplify this logic?
         self._units["x"] = str(
             selected_spec.spectral_axis.unit)
         self._units["y"] = str(
@@ -503,7 +507,21 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._initialized_models[comp_label] = initialized_model
 
         new_model["Initialized"] = True
+        new_model["initialized_display_units"] = self._units
+
+        new_model["compat_display_units"] = True  # always compatible at time of creation
         return new_model
+
+    def _on_global_display_unit_changed(self, msg):
+        disp_physical_type = u.Unit(msg.unit).physical_type
+        axis = {'spectral': 'x', 'flux': 'y'}.get(msg.axis)
+        for model_index, comp_model in enumerate(self.component_models):
+            comp_unit = u.Unit(comp_model["initialized_display_units"][axis])
+            compat = comp_unit.physical_type == disp_physical_type
+            self.component_models[model_index]["compat_display_units"] = compat
+
+        # length hasn't changed, so we need to force the traitlet to update
+        self.send_state("component_models")
 
     def remove_model_component(self, model_component_label):
         """
@@ -663,6 +681,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if len(self.model_equation) == 0:
             self.model_equation_invalid_msg = 'model equation is required'
             return
+        # TODO: split and check that each component exists and is currently valid with display units
         self.model_equation_invalid_msg = ''
 
     @observe("dataset_selected", "dataset_items", "cube_fit")

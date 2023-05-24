@@ -127,7 +127,7 @@
                 </v-col>
               </v-row>
             </v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-content v-if="item.compat_display_units">
               <v-row 
                 v-if="!componentInEquation(item.id)"
                 class="v-messages v-messages__message text--secondary"
@@ -193,6 +193,9 @@
                 </v-row>
                 <v-divider></v-divider>
               </v-div>
+            </v-expansion-panel-content>
+            <v-expansion-panel-content v-else>
+              <span>this component is disabled because the units are incompatible with currently set display units</span>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>
