@@ -1076,3 +1076,25 @@ class Mosviz(ConfigHelper, LineListMixin):
         `~specutils.Spectrum1D`
         """
         return self._get_spectrum('2D Spectra', row, apply_slider_redshift)
+
+    def get_data(self, data_label=None, spectral_subset=None, cls=None):
+        """
+        Returns data with name equal to data_label of type cls with subsets applied from
+        spectral_subset.
+
+        Parameters
+        ----------
+        data_label : str, optional
+            Provide a label to retrieve a specific data set from data_collection.
+        spectral_subset : str, optional
+            Spectral subset applied to data.
+        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+            The type that data will be returned as.
+
+        Returns
+        -------
+        data : cls
+            Data is returned as type cls with subsets applied.
+
+        """
+        return self._get_data(data_label=data_label, spectral_subset=spectral_subset, cls=cls)

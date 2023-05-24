@@ -28,6 +28,9 @@ Cubeviz
 - ``get_data`` now supports ``function=True`` to adopt the collapse-function from the spectrum viewer.
   [#2117]
 
+- ``get_data`` now supports applying a spectral mask to a collapse spatial subset. [#2199]
+
+
 Imviz
 ^^^^^
 

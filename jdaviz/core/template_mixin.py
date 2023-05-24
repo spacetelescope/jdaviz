@@ -1032,8 +1032,9 @@ class SubsetSelect(SelectPluginComponent):
 
     @property
     def selected_subset_mask(self):
-        get_data_kwargs = {'data_label': self.plugin.dataset.selected,
-                           'subset_to_apply': self.selected}
+        get_data_kwargs = {'data_label': self.plugin.dataset.selected}
+        if self._allowed_type:
+            get_data_kwargs[f'{self._allowed_type}_subset'] = self.selected
 
         if self.app.config == 'cubeviz' and self._allowed_type == 'spectral':
             viewer_ref = getattr(self.plugin,
@@ -1488,7 +1489,7 @@ class DatasetSelect(SelectPluginComponent):
         if spatial_subset == SPATIAL_DEFAULT_TEXT:
             spatial_subset = None
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
-                                                    subset_to_apply=spatial_subset)
+                                                    spatial_subset=spatial_subset)
 
     def _is_valid_item(self, data):
         def not_from_plugin(data):
