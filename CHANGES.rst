@@ -14,7 +14,9 @@ New Features
 
 - Histogram showing image values in stretch limits section of plot options plugin. [#2153]
 
-- Vertical (y-range) zoom tool for all spectrum and spectrum-2d viewers. [#2206]
+- Vertical (y-range) zoom tool for all spectrum and spectrum-2d viewers.  This also modifies
+  the icon of the horizontal (x-range) tool to be more consistent with the horizontal subset
+  selection tool. [#2206, #2212]
 
 - Allow Subset Plugin to edit composite subsets. [#2182]
 
