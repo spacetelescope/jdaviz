@@ -60,15 +60,17 @@ authors:
 - family-names: "Robitaille"
   given-names: "Thomas"
   orcid: "https://orcid.org/0000-0002-8642-1329"
+- family-names: "Shanahan"
+  given-names: "Clare" 
 - family-names: "Tollerud"
   given-names: "Erik"
   orcid: "https://orcid.org/0000-0002-9599-310X"
 - family-names: "Volfman"
   given-names: "Sabrina"
 title: "Jdaviz"
-version: 3.4.0
+version: 3.5.0
 doi: https://doi.org/10.5281/zenodo.5513927
-date-released: 2023-03-22
+date-released: 2023-05-25
 url: "https://github.com/spacetelescope/jdaviz"
 
 # see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors
