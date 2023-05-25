@@ -127,13 +127,16 @@
                 </v-col>
               </v-row>
             </v-expansion-panel-header>
-            <v-expansion-panel-content v-if="item.compat_display_units">
-              <v-row 
-                v-if="!componentInEquation(item.id)"
-                class="v-messages v-messages__message text--secondary"
-                style="padding-top: 12px"
-              >
-                <span><b>{{ item.id }}</b> model component not in equation</span>
+            <v-expansion-panel-content>
+              <v-row v-if="!item.compat_display_units">
+                <v-alert :type="componentInEquation(item.id) ? 'error' : 'warning'">
+                  <b>{{ item.id }}</b> is inconsistent with the current display units so cannot be used in the model equation.
+                </v-alert>
+              </v-row>
+              <v-row v-if="item.compat_display_units && !componentInEquation(item.id)">
+                <v-alert type="info">
+                  <b>{{ item.id }}</b> model component not in equation
+                </v-alert>
               </v-row>
               <v-row justify="end"
                 style="padding-top: 12px; padding-right: 2px"
@@ -193,9 +196,6 @@
                 </v-row>
                 <v-divider></v-divider>
               </v-div>
-            </v-expansion-panel-content>
-            <v-expansion-panel-content v-else>
-              <span>this component is disabled because the units are incompatible with currently set display units</span>
             </v-expansion-panel-content>
           </v-expansion-panel>
         </v-expansion-panels>

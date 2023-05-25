@@ -60,6 +60,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`create_model_component`
     * :meth:`remove_model_component`
     * :meth:`model_components`
+    * :meth:`valid_model_components`
     * :meth:`get_model_component`
     * :meth:`set_model_component`
     * :meth:`reestimate_model_parameters`
@@ -178,7 +179,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if self.config == "cubeviz":
             expose += ['spatial_subset']
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
-                   'model_components', 'create_model_component', 'remove_model_component',
+                   'model_components', 'valid_model_components',
+                   'create_model_component', 'remove_model_component',
                    'get_model_component', 'set_model_component', 'reestimate_model_parameters',
                    'equation', 'equation_components',
                    'add_results', 'residuals_calculate', 'residuals']
@@ -507,14 +509,19 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._initialized_models[comp_label] = initialized_model
 
         new_model["Initialized"] = True
-        new_model["initialized_display_units"] = self._units
+        new_model["initialized_display_units"] = self._units.copy()
 
         new_model["compat_display_units"] = True  # always compatible at time of creation
         return new_model
 
     def _on_global_display_unit_changed(self, msg):
-        disp_physical_type = u.Unit(msg.unit).physical_type
         axis = {'spectral': 'x', 'flux': 'y'}.get(msg.axis)
+
+        # update internal tracking of current units
+        self._units[axis] = str(msg.unit)
+
+        # update validity of model components
+        disp_physical_type = msg.unit.physical_type
         for model_index, comp_model in enumerate(self.component_models):
             comp_unit = u.Unit(comp_model["initialized_display_units"][axis])
             compat = comp_unit.physical_type == disp_physical_type
@@ -522,6 +529,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # length hasn't changed, so we need to force the traitlet to update
         self.send_state("component_models")
+        self._check_model_equation_invalid()
 
     def remove_model_component(self, model_component_label):
         """
@@ -663,6 +671,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         return [x["id"] for x in self.component_models]
 
     @property
+    def valid_model_components(self):
+        """
+        List of the labels of existing valid (due to display units) model components
+        """
+        return [x["id"] for x in self.component_models if x["compat_display_units"]]
+
+    @property
     def equation_components(self):
         """
         List of the labels of model components in the current equation
@@ -676,12 +691,41 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.remove_model_component(event)
 
     @observe('model_equation')
-    def _model_equation_changed(self, event):
+    def _check_model_equation_invalid(self, event=None):
         # Length is a dummy check to test the infrastructure
         if len(self.model_equation) == 0:
-            self.model_equation_invalid_msg = 'model equation is required'
+            self.model_equation_invalid_msg = 'model equation is required.'
             return
-        # TODO: split and check that each component exists and is currently valid with display units
+        if '' in self.equation_components:
+            # includes an operator without a variable (ex: 'C+')
+            self.model_equation_invalid_msg = 'incomplete equation.'
+            return
+        components_not_existing = [comp for comp in self.equation_components
+                                   if comp not in self.model_components]
+        if len(components_not_existing):
+            if len(components_not_existing) == 1:
+                msg = "is not an existing model component."
+            else:
+                msg = "are not existing model components."
+            self.model_equation_invalid_msg = f'{", ".join(components_not_existing)} {msg}'
+            return
+        components_not_valid = [comp for comp in self.equation_components
+                                if comp not in self.valid_model_components]
+        if len(components_not_valid):
+            if len(components_not_valid) == 1:
+                msg = ("is currently disabled because it has"
+                       " incompatible units with the current display units."
+                       " Remove the component from the equation,"
+                       " recreate the model component to have the new units,"
+                       " or revert the display units.")
+            else:
+                msg = ("are currently disabled because they have"
+                       " incompatible units with the current display units."
+                       " Remove the components from the equation,"
+                       " recreate the model components to have the new units,"
+                       " or revert the display units.")
+            self.model_equation_invalid_msg = f'{", ".join(components_not_valid)} {msg}'
+            return
         self.model_equation_invalid_msg = ''
 
     @observe("dataset_selected", "dataset_items", "cube_fit")
