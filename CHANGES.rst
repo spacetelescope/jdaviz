@@ -1,4 +1,85 @@
-3.5 (unreleased)
+3.6 (unreleased)
+================
+
+New Features
+------------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+API Changes
+-----------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+3.5.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.5 (2023-05-25)
 ================
 
 New Features
@@ -49,20 +130,11 @@ Mosviz
 - NIRSpec automatic loader now can take a single image as input, instead of requiring
   the number of cutouts to be the same as the number of 1D spectra. [#2146]
 
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
 API Changes
 -----------
 
 - Add ``get_subsets()`` method to app level to centralize subset information
   retrieval. [#2087, #2116, #2138]
-
-Cubeviz
-^^^^^^^
 
 Imviz
 ^^^^^
@@ -71,48 +143,6 @@ Imviz
   filename will no longer show the file dialog.  If the given file exists, it is silently
   overwritten. [#929]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-- Fixed get_model_parameters error when retrieving parameters for a cube fit. This
-  also removed the "_3d" previously appended to model labels in the returned dict. [#2171]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-- Fixed several data loader bugs for uncommon use cases. [#2146]
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-Other Changes and Additions
----------------------------
-
-- move build configuration to ``pyproject.toml`` as defined in PEP621 [#1661]
-
-- drop support for Python 3.8 [#2152]
-
-3.4.1 (unreleased)
-==================
-
 Bug Fixes
 ---------
 
@@ -120,6 +150,9 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+
+- Fixed get_model_parameters error when retrieving parameters for a cube fit. This
+  also removed the "_3d" previously appended to model labels in the returned dict. [#2171]
 
 Imviz
 ^^^^^
@@ -132,11 +165,14 @@ Imviz
 Mosviz
 ^^^^^^
 
-Specviz
-^^^^^^^
+- Fixed several data loader bugs for uncommon use cases. [#2146]
 
-Specviz2d
-^^^^^^^^^
+Other Changes and Additions
+---------------------------
+
+- move build configuration to ``pyproject.toml`` as defined in PEP621 [#1661]
+
+- drop support for Python 3.8 [#2152]
 
 3.4 (2023-03-22)
 ================
