@@ -514,22 +514,32 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         new_model["compat_display_units"] = True  # always compatible at time of creation
         return new_model
 
+    def _check_model_component_compat(self, axes=['x', 'y'], display_units=None):
+        if display_units is None:
+            display_units = [u.Unit(self._units[ax]) for ax in axes]
+
+        disp_physical_types = [unit.physical_type for unit in display_units]
+
+        for model_index, comp_model in enumerate(self.component_models):
+            compat = True
+            for ax, ax_physical_type in zip(axes, disp_physical_types):
+                comp_unit = u.Unit(comp_model["initialized_display_units"][ax])
+                compat = comp_unit.physical_type == ax_physical_type
+                if not compat:
+                    break
+            self.component_models[model_index]["compat_display_units"] = compat
+
+        # length hasn't changed, so we need to force the traitlet to update
+        self.send_state("component_models")
+        self._check_model_equation_invalid()
+
     def _on_global_display_unit_changed(self, msg):
         axis = {'spectral': 'x', 'flux': 'y'}.get(msg.axis)
 
         # update internal tracking of current units
         self._units[axis] = str(msg.unit)
 
-        # update validity of model components
-        disp_physical_type = msg.unit.physical_type
-        for model_index, comp_model in enumerate(self.component_models):
-            comp_unit = u.Unit(comp_model["initialized_display_units"][axis])
-            compat = comp_unit.physical_type == disp_physical_type
-            self.component_models[model_index]["compat_display_units"] = compat
-
-        # length hasn't changed, so we need to force the traitlet to update
-        self.send_state("component_models")
-        self._check_model_equation_invalid()
+        self._check_model_component_compat([axis], [msg.unit])
 
     def remove_model_component(self, model_component_label):
         """
@@ -660,6 +670,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # length hasn't changed, so we need to force the traitlet to update
         self.send_state("component_models")
 
+        # model units may have changed, need to re-check their compatibility with display units
+        self._check_model_component_compat()
+
         # return user-friendly info on revised model
         return self.get_model_component(model_component_label)
 
@@ -700,6 +713,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # includes an operator without a variable (ex: 'C+')
             self.model_equation_invalid_msg = 'incomplete equation.'
             return
+
         components_not_existing = [comp for comp in self.equation_components
                                    if comp not in self.model_components]
         if len(components_not_existing):
@@ -716,13 +730,13 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 msg = ("is currently disabled because it has"
                        " incompatible units with the current display units."
                        " Remove the component from the equation,"
-                       " recreate the model component to have the new units,"
+                       " re-estimate its free parameters to use the new units"
                        " or revert the display units.")
             else:
                 msg = ("are currently disabled because they have"
                        " incompatible units with the current display units."
                        " Remove the components from the equation,"
-                       " recreate the model components to have the new units,"
+                       " re-estimate their free parameters to use the new units"
                        " or revert the display units.")
             self.model_equation_invalid_msg = f'{", ".join(components_not_valid)} {msg}'
             return
