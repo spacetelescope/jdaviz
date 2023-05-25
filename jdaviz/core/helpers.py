@@ -412,7 +412,7 @@ class ConfigHelper(HubListener):
         return self.show(loc="sidecar:tab-after", title=title)
 
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
-                  function=None, cls=None):
+                  mask_subset=None, function=None, cls=None):
         # Start validity checks
         list_of_valid_function_values = ('minimum', 'maximum', 'mean',
                                          'median', 'sum')
@@ -421,12 +421,10 @@ class ConfigHelper(HubListener):
                              f" function values {list_of_valid_function_values}")
 
         list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
-        if spatial_subset and spatial_subset not in list_of_valid_subset_names:
-            raise ValueError(f"Subset {spatial_subset} not in list of valid"
-                             f" subset names {list_of_valid_subset_names}")
-        elif spectral_subset and spectral_subset not in list_of_valid_subset_names:
-            raise ValueError(f"Subset {spectral_subset} not in list of valid"
-                             f" subset names {list_of_valid_subset_names}")
+        for subset in (spatial_subset, spectral_subset, mask_subset):
+            if subset and subset not in list_of_valid_subset_names:
+                raise ValueError(f"Subset {subset} not in list of valid"
+                                 f" subset names {list_of_valid_subset_names}")
 
         if data_label and data_label not in self.app.data_collection.labels:
             raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
@@ -439,6 +437,14 @@ class ConfigHelper(HubListener):
         if cls is not None and not isclass(cls):
             raise TypeError(
                 "cls in get_data must be a class or None.")
+
+        if spectral_subset:
+            if mask_subset is not None:
+                raise ValueError("cannot use both mask_subset and spectral_subset")
+            # spectral_subset is applied as a mask, the only difference is that it has
+            # its own set of validity checks (whereas mask_subset can be used by downstream
+            # apps which would then need to do their own type checks, if necessary)
+            mask_subset = spectral_subset
 
         # End validity checks and start data retrieval
         data = self.app.data_collection[data_label]
@@ -457,7 +463,7 @@ class ConfigHelper(HubListener):
         if cls == Spectrum1D:
             object_kwargs['statistic'] = function
 
-        if not spatial_subset and not spectral_subset:
+        if not spatial_subset and not mask_subset:
             if 'Trace' in data.meta:
                 if cls is not None:  # pragma: no cover
                     raise ValueError("cls not supported for Trace object")
@@ -471,9 +477,9 @@ class ConfigHelper(HubListener):
             raise AttributeError(f"A valid cls must be provided to"
                                  f" apply subset {spatial_subset} to data. "
                                  f"Instead, {cls} was given.")
-        elif not cls and spectral_subset:
+        elif not cls and mask_subset:
             raise AttributeError(f"A valid cls must be provided to"
-                                 f" apply subset {spectral_subset} to data. "
+                                 f" apply subset {mask_subset} to data. "
                                  f"Instead, {cls} was given.")
 
         # Now we work on applying subsets to the data
@@ -503,17 +509,18 @@ class ConfigHelper(HubListener):
         if spectral_subset and not isinstance(all_subsets[spectral_subset],
                                               SpectralRegion):
             raise ValueError(f"{spectral_subset} is not a spectral subset.")
-        elif spectral_subset:
+
+        if mask_subset:
             real_spectral = [sub for subsets in self.app.data_collection.subset_groups
                              for sub in subsets.subsets
-                             if sub.data.label == data_label and subsets.label == spectral_subset][0] # noqa
+                             if sub.data.label == data_label and subsets.label == mask_subset][0] # noqa
 
             handler, _ = data_translator.get_handler_for(cls)
             try:
                 spec_subset = handler.to_object(real_spectral, **object_kwargs)
             except Exception as e:
                 warnings.warn(f"Not able to get {data_label} returned with"
-                              f" subset {spectral_subset} applied of type {cls}."
+                              f" subset {mask_subset} applied of type {cls}."
                               f" Exception: {e}")
             if spatial_subset or function:
                 # Return collapsed Spectrum1D object with spectral subset mask applied
