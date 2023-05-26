@@ -145,6 +145,9 @@ class Slice(PluginTemplateMixin):
                 # leave in the pre-init state and don't update the wavelength/slice
                 return
 
+        # Also update unit when data is updated
+        self.wavelength_unit = x_all.unit.to_string()
+
         # force wavelength to update from the current slider value
         self._on_slider_updated({'new': self.slice})
 
@@ -170,7 +173,6 @@ class Slice(PluginTemplateMixin):
         if msg.axis != 'spectral':
             return
         prev_unit = self.wavelength_unit
-        self.wavelength_unit = msg.unit.to_string()
         # original unit during init can be blank or deg (before axis is set correctly)
         if self._x_all is None or prev_unit in ('deg', ''):
             return

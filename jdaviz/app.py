@@ -102,9 +102,15 @@ class UnitConverterWithSpectral:
         # as the original native units of the component in the data.
         if cid.label == "flux":
             spec = data.get_object(cls=Spectrum1D)
-            eqv = u.spectral_density(spec.spectral_axis)
+            if len(values) == 2:
+                # Need this for setting the y-limits
+                spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
+                eqv = u.spectral_density(spec_limits*spec.spectral_axis.unit)
+            else:
+                eqv = u.spectral_density(spec.spectral_axis)
         else:  # spectral axis
             eqv = u.spectral()
+
         return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
 
 

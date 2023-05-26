@@ -104,8 +104,17 @@ class PluginMark():
                 return
             unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
+
         if self.yunit is not None:
-            self.y = (self.y * self.yunit).to_value(unit)
+            if self.viewer.default_class is Spectrum1D:
+                spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
+                eqv = u.spectral_density(spec.spectral_axis)
+                y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
+            else:
+                y = (self.y * self.yunit).to_value(unit)
+            self.yunit = unit
+            self.y = y
+
         self.yunit = unit
 
     def _on_global_display_unit_changed(self, msg):
