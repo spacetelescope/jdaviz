@@ -11,6 +11,7 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from stdatamodels import asdf_in_fits
 
 from jdaviz.core.config import list_configurations
+from jdaviz import configs as jdaviz_configs
 
 __all__ = [
     'guess_dimensionality',
@@ -272,3 +273,35 @@ def identify_helper(filename, ext=1):
         return 'imviz'
 
     raise ValueError(f"No helper could be auto-identified for {filename}.")
+
+
+def open(filename, show=True, **kwargs):
+    '''
+    Automatically detect the correct configuration based on a given file,
+    load the data, and display the configuration
+
+    Parameters
+    ----------
+    filename : str (path-like)
+        Name for a local data file.
+    show : bool
+        Determines whether to immediately show the application
+
+    Returns
+    -------
+    Jdaviz App : jdaviz.app.Application
+        The application, configured based on the automatic config detection
+    '''
+    helper_str = identify_helper(filename)
+    viz_class = getattr(jdaviz_configs, helper_str.capitalize())
+
+    viz_helper = viz_class()
+    if helper_str == "specviz":
+        viz_helper.load_spectrum(filename, **kwargs)
+    else:
+        viz_helper.load_data(filename, **kwargs)
+    
+    if show:
+        viz_helper.show()
+
+    return viz_helper
