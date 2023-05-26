@@ -22,6 +22,7 @@ class JdavizViewerMixin:
     toolbar = None
     tools_nested = []
     _prev_limits = None
+    _native_mark_classnames = ('Lines', 'LinesGL')
 
     def __init__(self, *args, **kwargs):
         # NOTE: anything here most likely won't be called by viewers because of inheritance order
@@ -35,14 +36,16 @@ class JdavizViewerMixin:
         """
         Return all marks that are Lines/LinesGL objects (and not subclasses)
         """
-        return [m for m in self.figure.marks if m.__class__.__name__ in ['Lines', 'LinesGL']]
+        return [m for m in self.figure.marks
+                if m.__class__.__name__ in self._native_mark_classnames]
 
     @property
     def custom_marks(self):
         """
         Return all marks that are not Lines/LinesGL objects (but can be subclasses)
         """
-        return [m for m in self.figure.marks if m.__class__.__name__ not in ['Lines', 'LinesGL']]
+        return [m for m in self.figure.marks
+                if m.__class__.__name__ not in self._native_mark_classnames]
 
     def _subscribe_to_layers_update(self):
         # subscribe to new layers
