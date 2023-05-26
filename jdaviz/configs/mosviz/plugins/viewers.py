@@ -12,9 +12,10 @@ from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
+from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 
 __all__ = ['MosvizImageView', 'MosvizProfile2DView',
-           'MosvizTableViewer']
+           'MosvizProfileView', 'MosvizTableViewer']
 
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
@@ -103,6 +104,22 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
+
+
+@viewer_registry("mosviz-profile-viewer", label="Profile 1D")
+class MosvizProfileView(SpecvizProfileView):
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['mosviz:homezoom', 'jdaviz:prevzoom'],
+                    ['mosviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
+                    ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
+                    ['bqplot:xrange'],
+                    ['jdaviz:selectline'],
+                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 @viewer_registry("mosviz-table-viewer", label="Table (Mosviz)")

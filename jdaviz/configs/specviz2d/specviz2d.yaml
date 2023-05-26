@@ -35,5 +35,5 @@ viewer_area:
       - container: row
         viewers:
           - name: Spectrum
-            plot: specviz-profile-viewer
+            plot: mosviz-profile-viewer
             reference: spectrum-viewer
