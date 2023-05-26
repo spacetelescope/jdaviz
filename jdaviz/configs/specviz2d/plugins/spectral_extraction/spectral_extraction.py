@@ -15,7 +15,6 @@ from jdaviz.core.marks import PluginLine
 
 from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty, VarianceUncertainty, UnknownUncertainty
-from astropy import units
 from specreduce import tracing
 from specreduce import background
 from specreduce import extract

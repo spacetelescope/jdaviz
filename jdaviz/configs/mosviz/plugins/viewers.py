@@ -106,7 +106,7 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         pixels = range(len(spectral_axis))
         return interp1d(pixels, spectral_axis)
 
-    def pixel_to_world_limits(self, limits, compute_max_residual=False, show_diagnostic_plot=False):
+    def pixel_to_world_limits(self, limits):
         if not len(limits) == 2:
             raise ValueError("limits must be length 2")
 
@@ -134,21 +134,6 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         invert = (-1) ** sum((self.inverted_x_axis, limits[0] > limits[1]))
         out_lims = list(map(map_pixel_to_world, limits))[::invert]
 
-        if compute_max_residual:
-            # TODO: need to think about order again here
-            inds = np.where(np.logical_and(pixels >= min(limits), pixels <= max(limits)))
-            line_world = pixel_to_world_line(pixels[inds])
-            max_resid_world = max(abs(spectral_axis[inds] - line_world))
-            max_resid_perc = max_resid_world / abs(out_lims[1] - out_lims[0])
-
-            if show_diagnostic_plot:
-                import matplotlib.pyplot as plt
-                plt.plot(pixels, spectral_axis, 'k.')
-                plt.plot(limits, out_lims, 'ro')
-                plt.plot(pixels[inds], line_world, 'g-')
-                plt.show()
-
-            return out_lims, max_resid_perc
         return out_lims
 
     @cached_property
@@ -157,12 +142,11 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         pixels = range(len(spectral_axis))
         return interp1d(spectral_axis, pixels)
 
-    def world_to_pixel_limits(self, limits, compute_max_residual=False, show_diagnostic_plot=False):
+    def world_to_pixel_limits(self, limits):
         if not len(limits) == 2:
             raise ValueError("limits must be length 2")
 
         spectral_axis = self.state.reference_data.get_object().spectral_axis.value
-        pixels = np.arange(0, len(spectral_axis))
 
         # we'll use interpolation when possible, but also want to fit a line between
         # the outermost edge of the data within the limits
@@ -185,21 +169,6 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         invert = (-1) ** sum((self.inverted_x_axis, limits[0] > limits[1]))
         out_lims = list(map(map_world_to_pixel, limits))[::invert]
 
-        if compute_max_residual:
-            # TODO: need to think about order again here
-            inds = np.where(np.logical_and(spectral_axis >= min(limits), spectral_axis <= max(limits)))
-            line_pix = world_to_pixel_line(spectral_axis[inds])
-            max_resid_pix = max(abs(pixels[inds] - line_pix))
-            max_resid_perc = max_resid_pix / abs(out_lims[1] - out_lims[0])
-
-            if show_diagnostic_plot:
-                import matplotlib.pyplot as plt
-                plt.plot(spectral_axis, pixels, 'k.')
-                plt.plot(limits, out_lims, 'ro')
-                plt.plot(spectral_axis[inds], line_pix, 'g-')
-                plt.show()
-
-            return out_lims, max_resid_perc
         return out_lims
 
     def _on_viewer_data_changed(self, msg):
