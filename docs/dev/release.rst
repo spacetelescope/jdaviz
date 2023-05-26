@@ -80,7 +80,6 @@ You can do a release from your fork directly without a clean code check-out.
 
      git add CHANGES.rst
      git add CITATION.cff
-     git add .github/workflows/ci_workflows.yml
      git commit -m "Preparing release vX.Y.0"
 
 #. Push the ``vX.Y.x`` branch to upstream.
@@ -256,33 +255,26 @@ Releasing a bugfix version
     backport something still, see :ref:`manual-backport`.
 
 The procedure for a bugfix release is a little different from a feature release - you will
-be cherry-picking bugfixes into an existing release branch, and will also need to do some
-cleanup on the ``main`` branch.
+be releasing from an existing release branch, and will also need to do some
+cleanup on the ``main`` branch. In the following, X and Y refer to the minor release for
+which you're doing a bugfix release. For example, if you are releasing v3.5.2, replace all
+instances of ``vX.Y.x`` with ``v3.5.x``. 
 
-#. Lock down the ``main`` branch of the repository by setting the
+#. Lock down the ``vX.Y.x`` branch of the repository by setting the
    `branch protection <https://github.com/spacetelescope/jdaviz/settings/branches>`_
-   rule for ``main`` to some high number required to merge, so that more PRs don't
+   rule for ``v*.x`` to some high number required to merge, so that more PRs don't
    get merged while you're releasing.
 
 #. Review the appropriate `Milestone <https://github.com/spacetelescope/jdaviz/milestones>`_
-   to see which PRs should be released in this version.
+   to see which PRs should be released in this version, and double check that any open
+   backport PRs intended for this release have been merged.
 
 #. Checkout the ``vX.Y.x`` branch corresponding to the last feature release.
 
-#. For any PRs to be released in this bugfix version, find the corresponding
-   `merge commit <https://github.com/spacetelescope/jdaviz/commits/main>`_ in main, copy the
-   full SHA of that commit, and use git's cherry-pick command to add those commits to the
-   ``vX.Y.x`` branch, resolving any conflicts:
-
-.. code-block:: bash
-
-       git cherry-pick -x -m1 [commit hash]
-
-#. The ``CHANGES.rst`` should now have all of the bug fixes to be released. Delete the
-   unreleased feature version section at the top of the changelog (if that was pulled in
-   while cherry-picking) and update the release date of the bugfix release section
-   from ``unreleased`` to current date in the ``yyyy-mm-dd`` format. Remove any empty
-   subsections.
+#. The ``CHANGES.rst`` file should have all of the bug fixes to be released. Delete the
+   unreleased feature version section at the top of the changelog if it exists and update
+   the release date of the bugfix release section from ``unreleased`` to current date in
+   the ``yyyy-mm-dd`` format. Remove any empty subsections.
 
 #. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
    If there are new contributors to the project, add them in the ``authors``
@@ -371,7 +363,7 @@ Milestones bookkeeping
 
 #. Create a new milestone for the next release and the next bugfix release, if
    doing a feature release, or for just the next bugfix release if you just did
-   one.
+   one. You do not need to fill in the description and due date fields.
 
 #. For the milestone of this release, if there are any open issues or pull requests
    still milestoned to it, move their milestones to the next feature or bugfix
