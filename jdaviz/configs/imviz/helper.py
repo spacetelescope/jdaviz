@@ -507,6 +507,10 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
 
     app._link_type = link_type
     app._wcs_use_affine = wcs_use_affine
+    viewer_ref = app._jdaviz_helper.default_viewer.reference
+    viewer_item = app._get_viewer_item(viewer_ref)
+
+    viewer_item['reference_data_label'] = refdata.label
 
     if link_plugin is not None:
         # Only broadcast after success.

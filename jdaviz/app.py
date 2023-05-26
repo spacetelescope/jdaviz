@@ -420,15 +420,13 @@ class Application(VuetifyTemplate, HubListener):
         if hasattr(msg, 'data'):
             layer_name = msg.data.label
             is_wcs_only = msg.data.meta.get(self._wcs_only_label, False)
-            is_ref_data = getattr(msg._viewer.state.reference_data, 'label', '') == layer_name
         elif hasattr(msg, 'subset'):
             layer_name = msg.subset.label
-            is_wcs_only = is_ref_data = False
+            is_wcs_only = False
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
         wcs_only_refdata_icon = 'mdi-compass-outline'
-        wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
         n_wcs_layers = (
             len([icon.startswith('mdi') for icon in self.state.layer_icons])
             if is_wcs_only else 0
@@ -436,8 +434,7 @@ class Application(VuetifyTemplate, HubListener):
         if layer_name not in self.state.layer_icons:
             if is_wcs_only:
                 self.state.layer_icons = {**self.state.layer_icons,
-                                          layer_name: wcs_only_refdata_icon if is_ref_data
-                                          else wcs_only_not_refdata_icon}
+                                          layer_name: wcs_only_refdata_icon}
             else:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
@@ -445,31 +442,7 @@ class Application(VuetifyTemplate, HubListener):
                 }
 
     def _on_refdata_changed(self, msg):
-        old_is_wcs_only = msg.old.meta.get(self._wcs_only_label, False)
-        new_is_wcs_only = msg.data.meta.get(self._wcs_only_label, False)
-
-        wcs_only_refdata_icon = 'mdi-compass-outline'
-        wcs_only_not_refdata_icon = 'mdi-compass-off-outline'
-
-        def switch_icon(old_icon, new_icon):
-            if old_icon != new_icon:
-                return new_icon
-            return old_icon
-
-        new_layer_icons = {}
-        for i, (layer_name, layer_icon) in enumerate(self.state.layer_icons.items()):
-            if layer_name == msg.old.label and old_is_wcs_only:
-                new_layer_icons[layer_name] = switch_icon(
-                    layer_icon, wcs_only_not_refdata_icon
-                )
-            elif layer_name == msg.data.label and new_is_wcs_only:
-                new_layer_icons[layer_name] = switch_icon(
-                    layer_icon, wcs_only_refdata_icon
-                )
-            else:
-                new_layer_icons[layer_name] = layer_icon
-
-        self.state.layer_icons = new_layer_icons
+        pass
 
     def _change_reference_data(self, new_refdata_label):
         """
@@ -1712,6 +1685,11 @@ class Application(VuetifyTemplate, HubListener):
                                  self._get_data_item_by_id(event['item_id'])['name'],
                                  visible=event['visible'], replace=event.get('replace', False))
 
+    def vue_change_reference_data(self, event):
+        self._change_reference_data(
+            self._get_data_item_by_id(event['item_id'])['name']
+        )
+
     def set_data_visibility(self, viewer_reference, data_label, visible=True, replace=False):
         """
         Set the visibility of the layers corresponding to ``data_label`` in a given viewer.
@@ -1992,6 +1970,7 @@ class Application(VuetifyTemplate, HubListener):
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
             'wcs_only_layers': wcs_only_layers,
+            'reference_data_label': getattr(viewer.state.reference_data, 'label', None),
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
             'config': self.config,  # give viewer access to app config/layout

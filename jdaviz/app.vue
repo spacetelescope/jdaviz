@@ -98,6 +98,7 @@
                   @data-item-unload="data_item_unload($event)"
                   @data-item-remove="data_item_remove($event)"
                   @call-viewer-method="call_viewer_method($event)"
+                  @change-reference-data="change_reference_data($event)"
                 ></g-viewer-tab>
               </gl-row>
             </golden-layout>
