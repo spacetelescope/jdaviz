@@ -229,7 +229,7 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
                 isinstance(layer_state.layer, BaseData)]
 
     def set_plot_axes(self):
-        self.figure.axes[0].visible = False
+        self.figure.axes[0].label = "x: pixels"
 
         self.figure.axes[1].label = "y: pixels"
         self.figure.axes[1].tick_format = None
