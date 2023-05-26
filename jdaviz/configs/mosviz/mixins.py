@@ -1,4 +1,4 @@
-__all__ = []
+__all__ = ['Matched2dSpectrumMixin']
 
 
 class Matched2dSpectrumMixin:
