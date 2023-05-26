@@ -71,9 +71,9 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
-                    ['jdaviz:panzoom', 'jdaviz:panzoom_x'],
+                    ['mosviz:homezoom', 'jdaviz:prevzoom'],
+                    ['mosviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
