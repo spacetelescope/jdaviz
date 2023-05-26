@@ -829,10 +829,6 @@ class SpectralExtraction(PluginTemplateMixin):
         if add_data:
             self.bg_spec_add_results.add_results_from_plugin(spec, replace=False)
 
-        # TEMPORARY: override spectral axis to be in pixels until properly supporting plotting
-        # in wavelength/frequency
-        spec._spectral_axis = np.arange(len(spec.spectral_axis)) * units.pix
-
         return spec
 
     def vue_create_bg_spec(self, *args):
@@ -923,10 +919,6 @@ class SpectralExtraction(PluginTemplateMixin):
         """
         extract = self.export_extract(**kwargs)
         spectrum = extract.spectrum
-
-        # TEMPORARY: override spectral axis to be in pixels until properly supporting plotting
-        # in wavelength/frequency
-        spectrum._spectral_axis = np.arange(len(spectrum.spectral_axis)) * units.pix
 
         if add_data:
             self.ext_add_results.add_results_from_plugin(spectrum, replace=False)
