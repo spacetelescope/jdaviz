@@ -300,7 +300,7 @@ def open(filename, show=True, **kwargs):
         viz_helper.load_spectrum(filename, **kwargs)
     else:
         viz_helper.load_data(filename, **kwargs)
-    
+
     if show:
         viz_helper.show()
 
