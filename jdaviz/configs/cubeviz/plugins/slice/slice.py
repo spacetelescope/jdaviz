@@ -145,6 +145,9 @@ class Slice(PluginTemplateMixin):
                 # leave in the pre-init state and don't update the wavelength/slice
                 return
 
+        # Also update unit when data is updated
+        self.wavelength_unit = x_all.unit.to_string()
+
         # force wavelength to update from the current slider value
         self._on_slider_updated({'new': self.slice})
 
