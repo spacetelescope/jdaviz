@@ -2,7 +2,7 @@
   <j-tooltip v-if="menuButtonAvailable()" tipid="viewer-toolbar-data">
     <v-menu attach offset-y :close-on-content-click="false" v-model="viewer.data_open">
       <template v-slot:activator="{ on, attrs }">
-        <v-btn 
+        <v-btn
           text 
           elevation="3" 
           v-bind="attrs" 
@@ -16,7 +16,6 @@
           <v-icon>mdi-format-list-bulleted-square</v-icon>
         </v-btn>
       </template>
-  
       <v-list style="max-height: 500px; width: 465px; padding-top: 0px" class="overflow-y-auto">
         <v-row key="title" style="padding-left: 25px; margin-right: 0px; background-color: #E3F2FD">
             <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
@@ -54,6 +53,7 @@
             @data-item-visibility="$emit('data-item-visibility', $event)"
             @data-item-unload="$emit('data-item-unload', $event)"
             @data-item-remove="$emit('data-item-remove', $event)"
+            @change-reference-data="$emit('change-reference-data', $event)"
           ></j-viewer-data-select-item>
         </v-row>
 
@@ -83,12 +83,11 @@
               :n_data_entries="nDataEntries"
               @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
+              @change-reference-data="$emit('change-reference-data', $event)"
             ></j-viewer-data-select-item>
           </v-row>
         </div>
-
       </v-list>
-
     </v-menu>
   </j-tooltip>
 </template>
@@ -211,8 +210,16 @@ module.exports = {
           }
         }
       }
-      
     },
+    isRefData() {
+      return this.$props.item.viewer.reference_data_label === this.$props.item.name
+    },
+    selectRefData() {
+      this.$emit('change-reference-data', {
+        id: this.$props.viewer.id,
+        item_id: this.$props.item.id
+      })
+    }
   },
   computed: {
     viewerTitleCase() {

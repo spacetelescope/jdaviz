@@ -15,6 +15,7 @@
       @data-item-unload="$emit('data-item-unload', $event)"
       @data-item-remove="$emit('data-item-remove', $event)"
       @call-viewer-method="$emit('call-viewer-method', $event)"
+      @change-reference-data="$emit('change-reference-data', $event)"
     ></g-viewer-tab>
     <gl-component
       v-for="(viewer, index) in stack.viewers"
@@ -36,6 +37,7 @@
               @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-unload="$emit('data-item-unload', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
+              @change-reference-data="$emit('change-reference-data', $event)"
             ></j-viewer-data-select>
 
 

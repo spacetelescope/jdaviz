@@ -11,18 +11,10 @@
         </v-btn>
       </j-tooltip>
     </div>
-    <div v-else>
-      <j-tooltip tipid="viewer-data-enable">
-        <v-btn v-if="this.$props.item.type !== 'wcs-only'"
-          icon
-          color="default"
-          @click="selectClicked">
-            <v-icon>mdi-plus</v-icon>
-        </v-btn>
-      </j-tooltip>
-    </div>
 
-    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
+
+    <j-tooltip :tooltipcontent="'Click to set as reference data'" span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
+      <span @click="selectRefData">
       <j-layer-viewer-icon span_style="margin-left: 4px; margin-right: 4px" :icon="icon" color="#000000DE"></j-layer-viewer-icon>
       <div class="text-ellipsis-middle" style="font-weight: 500">
         <span>
@@ -31,7 +23,11 @@
         <span>
           {{itemNameExtension}}
         </span>
+        <span v-if="this.$props.viewer.config === 'imviz' && isRefData()">
+          {{"*"}}
+        </span>
       </div>
+      </span>
     </j-tooltip>
 
     <div v-if="isSelected && isUnloadable" style="padding-left: 2px; right: 2px">
@@ -74,6 +70,15 @@ module.exports = {
         visible: prevVisibleState != 'visible' || (!this.multi_select && this.$props.item.type !== 'trace'),
         replace: !this.multi_select && this.$props.item.type !== 'trace'
       })
+    },
+    selectRefData() {
+      this.$emit('change-reference-data', {
+        id: this.$props.viewer.id,
+        item_id: this.$props.item.id
+      })
+    },
+    isRefData() {
+      return this.$props.viewer.reference_data_label == this.$props.item.name
     }
   },
   computed: {
