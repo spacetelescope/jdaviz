@@ -1,8 +1,12 @@
+import numpy as np
+
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
+from functools import cached_property
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
+from scipy.interpolate import interp1d
 from specutils import Spectrum1D
 
 from jdaviz.core.events import (AddDataToViewerMessage,
@@ -88,6 +92,135 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         self._default_spectrum_viewer_reference_name = kwargs.get(
             "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
         )
+
+        self.session.hub.subscribe(self, AddDataToViewerMessage,
+                                   handler=self._on_viewer_data_changed)
+        self.session.hub.subscribe(self, RemoveDataFromViewerMessage,
+                                   handler=self._on_viewer_data_changed)
+
+        self.scales['x'].observe(self._handle_x_axis_orientation, names=['min', 'max'])
+
+    @cached_property
+    def pixel_to_world_interp(self):
+        spectral_axis = self.state.reference_data.get_object().spectral_axis.value
+        pixels = range(len(spectral_axis))
+        return interp1d(pixels, spectral_axis)
+
+    def pixel_to_world_limits(self, limits, compute_max_residual=False, show_diagnostic_plot=False):
+        if not len(limits) == 2:
+            raise ValueError("limits must be length 2")
+
+        spectral_axis = self.state.reference_data.get_object().spectral_axis.value
+        pixels = np.arange(0, len(spectral_axis))
+
+        # we'll use interpolation when possible, but also want to fit a line between
+        # the outermost edge of the data within the limits
+        line_edges_pix = np.array([max((min(pixels), min(limits))),
+                                   min((max(pixels), max(limits)))])
+        line_edges_world = self.pixel_to_world_interp(line_edges_pix)
+        line_coeffs = np.polyfit(line_edges_pix, line_edges_world, deg=1)
+
+        def pixel_to_world_line(pixel):
+            return line_coeffs[0] * pixel + line_coeffs[1]
+
+        def map_pixel_to_world(pixel):
+            if pixels[0] <= pixel <= pixels[-1]:
+                # interpolate directly
+                return float(self.pixel_to_world_interp(pixel))
+            else:
+                # use the line model to extrapolate
+                return pixel_to_world_line(pixel)
+
+        invert = (-1) ** sum((self.inverted_x_axis, limits[0] > limits[1]))
+        out_lims = list(map(map_pixel_to_world, limits))[::invert]
+
+        if compute_max_residual:
+            # TODO: need to think about order again here
+            inds = np.where(np.logical_and(pixels >= min(limits), pixels <= max(limits)))
+            line_world = pixel_to_world_line(pixels[inds])
+            max_resid_world = max(abs(spectral_axis[inds] - line_world))
+            max_resid_perc = max_resid_world / abs(out_lims[1] - out_lims[0])
+
+            if show_diagnostic_plot:
+                import matplotlib.pyplot as plt
+                plt.plot(pixels, spectral_axis, 'k.')
+                plt.plot(limits, out_lims, 'ro')
+                plt.plot(pixels[inds], line_world, 'g-')
+                plt.show()
+
+            return out_lims, max_resid_perc
+        return out_lims
+
+    @cached_property
+    def world_to_pixel_interp(self):
+        spectral_axis = self.state.reference_data.get_object().spectral_axis.value
+        pixels = range(len(spectral_axis))
+        return interp1d(spectral_axis, pixels)
+
+    def world_to_pixel_limits(self, limits, compute_max_residual=False, show_diagnostic_plot=False):
+        if not len(limits) == 2:
+            raise ValueError("limits must be length 2")
+
+        spectral_axis = self.state.reference_data.get_object().spectral_axis.value
+        pixels = np.arange(0, len(spectral_axis))
+
+        # we'll use interpolation when possible, but also want to fit a line between
+        # the outermost edge of the data within the limits
+        line_edges_world = np.array([max((min(spectral_axis), min(limits))),
+                                     min((max(spectral_axis), max(limits)))])
+        line_edges_pixels = self.world_to_pixel_interp(line_edges_world)
+        line_coeffs = np.polyfit(line_edges_world, line_edges_pixels, deg=1)
+
+        def world_to_pixel_line(world):
+            return line_coeffs[0] * world + line_coeffs[1]
+
+        def map_world_to_pixel(world):
+            if spectral_axis[0] <= world <= spectral_axis[-1]:
+                # interpolate directly
+                return float(self.world_to_pixel_interp(world))
+            else:
+                # use the line model to extrapolate
+                return world_to_pixel_line(world)
+
+        invert = (-1) ** sum((self.inverted_x_axis, limits[0] > limits[1]))
+        out_lims = list(map(map_world_to_pixel, limits))[::invert]
+
+        if compute_max_residual:
+            # TODO: need to think about order again here
+            inds = np.where(np.logical_and(spectral_axis >= min(limits), spectral_axis <= max(limits)))
+            line_pix = world_to_pixel_line(spectral_axis[inds])
+            max_resid_pix = max(abs(pixels[inds] - line_pix))
+            max_resid_perc = max_resid_pix / abs(out_lims[1] - out_lims[0])
+
+            if show_diagnostic_plot:
+                import matplotlib.pyplot as plt
+                plt.plot(spectral_axis, pixels, 'k.')
+                plt.plot(limits, out_lims, 'ro')
+                plt.plot(spectral_axis[inds], line_pix, 'g-')
+                plt.show()
+
+            return out_lims, max_resid_perc
+        return out_lims
+
+    def _on_viewer_data_changed(self, msg):
+        if msg.viewer_reference != self.reference:
+            return
+        # clear cached properties that are based on reference data
+        for attr in ('inverted_x_axis', 'pixel_to_world_interp', 'world_to_pixel_interp'):
+            if attr in self.__dict__:
+                del self.__dict__[attr]
+
+    @cached_property
+    def inverted_x_axis(self):
+        spectral_axis = self.data()[0].spectral_axis
+        return spectral_axis[0] > spectral_axis[-1]
+
+    def _handle_x_axis_orientation(self, *args):
+        x_scales = self.scales['x']
+        limits = [x_scales.min, x_scales.max]
+        with x_scales.hold_sync():
+            x_scales.min = max(limits) if self.inverted_x_axis else min(limits)
+            x_scales.max = min(limits) if self.inverted_x_axis else max(limits)
 
     def data(self, cls=None):
         return [layer_state.layer.get_object(cls=cls or self.default_class)
