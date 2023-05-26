@@ -106,7 +106,7 @@ class PluginMark():
         unit = u.Unit(unit)
 
         if self.yunit is not None:
-            if ("spec" in self.viewer.reference or "specviz" in self.viewer.reference_id):
+            if self.viewer.default_class is Spectrum1D:
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
                 eqv = u.spectral_density(spec.spectral_axis)
                 y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
