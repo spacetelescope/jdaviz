@@ -38,10 +38,11 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
     _state_cls = FreezableProfileViewerState
 
     def __init__(self, *args, **kwargs):
+        default_tool_priority = kwargs.pop('default_tool_priority', [])
         super().__init__(*args, **kwargs)
 
         self._subscribe_to_layers_update()
-        self.initialize_toolbar(default_tool_priority=['jdaviz:selectslice'])
+        self.initialize_toolbar(default_tool_priority=default_tool_priority)
         self._offscreen_lines_marks = OffscreenLinesMarks(self)
         self.figure.marks = self.figure.marks + self._offscreen_lines_marks.marks
 
