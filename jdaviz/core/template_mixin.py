@@ -14,6 +14,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.subset import RoiSubsetState
+from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
@@ -1678,9 +1679,9 @@ class AutoTextFieldMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.auto_label = AddResults(self, 'label',
-                                     'label_default', 'label_auto',
-                                     'label_invalid_msg')
+        self.auto_label = AutoTextField(self, 'label',
+                                        'label_default', 'label_auto',
+                                        'label_invalid_msg')
 
 
 class AddResults(BasePluginComponent):
@@ -1837,25 +1838,31 @@ class AddResults(BasePluginComponent):
         if label is None:
             label = self.label
 
-        if replace is None:
-            replace = self.viewer.selected_reference != 'spectrum-viewer'
-
-        if self.label_overwrite and len(self.add_to_viewer_items) <= 2:
+        if self.label_overwrite:
             # the switch for add_to_viewer is hidden, and so the loaded state of the overwritten
             # entry should be the same as the original entry (to avoid deleting reference data)
-            viewer_reference = self.add_to_viewer_items[-1]['reference']
-            viewer_item = self.app._viewer_item_by_reference(viewer_reference)
-            viewer = self.app.get_viewer(viewer_reference)
-            viewer_loaded_labels = [layer.layer.label for layer in viewer.layers]
-            add_to_viewer_selected = viewer_reference if label in viewer_loaded_labels else 'None'  # noqa
-            visible = label in viewer_item['visible_layers']
+            add_to_viewer_refs = []
+            add_to_viewer_vis = []
+            for viewer_select_item in self.add_to_viewer_items[1:]:
+                # index 0 is for "None"
+                viewer_ref = viewer_select_item['reference']
+                viewer_item = self.app._viewer_item_by_reference(viewer_ref)
+                viewer = self.app.get_viewer(viewer_ref)
+                viewer_loaded_labels = [layer.layer.label for layer in viewer.layers]
+                if label in viewer_loaded_labels:
+                    add_to_viewer_refs.append(viewer_ref)
+                    add_to_viewer_vis.append(label in viewer_item['visible_layers'])
         else:
-            add_to_viewer_selected = self.add_to_viewer_selected
-            visible = True
+            if self.add_to_viewer_selected == 'None':
+                add_to_viewer_refs = []
+                add_to_viewer_vis = []
+            else:
+                add_to_viewer_refs = [self.add_to_viewer_selected]
+                add_to_viewer_vis = [True]
 
         if label in self.app.data_collection:
-            if add_to_viewer_selected != 'None':
-                self.app.remove_data_from_viewer(self.viewer.selected_reference, label)
+            for viewer_ref in add_to_viewer_refs:
+                self.app.remove_data_from_viewer(viewer_ref, label)
             self.app.data_collection.remove(self.app.data_collection[label])
 
         if not hasattr(data_item, 'meta'):
@@ -1865,12 +1872,17 @@ class AddResults(BasePluginComponent):
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
         self.app.add_data(data_item, label)
 
-        if add_to_viewer_selected != 'None':
+        for viewer_ref, visible in zip(add_to_viewer_refs, add_to_viewer_vis):
             # replace the contents in the selected viewer with the results from this plugin
-            # TODO: switch to an instance/classname check?
-            self.app.add_data_to_viewer(self.viewer.selected_id,
+            if replace is not None:
+                this_replace = replace
+            else:
+                this_viewer = self.app.get_viewer(viewer_ref)
+                this_replace = isinstance(this_viewer, BqplotImageView)
+
+            self.app.add_data_to_viewer(viewer_ref,
                                         label,
-                                        visible=visible, clear_other_data=replace)
+                                        visible=visible, clear_other_data=this_replace)
 
         # update overwrite warnings, etc
         self._on_label_changed()
