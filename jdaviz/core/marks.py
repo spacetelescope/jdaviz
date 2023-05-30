@@ -92,7 +92,8 @@ class PluginMark():
                 return
             unit = self.viewer.state.x_display_unit
         unit = u.Unit(unit)
-        if self.xunit is not None:
+
+        if self.xunit is not None and not np.all([s == 0 for s in self.x.shape]):
             x = (self.x * self.xunit).to_value(unit, u.spectral())
             self.xunit = unit
             self.x = x
@@ -105,7 +106,7 @@ class PluginMark():
             unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
 
-        if self.yunit is not None:
+        if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
             if self.viewer.default_class is Spectrum1D:
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
                 eqv = u.spectral_density(spec.spectral_axis)
