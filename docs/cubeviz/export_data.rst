@@ -29,7 +29,7 @@ An example without accessing Specviz:
 .. code-block:: python
 
     subset1_spec1d = cubeviz.get_data(data_label=flux_data_label, 
-                                      subset_to_apply="Subset 1",
+                                      spatial_subset="Subset 1",
                                       function="mean")
 
 Note that in the above example, the ``function`` keyword is used to tell Cubeviz
