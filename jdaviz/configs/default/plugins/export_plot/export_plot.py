@@ -1,3 +1,5 @@
+import os
+
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -32,6 +34,9 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         """
         Save the figure to an image with a provided filename or through an interactive save dialog.
 
+        If ``filetype`` is 'png' (or defaults to 'png' based on ``filename``), the interactive save
+        dialog will be bypassed (this is not supported for 'svg').
+
         Parameters
         ----------
         filename : str or `None`
@@ -49,7 +54,15 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
         viewer = self.viewer.selected_obj
         if filetype == "png":
-            viewer.figure.save_png(filename)
+            if filename is None:
+                viewer.figure.save_png()
+            else:
+                # support writing without save dialog
+                # https://github.com/bqplot/bqplot/pull/1397
+                def on_img_received(data):
+                    with open(os.path.expanduser(filename), 'bw') as f:
+                        f.write(data)
+                viewer.figure.get_png_data(on_img_received)
         elif filetype == "svg":
             viewer.figure.save_svg(filename)
         else:

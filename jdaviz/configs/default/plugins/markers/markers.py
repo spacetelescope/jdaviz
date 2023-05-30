@@ -9,18 +9,6 @@ from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Markers']
 
-_default_table_values = {'spectral_axis': np.nan,
-                         'spectral_axis:unit': '',
-                         'slice': np.nan,
-                         'pixel': (np.nan, np.nan),
-                         'pixel:unreliable': None,
-                         'world': (np.nan, np.nan),
-                         'world:unreliable': None,
-                         'value': np.nan,
-                         'value:unit': '',
-                         'value:unreliable': None,
-                         'index': np.nan}
-
 
 @tray_registry('g-markers', label="Markers")
 class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
@@ -36,6 +24,18 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
     """
     template_file = __file__, "markers.vue"
+
+    _default_table_values = {'spectral_axis': np.nan,
+                             'spectral_axis:unit': '',
+                             'slice': np.nan,
+                             'pixel': (np.nan, np.nan),
+                             'pixel:unreliable': None,
+                             'world': (np.nan, np.nan),
+                             'world:unreliable': None,
+                             'value': np.nan,
+                             'value:unit': '',
+                             'value:unreliable': None,
+                             'index': np.nan}
 
     @property
     def user_api(self):
@@ -66,13 +66,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                        'pixel', 'world', 'index', 'value', 'value:unit',
                        'viewer']
         else:
-            headers = []
+            # allow downstream configs to override headers
+            headers = kwargs.get('headers', [])
 
         headers += ['data_label']
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
-        self.table._default_values_by_colname = _default_table_values
+        self.table._default_values_by_colname = self._default_table_values
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -101,6 +102,10 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 for viewer_id, viewer in self.app._viewer_store.items()
                 if hasattr(viewer, 'figure')}
 
+    @property
+    def coords_info(self):
+        return self.app.session.application._tools['g-coords-info']
+
     @observe('plugin_opened')
     def _on_plugin_opened_changed(self, *args):
         if self.disabled_msg:
@@ -124,13 +129,13 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_viewer_key_event(self, viewer, data):
         if data['event'] == 'keydown' and data['key'] == 'm':
-            row_info = self.app.session.application._tools['g-coords-info'].as_dict()
+            row_info = self.coords_info.as_dict()
 
             if 'viewer' in self.table.headers_avail:
                 row_info['viewer'] = viewer.reference if viewer.reference is not None else viewer.reference_id  # noqa
 
             for k in self.table.headers_avail:
-                row_info.setdefault(k, _default_table_values.get(k, ''))
+                row_info.setdefault(k, self._default_table_values.get(k, ''))
 
             try:
                 self.table.add_item({k: v for k, v in row_info.items()

@@ -1,5 +1,10 @@
 <template>
   <v-app id="web-app" :class="'jdaviz ' + config" ref="mainapp">
+    <jupyter-widget
+      v-if="state.style_widget"
+      :widget="state.style_widget"
+      style="display: none"
+    ></jupyter-widget>
     <v-overlay v-if="state.logger_overlay"
       absolute
       opacity="0.7">

@@ -90,7 +90,7 @@ class CubevizProfileView(SpecvizProfileView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:selectslice', 'jdaviz:selectline'],
@@ -98,8 +98,7 @@ class CubevizProfileView(SpecvizProfileView):
                 ]
 
     def __init__(self, *args, **kwargs):
-        # NOTE: super will initialize nested toolbar with
-        # default_tool_priority=['jdaviz:selectslice']
+        kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
         super().__init__(*args, **kwargs)
 
         self._default_flux_viewer_reference_name = kwargs.get(

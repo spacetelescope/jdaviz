@@ -169,7 +169,7 @@ class TestSpecvizHelper:
     def test_get_spectral_regions_composite_region(self):
         spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
 
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6400))
+        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 7400))
 
         spectrum_viewer.session.edit_subset_mode._mode = AndNotMode
 
@@ -186,7 +186,7 @@ class TestSpecvizHelper:
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
                                  7300., atol=1e-5)
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][1].value,
-                                 7800., atol=1e-5)
+                                 7400., atol=1e-5)
 
     def test_get_spectral_regions_composite_region_multiple_and_nots(self):
         spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")

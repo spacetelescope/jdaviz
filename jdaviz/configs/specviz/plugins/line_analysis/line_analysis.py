@@ -391,7 +391,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # cube, but still apply that to the spatially-collapsed spectrum.
             continuum_mask = ~self._specviz_helper.get_data(
                 self.dataset.selected,
-                subset_to_apply=self.continuum_subset_selected,
+                spectral_subset=self.continuum_subset_selected,
                 use_display_units=False).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan

@@ -15,13 +15,14 @@ import numpy as np
 import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.nddata import CCDData
+from regions.core.core import Region
 from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectralRegion
 
 
 from jdaviz.app import Application
@@ -410,8 +411,8 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    def _get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
-                  use_display_units=False):
+    def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
+                  mask_subset=None, function=None, cls=None, use_display_units=False):
         def _handle_display_units(data, use_display_units):
             if use_display_units:
                 if isinstance(data, Spectrum1D):
@@ -443,9 +444,10 @@ class ConfigHelper(HubListener):
                              f" function values {list_of_valid_function_values}")
 
         list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
-        if subset_to_apply and subset_to_apply not in list_of_valid_subset_names:
-            raise ValueError(f"Subset {subset_to_apply} not in list of valid"
-                             f" subset names {list_of_valid_subset_names}")
+        for subset in (spatial_subset, spectral_subset, mask_subset):
+            if subset and subset not in list_of_valid_subset_names:
+                raise ValueError(f"Subset {subset} not in list of valid"
+                                 f" subset names {list_of_valid_subset_names}")
 
         if data_label and data_label not in self.app.data_collection.labels:
             raise ValueError(f'{data_label} not in {self.app.data_collection.labels}.')
@@ -458,6 +460,16 @@ class ConfigHelper(HubListener):
         if cls is not None and not isclass(cls):
             raise TypeError(
                 "cls in get_data must be a class or None.")
+
+        if spectral_subset:
+            if mask_subset is not None:
+                raise ValueError("cannot use both mask_subset and spectral_subset")
+            # spectral_subset is applied as a mask, the only difference is that it has
+            # its own set of validity checks (whereas mask_subset can be used by downstream
+            # apps which would then need to do their own type checks, if necessary)
+            mask_subset = spectral_subset
+
+        # End validity checks and start data retrieval
         data = self.app.data_collection[data_label]
 
         if not cls:
@@ -474,7 +486,7 @@ class ConfigHelper(HubListener):
         if cls == Spectrum1D:
             object_kwargs['statistic'] = function
 
-        if not subset_to_apply:
+        if not spatial_subset and not mask_subset:
             if 'Trace' in data.meta:
                 if cls is not None:  # pragma: no cover
                     raise ValueError("cls not supported for Trace object")
@@ -484,33 +496,66 @@ class ConfigHelper(HubListener):
 
             return _handle_display_units(data, use_display_units)
 
-        if not cls and subset_to_apply:
+        if not cls and spatial_subset:
             raise AttributeError(f"A valid cls must be provided to"
-                                 f" apply subset {subset_to_apply} to data. "
+                                 f" apply subset {spatial_subset} to data. "
+                                 f"Instead, {cls} was given.")
+        elif not cls and mask_subset:
+            raise AttributeError(f"A valid cls must be provided to"
+                                 f" apply subset {mask_subset} to data. "
                                  f"Instead, {cls} was given.")
 
-        # Loop through each subset
-        for subsets in self.app.data_collection.subset_groups:
-            # If name matches the name in subsets_to_apply, continue
-            if subsets.label.lower() == subset_to_apply.lower():
-                # Loop through each data a subset applies to
-                for subset in subsets.subsets:
-                    # If the subset applies to data with the same name as data_label, continue
-                    if subset.data.label == data_label:
+        # Now we work on applying subsets to the data
+        all_subsets = self.app.get_subsets(object_only=True)
 
-                        handler, _ = data_translator.get_handler_for(cls)
-                        try:
-                            data = handler.to_object(subset, **object_kwargs)
-                        except Exception as e:
-                            warnings.warn(f"Not able to get {data_label} returned with"
-                                          f" subset {subsets.label} applied of type {cls}."
-                                          f" Exception: {e}")
+        # Handle spatial subset
+        if spatial_subset and not isinstance(all_subsets[spatial_subset][0],
+                                             Region):
+            raise ValueError(f"{spatial_subset} is not a spatial subset.")
+        elif spatial_subset:
+            real_spatial = [sub for subsets in self.app.data_collection.subset_groups
+                            for sub in subsets.subsets
+                            if sub.data.label == data_label and subsets.label == spatial_subset][0]
+            handler, _ = data_translator.get_handler_for(cls)
+            try:
+                data = handler.to_object(real_spatial, **object_kwargs)
+            except Exception as e:
+                warnings.warn(f"Not able to get {data_label} returned with"
+                              f" subset {spatial_subset} applied of type {cls}."
+                              f" Exception: {e}")
+        elif function:
+            # This covers the case where cubeviz.get_data is called using a spectral_subset
+            # with function set.
+            data = data.get_object(cls=cls, **object_kwargs)
+
+        # Handle spectral subset, including case where spatial subset is also set
+        if spectral_subset and not isinstance(all_subsets[spectral_subset],
+                                              SpectralRegion):
+            raise ValueError(f"{spectral_subset} is not a spectral subset.")
+
+        if mask_subset:
+            real_spectral = [sub for subsets in self.app.data_collection.subset_groups
+                             for sub in subsets.subsets
+                             if sub.data.label == data_label and subsets.label == mask_subset][0] # noqa
+
+            handler, _ = data_translator.get_handler_for(cls)
+            try:
+                spec_subset = handler.to_object(real_spectral, **object_kwargs)
+            except Exception as e:
+                warnings.warn(f"Not able to get {data_label} returned with"
+                              f" subset {mask_subset} applied of type {cls}."
+                              f" Exception: {e}")
+            if spatial_subset or function:
+                # Return collapsed Spectrum1D object with spectral subset mask applied
+                data.mask = spec_subset.mask
+            else:
+                data = spec_subset
+
         return _handle_display_units(data, use_display_units)
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None, use_display_units=False):
+    def get_data(self, data_label=None, cls=None, use_display_units=False):
         """
-        Returns data with name equal to data_label of type cls with subsets applied from
-        subset_to_apply.
+        Returns data with name equal to data_label of type cls.
 
         Parameters
         ----------
@@ -518,19 +563,18 @@ class ConfigHelper(HubListener):
             Provide a label to retrieve a specific data set from data_collection.
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
-        subset_to_apply : str, optional
-            Subset that is to be applied to data before it is returned.
         use_display_units: bool, optional
             Whether to convert to the display units defined in the <unit-conversion> plugin.
 
         Returns
         -------
         data : cls
-            Data is returned as type cls with subsets applied.
+            Data is returned as type cls.
 
         """
-        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-                              use_display_units=use_display_units)
+        return self._get_data(data_label=data_label, spatial_subset=None,
+                              spectral_subset=None, function=None,
+                              cls=None, use_display_units=use_display_units)
 
 
 class ImageConfigHelper(ConfigHelper):

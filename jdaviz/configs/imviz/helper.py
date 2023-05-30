@@ -239,6 +239,28 @@ class Imviz(ImageConfigHelper):
         """
         return getattr(self.app, '_catalog_source_table', None)
 
+    def get_data(self, data_label=None, spatial_subset=None, cls=None):
+        """
+        Returns data with name equal to data_label of type cls with subsets applied from
+        spatial_subset.
+
+        Parameters
+        ----------
+        data_label : str, optional
+            Provide a label to retrieve a specific data set from data_collection.
+        spatial_subset : str, optional
+            Spatial subset applied to data.
+        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+            The type that data will be returned as.
+
+        Returns
+        -------
+        data : cls
+            Data is returned as type cls with subsets applied.
+
+        """
+        return self._get_data(data_label=data_label, spatial_subset=spatial_subset, cls=cls)
+
 
 def split_filename_with_fits_ext(filename):
     """Split a ``filename[ext]`` input into filename and FITS extension.

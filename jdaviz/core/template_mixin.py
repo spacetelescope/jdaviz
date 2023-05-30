@@ -43,6 +43,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'SPATIAL_DEFAULT_TEXT']
 
 SPATIAL_DEFAULT_TEXT = "Entire Cube"
+GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att')
 
 
 def show_widget(widget, loc, title):  # pragma: no cover
@@ -1081,8 +1082,9 @@ class SubsetSelect(SelectPluginComponent):
 
     @property
     def selected_subset_mask(self):
-        get_data_kwargs = {'data_label': self.plugin.dataset.selected,
-                           'subset_to_apply': self.selected}
+        get_data_kwargs = {'data_label': self.plugin.dataset.selected}
+        if self._allowed_type:
+            get_data_kwargs[f'{self._allowed_type}_subset'] = self.selected
 
         if self.app.config == 'cubeviz' and self._allowed_type == 'spectral':
             viewer_ref = getattr(self.plugin,
@@ -1461,7 +1463,7 @@ class DatasetSelect(SelectPluginComponent):
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
         manual_options: list
-            list of options to provide that are not automatically populated by subsets.  If
+            list of options to provide that are not automatically populated by datasets.  If
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
         """
@@ -1539,7 +1541,7 @@ class DatasetSelect(SelectPluginComponent):
         if spatial_subset == SPATIAL_DEFAULT_TEXT:
             spatial_subset = None
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
-                                                    subset_to_apply=spatial_subset,
+                                                    spatial_subset=spatial_subset,
                                                     use_display_units=use_display_units)
 
     def _is_valid_item(self, data):
@@ -2006,9 +2008,10 @@ class PlotOptionsSyncState(BasePluginComponent):
 
     def __repr__(self):
         choices = self.choices
+        glue_name = self._glue_name if isinstance(self._glue_name, str) else ''
         if len(choices):
-            return f"<PlotOptionsSyncState {self._glue_name}={self.value} choices={self.choices} (linked_states: {len(self.linked_states)}/{len(self.subscribed_states)})>"  # noqa
-        return f"<PlotOptionsSyncState {self._glue_name}={self.value} (linked_states: {len(self.linked_states)}/{len(self.subscribed_states)})>"  # noqa
+            return f"<PlotOptionsSyncState {glue_name}={self.value} choices={self.choices} (linked_states: {len(self.linked_states)}/{len(self.subscribed_states)})>"  # noqa
+        return f"<PlotOptionsSyncState {glue_name}={self.value} (linked_states: {len(self.linked_states)}/{len(self.subscribed_states)})>"  # noqa
 
     @property
     def user_api(self):
@@ -2042,6 +2045,12 @@ class PlotOptionsSyncState(BasePluginComponent):
         if self._state_filter is None:
             return True
         return self._state_filter(state)
+
+    def glue_name(self, state):
+        if isinstance(self._glue_name, str):
+            return self._glue_name
+        # also support a callable that takes the state as input and returns a string
+        return self._glue_name(state)
 
     @property
     def subscribed_viewers(self):
@@ -2105,31 +2114,40 @@ class PlotOptionsSyncState(BasePluginComponent):
         return self._linked_states
 
     def _get_glue_value(self, state):
-        if self._glue_name == 'cmap':
-            return getattr(state, self._glue_name).name
-        if self._glue_name in ['contour_visible', 'bitmap_visible']:
+        glue_name = self.glue_name(state)
+        if glue_name == 'cmap':
+            return getattr(state, glue_name).name
+        if glue_name in GLUE_STATES_WITH_HELPERS:
+            return str(getattr(state, glue_name))
+        if glue_name in ('contour_visible', 'bitmap_visible'):
             # return False if the layer itself is not visible.  Setting this object
             # to True will then set both glue_name and visible to True.
-            return getattr(state, self._glue_name) and getattr(state, 'visible')
-        return getattr(state, self._glue_name)
+            return getattr(state, glue_name) and getattr(state, 'visible')
+
+        return getattr(state, glue_name)
 
     def _get_glue_choices(self, state):
-        if self._glue_name == 'cmap':
+        glue_name = self.glue_name(state)
+        if glue_name == 'cmap':
             return [{'text': cmap[0], 'value': cmap[1].name} for cmap in colormaps.members]
-        elif self._glue_name == 'color_mode':
+        if glue_name in GLUE_STATES_WITH_HELPERS:
+            helper = getattr(state, f'{glue_name}_helper')
+            return [{'text': str(choice), 'value': str(choice)} for choice in helper.choices]
+        if glue_name == 'color_mode':
             return [{'text': 'Colormap', 'value': 'Colormaps'},
                     {'text': 'Monochromatic', 'value': 'One color per layer'}]
-        else:
-            values, labels = _get_glue_choices(state, self._glue_name)
-            return [{'text': l, 'value': v} for v, l in zip(values, labels)]
+
+        values, labels = _get_glue_choices(state, glue_name)
+        return [{'text': l, 'value': v} for v, l in zip(values, labels)]
 
     def _on_viewer_layer_changed(self, msg=None):
         self._clear_cache(*self._cached_properties)
 
         # clear existing callbacks - we'll re-create those we need later
         for state in self.linked_states:
-            state.remove_callback(self._glue_name, self._on_glue_value_changed)
-            if self._glue_name in ['contour_visible', 'bitmap_visible']:
+            glue_name = self.glue_name(state)
+            state.remove_callback(glue_name, self._on_glue_value_changed)
+            if glue_name in ['contour_visible', 'bitmap_visible']:
                 state.remove_callback('visible', self._on_glue_layer_visible_changed)
 
         in_subscribed_states = False
@@ -2143,7 +2161,8 @@ class PlotOptionsSyncState(BasePluginComponent):
             for state in states:
                 if state is None or not self.state_filter(state):
                     continue
-                if self._glue_name is None or not hasattr(state, self._glue_name):
+                glue_name = self.glue_name(state)
+                if glue_name is None or not hasattr(state, glue_name):
                     continue
 
                 in_subscribed_states = True
@@ -2151,13 +2170,13 @@ class PlotOptionsSyncState(BasePluginComponent):
                     icons.append(icon)
                 current_glue_values.append(self._get_glue_value(state))
                 self._linked_states.append(state)  # these will be iterated when value is set
-                state.add_callback(self._glue_name, self._on_glue_value_changed)
-                if self._glue_name in ['contour_visible', 'bitmap_visible']:
+                state.add_callback(glue_name, self._on_glue_value_changed)
+                if glue_name in ['contour_visible', 'bitmap_visible']:
                     state.add_callback('visible', self._on_glue_layer_visible_changed)
 
                 if self.sync.get('choices') is None and \
-                        (hasattr(getattr(type(state), self._glue_name), 'get_display_func')
-                         or self._glue_name == 'cmap'):
+                        (hasattr(getattr(type(state), glue_name), 'get_display_func')
+                         or glue_name == 'cmap'):
                     # then we can access and populate the choices.  We are assuming here
                     # that each state-instance with this same name will have the same
                     # choices and that those will not change.  If we ever hookup options
@@ -2194,17 +2213,22 @@ class PlotOptionsSyncState(BasePluginComponent):
 
         self._processing_change_to_glue = True
         for glue_state in self.linked_states:
-            if self._glue_name == 'cmap':
+            glue_name = self.glue_name(glue_state)
+            if glue_name == 'cmap':
                 cmap = None
                 for member in colormaps.members:
                     if member[1].name == msg['new']:
                         cmap = member[1]
                         break
-                setattr(glue_state, self._glue_name, cmap)
+                setattr(glue_state, glue_name, cmap)
+            elif glue_name in GLUE_STATES_WITH_HELPERS:
+                helper = getattr(glue_state, f'{glue_name}_helper')
+                value = [choice for choice in helper.choices if str(choice) == msg['new']][0]
+                setattr(glue_state, glue_name, value)
             else:
-                setattr(glue_state, self._glue_name, msg['new'])
+                setattr(glue_state, glue_name, msg['new'])
 
-            if self._glue_name in ['bitmap_visible', 'contour_visible'] and msg['new'] is True:
+            if glue_name in ['bitmap_visible', 'contour_visible'] and msg['new'] is True:
                 # ensure that the layer is also visible
                 if not glue_state.visible:
                     setattr(glue_state, 'visible', msg['new'])
@@ -2244,6 +2268,8 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._processing_change_from_glue = True
         if "Colormap" in value.__class__.__name__:
             value = value.name
+        elif self._glue_name in GLUE_STATES_WITH_HELPERS:
+            value = str(value)
         elif isinstance(self.value, (int, float)) and self._glue_name != 'percentile':
             # glue might pass us ints for float or vice versa, but our traitlets care
             # so let's cast to the type expected by the traitlet to avoid having to

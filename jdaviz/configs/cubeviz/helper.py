@@ -120,8 +120,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             self._specviz = Specviz(app=self.app)
         return self._specviz
 
-    def get_data(self, data_label=None, cls=None, subset_to_apply=None, function=None,
-                 use_display_units=False):
+    def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None, function=None,
+                 cls=None, use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -130,15 +130,18 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
-            The type that data will be returned as.
-        subset_to_apply : str, optional
-            Subset that is to be applied to data before it is returned.
+        spatial_subset : str, optional
+            Spatial subset applied to data.
+        spectral_subset : str, optional
+            Spectral subset applied to data.
         function : {True, False, 'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
             Ignored if ``data_label`` does not point to cube-like data.
             If True, will collapse according to the current collapse function defined in the
             spectrum viewer.  If provided as a string, the cube will be collapsed with the provided
-            function.  If False, None, or not passed, the entire cube will be returned.
+            function.  If False, None, or not passed, the entire cube will be returned (unless there
+            are values for ``spatial_subset`` and ``spectral_subset``).
+        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+            The type that data will be returned as.
 
         Returns
         -------
@@ -146,13 +149,21 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        if function is True:
-            return self.specviz.get_data(data_label=data_label, cls=cls,
-                                         subset_to_apply=subset_to_apply)
+        # If function is a value ('sum' or 'minimum') or True and spatial and spectral
+        # are set, then we collapse the cube along the spatial subset using the function, then
+        # we apply the mask from the spectral subset.
+        # If function is any value other than False, we use specviz
+        if (function is not False and spectral_subset and spatial_subset) or function:
+            return self.specviz.get_data(data_label=data_label, spectral_subset=spectral_subset,
+                                         cls=cls, spatial_subset=spatial_subset, function=function)
+        elif function is False and spectral_subset:
+            raise ValueError("function cannot be False if spectral_subset"
+                             " is set")
         elif function is False:
             function = None
-        return self._get_data(data_label=data_label, cls=cls, subset_to_apply=subset_to_apply,
-                              function=function, use_display_units=use_display_units)
+        return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
+                              spectral_subset=spectral_subset, function=function,
+                              cls=cls, use_display_units=use_display_units)
 
 
 def layer_is_cube_image_data(layer):

@@ -40,7 +40,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     subplugins_opened = Any().tag(sync=True)
 
-    is_editable = Bool(False).tag(sync=True)
+    is_centerable = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -100,7 +100,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_definitions = []
         self.subset_types = []
         self.glue_state_types = []
-        self.is_editable = False
+        self.is_centerable = False
 
         if not hasattr(self, 'subset_select'):
             # during initial init, this can trigger before the component is initialized
@@ -137,9 +137,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not subset_information:
             return
         if len(subset_information) == 1:
-            self.is_editable = True
+            self.is_centerable = True
         else:
-            self.is_editable = False
+            self.is_centerable = False
 
         for spec in subset_information:
             subset_definition = []
@@ -214,7 +214,14 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self._get_subset_definition(self.subset_selected)
 
     def vue_update_subset(self, *args):
+        status, reason = self._check_input()
+        if not status:
+            self.hub.broadcast(SnackbarMessage(reason, color='error', sender=self))
+            return
+
         for index, sub in enumerate(self.subset_definitions):
+            if len(self.subset_states) <= index:
+                return
             sub_states = self.subset_states[index]
             for d_att in sub:
                 if d_att["att"] == 'theta':  # Humans use degrees but glue uses radians
@@ -237,23 +244,55 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         setattr(sub_states, d_att["att"], d_val)
                     else:
                         setattr(sub_states.roi, d_att["att"], d_val)
-            try:
-                # TODO: This commented out section is "more correct" because it
-                #  adds the changed subregion to the data_collection.subset_groups
-                #  tree. However, it still needs improvement and the section below
-                #  allows updating similar to `main`.
-                # self.session.edit_subset_mode._combine_data(sub_states,
-                # override_mode=SUBSET_MODES[self.glue_state_types[index]])
-                self.session.edit_subset_mode._combine_data(sub_states, override_mode=ReplaceMode)
-            except Exception as err:  # pragma: no cover
-                self.hub.broadcast(SnackbarMessage(
-                    f"Failed to update Subset: {repr(err)}", color='error', sender=self))
+        try:
+            dc = self.data_collection
+            subsets = dc.subset_groups
+            self.session.edit_subset_mode._combine_data(
+                subsets[[x.label for x in subsets].index(self.subset_selected)].subset_state,
+                override_mode=ReplaceMode)
+        except Exception as err:  # pragma: no cover
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to update Subset: {repr(err)}", color='error', sender=self))
+
+    def _check_input(self):
+        status = True
+        reason = ""
+        for index, sub in enumerate(self.subset_definitions):
+            lo = hi = xmin = xmax = ymin = ymax = None
+            for d_att in sub:
+                if d_att["att"] == "lo":
+                    lo = d_att["value"]
+                elif d_att["att"] == "hi":
+                    hi = d_att["value"]
+                elif d_att["att"] == "radius" and d_att["value"] <= 0:
+                    status = False
+                    reason = "Failed to update Subset: radius must be a positive scalar"
+                    break
+                elif d_att["att"] == "xmin":
+                    xmin = d_att["value"]
+                elif d_att["att"] == "xmax":
+                    xmax = d_att["value"]
+                elif d_att["att"] == "ymin":
+                    ymin = d_att["value"]
+                elif d_att["att"] == "ymax":
+                    ymax = d_att["value"]
+
+                if lo and hi and hi <= lo:
+                    status = False
+                    reason = "Failed to update Subset: lower bound must be less than upper bound"
+                    break
+                elif xmin and xmax and ymin and ymax and (xmax - xmin <= 0 or ymax - ymin <= 0):
+                    status = False
+                    reason = "Failed to update Subset: width and length must be positive scalars"
+                    break
+
+        return status, reason
 
     def vue_recenter_subset(self, *args):
-        # Composite region cannot be edited. This only works for Imviz.
-        if not self.is_editable or self.config != 'imviz':  # no-op
+        # Composite region cannot be centered. This only works for Imviz.
+        if not self.is_centerable or self.config != 'imviz':  # no-op
             raise NotImplementedError(
-                f'Cannot recenter: is_editable={self.is_editable}, config={self.config}')
+                f'Cannot recenter: is_centerable={self.is_centerable}, config={self.config}')
 
         from photutils.aperture import ApertureStats
         from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
@@ -290,7 +329,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         cen : number, tuple of numbers, or `None`
             The center of the Subset in ``x`` or ``(x, y)``,
             depending on the Subset type, if applicable.
-            If Subset is not editable, this returns `None`.
+            If Subset is not centerable, this returns `None`.
 
         Raises
         ------
@@ -298,8 +337,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             Subset type is not supported.
 
         """
-        # Composite region cannot be edited.
-        if not self.is_editable:  # no-op
+        # Composite region cannot be centered.
+        if not self.is_centerable:  # no-op
             return
 
         subset_state = self.subset_select.selected_subset_state
@@ -328,7 +367,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     def set_center(self, new_cen, update=False):
         """Set the desired center for the selected Subset, if applicable.
-        If Subset is not editable, nothing is done.
+        If Subset is not centerable, nothing is done.
 
         Parameters
         ----------
@@ -347,8 +386,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             Subset type is not supported.
 
         """
-        # Composite region cannot be edited, so just grab first element.
-        if not self.is_editable:  # no-op
+        # Composite region cannot be centered, so just grab first element.
+        if not self.is_centerable:  # no-op
             return
 
         subset_state = self.subset_select.selected_subset_state

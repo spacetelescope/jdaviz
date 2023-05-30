@@ -192,6 +192,27 @@ class XRangeZoom(_BaseSelectZoom):
 
 
 @viewer_tool
+class YRangeZoom(_BaseSelectZoom):
+    icon = os.path.join(ICON_DIR, 'zoom_yrange.svg')
+    tool_id = 'jdaviz:yrangezoom'
+    action_text = 'Vertical zoom'
+    tool_tip = 'Zoom to a drawn vertical region'
+
+    def _new_interact(self):
+        return BrushIntervalSelector(orientation='vertical',
+                                     scale=self.viewer.scale_y,
+                                     color=INTERACT_COLOR)
+
+    def on_update_zoom(self):
+        if self.interact.selected is None:
+            # a valid region was not drawn, perhaps just a click with no drag!
+            # let's ignore and reset the tool
+            return
+
+        self.viewer.state.y_min, self.viewer.state.y_max = self.interact.selected
+
+
+@viewer_tool
 class SelectLine(CheckableTool, HubListener):
     icon = os.path.join(ICON_DIR, 'line_select.svg')
     tool_id = 'jdaviz:selectline'
