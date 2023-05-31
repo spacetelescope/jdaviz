@@ -151,29 +151,28 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert self.imviz.app.state.layer_icons["fits_wcs[DATA]"] == "a"
         assert self.viewer.state.reference_data.label == "fits_wcs[DATA]"
 
-        wcs_only_refdata_icon = "mdi-compass-outline"
-        wcs_only_not_refdata_icon = "mdi-compass-off-outline"
+        wcs_only_icon = "mdi-rotate-left"
 
         # Now we change the reference data.
         for i in (3, 4):
             data_label = self.imviz.app.data_collection[i].label
 
             # Icon before setting this WCS-only data as reference data.
-            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_not_refdata_icon
+            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_icon
 
             # Set it as reference data.
             self.imviz.app._change_reference_data(data_label)
             assert self.viewer.state.reference_data.label == data_label
 
             # Icon after setting it as reference data.
-            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_refdata_icon
+            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_icon
 
         # Change reference back to normal data.
         self.imviz.app._change_reference_data("fits_wcs[DATA]")
         assert self.viewer.state.reference_data.label == "fits_wcs[DATA]"
         for i in (3, 4):
             data_label = self.imviz.app.data_collection[i].label
-            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_not_refdata_icon
+            assert self.imviz.app.state.layer_icons[data_label] == wcs_only_icon
 
 
 def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):

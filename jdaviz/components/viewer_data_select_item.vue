@@ -12,22 +12,26 @@
       </j-tooltip>
     </div>
 
-    <j-tooltip :tooltipcontent="'Click to set as reference data'" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
-      <span @click="selectRefData">
-      <j-layer-viewer-icon span_style="margin-left: 4px; margin-right: 2px" :icon="icon" color="#000000DE"></j-layer-viewer-icon>
-      <div class="text-ellipsis-middle" style="font-weight: 500">
+    <j-tooltip
+      :tooltipcontent="isRefData() ? 'Reference data' : 'Click to set as reference data'"
+      span_style="font-size: 12pt; padding-top: 6px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
+    <span
+      style="cursor: pointer;"
+      @click="selectRefData"
+    >
+      <j-layer-viewer-icon span_style="margin-left: 4px;" :icon="icon" color="#000000DE" :is_ref_data="isRefData()"></j-layer-viewer-icon>
+
+      <div class="text-ellipsis-middle" style="font-weight: 500;">
         <span>
           {{itemNamePrefix}}
         </span>
         <span>
           {{itemNameExtension}}
         </span>
-        <span v-if="this.$props.viewer.config === 'imviz' && isRefData()">
-          {{"*"}}
-        </span>
       </div>
       </span>
     </j-tooltip>
+
 
     <div v-if="isSelected && isUnloadable" style="right: 2px">
       <j-tooltip tipid='viewer-data-disable'>
@@ -71,10 +75,12 @@ module.exports = {
       })
     },
     selectRefData() {
-      this.$emit('change-reference-data', {
-        id: this.$props.viewer.id,
-        item_id: this.$props.item.id
-      })
+      if (!this.isRefData()) {
+        this.$emit('change-reference-data', {
+          id: this.$props.viewer.id,
+          item_id: this.$props.item.id
+        })
+      }
     },
     isRefData() {
       return this.$props.viewer.reference_data_label == this.$props.item.name
