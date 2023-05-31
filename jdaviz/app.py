@@ -481,9 +481,9 @@ class Application(VuetifyTemplate, HubListener):
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
-        wcs_only_refdata_icon = 'mdi-compass-outline'
+        wcs_only_refdata_icon = 'mdi-rotate-left'
         n_wcs_layers = (
-            len([icon.startswith('mdi') for icon in self.state.layer_icons])
+            len([icon.startswith('mdi-rotate-left') for icon in self.state.layer_icons])
             if is_wcs_only else 0
         )
         if layer_name not in self.state.layer_icons:
@@ -2187,6 +2187,9 @@ class Application(VuetifyTemplate, HubListener):
 
         wcs_only_layers = getattr(viewer.state, 'wcs_only_layers', [])
 
+        reference_data = getattr(viewer.state, 'reference_data', None)
+        reference_data_label = getattr(reference_data, 'label', None)
+
         return {
             'id': vid,
             'name': name or vid,
@@ -2197,7 +2200,7 @@ class Application(VuetifyTemplate, HubListener):
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
             'wcs_only_layers': wcs_only_layers,
-            'reference_data_label': getattr(viewer.state.reference_data, 'label', None),
+            'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
             'config': self.config,  # give viewer access to app config/layout
