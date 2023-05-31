@@ -7,13 +7,14 @@ import pytest
 from astroquery.mast import Observations
 
 from jdaviz import open as jdaviz_open
-from jdaviz.configs import Specviz, Specviz2d, Cubeviz, Imviz
+from jdaviz.configs import Specviz2d, Cubeviz, Imviz  # , Specviz
 
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('uris', (
-    ("mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits", Specviz),
+    # ("mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits", Specviz),
+    # Specviz check disabled due to https://github.com/spacetelescope/jdaviz/issues/2229
     ("mast:JWST/product/jw01538-o160_s00004_nirspec_f170lp-g235h-s1600a1-sub2048_s2d.fits", Specviz2d),  # noqa
     ("mast:JWST/product/jw02727-o002_t062_nircam_clear-f090w_i2d.fits", Imviz),
     ("mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_s3d.fits", Cubeviz))

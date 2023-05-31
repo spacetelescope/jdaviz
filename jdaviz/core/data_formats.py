@@ -158,6 +158,9 @@ def identify_helper(filename, ext=1):
     -------
     helper_name : str
         Name of the best-guess helper for ``filename``.
+
+    Fits HDUList : astropy.io.fits.HDUList
+        The HDUList of the file opened to identify the helper
     """
     supported_dtypes = [
         Spectrum1D,
@@ -169,10 +172,11 @@ def identify_helper(filename, ext=1):
     if filename.lower().endswith('asdf'):
         # ASDF files are only supported in jdaviz for
         # Roman WFI 2D images, so suggest imviz:
-        return 'imviz'
+        return ('imviz', None)
 
-    header = fits.getheader(filename, ext=ext)
-    data = fits.getdata(filename, ext=ext)
+    hdul = fits.open(filename)
+    data = hdul[ext]
+    header = data.header
     wcs = _get_wcs(filename, header)
     has_spectral_axis = 'spectral' in wcs.world_axis_object_classes
 
@@ -203,10 +207,10 @@ def identify_helper(filename, ext=1):
             # could be 2D spectrum or 2D image. break tie with WCS:
             if has_spectral_axis:
                 if n_axes > 1:
-                    return 'specviz2d'
-                return 'specviz'
+                    return ('specviz2d', hdul)
+                return ('specviz', hdul)
             elif not isinstance(data, fits.BinTableHDU):
-                return 'imviz'
+                return ('imviz', hdul)
 
     # Ensure specviz is chosen when ``data`` is a table or recarray
     # and there's a "known" spectral column name:
@@ -232,7 +236,7 @@ def identify_helper(filename, ext=1):
 
         # if at least one spectral column is found:
         if sum(found_spectral_columns):
-            return 'specviz'
+            return ('specviz', hdul)
 
     # If the data could be spectral:
     for cls in [Spectrum1D, SpectrumList]:
@@ -242,10 +246,10 @@ def identify_helper(filename, ext=1):
             # first catch known JWST spectrum types:
             if (n_axes == 3 and
                     recognized_spectrum_format.find('s3d') > -1):
-                return 'cubeviz'
+                return ('cubeviz', hdul)
             elif (n_axes == 2 and
                   recognized_spectrum_format.find('x1d') > -1):
-                return 'specviz'
+                return ('specviz', hdul)
 
             # we intentionally don't choose specviz2d for
             # data recognized as 's2d' as we did with the cases above,
@@ -255,11 +259,11 @@ def identify_helper(filename, ext=1):
             # Use WCS to break the tie below:
             elif n_axes == 2:
                 if has_spectral_axis:
-                    return 'specviz2d'
-                return 'imviz'
+                    return ('specviz2d', hdul)
+                return ('imviz', hdul)
 
             elif n_axes == 1:
-                return 'specviz'
+                return ('specviz', hdul)
 
     try:
         # try using the specutils registry:
@@ -271,7 +275,7 @@ def identify_helper(filename, ext=1):
 
     if n_axes == 2 and not has_spectral_axis:
         # at this point, non-spectral 2D data are likely images:
-        return 'imviz'
+        return ('imviz', hdul)
 
     raise ValueError(f"No helper could be auto-identified for {filename}.")
 
@@ -294,7 +298,7 @@ def open(filename, show=True, **kwargs):
         The application, configured based on the automatic config detection
     '''
     # Identify the correct config
-    helper_str = identify_helper(filename)
+    helper_str, hdul = identify_helper(filename)
     viz_class = getattr(jdaviz_configs, helper_str.capitalize())
 
     # Create config instance
@@ -303,10 +307,11 @@ def open(filename, show=True, **kwargs):
     viz_helper = viz_class(verbosity=verbosity, history_verbosity=history_verbosity)
 
     # Load data
+    data = hdul if (hdul is not None) else filename
     if helper_str == "specviz":
-        viz_helper.load_spectrum(filename, **kwargs)
+        viz_helper.load_spectrum(data, **kwargs)
     else:
-        viz_helper.load_data(filename, **kwargs)
+        viz_helper.load_data(data, **kwargs)
 
     # Display app
     if show:
