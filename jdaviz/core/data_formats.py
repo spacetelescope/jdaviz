@@ -12,6 +12,7 @@ from stdatamodels import asdf_in_fits
 
 from jdaviz.core.config import list_configurations
 from jdaviz import configs as jdaviz_configs
+from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY
 
 __all__ = [
     'guess_dimensionality',
@@ -292,15 +293,22 @@ def open(filename, show=True, **kwargs):
     Jdaviz App : jdaviz.app.Application
         The application, configured based on the automatic config detection
     '''
+    # Identify the correct config
     helper_str = identify_helper(filename)
     viz_class = getattr(jdaviz_configs, helper_str.capitalize())
 
-    viz_helper = viz_class()
+    # Create config instance
+    verbosity = kwargs.pop('verbosity', DEFAULT_VERBOSITY)
+    history_verbosity = kwargs.pop('history_verbosity', DEFAULT_HISTORY_VERBOSITY)
+    viz_helper = viz_class(verbosity=verbosity, history_verbosity=history_verbosity)
+
+    # Load data
     if helper_str == "specviz":
         viz_helper.load_spectrum(filename, **kwargs)
     else:
         viz_helper.load_data(filename, **kwargs)
 
+    # Display app
     if show:
         viz_helper.show()
 
