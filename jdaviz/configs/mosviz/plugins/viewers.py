@@ -178,6 +178,8 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         for attr in ('inverted_x_axis', 'pixel_to_world_interp', 'world_to_pixel_interp'):
             if attr in self.__dict__:
                 del self.__dict__[attr]
+        if len(self.data()):
+            self._handle_x_axis_orientation()
 
     @cached_property
     def inverted_x_axis(self):

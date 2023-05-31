@@ -133,11 +133,6 @@ class Mosviz(ConfigHelper, Matched2dSpectrumMixin, LineListMixin):
 
         self._frozen_layers_cache = []
 
-        # Make sure world flipping has been handled correctly, as internal
-        # callbacks may have been made while limits were frozen.  This is
-        # especially important for NIRISS data.
-        self._update_spec2d_x_axis()
-
     def _redshift_listener(self, msg):
         '''Save new redshifts (including from the helper itself)'''
         if self._update_in_progress:
