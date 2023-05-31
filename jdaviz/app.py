@@ -499,11 +499,7 @@ class Application(VuetifyTemplate, HubListener):
                      LinkSame(linked_data.components[0], ref_data.components[1])]
             dc.add_link(links)
             return
-        elif (linked_data.meta.get('Plugin', None) == 'SpectralExtraction' or
-                (linked_data.meta.get('Plugin', None) == ('GaussianSmooth') and
-                 linked_data.ndim < 3 and  # Cube linking requires special logic. See below
-                 ref_data.ndim < 3)
-              ):
+        elif linked_data.meta.get('Plugin', None) == 'SpectralExtraction':
             links = [LinkSame(linked_data.components[0], ref_data.components[0]),
                      LinkSame(linked_data.components[1], ref_data.components[1])]
             dc.add_link(links)
