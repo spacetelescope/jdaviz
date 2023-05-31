@@ -192,6 +192,7 @@ Using Jdaviz
   save_state.rst
   display.rst
   sample_notebooks.rst
+  create_products.rst
 
 Reference/API
 =============

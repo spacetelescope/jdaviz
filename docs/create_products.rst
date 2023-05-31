@@ -1,6 +1,7 @@
-*******************************************
+.. _create_products:
+
 Create products that are readable by Jdaviz
-*******************************************
+===========================================
 
 Data products can be loaded in the different Jdaviz configurations using
 various methods, e.g. loading :class:`~specutils.Spectrum1D` objects, loading
