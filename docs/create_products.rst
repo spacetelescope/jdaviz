@@ -1,6 +1,6 @@
 .. _create_products:
 
-Create jdaviz-readable products
+Create Jdaviz-readable Products
 ===============================
 
 Data products can be loaded in the different Jdaviz configurations using
