@@ -1,7 +1,7 @@
 .. _create_products:
 
-Create products that are readable by Jdaviz
-===========================================
+Create jdaviz-readable products
+===============================
 
 Data products can be loaded in the different Jdaviz configurations using
 various methods, e.g. loading :class:`~specutils.Spectrum1D` objects, loading
@@ -61,7 +61,7 @@ Creating a dedicated loader
 The `specutils documentation on how to create a custom loader
 <https://specutils.readthedocs.io/en/stable/custom_loading.html#creating-a-custom-loader>`_
 is available. We are working on the necessary documentation to allow
-``jdaviz`` to recognize a custom loader in ``specutils``.
+``jdaviz`` to recognize a custom loader developed in ``specutils``.
 
 Providing scripts to load the data as Spectrum1D objects
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
