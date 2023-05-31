@@ -120,7 +120,7 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
             == (2, 4, 2))
 
 
-def test_spectrum1d_smooth(specviz_helper, spectrum1d):
+def test_specviz1d_smooth(specviz_helper, spectrum1d):
     data_label = 'test'
     dc = specviz_helper.app.data_collection
     specviz_helper.load_data(spectrum1d, data_label=data_label)
@@ -160,7 +160,7 @@ def test_spectrum1d_smooth(specviz_helper, spectrum1d):
     assert label_mouseover.icon == 'mdi-cursor-default'
 
 
-def test_spectrum2d_smooth(specviz2d_helper, spectrum2d):
+def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
     data_label = 'test'
     dc = specviz2d_helper.app.data_collection
     specviz2d_helper.load_data(spectrum_2d=spectrum2d, spectrum_2d_label=data_label)
