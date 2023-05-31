@@ -1070,8 +1070,9 @@ class SubsetSelect(SelectPluginComponent):
         # that.  For imviz, this will mean we won't be able to loop through each of the viewers,
         # but the original viewer should have access to all the subsets.
         for viewer_ref in self.viewer_refs:
-            match = self.app.get_subsets_from_viewer(viewer_ref,
-                                                     subset_type=subset_type).get(self.selected)
+            match = self.app.get_subsets(self.selected,
+                                         spatial_only=subset_type == 'spatial',
+                                         spectral_only=subset_type == 'spectral')
             if match is not None:
                 return match
 
