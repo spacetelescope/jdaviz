@@ -294,8 +294,8 @@ def open(filename, show=True, **kwargs):
 
     Returns
     -------
-    Jdaviz App : jdaviz.app.Application
-        The application, configured based on the automatic config detection
+    Jdaviz ConfigHelper : jdaviz.core.helpers.ConfigHelper
+        The autoidentified ConfigHelper for the given data
     '''
     # Identify the correct config
     helper_str, hdul = identify_helper(filename)
