@@ -152,6 +152,10 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         # the outermost edge of the data within the limits
         line_edges_world = np.array([max((min(spectral_axis), min(limits))),
                                      min((max(spectral_axis), max(limits)))])
+        if line_edges_world[0] > line_edges_world[1]:
+            # then the limits are entirely out of range, so use the whole range
+            # when fitting the linear approximation
+            line_edges_world = np.array([min(spectral_axis), max(spectral_axis)])
         line_edges_pixels = self.world_to_pixel_interp(line_edges_world)
         line_coeffs = np.polyfit(line_edges_world, line_edges_pixels, deg=1)
 
