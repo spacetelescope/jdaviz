@@ -12,14 +12,24 @@
       :hint="label_hint ? label_hint : 'Label for the resulting data item.'"
     ></plugin-auto-label>   
 
-    <plugin-viewer-select v-if="add_to_viewer_items.length > 2"
-      :items="add_to_viewer_items"
-      :selected="add_to_viewer_selected"
-      @update:selected="$emit('update:add_to_viewer_selected', $event)"
-      show_if_single_entry="true"
-      label='Plot in Viewer'
-      :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
-    ></plugin-viewer-select>
+    <div v-if="add_to_viewer_items.length > 2">
+      <v-switch v-if="label_overwrite"
+        class="hide-input"
+        label="Show in viewers"
+        :disabled="true"
+        :hint="'Visibility of the modified entry will be adopted from the current \''+label+'\' data entry.'"
+        persistent-hint
+      >
+      </v-switch>
+      <plugin-viewer-select v-else
+        :items="add_to_viewer_items"
+        :selected="add_to_viewer_selected"
+        @update:selected="$emit('update:add_to_viewer_selected', $event)"
+        show_if_single_entry="true"
+        label='Plot in Viewer'
+        :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
+      ></plugin-viewer-select>
+    </div>
 
     <v-row v-else>
       <v-switch v-if="label_overwrite"
