@@ -3,7 +3,8 @@
 Create Jdaviz-readable Products
 ===============================
 
-Spectroscopic data products (1D, 2D, and 3D) can be loaded in the different Jdaviz configurations using
+Spectroscopic data products (1D, 2D, and 3D) can be loaded
+in the different ``jdaviz`` configurations using
 essentially two methods, i.e. loading :class:`~specutils.Spectrum1D` objects, or loading
 from FITS files. Here, we list a few ways in which data can be packaged to be easily loaded
 into a ``jdaviz`` configuration.
