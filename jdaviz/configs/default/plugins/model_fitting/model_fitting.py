@@ -695,7 +695,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         """
         List of the labels of model components in the current equation
         """
-        return re.split('[+*/-]', self.equation.value)
+        return re.split(r'[+*/-]', self.equation.value.replace(' ', ''))
 
     def vue_add_model(self, event):
         self.create_model_component()

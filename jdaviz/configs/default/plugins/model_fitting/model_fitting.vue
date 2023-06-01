@@ -314,7 +314,7 @@
     },
     methods: {
       componentInEquation(componentId) {
-        return this.model_equation.split(/[+*\/-]/).indexOf(componentId) !== -1
+        return this.model_equation.replace(/\s/g, '').split(/[+*\/-]/).indexOf(componentId) !== -1
       },
       roundUncertainty(uncertainty) {
         return uncertainty.toPrecision(2)
