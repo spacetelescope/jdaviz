@@ -292,6 +292,9 @@ def open(filename, show=True, **kwargs):
     show : bool
         Determines whether to immediately show the application
 
+    All other arguments are interpreted as load_data/load_spectrum arguments for
+    the autoidentified configuration class
+
     Returns
     -------
     Jdaviz ConfigHelper : jdaviz.core.helpers.ConfigHelper
