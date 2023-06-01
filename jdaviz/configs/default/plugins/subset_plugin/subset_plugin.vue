@@ -47,17 +47,42 @@
 
     <!-- Show all subregions of a subset, including Glue state and subset type. -->
     <div v-for="(region, index) in subset_definitions">
-      <v-row no-gutters>
-          <v-col>Subset type: {{ subset_types[index] }}</v-col>
+       <j-plugin-section-header style="margin: 0px; text-align: left; font-size: larger; font-weight: bold">
+       Subregion {{ index }}</j-plugin-section-header>
+       <v-row no-gutters>
+        <div style="margin-top: 4px">
+            {{ subset_types[index] }} applied with
+        </div>
+        <div style="margin-top: -2px; padding-bottom: 8px">
+            <div v-if="index === 0">
+              <img :src="icon_replace" width="20"/>
+              replace mode
+            </div>
+            <div v-else-if="glue_state_types[index] === 'AndState'">
+              <img :src="icon_and" width="20"/>
+              and mode
+            </div>
+            <div v-else-if="glue_state_types[index] === 'OrState'">
+              <img :src="icon_or" width="20"/>
+              add mode
+            </div>
+            <div v-else-if="glue_state_types[index] === 'AndNotState'">
+              <img :src="icon_andnot" width="20"/>
+              remove mode
+            </div>
+            <div v-else-if="glue_state_types[index] === 'XorState'">
+              <img :src="icon_xor" width="20"/>
+              xor mode
+            </div>
+        </div>
       </v-row>
-      <v-row no-gutters>
-          <v-col>Glue state: {{ glue_state_types[index] }}</v-col>
-      </v-row>
-      <v-row v-for="(item, index2) in region">
+
+      <v-row v-for="(item, index2) in region" style="margin: 0px 0px 0px 0px !important">
         <v-text-field
           :label="item.name"
           v-model.number="item.value"
           type="number"
+          style="padding-top: 0px; margin-top: 0px"
         ></v-text-field>
       </v-row>
     </div>
