@@ -15,16 +15,23 @@ def test_viewer_axis_link(mosviz_helper, mos_spectrum1d, mos_spectrum2d):
     mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label2d, add_redshift_column=True)
 
     table = mosviz_helper.app.get_viewer('table-viewer')
-    table.widget_table.vue_on_row_clicked(0)
+    table.select_row(0)
 
-    scale_2d = mosviz_helper.app.get_viewer('spectrum-2d-viewer').scales['x']
-    scale_1d = mosviz_helper.app.get_viewer('spectrum-viewer').scales['x']
+    s2dv = mosviz_helper.app.get_viewer('spectrum-2d-viewer')
+    sv = mosviz_helper.app.get_viewer('spectrum-viewer')
+    s2dxscales = s2dv.scales['x']
+    sxscales = sv.scales['x']
 
-    scale_2d.min = 200.0
-    assert scale_1d.min == mos_spectrum1d.spectral_axis.value[200]
+    assert s2dxscales.min == -0.5
+    assert s2dxscales.max == 14.5
+    assert_allclose(sxscales.min, 5e-7)
+    assert_allclose(sxscales.max, 1.55e-5)
 
-    scale_1d.max = 7564
-    assert scale_2d.max == 800.0
+    s2dv.state.x_max = 10
+    assert_allclose(sxscales.max, 1.1e-5)
+
+    sv.state.x_max = 8e-6
+    assert_allclose(s2dxscales.max, 7)
 
 
 def test_to_csv(tmp_path, mosviz_helper, spectrum_collection):

@@ -218,7 +218,7 @@ def spectrum1d_cube_custom_fluxunit():
 
 
 @pytest.fixture
-def mos_spectrum1d():
+def mos_spectrum1d(mos_spectrum2d):
     '''
     A specially defined Spectrum1d that matches the corresponding spectrum2d below.
 
@@ -228,7 +228,7 @@ def mos_spectrum1d():
 
     Unless linking the two is required, try to use the global spectrum1d fixture.
     '''
-    spec_axis = np.linspace(6000, 8000, 1024) * u.AA
+    spec_axis = mos_spectrum2d.spectral_axis
     np.random.seed(42)
     flux = (np.random.randn(len(spec_axis.value)) +
             10*np.exp(-0.001*(spec_axis.value-6563)**2) +
