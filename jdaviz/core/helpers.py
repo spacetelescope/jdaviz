@@ -431,7 +431,8 @@ class ConfigHelper(HubListener):
                     new_uncert = data.uncertainty.__class__(data.uncertainty.quantity.to(flux_unit)) if data.uncertainty is not None else None  # noqa
                     data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
                                                                           u.spectral()),
-                                      flux=data.flux.to(flux_unit),
+                                      flux=data.flux.to(flux_unit,
+                                                        u.spectral_density(data.spectral_axis)),
                                       uncertainty=new_uncert)
                 else:  # pragma: nocover
                     raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
