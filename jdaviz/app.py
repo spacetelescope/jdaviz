@@ -1728,6 +1728,7 @@ class Application(VuetifyTemplate, HubListener):
             [data] = [x for x in self.data_collection if x.label == data_label]
 
             viewer.add_data(data, percentile=95, color=viewer.color_cycler())
+            viewer.set_plot_axes()
 
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,

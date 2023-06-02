@@ -227,3 +227,7 @@ class JdavizViewerMixin:
     @property
     def reference(self):
         return self.jdaviz_app._viewer_item_by_id(self.reference_id).get('reference')
+
+    def set_plot_axes(self):
+        # individual viewers can override to set custom axes labels/ticks/styling
+        return
