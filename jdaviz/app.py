@@ -499,9 +499,9 @@ class Application(VuetifyTemplate, HubListener):
                      LinkSame(linked_data.components[0], ref_data.components[1])]
             dc.add_link(links)
             return
-        elif ((self.config in ['specviz', 'mosviz'] and
+        elif ((self.config in ['specviz2d', 'mosviz'] and
                linked_data.meta.get('Plugin', None) is not None) or
-              (linked_data.meta.get('Plugin', None) == ('GaussianSmooth') and
+              (linked_data.meta.get('Plugin', None) == 'GaussianSmooth' and
                linked_data.ndim < 3 and  # Cube linking requires special logic. See below
                ref_data.ndim < 3)
               ):
