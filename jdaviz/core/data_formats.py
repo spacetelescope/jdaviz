@@ -174,7 +174,8 @@ def identify_helper(filename, ext=1):
         # Roman WFI 2D images, so suggest imviz:
         return ('imviz', None)
 
-    hdul = fits.open(filename)
+    # Must use memmap=False to force close all handles and allow file overwrite
+    hdul = fits.open(filename, memmap=False)
     data = hdul[ext]
     header = data.header
     wcs = _get_wcs(filename, header)
@@ -268,7 +269,7 @@ def identify_helper(filename, ext=1):
     try:
         # try using the specutils registry:
         valid_format, config = identify_data(filename)
-        return config
+        return (config, hdul)
     except ValueError:
         # if file type not recognized:
         pass
