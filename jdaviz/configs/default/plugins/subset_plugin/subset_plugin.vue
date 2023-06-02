@@ -47,9 +47,9 @@
 
     <!-- Show all subregions of a subset, including Glue state and subset type. -->
     <div v-for="(region, index) in subset_definitions">
-       <j-plugin-section-header style="margin: 0px; text-align: left; font-size: larger; font-weight: bold">
+       <j-plugin-section-header style="margin: 0px; margin-left: -12px; text-align: left; font-size: larger; font-weight: bold">
        Subregion {{ index }}</j-plugin-section-header>
-       <v-row no-gutters>
+       <v-row class="row-no-outside-padding">
         <div style="margin-top: 4px">
             {{ subset_types[index] }} applied with
         </div>
@@ -77,7 +77,7 @@
         </div>
       </v-row>
 
-      <v-row v-for="(item, index2) in region" style="margin: 0px 0px 0px 0px !important">
+      <v-row v-for="(item, index2) in region" class="row-no-outside-padding">
         <v-text-field
           :label="item.name"
           v-model.number="item.value"
