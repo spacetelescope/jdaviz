@@ -504,6 +504,9 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
     assert subset_plugin.subset_types == ['Range', 'Range', 'Range', 'Range']
     assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'OrState', 'AndState']
 
+    subset_plugin.vue_simplify_subset()
+    assert subset_plugin.glue_state_types == ["RangeSubsetState", "OrState"]
+
 
 def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
     specviz_helper.load_spectrum(spectrum1d)

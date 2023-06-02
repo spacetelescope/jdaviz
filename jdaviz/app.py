@@ -1127,6 +1127,42 @@ class Application(VuetifyTemplate, HubListener):
             elif isinstance(subset_state, RangeSubsetState):
                 return self._get_range_subset_bounds(subset_state, simplify_spectral)
 
+    def convert_spectral_to_simpler_subset(self, subset_name, att, overwrite=False):
+        """
+        Convert a composite spectral subset consisting of And, AndNot, Or, Replace, and Xor
+        into one consisting of just Range and Or state objects.
+
+        Parameters
+        ----------
+        subset_name : str
+            Name of subset to simplify.
+        att : str
+            Attribute that the subset uses to apply to data.
+        overwrite : bool
+            Whether to update the current subset with the simplified state or apply it
+            to a new subset.
+        """
+        spectral_region = self.get_subsets(subset_name, spectral_only=True)
+        new_state = None
+        # Reverse through sub regions so that they are added back
+        # in the order of lowest values to highest
+        for index in range(len(spectral_region) - 1, -1, -1):
+            convert_to_range = RangeSubsetState(spectral_region[index].lower.value,
+                                                spectral_region[index].upper.value,
+                                                att)
+            if new_state is None:
+                new_state = convert_to_range
+            else:
+                new_state = new_state | convert_to_range
+
+        dc = self.data_collection
+        if not overwrite:
+            dc.new_subset_group(subset_state=new_state)
+        else:
+            old_subset = [subsets for subsets in dc.subset_groups
+                          if subsets.label == subset_name][0]
+            old_subset.subset_state = new_state
+
     def add_data(self, data, data_label=None, notify_done=True):
         """
         Add data to the Glue ``DataCollection``.

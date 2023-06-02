@@ -211,6 +211,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         self._unpack_get_subsets_for_ui()
 
+    def vue_simplify_subset(self, *args):
+        if len(self.subset_states) < 2:
+            self.hub.broadcast(SnackbarMessage("Cannot simplify spectral subset "
+                                               "of length less than 2", color='warning',
+                                               sender=self))
+            return
+        att = self.subset_states[0].att
+        self.app.convert_spectral_to_simpler_subset(subset_name=self.subset_selected,
+                                                    att=att, overwrite=True)
+
     def vue_update_subset(self, *args):
         status, reason = self._check_input()
         if not status:

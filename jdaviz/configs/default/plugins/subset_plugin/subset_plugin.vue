@@ -88,6 +88,7 @@
     </div>
 
       <v-row justify="end" no-gutters>
+        <v-btn color="primary" text @click="simplify_subset">Simplify</v-btn>
         <v-btn color="primary" text @click="update_subset">Update</v-btn>
       </v-row>
   </j-tray-plugin>
