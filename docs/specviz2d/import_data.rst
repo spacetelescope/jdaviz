@@ -9,6 +9,7 @@ as that allows the Python-level interface and parsing tools to be defined in ``s
 instead of being duplicated in Jdaviz.
 :class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however,
 and hence should address most astronomical spectrum use cases.
+If you are creating your own data products, please read the page :ref:`create_products`.
 
 .. seealso::
 
@@ -56,7 +57,7 @@ notebook can access the Specviz2D helper class API. Using this API, users can
 load data into the application through code with the
 :meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_data`
 method, which takes as input a :class:`~specutils.Spectrum1D` object or filename for the
-2D spectrum and (optionally) the 1D spectrum. 
+2D spectrum and (optionally) the 1D spectrum.
 
 By default, extension 1 of the 2D
 file is loaded, but you can specify another extension by providing an integer
