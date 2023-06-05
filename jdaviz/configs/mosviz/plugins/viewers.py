@@ -226,9 +226,6 @@ class MosvizProfileView(SpecvizProfileView):
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
 
 @viewer_registry("mosviz-table-viewer", label="Table (Mosviz)")
 class MosvizTableViewer(TableViewer, JdavizViewerMixin):

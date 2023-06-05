@@ -66,7 +66,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
             ]
             # clear the cache in case the spectrum-viewer selection was already cached
             self.dataset._clear_cache()
-        elif self.config in ["mosviz", "specviz2d"]:
+        elif self.config in ("mosviz", "specviz2d"):
             # only allow smoothing 1d spectra
             self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
             self.dataset._clear_cache()

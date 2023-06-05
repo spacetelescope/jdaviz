@@ -120,7 +120,7 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
             == (2, 4, 2))
 
 
-def test_specviz1d_smooth(specviz_helper, spectrum1d):
+def test_specviz_smooth(specviz_helper, spectrum1d):
     data_label = 'test'
     dc = specviz_helper.app.data_collection
     specviz_helper.load_data(spectrum1d, data_label=data_label)
