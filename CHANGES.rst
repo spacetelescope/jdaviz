@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Introduce jdaviz.open to automatically detect the appropriate config and load data [#2221]
+
 Cubeviz
 ^^^^^^^
 

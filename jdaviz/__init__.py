@@ -19,6 +19,7 @@ from jdaviz.configs.mosviz import Mosviz  # noqa: F401
 from jdaviz.configs.cubeviz import Cubeviz  # noqa: F401
 from jdaviz.configs.imviz import Imviz  # noqa: F401
 from jdaviz.utils import enable_hot_reloading  # noqa: F401
+from jdaviz.core.data_formats import open  # noqa: F401
 
 # Clean up namespace.
 del os

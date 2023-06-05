@@ -14,10 +14,12 @@ from jdaviz.app import _verbosity_levels
 __all__ = ['main']
 
 JDAVIZ_DIR = pathlib.Path(__file__).parent.resolve()
+DEFAULT_VERBOSITY = 'warning'
+DEFAULT_HISTORY_VERBOSITY = 'info'
 
 
 def main(filepaths=None, layout='default', instrument=None, browser='default',
-         theme='light', verbosity='warning', history_verbosity='info',
+         theme='light', verbosity=DEFAULT_VERBOSITY, history_verbosity=DEFAULT_HISTORY_VERBOSITY,
          hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
