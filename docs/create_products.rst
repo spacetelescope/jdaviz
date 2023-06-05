@@ -1,7 +1,7 @@
 .. _create_products:
 
 Creating Jdaviz-readable Products
-===============================
+=================================
 
 Spectroscopic data products (1D, 2D, and 3D) can be loaded
 in the different ``jdaviz`` configurations using
