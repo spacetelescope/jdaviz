@@ -564,13 +564,11 @@ def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
     viewer.apply_roi(XRangeROI(7200, 7400))
 
     viewer.apply_roi(XRangeROI(7600, 7800))
-    reg = specviz_helper.app.get_subsets("Subset 1")
-    print(reg)
 
     specviz_helper.app.session.edit_subset_mode.mode = XorMode
     viewer.apply_roi(XRangeROI(6700, 7700))
     reg = specviz_helper.app.get_subsets("Subset 1")
-    print(reg)
+
     assert reg[0].lower.value == 6400 and reg[0].upper.value == 6600
     assert reg[1].lower.value == 6700 and reg[1].upper.value == 7200
     assert reg[2].lower.value == 7400 and reg[2].upper.value == 7600
