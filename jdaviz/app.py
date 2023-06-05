@@ -1129,7 +1129,8 @@ class Application(VuetifyTemplate, HubListener):
                             new_region = new_region + temp_region.invert(one.lower, one.upper)
                         # This adds the edge regions that are otherwise not included
                         if not (one.lower == temp_region.lower and one.upper == temp_region.upper):
-                            new_region = new_region + one.invert(temp_region.lower, temp_region.upper)
+                            new_region = new_region + one.invert(temp_region.lower,
+                                                                 temp_region.upper)
                         return new_region
                     else:
                         return two + one

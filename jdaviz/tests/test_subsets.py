@@ -554,6 +554,7 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
     with pytest.raises(ValueError, match="AND mode should overlap with existing subset"):
         specviz_helper.app.get_subsets("Subset 1")
 
+
 def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
     specviz_helper.load_spectrum(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
