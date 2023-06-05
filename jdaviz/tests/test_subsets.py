@@ -553,3 +553,24 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
     viewer.apply_roi(XRangeROI(7800, 8000))
     with pytest.raises(ValueError, match="AND mode should overlap with existing subset"):
         specviz_helper.app.get_subsets("Subset 1")
+
+def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d)
+    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+
+    viewer.apply_roi(XRangeROI(6400, 6600))
+    specviz_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(XRangeROI(7200, 7400))
+
+    viewer.apply_roi(XRangeROI(7600, 7800))
+    reg = specviz_helper.app.get_subsets("Subset 1")
+    print(reg)
+
+    specviz_helper.app.session.edit_subset_mode.mode = XorMode
+    viewer.apply_roi(XRangeROI(6700, 7700))
+    reg = specviz_helper.app.get_subsets("Subset 1")
+    print(reg)
+    assert reg[0].lower.value == 6400 and reg[0].upper.value == 6600
+    assert reg[1].lower.value == 6700 and reg[1].upper.value == 7200
+    assert reg[2].lower.value == 7400 and reg[2].upper.value == 7600
+    assert reg[3].lower.value == 7700 and reg[3].upper.value == 7800

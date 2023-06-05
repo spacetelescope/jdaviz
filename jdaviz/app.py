@@ -1106,12 +1106,31 @@ class Application(VuetifyTemplate, HubListener):
                     #   (4.0 um, 4.5 um)    (5.0 um, 6.0 um)    (9.0 um, 12.0 um)
 
                     if isinstance(two, SpectralRegion):
-                        if one.lower > two.lower:
-                            # If one.lower is less than two.lower, it will be included
-                            # in the two.invert() call. Otherwise, we can add it like this.
-                            return (two.invert(one.lower, one.upper) +
-                                    one.invert(two.lower, two.upper))
-                        return two.invert(one.lower, one.upper)
+                        new_region = None
+                        temp_region = None
+                        for subregion in two:
+                            # Add all subregions that do not intersect with XOR region
+                            # to a new SpectralRegion object
+                            if subregion.lower > one.upper or subregion.upper < one.lower:
+                                if not new_region:
+                                    new_region = subregion
+                                else:
+                                    new_region += subregion
+                            # All other subregions are added to temp_region
+                            else:
+                                if not temp_region:
+                                    temp_region = subregion
+                                else:
+                                    temp_region += subregion
+                        # This is the main application of XOR to other regions
+                        if not new_region:
+                            new_region = temp_region.invert(one.lower, one.upper)
+                        else:
+                            new_region = new_region + temp_region.invert(one.lower, one.upper)
+                        # This adds the edge regions that are otherwise not included
+                        if not (one.lower == temp_region.lower and one.upper == temp_region.upper):
+                            new_region = new_region + one.invert(temp_region.lower, temp_region.upper)
+                        return new_region
                     else:
                         return two + one
             else:
@@ -1127,7 +1146,7 @@ class Application(VuetifyTemplate, HubListener):
             elif isinstance(subset_state, RangeSubsetState):
                 return self._get_range_subset_bounds(subset_state, simplify_spectral)
 
-    def convert_spectral_to_simpler_subset(self, subset_name, att, overwrite=False):
+    def simplify_spectral_subset(self, subset_name, att, overwrite=False):
         """
         Convert a composite spectral subset consisting of And, AndNot, Or, Replace, and Xor
         into one consisting of just Range and Or state objects.

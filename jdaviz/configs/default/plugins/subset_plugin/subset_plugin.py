@@ -46,6 +46,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     subplugins_opened = Any().tag(sync=True)
 
     is_centerable = Bool(False).tag(sync=True)
+    can_simplify = Bool(False).tag(sync=True)
 
     icon_replace = Unicode(read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_or = Unicode(read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
@@ -199,6 +200,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self.glue_state_types = self.glue_state_types + [glue_state]
                 self.subset_states = self.subset_states + [subset_state]
 
+        if len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState):
+            self.can_simplify = True
+        else:
+            self.can_simplify = False
+
     def _get_subset_definition(self, *args):
         """
         Retrieve the parameters defining the selected subset, for example the
@@ -218,8 +224,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                                sender=self))
             return
         att = self.subset_states[0].att
-        self.app.convert_spectral_to_simpler_subset(subset_name=self.subset_selected,
-                                                    att=att, overwrite=True)
+        self.app.simplify_spectral_subset(subset_name=self.subset_selected, att=att,
+                                          overwrite=True)
 
     def vue_update_subset(self, *args):
         status, reason = self._check_input()
