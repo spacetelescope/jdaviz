@@ -100,7 +100,9 @@ Manual Loading
 If an automatic parser is not provided yet for your data, Mosviz provides manual loading by
 specifying which files are which, and the associations between them. This is done by
 generating three lists containing the filenames for the 1D spectra,
-2D spectra, and images in your dataset. These three lists are taken as arguments
+2D spectra, and images in your dataset (if you are creating your own data products,
+please read the page :ref:`create_products`). 
+These three lists are taken as arguments
 by :py:meth:`~jdaviz.configs.mosviz.helper.Mosviz.load_data`. The association between files is
 assumed to be the order of each list (e.g., the first object consists of the first filename
 specified in each list, the second target is the second in each list, and so forth).

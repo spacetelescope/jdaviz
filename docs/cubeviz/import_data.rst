@@ -10,6 +10,7 @@ now supports 3D cubes and allows the Python-level interface and parsing tools to
 be defined in ``specutils`` instead of being duplicated in Jdaviz.
 :class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however,
 and hence should address most astronomical spectrum use cases.
+If you are creating your own data products, please read the page :ref:`create_products`.
 
 Cubeviz will automatically parse the data into the multiple viewers as described in
 :ref:`cubeviz-display-cubes`. For the best experience, data loaded into Cubeviz should contain valid WCS
