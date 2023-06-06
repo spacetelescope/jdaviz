@@ -20,4 +20,5 @@ if __name__ == "__main__":
         start_as_kernel()
     else:
         import jdaviz.cli
-        jdaviz.cli._main()
+        # should change this to _main, but now it doesn't need arguments
+        jdaviz.cli._imviz()
