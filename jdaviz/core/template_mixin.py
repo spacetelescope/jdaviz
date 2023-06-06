@@ -1496,6 +1496,9 @@ class DatasetSelect(SelectPluginComponent):
         def not_from_plugin(data):
             return data.meta.get('Plugin', None) is None
 
+        def not_from_this_plugin(data):
+            return data.meta.get('Plugin', None) != self.plugin.__class__.__name__
+
         def not_from_plugin_model_fitting(data):
             return data.meta.get('Plugin', None) != 'ModelFitting'
 

@@ -60,6 +60,9 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Gaussian smooth plugin excludes results from the gaussian smooth plugin from the input
+  dataset dropdown. [#2239]
+
 3.5.1 (unreleased)
 ==================
 
