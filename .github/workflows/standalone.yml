@@ -81,4 +81,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: jdaviz-standlone-${{ matrix.os }}
-        path: standalone/dist/jdaviz-cli
+        path: |
+          standalone/dist/jdaviz-cli
+          standalone/dist/jdaviz.app
