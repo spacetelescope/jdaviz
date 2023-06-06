@@ -88,7 +88,9 @@
     </div>
 
       <v-row justify="end" no-gutters>
-        <v-btn color="primary" text @click="simplify_subset" :disabled="!can_simplify">Simplify</v-btn>
+        <j-tooltip tooltipcontent="Convert composite subset to use only add mode to connect subregions">
+          <v-btn color="primary" text @click="simplify_subset" :disabled="!can_simplify">Simplify</v-btn>
+        </j-tooltip>
         <v-btn color="primary" text @click="update_subset">Update</v-btn>
       </v-row>
   </j-tray-plugin>
