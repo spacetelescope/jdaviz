@@ -7,7 +7,7 @@ import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
-from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
@@ -161,7 +161,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             glue_state = spec["glue_state"]
             if isinstance(subset_state, RoiSubsetState):
                 if isinstance(subset_state.roi, CircularROI):
-                    x, y = subset_state.roi.get_center()
+                    x, y = subset_state.roi.center()
                     r = subset_state.roi.radius
                     subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
                                          {"name": "Y Center", "att": "yc", "value": y, "orig": y},
@@ -178,8 +178,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
 
                 elif isinstance(subset_state.roi, EllipticalROI):
-                    xc = subset_state.roi.xc
-                    yc = subset_state.roi.yc
+                    xc, yc = subset_state.roi.center()
                     rx = subset_state.roi.radius_x
                     ry = subset_state.roi.radius_y
                     theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
@@ -189,6 +188,17 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
                         {"name": "Y Radius", "att": "radius_y", "value": ry, "orig": ry},
                         {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
+
+                elif isinstance(subset_state.roi, CircularAnnulusROI):
+                    x, y = subset_state.roi.center()
+                    inner_r = subset_state.roi.inner_radius
+                    outer_r = subset_state.roi.outer_radius
+                    subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
+                                         {"name": "Y Center", "att": "yc", "value": y, "orig": y},
+                                         {"name": "Inner radius", "att": "inner_radius",
+                                          "value": inner_r, "orig": inner_r},
+                                         {"name": "Outer radius", "att": "outer_radius",
+                                          "value": outer_r, "orig": outer_r}]
 
                 subset_type = subset_state.roi.__class__.__name__
 
@@ -389,7 +399,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         if isinstance(subset_state, RoiSubsetState):
             sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
+            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
                 cen = sbst_obj.get_center()
             elif isinstance(sbst_obj, RectangularROI):
                 cen = sbst_obj.center()
@@ -439,7 +449,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if isinstance(subset_state, RoiSubsetState):
             x, y = new_cen
             sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
+            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
                 self._set_value_in_subset_definition(0, "X Center", "value", x)
                 self._set_value_in_subset_definition(0, "Y Center", "value", y)
             elif isinstance(sbst_obj, RectangularROI):

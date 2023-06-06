@@ -12,11 +12,8 @@ import ipyvue
 from astropy import units as u
 from astropy.nddata import CCDData, NDData
 from astropy.io import fits
-from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.utils.decorators import deprecated
-from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
-
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -39,9 +36,9 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core.state_objects import State
 from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
                               CompositeSubsetState, InvertState)
-from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 from glue.core.units import unit_converter
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
+from glue_astronomy.translators.regions import roi_subset_state_to_spatial
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
@@ -1055,27 +1052,8 @@ class Application(VuetifyTemplate, HubListener):
         return spec_region
 
     def _get_roi_subset_definition(self, subset_state):
-        _around_decimals = 6
-        roi = subset_state.roi
-        roi_as_region = None
-        if isinstance(roi, CircularROI):
-            x, y = roi.get_center()
-            r = roi.radius
-            roi_as_region = CirclePixelRegion(PixCoord(x, y), r)
-
-        elif isinstance(roi, RectangularROI):
-            theta = np.around(np.degrees(roi.theta), decimals=_around_decimals)
-            roi_as_region = RectanglePixelRegion(PixCoord(roi.center()[0], roi.center()[1]),
-                                                 roi.width(), roi.height(), Angle(theta, "deg"))
-
-        elif isinstance(roi, EllipticalROI):
-            xc = roi.xc
-            yc = roi.yc
-            rx = roi.radius_x
-            ry = roi.radius_y
-            theta = np.around(np.degrees(roi.theta), decimals=_around_decimals)
-            roi_as_region = EllipsePixelRegion(PixCoord(xc, yc), rx * 2, ry * 2, Angle(theta, "deg"))  # noqa: E501
-
+        # TODO: Imviz: Return sky region if link type is WCS.
+        roi_as_region = roi_subset_state_to_spatial(subset_state)
         return [{"name": subset_state.roi.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
                  "region": roi_as_region,

@@ -3,9 +3,10 @@ import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core import Data
-from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, XRangeROI
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
-from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
+from regions import (PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion,
+                     CircleAnnulusPixelRegion)
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion, Spectrum1D
 
@@ -316,7 +317,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
                        'subset_state': reg[-1]['subset_state']}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(EllipticalROI(30, 30, 3, 6))
+    viewer.apply_roi(EllipticalROI(xc=30, yc=30, radius_x=3, radius_y=6))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
                                   width=6, height=12, angle=0.0 * u.deg)
@@ -368,7 +369,7 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
                        'subset_state': reg[-1]['subset_state']}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(EllipticalROI(30, 30, 3, 6))
+    viewer.apply_roi(EllipticalROI(xc=30, yc=30, radius_x=3, radius_y=6))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
                                   width=6, height=12, angle=0.0 * u.deg)
@@ -413,7 +414,7 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = np.ones((10, 10))
 
     data_label = 'image-data'
-    viewer = imviz_helper.app.get_viewer('imviz-0')
+    viewer = imviz_helper.default_viewer
     imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=True)
     viewer.apply_roi(CircularROI(xc=5, yc=5, radius=2))
     reg = imviz_helper.app.get_subsets("Subset 1")
@@ -422,7 +423,7 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
                        'subset_state': reg[-1]['subset_state']}
 
     imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(RectangularROI(2, 4, 2, 4))
+    viewer.apply_roi(RectangularROI(xmin=2, xmax=4, ymin=2, ymax=4))
     reg = imviz_helper.app.get_subsets("Subset 1")
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=3, y=3),
                                       width=2, height=2, angle=0.0 * u.deg)
@@ -430,17 +431,25 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
                        'subset_state': reg[-1]['subset_state']}
 
     imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(EllipticalROI(3, 3, 3, 6))
+    viewer.apply_roi(EllipticalROI(xc=3, yc=3, radius_x=3, radius_y=6))
     reg = imviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
                                   width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
                        'subset_state': reg[-1]['subset_state']}
 
+    imviz_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(CircularAnnulusROI(xc=5, yc=5, inner_radius=2.5, outer_radius=5))
+    reg = imviz_helper.app.get_subsets("Subset 1")
+    ann1 = CircleAnnulusPixelRegion(center=PixCoord(x=5, y=5), inner_radius=2.5, outer_radius=5)
+    assert reg[-1] == {'name': 'CircularAnnulusROI', 'glue_state': 'OrState', 'region': ann1,
+                       'subset_state': reg[-1]['subset_state']}
+
     subset_plugin = imviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.subset_selected == "Subset 1"
-    assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI']
-    assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'AndNotState']
+    assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI',
+                                          'CircularAnnulusROI']
+    assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'AndNotState', 'OrState']
 
 
 def test_with_invalid_subset_name(cubeviz_helper):
