@@ -24,14 +24,14 @@ from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
-                                        SubsetSelect, TableMixin)
-from jdaviz.utils import bqplot_clear_figure, PRIHDR_KEY
+                                        SubsetSelect, TableMixin, PlotMixin)
+from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
 
 
 @tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
-class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin):
+class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin, PlotMixin):
     template_file = __file__, "aper_phot_simple.vue"
     subset_items = List([]).tag(sync=True)
     subset_selected = Unicode("").tag(sync=True)
@@ -83,10 +83,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         self._selected_data = None
         self._selected_subset = None
-        self._fig = bqplot.Figure()
         self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
         self._fitted_model_name = 'phot_radial_profile'
+
+        self.plot.add_line('line', color='gray', marker_size=32)
+        self.plot.add_scatter('scatter', color='gray', default_size=1)
+        self.plot.add_line('fit_line', color='magenta', line_style='dashed')
 
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
@@ -345,48 +348,40 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 self.table.add_item(phot_table)
 
             # Plots.
-            # TODO: Jenn wants title at bottom.
-            bqplot_clear_figure(self._fig)
-            self._fig.title_style = {'font-size': '12px'}
-            # NOTE: default margin in bqplot is 60 in all directions
-            self._fig.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
-            line_x_sc = bqplot.LinearScale()
-            line_y_sc = bqplot.LinearScale()
+            line = self.plot.marks['line']
+            sc = self.plot.marks['scatter']
+            fit_line = self.plot.marks['fit_line']
 
             if self.current_plot_type == "Curve of Growth":
-                self._fig.title = 'Curve of growth from aperture center'
+                self.plot.figure.title = 'Curve of growth from aperture center'
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
                     comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
                     wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
-                self._fig.axes = [bqplot.Axis(scale=line_x_sc, label=x_label),
-                                  bqplot.Axis(scale=line_y_sc, orientation='vertical',
-                                              label=y_label)]
-                bqplot_line = bqplot.Lines(x=x_arr, y=sum_arr, marker='circle',
-                                           scales={'x': line_x_sc, 'y': line_y_sc},
-                                           marker_size=32, colors='gray')
-                bqplot_marks = [bqplot_line]
+                line.x, line.y = x_arr, sum_arr
+                sc.x, sc.y = [], []
+                self.plot.figure.axes[0].label = x_label
+                self.plot.figure.axes[1].label = y_label
 
             else:  # Radial profile
-                self._fig.axes = [bqplot.Axis(scale=line_x_sc, label='pix'),
-                                  bqplot.Axis(scale=line_y_sc, orientation='vertical',
-                                              label=comp.units or 'Value')]
+                self.plot.figure.axes[0].label = 'pix'
+                self.plot.figure.axes[1].label = comp.units or 'Value'
 
                 if self.current_plot_type == "Radial Profile":
-                    self._fig.title = 'Radial profile from aperture center'
+                    self.plot.figure.title = 'Radial profile from aperture center'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=False)
-                    bqplot_line = bqplot.Lines(x=x_data, y=y_data, marker='circle',
-                                               scales={'x': line_x_sc, 'y': line_y_sc},
-                                               marker_size=32, colors='gray')
+                    line.x, line.y = x_data, y_data
+                    sc.x, sc.y = [], []
+
                 else:  # Radial Profile (Raw)
-                    self._fig.title = 'Raw radial profile from aperture center'
+                    self.plot.figure.title = 'Raw radial profile from aperture center'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=True)
-                    bqplot_line = bqplot.Scatter(x=x_data, y=y_data, marker='circle',
-                                                 scales={'x': line_x_sc, 'y': line_y_sc},
-                                                 default_size=1, colors='gray')
+
+                    line.x, line.y = [], []
+                    sc.x, sc.y = x_data, y_data
 
                 # Fit Gaussian1D to radial profile data.
                 if self.fit_radial_profile:
@@ -412,21 +407,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                             f"Radial profile fitting: {msg}", color='warning', sender=self))
                     y_fit = fit_model(x_data)
                     self.app.fitted_models[self._fitted_model_name] = fit_model
-                    bqplot_fit = bqplot.Lines(x=x_data, y=y_fit, marker=None,
-                                              scales={'x': line_x_sc, 'y': line_y_sc},
-                                              colors='magenta', line_style='dashed')
-                    bqplot_marks = [bqplot_line, bqplot_fit]
+
+                    fit_line.x, fit_line.y = x_data, y_fit
                 else:
-                    bqplot_marks = [bqplot_line]
+                    fit_line.x, fit_line.y = [], []
 
         except Exception as e:  # pragma: no cover
-            bqplot_clear_figure(self._fig)
+            self.plot.clear_plot()
             msg = f"Aperture photometry failed: {repr(e)}"
             self.hub.broadcast(SnackbarMessage(msg, color='error', sender=self))
             self.result_failed_msg = msg
         else:
             self.result_failed_msg = ''
-            self._fig.marks = bqplot_marks
 
             # Parse results for GUI.
             tmp = []
@@ -464,8 +456,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             self.results = tmp
             self.fit_results = fit_tmp
             self.result_available = True
-            self.radial_plot = self._fig
-            self.bqplot_figs_resize = [self._fig]
             self.plot_available = True
 
 

@@ -1,12 +1,9 @@
-import bqplot
-from ipywidgets import widget_serialization
 from traitlets import Any, Bool, List, Unicode, observe
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin
-from jdaviz.utils import bqplot_clear_figure
+from jdaviz.core.template_mixin import PluginTemplateMixin, Plot
 
 __all__ = ['LineProfileXY']
 
@@ -19,17 +16,27 @@ class LineProfileXY(PluginTemplateMixin):
     plot_available = Bool(False).tag(sync=True)
     selected_x = Any('').tag(sync=True)
     selected_y = Any('').tag(sync=True)
-    line_plot_across_x = Any('').tag(sync=True, **widget_serialization)
-    line_plot_across_y = Any('').tag(sync=True, **widget_serialization)
+
+    plot_across_x_widget = Unicode().tag(sync=True)
+    plot_across_y_widget = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._default_viewer = f'{self.app.config}-0'
 
+        self.plot_across_x = Plot(self)
+        self.plot_across_x.add_line('line', color='gray')
+        self.plot_across_x.figure.axes[0].label = 'Y (pix)'
+        self.plot_across_x_widget = 'IPY_MODEL_'+self.plot_across_x.model_id
+
+        self.plot_across_y = Plot(self)
+        self.plot_across_y.add_line('line', color='gray')
+        self.plot_across_y.figure.axes[0].label = 'X (pix)'
+        self.plot_across_y_widget = 'IPY_MODEL_'+self.plot_across_y.model_id
+
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
         self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
 
-        self._figs = [bqplot.Figure(), bqplot.Figure()]
         self._on_viewers_changed()  # Populate it on start-up
 
     def _on_viewers_changed(self, msg=None):
@@ -41,10 +48,8 @@ class LineProfileXY(PluginTemplateMixin):
 
     def reset_results(self):
         self.plot_available = False
-        self.line_plot_across_x = ''
-        self.line_plot_across_y = ''
-        for fig in self._figs:
-            bqplot_clear_figure(fig)
+        self.plot_across_x.clear_plot()
+        self.plot_across_y.clear_plot()
 
     # This is also triggered from viewer code.
     @observe("selected_viewer")
@@ -81,24 +86,12 @@ class LineProfileXY(PluginTemplateMixin):
         else:
             y_label = 'Value'
 
-        # Clear bqplot figures.
-        fig_x = self._figs[0]
-        bqplot_clear_figure(fig_x)
-        fig_y = self._figs[1]
-        bqplot_clear_figure(fig_y)
+        self.plot_across_x.figure.title = f'X={x}'
+        line_x = self.plot_across_x.marks['line']
+        line_x.x, line_x.y = range(comp.data.shape[0]), comp.data[:, x]
+        line_x.scales['x'].min, line_x.scales['x'].max = y_min, y_max
+        self.plot_across_x.figure.axes[1].label = y_label
 
-        fig_x.title = f'X={x}'
-        fig_x.title_style = {'font-size': '12px'}
-        fig_x.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
-        line_x_x_sc = bqplot.LinearScale()
-        line_x_y_sc = bqplot.LinearScale()
-        line_x = bqplot.Lines(x=range(comp.data.shape[0]), y=comp.data[:, x],
-                              scales={'x': line_x_x_sc, 'y': line_x_y_sc}, colors='gray')
-        fig_x.marks = [line_x]
-        fig_x.axes = [bqplot.Axis(scale=line_x_x_sc, label='Y (pix)'),
-                      bqplot.Axis(scale=line_x_y_sc, orientation='vertical', label=y_label)]
-        line_x.scales['x'].min = y_min
-        line_x.scales['x'].max = y_max
         y_min = max(int(y_min), 0)
         y_max = min(int(y_max), ny)
         zoomed_data_x = comp.data[y_min:y_max, x]
@@ -106,18 +99,12 @@ class LineProfileXY(PluginTemplateMixin):
             line_x.scales['y'].min = zoomed_data_x.min() * 0.95
             line_x.scales['y'].max = zoomed_data_x.max() * 1.05
 
-        fig_y.title = f'Y={y}'
-        fig_y.title_style = {'font-size': '12px'}
-        fig_y.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
-        line_y_x_sc = bqplot.LinearScale()
-        line_y_y_sc = bqplot.LinearScale()
-        line_y = bqplot.Lines(x=range(comp.data.shape[1]), y=comp.data[y, :],
-                              scales={'x': line_y_x_sc, 'y': line_y_y_sc}, colors='gray')
-        fig_y.marks = [line_y]
-        fig_y.axes = [bqplot.Axis(scale=line_y_x_sc, label='X (pix)'),
-                      bqplot.Axis(scale=line_y_y_sc, orientation='vertical', label=y_label)]
-        line_y.scales['x'].min = x_min
-        line_y.scales['x'].max = x_max
+        self.plot_across_y.figure.title = f'Y={y}'
+        line_y = self.plot_across_y.marks['line']
+        line_y.x, line_y.y = range(comp.data.shape[1]), comp.data[y, :]
+        line_y.scales['x'].min, line_y.scales['x'].max = x_min, x_max
+        self.plot_across_y.figure.axes[1].label = y_label
+
         x_min = max(int(x_min), 0)
         x_max = min(int(x_max), nx)
         zoomed_data_y = comp.data[y, x_min:x_max]
@@ -125,7 +112,4 @@ class LineProfileXY(PluginTemplateMixin):
             line_y.scales['y'].min = zoomed_data_y.min() * 0.95
             line_y.scales['y'].max = zoomed_data_y.max() * 1.05
 
-        self.line_plot_across_x = fig_x
-        self.line_plot_across_y = fig_y
-        self.bqplot_figs_resize = self._figs
         self.plot_available = True
