@@ -24,13 +24,11 @@ datas = [
     *collect_data_files("glue"),
     *collect_data_files("glue_jupyter"),
     *collect_data_files("bqplot"),
-    *collect_data_files("jdaviz"),
     *collect_data_files("ipypopout"),
 ]
 binaries = []
 # jdaviz is not imported condinally in jdaviz-cli-entrypoint.py, so a hidden import
 hiddenimports = []
-hiddenimports += collect_submodules("jdaviz")
 hiddenimports += collect_submodules("regions")
 hiddenimports += collect_submodules("photutils")
 hiddenimports += collect_submodules("jupyter_client")
@@ -53,7 +51,7 @@ a = Analysis(
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
-    hookspath=[],
+    hookspath=["hooks"],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
