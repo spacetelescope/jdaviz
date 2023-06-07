@@ -1006,7 +1006,7 @@ class Application(VuetifyTemplate, HubListener):
             rx = roi.radius_x
             ry = roi.radius_y
             theta = np.around(np.degrees(roi.theta), decimals=_around_decimals)
-            roi_as_region = EllipsePixelRegion(PixCoord(xc, yc), rx, ry, Angle(theta, "deg"))
+            roi_as_region = EllipsePixelRegion(PixCoord(xc, yc), rx * 2, ry * 2, Angle(theta, "deg"))  # noqa: E501
 
         return [{"name": subset_state.roi.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
