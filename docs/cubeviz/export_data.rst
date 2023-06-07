@@ -41,7 +41,7 @@ To get all subsets from the spectrum viewer:
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.app.get_subsets_from_viewer("spectrum-viewer")
+    subset1_spec1d = cubeviz.app.get_subsets()
 
 To access the spatial regions themselves:
 

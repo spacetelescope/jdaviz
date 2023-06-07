@@ -14,6 +14,7 @@ from astropy.nddata import CCDData, NDData
 from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.time import Time
+from astropy.utils.exceptions import AstropyDeprecationWarning
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
@@ -802,6 +803,9 @@ class Application(VuetifyTemplate, HubListener):
             representing the subset name and values as astropy regions
             objects.
         """
+        warnings.warn(AstropyDeprecationWarning("get_subsets_from_viewer() is deprecated in v3.6 "
+                                                "and will be removed in a future release. Use "
+                                                "get_subsets() instead."))
         viewer = self.get_viewer(viewer_reference)
         data = self.get_data_from_viewer(viewer_reference,
                                          data_label,
