@@ -42,6 +42,8 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Fixed wrong elliptical region translation in ``app.get_subsets()``. [#2244]
+
 Cubeviz
 ^^^^^^^
 
