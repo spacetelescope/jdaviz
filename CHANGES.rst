@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fixed wrong elliptical region translation in ``app.get_subsets()``. [#2244, #2246]
+
 Cubeviz
 ^^^^^^^
 

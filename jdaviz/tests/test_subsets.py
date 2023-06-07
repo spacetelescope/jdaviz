@@ -332,7 +332,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     viewer.apply_roi(EllipticalROI(30, 30, 3, 6))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
-                                  width=3, height=6, angle=0.0 * u.deg)
+                                  width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'OrState', 'region': ellipse1,
                        'subset_state': reg[-1]['subset_state']}
 
@@ -384,18 +384,18 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     viewer.apply_roi(EllipticalROI(30, 30, 3, 6))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
-                                  width=3, height=6, angle=0.0 * u.deg)
+                                  width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
                        'subset_state': reg[-1]['subset_state']}
 
     regions_list = cubeviz_helper.app.get_subsets("Subset 1", object_only=True)
     assert len(regions_list) == 3
-    assert regions_list[-1].width == 3
+    assert regions_list[-1].width == 6
 
     regions_list = cubeviz_helper.app.get_subsets("Subset 1", spatial_only=True,
                                                   object_only=True)
     assert len(regions_list) == 3
-    assert regions_list[-1].width == 3
+    assert regions_list[-1].width == 6
 
     spatial_list = cubeviz_helper.app.get_subsets("Subset 1", spatial_only=True)
     assert len(spatial_list) == 3
@@ -446,7 +446,7 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     viewer.apply_roi(EllipticalROI(3, 3, 3, 6))
     reg = imviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
-                                  width=3, height=6, angle=0.0 * u.deg)
+                                  width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
                        'subset_state': reg[-1]['subset_state']}
 
