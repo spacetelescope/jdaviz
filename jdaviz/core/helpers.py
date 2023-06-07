@@ -658,12 +658,17 @@ class ImageConfigHelper(ConfigHelper):
             If not requested, return `None`.
 
         """
+        if len(self.app.data_collection) == 0:
+            raise ValueError('Cannot load regions without data.')
+
         from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                         EllipticalAperture, SkyEllipticalAperture,
-                                        RectangularAperture, SkyRectangularAperture)
+                                        RectangularAperture, SkyRectangularAperture,
+                                        CircularAnnulus, SkyCircularAnnulus)
         from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
                              EllipsePixelRegion, EllipseSkyRegion,
-                             RectanglePixelRegion, RectangleSkyRegion)
+                             RectanglePixelRegion, RectangleSkyRegion,
+                             CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
         from jdaviz.core.region_translators import regions2roi, aperture2regions
 
         # If user passes in one region obj instead of list, try to be smart.
@@ -688,23 +693,27 @@ class ImageConfigHelper(ConfigHelper):
         has_wcs = data_has_valid_wcs(data, ndim=2)
 
         for region in regions:
-            if isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
-                                   SkyRectangularAperture, CircleSkyRegion,
-                                   EllipseSkyRegion, RectangleSkyRegion)) and not has_wcs:
+            if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
+                                    SkyRectangularAperture, SkyCircularAnnulus,
+                                    CircleSkyRegion, EllipseSkyRegion,
+                                    RectangleSkyRegion, CircleAnnulusSkyRegion))
+                    and not has_wcs):
                 bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
                 continue
 
             # photutils: Convert to regions shape first
             if isinstance(region, (CircularAperture, SkyCircularAperture,
                                    EllipticalAperture, SkyEllipticalAperture,
-                                   RectangularAperture, SkyRectangularAperture)):
+                                   RectangularAperture, SkyRectangularAperture,
+                                   CircularAnnulus, SkyCircularAnnulus)):
                 region = aperture2regions(region)
 
             # regions: Convert to ROI.
             # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
             if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
                                    EllipsePixelRegion, EllipseSkyRegion,
-                                   RectanglePixelRegion, RectangleSkyRegion)):
+                                   RectanglePixelRegion, RectangleSkyRegion,
+                                   CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
                 state = regions2roi(region, wcs=data.coords)
 
                 # TODO: Do we want user to specify viewer? Does it matter?

@@ -1,17 +1,14 @@
-import glue_astronomy
 import numpy as np
+import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.utils.data import get_pkg_data_filename
-from packaging.version import Version
 from photutils.aperture import CircularAperture, SkyCircularAperture
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
                      EllipsePixelRegion, PointSkyRegion, PolygonPixelRegion,
                      CircleAnnulusPixelRegion, CircleAnnulusSkyRegion, Regions)
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
-
-GLUE_ASTRONOMY_LT_0_7_1 = not (Version(glue_astronomy.__version__) >= Version("0.7.1.dev"))
 
 
 class BaseRegionHandler:
@@ -122,13 +119,15 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
 
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
-        # This will become indistinguishable from normal Subset.
+        # These will become indistinguishable from normal Subset.
         my_reg_sky_1 = CircleSkyRegion(sky, Angle(0.5, u.arcsec))
-        # Masked subset.
         my_reg_sky_2 = CircleAnnulusSkyRegion(center=sky, inner_radius=0.0004 * u.deg,
                                               outer_radius=0.0005 * u.deg)
-        # Add them both.
-        bad_regions = self.imviz.load_regions([my_reg_sky_1, my_reg_sky_2], return_bad_regions=True)
+        # Masked subset.
+        my_reg_sky_3 = PolygonPixelRegion(vertices=PixCoord(x=[1, 1, 3, 3, 1], y=[1, 3, 3, 1, 1]))
+        # Add them all.
+        bad_regions = self.imviz.load_regions([my_reg_sky_1, my_reg_sky_2, my_reg_sky_3],
+                                              return_bad_regions=True)
         assert len(bad_regions) == 0
 
         # Mimic interactive regions (after)
@@ -139,14 +138,27 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # that check hopefully is already done in glue-astronomy.
         # Apparently, static region ate up one number...
         subsets = self.imviz.get_interactive_regions()
-        assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 4', 'Subset 5'], subsets
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3', 'Subset 5', 'Subset 6'], subsets  # noqa: E501
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
-        assert isinstance(subsets['Subset 4'], EllipsePixelRegion)
-        assert isinstance(subsets['Subset 5'], RectanglePixelRegion)
+        assert isinstance(subsets['Subset 3'], CircleAnnulusPixelRegion)
+        assert isinstance(subsets['Subset 5'], EllipsePixelRegion)
+        assert isinstance(subsets['Subset 6'], RectanglePixelRegion)
 
         # Check static region
         self.verify_region_loaded('MaskedSubset 1')
+
+    def test_regions_annulus_from_load_data(self):
+        # This file actually will load 2 annuli
+        regfile = get_pkg_data_filename('data/ds9_annulus_01.reg')
+        self.imviz.load_data(regfile)
+        assert len(self.imviz.app.data_collection) == 2  # Make sure not loaded as data
+
+        subsets = self.imviz.get_interactive_regions()
+        subset_names = list(subsets.keys())
+        assert subset_names == ['Subset 1', 'Subset 2']
+        for n in subset_names:
+            assert isinstance(subsets[n], CircleAnnulusPixelRegion)
 
     def test_photutils_pixel(self):
         my_aper = CircularAperture((5, 5), r=2)
@@ -173,18 +185,21 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.raw_regions = Regions.read(self.region_file, format='ds9')
 
     def test_ds9_load_all(self, imviz_helper):
+        with pytest.raises(ValueError, match="Cannot load regions without data"):
+            imviz_helper.load_data(self.region_file)
+
         self.viewer = imviz_helper.default_viewer
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.load_regions_from_file(self.region_file, return_bad_regions=True)
         assert len(bad_regions) == 1
 
-        # Will load 8/9 and 6 of that become ROIs.
+        # Will load 8/9 and 7 of that become ROIs.
         subsets = imviz_helper.get_interactive_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3',
-                                        'Subset 4', 'Subset 5', 'Subset 6'], subsets
+                                        'Subset 4', 'Subset 5', 'Subset 6', 'Subset 7'], subsets
 
-        for i in (1, 2):  # The other 2 are MaskedSubset
-            self.verify_region_loaded(f'MaskedSubset {i}', count=1)
+        # The other 1 is MaskedSubset
+        self.verify_region_loaded('MaskedSubset 1', count=1)
 
     def test_ds9_load_two_good(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer
@@ -234,18 +249,12 @@ class TestGetInteractiveRegions(BaseImviz_WCS_NoWCS):
         new_subset = subset_groups[0].subset_state & ~subset_groups[1].subset_state
         self.viewer.apply_subset_state(new_subset)
 
-        # In older glue-astronomy, annulus is no longer accessible by API
-        # but also should not crash Imviz.
         subsets = self.imviz.get_interactive_regions()
         assert len(self.imviz.app.data_collection.subset_groups) == 3
-        if GLUE_ASTRONOMY_LT_0_7_1:
-            expected_subset_keys = ['Subset 1', 'Subset 2']
-        else:
-            expected_subset_keys = ['Subset 1', 'Subset 2', 'Subset 3']
-            assert isinstance(subsets['Subset 3'], CircleAnnulusPixelRegion)
-        assert list(subsets.keys()) == expected_subset_keys, subsets
+        assert list(subsets.keys()) == ['Subset 1', 'Subset 2', 'Subset 3'], subsets
         assert isinstance(subsets['Subset 1'], CirclePixelRegion)
         assert isinstance(subsets['Subset 2'], CirclePixelRegion)
+        assert isinstance(subsets['Subset 3'], CircleAnnulusPixelRegion)
 
         # Clear the regions for next test.
         self.imviz._delete_all_regions()

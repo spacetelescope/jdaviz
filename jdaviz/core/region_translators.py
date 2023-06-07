@@ -3,7 +3,7 @@
 """
 from astropy import units as u
 from astropy.coordinates import Angle
-from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
+from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, CircularAnnulusROI
 from photutils.aperture import (CircularAperture, SkyCircularAperture,
                                 EllipticalAperture, SkyEllipticalAperture,
                                 RectangularAperture, SkyRectangularAperture,
@@ -115,7 +115,8 @@ def regions2roi(region_shape, wcs=None):
     <glue.core.roi.CircularROI object at ...>
 
     """
-    if isinstance(region_shape, (CircleSkyRegion, EllipseSkyRegion, RectangleSkyRegion)):
+    if isinstance(region_shape, (CircleSkyRegion, EllipseSkyRegion, RectangleSkyRegion,
+                                 CircleAnnulusSkyRegion)):
         if wcs is None:
             raise ValueError(f'WCS must be provided for {region_shape}')
 
@@ -140,6 +141,10 @@ def regions2roi(region_shape, wcs=None):
         roi = RectangularROI(
             xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax,
             theta=region_shape.angle.to_value(u.radian))
+    elif isinstance(region_shape, CircleAnnulusPixelRegion):
+        roi = CircularAnnulusROI(
+            xc=region_shape.center.x, yc=region_shape.center.y,
+            inner_radius=region_shape.inner_radius, outer_radius=region_shape.outer_radius)
     else:
         raise NotImplementedError(f'{region_shape.__class__.__name__} is not supported')
 
