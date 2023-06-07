@@ -72,7 +72,8 @@ test = [
     "pytest-tornasync",
 ]
 docs = [
-    "sphinx-astropy[confv2]>=1.9.1"
+    "sphinx-astropy[confv2]>=1.9.1",
+    "sphinx_design"
 ]
 roman = [
     "roman_datamodels>=0.14.2",

@@ -2,6 +2,59 @@
 Jdaviz
 ######
 
+.. grid:: 3
+   :gutter: 1
+
+   .. grid-item-card::
+      :img-top: logos/imviz\ icon.svg
+
+      .. button-ref:: imviz/index
+         :expand:
+         :color: primary
+         :click-parent:
+
+         Jump to Imviz
+
+   .. grid-item-card::
+      :img-top: logos/specicon.svg
+
+      .. button-ref:: specviz/index
+         :expand:
+         :color: primary
+         :click-parent:
+
+         Jump to Specviz
+
+   .. grid-item-card::
+      :img-top: logos/cube.svg
+
+      .. button-ref:: cubeviz/index
+         :expand:
+         :color: primary
+         :click-parent:
+
+         Jump to Cubeviz
+
+   .. grid-item-card::
+      :img-top: logos/specviz2d\ icon.svg
+
+      .. button-ref:: specviz2d/index
+         :expand:
+         :color: primary
+         :click-parent:
+
+         Jump to Specviz2D
+
+   .. grid-item-card::
+      :img-top: logos/mos.svg
+
+      .. button-ref:: mosviz/index
+         :expand:
+         :color: primary
+         :click-parent:
+
+         Jump to Mosviz
+
 ``jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
@@ -43,15 +96,6 @@ contextual information like on-sky views of the spectrograph slit.
    under the "Materials and Videos" expandable section. Scroll down to the bottom of that section
    to find materials from the most recent session (JWebbinar 24, March 2023).
 
-*******************************
-JWST Instrument Modes in Jdaviz
-*******************************
-
-.. toctree::
-  :maxdepth: 2
-
-  index_jwst_modes
-
 ************
 Using Jdaviz
 ************
@@ -60,6 +104,15 @@ Using Jdaviz
   :maxdepth: 2
 
   index_using_jdaviz
+
+*******************************
+JWST Instrument Modes in Jdaviz
+*******************************
+
+.. toctree::
+  :maxdepth: 2
+
+  index_jwst_modes
 
 *****************
 Development Guide

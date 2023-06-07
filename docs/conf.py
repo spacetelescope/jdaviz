@@ -144,7 +144,7 @@ dev = "dev" in release
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
 
-extensions += ['sphinx.ext.extlinks']  # noqa: F405
+extensions += ['sphinx.ext.extlinks', 'sphinx_design']  # noqa: F405
 gh_tag = f'v{release}' if '.dev' not in release else 'main'
 extlinks = {'gh-tree': (f'https://github.com/spacetelescope/jdaviz/tree/{gh_tag}/%s', '%s'),
             'gh-notebook': (f'https://github.com/spacetelescope/jdaviz/blob/{gh_tag}/notebooks/%s.ipynb', '%s notebook')}  # noqa: E501
@@ -158,6 +158,9 @@ extlinks = {'gh-tree': (f'https://github.com/spacetelescope/jdaviz/tree/{gh_tag}
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
+html_css_files = ["jdaviz.css"]
+html_copy_source = False
+
 html_theme_options.update(  # noqa: F405
     {
         "github_url": "https://github.com/spacetelescope/jdaviz",
@@ -169,6 +172,7 @@ html_theme_options.update(  # noqa: F405
 )
 
 html_context = {
+    "default_mode": "light",
     "to_be_indexed": ["stable", "latest"],
     "is_development": dev,
     "github_user": "spacetelescope",
@@ -197,7 +201,7 @@ html_logo = 'logos/jdaviz.svg'
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-# html_favicon = ''
+html_favicon = 'logos/specviz2d.ico'
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
