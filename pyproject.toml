@@ -3,7 +3,7 @@ name = "jdaviz"
 description = "Astronomical data analysis development leveraging the Jupyter platform"
 requires-python = ">=3.8"
 authors = [
-    { name = "JDADF Developers", email = "rosteen@stsci.edu" },
+    { name = "JDADF Developers", email = "help@stsci.edu" },
 ]
 dependencies = [
     "packaging",
@@ -72,9 +72,7 @@ test = [
     "pytest-tornasync",
 ]
 docs = [
-    "sphinx-rtd-theme",
-    "sphinx-astropy",
-    "tomli; python_version <\"3.11\""
+    "sphinx-astropy[confv2]>=1.9.1"
 ]
 roman = [
     "roman_datamodels>=0.14.2",
