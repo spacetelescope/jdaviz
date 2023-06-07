@@ -209,7 +209,7 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
     assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
-    subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
+    subsets = cubeviz_helper.app.get_subsets(spatial_only=True)
     reg = subsets.get('Subset 2')[0]['region']
 
     assert len(subsets) == 1

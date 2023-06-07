@@ -73,8 +73,8 @@ def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
     cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'test')
     cubeviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(6600, 7400))
 
-    subsets = cubeviz_helper.app.get_subsets(spatial_only=True)
-    reg = subsets.get('Subset 1')[0]['region']
+    subsets = cubeviz_helper.app.get_subsets()
+    reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
     assert_allclose(reg.lower.value, 6600.)
