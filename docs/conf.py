@@ -25,26 +25,16 @@
 # Thus, any C-extensions that are needed to build the documentation will *not*
 # be accessible, and the documentation will not build correctly.
 
-import os
 import sys
 import datetime
-import importlib.metadata as importlib_metadata
 
-from pathlib import Path
-
-if sys.version_info < (3, 11):
-    import tomli as tomllib
-else:
-    import tomllib
+from jdaviz import __version__
 
 try:
-    from sphinx_astropy.conf.v1 import *  # noqa
+    from sphinx_astropy.conf.v2 import *  # noqa
 except ImportError:
     print('ERROR: the documentation requires the sphinx-astropy package to be installed')
     sys.exit(1)
-
-with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as configuration_file:
-    metadata = tomllib.load(configuration_file)
 
 # -- General configuration ----------------------------------------------------
 
@@ -52,7 +42,7 @@ with open(Path(__file__).parent.parent / "pyproject.toml", "rb") as configuratio
 highlight_language = 'python3'
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.2'
+# needs_sphinx = '1.2'
 
 # To perform a Sphinx version check that needs to be more specific than
 # major.minor, call `check_sphinx_version("x.y.z")` here.
@@ -60,7 +50,7 @@ highlight_language = 'python3'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns.append('_templates')
+exclude_patterns.append('_templates')  # noqa: F405
 
 # This is added to the end of RST files - a good place to put substitutions to
 # be used globally.
@@ -134,13 +124,13 @@ rst_epilog += """
 .. |icon-viewer-data-select| image:: /img/icons/viewer_data_select.png
   :scale: 30
   :alt: data select icon
-"""
+"""  # noqa: F405
 
 # -- Project information ------------------------------------------------------
 
 # This does not *have* to match the package name, but typically does
-project = metadata['project']['name']
-author = metadata['project']['authors'][0]['name']
+project = "jdaviz"
+author = "JDADF Developers"
 copyright = '{0}, {1}'.format(
     datetime.datetime.now().year, author)
 
@@ -149,15 +139,15 @@ copyright = '{0}, {1}'.format(
 # built documents.
 
 # The full version, including alpha/beta/rc tags.
-release = importlib_metadata.version(project)
+release = __version__
+dev = "dev" in release
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2])
 
-extensions += ['sphinx.ext.extlinks']
+extensions += ['sphinx.ext.extlinks', 'sphinx_design']  # noqa: F405
 gh_tag = f'v{release}' if '.dev' not in release else 'main'
 extlinks = {'gh-tree': (f'https://github.com/spacetelescope/jdaviz/tree/{gh_tag}/%s', '%s'),
-            'gh-notebook': (f'https://github.com/spacetelescope/jdaviz/blob/{gh_tag}/notebooks/%s.ipynb',
-                            '%s notebook')}
+            'gh-notebook': (f'https://github.com/spacetelescope/jdaviz/blob/{gh_tag}/notebooks/%s.ipynb', '%s notebook')}  # noqa: E501
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -168,33 +158,54 @@ extlinks = {'gh-tree': (f'https://github.com/spacetelescope/jdaviz/tree/{gh_tag}
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
+html_css_files = ["jdaviz.css"]
+html_copy_source = False
+
+html_theme_options.update(  # noqa: F405
+    {
+        "github_url": "https://github.com/spacetelescope/jdaviz",
+        "external_links": [
+            {"name": "Help Desk", "url": "http://jwsthelp.stsci.edu/"},
+        ],
+        "use_edit_page_button": True,
+    }
+)
+
+html_context = {
+    "default_mode": "light",
+    "to_be_indexed": ["stable", "latest"],
+    "is_development": dev,
+    "github_user": "spacetelescope",
+    "github_repo": "jdaviz",
+    "github_version": "main",
+    "doc_path": "docs",
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # To use a different custom theme, add the directory containing the theme.
-#html_theme_path = []
+# html_theme_path = []
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes. To override the custom theme, set this to the
 # name of a builtin theme or the name of a custom theme in html_theme_path.
-#html_theme = None
 
-html_theme = "sphinx_rtd_theme"
+# html_theme = "sphinx_rtd_theme"
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+# html_sidebars = {}
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = ''
+html_logo = 'logos/jdaviz.svg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = ''
+html_favicon = 'logos/specviz2d.ico'
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-#html_last_updated_fmt = ''
+# html_last_updated_fmt = ''
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -219,21 +230,6 @@ latex_documents = [('index', project + '.tex', project + u' Documentation',
 man_pages = [('index', project.lower(), project + u' Documentation',
               [author], 1)]
 
-
-# -- Options for the edit_on_github extension ---------------------------------
-
-if metadata['tool']['build_sphinx']['edit_on_github']:
-
-    extensions += ['sphinx_astropy.ext.edit_on_github']
-
-    edit_on_github_project = metadata['tool']['build_sphinx']['github_project']
-    edit_on_github_branch = "main"
-
-    edit_on_github_source_root = ""
-    edit_on_github_doc_root = "docs"
-
-# -- Resolving issue number to links in changelog -----------------------------
-github_issues_url = 'https://github.com/{0}/issues/'.format(metadata['tool']['build_sphinx']['github_project'])
 
 # -- Turn on nitpicky mode for sphinx (to warn about references not found) ----
 nitpicky = True
@@ -263,15 +259,16 @@ for line in open('nitpick-exceptions'):
     nitpick_ignore.append((dtype, target))
 
 # Extra intersphinx in addition to what is already in sphinx-astropy
-intersphinx_mapping['glue'] = ('http://docs.glueviz.org/en/stable/', None)
-intersphinx_mapping['glue_jupyter'] = ('https://glue-jupyter.readthedocs.io/en/stable/', None)
-intersphinx_mapping['regions'] = ('https://astropy-regions.readthedocs.io/en/stable/', None)
-intersphinx_mapping['skimage'] = ('https://scikit-image.org/docs/stable/', None)
-intersphinx_mapping['specutils'] = ('https://specutils.readthedocs.io/en/stable/', None)
-intersphinx_mapping['specreduce'] = ('https://specreduce.readthedocs.io/en/stable/', None)
-intersphinx_mapping['photutils'] = ('https://photutils.readthedocs.io/en/stable/', None)
-intersphinx_mapping['traitlets'] = ('https://traitlets.readthedocs.io/en/stable/', None)
-intersphinx_mapping['roman_datamodels'] = ('https://roman-datamodels.readthedocs.io/en/stable/', None)
+intersphinx_mapping.update({  # noqa: F405
+    'glue': ('http://docs.glueviz.org/en/stable/', None),
+    'glue_jupyter': ('https://glue-jupyter.readthedocs.io/en/stable/', None),
+    'photutils': ('https://photutils.readthedocs.io/en/stable/', None),
+    'regions': ('https://astropy-regions.readthedocs.io/en/stable/', None),
+    'roman_datamodels': ('https://roman-datamodels.readthedocs.io/en/stable/', None),
+    'skimage': ('https://scikit-image.org/docs/stable/', None),
+    'specreduce': ('https://specreduce.readthedocs.io/en/stable/', None),
+    'specutils': ('https://specutils.readthedocs.io/en/stable/', None),
+    'traitlets': ('https://traitlets.readthedocs.io/en/stable/', None)})
 
 # Options for linkcheck
 linkcheck_ignore = ['https://github.com/spacetelescope/jdaviz/settings/branches']

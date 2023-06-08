@@ -1,12 +1,11 @@
-
-.. image:: ../logos/cubeviz.svg
-   :width: 400
+.. |cubeviz_logo| image:: ../logos/cube.svg
+    :height: 42px
 
 .. _cubeviz:
 
-#######
-Cubeviz
-#######
+######################
+|cubeviz_logo| Cubeviz
+######################
 
 .. image:: https://stsci.box.com/shared/static/esod50xtbn07wvls1ia07urnr65tv2bj.gif
     :alt: Introductory video tour of the Cubeviz configuration and its features

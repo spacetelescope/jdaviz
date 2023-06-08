@@ -18,25 +18,25 @@ Open and Explore a Cube
 
 .. raw:: html
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/Xjo8jQPa0M0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/Xjo8jQPa0M0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Selecting Subsets
 =================
 
 .. raw:: html
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/G4oFVhxWu5I" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/G4oFVhxWu5I" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Model Fitting
 =============
 
 .. raw:: html
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/mxh7kjfvd5g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/mxh7kjfvd5g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Line Analysis
 =============
 
 .. raw:: html
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/STREWC6ugOI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/STREWC6ugOI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

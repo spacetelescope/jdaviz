@@ -1,11 +1,11 @@
-.. image:: ../logos/specviz2d.svg
-   :width: 400
+.. |specviz2d_logo| image:: ../logos/specviz2d\ icon.svg
+    :height: 42px
 
 .. _specviz2d:
 
-#########
-Specviz2D
-#########
+##########################
+|specviz2d_logo| Specviz2D
+##########################
 
 Specviz2d is a tool for visualization and quick-look analysis of 2D astronomical spectra.
 It incorporates visualization tools with analysis capabilities,

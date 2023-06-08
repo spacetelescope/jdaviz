@@ -1,6 +1,6 @@
-##########
-Developers
-##########
+###############
+Developer Guide
+###############
 
 Here is some documentation specific for developers.  
 

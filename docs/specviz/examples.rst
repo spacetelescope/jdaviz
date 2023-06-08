@@ -18,18 +18,18 @@ Open a Spectrum
 
 .. raw:: html
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/NxpDtzbNhmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/NxpDtzbNhmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Model Fitting
 =============
 
 .. raw:: html
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/YJVn5_BN6IM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/YJVn5_BN6IM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Line Analysis
 =============
 
 .. raw:: html
 
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/zATHqXpE84Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://www.youtube.com/embed/zATHqXpE84Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
