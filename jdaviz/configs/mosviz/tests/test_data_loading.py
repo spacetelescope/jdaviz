@@ -20,12 +20,14 @@ def test_load_spectrum1d(mosviz_helper, spectrum1d):
     assert dc_1.label == label
     assert dc_1.meta['uncertainty_type'] == 'std'
 
-    table = mosviz_helper.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name)
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
+    data = mosviz_helper.app.get_viewer(mosviz_helper._default_spectrum_viewer_reference_name
+                                        ).data()
 
-    assert isinstance(data[label], Spectrum1D)
+    assert len(data) == 1
+    assert isinstance(data[0], Spectrum1D)
 
     with pytest.raises(AttributeError):
         mosviz_helper.load_1d_spectra([1, 2, 3])
@@ -42,12 +44,14 @@ def test_load_image(mosviz_helper, mos_image):
     assert PRIHDR_KEY not in dc_1.meta
     assert dc_1.meta['RADESYS'] == 'ICRS'
 
-    table = mosviz_helper.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name)
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_helper.app.get_data_from_viewer('image-viewer')
+    data = mosviz_helper.app.get_viewer(mosviz_helper._default_image_viewer_reference_name
+                                        ).data()
 
-    dataval = data[f"{label} 0"]
+    assert len(data) == 1
+    dataval = data[0]
     assert isinstance(dataval, CCDData)
     assert dataval.shape == (55, 55)
 
@@ -63,12 +67,14 @@ def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
     assert dc_1.label == labels[0]
     assert dc_1.meta['uncertainty_type'] == 'std'
 
-    table = mosviz_helper.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name)
     table.select_row(0)
 
-    data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
+    data = mosviz_helper.app.get_viewer(mosviz_helper._default_spectrum_viewer_reference_name
+                                        ).data()
 
-    assert isinstance(data[labels[0]], Spectrum1D)
+    assert len(data) == 1
+    assert isinstance(data[0], Spectrum1D)
 
 
 def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
@@ -83,12 +89,14 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
     assert dc_1.label == labels[0]
     assert dc_1.meta['uncertainty_type'] == 'std'
 
-    table = mosviz_helper.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name)
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_helper.app.get_data_from_viewer('spectrum-viewer')
+    data = mosviz_helper.app.get_viewer(mosviz_helper._default_spectrum_viewer_reference_name
+                                        ).data()
 
-    assert isinstance(data[labels[0]], Spectrum1D)
+    assert len(data) == 1
+    assert isinstance(data[0], Spectrum1D)
 
 
 def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
@@ -102,12 +110,14 @@ def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
     assert dc_1.label == label
     assert dc_1.meta['INSTRUME'] == 'nirspec'
 
-    table = mosviz_helper.app.get_viewer('table-viewer')
+    table = mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name)
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_helper.app.get_data_from_viewer('spectrum-2d-viewer')
+    data = mosviz_helper.app.get_viewer(mosviz_helper._default_spectrum_viewer_reference_name
+                                        ).data()
 
-    assert data[label].shape == (1024, 15)
+    assert len(data) == 0
+    assert data[0].shape == (1024, 15)
 
 
 @pytest.mark.parametrize('label', [None, "Test Label"])
@@ -118,7 +128,8 @@ def test_load_multi_image_spec(mosviz_helper, mos_image, spectrum1d, mos_spectru
 
     mosviz_helper.load_data(spectra1d, spectra2d, images=images, images_label=label)
 
-    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name
+                                        ).figure_widget.highlighted == 0
     assert len(mosviz_helper.app.data_collection) == 10
 
     qtable = mosviz_helper.to_table()
@@ -134,7 +145,8 @@ def test_load_multi_image_and_spec1d_only(mosviz_helper, mos_image, spectrum1d):
 
     mosviz_helper.load_data(spectra_1d=spectra1d, images=images)
 
-    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name
+                                        ).figure_widget.highlighted == 0
     assert len(mosviz_helper.app.data_collection) == 7
 
 
@@ -144,7 +156,8 @@ def test_load_multi_image_and_spec2d_only(mosviz_helper, mos_image, mos_spectrum
 
     mosviz_helper.load_data(spectra_2d=spectra2d, images=images)
 
-    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name
+                                        ).figure_widget.highlighted == 0
     assert len(mosviz_helper.app.data_collection) == 7
 
 
@@ -170,7 +183,8 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
 
     mosviz_helper.load_data(spectra1d, spectra2d, images=mos_image, images_label=label)
 
-    assert mosviz_helper.app.get_viewer("table-viewer").figure_widget.highlighted == 0
+    assert mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name
+                                        ).figure_widget.highlighted == 0
     assert len(mosviz_helper.app.data_collection) == 8
 
     qtable = mosviz_helper.to_table()
