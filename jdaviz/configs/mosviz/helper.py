@@ -17,7 +17,6 @@ from jdaviz.core.events import SnackbarMessage, TableClickMessage, RedshiftMessa
 from jdaviz.configs.specviz import Specviz
 from jdaviz.configs.specviz.helper import _apply_redshift_to_spectra
 from jdaviz.configs.specviz2d import Specviz2d
-from jdaviz.configs.mosviz.mixins import Matched2dSpectrumMixin
 from jdaviz.configs.mosviz.plugins import jwst_header_to_skyregion
 from jdaviz.configs.mosviz.plugins.parsers import (
     FALLBACK_NAME, mos_spec1d_parser, mos_spec2d_parser)
@@ -26,7 +25,7 @@ from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMi
 __all__ = ['Mosviz']
 
 
-class Mosviz(ConfigHelper, Matched2dSpectrumMixin, LineListMixin):
+class Mosviz(ConfigHelper, LineListMixin):
     """Mosviz Helper class"""
 
     _default_configuration = "mosviz"
@@ -79,8 +78,6 @@ class Mosviz(ConfigHelper, Matched2dSpectrumMixin, LineListMixin):
 
         self._initialize_table()
         self._default_visible_columns = []
-
-        self._setup_xaxes_linking()
 
     def _initialize_table(self, label="MOS Table", table_viewer_reference_name='table-viewer'):
         '''

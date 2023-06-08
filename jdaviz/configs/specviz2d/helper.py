@@ -2,13 +2,12 @@ from jdaviz.configs.specviz import Specviz
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
-from jdaviz.configs.mosviz.mixins import Matched2dSpectrumMixin
 from jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction import SpectralExtraction  # noqa
 
 __all__ = ['Specviz2d']
 
 
-class Specviz2d(ConfigHelper, Matched2dSpectrumMixin, LineListMixin):
+class Specviz2d(ConfigHelper, LineListMixin):
     """Specviz2D Helper class"""
 
     _default_configuration = "specviz2d"
@@ -18,7 +17,6 @@ class Specviz2d(ConfigHelper, Matched2dSpectrumMixin, LineListMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._setup_xaxes_linking()
 
     @property
     def specviz(self):

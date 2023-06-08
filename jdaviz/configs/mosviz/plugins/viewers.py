@@ -71,7 +71,7 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['mosviz:homezoom', 'jdaviz:prevzoom'],
+                    ['mosviz:homezoom'],
                     ['mosviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
@@ -98,25 +98,32 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         self.session.hub.subscribe(self, RemoveDataFromViewerMessage,
                                    handler=self._on_viewer_data_changed)
 
-        self.scales['x'].observe(self._handle_x_axis_orientation, names=['min', 'max'])
+        for k in ('x_min', 'x_max'):
+            self.state.add_callback(k, self._handle_x_axis_orientation)
+
+    @cached_property
+    def reference_spectral_axis(self):
+        return self.state.reference_data.get_object().spectral_axis.value
 
     @cached_property
     def pixel_to_world_interp(self):
-        spectral_axis = self.state.reference_data.get_object().spectral_axis.value
-        pixels = range(len(spectral_axis))
-        return interp1d(pixels, spectral_axis)
+        pixels = range(len(self.reference_spectral_axis))
+        return interp1d(pixels, self.reference_spectral_axis)
 
     def pixel_to_world_limits(self, limits):
         if not len(limits) == 2:
             raise ValueError("limits must be length 2")
 
-        spectral_axis = self.state.reference_data.get_object().spectral_axis.value
-        pixels = np.arange(0, len(spectral_axis))
+        pixels = np.arange(0, len(self.reference_spectral_axis))
 
         # we'll use interpolation when possible, but also want to fit a line between
         # the outermost edge of the data within the limits
         line_edges_pix = np.array([max((min(pixels), min(limits))),
                                    min((max(pixels), max(limits)))])
+        if line_edges_pix[0] > line_edges_pix[1]:
+            # then the limits are entirely out of range, so use the whole range
+            # when fitting the linear approximation
+            line_edges_pix = np.array([min(pixels), max(pixels)])
         line_edges_world = self.pixel_to_world_interp(line_edges_pix)
         line_coeffs = np.polyfit(line_edges_pix, line_edges_world, deg=1)
 
@@ -138,24 +145,22 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
     @cached_property
     def world_to_pixel_interp(self):
-        spectral_axis = self.state.reference_data.get_object().spectral_axis.value
-        pixels = range(len(spectral_axis))
-        return interp1d(spectral_axis, pixels)
+        pixels = range(len(self.reference_spectral_axis))
+        return interp1d(self.reference_spectral_axis, pixels)
 
     def world_to_pixel_limits(self, limits):
         if not len(limits) == 2:
             raise ValueError("limits must be length 2")
 
-        spectral_axis = self.state.reference_data.get_object().spectral_axis.value
-
         # we'll use interpolation when possible, but also want to fit a line between
         # the outermost edge of the data within the limits
-        line_edges_world = np.array([max((min(spectral_axis), min(limits))),
-                                     min((max(spectral_axis), max(limits)))])
+        line_edges_world = np.array([max((min(self.reference_spectral_axis), min(limits))),
+                                     min((max(self.reference_spectral_axis), max(limits)))])
         if line_edges_world[0] > line_edges_world[1]:
             # then the limits are entirely out of range, so use the whole range
             # when fitting the linear approximation
-            line_edges_world = np.array([min(spectral_axis), max(spectral_axis)])
+            line_edges_world = np.array([min(self.reference_spectral_axis),
+                                         max(self.reference_spectral_axis)])
         line_edges_pixels = self.world_to_pixel_interp(line_edges_world)
         line_coeffs = np.polyfit(line_edges_world, line_edges_pixels, deg=1)
 
@@ -163,7 +168,7 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
             return line_coeffs[0] * world + line_coeffs[1]
 
         def map_world_to_pixel(world):
-            if spectral_axis[0] <= world <= spectral_axis[-1]:
+            if min(self.reference_spectral_axis) <= world <= max(self.reference_spectral_axis):
                 # interpolate directly
                 return float(self.world_to_pixel_interp(world))
             else:
@@ -178,8 +183,11 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
     def _on_viewer_data_changed(self, msg):
         if msg.viewer_reference != self.reference:
             return
-        # clear cached properties that are based on reference data
-        for attr in ('inverted_x_axis', 'pixel_to_world_interp', 'world_to_pixel_interp'):
+        # clear cached properties that are based on reference data - this is probably
+        # overly-conservative and we might be able to limit the clearing for only when
+        # reference data is changed (perhaps with a callback on the state for reference_data)
+        for attr in ('reference_spectral_axis', 'inverted_x_axis',
+                     'pixel_to_world_interp', 'world_to_pixel_interp'):
             if attr in self.__dict__:
                 del self.__dict__[attr]
         if len(self.data()):
@@ -187,12 +195,14 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
     @cached_property
     def inverted_x_axis(self):
-        spectral_axis = self.data()[0].spectral_axis
-        return spectral_axis[0] > spectral_axis[-1]
+        return self.reference_spectral_axis[0] > self.reference_spectral_axis[-1]
 
     def _handle_x_axis_orientation(self, *args):
         x_scales = self.scales['x']
         limits = [x_scales.min, x_scales.max]
+        limits_inverted = limits[0] > limits[1]
+        if limits_inverted == self.inverted_x_axis:
+            return
         with x_scales.hold_sync():
             x_scales.min = max(limits) if self.inverted_x_axis else min(limits)
             x_scales.max = min(limits) if self.inverted_x_axis else max(limits)
@@ -218,7 +228,7 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 class MosvizProfileView(SpecvizProfileView):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['mosviz:homezoom', 'jdaviz:prevzoom'],
+                    ['mosviz:homezoom'],
                     ['mosviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
                     ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
                     ['bqplot:xrange'],
