@@ -113,10 +113,10 @@ def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):
     table = mosviz_helper.app.get_viewer(mosviz_helper._default_table_viewer_reference_name)
     table.widget_table.vue_on_row_clicked(0)
 
-    data = mosviz_helper.app.get_viewer(mosviz_helper._default_spectrum_viewer_reference_name
+    data = mosviz_helper.app.get_viewer(mosviz_helper._default_spectrum_2d_viewer_reference_name
                                         ).data()
 
-    assert len(data) == 0
+    assert len(data) == 1
     assert data[0].shape == (1024, 15)
 
 
