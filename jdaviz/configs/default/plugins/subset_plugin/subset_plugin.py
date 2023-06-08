@@ -200,7 +200,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self.glue_state_types = self.glue_state_types + [glue_state]
                 self.subset_states = self.subset_states + [subset_state]
 
-        if len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState):
+        simplifiable_states = ['AndState', 'XorState', 'AndNotState']
+        # Check if the subset has more than one subregion, is a range subset type, and
+        # uses one of the states that can be simplified.
+        if (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
+                and len(set(simplifiable_states) - set(self.glue_state_types)) < 3):
             self.can_simplify = True
         else:
             self.can_simplify = False
