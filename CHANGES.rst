@@ -6,6 +6,9 @@ New Features
 
 - Introduce jdaviz.open to automatically detect the appropriate config and load data [#2221]
 
+- Add Simplify button to subset plugin to make composite spectral subsets more user
+  friendly. [#2237]
+
 Cubeviz
 ^^^^^^^
 
