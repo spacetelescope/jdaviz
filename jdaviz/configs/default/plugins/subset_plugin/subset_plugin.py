@@ -46,6 +46,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     subplugins_opened = Any().tag(sync=True)
 
     is_centerable = Bool(False).tag(sync=True)
+    can_simplify = Bool(False).tag(sync=True)
 
     icon_replace = Unicode(read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_or = Unicode(read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
@@ -199,6 +200,15 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self.glue_state_types = self.glue_state_types + [glue_state]
                 self.subset_states = self.subset_states + [subset_state]
 
+        simplifiable_states = set(['AndState', 'XorState', 'AndNotState'])
+        # Check if the subset has more than one subregion, is a range subset type, and
+        # uses one of the states that can be simplified.
+        if (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
+                and len(simplifiable_states - set(self.glue_state_types)) < 3):
+            self.can_simplify = True
+        else:
+            self.can_simplify = False
+
     def _get_subset_definition(self, *args):
         """
         Retrieve the parameters defining the selected subset, for example the
@@ -210,6 +220,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_states = []
 
         self._unpack_get_subsets_for_ui()
+
+    def vue_simplify_subset(self, *args):
+        if len(self.subset_states) < 2:
+            self.hub.broadcast(SnackbarMessage("Cannot simplify spectral subset "
+                                               "of length less than 2", color='warning',
+                                               sender=self))
+            return
+        att = self.subset_states[0].att
+        self.app.simplify_spectral_subset(subset_name=self.subset_selected, att=att,
+                                          overwrite=True)
 
     def vue_update_subset(self, *args):
         status, reason = self._check_input()
