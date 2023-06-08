@@ -2,7 +2,7 @@
 
 from zipfile import ZipFile
 
-from astropy.nddata import CCDData
+from glue.core import Data
 import numpy as np
 import pytest
 from specutils import Spectrum1D
@@ -52,7 +52,7 @@ def test_load_image(mosviz_helper, mos_image):
 
     assert len(data) == 1
     dataval = data[0]
-    assert isinstance(dataval, CCDData)
+    assert isinstance(dataval, Data)
     assert dataval.shape == (55, 55)
 
 
