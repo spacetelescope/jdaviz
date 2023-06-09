@@ -1244,18 +1244,22 @@ class Application(VuetifyTemplate, HubListener):
             Whether to update the current subset with the simplified state or apply it
             to a new subset.
         """
-        spectral_region = self.get_subsets(subset_name, spectral_only=True)
-        new_state = None
-        # Reverse through sub regions so that they are added back
-        # in the order of lowest values to highest
-        for index in range(len(spectral_region) - 1, -1, -1):
-            convert_to_range = RangeSubsetState(spectral_region[index].lower.value,
-                                                spectral_region[index].upper.value,
-                                                att)
-            if new_state is None:
-                new_state = convert_to_range
-            else:
-                new_state = new_state | convert_to_range
+        if self.is_there_overlap_spectral_subset(subset_name):
+            new_state = self.merge_overlapping_spectral_regions(subset_name, att)
+        else:
+            new_state = None
+            spectral_region = self.get_subsets(subset_name, spectral_only=True)
+            # new_state = None
+            # Reverse through sub regions so that they are added back
+            # in the order of lowest values to highest
+            for index in range(len(spectral_region) - 1, -1, -1):
+                convert_to_range = RangeSubsetState(spectral_region[index].lower.value,
+                                                    spectral_region[index].upper.value,
+                                                    att)
+                if new_state is None:
+                    new_state = convert_to_range
+                else:
+                    new_state = new_state | convert_to_range
 
         dc = self.data_collection
         if not overwrite:
@@ -1264,6 +1268,62 @@ class Application(VuetifyTemplate, HubListener):
             old_subset = [subsets for subsets in dc.subset_groups
                           if subsets.label == subset_name][0]
             old_subset.subset_state = new_state
+
+    def is_there_overlap_spectral_subset(self, subset_name):
+        """
+        Returns True if the spectral subset with subset_name has overlapping
+        subregions.
+        """
+        spectral_region = self.get_subsets(subset_name, spectral_only=True)
+        if not spectral_region or len(spectral_region) < 2:
+            return False
+        for index in range(0, len(spectral_region) - 1):
+            if spectral_region[index].upper.value >= spectral_region[index + 1].lower.value:
+                return True
+        return False
+
+    def merge_overlapping_spectral_regions(self, subset_name, att):
+        """
+        Takes a spectral subset with subset_name and returns an ``OrState`` object
+        that merges all overlapping subregions.
+
+        Parameters
+        ----------
+        subset_name : str
+            Name of subset to simplify.
+        att : str
+            Attribute that the subset uses to apply to data.
+        """
+        spectral_region = self.get_subsets(subset_name, spectral_only=True)
+        merged_regions = None
+        # Convert SpectralRegion object into a list with tuples representing
+        # the lower and upper values of each region.
+        reg_as_tup = [(sr.lower.value, sr.upper.value) for sr in spectral_region]
+        for index in range(0, len(spectral_region)):
+            # Instantiate merged regions
+            if not merged_regions:
+                merged_regions = [reg_as_tup[index]]
+            else:
+                last_merged = merged_regions[-1]
+                # If the lower value of the current subregion is less than or equal to the upper
+                # value of the last subregion added to merged_regions, update last_merged
+                # with the max upper value between the two regions.
+                if reg_as_tup[index][0] <= last_merged[1]:
+                    last_merged = (last_merged[0], max(last_merged[1], reg_as_tup[index][1]))
+                    merged_regions = merged_regions[:-1]
+                    merged_regions.append(last_merged)
+                else:
+                    merged_regions.append(reg_as_tup[index])
+
+        new_state = None
+        for region in reversed(merged_regions):
+            convert_to_range = RangeSubsetState(region[0], region[1], att)
+            if new_state is None:
+                new_state = convert_to_range
+            else:
+                new_state = new_state | convert_to_range
+
+        return new_state
 
     def add_data(self, data, data_label=None, notify_done=True):
         """
