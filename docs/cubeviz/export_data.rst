@@ -22,7 +22,7 @@ can be used to extract the *spectrum* of a spatial subset named "Subset 1":
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.specviz.get_spectra(subset_to_apply="Subset 1")
+    subset1_spec1d = cubeviz.specviz.get_spectra(spectral_subset="Subset 1")
 
 An example without accessing Specviz:
 

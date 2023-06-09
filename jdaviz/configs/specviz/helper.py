@@ -1,6 +1,7 @@
 import warnings
 
 from astropy import units as u
+from astropy.utils.decorators import deprecated_renamed_argument
 from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
@@ -68,7 +69,8 @@ class Specviz(ConfigHelper, LineListMixin):
                           show_in_viewer=show_in_viewer,
                           concat_by_file=concat_by_file)
 
-    def get_spectra(self, data_label=None, subset_to_apply=None, apply_slider_redshift="Warn"):
+    @deprecated_renamed_argument(old_name="subset_to_apply", new_name="spectral_subset", since="3.6")
+    def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
 
         """
@@ -81,16 +83,16 @@ class Specviz(ConfigHelper, LineListMixin):
 
         if data_label is not None:
             spectrum = get_data_method(data_label=data_label,
-                                       spectral_subset=subset_to_apply,
+                                       spectral_subset=spectral_subset,
                                        cls=Spectrum1D)
             spectra[data_label] = spectrum
         else:
             for layer_state in viewer.state.layers:
                 lyr = layer_state.layer
-                if subset_to_apply is not None:
-                    if lyr.label == subset_to_apply:
+                if spectral_subset is not None:
+                    if lyr.label == spectral_subset:
                         spectrum = get_data_method(data_label=lyr.data.label,
-                                                   spectral_subset=subset_to_apply,
+                                                   spectral_subset=spectral_subset,
                                                    cls=Spectrum1D,
                                                    **function_kwargs)
                         spectra[lyr.data.label] = spectrum
@@ -291,7 +293,7 @@ class Specviz(ConfigHelper, LineListMixin):
                  use_display_units=False, **kwargs):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
-        subset_to_apply.
+        spectral_subset.
 
         Parameters
         ----------
