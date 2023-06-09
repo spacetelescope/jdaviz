@@ -69,7 +69,7 @@ class Specviz(ConfigHelper, LineListMixin):
                           show_in_viewer=show_in_viewer,
                           concat_by_file=concat_by_file)
 
-    @deprecated_renamed_argument(old_name="subset_to_apply", new_name="spectral_subset", since="3.6")
+    @deprecated_renamed_argument("subset_to_apply", "spectral_subset", "3.6")
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
 
