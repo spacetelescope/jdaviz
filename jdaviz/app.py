@@ -15,7 +15,6 @@ from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.time import Time
 from astropy.utils.decorators import deprecated
-from astropy.utils.exceptions import AstropyDeprecationWarning
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
