@@ -990,15 +990,21 @@ class Application(VuetifyTemplate, HubListener):
         _around_decimals = 6
         roi = subset_state.roi
         roi_as_region = None
+        data = subset_state.xatt.parent
+
         if isinstance(roi, CircularROI):
             x, y = roi.get_center()
             r = roi.radius
             roi_as_region = CirclePixelRegion(PixCoord(x, y), r)
+            if data is not None and data.coords is not None:
+                roi_as_region = roi_as_region.to_sky(data.coords)
 
         elif isinstance(roi, RectangularROI):
             theta = np.around(np.degrees(roi.theta), decimals=_around_decimals)
             roi_as_region = RectanglePixelRegion(PixCoord(roi.center()[0], roi.center()[1]),
                                                  roi.width(), roi.height(), Angle(theta, "deg"))
+            if data is not None and data.coords is not None:
+                roi_as_region = roi_as_region.to_sky(data.coords)
 
         elif isinstance(roi, EllipticalROI):
             xc = roi.xc
@@ -1007,6 +1013,8 @@ class Application(VuetifyTemplate, HubListener):
             ry = roi.radius_y
             theta = np.around(np.degrees(roi.theta), decimals=_around_decimals)
             roi_as_region = EllipsePixelRegion(PixCoord(xc, yc), rx * 2, ry * 2, Angle(theta, "deg"))  # noqa: E501
+            if data is not None and data.coords is not None:
+                roi_as_region = roi_as_region.to_sky(data.coords)
 
         return [{"name": subset_state.roi.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
