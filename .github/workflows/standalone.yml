@@ -73,7 +73,7 @@ jobs:
     - name: Zip OSX app to maintain symlinks and to sign
       # if we do not call always() GHA will && with success()
       if: ${{ always() && (matrix.os == 'macos') }}
-      run: (cd standalone/dist; zip -r --symlinks jdaviz.zip jdaviz.app )
+      run: (cd standalone/dist; ditto -c -k --sequesterRsrc --keepParent jdaviz.app jdaviz.zip )
 
     - name: Notary step (OSX)
       if: ${{ matrix.os == 'macos' }}
@@ -89,7 +89,7 @@ jobs:
           xcrun notarytool log --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --password ${{ secrets.NOTARIZATION_PASSWORD }} $uuid || true
         fi
         # re-zip it
-        (cd standalone/dist; rm jdaviz.zip; zip -r --symlinks jdaviz.zip jdaviz.app )
+        (cd standalone/dist; rm jdaviz.zip; ditto -c -k --sequesterRsrc --keepParent jdaviz.app jdaviz.zip )
 
     - name: Validate app (OSX)
       if: ${{ matrix.os == 'macos' }}
