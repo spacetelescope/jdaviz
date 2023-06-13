@@ -51,6 +51,18 @@ jobs:
         DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
       run: (cd standalone; pyinstaller ./jdaviz.spec)
 
+    - name: Remove invalid files for OSX
+      # hopefully we can improve this in the future
+      # by using good hooks
+      if: ${{ matrix.os == 'macos' }}
+      run: |
+        rm -rf dist/jdaviz.app/Contents/Resources/skimage/.dylibs
+
+    - name: Notary step
+      if: ${{ matrix.os == 'macos' }}
+      run: |
+        xcrun notarytool submit standalone/dist/jdaviz.zip --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}
+
     - name: Run jdaviz cmd in background
       run: ./standalone/dist/jdaviz-cli/jdaviz-cli imviz&
 
