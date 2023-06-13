@@ -76,6 +76,11 @@ jobs:
       run: |
         xcrun notarytool submit standalone/dist/jdaviz.zip --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}
 
+    - name: Validate app (OSX)
+      if: ${{ matrix.os == 'macos' }}
+      run: |
+        spctl -a -vvv -t execute standalone/dist/jdaviz.app
+
     - name: Run jdaviz cmd in background
       run: ./standalone/dist/jdaviz-cli/jdaviz-cli imviz&
 
