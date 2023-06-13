@@ -13,7 +13,7 @@ import photutils
 import regions
 from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_submodules
 
-codesign_identity = None#os.environ.get("DEVELOPER_ID_APPLICATION")
+codesign_identity = os.environ.get("DEVELOPER_ID_APPLICATION")
 
 datas = [
     (Path(sys.prefix) / "share" / "jupyter", "./share/jupyter"),
