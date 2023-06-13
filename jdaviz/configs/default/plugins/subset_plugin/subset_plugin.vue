@@ -83,7 +83,7 @@
           v-model.number="item.value"
           type="number"
           style="padding-top: 0px; margin-top: 0px"
-          :suffix="item.unit.replace('Angstrom', 'A')"
+          :suffix="item.unit ? item.unit.replace('Angstrom', 'A') : ''"
         ></v-text-field>
       </v-row>
     </div>
