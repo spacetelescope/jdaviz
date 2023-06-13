@@ -65,6 +65,11 @@ jobs:
         cd standalone/dist
         codesign --deep --force --options=runtime --entitlements entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp jdaviz.app
 
+    - name: Zip OSX app to maintain symlinks and to sign
+      # if we do not call always() GHA will && with success()
+      if: ${{ always() && (matrix.os == 'macos') }}
+      run: (cd standalone/dist; zip -r --symlinks jdaviz.zip jdaviz.app )
+
     - name: Notary step (OSX)
       if: ${{ matrix.os == 'macos' }}
       run: |
@@ -94,11 +99,6 @@ jobs:
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
-
-    - name: Zip OSX app to maintain symlinks
-      # if we do not call always() GHA will && with success()
-      if: ${{ always() && (matrix.os == 'macos') }}
-      run: (cd standalone/dist; zip -r --symlinks jdaviz.zip jdaviz.app )
 
     - name: Upload jdaviz standalone
       if: always()
