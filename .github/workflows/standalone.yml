@@ -80,13 +80,16 @@ jobs:
       run: |
         output=$(xcrun notarytool submit standalone/dist/jdaviz.zip --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
         echo "$output"
+        uuid=$(echo "$output" | awk -F '[ :]+' '/id:/ {print $2; exit}')
+        echo "UUID: $uuid"
         if [[ $output == *"status: Accepted"* ]]; then
-          uuid=$(echo "$output" | awk '/id:/ {print $2}')
-          echo "UUID: $uuid"
+          echo "Great, notarization succeeded!"
         else
-          uuid=$(echo "$output" | awk '/id:/ {print $2}')
+          echo "Log output for failed notarization: $uuid"
           xcrun notarytool log --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --password ${{ secrets.NOTARIZATION_PASSWORD }} $uuid || true
         fi
+        # re-zip it
+        (cd standalone/dist; rm jdaviz.zip; zip -r --symlinks jdaviz.zip jdaviz.app )
 
     - name: Validate app (OSX)
       if: ${{ matrix.os == 'macos' }}
