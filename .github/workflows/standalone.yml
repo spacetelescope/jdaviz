@@ -57,6 +57,8 @@ jobs:
       # by using good hooks
       # i think the issue is that we have a . in the name, there are many
       # google hits on pyqt having the same issue
+      # and we might be able to remove it after https://github.com/pyinstaller/pyinstaller/pull/7619
+      # is released (pyinstaller 5.13 probably)
       if: ${{ matrix.os == 'macos' }}
       run: |
         rm -rf standalone/dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
