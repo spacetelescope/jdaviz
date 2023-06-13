@@ -82,7 +82,7 @@ jobs:
       run: |
         output=$(xcrun notarytool submit standalone/dist/jdaviz.zip --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
         echo "$output"
-        uuid=$(echo "$output" | awk -F '[ :]+' '/id:/ {print $2; exit}')
+        uuid=$(echo "$output" | awk -F '[ :]+' '/id:/ {print $3; exit}')
         echo "UUID: $uuid"
         if [[ $output == *"status: Accepted"* ]]; then
           echo "Great, notarization succeeded!"
