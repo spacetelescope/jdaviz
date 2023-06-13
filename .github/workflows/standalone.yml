@@ -83,7 +83,7 @@ jobs:
           echo "UUID: $uuid"
         else
           uuid=$(echo "$output" | awk '/id:/ {print $2}')
-          xcrun notarytool log --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true $uuid
+          xcrun notarytool log --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --password ${{ secrets.NOTARIZATION_PASSWORD }} $uuid || true
         fi
 
     - name: Validate app (OSX)
