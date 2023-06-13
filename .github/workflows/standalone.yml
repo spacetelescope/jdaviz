@@ -123,11 +123,17 @@ jobs:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
-    - name: Upload jdaviz standalone
-      if: always()
+    - name: Upload jdaviz standalone (non-OSX)
+      if: ${{ always() && (matrix.os != 'macos') }}
       uses: actions/upload-artifact@v3
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: |
           standalone/dist/jdaviz-cli
-          standalone/dist/jdaviz.zip
+
+    - name: Upload jdaviz standalone (OSX)
+      if: ${{ always() && (matrix.os == 'macos') }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: jdaviz-standlone-${{ matrix.os }}
+        path: standalone/dist/jdaviz.zip
