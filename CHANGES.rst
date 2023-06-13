@@ -32,8 +32,6 @@ Specviz2d
 API Changes
 -----------
 
-- Subset Plugin now respects the chosen display unit after using Unit Conversion. [#2195]
-
 Cubeviz
 ^^^^^^^
 
