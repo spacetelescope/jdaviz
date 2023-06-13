@@ -44,7 +44,7 @@ jobs:
       run: pip install .
 
     - name: Install pyinstaller
-      run: pip install pyinstaller
+      run: pip install pyinstaller==5.11
 
     - name: Create standalone binary
       env:
