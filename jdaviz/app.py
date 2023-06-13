@@ -9,9 +9,9 @@ import operator
 from ipywidgets import widget_serialization
 import ipyvue
 
+from astropy import units as u
 from astropy.nddata import CCDData, NDData
 from astropy.io import fits
-from astropy import units as u
 from astropy.coordinates import Angle
 from astropy.time import Time
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
@@ -28,7 +28,7 @@ from glue.core.exceptions import IncompatibleAttribute
 from glue.config import colormaps, data_translator
 from glue.config import settings as glue_settings
 from glue.core import BaseData, HubListener, Data, DataCollection
-from glue.core.link_helpers import LinkSame
+from glue.core.link_helpers import LinkSame, LinkSameWithUnits
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, IncompatibleWCS
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
@@ -39,6 +39,7 @@ from glue.core.state_objects import State
 from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
                               CompositeSubsetState, InvertState)
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
+from glue.core.units import unit_converter
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -70,9 +71,56 @@ EXT_TYPES = dict(flux=['flux', 'sci'],
                  mask=['mask', 'dq'])
 
 
+@unit_converter('custom-jdaviz')
+class UnitConverterWithSpectral:
+
+    def equivalent_units(self, data, cid, units):
+        if cid.label == "flux":
+            eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
+            list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
+                include_prefix_units=True, equivalencies=eqv))) + [
+                    'Jy', 'mJy', 'uJy',
+                    'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
+                    'eV / (s m2 Hz)', 'eV / (Hz s m2)',
+                    'erg / (s cm2)',
+                    'erg / (s cm2 Angstrom)', 'erg / (Angstrom s cm2)',
+                    'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
+                    'ph / (s cm2 Angstrom)', 'ph / (Angstrom s cm2)',
+                    'ph / (s cm2 Hz)', 'ph / (Hz s cm2)'
+                ])
+        else:  # spectral axis
+            # prefer Hz over Bq and um over micron
+            exclude = {'Bq', 'micron'}
+            list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
+                include_prefix_units=True, equivalencies=u.spectral())))) - exclude
+        return list_of_units
+
+    def to_unit(self, data, cid, values, original_units, target_units):
+        # Given a glue data object (data), a component ID (cid), the values
+        # to convert, and the original and target units of the values, this method
+        # should return the converted values. Note that original_units
+        # gives the units of the values array, which might not be the same
+        # as the original native units of the component in the data.
+        if cid.label == "flux":
+            spec = data.get_object(cls=Spectrum1D)
+            if len(values) == 2:
+                # Need this for setting the y-limits
+                spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
+                eqv = u.spectral_density(spec_limits*spec.spectral_axis.unit)
+            else:
+                eqv = u.spectral_density(spec.spectral_axis)
+        else:  # spectral axis
+            eqv = u.spectral()
+
+        return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
+
+
 # Set default opacity for data layers to 1 instead of 0.8 in
 # some glue-core versions
 glue_settings.DATA_ALPHA = 1
+
+# Enable spectrum unit conversion.
+glue_settings.UNIT_CONVERTER = 'custom-jdaviz'
 
 custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-external-link': 'components/external_link.vue',
@@ -466,7 +514,7 @@ class Application(VuetifyTemplate, HubListener):
         if isinstance(linked_data.coords, SpectralCoordinates):
             wc_old = ref_data.world_component_ids[-1]
             wc_new = linked_data.world_component_ids[0]
-            self.data_collection.add_link(LinkSame(wc_old, wc_new))
+            self.data_collection.add_link(LinkSameWithUnits(wc_old, wc_new))
             return
 
         try:
@@ -512,8 +560,8 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     continue
 
-                links.append(LinkSame(ref_data.pixel_component_ids[ref_index],
-                                      linked_data.pixel_component_ids[linked_index]))
+                links.append(LinkSameWithUnits(ref_data.pixel_component_ids[ref_index],
+                                               linked_data.pixel_component_ids[linked_index]))
 
             dc.add_link(links)
 
@@ -852,7 +900,8 @@ class Application(VuetifyTemplate, HubListener):
         return regions
 
     def get_subsets(self, subset_name=None, spectral_only=False,
-                    spatial_only=False, object_only=False, simplify_spectral=True):
+                    spatial_only=False, object_only=False, simplify_spectral=True,
+                    use_display_units=False):
         """
         Returns all branches of glue subset tree in the form that subset plugin can recognize.
 
@@ -869,6 +918,9 @@ class Application(VuetifyTemplate, HubListener):
             leave out the region class name and glue_state.
         simplify_spectral : bool
             Return a composite spectral subset collapsed to a simplified SpectralRegion.
+        use_display_units: bool, optional
+            Whether to convert to the display units defined in the
+            :ref:`Unit Conversion <unit-conversion>` plugin.
 
         Returns
         -------
@@ -887,7 +939,8 @@ class Application(VuetifyTemplate, HubListener):
             if isinstance(subset.subset_state, CompositeSubsetState):
                 # Region composed of multiple ROI or Range subset
                 # objects that must be traversed
-                subset_region = self.get_sub_regions(subset.subset_state, simplify_spectral)
+                subset_region = self.get_sub_regions(subset.subset_state,
+                                                     simplify_spectral, use_display_units)
             elif isinstance(subset.subset_state, RoiSubsetState):
                 # 3D regions represented as a dict including an
                 # AstropyRegion object if possible
@@ -895,7 +948,8 @@ class Application(VuetifyTemplate, HubListener):
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
                 subset_region = self._get_range_subset_bounds(subset.subset_state,
-                                                              simplify_spectral)
+                                                              simplify_spectral,
+                                                              use_display_units)
             else:
                 # subset.subset_state can be an instance of MaskSubsetState
                 # or something else we do not know how to handle
@@ -966,19 +1020,25 @@ class Application(VuetifyTemplate, HubListener):
                 regions_no_dups += region
         return regions_no_dups
 
-    def _get_range_subset_bounds(self, subset_state, simplify_spectral=True):
+    def _get_range_subset_bounds(self, subset_state,
+                                 simplify_spectral=True, use_display_units=False):
         # TODO: Use global display units
         # units = dc[0].data.coords.spectral_axis.unit
         viewer = self.get_viewer(self._jdaviz_helper. _default_spectrum_viewer_reference_name)
         data = viewer.data()
-        if viewer:
-            units = u.Unit(viewer.state.x_display_unit)
-        elif data and len(data) > 0 and isinstance(data[0], Spectrum1D):
+        if data and len(data) > 0 and isinstance(data[0], Spectrum1D):
             units = data[0].spectral_axis.unit
         else:
             raise ValueError("Unable to find spectral axis units")
+        if use_display_units:
+            # converting may result in flipping order (wavelength <-> frequency)
+            ret_units = self._get_display_unit('spectral')
+            subset_bounds = [(subset_state.lo * units).to(ret_units, u.spectral()),
+                             (subset_state.hi * units).to(ret_units, u.spectral())]
+            spec_region = SpectralRegion(min(subset_bounds), max(subset_bounds))
+        else:
+            spec_region = SpectralRegion(subset_state.lo * units, subset_state.hi * units)
 
-        spec_region = SpectralRegion(subset_state.lo * units, subset_state.hi * units)
         if not simplify_spectral:
             return [{"name": subset_state.__class__.__name__,
                      "glue_state": subset_state.__class__.__name__,
@@ -1013,12 +1073,14 @@ class Application(VuetifyTemplate, HubListener):
                  "region": roi_as_region,
                  "subset_state": subset_state}]
 
-    def get_sub_regions(self, subset_state, simplify_spectral=True):
+    def get_sub_regions(self, subset_state, simplify_spectral=True, use_display_units=False):
 
         if isinstance(subset_state, CompositeSubsetState):
             if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
-                one = self.get_sub_regions(subset_state.state1, simplify_spectral)
-                two = self.get_sub_regions(subset_state.state2, simplify_spectral)
+                one = self.get_sub_regions(subset_state.state1,
+                                           simplify_spectral, use_display_units)
+                two = self.get_sub_regions(subset_state.state2,
+                                           simplify_spectral, use_display_units)
 
                 if isinstance(one, list) and "glue_state" in one[0]:
                     one[0]["glue_state"] = subset_state.__class__.__name__
@@ -1137,7 +1199,8 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
-                return self.get_sub_regions(subset_state.state1, simplify_spectral)
+                return self.get_sub_regions(subset_state.state1,
+                                            simplify_spectral, use_display_units)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI or Range.
@@ -1145,7 +1208,25 @@ class Application(VuetifyTemplate, HubListener):
                 return self._get_roi_subset_definition(subset_state)
 
             elif isinstance(subset_state, RangeSubsetState):
-                return self._get_range_subset_bounds(subset_state, simplify_spectral)
+                return self._get_range_subset_bounds(subset_state,
+                                                     simplify_spectral, use_display_units)
+
+    def _get_display_unit(self, axis):
+        if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
+            # fallback on native units (unit conversion is not enabled)
+            if axis == 'spectral':
+                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+                return sv.data()[0].spectral_axis.unit
+            elif axis == 'flux':
+                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+                return sv.data()[0].flux.unit
+            else:
+                raise ValueError(f"could not find units for axis='{axis}'")
+        try:
+            return getattr(self._jdaviz_helper.plugins.get('Unit Conversion')._obj,
+                           f'{axis}_unit_selected')
+        except AttributeError:
+            raise ValueError(f"could not find display unit for axis='{axis}'")
 
     def simplify_spectral_subset(self, subset_name, att, overwrite=False):
         """
@@ -1362,19 +1443,6 @@ class Application(VuetifyTemplate, HubListener):
             raise ValueError(f"Could not identify viewer with reference {viewer_reference}")
 
         self.set_data_visibility(viewer_item, data_label, visible=visible, replace=clear_other_data)
-
-    def _set_plot_axes_labels(self, viewer_id):
-        """
-        Sets the plot axes labels to be the units of the data to be loaded.
-
-        Parameters
-        ----------
-        viewer_id : str
-            The UUID associated with the desired viewer item.
-        """
-        viewer = self._viewer_by_id(viewer_id)
-
-        viewer.set_plot_axes()
 
     def remove_data_from_viewer(self, viewer_reference, data_label):
         """
@@ -1716,6 +1784,7 @@ class Application(VuetifyTemplate, HubListener):
             [data] = [x for x in self.data_collection if x.label == data_label]
 
             viewer.add_data(data, percentile=95, color=viewer.color_cycler())
+            viewer.set_plot_axes()
 
             add_data_message = AddDataMessage(data, viewer,
                                               viewer_id=viewer_id,
@@ -1751,11 +1820,8 @@ class Application(VuetifyTemplate, HubListener):
         # active data.
         viewer_data_labels = [layer.layer.label for layer in viewer.layers]
         if len(viewer_data_labels) > 0 and getattr(self._jdaviz_helper, '_in_batch_load', 0) == 0:
-            active_data = self.data_collection[viewer_data_labels[0]]
-            if (hasattr(active_data, "_preferred_translation")
-                    and active_data._preferred_translation is not None):
-                self._set_plot_axes_labels(viewer_id)
-
+            # This "if" is nested on purpose to make parent "if" available
+            # for other configs in the future, as needed.
             if self.config == 'imviz':
                 viewer.on_limits_change()  # Trigger compass redraw
 

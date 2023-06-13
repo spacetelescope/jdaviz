@@ -128,14 +128,38 @@
               </v-row>
             </v-expansion-panel-header>
             <v-expansion-panel-content>
-              <v-row 
-                v-if="!componentInEquation(item.id)"
-                class="v-messages v-messages__message text--secondary"
-                style="padding-top: 12px"
-              >
-                <span><b>{{ item.id }}</b> model component not in equation</span>
+              <v-row v-if="!item.compat_display_units">
+                <v-alert :type="componentInEquation(item.id) ? 'error' : 'warning'">
+                  <b>{{ item.id }}</b> is inconsistent with the current display units so cannot be used in the model equation.
+                  Create a new model component or re-estimate the free parameters based on the current display units.
+                  <v-row
+                    justify="end"
+                    style="padding-top: 12px; padding-right: 2px"
+                  >
+                    <j-tooltip tipid='plugin-model-fitting-reestimate'>
+                      <v-btn
+                        tile
+                        :elevation=0
+                        x-small
+                        dense 
+                        color="turquoise"
+                        dark
+                        style="padding-left: 8px; padding-right: 6px;"
+                        @click="reestimate_model_parameters(item.id)">
+                        <v-icon left small dense style="margin-right: 2px">mdi-restart</v-icon>
+                        Re-estimate free parameters
+                      </v-btn>
+                    </j-tooltip>
+                  </v-row>
+                </v-alert>
               </v-row>
-              <v-row justify="end"
+              <v-row v-if="item.compat_display_units && !componentInEquation(item.id)">
+                <v-alert type="info">
+                  <b>{{ item.id }}</b> model component not in equation
+                </v-alert>
+              </v-row>
+              <v-row v-if="item.compat_display_units"
+                justify="end"
                 style="padding-top: 12px; padding-right: 2px"
               >
                 <j-tooltip tipid='plugin-model-fitting-reestimate'>
@@ -290,7 +314,7 @@
     },
     methods: {
       componentInEquation(componentId) {
-        return this.model_equation.split(/[+*\/-]/).indexOf(componentId) !== -1
+        return this.model_equation.replace(/\s/g, '').split(/[+*\/-]/).indexOf(componentId) !== -1
       },
       roundUncertainty(uncertainty) {
         return uncertainty.toPrecision(2)

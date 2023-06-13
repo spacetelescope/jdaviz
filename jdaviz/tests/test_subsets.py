@@ -4,12 +4,10 @@ from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core import Data
 from glue.core.roi import CircularROI, EllipticalROI, RectangularROI, XRangeROI
-
 from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
-
 from numpy.testing import assert_allclose
-from specutils import SpectralRegion
+from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.marks import ShadowSpatialSpectral
 
@@ -135,12 +133,10 @@ def test_region_from_subset_3d(cubeviz_helper):
 
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
-    data = Data(flux=np.ones((128, 128, 256)), label='Test 1D Flux', coords=spectral_cube_wcs)
+    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
 
-    cubeviz_helper.app.data_collection.append(data)
-
-    cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'Test 1D Flux')
+    cubeviz_helper.load_data(data, data_label='Test 1D Flux')
 
     cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
 
@@ -184,11 +180,8 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
 
 
 def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
-    data = Data(flux=np.ones((128, 128, 256)), label='Test Flux', coords=spectral_cube_wcs)
-    cubeviz_helper.app.data_collection.append(data)
-
-    cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'Test Flux')
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test Flux')
+    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    cubeviz_helper.load_data(data, data_label="Test Flux")
 
     # use gaussian smooth plugin as a regression test for
     # https://github.com/spacetelescope/jdaviz/issues/1853
@@ -236,11 +229,8 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
 
 
 def test_disjoint_spatial_subset(cubeviz_helper, spectral_cube_wcs):
-    data = Data(flux=np.ones((128, 128, 256)), label='Test Flux', coords=spectral_cube_wcs)
-    cubeviz_helper.app.data_collection.append(data)
-
-    cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'Test Flux')
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test Flux')
+    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    cubeviz_helper.load_data(data, data_label="Test Flux")
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     flux_viewer.apply_roi(CircularROI(xc=3, yc=4, radius=1))
@@ -260,11 +250,8 @@ def test_disjoint_spatial_subset(cubeviz_helper, spectral_cube_wcs):
 
 def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
-    data = Data(flux=np.ones((128, 128, 256)), label='Test Flux', coords=spectral_cube_wcs)
-    cubeviz_helper.app.data_collection.append(data)
-
-    cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'Test Flux')
-    cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test Flux')
+    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    cubeviz_helper.load_data(data, data_label="Test Flux")
 
     spec_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
     spec_viewer.apply_roi(XRangeROI(5, 15.5))

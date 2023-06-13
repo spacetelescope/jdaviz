@@ -10,7 +10,6 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from astropy.utils.data import download_file
 
 from jdaviz.app import Application
-from jdaviz.configs.specviz.plugins.unit_conversion import unit_conversion as uc
 from jdaviz.core.marks import LineUncertainties
 from jdaviz import Specviz
 
@@ -277,7 +276,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_spectrum(spectrum1d)  # Originally Angstrom
 
     # Also check coordinates info panel.
     # x=0 -> 6000 A, x=1 -> 6222.222 A
@@ -293,27 +292,22 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     assert label_mouseover.as_text() == ('', '', '')
     assert label_mouseover.icon == ''
 
-    # Convert the wavelength axis to microns
-    new_spectral_axis = "micron"
-    conv_func = uc.UnitConversion.process_unit_conversion
-    converted_spectrum = conv_func(specviz_helper.app, spectrum=spectrum1d,
-                                   new_spectral_axis=new_spectral_axis)
+    # Convert the wavelength axis to micron
+    new_spectral_axis = "um"
+    specviz_helper.plugins['Unit Conversion'].spectral_unit = new_spectral_axis
 
-    # Add this new data and clear the other, making the converted spectrum our reference
-    specviz_helper.app.add_data(converted_spectrum, "Converted Spectrum")
-    specviz_helper.app.add_data_to_viewer("spectrum-viewer",
-                                          "Converted Spectrum",
-                                          clear_other_data=True)
+    spec_viewer.apply_roi(XRangeROI(0.6, 0.7))
 
-    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(0.6, 0.7))
-
-    # TODO: Is this test still relevant with the upcoming glue unit conversion changes?
     # Retrieve the Subset
-    # subsets = specviz_helper.get_spectral_regions()
-    # reg = subsets.get('Subset 1')
-    #
-    # assert reg.lower.unit == u.Unit(new_spectral_axis)
-    # assert reg.upper.unit == u.Unit(new_spectral_axis)
+    subsets = specviz_helper.get_spectral_regions(use_display_units=False)
+    reg = subsets.get('Subset 1')
+    assert reg.lower.unit == u.Angstrom
+    assert reg.upper.unit == u.Angstrom
+
+    subsets = specviz_helper.get_spectral_regions(use_display_units=True)
+    reg = subsets.get('Subset 1')
+    assert reg.lower.unit == u.um
+    assert reg.upper.unit == u.um
 
     # Coordinates info panel should show new unit
     label_mouseover._viewer_mouse_event(spec_viewer,
@@ -321,7 +315,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     label_mouseover.as_text() == ('Cursor 6.10000e-01, 1.25000e+01',
                                   'Wave 6.00000e-01 micron (0 pix)',
                                   'Flux 1.24967e+01 Jy')
-    assert label_mouseover.icon == 'b'
+    assert label_mouseover.icon == 'a'
 
     label_mouseover._viewer_mouse_event(spec_viewer, {'event': 'mouseleave'})
     assert label_mouseover.as_text() == ('', '', '')
