@@ -26,6 +26,7 @@ jobs:
       matrix:
         os: [ubuntu, windows, macos]
     steps:
+    # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
       uses: apple-actions/import-codesign-certs@v1
       if: ${{ matrix.os == 'macos' }}
@@ -58,7 +59,13 @@ jobs:
       run: |
         rm -rf dist/jdaviz.app/Contents/Resources/skimage/.dylibs
 
-    - name: Notary step
+    - name: Codesign (OSX)
+      if: ${{ matrix.os == 'macos' }}
+      run: |
+        cd standalone/dist
+        codesign --deep --force --options=runtime --entitlements entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp jdaviz.app
+
+    - name: Notary step (OSX)
       if: ${{ matrix.os == 'macos' }}
       run: |
         xcrun notarytool submit standalone/dist/jdaviz.zip --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}
