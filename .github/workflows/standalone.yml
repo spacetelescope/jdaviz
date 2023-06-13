@@ -76,7 +76,15 @@ jobs:
     - name: Notary step (OSX)
       if: ${{ matrix.os == 'macos' }}
       run: |
-        xcrun notarytool submit standalone/dist/jdaviz.zip --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}
+        output=$(xcrun notarytool submit standalone/dist/jdaviz.zip --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
+        echo "$output"
+        if [[ $output == *"status: Accepted"* ]]; then
+          uuid=$(echo "$output" | awk '/id:/ {print $2}')
+          echo "UUID: $uuid"
+        else
+          uuid=$(echo "$output" | awk '/id:/ {print $2}')
+          xcrun notarytool log --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true $uuid
+        fi
 
     - name: Validate app (OSX)
       if: ${{ matrix.os == 'macos' }}
