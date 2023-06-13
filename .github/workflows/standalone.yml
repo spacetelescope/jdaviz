@@ -57,6 +57,7 @@ jobs:
       # by using good hooks
       if: ${{ matrix.os == 'macos' }}
       run: |
+        rm -rf dist/jdaviz.app/Contents/Contents/MacOS/skimage/.dylibs
         rm -rf dist/jdaviz.app/Contents/Resources/skimage/.dylibs
 
     - name: Codesign (OSX)
