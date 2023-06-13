@@ -73,6 +73,8 @@ jobs:
     - name: Zip OSX app to maintain symlinks and to sign
       # if we do not call always() GHA will && with success()
       if: ${{ always() && (matrix.os == 'macos') }}
+      # it seems ditto (not zip) should be used in combination with notarization
+      # see https://developer.apple.com/forums/thread/116831
       run: (cd standalone/dist; ditto -c -k --sequesterRsrc --keepParent jdaviz.app jdaviz.zip )
 
     - name: Notary step (OSX)
