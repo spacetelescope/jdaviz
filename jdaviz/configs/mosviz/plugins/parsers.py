@@ -9,7 +9,7 @@ from astropy.io import fits
 from astropy.io.registry import IORegistryError
 from astropy.wcs import WCS
 from glue.core.data import Data
-from glue.core.link_helpers import LinkSame
+from glue.core.link_helpers import LinkSameWithUnits
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from specutils.io.default_loaders.jwst_reader import identify_jwst_s2d_multi_fits
 
@@ -140,7 +140,7 @@ def link_data_in_table(app, data_obj=None):
             wc_spec_1d = app.session.data_collection[spec_1d].world_component_ids
             wc_spec_2d = app.session.data_collection[spec_2d].world_component_ids
 
-            wc_spec_ids.append(LinkSame(wc_spec_1d[0], wc_spec_2d[1]))
+            wc_spec_ids.append(LinkSameWithUnits(wc_spec_1d[0], wc_spec_2d[1]))
 
     app.session.data_collection.add_link(wc_spec_ids)
 

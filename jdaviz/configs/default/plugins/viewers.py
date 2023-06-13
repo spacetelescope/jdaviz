@@ -118,8 +118,6 @@ class JdavizViewerMixin:
                         return "mdi-chart-bell-curve", ""
             return "", suffix
 
-            return '', ''
-
         visible_layers = {}
         for layer in self.state.layers[::-1]:
             if layer.visible:
@@ -222,9 +220,17 @@ class JdavizViewerMixin:
         return self.jdaviz_app._jdaviz_helper
 
     @property
+    def hub(self):
+        return self.session.hub
+
+    @property
     def reference_id(self):
         return self._reference_id
 
     @property
     def reference(self):
         return self.jdaviz_app._viewer_item_by_id(self.reference_id).get('reference')
+
+    def set_plot_axes(self):
+        # individual viewers can override to set custom axes labels/ticks/styling
+        return

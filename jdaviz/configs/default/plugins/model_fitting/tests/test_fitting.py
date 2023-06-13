@@ -327,3 +327,56 @@ def test_results_table(specviz_helper, spectrum1d):
                                  'G:mean_1:fixed', 'G:mean_1:std',
                                  'G:stddev_1', 'G:stddev_1:unit',
                                  'G:stddev_1:fixed', 'G:stddev_1:std']
+
+
+def test_equation_validation(specviz_helper, spectrum1d):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+
+    mf = specviz_helper.plugins['Model Fitting']
+    mf.create_model_component('Const1D')
+    mf.create_model_component('Linear1D')
+
+    assert mf.equation == 'C+L'
+    assert mf._obj.model_equation_invalid_msg == ''
+
+    mf.equation = 'L+'
+    assert mf._obj.model_equation_invalid_msg == 'incomplete equation.'
+
+    mf.equation = 'L+C'
+    assert mf._obj.model_equation_invalid_msg == ''
+
+    mf.equation = 'L+CC'
+    assert mf._obj.model_equation_invalid_msg == 'CC is not an existing model component.'
+
+    mf.equation = 'L+CC+DD'
+    assert mf._obj.model_equation_invalid_msg == 'CC, DD are not existing model components.'
+
+    mf.equation = ''
+    assert mf._obj.model_equation_invalid_msg == 'model equation is required.'
+
+
+@pytest.mark.filterwarnings(r"ignore:Model is linear in parameters.*")
+@pytest.mark.filterwarnings(r"ignore:The fit may be unsuccessful.*")
+def test_incompatible_units(specviz_helper, spectrum1d):
+    data_label = 'test'
+    specviz_helper.load_data(spectrum1d, data_label=data_label)
+
+    mf = specviz_helper.plugins['Model Fitting']
+    mf.create_model_component('Linear1D')
+
+    mf.add_results.label = 'model native units'
+    mf.calculate_fit(add_data=True)
+
+    uc = specviz_helper.plugins['Unit Conversion']
+    assert uc.spectral_unit.selected == "Angstrom"
+    uc.spectral_unit = u.Hz
+
+    assert 'L is currently disabled' in mf._obj.model_equation_invalid_msg
+    mf.add_results.label = 'frequency units'
+    with pytest.raises(ValueError, match=r"model equation is invalid.*"):
+        mf.calculate_fit(add_data=True)
+
+    mf.reestimate_model_parameters()
+    assert mf._obj.model_equation_invalid_msg == ''
+    mf.calculate_fit(add_data=True)

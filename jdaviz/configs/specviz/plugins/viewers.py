@@ -351,9 +351,22 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         result : bool
             `True` if successful, `False` otherwise.
         """
+        # If this is the first loaded data, set things up for unit conversion.
+        if len(self.layers) == 0:
+            reset_plot_axes = True
+        else:
+            reset_plot_axes = False
+
         # The base class handles the plotting of the main
         # trace representing the spectrum itself.
         result = super().add_data(data, color, alpha, **layer_state)
+
+        if reset_plot_axes:
+            x_units = data.get_component(self.state.x_att.label).units
+            y_units = data.get_component("flux").units
+            self.state.x_display_unit = x_units if len(x_units) else None
+            self.state.y_display_unit = y_units if len(y_units) else None
+            self.set_plot_axes()
 
         self._plot_uncertainties()
 
@@ -477,22 +490,21 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 self.figure.marks = list(self.figure.marks) + [error_line_mark]
 
     def set_plot_axes(self):
-        # Get data to be used for axes labels
-        data = self.data()[0]
-
         # Set axes labels for the spectrum viewer
-        spectral_axis_unit_type = str(data.spectral_axis.unit.physical_type).title()
-        # flux_unit_type = data.flux.unit.physical_type.title()
         flux_unit_type = "Flux density"
-
-        if data.spectral_axis.unit.is_equivalent(u.m):
+        x_disp_unit = self.state.x_display_unit
+        x_unit = u.Unit(x_disp_unit) if x_disp_unit else u.dimensionless_unscaled
+        if x_unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
-        elif data.spectral_axis.unit.is_equivalent(u.pixel):
-            spectral_axis_unit_type = "pixel"
+        elif x_unit.is_equivalent(u.Hz):
+            spectral_axis_unit_type = "Frequency"
+        elif x_unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "Pixel"
+        else:
+            spectral_axis_unit_type = str(x_unit.physical_type).title()
 
-        label_0 = f"{spectral_axis_unit_type} [{data.spectral_axis.unit.to_string()}]"
-        self.figure.axes[0].label = label_0
-        self.figure.axes[1].label = f"{flux_unit_type} [{data.flux.unit.to_string()}]"
+        self.figure.axes[0].label = f"{spectral_axis_unit_type} [{self.state.x_display_unit}]"
+        self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
 
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"

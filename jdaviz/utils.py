@@ -4,7 +4,6 @@ import threading
 from collections import deque
 
 import matplotlib.pyplot as plt
-
 from astropy.io import fits
 from ipyvue import watch
 from glue.config import settings

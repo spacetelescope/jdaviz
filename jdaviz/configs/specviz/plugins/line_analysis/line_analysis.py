@@ -15,7 +15,8 @@ from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 SpectralMarksChangedMessage,
                                 LineIdentifyMessage,
-                                RedshiftMessage)
+                                RedshiftMessage,
+                                GlobalDisplayUnitChanged)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -158,6 +159,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                            handler=self._on_plotted_lines_changed)
         self.hub.subscribe(self, LineIdentifyMessage,
                            handler=self._on_identified_line_changed)
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed)
 
     @property
     def user_api(self):
@@ -203,6 +206,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                  self.spatial_subset_selected,
                                  self.continuum_subset_selected]
                 and self.plugin_opened):
+            self._calculate_statistics()
+
+    def _on_global_display_unit_changed(self, msg):
+        if self.plugin_opened:
             self._calculate_statistics()
 
     @observe('plugin_opened')
@@ -314,8 +321,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         # show spinner with overlay
         self.results_computing = True
-
-        full_spectrum = self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected)  # noqa
+        full_spectrum = self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected,  # noqa
+                                                                          use_display_units=True)
 
         if (full_spectrum is None or self.width == "" or
                 (not self.plugin_opened and not kwargs.get('ignore_plugin_closed'))):
@@ -330,13 +337,14 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.update_results(None)
             return
 
-        sr = self.app.get_subsets().get(self.spectral_subset_selected)
         if self.spectral_subset_selected == "Entire Spectrum":
             spectrum = full_spectrum
         else:
+            sr = self.app.get_subsets(self.spectral_subset_selected,
+                                      simplify_spectral=True, use_display_units=True)
             spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
-            sr_lower = spectrum.spectral_axis[spectrum.spectral_axis.value >= sr.lower.value][0]
-            sr_upper = spectrum.spectral_axis[spectrum.spectral_axis.value <= sr.upper.value][-1]
+            sr_lower = np.nanmin(spectrum.spectral_axis[spectrum.spectral_axis.value >= sr.lower.value])  # noqa
+            sr_upper = np.nanmax(spectrum.spectral_axis[spectrum.spectral_axis.value <= sr.upper.value])  # noqa
 
         # compute continuum
         if self.continuum_subset_selected == "Surrounding" and self.spectral_subset_selected == "Entire Spectrum": # noqa
@@ -383,7 +391,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # cube, but still apply that to the spatially-collapsed spectrum.
             continuum_mask = ~self._specviz_helper.get_data(
                 self.dataset.selected,
-                spectral_subset=self.continuum_subset_selected).mask
+                spectral_subset=self.continuum_subset_selected,
+                use_display_units=False).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             if self.spectral_subset_selected == "Entire Spectrum":
@@ -521,8 +530,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     def _compute_redshift_for_selected_line(self):
         index = self.line_items.index(self.selected_line)
         line_mark = self.line_marks[index]
-        rest_value = (line_mark.rest_value * line_mark._x_unit).to_value(u.AA,
-                                                                         equivalencies=u.spectral())
+        rest_value = (line_mark.rest_value * line_mark.xunit).to_value(u.AA,
+                                                                       equivalencies=u.spectral())
         return (self.results_centroid - rest_value) / rest_value
 
     @observe('sync_identify')

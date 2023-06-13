@@ -81,7 +81,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     label_mouseover._viewer_mouse_event(viewer_1d,
                                         {'event': 'mousemove', 'domain': {'x': 6.5, 'y': 3}})
     assert label_mouseover.as_text() == ('Cursor 6.50000e+00, 3.00000e+00',
-                                         'Wave 6.00000e+00 pix',
+                                         'Wave 6.00000e+00 pixel',
                                          'Flux -3.59571e+00')
     assert label_mouseover.icon == 'b'
 

@@ -138,10 +138,16 @@ class Specviz(ConfigHelper, LineListMixin):
 
             return output_spectra
 
-    def get_spectral_regions(self):
+    def get_spectral_regions(self, use_display_units=False):
         """
         A simple wrapper around the app-level call to retrieve only spectral
         subsets, which are now returned as SpectralRegions by default.
+
+        Parameters
+        ----------
+        use_display_units : bool, optional
+            Whether to convert to the display units defined in the
+            :ref:`Unit Conversion <unit-conversion>` plugin.
 
         Returns
         -------
@@ -149,7 +155,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Mapping from the names of the subsets to the subsets expressed
             as `specutils.SpectralRegion` objects.
         """
-        return self.app.get_subsets(spectral_only=True)
+        return self.app.get_subsets(spectral_only=True, use_display_units=use_display_units)
 
     def x_limits(self, x_min=None, x_max=None):
         """Sets the limits of the x-axis
@@ -281,7 +287,8 @@ class Specviz(ConfigHelper, LineListMixin):
             self._default_spectrum_viewer_reference_name
         ).figure.axes[axis].tick_format = fmt
 
-    def get_data(self, data_label=None, spectral_subset=None, cls=None, **kwargs):
+    def get_data(self, data_label=None, spectral_subset=None, cls=None,
+                 use_display_units=False, **kwargs):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         subset_to_apply.
@@ -294,6 +301,8 @@ class Specviz(ConfigHelper, LineListMixin):
             Spectral subset applied to data.
         cls : `~specutils.Spectrum1D`, optional
             The type that data will be returned as.
+        use_display_units: bool, optional
+            Whether to convert to the display units defined in the <unit-conversion> plugin.
 
         Returns
         -------
@@ -322,4 +331,5 @@ class Specviz(ConfigHelper, LineListMixin):
             function = None
 
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
-                              spectral_subset=spectral_subset, function=function, cls=cls)
+                              spectral_subset=spectral_subset, function=function,
+                              cls=cls, use_display_units=use_display_units)

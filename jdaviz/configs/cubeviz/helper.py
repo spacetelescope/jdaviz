@@ -121,7 +121,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         return self._specviz
 
     def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None, function=None,
-                 cls=None):
+                 cls=None, use_display_units=False):
         """
         Returns data with name equal to ``data_label`` of type ``cls`` with subsets applied from
         ``spatial_subset`` and/or ``spectral_subset`` using ``function`` if applicable.
@@ -162,7 +162,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         elif function is False:
             function = None
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
-                              spectral_subset=spectral_subset, function=function, cls=cls)
+                              spectral_subset=spectral_subset, function=function,
+                              cls=cls, use_display_units=use_display_units)
 
 
 def layer_is_cube_image_data(layer):

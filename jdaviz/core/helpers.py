@@ -412,8 +412,32 @@ class ConfigHelper(HubListener):
         return self.show(loc="sidecar:tab-after", title=title)
 
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
-                  mask_subset=None, function=None, cls=None):
-        # Start validity checks
+                  mask_subset=None, function=None, cls=None, use_display_units=False):
+        def _handle_display_units(data, use_display_units):
+            if use_display_units:
+                if isinstance(data, Spectrum1D):
+                    spectral_unit = self.app._get_display_unit('spectral')
+                    if not spectral_unit:
+                        return data
+                    if self.app.config == 'cubeviz' and spectral_unit == 'deg':
+                        # this happens before the correct axis is set for the spectrum-viewer
+                        # and would result in a unit-conversion error if attempting to convert
+                        # to the display units.  This should only ever be temporary during
+                        # app intialization.
+                        return data
+                    flux_unit = self.app._get_display_unit('flux')
+                    # TODO: any other attributes (meta, wcs, etc)?
+                    # TODO: implement uncertainty.to upstream
+                    new_uncert = data.uncertainty.__class__(data.uncertainty.quantity.to(flux_unit)) if data.uncertainty is not None else None  # noqa
+                    data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
+                                                                          u.spectral()),
+                                      flux=data.flux.to(flux_unit,
+                                                        u.spectral_density(data.spectral_axis)),
+                                      uncertainty=new_uncert)
+                else:  # pragma: nocover
+                    raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
+            return data
+
         list_of_valid_function_values = ('minimum', 'maximum', 'mean',
                                          'median', 'sum')
         if function and function not in list_of_valid_function_values:
@@ -471,7 +495,7 @@ class ConfigHelper(HubListener):
             else:
                 data = data.get_object(cls=cls, **object_kwargs)
 
-            return data
+            return _handle_display_units(data, use_display_units)
 
         if not cls and spatial_subset:
             raise AttributeError(f"A valid cls must be provided to"
@@ -528,9 +552,9 @@ class ConfigHelper(HubListener):
             else:
                 data = spec_subset
 
-        return data
+        return _handle_display_units(data, use_display_units)
 
-    def get_data(self, data_label=None, cls=None):
+    def get_data(self, data_label=None, cls=None, use_display_units=False):
         """
         Returns data with name equal to data_label of type cls.
 
@@ -540,6 +564,8 @@ class ConfigHelper(HubListener):
             Provide a label to retrieve a specific data set from data_collection.
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
+        use_display_units: bool, optional
+            Whether to convert to the display units defined in the <unit-conversion> plugin.
 
         Returns
         -------
@@ -548,7 +574,8 @@ class ConfigHelper(HubListener):
 
         """
         return self._get_data(data_label=data_label, spatial_subset=None,
-                              spectral_subset=None, function=None, cls=None)
+                              spectral_subset=None, function=None,
+                              cls=None, use_display_units=use_display_units)
 
 
 class ImageConfigHelper(ConfigHelper):

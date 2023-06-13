@@ -21,7 +21,6 @@ tray:
   - spectral-extraction
   - g-gaussian-smooth
   - g-model-fitting
-  - g-unit-conversion
   - g-line-list
   - specviz-line-analysis
   - g-export-plot
