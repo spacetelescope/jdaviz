@@ -20,7 +20,7 @@ datas = [
     (Path(sys.prefix) / "etc" / "jupyter", "./etc/jupyter"),
     *collect_data_files("regions"),
     *collect_data_files("photutils"),
-    *collect_data_files("debugpy"),
+    # *collect_data_files("debugpy"),
     *collect_data_files("glue"),
     *collect_data_files("glue_jupyter"),
     *collect_data_files("bqplot"),
@@ -32,6 +32,7 @@ hiddenimports = []
 hiddenimports += collect_submodules("regions")
 hiddenimports += collect_submodules("photutils")
 hiddenimports += collect_submodules("jupyter_client")
+hiddenimports += collect_submodules("debugpy")
 tmp_ret = collect_all("astropy")
 datas += tmp_ret[0]
 binaries += tmp_ret[1]

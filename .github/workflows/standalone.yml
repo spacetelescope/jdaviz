@@ -44,7 +44,7 @@ jobs:
       run: pip install .
 
     - name: Install pyinstaller
-      run: pip install https://github.com/maartenbreddels/pyinstaller/archive/fix_relocate_osx_libraries.zip
+      run: pip install pyinstaller
 
     - name: Create standalone binary
       env:
