@@ -55,9 +55,11 @@ jobs:
     - name: Remove invalid files for OSX
       # hopefully we can improve this in the future
       # by using good hooks
+      # i think the issue is that we have a . in the name, there are many
+      # google hits on pyqt having the same issue
       if: ${{ matrix.os == 'macos' }}
       run: |
-        rm -rf dist/jdaviz.app/Contents/Contents/MacOS/skimage/.dylibs
+        rm -rf dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
         rm -rf dist/jdaviz.app/Contents/Resources/skimage/.dylibs
 
     - name: Codesign (OSX)
