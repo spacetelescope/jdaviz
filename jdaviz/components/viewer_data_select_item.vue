@@ -12,7 +12,7 @@
       </j-tooltip>
     </div>
     <j-tooltip
-      :tooltipcontent="isRefData() ? 'Reference data' : 'Click to set as reference data'"
+      :tooltipcontent="isRefData() && viewer.config === 'imviz' ? 'Current viewer orientation' : 'Set viewer orientation'"
       span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
     <span
       style="cursor: pointer;"
