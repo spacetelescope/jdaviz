@@ -12,7 +12,7 @@
       </j-tooltip>
     </div>
     <j-tooltip
-      :tooltipcontent="isRefData() && viewer.config === 'imviz' ? 'Current viewer orientation' : 'Set viewer orientation'"
+      :tooltipcontent=dataMenuTooltip
       span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
     <span
       style="cursor: pointer;"
@@ -160,6 +160,15 @@ module.exports = {
         return 'black'
       } else {
         return 'gray'
+      }
+    },
+    dataMenuTooltip() {
+      if (this.$props.viewer.config === 'imviz' && this.isRefData()) {
+        return 'Current viewer orientation'
+      } else if (this.$props.viewer.config === 'imviz') {
+        return 'Set viewer orientation'
+      } else {
+        return null
       }
     }
   }
