@@ -120,7 +120,7 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
             == (2, 4, 2))
 
 
-def test_spectrum1d_smooth(specviz_helper, spectrum1d):
+def test_specviz_smooth(specviz_helper, spectrum1d):
     data_label = 'test'
     dc = specviz_helper.app.data_collection
     specviz_helper.load_data(spectrum1d, data_label=data_label)
@@ -160,7 +160,7 @@ def test_spectrum1d_smooth(specviz_helper, spectrum1d):
     assert label_mouseover.icon == 'mdi-cursor-default'
 
 
-def test_spectrum2d_smooth(specviz2d_helper, spectrum2d):
+def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
     data_label = 'test'
     dc = specviz2d_helper.app.data_collection
     specviz2d_helper.load_data(spectrum_2d=spectrum2d, spectrum_2d_label=data_label)
@@ -170,18 +170,20 @@ def test_spectrum2d_smooth(specviz2d_helper, spectrum2d):
     # The Autocollapsed spectrum is given the label of "Spectrum 1D by default"
     smooth_source_dataset = "Spectrum 1D"
     gs_plugin.dataset = smooth_source_dataset
-    test_stddev_level = 100.0
+    test_stddev_level = 10.0
     gs_plugin.stddev = test_stddev_level
-    gs_plugin.smooth()
+    smoothed_spectrum = gs_plugin.smooth(add_data=True)
 
     assert len(dc) == 3
     assert dc[2].label == f'{smooth_source_dataset} smooth stddev-{test_stddev_level}'
+    np.testing.assert_allclose(smoothed_spectrum.spectral_axis.value,
+                               spectrum2d.spectral_axis.value)
 
     # Ensure all marks were created properly (i.e. not in their initialized state)
     # [0,1] is the default (initialization) value for the marks
     marks = specviz2d_helper.app.get_viewer('spectrum-viewer').native_marks
-
     assert len(marks) == 2
-    for mark in marks:
-        np.testing.assert_allclose(mark.x, spectrum2d.spectral_axis.value)
-        assert not np.array_equal(mark.y, [0, 1])
+
+    gp_mark = marks[-1]
+    np.testing.assert_allclose(gp_mark.x, smoothed_spectrum.spectral_axis.value)
+    np.testing.assert_allclose(gp_mark.y, smoothed_spectrum.flux.value)

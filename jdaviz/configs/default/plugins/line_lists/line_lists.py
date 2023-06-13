@@ -411,10 +411,8 @@ class LineListTool(PluginTemplateMixin):
 
     def _on_spectrum_viewer_limits_changed(self, event=None):
         sv = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-
         if sv.state.x_min is None or sv.state.x_max is None:
             return
-
         self.spectrum_viewer_min = float(sv.state.x_min)
         self.spectrum_viewer_max = float(sv.state.x_max)
 

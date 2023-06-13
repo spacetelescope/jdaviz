@@ -7,26 +7,6 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.specviz2d.helper import Specviz2d
 
 
-def test_viewer_axis_link(mosviz_helper, mos_spectrum1d, mos_spectrum2d):
-    label1d = "Test 1D Spectrum"
-    mosviz_helper.load_1d_spectra(mos_spectrum1d, data_labels=label1d)
-
-    label2d = "Test 2D Spectrum"
-    mosviz_helper.load_2d_spectra(mos_spectrum2d, data_labels=label2d, add_redshift_column=True)
-
-    table = mosviz_helper.app.get_viewer('table-viewer')
-    table.widget_table.vue_on_row_clicked(0)
-
-    scale_2d = mosviz_helper.app.get_viewer('spectrum-2d-viewer').scales['x']
-    scale_1d = mosviz_helper.app.get_viewer('spectrum-viewer').scales['x']
-
-    scale_2d.min = 200.0
-    assert scale_1d.min == mos_spectrum1d.spectral_axis.value[200]
-
-    scale_1d.max = 7564
-    assert scale_2d.max == 800.0
-
-
 def test_to_csv(tmp_path, mosviz_helper, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
     mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels, add_redshift_column=True)

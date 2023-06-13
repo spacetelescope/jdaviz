@@ -15,6 +15,7 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5
         original_limits = (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max)
         assert_allclose(original_limits, (-0.5, 9.5, -0.5, 9.5))
+        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), original_limits)  # noqa
         t.activate()
         t.save_prev_zoom()
         v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max = (1, 8, 1, 8)

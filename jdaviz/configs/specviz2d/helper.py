@@ -1,5 +1,3 @@
-import numpy as np
-
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import SnackbarMessage
@@ -20,12 +18,6 @@ class Specviz2d(ConfigHelper, LineListMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        spec1d = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        spec1d.scales['x'].observe(self._update_spec2d_x_axis)
-
-        spec2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
-        spec2d.scales['x'].observe(self._update_spec1d_x_axis)
-
     @property
     def specviz(self):
         """
@@ -35,84 +27,6 @@ class Specviz2d(ConfigHelper, LineListMixin):
         if not hasattr(self, '_specviz'):
             self._specviz = Specviz(app=self.app)
         return self._specviz
-
-    def _extend_world(self, spec1d, ext):
-        # Extend 1D spectrum world axis to enable panning (within reason) past
-        # the bounds of data
-        world = self.app.data_collection[spec1d]["World 0"].copy()
-        dw = world[1]-world[0]
-        prepend = np.linspace(world[0]-dw*ext, world[0]-dw, ext)
-        dw = world[-1]-world[-2]
-        append = np.linspace(world[-1]+dw, world[-1]+dw*ext, ext)
-        world = np.hstack((prepend, world, append))
-        return world
-
-    def _update_spec2d_x_axis(self, change):
-        # This assumes the two spectrum viewers have the same x-axis shape and
-        # wavelength solution, which should always hold
-        if change['old'] is None:
-            pass
-        else:
-            name = change['name']
-            if name not in ['min', 'max']:
-                return
-            new_val = change['new']
-            spec1d = self.app.get_viewer(
-                self._default_spectrum_viewer_reference_name
-            ).state.reference_data.label
-            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
-            world = self._extend_world(spec1d, extend_by)
-
-            # Warn the user if they've panned far enough away from the data
-            # that the viewers will desync
-            if new_val > world[-1] or new_val < world[0]:
-                self.app.hub.broadcast(SnackbarMessage(
-                    "Panning too far away from the data may desync the 1D and 2D spectrum viewers.",
-                    color='warning', sender=self))
-
-            idx = float((np.abs(world - new_val)).argmin()) - extend_by
-            scales = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name).scales
-            old_idx = getattr(scales['x'], name)
-            if idx != old_idx:
-                setattr(scales['x'], name, idx)
-
-    def _update_spec1d_x_axis(self, change):
-        if self.app.get_viewer(
-                self._default_spectrum_viewer_reference_name
-        ).state.reference_data is None:
-            return
-
-        # This assumes the two spectrum viewers have the same x-axis shape and
-        # wavelength solution, which should always hold
-        if change['old'] is None:
-            pass
-        else:
-            name = change['name']
-            if name not in ['min', 'max']:
-                return
-            new_idx = int(np.around(change['new']))
-            spec1d = self.app.get_viewer(
-                self._default_spectrum_viewer_reference_name
-            ).state.reference_data.label
-            extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
-            world = self._extend_world(spec1d, extend_by)
-
-            scales = self.app.get_viewer(
-                self._default_spectrum_viewer_reference_name
-            ).scales
-            old_val = getattr(scales['x'], name)
-
-            # Warn the user if they've panned far enough away from the data
-            # that the viewers will desync
-            try:
-                val = world[new_idx+extend_by]
-            except IndexError:
-                val = old_val
-                self.app.hub.broadcast(SnackbarMessage(
-                    "Panning too far away from the data may desync the 1D and 2D spectrum viewers.",
-                    color='warning', sender=self))
-            if val != old_val:
-                setattr(scales['x'], name, val)
 
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
                   spectrum_2d_label=None, show_in_viewer=True, ext=1,

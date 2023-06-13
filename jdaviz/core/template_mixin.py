@@ -1065,13 +1065,11 @@ class SubsetSelect(SelectPluginComponent):
     def selected_obj(self):
         if self.selected in self.manual_options or self.selected not in self.labels:
             return None
-        subset_type = self.selected_item['type']
         # NOTE: we use reference names here instead of IDs since get_subsets_from_viewer requires
         # that.  For imviz, this will mean we won't be able to loop through each of the viewers,
         # but the original viewer should have access to all the subsets.
         for viewer_ref in self.viewer_refs:
-            match = self.app.get_subsets_from_viewer(viewer_ref,
-                                                     subset_type=subset_type).get(self.selected)
+            match = self.app.get_subsets(self.selected)
             if match is not None:
                 return match
 

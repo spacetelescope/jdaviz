@@ -7,70 +7,33 @@ from glue.viewers.common.tool import CheckableTool
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.utils import debounced
 
-from jdaviz.core.tools import BoxZoom, PanZoom
+from jdaviz.core.tools import BoxZoom, PanZoom, _MatchedZoomMixin
 
 __all__ = []
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 
 
-class _MatchedZoomMixin:
-    def _iter_image_viewers(self):
-        for viewer in self.viewer.session.application.viewers:
-            if isinstance(viewer, BqplotImageView):
-                yield viewer
+class _ImvizMatchedZoomMixin(_MatchedZoomMixin):
+    match_keys = ('x_min', 'x_max', 'y_min', 'y_max')
+    disable_matched_zoom_in_other_viewer = False
 
-    def save_prev_zoom(self):
-        # override the behavior in core.tools._BaseZoomHistory to store viewer limits
-        # for all referenced viewers.  This enables the previous zoom button to work for
-        # a viewer whose zoom was changed by a MatchedZoom instance from another viewer
-        for viewer in self._iter_image_viewers():
-            viewer._prev_limits = (viewer.state.x_min, viewer.state.x_max,
-                                   viewer.state.y_min, viewer.state.y_max)
+    def _is_matched_viewer(self, viewer):
+        return isinstance(viewer, BqplotImageView)
 
-    def activate(self):
-
-        super().activate()
-        self.viewer.state.add_callback('x_min', self.on_limits_change)
-        self.viewer.state.add_callback('x_max', self.on_limits_change)
-        self.viewer.state.add_callback('y_min', self.on_limits_change)
-        self.viewer.state.add_callback('y_max', self.on_limits_change)
-
+    def _post_activate(self):
         # NOTE: For Imviz only.
         # Set the reference data in other viewers to be the same as the current viewer.
         # If adding the data to the viewer, make sure it is not actually shown since the
         # user didn't request it.
-        if self.viewer.jdaviz_app.config == 'imviz':
-            for viewer in self._iter_image_viewers():
-                if viewer is not self.viewer:
-                    if self.viewer.state.reference_data not in viewer.state.layers_data:
-                        viewer.add_data(self.viewer.state.reference_data)
-                        for layer in viewer.state.layers:
-                            if layer.layer is self.viewer.state.reference_data:
-                                layer.visible = False
-                                break
-                    viewer.state.reference_data = self.viewer.state.reference_data
-
-        # Trigger a sync so the initial limits match
-        self.on_limits_change()
-
-    def deactivate(self):
-
-        self.viewer.state.remove_callback('x_min', self.on_limits_change)
-        self.viewer.state.remove_callback('x_max', self.on_limits_change)
-        self.viewer.state.remove_callback('y_min', self.on_limits_change)
-        self.viewer.state.remove_callback('y_max', self.on_limits_change)
-
-        super().deactivate()
-
-    def on_limits_change(self, *args):
-        for viewer in self._iter_image_viewers():
-            if viewer is not self.viewer:
-                with delay_callback(viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                    viewer.state.x_min = self.viewer.state.x_min
-                    viewer.state.x_max = self.viewer.state.x_max
-                    viewer.state.y_min = self.viewer.state.y_min
-                    viewer.state.y_max = self.viewer.state.y_max
+        for viewer in self._iter_matched_viewers(include_self=False):
+            if self.viewer.state.reference_data not in viewer.state.layers_data:
+                viewer.add_data(self.viewer.state.reference_data)
+                for layer in viewer.state.layers:
+                    if layer.layer is self.viewer.state.reference_data:
+                        layer.visible = False
+                        break
+            viewer.state.reference_data = self.viewer.state.reference_data
 
 
 @viewer_tool
@@ -124,7 +87,7 @@ class BlinkOnce(CheckableTool):
 
 
 @viewer_tool
-class MatchBoxZoom(_MatchedZoomMixin, BoxZoom):
+class MatchBoxZoom(_ImvizMatchedZoomMixin, BoxZoom):
     icon = os.path.join(ICON_DIR, 'zoom_box_match.svg')
     tool_id = 'jdaviz:boxzoommatch'
     action_text = 'Box zoom, matching between viewers'
@@ -132,7 +95,7 @@ class MatchBoxZoom(_MatchedZoomMixin, BoxZoom):
 
 
 @viewer_tool
-class MatchPanZoom(_MatchedZoomMixin, ImagePanZoom):
+class MatchPanZoom(_ImvizMatchedZoomMixin, ImagePanZoom):
     icon = os.path.join(ICON_DIR, 'panzoom_match.svg')
     tool_id = 'jdaviz:panzoommatch'
     action_text = 'Pan, matching between viewers'

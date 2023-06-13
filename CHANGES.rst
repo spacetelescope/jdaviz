@@ -23,11 +23,16 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Improved x-axis limit-matching between 2d and 1d spectrum viewers. [#2219]
+
 Specviz
 ^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
+
+- Re-enable support for displaying the 1d spectrum in wavelength/frequency space, with improved
+  x-axis limit-matching. [#2219]
 
 API Changes
 -----------

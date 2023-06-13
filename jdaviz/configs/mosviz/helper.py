@@ -2,7 +2,6 @@ import os
 import warnings
 from copy import deepcopy
 from pathlib import Path
-from time import time
 from zipfile import is_zipfile
 
 import numpy as np
@@ -39,10 +38,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         super().__init__(*args, **kwargs)
 
         spec1d = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        spec1d.scales['x'].observe(self._update_spec2d_x_axis, names=['min', 'max'])
-
         spec2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
-        spec2d.scales['x'].observe(self._update_spec1d_x_axis, names=['min', 'max'])
 
         image_viewer = self.app.get_viewer(self._default_image_viewer_reference_name)
 
@@ -77,12 +73,6 @@ class Mosviz(ConfigHelper, LineListMixin):
                                handler=self._redshift_listener)
 
         self._shared_image = False
-
-        self._scales1d = spec1d.scales['x']
-        self._scales2d = spec2d.scales['x']
-
-        self._panning_warning_triggered = False
-        self._last_panning_warning = 0
 
         self._update_in_progress = False
 
@@ -140,94 +130,6 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         self._frozen_layers_cache = []
 
-        # Make sure world flipping has been handled correctly, as internal
-        # callbacks may have been made while limits were frozen.  This is
-        # especially important for NIRISS data.
-        self._update_spec2d_x_axis()
-
-    def _extend_world(self, spec1d, ext):
-        # Extend 1D spectrum world axis to enable panning (within reason) past
-        # the bounds of data
-        world = self.app.data_collection[spec1d]["World 0"].copy()
-        dw = world[1]-world[0]
-        prepend = np.linspace(world[0]-dw*ext, world[0]-dw, ext)
-        dw = world[-1]-world[-2]
-        append = np.linspace(world[-1]+dw, world[-1]+dw*ext, ext)
-        world = np.hstack((prepend, world, append))
-        return world
-
-    def _update_spec2d_x_axis(self, change=None):
-        # This assumes the two spectrum viewers have the same x-axis shape and
-        # wavelength solution, which should always hold
-        table_viewer = self.app.get_viewer(self._default_table_viewer_reference_name)
-
-        if self._update_in_progress or table_viewer.row_selection_in_progress:
-            return
-
-        min_1d = self._scales1d.min
-        max_1d = self._scales1d.max
-
-        spec1d = table_viewer._selected_data[self._default_spectrum_viewer_reference_name]
-        extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
-        world = self._extend_world(spec1d, extend_by)
-
-        # Workaround for flipped data
-        min_world, max_world = ((world[0], world[-1]) if not self._is_world_flipped()
-                                else (world[-1], world[0]))
-
-        # Warn the user if they've panned far enough away from the data
-        # that the viewers will desync
-        if min_1d < min_world or max_1d > max_world:
-            self._show_panning_warning()
-            return
-
-        self._panning_warning_triggered = False
-
-        idx_min = float((np.abs(world - min_1d)).argmin()) - extend_by
-        idx_max = float((np.abs(world - max_1d)).argmin()) - extend_by
-
-        self._update_in_progress = True
-        with self._scales2d.hold_sync():
-            self._scales2d.min = idx_min
-            self._scales2d.max = idx_max
-
-        self._update_in_progress = False
-
-    def _update_spec1d_x_axis(self, change=None):
-        # This assumes the two spectrum viewers have the same x-axis shape and
-        # wavelength solution, which should always hold
-        table_viewer = self.app.get_viewer(self._default_table_viewer_reference_name)
-
-        if self._update_in_progress or table_viewer.row_selection_in_progress:
-            return
-
-        min_2d = self._scales2d.min
-        max_2d = self._scales2d.max
-
-        spec1d = table_viewer._selected_data[self._default_spectrum_viewer_reference_name]
-        extend_by = int(self.app.data_collection[spec1d]["World 0"].shape[0])
-        world = self._extend_world(spec1d, extend_by)
-
-        idx_min = int(np.around(min_2d)) + extend_by
-        idx_max = int(np.around(max_2d)) + extend_by
-
-        # Warn the user if they've panned far enough away from the data
-        # that the viewers will desync
-        # Note: Because of the flipped data workaround, idx_min can be > idx_max
-        max_world = len(world)
-        if not (0 <= idx_min < max_world and 0 <= idx_max < max_world):
-            self._show_panning_warning()
-            return
-
-        self._panning_warning_triggered = False
-
-        self._update_in_progress = True
-        with self._scales1d.hold_sync():
-            self._scales1d.min = world[idx_min]
-            self._scales1d.max = world[idx_max]
-
-        self._update_in_progress = False
-
     def _redshift_listener(self, msg):
         '''Save new redshifts (including from the helper itself)'''
         if self._update_in_progress:
@@ -255,35 +157,8 @@ class Mosviz(ConfigHelper, LineListMixin):
         if value is not None:
             self.specviz.set_redshift(value)
 
-    def _show_panning_warning(self):
-        now = time()
-
-        # Limit the number of messages that can be send to 1 per 5 seconds
-        panning_warning_timeout = 5
-
-        if (not self._panning_warning_triggered
-                and now > self._last_panning_warning + panning_warning_timeout):
-            self._panning_warning_triggered = True
-            self._last_panning_warning = now
-            msg = ("Warning: panning too far away from the data may desync"
-                   "the 1D and 2D spectrum viewers")
-            msg = SnackbarMessage(msg, color='warning', sender=self)
-            self.app.hub.broadcast(msg)
-
-    def _is_world_flipped(self):
-        spec1d = self.app.get_viewer(
-            self._default_table_viewer_reference_name
-        )._selected_data.get(
-            self._default_spectrum_viewer_reference_name
-        )
-        if not spec1d:
-            return False
-        world = self.app.data_collection[spec1d]["World 0"]
-        return world[0] > world[-1]
-
     def _row_click_message_handler(self, msg):
         self._handle_image_zoom(msg)
-        self._handle_flipped_data()
         # expose the row to vue for each of the viewers
         self.app.state.settings = {**self.app.state.settings, 'mosviz_row': msg.selected_index}
 
@@ -316,14 +191,6 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         if center is not None:
             imview.center_on(center)
-
-    def _handle_flipped_data(self):
-        # Workaround for flipped data
-        if self._is_world_flipped():
-            min, max = self._scales2d.max, self._scales2d.min
-            with self._scales2d.hold_sync():
-                self._scales2d.min = min
-                self._scales2d.max = max
 
     def _zoom_to_object_params(self, msg):
 

@@ -1,8 +1,12 @@
+import numpy as np
+
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
+from functools import cached_property
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
+from scipy.interpolate import interp1d
 from specutils import Spectrum1D
 
 from jdaviz.core.events import (AddDataToViewerMessage,
@@ -12,9 +16,10 @@ from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
+from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 
 __all__ = ['MosvizImageView', 'MosvizProfile2DView',
-           'MosvizTableViewer']
+           'MosvizProfileView', 'MosvizTableViewer']
 
 
 @viewer_registry("mosviz-image-viewer", label="Image 2D (Mosviz)")
@@ -66,9 +71,9 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
-                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
-                    ['jdaviz:panzoom', 'jdaviz:panzoom_x'],
+                    ['mosviz:homezoom'],
+                    ['mosviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],
                     ['bqplot:xrange'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
@@ -88,6 +93,120 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
             "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
         )
 
+        self.session.hub.subscribe(self, AddDataToViewerMessage,
+                                   handler=self._on_viewer_data_changed)
+        self.session.hub.subscribe(self, RemoveDataFromViewerMessage,
+                                   handler=self._on_viewer_data_changed)
+
+        for k in ('x_min', 'x_max'):
+            self.state.add_callback(k, self._handle_x_axis_orientation)
+
+    @cached_property
+    def reference_spectral_axis(self):
+        return self.state.reference_data.get_object().spectral_axis.value
+
+    @cached_property
+    def pixel_to_world_interp(self):
+        pixels = range(len(self.reference_spectral_axis))
+        return interp1d(pixels, self.reference_spectral_axis)
+
+    def pixel_to_world_limits(self, limits):
+        if not len(limits) == 2:
+            raise ValueError("limits must be length 2")
+
+        pixels = np.arange(0, len(self.reference_spectral_axis))
+
+        # we'll use interpolation when possible, but also want to fit a line between
+        # the outermost edge of the data within the limits
+        line_edges_pix = np.array([max((min(pixels), min(limits))),
+                                   min((max(pixels), max(limits)))])
+        if line_edges_pix[0] > line_edges_pix[1]:
+            # then the limits are entirely out of range, so use the whole range
+            # when fitting the linear approximation
+            line_edges_pix = np.array([min(pixels), max(pixels)])
+        line_edges_world = self.pixel_to_world_interp(line_edges_pix)
+        line_coeffs = np.polyfit(line_edges_pix, line_edges_world, deg=1)
+
+        def pixel_to_world_line(pixel):
+            return line_coeffs[0] * pixel + line_coeffs[1]
+
+        def map_pixel_to_world(pixel):
+            if pixels[0] <= pixel <= pixels[-1]:
+                # interpolate directly
+                return float(self.pixel_to_world_interp(pixel))
+            else:
+                # use the line model to extrapolate
+                return pixel_to_world_line(pixel)
+
+        invert = (-1) ** sum((self.inverted_x_axis, limits[0] > limits[1]))
+        out_lims = list(map(map_pixel_to_world, limits))[::invert]
+
+        return out_lims
+
+    @cached_property
+    def world_to_pixel_interp(self):
+        pixels = range(len(self.reference_spectral_axis))
+        return interp1d(self.reference_spectral_axis, pixels)
+
+    def world_to_pixel_limits(self, limits):
+        if not len(limits) == 2:
+            raise ValueError("limits must be length 2")
+
+        # we'll use interpolation when possible, but also want to fit a line between
+        # the outermost edge of the data within the limits
+        line_edges_world = np.array([max((min(self.reference_spectral_axis), min(limits))),
+                                     min((max(self.reference_spectral_axis), max(limits)))])
+        if line_edges_world[0] > line_edges_world[1]:
+            # then the limits are entirely out of range, so use the whole range
+            # when fitting the linear approximation
+            line_edges_world = np.array([min(self.reference_spectral_axis),
+                                         max(self.reference_spectral_axis)])
+        line_edges_pixels = self.world_to_pixel_interp(line_edges_world)
+        line_coeffs = np.polyfit(line_edges_world, line_edges_pixels, deg=1)
+
+        def world_to_pixel_line(world):
+            return line_coeffs[0] * world + line_coeffs[1]
+
+        def map_world_to_pixel(world):
+            if min(self.reference_spectral_axis) <= world <= max(self.reference_spectral_axis):
+                # interpolate directly
+                return float(self.world_to_pixel_interp(world))
+            else:
+                # use the line model to extrapolate
+                return world_to_pixel_line(world)
+
+        invert = (-1) ** sum((self.inverted_x_axis, limits[0] > limits[1]))
+        out_lims = list(map(map_world_to_pixel, limits))[::invert]
+
+        return out_lims
+
+    def _on_viewer_data_changed(self, msg):
+        if msg.viewer_reference != self.reference:
+            return
+        # clear cached properties that are based on reference data - this is probably
+        # overly-conservative and we might be able to limit the clearing for only when
+        # reference data is changed (perhaps with a callback on the state for reference_data)
+        for attr in ('reference_spectral_axis', 'inverted_x_axis',
+                     'pixel_to_world_interp', 'world_to_pixel_interp'):
+            if attr in self.__dict__:
+                del self.__dict__[attr]
+        if len(self.data()):
+            self._handle_x_axis_orientation()
+
+    @cached_property
+    def inverted_x_axis(self):
+        return self.reference_spectral_axis[0] > self.reference_spectral_axis[-1]
+
+    def _handle_x_axis_orientation(self, *args):
+        x_scales = self.scales['x']
+        limits = [x_scales.min, x_scales.max]
+        limits_inverted = limits[0] > limits[1]
+        if limits_inverted == self.inverted_x_axis:
+            return
+        with x_scales.hold_sync():
+            x_scales.min = max(limits) if self.inverted_x_axis else min(limits)
+            x_scales.max = min(limits) if self.inverted_x_axis else max(limits)
+
     def data(self, cls=None):
         return [layer_state.layer.get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
@@ -95,7 +214,7 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
                 isinstance(layer_state.layer, BaseData)]
 
     def set_plot_axes(self):
-        self.figure.axes[0].visible = False
+        self.figure.axes[0].label = "x: pixels"
 
         self.figure.axes[1].label = "y: pixels"
         self.figure.axes[1].tick_format = None
@@ -103,6 +222,19 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
         # Make it so y axis label is not covering tick numbers.
         self.figure.axes[1].label_offset = "-50"
+
+
+@viewer_registry("mosviz-profile-viewer", label="Profile 1D")
+class MosvizProfileView(SpecvizProfileView):
+    # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
+    tools_nested = [
+                    ['mosviz:homezoom'],
+                    ['mosviz:boxzoom', 'mosviz:xrangezoom', 'jdaviz:yrangezoom'],  # noqa
+                    ['mosviz:panzoom', 'mosviz:panzoom_x', 'jdaviz:panzoom_y'],  # noqa
+                    ['bqplot:xrange'],
+                    ['jdaviz:selectline'],
+                    ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
+                ]
 
 
 @viewer_registry("mosviz-table-viewer", label="Table (Mosviz)")

@@ -37,6 +37,84 @@ class _BaseZoomHistory:
                                     self.viewer.state.y_min, self.viewer.state.y_max)
 
 
+class _MatchedZoomMixin:
+    match_axes = ('x', 'y')
+    disable_matched_zoom_in_other_viewer = False
+
+    def _is_matched_viewer(self, viewer):
+        return True
+
+    def _iter_matched_viewers(self, include_self=False):
+        for viewer in self.viewer.session.application.viewers:
+            if viewer is self.viewer and not include_self:
+                continue
+            elif self._is_matched_viewer(viewer):
+                yield viewer
+
+    def _map_limits(self, from_viewer, to_viewer, limits={}):
+        return limits
+
+    def _post_activate(self):
+        return
+
+    @property
+    def match_keys(self):
+        keys = []
+        for ax in self.match_axes:
+            keys += [f'{ax}_min', f'{ax}_max']
+        return keys
+
+    def activate(self):
+        if self.disable_matched_zoom_in_other_viewer:
+            # mapping limits are not guaranteed to roundtrip, so we need to disable
+            # any linked tool in the "other" viewer
+            for viewer in self._iter_matched_viewers(include_self=False):
+                if isinstance(viewer.toolbar.active_tool, _MatchedZoomMixin):
+                    viewer.toolbar.active_tool_id = None
+
+        super().activate()
+        for k in self.match_keys:
+            self.viewer.state.add_callback(k, self.on_limits_change)
+
+        self._post_activate()
+
+        # Trigger a sync so the initial limits match
+        self.on_limits_change()
+
+    def deactivate(self):
+        for k in self.match_keys:
+            self.viewer.state.remove_callback(k, self.on_limits_change)
+
+        super().deactivate()
+
+    def on_limits_change(self, *args):
+        # from_lims: limits in the viewer belonging to the tool
+        from_lims = {k: getattr(self.viewer.state, k) for k in self.match_keys}
+
+        for viewer in self._iter_matched_viewers(include_self=False):
+            # orig_lims: limits in this "matched" viewer
+            # to_lims: proposed new limits for this "matched" viewer
+            orig_lims = {k: getattr(viewer.state, k) for k in self.match_keys}
+            to_lims = self._map_limits(self.viewer, viewer, from_lims)
+            with delay_callback(viewer.state, *self.match_keys):
+                for ax in self.match_axes:
+                    # to avoid recursion we'll only update the state if there is a change
+                    # outside a tolerance set by some fraction of the limits range
+                    if None in orig_lims.values():
+                        orig_range = np.inf
+                    else:
+                        orig_range = abs(orig_lims.get(f'{ax}_max') - orig_lims.get(f'{ax}_min'))
+                    to_range = abs(to_lims.get(f'{ax}_max') - to_lims.get(f'{ax}_min'))
+                    tol = 1e-6 * min(orig_range, to_range)
+
+                    for k in (f'{ax}_min', f'{ax}_max'):
+                        value = to_lims.get(k)
+                        orig_value = orig_lims.get(k)
+                        if not np.isnan(value) and (orig_value is None or
+                                                    abs(value-orig_lims.get(k, np.inf)) > tol):
+                            setattr(viewer.state, k, value)
+
+
 @viewer_tool
 class PrevZoom(Tool, _BaseZoomHistory):
     icon = os.path.join(ICON_DIR, 'zoom_back.svg')
