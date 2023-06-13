@@ -227,7 +227,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         self._unpack_get_subsets_for_ui()
 
-<<<<<<< HEAD
     def vue_simplify_subset(self, *args):
         if len(self.subset_states) < 2:
             self.hub.broadcast(SnackbarMessage("Cannot simplify spectral subset "
@@ -237,14 +236,13 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         att = self.subset_states[0].att
         self.app.simplify_spectral_subset(subset_name=self.subset_selected, att=att,
                                           overwrite=True)
-=======
+
     def _on_display_unit_changed(self, msg):
         # We only care about the spectral units, since flux units don't affect spectral subsets
         if msg.axis == "spectral":
             self.spectral_display_unit = msg.unit
             if self.subset_selected != self.subset_select.default_text:
                 self._get_subset_definition(self.subset_selected)
->>>>>>> a9151a48acb62b44db69c360245bd46c6c8b7a9a
 
     def vue_update_subset(self, *args):
         status, reason = self._check_input()
