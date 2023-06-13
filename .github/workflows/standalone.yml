@@ -59,8 +59,8 @@ jobs:
       # google hits on pyqt having the same issue
       if: ${{ matrix.os == 'macos' }}
       run: |
-        rm -rf dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
-        rm -rf dist/jdaviz.app/Contents/Resources/skimage/.dylibs
+        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
+        rm -rf standalone/dist/jdaviz.app/Contents/Resources/skimage/.dylibs
 
     - name: Codesign (OSX)
       if: ${{ matrix.os == 'macos' }}
