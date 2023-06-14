@@ -189,7 +189,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
         provide convenience function to clearing the cache for cached_properties
         """
         if not len(attrs):
-            attrs = self._cached_properties
+            attrs = getattr(self, '_cached_properties', [])
         for attr in attrs:
             if attr in self.__dict__:
                 del self.__dict__[attr]
