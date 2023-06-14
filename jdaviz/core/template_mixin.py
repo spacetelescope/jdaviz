@@ -184,6 +184,16 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
     def data_collection(self):
         return self._app.session.data_collection
 
+    def _clear_cache(self, *attrs):
+        """
+        provide convenience function to clearing the cache for cached_properties
+        """
+        if not len(attrs):
+            attrs = self._cached_properties
+        for attr in attrs:
+            if attr in self.__dict__:
+                del self.__dict__[attr]
+
     @property
     def _specviz_helper(self):
         # for helpers that have a .specviz, return that, otherwise the original helper
