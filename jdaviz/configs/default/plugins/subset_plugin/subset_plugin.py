@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 
+from astropy.time import Time
 import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
@@ -192,12 +193,21 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 subset_type = subset_state.roi.__class__.__name__
 
             elif isinstance(subset_state, RangeSubsetState):
-                lo = spec['region'].lower
-                hi = spec['region'].upper
-                subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo.value,
-                                      "orig": lo.value, "unit": str(lo.unit)},
-                                     {"name": "Upper bound", "att": "hi", "value": hi.value,
-                                      "orig": hi.value, "unit": str(hi.unit)}]
+                region = spec['region']
+                if isinstance(region, Time):
+                    lo = region.min()
+                    hi = region.max()
+                    subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo.value,
+                                          "orig": lo.value},
+                                         {"name": "Upper bound", "att": "hi", "value": hi.value,
+                                          "orig": hi.value}]
+                else:
+                    lo = region.lower
+                    hi = region.upper
+                    subset_definition = [{"name": "Lower bound", "att": "lo", "value": lo.value,
+                                          "orig": lo.value, "unit": str(lo.unit)},
+                                         {"name": "Upper bound", "att": "hi", "value": hi.value,
+                                          "orig": hi.value, "unit": str(hi.unit)}]
                 subset_type = "Range"
             if len(subset_definition) > 0:
                 # Note: .append() does not work for List traitlet.
