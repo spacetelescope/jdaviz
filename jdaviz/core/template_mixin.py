@@ -2530,7 +2530,7 @@ class Plot(PluginSubcomponent):
                                     'y': self.figure.axes[1].scale},
                             colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                             **kwargs)
-        self.figure.marks += [mark]
+        self.figure.marks = self.figure.marks + [mark]
         self._marks[label] = mark  # TODO: handle overwriting case
         return mark
 
@@ -2541,7 +2541,7 @@ class Plot(PluginSubcomponent):
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs
                               )
-        self.figure.marks += [mark]
+        self.figure.marks = self.figure.marks + [mark]
         self._marks[label] = mark  # TODO: handle overwriting case
         return mark
 
