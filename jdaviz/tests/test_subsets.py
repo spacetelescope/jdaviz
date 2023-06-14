@@ -581,3 +581,23 @@ def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
 
     reg = specviz_helper.app.get_subsets("Subset 1")
     assert reg.lower.value == 6400 and reg.upper.value == 7400
+
+
+def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
+    specviz_helper.load_spectrum(spectrum1d)
+    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+
+    viewer.apply_roi(XRangeROI(6400, 6600))
+    specviz_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(XRangeROI(7000, 7400))
+
+    viewer.apply_roi(XRangeROI(6600, 7300))
+
+    viewer.apply_roi(XRangeROI(7600, 7800))
+
+    subset_plugin = specviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    assert subset_plugin.can_simplify
+    subset_plugin.vue_simplify_subset()
+
+    reg = specviz_helper.app.get_subsets("Subset 1")
+    assert reg.lower.value == 6400 and reg.upper.value == 7400
