@@ -61,7 +61,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 2
         assert phot_plugin.plot_available
-        assert phot_plugin.radial_plot != ''  # Does not check content
+        assert len(phot_plugin.plot.marks['scatter'].x) > 0
 
         # Check photometry results.
         assert tbl.colnames == [
@@ -168,7 +168,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Curve of growth
         phot_plugin.current_plot_type = 'Curve of Growth'
         phot_plugin.vue_do_aper_phot()
-        assert phot_plugin._fig.title == 'Curve of growth from aperture center'
+        assert phot_plugin.plot.figure.title == 'Curve of growth from aperture center'
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):

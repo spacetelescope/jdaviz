@@ -2,6 +2,7 @@ from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import astropy.units as u
+import bqplot
 import numpy as np
 
 from functools import cached_property
@@ -38,6 +39,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'LayerSelect', 'LayerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
            'Table', 'TableMixin',
+           'Plot', 'PlotMixin',
            'AutoTextField', 'AutoTextFieldMixin',
            'AddResults', 'AddResultsMixin',
            'PlotOptionsSyncState',
@@ -2535,3 +2537,94 @@ class TableMixin(VuetifyTemplate, HubListener):
         Export the QTable representation of the table.
         """
         return self.table.export_table()
+
+
+class Plot(PluginSubcomponent):
+    """
+    Plot subcomponent.  For most cases where a plugin only requires a single plot, use the mixin
+    instead.
+
+    To use in a plugin, define ``plugin.plot = Plot(plugin)``, create a ``plot_widget`` Unicode
+    traitlet, and set ``plugin.plot_widget = 'IPY_MODEL_'+self.plot.model_id``.
+
+    To render in the plugin's vue file::
+
+      <jupyter-widget :widget="plot_widget"></jupyter-widget>
+
+    """
+    template_file = __file__, "../components/plugin_plot.vue"
+
+    figure = Any().tag(sync=True, **widget_serialization)
+
+    def __init__(self, plugin, *args, **kwargs):
+        super().__init__(plugin, 'Plot', *args, **kwargs)
+        self.figure = bqplot.Figure()
+        self._marks = {}
+
+        self.figure.axes = [bqplot.Axis(scale=bqplot.LinearScale(), label='x'),
+                            bqplot.Axis(scale=bqplot.LinearScale(),
+                                        orientation='vertical', label='y')]
+
+        self.figure.title_style = {'font-size': '12px'}
+        self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+
+        plugin.bqplot_figs_resize += [self.figure]
+
+    @property
+    def marks(self):
+        return self._marks
+
+    def clear_marks(self, *mark_labels):
+        for mark_label, mark in self.marks.items():
+            if mark_label in mark_labels:
+                mark.x, mark.y = [], []
+
+    def clear_all_marks(self):
+        self.clear_marks(*self.marks.keys())
+
+    def _add_mark(self, cls, label, **kwargs):
+        if label in self._marks:
+            raise ValueError(f"mark with label '{label}' already exists")
+        mark = cls(scales={'x': self.figure.axes[0].scale,
+                           'y': self.figure.axes[1].scale},
+                   **kwargs)
+        self.figure.marks = self.figure.marks + [mark]
+        self._marks[label] = mark
+        return mark
+
+    def add_line(self, label, x=[], y=[], **kwargs):
+        return self._add_mark(bqplot.Lines, label, x=x, y=y,
+                              colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
+                              **kwargs)
+
+    def add_scatter(self, label, x=[], y=[], **kwargs):
+        return self._add_mark(bqplot.Scatter, label, x=x, y=y,
+                              colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
+                              **kwargs)
+
+
+class PlotMixin(VuetifyTemplate, HubListener):
+    """
+    Plot subcomponent mixin.
+
+    In addition to ``plot``, this provides the following methods at the plugin-level:
+
+    * :meth:`clear_plot`
+
+    To render in the plugin's vue file::
+
+      <jupyter-widget :widget="plot_widget"></jupyter-widget>
+
+    """
+    plot_widget = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.plot = Plot(self)
+        self.plot_widget = 'IPY_MODEL_'+self.plot.model_id
+
+    def clear_plot(self):
+        """
+        Clear all data from the current plot.
+        """
+        self.plot.clear_plot()
