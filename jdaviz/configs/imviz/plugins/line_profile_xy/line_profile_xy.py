@@ -48,8 +48,8 @@ class LineProfileXY(PluginTemplateMixin):
 
     def reset_results(self):
         self.plot_available = False
-        self.plot_across_x.clear_plot()
-        self.plot_across_y.clear_plot()
+        self.plot_across_x.clear_all_marks()
+        self.plot_across_y.clear_all_marks()
 
     # This is also triggered from viewer code.
     @observe("selected_viewer")

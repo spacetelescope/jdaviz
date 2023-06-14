@@ -27,7 +27,6 @@ from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
-from jdaviz.utils import bqplot_clear_figure
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
@@ -2512,7 +2511,8 @@ class Plot(PluginSubcomponent):
         self._marks = {}
 
         self.figure.axes = [bqplot.Axis(scale=bqplot.LinearScale(), label='x'),
-                            bqplot.Axis(scale=bqplot.LinearScale(), orientation='vertical', label='y')]
+                            bqplot.Axis(scale=bqplot.LinearScale(),
+                                        orientation='vertical', label='y')]
 
         self.figure.title_style = {'font-size': '12px'}
         self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
@@ -2523,31 +2523,33 @@ class Plot(PluginSubcomponent):
     def marks(self):
         return self._marks
 
-    def add_line(self, label, x=[], y=[], **kwargs):
-        # TODO: general method to add mark to avoid repeated code
-        mark = bqplot.Lines(x=x, y=y,
-                            scales={'x': self.figure.axes[0].scale,
-                                    'y': self.figure.axes[1].scale},
-                            colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
-                            **kwargs)
+    def clear_marks(self, *mark_labels):
+        for mark_label, mark in self.marks.items():
+            if mark_label in mark_labels:
+                mark.x, mark.y = [], []
+
+    def clear_all_marks(self):
+        self.clear_marks(*self.marks.keys())
+
+    def _add_mark(self, cls, label, **kwargs):
+        if label in self._marks:
+            raise ValueError(f"mark with label '{label}' already exists")
+        mark = cls(scales={'x': self.figure.axes[0].scale,
+                           'y': self.figure.axes[1].scale},
+                   **kwargs)
         self.figure.marks = self.figure.marks + [mark]
-        self._marks[label] = mark  # TODO: handle overwriting case
+        self._marks[label] = mark
         return mark
+
+    def add_line(self, label, x=[], y=[], **kwargs):
+        return self._add_mark(bqplot.Lines, label, x=x, y=y,
+                              colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
+                              **kwargs)
 
     def add_scatter(self, label, x=[], y=[], **kwargs):
-        mark = bqplot.Scatter(x=x, y=y,
-                              scales={'x': self.figure.axes[0].scale,
-                                      'y': self.figure.axes[1].scale},
+        return self._add_mark(bqplot.Scatter, label, x=x, y=y,
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
-                              **kwargs
-                              )
-        self.figure.marks = self.figure.marks + [mark]
-        self._marks[label] = mark  # TODO: handle overwriting case
-        return mark
-
-    def clear_plot(self):
-        for mark in self.figure.marks:
-            mark.x, mark.y = [], []
+                              **kwargs)
 
 
 class PlotMixin(VuetifyTemplate, HubListener):

@@ -3,7 +3,6 @@ import warnings
 from datetime import datetime
 
 import astropy
-import bqplot
 import numpy as np
 from astropy import units as u
 from astropy.modeling.fitting import LevMarLSQFitter
@@ -358,7 +357,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                     comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
                     wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
                 line.x, line.y = x_arr, sum_arr
-                sc.x, sc.y = [], []
+                self.plot.clear_marks('scatter', 'fit_line')
                 self.plot.figure.axes[0].label = x_label
                 self.plot.figure.axes[1].label = y_label
 
@@ -372,7 +371,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=False)
                     line.x, line.y = x_data, y_data
-                    sc.x, sc.y = [], []
+                    self.plot.clear_marks('scatter')
 
                 else:  # Radial Profile (Raw)
                     self.plot.figure.title = 'Raw radial profile from aperture center'
@@ -380,8 +379,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=True)
 
-                    line.x, line.y = [], []
                     sc.x, sc.y = x_data, y_data
+                    self.plot.clear_marks('line')
 
                 # Fit Gaussian1D to radial profile data.
                 if self.fit_radial_profile:
@@ -407,13 +406,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                             f"Radial profile fitting: {msg}", color='warning', sender=self))
                     y_fit = fit_model(x_data)
                     self.app.fitted_models[self._fitted_model_name] = fit_model
-
                     fit_line.x, fit_line.y = x_data, y_fit
                 else:
-                    fit_line.x, fit_line.y = [], []
+                    self.plot.clear_marks('fit_line')
 
         except Exception as e:  # pragma: no cover
-            self.plot.clear_plot()
+            self.plot.clear_all_marks()
             msg = f"Aperture photometry failed: {repr(e)}"
             self.hub.broadcast(SnackbarMessage(msg, color='error', sender=self))
             self.result_failed_msg = msg

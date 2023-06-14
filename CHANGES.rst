@@ -9,6 +9,8 @@ New Features
 - Add Simplify button to subset plugin to make composite spectral subsets more user
   friendly. [#2237]
 
+- Plots within plugins can now be popped-out into their own windows. [#2254]
+
 Cubeviz
 ^^^^^^^
 
