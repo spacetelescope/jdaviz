@@ -600,4 +600,6 @@ def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
     subset_plugin.vue_simplify_subset()
 
     reg = specviz_helper.app.get_subsets("Subset 1")
-    assert reg.lower.value == 6400 and reg.upper.value == 7400
+    assert reg[0].lower.value == 6400 and reg[0].upper.value == 7400
+    assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
+
