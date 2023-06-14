@@ -1249,7 +1249,6 @@ class Application(VuetifyTemplate, HubListener):
         else:
             new_state = None
             spectral_region = self.get_subsets(subset_name, spectral_only=True)
-            # new_state = None
             # Reverse through sub regions so that they are added back
             # in the order of lowest values to highest
             for index in range(len(spectral_region) - 1, -1, -1):
