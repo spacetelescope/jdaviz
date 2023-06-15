@@ -60,7 +60,12 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     else:
         file_list = []
 
-    with open(JDAVIZ_DIR / "jdaviz_cli.ipynb") as f:
+    if not filepaths and not layout:
+        notebook = "jdaviz_cli_launcher.ipynb"
+    else:
+        notebook = "jdaviz_cli.ipynb"
+
+    with open(JDAVIZ_DIR / notebook) as f:
         notebook_template = f.read()
 
     start_dir = os.path.abspath('.')
