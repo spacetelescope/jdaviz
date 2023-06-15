@@ -15,7 +15,6 @@ def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']
     intro_row = v.Row()
     welcome_text = v.Html(tag='h1', attributes={'title': 'a title'},
                           children=['Welcome to Jdaviz'])
-    #links = 
     intro_row.children = [welcome_text]
 
     # Filepath row
@@ -27,11 +26,12 @@ def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']
         if filepath:
             helper = jdaviz_open(filepath, show=False)
             main.children = [helper.app]
-    
-    open_data_btn = v.Btn(class_="ma-2", outlined=True, color="primary", children=[v.Icon(children=["mdi-upload"])])
+
+    open_data_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
+                          children=[v.Icon(children=["mdi-upload"])])
     open_data_btn.on_event('click', lambda btn, event, data: load_file(btn.value))
     jslink((text_field, 'v_model'), (open_data_btn, 'value'))
-    
+
     filepath_row.children = [text_field, open_data_btn]
 
     # Config buttons
@@ -41,7 +41,8 @@ def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']
 
     btns = []
     for config in configs:
-        config_btn = v.Btn(class_="ma-2", outlined=True, color="primary", children=[config.capitalize()])
+        config_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
+                           children=[config.capitalize()])
         config_btn.on_event('click', lambda btn, event, data: create_config(btn.children[0]))
         btns.append(config_btn)
 
