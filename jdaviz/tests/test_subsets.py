@@ -602,3 +602,45 @@ def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
     reg = specviz_helper.app.get_subsets("Subset 1")
     assert reg[0].lower.value == 6400 and reg[0].upper.value == 7400
     assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
+
+
+def test_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
+    specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
+    viewer = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
+
+    viewer.apply_roi(XRangeROI(6400, 7400))
+    specviz2d_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(XRangeROI(6600, 7200))
+
+    specviz2d_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(XRangeROI(6600, 7300))
+
+    subset_plugin = specviz2d_helper.app.get_tray_item_from_name('g-subset-plugin')
+    assert subset_plugin.can_simplify
+    subset_plugin.vue_simplify_subset()
+
+    reg = specviz2d_helper.app.get_subsets("Subset 1")
+    assert reg.lower.value == 6400 and reg.upper.value == 7400
+
+
+def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
+    specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
+    viewer = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
+
+    viewer.apply_roi(XRangeROI(6400, 6600))
+    specviz2d_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(XRangeROI(7000, 7400))
+
+    viewer.apply_roi(XRangeROI(6600, 7300))
+
+    viewer.apply_roi(XRangeROI(7600, 7800))
+
+    subset_plugin = specviz2d_helper.app.get_tray_item_from_name('g-subset-plugin')
+    assert subset_plugin.can_simplify
+    subset_plugin.vue_simplify_subset()
+
+    reg = specviz2d_helper.app.get_subsets("Subset 1")
+    assert reg[0].lower.value == 6400 and reg[0].upper.value == 7400
+    assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
