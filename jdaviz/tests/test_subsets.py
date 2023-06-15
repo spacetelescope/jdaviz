@@ -588,6 +588,7 @@ def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
 
     viewer.apply_roi(XRangeROI(6400, 6600))
+    assert specviz_helper.app.is_there_overlap_spectral_subset("Subset 1") is False
     specviz_helper.app.session.edit_subset_mode.mode = OrMode
     viewer.apply_roi(XRangeROI(7000, 7400))
 
