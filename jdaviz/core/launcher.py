@@ -7,8 +7,7 @@ from jdaviz.core.data_formats import open as jdaviz_open
 
 
 def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']):
-    main = v.Sheet(class_="mx-4")
-    main.add_traits(_metadata=Dict(default_value={'mount_id': 'content'}).tag(sync=True))
+    main = v.Sheet(class_="mx-4", _metadata={'mount_id': 'content'})
     main.children = []
 
     # Create Intro Row
