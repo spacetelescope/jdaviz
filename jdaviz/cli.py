@@ -61,7 +61,7 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         file_list = []
 
     print(f'{file_list}, {layout}')
-    if len(file_list) == 0 and layout is '':
+    if len(file_list) == 0 and layout == '':
         notebook = "jdaviz_cli_launcher.ipynb"
     else:
         notebook = "jdaviz_cli.ipynb"
