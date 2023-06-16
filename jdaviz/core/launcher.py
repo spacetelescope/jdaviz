@@ -19,10 +19,9 @@ def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']
 
     # Filepath row
     filepath_row = v.Row()
-    text_field = v.TextField(label="URI or File Path", v_model=None)
+    text_field = v.TextField(label="File Path", v_model=None)
 
     def load_file(filepath):
-        print(filepath)
         if filepath:
             helper = jdaviz_open(filepath, show=False)
             main.children = [helper.app]
