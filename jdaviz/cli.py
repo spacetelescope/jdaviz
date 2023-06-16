@@ -60,7 +60,8 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     else:
         file_list = []
 
-    if not filepaths and not layout:
+    print(f'{file_list}, {layout}')
+    if len(file_list) == 0 and layout is '':
         notebook = "jdaviz_cli_launcher.ipynb"
     else:
         notebook = "jdaviz_cli.ipynb"
@@ -116,8 +117,8 @@ def _main(config=None):
                                      'loaded from FILENAME.')
     filepaths_nargs = '*'
     if config is None:
-        parser.add_argument('layout', choices=['cubeviz', 'specviz', 'specviz2d',
-                                               'mosviz', 'imviz'],
+        parser.add_argument('--layout', default='', choices=['cubeviz', 'specviz', 'specviz2d',
+                                                             'mosviz', 'imviz'],
                             help='Configuration to use.')
     if (config == "mosviz") or ("mosviz" in sys.argv):
         filepaths_nargs = 1
