@@ -8,7 +8,7 @@ from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
-from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
+from glue.core.subset import RoiSubsetState, RangeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -385,39 +385,13 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             depending on the Subset type, if applicable.
             If Subset is not centerable, this returns `None`.
 
-        Raises
-        ------
-        NotImplementedError
-            Subset type is not supported.
-
         """
         # Composite region cannot be centered.
         if not self.is_centerable:  # no-op
             return
 
         subset_state = self.subset_select.selected_subset_state
-
-        if isinstance(subset_state, RoiSubsetState):
-            sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
-                cen = sbst_obj.get_center()
-            elif isinstance(sbst_obj, RectangularROI):
-                cen = sbst_obj.center()
-            else:  # pragma: no cover
-                raise NotImplementedError(
-                    f'Getting center of {sbst_obj.__class__} is not supported')
-
-        elif isinstance(subset_state, RangeSubsetState):
-            cen = (subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo
-
-        elif isinstance(subset_state, CompositeSubsetState):
-            cen = None
-
-        else:  # pragma: no cover
-            raise NotImplementedError(
-                f'Getting center of {subset_state.__class__} is not supported')
-
-        return cen
+        return subset_state.center()
 
     def set_center(self, new_cen, update=False):
         """Set the desired center for the selected Subset, if applicable.
@@ -464,7 +438,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')
 
         elif isinstance(subset_state, RangeSubsetState):
-            dx = new_cen - ((subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo)
+            dx = new_cen - subset_state.center()
             self._set_value_in_subset_definition(0, "Lower bound", "value", subset_state.lo + dx)
             self._set_value_in_subset_definition(0, "Upper bound", "value", subset_state.hi + dx)
 
