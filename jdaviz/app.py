@@ -38,7 +38,7 @@ from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
                               CompositeSubsetState, InvertState)
 from glue.core.units import unit_converter
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
-from glue_astronomy.translators.regions import roi_subset_state_to_spatial
+from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
@@ -1053,7 +1053,7 @@ class Application(VuetifyTemplate, HubListener):
 
     def _get_roi_subset_definition(self, subset_state):
         # TODO: Imviz: Return sky region if link type is WCS.
-        roi_as_region = roi_subset_state_to_spatial(subset_state)
+        roi_as_region = roi_subset_state_to_region(subset_state)
         return [{"name": subset_state.roi.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
                  "region": roi_as_region,
