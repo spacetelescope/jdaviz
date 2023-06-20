@@ -91,6 +91,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed mouseover not behaving properly in spectrum viewer when spatial subset is present. [#2258]
+
 Imviz
 ^^^^^
 

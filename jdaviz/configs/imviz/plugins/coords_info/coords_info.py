@@ -464,7 +464,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     sp = self.app._get_object_cache[cache_key]
                 else:
                     sp = self._specviz_helper.get_data(data_label=data_label,
-                                                       spectral_subset=subset_label)
+                                                       spatial_subset=subset_label)
                     self.app._get_object_cache[cache_key] = sp
 
                 # Calculations have to happen in the frame of viewer display units.
