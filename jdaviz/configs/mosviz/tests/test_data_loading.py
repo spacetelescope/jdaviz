@@ -2,9 +2,9 @@
 
 from zipfile import ZipFile
 
-from glue.core import Data
 import numpy as np
 import pytest
+from astropy.nddata import CCDData
 from specutils import Spectrum1D
 
 from jdaviz.utils import PRIHDR_KEY
@@ -48,11 +48,11 @@ def test_load_image(mosviz_helper, mos_image):
     table.widget_table.vue_on_row_clicked(0)
 
     data = mosviz_helper.app.get_viewer(mosviz_helper._default_image_viewer_reference_name
-                                        ).data()
+                                        ).data(cls=CCDData)
 
     assert len(data) == 1
     dataval = data[0]
-    assert isinstance(dataval, Data)
+    assert isinstance(dataval, CCDData)
     assert dataval.shape == (55, 55)
 
 

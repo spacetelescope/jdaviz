@@ -55,10 +55,13 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Added new ``statistic`` keyword to ``mosviz.get_viewer("spectrum-2d-viewer").data()``
+  to allow user to collapse 2D spectrum to 1D. [#2242]
+
 Specviz
 ^^^^^^^
 
-* Re-enabled unit conversion support. [#2127]
+- Re-enabled unit conversion support. [#2127]
 
 Specviz2d
 ^^^^^^^^^

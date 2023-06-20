@@ -43,7 +43,7 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewe
         self.figure.fig_margin = {'left': 0, 'bottom': 0, 'top': 0, 'right': 0}
 
     def data(self, cls=None):
-        return [layer_state.layer  # .get_object(cls=cls or self.default_class)
+        return [layer_state.layer.get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
