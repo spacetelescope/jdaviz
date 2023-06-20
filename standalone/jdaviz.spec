@@ -42,6 +42,8 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
+    # executable name: dist/jdaviz/jdaviz-cli
+    # note: cannot be called jdaviz, because there is a directory called jdaviz
     name="jdaviz-cli",
     debug=False,
     bootloader_ignore_signals=False,
@@ -62,7 +64,8 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="jdaviz-cli",
+    # directory name: dist/jdaviz
+    name="jdaviz",
 )
 app = BUNDLE(
     exe,

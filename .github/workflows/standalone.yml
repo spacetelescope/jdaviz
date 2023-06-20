@@ -66,28 +66,31 @@ jobs:
         cd standalone/dist
         codesign --deep --force --options=runtime --entitlements ../entitlements.plist --sign ${{ secrets.DEVELOPER_ID_APPLICATION }} --timestamp jdaviz.app
 
-    - name: Zip OSX app to maintain symlinks and to sign
+    - name: Create dmg (OSX)
       # if we do not call always() GHA will && with success()
       if: ${{ always() && (matrix.os == 'macos') }}
       # it seems ditto (not zip) should be used in combination with notarization
       # see https://developer.apple.com/forums/thread/116831
-      run: (cd standalone/dist; ditto -c -k --sequesterRsrc --keepParent jdaviz.app jdaviz.zip )
+      # but dmg also works
+      # see https://github.com/glue-viz/glue-standalone-apps/blob/main/.github/workflows/build_stable.yml
+      run: |
+        rm -rf standalone/dist/jdaviz
+        hdiutil create -volname "Jdaviz" -srcfolder standalone/dist -ov -format UDZO standalone/dist/jdaviz.dmg
 
-    - name: Notary step (OSX)
+    - name: Notary step + stapling (OSX)
       if: ${{ matrix.os == 'macos' }}
       run: |
-        output=$(xcrun notarytool submit standalone/dist/jdaviz.zip --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
+        output=$(xcrun notarytool submit standalone/dist/jdaviz.dmg --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --wait --password ${{ secrets.NOTARIZATION_PASSWORD }}) || true
         echo "$output"
         uuid=$(echo "$output" | awk -F '[ :]+' '/id:/ {print $3; exit}')
         echo "UUID: $uuid"
         if [[ $output == *"status: Accepted"* ]]; then
-          echo "Great, notarization succeeded!"
+          echo "Great, notarization succeeded, staple it!"
+          xcrun stapler staple standalone/dist/jdaviz.dmg
         else
           echo "Log output for failed notarization: $uuid"
           xcrun notarytool log --apple-id ${{ secrets.NOTARIZATION_USERNAME }} --team-id ${{ secrets.TEAM_ID }} --password ${{ secrets.NOTARIZATION_PASSWORD }} $uuid || true
         fi
-        # re-zip it
-        (cd standalone/dist; rm jdaviz.zip; ditto -c -k --sequesterRsrc --keepParent jdaviz.app jdaviz.zip )
 
     - name: Validate app (OSX)
       if: ${{ matrix.os == 'macos' }}
@@ -95,7 +98,12 @@ jobs:
         spctl -a -vvv -t execute standalone/dist/jdaviz.app
 
     - name: Run jdaviz cmd in background
-      run: ./standalone/dist/jdaviz-cli/jdaviz-cli imviz&
+      if: ${{ matrix.os == 'macos' }}
+      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz&
+
+    - name: Run jdaviz cmd in background
+      if: ${{ matrix.os != 'macos' }}
+      run: ./standalone/dist/jdaviz/jdaviz-cli imviz&
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
@@ -125,11 +133,11 @@ jobs:
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: |
-          standalone/dist/jdaviz-cli
+          standalone/dist/jdaviz
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos') }}
       uses: actions/upload-artifact@v3
       with:
         name: jdaviz-standlone-${{ matrix.os }}
-        path: standalone/dist/jdaviz.zip
+        path: standalone/dist/jdaviz.dmg
