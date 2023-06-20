@@ -3,45 +3,19 @@ import sys
 from pathlib import Path
 import os
 
-import bqplot
-import debugpy
-import glue
-import jdaviz
-import glue_jupyter
-import ipypopout
-import photutils
-import regions
-from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_submodules
+from PyInstaller.building.build_main import Analysis
+from PyInstaller.building.api import COLLECT, EXE, PYZ
+from PyInstaller.building.osx import BUNDLE
 
+import jdaviz
 codesign_identity = os.environ.get("DEVELOPER_ID_APPLICATION")
 
+# this copies over the nbextensions enabling json and the js assets
+# for all the widgets
 datas = [
     (Path(sys.prefix) / "share" / "jupyter", "./share/jupyter"),
     (Path(sys.prefix) / "etc" / "jupyter", "./etc/jupyter"),
-    *collect_data_files("regions"),
-    *collect_data_files("photutils"),
-    # *collect_data_files("debugpy"),
-    *collect_data_files("glue"),
-    *collect_data_files("glue_jupyter"),
-    *collect_data_files("bqplot"),
-    *collect_data_files("ipypopout"),
 ]
-binaries = []
-# jdaviz is not imported condinally in jdaviz-cli-entrypoint.py, so a hidden import
-hiddenimports = []
-hiddenimports += collect_submodules("regions")
-hiddenimports += collect_submodules("photutils")
-hiddenimports += collect_submodules("jupyter_client")
-hiddenimports += collect_submodules("debugpy")
-tmp_ret = collect_all("astropy")
-datas += tmp_ret[0]
-binaries += tmp_ret[1]
-hiddenimports += tmp_ret[2]
-# tmp_ret = collect_all('.')
-datas += tmp_ret[0]
-binaries += tmp_ret[1]
-hiddenimports += tmp_ret[2]
-
 
 block_cipher = None
 
@@ -49,9 +23,9 @@ block_cipher = None
 a = Analysis(
     ["jdaviz-cli-entrypoint.py"],
     pathex=[],
-    binaries=binaries,
+    binaries=[],
     datas=datas,
-    hiddenimports=hiddenimports,
+    hiddenimports=[],
     hookspath=["hooks"],
     hooksconfig={},
     runtime_hooks=[],
@@ -78,8 +52,7 @@ exe = EXE(
     argv_emulation=False,
     target_arch=None,
     codesign_identity=codesign_identity,
-    entitlements_file=None,
-
+    entitlements_file="entitlements.plist",
 )
 coll = COLLECT(
     exe,
@@ -91,8 +64,12 @@ coll = COLLECT(
     upx_exclude=[],
     name="jdaviz-cli",
 )
-app = BUNDLE(exe, coll,
-         name='jdaviz.app',
-         icon=None,
-         bundle_identifier='edu.stsci.jdaviz',
-         version=jdaviz.__version__)
+app = BUNDLE(
+    exe,
+    coll,
+    name="jdaviz.app",
+    icon=None,
+    entitlements_file="entitlements.plist",
+    bundle_identifier="edu.stsci.jdaviz",
+    version=jdaviz.__version__,
+)
