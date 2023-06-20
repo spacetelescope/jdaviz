@@ -663,7 +663,7 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_store.get(vid)
 
-    @deprecated(since="3.6", alternative="get_data")
+    @deprecated(since="3.6", alternative="viz_helper.get_data")
     def get_data_from_viewer(self, viewer_reference, data_label=None,
                              cls='default', include_subsets=True):
         """
@@ -806,9 +806,11 @@ class Application(VuetifyTemplate, HubListener):
             objects.
         """
         viewer = self.get_viewer(viewer_reference)
-        data = self.get_data_from_viewer(viewer_reference,
-                                         data_label,
-                                         cls=None)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            data = self.get_data_from_viewer(viewer_reference,
+                                             data_label,
+                                             cls=None)
         regions = {}
 
         if data_label is not None:
@@ -848,7 +850,9 @@ class Application(VuetifyTemplate, HubListener):
                     regions[key] = self.get_subsets(key)
                     continue
 
-                temp_data = self.get_data_from_viewer(viewer_reference, value.label)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    temp_data = self.get_data_from_viewer(viewer_reference, value.label)
                 if isinstance(temp_data, Spectrum1D):
                     regions[key] = self.get_subsets(key)
                     continue

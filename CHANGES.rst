@@ -39,6 +39,13 @@ Specviz2d
 API Changes
 -----------
 
+- ``viz.app.get_data_from_viewer()`` is deprecated; use ``viz.get_data()``. [#2242]
+
+- ``viz.app.get_subsets_from_viewer()`` is deprecated; use ``viz.app.get_subsets()``. [#2242]
+
+- ``viz.get_data()`` now takes optional ``**kwargs``; e.g., you could pass in
+  ``function="sum"`` to collapse a cube in Cubeviz. [#2242]
+
 Cubeviz
 ^^^^^^^
 
@@ -60,6 +67,8 @@ Bug Fixes
 ---------
 
 - Fixed wrong elliptical region translation in ``app.get_subsets()``. [#2244]
+
+- Fixed ``cls`` input being ignored in ``viz.get_data()``. [#2242]
 
 Cubeviz
 ^^^^^^^

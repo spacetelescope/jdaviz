@@ -1,16 +1,17 @@
+import warnings
+
 import pytest
 import numpy as np
 
 from astropy.utils.data import download_file
 
 
-@pytest.mark.filterwarnings('ignore')
 @pytest.mark.remote_data
 def test_data_retrieval(cubeviz_helper):
     """The purpose of this test is to check that both methods:
 
     - app.get_viewer('spectrum-viewer').data()
-    - app.get_data_from_viewer("spectrum-viewer")
+    - cubeviz_helper.get_data()
 
     return the same spectrum values.
     """
@@ -20,14 +21,16 @@ def test_data_retrieval(cubeviz_helper):
 
     spectrum_viewer_reference_name = "spectrum-viewer"
     fn = download_file(URL, cache=True)
-    cubeviz_helper.load_data(fn)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        cubeviz_helper.load_data(fn)
 
     # two ways of retrieving data from the viewer.
     # They should return the same spectral values
     a1 = cubeviz_helper.app.get_viewer(spectrum_viewer_reference_name).data()
-    a2 = cubeviz_helper.app.get_data_from_viewer(spectrum_viewer_reference_name)
+    a2 = cubeviz_helper.get_data("contents[FLUX]", function="sum")
 
     test_value_1 = a1[0].data
-    test_value_2 = list(a2.values())[0].data
+    test_value_2 = a2.flux.value
 
     assert np.allclose(test_value_1, test_value_2, atol=1e-5)
