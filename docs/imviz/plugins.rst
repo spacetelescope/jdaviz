@@ -205,12 +205,11 @@ an interactively selected region. A typical workflow is as follows:
 
    .. warning::
 
-       If your data is in surface brightness unit and pixels on the image
+       If your data is in surface brightness units and pixels on the image
        have varying sky area, you should first convert your data from
-       surface brightness to flux unit first before using this plugin.
-       This is because for performance reasons, the plugin only takes out
-       per steradian after the aperture sum, which makes no difference but
-       only if all pixels have the same area.
+       surface brightness to flux units before using this plugin.
+       This is because, for performance reasons, the plugin multiplies
+       by the area after the aperture sum is calculated.
 
 7. If you also want photometry result in the unit of counts, you can enter a
    conversion factor in the :guilabel:`Counts conversion factor` field. The value
