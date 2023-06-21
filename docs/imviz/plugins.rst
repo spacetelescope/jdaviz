@@ -202,6 +202,16 @@ an interactively selected region. A typical workflow is as follows:
    in display data unit. Otherwise, it is only informational.
    If this field is not applicable for you, leave it at 0.
    **This field resets every time Data selection changes if auto-population not possible.**
+
+   .. warning::
+
+       If your data is in surface brightness unit and pixels on the image
+       have varying sky area, you should first convert your data from
+       surface brightness to flux unit first before using this plugin.
+       This is because for performance reasons, the plugin only takes out
+       per steradian after the aperture sum, which makes no difference but
+       only if all pixels have the same area.
+
 7. If you also want photometry result in the unit of counts, you can enter a
    conversion factor in the :guilabel:`Counts conversion factor` field. The value
    must be in the unit of display data unit per counts. This is used to convert linear
