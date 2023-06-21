@@ -22,8 +22,8 @@ def test_region_from_subset_2d(cubeviz_helper):
 
     cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(EllipticalROI(1, 3.5, 1.2, 3.3))
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
-    reg = subsets.get('Subset 1')
+    subsets = cubeviz_helper.app.get_subsets()
+    reg = subsets.get('Subset 1')[0]['region']
 
     assert len(subsets) == 1
     assert isinstance(reg, EllipsePixelRegion)
@@ -99,8 +99,8 @@ def test_region_from_subset_3d(cubeviz_helper):
         assert subset_plugin._get_value_from_subset_definition(0, "Ymax", key) == 3.3
         assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 45
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
-    reg = subsets.get('Subset 1')
+    subsets = cubeviz_helper.app.get_subsets()
+    reg = subsets.get('Subset 1')[0]['region']
 
     assert_allclose(reg.center.x, 2.75)
     assert_allclose(reg.center.y, 1.65)
@@ -110,8 +110,8 @@ def test_region_from_subset_3d(cubeviz_helper):
 
     # Move the rectangle
     subset_plugin.set_center((3, 2), update=True)
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
-    reg = subsets.get('Subset 1')
+    subsets = cubeviz_helper.app.get_subsets()
+    reg = subsets.get('Subset 1')[0]['region']
     assert_allclose(reg.center.x, 3)
     assert_allclose(reg.center.y, 2)
     assert_allclose(reg.width, 1.5)
@@ -140,7 +140,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
 
     cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
+    subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
     reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
@@ -165,7 +165,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
         assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", key) == 10
         assert subset_plugin._get_value_from_subset_definition(0, "Upper bound", key) == 15.5
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
+    subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
     reg = subsets.get('Subset 1')
 
     assert_quantity_allclose(reg.lower, 10.0 * u.Hz)
@@ -173,7 +173,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
 
     # Move the Subset.
     subset_plugin.set_center(10, update=True)
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
+    subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
     reg = subsets.get('Subset 1')
     assert_quantity_allclose(reg.lower, 7.25 * u.Hz)
     assert_quantity_allclose(reg.upper, 12.75 * u.Hz)
@@ -200,7 +200,7 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
 
     assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 1  # noqa
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('spectrum-viewer', subset_type='spectral')
+    subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
     reg = subsets.get('Subset 1')
 
     assert len(subsets) == 1
@@ -209,8 +209,8 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
     assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer', subset_type='spatial')
-    reg = subsets.get('Subset 2')
+    subsets = cubeviz_helper.app.get_subsets(spatial_only=True)
+    reg = subsets.get('Subset 2')[0]['region']
 
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)

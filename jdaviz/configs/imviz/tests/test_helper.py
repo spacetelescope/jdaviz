@@ -25,12 +25,12 @@ def test_create_new_viewer(imviz_helper, image_2d_wcs):
     assert len(imviz_helper.app.get_viewer_ids()) == 2
 
     # there should be no data in the new viewer
-    assert len(imviz_helper.app.get_data_from_viewer(viewer_name)) == 0
+    assert len(imviz_helper.app.get_viewer(viewer_name).data()) == 0
 
     # then add data, and check that data were added to the new viewer
     imviz_helper.app.add_data_to_viewer(viewer_name, data_label)
-    assert len(imviz_helper.app.get_data_from_viewer(viewer_name)) == 1
+    assert len(imviz_helper.app.get_viewer(viewer_name).data()) == 1
 
     # remove data from the new viewer, check that it was removed
     imviz_helper.app.remove_data_from_viewer(viewer_name, data_label)
-    assert len(imviz_helper.app.get_data_from_viewer(viewer_name)) == 0
+    assert len(imviz_helper.app.get_viewer(viewer_name).data()) == 0

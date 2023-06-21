@@ -54,7 +54,8 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
     assert viz.app.get_viewer_reference_names() == ['h', 'k']
 
     viz.load_spectrum(spectrum1d, data_label='example label')
-    assert not len(viz.app.get_data_from_viewer("h", "non-existent label"))
+    with pytest.raises(ValueError):
+        viz.get_data("non-existent label")
 
 
 def test_duplicate_data_labels(specviz_helper, spectrum1d):

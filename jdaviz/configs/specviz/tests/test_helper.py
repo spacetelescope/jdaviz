@@ -32,10 +32,9 @@ class TestSpecvizHelper:
         assert dc_0.label == self.label
         assert dc_0.meta['uncertainty_type'] == 'std'
 
-        data = self.spec_app.app.get_data_from_viewer('spectrum-viewer')
+        data = self.spec_app.get_data()
 
-        assert isinstance(list(data.values())[0], Spectrum1D)
-        assert list(data.keys())[0] == self.label
+        assert isinstance(data, Spectrum1D)
 
     def test_load_spectrum_list_no_labels(self):
         # now load three more spectra from a SpectrumList, without labels

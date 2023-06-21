@@ -554,7 +554,7 @@ class ConfigHelper(HubListener):
 
         return _handle_display_units(data, use_display_units)
 
-    def get_data(self, data_label=None, cls=None, use_display_units=False):
+    def get_data(self, data_label=None, cls=None, use_display_units=False, **kwargs):
         """
         Returns data with name equal to data_label of type cls.
 
@@ -564,18 +564,20 @@ class ConfigHelper(HubListener):
             Provide a label to retrieve a specific data set from data_collection.
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
-        use_display_units: bool, optional
+        use_display_units : bool, optional
             Whether to convert to the display units defined in the <unit-conversion> plugin.
+        kwargs : dict
+            For Cubeviz, you could also pass in ``function`` (str) to collapse
+            the cube into 1D spectrum using provided function.
 
         Returns
         -------
         data : cls
-            Data is returned as type cls.
+            Data is returned as type ``cls``.
 
         """
-        return self._get_data(data_label=data_label, spatial_subset=None,
-                              spectral_subset=None, function=None,
-                              cls=None, use_display_units=use_display_units)
+        return self._get_data(data_label=data_label,
+                              cls=cls, use_display_units=use_display_units, **kwargs)
 
 
 class ImageConfigHelper(ConfigHelper):

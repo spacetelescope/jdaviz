@@ -25,8 +25,8 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube):
     assert len(spectrum_viewer.data()) == 2
 
     # Check that a new subset was created
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
-    reg = subsets.get('Subset 1')
+    subsets = cubeviz_helper.app.get_subsets()
+    reg = subsets.get('Subset 1')[0]['region']
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
 
@@ -64,8 +64,8 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert len(spectrum_viewer.data()) == 2
 
     # Check that subset was created
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
-    reg = subsets.get('Subset 1')
+    subsets = cubeviz_helper.app.get_subsets()
+    reg = subsets.get('Subset 1')[0]['region']
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
 
@@ -77,8 +77,8 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert len(flux_viewer.figure.marks) == 4
     assert len(spectrum_viewer.data()) == 3
 
-    subsets = cubeviz_helper.app.get_subsets_from_viewer('flux-viewer')
-    reg2 = subsets.get('Subset 2')
+    subsets = cubeviz_helper.app.get_subsets()
+    reg2 = subsets.get('Subset 2')[0]['region']
     assert len(subsets) == 2
     assert isinstance(reg2, RectanglePixelRegion)
 

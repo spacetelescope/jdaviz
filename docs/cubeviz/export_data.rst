@@ -22,7 +22,7 @@ can be used to extract the *spectrum* of a spatial subset named "Subset 1":
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.specviz.get_spectra(subset_to_apply="Subset 1")
+    subset1_spec1d = cubeviz.specviz.get_spectra(spectral_subset="Subset 1")
 
 An example without accessing Specviz:
 
@@ -41,7 +41,7 @@ To get all subsets from the spectrum viewer:
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.app.get_subsets_from_viewer("spectrum-viewer")
+    subset1_spec1d = cubeviz.specviz.app.get_subsets()
 
 To access the spatial regions themselves:
 

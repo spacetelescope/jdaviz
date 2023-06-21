@@ -14,6 +14,7 @@ from astropy.nddata import CCDData, NDData
 from astropy.io import fits
 from astropy.coordinates import Angle
 from astropy.time import Time
+from astropy.utils.decorators import deprecated
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
@@ -662,6 +663,7 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_store.get(vid)
 
+    @deprecated(since="3.6", alternative="viz_helper.get_data")
     def get_data_from_viewer(self, viewer_reference, data_label=None,
                              cls='default', include_subsets=True):
         """
@@ -769,6 +771,7 @@ class Application(VuetifyTemplate, HubListener):
         # If a data label was provided, return only the corresponding data, otherwise return all:
         return data.get(data_label, data)
 
+    @deprecated(since="3.6", alternative="get_subsets")
     def get_subsets_from_viewer(self, viewer_reference, data_label=None, subset_type=None):
         """
         Returns the subsets of a specified viewer converted to astropy regions
@@ -803,9 +806,11 @@ class Application(VuetifyTemplate, HubListener):
             objects.
         """
         viewer = self.get_viewer(viewer_reference)
-        data = self.get_data_from_viewer(viewer_reference,
-                                         data_label,
-                                         cls=None)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            data = self.get_data_from_viewer(viewer_reference,
+                                             data_label,
+                                             cls=None)
         regions = {}
 
         if data_label is not None:
@@ -845,7 +850,9 @@ class Application(VuetifyTemplate, HubListener):
                     regions[key] = self.get_subsets(key)
                     continue
 
-                temp_data = self.get_data_from_viewer(viewer_reference, value.label)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    temp_data = self.get_data_from_viewer(viewer_reference, value.label)
                 if isinstance(temp_data, Spectrum1D):
                     regions[key] = self.get_subsets(key)
                     continue

@@ -39,6 +39,13 @@ Specviz2d
 API Changes
 -----------
 
+- ``viz.app.get_data_from_viewer()`` is deprecated; use ``viz.get_data()``. [#2242]
+
+- ``viz.app.get_subsets_from_viewer()`` is deprecated; use ``viz.app.get_subsets()``. [#2242]
+
+- ``viz.get_data()`` now takes optional ``**kwargs``; e.g., you could pass in
+  ``function="sum"`` to collapse a cube in Cubeviz. [#2242]
+
 Cubeviz
 ^^^^^^^
 
@@ -48,10 +55,13 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Added new ``statistic`` keyword to ``mosviz.get_viewer("spectrum-2d-viewer").data()``
+  to allow user to collapse 2D spectrum to 1D. [#2242]
+
 Specviz
 ^^^^^^^
 
-* Re-enabled unit conversion support. [#2127]
+- Re-enabled unit conversion support. [#2127]
 
 Specviz2d
 ^^^^^^^^^
@@ -60,6 +70,8 @@ Bug Fixes
 ---------
 
 - Fixed wrong elliptical region translation in ``app.get_subsets()``. [#2244]
+
+- Fixed ``cls`` input being ignored in ``viz.get_data()``. [#2242]
 
 Cubeviz
 ^^^^^^^
