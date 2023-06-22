@@ -313,6 +313,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         reason = ""
         for index, sub in enumerate(self.subset_definitions):
             lo = hi = xmin = xmax = ymin = ymax = None
+            inner_radius = outer_radius = None
             for d_att in sub:
                 if d_att["att"] == "lo":
                     lo = d_att["value"]
@@ -330,6 +331,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     ymin = d_att["value"]
                 elif d_att["att"] == "ymax":
                     ymax = d_att["value"]
+                elif d_att["att"] == "outer_radius":
+                    outer_radius = d_att["value"]
+                elif d_att["att"] == "inner_radius":
+                    inner_radius = d_att["value"]
 
                 if lo and hi and hi <= lo:
                     status = False
@@ -338,6 +343,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 elif xmin and xmax and ymin and ymax and (xmax - xmin <= 0 or ymax - ymin <= 0):
                     status = False
                     reason = "Failed to update Subset: width and length must be positive scalars"
+                    break
+                elif inner_radius and outer_radius and inner_radius >= outer_radius:
+                    status = False
+                    reason = "Failed to update Subset: inner radius must be less than outer radius"
                     break
 
         return status, reason
