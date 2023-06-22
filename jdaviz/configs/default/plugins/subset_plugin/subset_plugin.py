@@ -149,7 +149,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
         if not subset_information:
             return
-        if len(subset_information) == 1:
+        if ((len(subset_information) == 1) and
+                isinstance(subset_information[0]["subset_state"], RoiSubsetState) and
+                isinstance(subset_information[0]["subset_state"].roi,
+                           (CircularROI, RectangularROI, EllipticalROI))):
             self.is_centerable = True
         else:
             self.is_centerable = False
