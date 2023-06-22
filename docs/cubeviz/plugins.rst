@@ -274,3 +274,6 @@ Export Plot
 ===========
 
 This plugin allows exporting the plot in a given viewer to various image formats.
+
+If you have ``opencv-python`` installed, you are also able to export selected
+cube slices to a video file.

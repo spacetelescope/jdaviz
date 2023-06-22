@@ -14,6 +14,9 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Added the ability to export cube slices to video. User will need to install
+  ``opencv-python`` separately or use ``[all]`` specifier when installing Jdaviz. [#2264]
+
 Imviz
 ^^^^^
 
