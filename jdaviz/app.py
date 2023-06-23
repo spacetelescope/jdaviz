@@ -517,17 +517,18 @@ class Application(VuetifyTemplate, HubListener):
 
         new_refdata = self.data_collection[new_refdata_label]
         viewer.state.reference_data = new_refdata
+
+        # Re-link
+        self._jdaviz_helper.link_data(link_type=self._link_type,
+                                      wcs_use_affine=self._wcs_use_affine,
+                                      error_on_fail=True)
+
         self.hub.broadcast(ChangeRefDataMessage(
             new_refdata,
             viewer,
             viewer_id=viewer_id,
             old=old_refdata,
             sender=self))
-
-        # Re-link
-        self._jdaviz_helper.link_data(link_type=self._link_type,
-                                      wcs_use_affine=self._wcs_use_affine,
-                                      error_on_fail=True)
 
         viewer.state.reset_limits()
 

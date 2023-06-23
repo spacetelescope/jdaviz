@@ -285,11 +285,13 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if data_label == ref_label:
             return 'self'
 
+        if ref_label in self.state.wcs_only_layers:
+            return 'wcs'
+
         link_type = None
         for elink in self.session.application.data_collection.external_links:
             elink_labels = (elink.data1.label, elink.data2.label)
-            if (data_label in elink_labels and
-                    (ref_label in elink_labels or ref_label == self.jdaviz_app._wcs_only_label)):
+            if data_label in elink_labels and ref_label in elink_labels:
                 if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
                     link_type = 'pixels'
                 else:  # If not pixels, must be WCS

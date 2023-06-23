@@ -20,7 +20,7 @@
         <div class="single-line" style="width: 100%">
           <v-chip v-if="multiselect" style="width: calc(100% - 10px)">
             <span>
-              <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+              <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :prevent_invert_if_dark="true" :is_wcs_only="isWCSOnlyLayer()"></j-layer-viewer-icon>
               {{ data.item.label }}
             </span>
           </v-chip>
@@ -63,7 +63,13 @@
 </template>
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect']
+  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry'],
+  methods: {
+    isWCSOnlyLayer(item) {
+      const wcsOnly = Object.keys(this.$props.viewer.wcs_only_layers).includes(item.name)
+      return wcsOnly
+    },
+  }
 };
 </script>
 

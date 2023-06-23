@@ -357,22 +357,41 @@ def _rotated_gwcs(
 
 
 def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape,
-                            wcs_only_key="_WCS_ONLY"):
+                            wcs_only_key="_WCS_ONLY", data=None,
+                            cdelt_signs=None):
     # get the world coordinates of the central pixel
     central_pixel_coord = (np.array(real_image_shape) * 0.5) * u.pix
     central_world_coord = wcs.pixel_to_world(*central_pixel_coord)
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
 
     # compute the x/y plate scales from the WCS:
-    pixel_scales = [
-        value * (unit / u.pix)
-        for value, unit in zip(
-            proj_plane_pixel_scales(wcs), wcs.wcs.cunit
-        )
-    ]
+    if hasattr(wcs, 'pixel_scale_matrix'):
+        pixel_scales = [
+            value * (unit / u.pix)
+            for value, unit in zip(
+                proj_plane_pixel_scales(wcs), wcs.wcs.cunit
+            )
+        ]
+        cdelt = wcs.wcs.cdelt
+    else:
+        # GWCS doesn't yet have a pixel scale attr, so approximate
+        # its behavior from the WCS keys in the header:
+        cdelt = [
+            v for k, v in data.meta['wcsinfo'].items()
+            if k.lower().startswith('cdelt')
+        ]
+        pc = [
+            v for k, v in data.meta['wcsinfo'].items()
+            if k.lower().startswith('pc')
+        ]
+        n = int(len(pc) ** 0.5)
+        pc = np.reshape(pc, (n, n))
+
+        pixel_scales = np.dot(cdelt, pc) * u.deg / u.pix
 
     # flip e.g. RA or Dec axes?
-    cdelt_signs = np.sign(wcs.wcs.cdelt)
+    if cdelt_signs is None:
+        cdelt_signs = np.sign(cdelt)
 
     # create a GWCS centered on ``filename``,
     # and rotated by ``rotation_angle``:
@@ -390,7 +409,8 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     return ndd
 
 
-def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shape=(2, 2)):
+def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shape=(2, 2),
+                                   cdelt_signs=None):
     """
     Create a synthetic NDData which stores GWCS that approximate
     the WCS in the coords attr of the Data object with label ``data_label``
@@ -425,4 +445,5 @@ def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shap
     if data.coords is None:
         raise ValueError(f"{data_label} has no WCS for rotation.")
     return _prepare_rotated_nddata(data.shape, data.coords, rotation_angle, refdata_shape,
-                                   wcs_only_key=app._wcs_only_label)
+                                   wcs_only_key=app._wcs_only_label, data=data,
+                                   cdelt_signs=cdelt_signs)
