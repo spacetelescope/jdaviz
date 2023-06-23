@@ -150,9 +150,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not subset_information:
             return
         if ((len(subset_information) == 1) and
-                isinstance(subset_information[0]["subset_state"], RoiSubsetState) and
-                isinstance(subset_information[0]["subset_state"].roi,
-                           (CircularROI, RectangularROI, EllipticalROI))):
+                (isinstance(subset_information[0]["subset_state"], RangeSubsetState) or
+                 (isinstance(subset_information[0]["subset_state"], RoiSubsetState) and
+                  isinstance(subset_information[0]["subset_state"].roi,
+                             (CircularROI, RectangularROI, EllipticalROI))))):
             self.is_centerable = True
         else:
             self.is_centerable = False
