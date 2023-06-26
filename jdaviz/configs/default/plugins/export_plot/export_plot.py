@@ -9,6 +9,7 @@ try:
 except ImportError:
     HAS_OPENCV = False
 else:
+    import threading
     import time
     HAS_OPENCV = True
 
@@ -86,15 +87,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         """
         self.save_figure(filetype=filetype)
 
-    def save_movie(self, i_start, i_end, filename=None, filetype=None, rm_temp_files=True):
-        """``i`` start/end control the frames being written out.
-        ``i_end`` is inclusive. This method creates a bunch of
-        PNG files (one per frame) and then deletes them after stitching
-        the video.
-        """
-        if not HAS_OPENCV:
-            raise ImportError("Please install opencv-python to save cube as movie.")
-
+    def _save_movie(self, i_start, i_end, filename=None, filetype=None, rm_temp_files=True):
         if self.config != "cubeviz":
             raise NotImplementedError(f"save_movie is not available for config={self.config}")
 
@@ -143,13 +136,17 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
                 slice_plg._on_slider_updated({'new': i})
                 cur_pngfile = f"._cubeviz_movie_frame_{i}.png"
 
-                # FIXME: bqplot stuck after first frame!
                 # If we can fix this, maybe we can have callback to video.write and don't need PNG files.
                 self.save_figure(filename=cur_pngfile, filetype="png")
 
                 temp_png_files.append(cur_pngfile)
                 i += i_step
                 time.sleep(ts)  # Avoid giving user epilepsy
+
+                # Wait for the roundtrip to the frontend to complete in case the epilepsy
+                # mitigating sleep wasn't long enough
+                while self.viewer.figure._upload_png_callback is not None:
+                    time.sleep(0.1)
 
             for cur_pngfile in temp_png_files:
                 video.write(cv2.imread(cur_pngfile))
@@ -163,6 +160,18 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if rm_temp_files:
             for cur_pngfile in temp_png_files:
                 os.remove(cur_pngfile)
+
+    def save_movie(self, i_start, i_end, filename=None, filetype=None, rm_temp_files=True):
+        """``i`` start/end control the frames being written out.
+        ``i_end`` is inclusive. This method creates a bunch of
+        PNG files (one per frame) and then deletes them after stitching
+        the video.
+        """
+        if not HAS_OPENCV:
+            raise ImportError("Please install opencv-python to save cube as movie.")
+        threading.Thread(
+            target=lambda: self._save_movie(i_start, i_end, filename, filetype, rm_temp_files)
+        ).start()
 
     def vue_save_movie(self, filetype):
         """
