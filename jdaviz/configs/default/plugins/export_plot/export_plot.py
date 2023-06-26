@@ -87,9 +87,94 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         """
         self.save_figure(filetype=filetype)
 
-    def _save_movie(self, i_start, i_end, filename=None, filetype=None, rm_temp_files=True):
+    def _save_movie(self, i_start, i_end, filename, rm_temp_files):
+        # NOTE: All the stuff here has to be in the same thread but
+        #       separate from main app thread to work.
+        self.app.loading = True  # Grays out the app
+        viewer = self.viewer.selected_obj
+        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+        orig_slice = slice_plg.slice
+        ts = float(slice_plg.play_interval) * 1e-3  # ms to s
+        temp_png_files = []
+
+        # TODO: Expose to users?
+        fps = 5  # This is arbitrary
+        i_step = 1  # Need n_frames check if we allow tweaking
+
+        # No wrapping. Forward only.
+        if i_start < 0:
+            i_start = 0
+        if i_end > slice_plg.max_value:
+            i_end = slice_plg.max_value
+        if i_end <= i_start:
+            raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
+
+        i = i_start
+        while i <= i_end:
+            slice_plg._on_slider_updated({'new': i})
+            cur_pngfile = f"._cubeviz_movie_frame_{i}.png"
+            self.save_figure(filename=cur_pngfile, filetype="png")
+            temp_png_files.append(cur_pngfile)
+            i += i_step
+            time.sleep(ts)  # Avoid giving user epilepsy
+
+            # Wait for the roundtrip to the frontend to complete in case the epilepsy
+            # mitigating sleep wasn't long enough
+            while viewer.figure._upload_png_callback is not None:
+                time.sleep(ts)
+
+        # Grab frame size.
+        frame_shape = cv2.imread(temp_png_files[0]).shape
+        frame_size = (frame_shape[1], frame_shape[0])
+
+        try:
+            video = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, frame_size, True)  # noqa: E501
+            for cur_pngfile in temp_png_files:
+                video.write(cv2.imread(cur_pngfile))
+        finally:
+            cv2.destroyAllWindows()
+            video.release()
+            slice_plg._on_slider_updated({'new': orig_slice})
+            self.app.loading = False
+
+        if rm_temp_files:
+            for cur_pngfile in temp_png_files:
+                os.remove(cur_pngfile)
+
+    def save_movie(self, i_start, i_end, filename=None, filetype=None, rm_temp_files=True):
+        """Save selected slices as a movie.
+
+        This method creates a PNG file per frame (``._cubeviz_movie_frame_<n>.png``)
+        in the working directory before stitching all the frames into a movie.
+        Please make sure you have sufficient memory for this operation.
+        PNG files are deleted after the movie is created unless otherwise specified.
+        If another PNG file with the same name already exists, it will be silently replaced.
+
+        Parameters
+        ----------
+        i_start, i_end : int
+            Slices to record; each slice will be a frame in the movie.
+            Unlike Python indexing, ``i_end`` is inclusive.
+            Wrapping and reverse indexing are not supported.
+
+        filename : str or `None`
+            Filename for the movie to be recorded. Include path if necessary.
+            If not given, it will be named ``mymovie.mp4`` in the working directory.
+            If another file with the same name already exists, it will be silently replaced.
+
+        filetype : {'mp4', `None`}
+            Currently only MPEG-4 is supported. This keyword is reserved for future support
+            of other format(s).
+
+        rm_temp_files : bool
+            Remove temporary PNG files after movie creation. Default is `True`.
+
+        """
         if self.config != "cubeviz":
             raise NotImplementedError(f"save_movie is not available for config={self.config}")
+
+        if not HAS_OPENCV:
+            raise ImportError("Please install opencv-python to save cube as movie.")
 
         if filetype is None:
             if filename is not None and '.' in filename:
@@ -108,69 +193,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if filename is None:
             filename = f"mymovie.{filetype}"
 
-        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
-        orig_slice = slice_plg.slice
-        ts = float(slice_plg.play_interval) * 1e-3  # ms to s
-        temp_png_files = []
-
-        # TODO: Expose to users?
-        frame_size = viewer.shape[::-1]  # nx, ny
-        fps = 5  # This is arbitrary
-        i_step = 1  # Need n_frames check if we allow tweaking
-
-        # No wrapping. Forward only.
-        if i_start < 0:
-            i_start = 0
-        if i_end > slice_plg.max_value:
-            i_end = slice_plg.max_value
-        if i_end <= i_start:
-            raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
-
-        video = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, frame_size, True)
-        i = i_start
-
-        try:
-            self.app.loading = True  # Grays out the app
-
-            while i <= i_end:
-                slice_plg._on_slider_updated({'new': i})
-                cur_pngfile = f"._cubeviz_movie_frame_{i}.png"
-
-                # If we can fix this, maybe we can have callback to video.write and don't need PNG files.
-                self.save_figure(filename=cur_pngfile, filetype="png")
-
-                temp_png_files.append(cur_pngfile)
-                i += i_step
-                time.sleep(ts)  # Avoid giving user epilepsy
-
-                # Wait for the roundtrip to the frontend to complete in case the epilepsy
-                # mitigating sleep wasn't long enough
-                while self.viewer.figure._upload_png_callback is not None:
-                    time.sleep(0.1)
-
-            for cur_pngfile in temp_png_files:
-                video.write(cv2.imread(cur_pngfile))
-
-        finally:
-            cv2.destroyAllWindows()
-            video.release()
-            slice_plg._on_slider_updated({'new': orig_slice})
-            self.app.loading = False
-
-        if rm_temp_files:
-            for cur_pngfile in temp_png_files:
-                os.remove(cur_pngfile)
-
-    def save_movie(self, i_start, i_end, filename=None, filetype=None, rm_temp_files=True):
-        """``i`` start/end control the frames being written out.
-        ``i_end`` is inclusive. This method creates a bunch of
-        PNG files (one per frame) and then deletes them after stitching
-        the video.
-        """
-        if not HAS_OPENCV:
-            raise ImportError("Please install opencv-python to save cube as movie.")
         threading.Thread(
-            target=lambda: self._save_movie(i_start, i_end, filename, filetype, rm_temp_files)
+            target=lambda: self._save_movie(i_start, i_end, filename, rm_temp_files)
         ).start()
 
     def vue_save_movie(self, filetype):
