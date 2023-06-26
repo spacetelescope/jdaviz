@@ -30,7 +30,7 @@ To load a sample `NIRISS Nirspec Data Set <https://stsci.box.com/shared/static/o
 
 .. code-block:: bash
 
-    jdaviz mosviz /path/to/mosviz_nirspec_data_0.3/level3
+    jdaviz --layout=mosviz /path/to/mosviz_nirspec_data_0.3/level3
 
 Or to load in a Jupyter notebook, see the :gh-notebook:`MosvizExample` or :gh-notebook:`MosvizNIRISSExample`.
 

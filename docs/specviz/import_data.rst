@@ -26,7 +26,7 @@ a data file is optional, and multiple data files may be provided:
 
 .. code-block:: bash
 
-    jdaviz specviz /my/directory/spectrum1.fits /my/directory/spectrum2.fits
+    jdaviz --layout=specviz /my/directory/spectrum1.fits /my/directory/spectrum2.fits
 
 .. _specviz-import-gui:
 
