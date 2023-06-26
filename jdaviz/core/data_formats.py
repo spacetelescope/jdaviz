@@ -303,7 +303,12 @@ def open(filename, show=True, **kwargs):
     '''
     # Identify the correct config
     helper_str, hdul = identify_helper(filename)
-    viz_class = getattr(jdaviz_configs, helper_str.capitalize())
+    _launch_config_with_data(helper_str, hdul, show, **kwargs)
+
+
+
+def _launch_config_with_data(config, data=None, show=True, **kwargs):
+    viz_class = getattr(jdaviz_configs, config.capitalize())
 
     # Create config instance
     verbosity = kwargs.pop('verbosity', DEFAULT_VERBOSITY)
@@ -311,8 +316,8 @@ def open(filename, show=True, **kwargs):
     viz_helper = viz_class(verbosity=verbosity, history_verbosity=history_verbosity)
 
     # Load data
-    data = hdul if (hdul is not None) else filename
-    viz_helper.load_data(data, **kwargs)
+    if data != None:
+        viz_helper.load_data(data, **kwargs)
 
     # Display app
     if show:
