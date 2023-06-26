@@ -1,6 +1,5 @@
 import ipyvuetify as v
 from ipywidgets import jslink
-from traitlets import Dict
 
 from jdaviz import configs as jdaviz_configs
 from jdaviz.core.data_formats import open as jdaviz_open
