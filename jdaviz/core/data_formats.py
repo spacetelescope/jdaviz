@@ -306,7 +306,6 @@ def open(filename, show=True, **kwargs):
     _launch_config_with_data(helper_str, hdul, show, **kwargs)
 
 
-
 def _launch_config_with_data(config, data=None, show=True, **kwargs):
     viz_class = getattr(jdaviz_configs, config.capitalize())
 
@@ -316,7 +315,7 @@ def _launch_config_with_data(config, data=None, show=True, **kwargs):
     viz_helper = viz_class(verbosity=verbosity, history_verbosity=history_verbosity)
 
     # Load data
-    if data != None:
+    if data is not None:
         viz_helper.load_data(data, **kwargs)
 
     # Display app

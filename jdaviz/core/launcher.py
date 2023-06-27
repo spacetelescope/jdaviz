@@ -1,7 +1,6 @@
 import ipyvuetify as v
 from ipywidgets import jslink
 
-from jdaviz import configs as jdaviz_configs
 from jdaviz.core.data_formats import identify_helper, _launch_config_with_data
 
 
@@ -25,7 +24,8 @@ def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']
     for config in configs:
         config_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
                            children=[config.capitalize()])
-        config_btn.on_event('click', lambda btn, event, data: create_config(btn.children[0], loaded_data))
+        config_btn.on_event('click', lambda btn, event, data: create_config(btn.children[0],
+                                                                            loaded_data))
         btns[config] = config_btn
 
     # Create button row
@@ -43,7 +43,6 @@ def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']
                 btn.disabled = not (config == helper)
                 nonlocal loaded_data
                 loaded_data = data_obj
-            
 
     open_data_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
                           children=[v.Icon(children=["mdi-upload"])])
