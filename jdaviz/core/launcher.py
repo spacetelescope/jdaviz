@@ -1,6 +1,7 @@
 import ipyvuetify as v
 from ipywidgets import jslink
 
+from jdaviz.cli import ALL_JDAVIZ_CONFIGS
 from jdaviz.core.data_formats import identify_helper, _launch_config_with_data
 
 
@@ -36,20 +37,23 @@ def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']
     filepath_row = v.Row()
     text_field = v.TextField(label="File Path", v_model=None)
 
-    def load_file(filepath):
-        if filepath:
-            helper, data_obj = identify_helper(filepath)
-            for config, btn in btns.items():
-                btn.disabled = not (config == helper)
-                nonlocal loaded_data
-                loaded_data = data_obj
+    def enable_compatible_configs(filepath):
+        nonlocal loaded_data
+        if filepath in (None, ''):
+            helper = ALL_JDAVIZ_CONFIGS
+            loaded_data = None
+        else:
+            helper, loaded_data = identify_helper(filepath)
 
-    open_data_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
-                          children=[v.Icon(children=["mdi-upload"])])
-    open_data_btn.on_event('click', lambda btn, event, data: load_file(btn.value))
-    jslink((text_field, 'v_model'), (open_data_btn, 'value'))
+        for config, btn in btns.items():
+            btn.disabled = not (config in helper)
 
-    filepath_row.children = [text_field, open_data_btn]
+    id_data_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
+                          children=[v.Icon(children=["mdi-magnify"])])
+    id_data_btn.on_event('click', lambda btn, event, data: enable_compatible_configs(btn.value))
+    jslink((text_field, 'v_model'), (id_data_btn, 'value'))
+
+    filepath_row.children = [text_field, id_data_btn]
 
     # Create Launcher
     main.children = [intro_row, filepath_row, btn_row]

@@ -16,6 +16,7 @@ __all__ = ['main']
 JDAVIZ_DIR = pathlib.Path(__file__).parent.resolve()
 DEFAULT_VERBOSITY = 'warning'
 DEFAULT_HISTORY_VERBOSITY = 'info'
+ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 
 
 def main(filepaths=None, layout='default', instrument=None, browser='default',
@@ -116,8 +117,7 @@ def _main(config=None):
                                      'loaded from FILENAME.')
     filepaths_nargs = '*'
     if config is None:
-        parser.add_argument('--layout', default='', choices=['cubeviz', 'specviz', 'specviz2d',
-                                                             'mosviz', 'imviz'],
+        parser.add_argument('--layout', default='', choices=ALL_JDAVIZ_CONFIGS,
                             help='Configuration to use.')
     if (config == "mosviz") or ("mosviz" in sys.argv):
         filepaths_nargs = 1
