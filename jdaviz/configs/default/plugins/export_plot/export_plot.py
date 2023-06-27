@@ -1,5 +1,9 @@
 import os
 
+from glue_jupyter.bqplot.image import BqplotImageView
+from traitlets import Any
+
+from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -33,6 +37,11 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     """
     template_file = __file__, "export_plot.vue"
 
+    # For Cubeviz movie.
+    i_start = Any(0).tag(sync=True)
+    i_end = Any(0).tag(sync=True)
+    movie_filename = Any("mymovie.mp4").tag(sync=True)
+
     @property
     def user_api(self):
         if self.config == "cubeviz":
@@ -41,6 +50,15 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        if self.config == "cubeviz":
+            self.session.hub.subscribe(self, AddDataMessage, handler=self._on_cubeviz_data_added)
+
+    def _on_cubeviz_data_added(self, msg):
+        # NOTE: This needs revising if we allow loading more than one cube.
+        if isinstance(msg.viewer, BqplotImageView):
+            if len(msg.data.shape) == 3:
+                self.i_end = msg.data.shape[-1] - 1  # Same as max_value in Slice plugin
 
     def save_figure(self, filename=None, filetype=None):
         """
@@ -150,6 +168,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         PNG files are deleted after the movie is created unless otherwise specified.
         If another PNG file with the same name already exists, it will be silently replaced.
 
+        Movie is written out with frame rate of 5 frames per second (fps).
+
         Parameters
         ----------
         i_start, i_end : int
@@ -187,6 +207,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             raise NotImplementedError(f"filetype={filetype} not supported")
 
         viewer = self.viewer.selected_obj
+        if not isinstance(viewer, BqplotImageView):  # Profile viewer in glue-jupyter cannot do this
+            raise TypeError(f"Movie for {viewer.__class__.__name__} is not supported.")
         if viewer.shape is None:
             raise ValueError("Selected viewer has no display shape.")
 
@@ -202,4 +224,18 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         Callback for save movie events in the front end viewer toolbars. Uses
         the bqplot.Figure save methods.
         """
-        self.save_movie(filetype=filetype)
+        try:
+            i_start = int(self.i_start)
+            i_end = int(self.i_end)
+            filename = self.movie_filename
+            self.save_movie(i_start, i_end, filename=filename, filetype=filetype)
+        except Exception as err:  # pragma: no cover
+            self.hub.broadcast(SnackbarMessage(
+                f"Error saving {self.movie_filename}: {err!r}",
+                sender=self, color="error"))
+        else:
+            # Let the user know where we saved the file.
+            self.hub.broadcast(SnackbarMessage(
+                f"Movie saved to {os.path.abspath(self.movie_filename)}"
+                f"for slices {i_start} to {i_end}, inclusive.",
+                sender=self, color="success"))
