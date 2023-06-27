@@ -40,16 +40,18 @@ def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']
     def enable_compatible_configs(filepath):
         nonlocal loaded_data
         if filepath in (None, ''):
-            helper = ALL_JDAVIZ_CONFIGS
+            compatible_helpers = ALL_JDAVIZ_CONFIGS
             loaded_data = None
         else:
-            helper, loaded_data = identify_helper(filepath)
+            compatible_helpers, loaded_data = identify_helper(filepath)
+            if len(compatible_helpers) > 0 and loaded_data is None:
+                loaded_data = filepath
 
         for config, btn in btns.items():
-            btn.disabled = not (config in helper)
+            btn.disabled = not (config in compatible_helpers)
 
     id_data_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
-                          children=[v.Icon(children=["mdi-magnify"])])
+                        children=[v.Icon(children=["mdi-magnify"])])
     id_data_btn.on_event('click', lambda btn, event, data: enable_compatible_configs(btn.value))
     jslink((text_field, 'v_model'), (id_data_btn, 'value'))
 
