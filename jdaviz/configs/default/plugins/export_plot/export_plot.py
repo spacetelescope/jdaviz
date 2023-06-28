@@ -228,14 +228,21 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             i_start = int(self.i_start)
             i_end = int(self.i_end)
             filename = self.movie_filename
+
+            # Make sure file does not end up in weird places in standalone mode.
+            path = os.path.dirname(filename)
+            if path and not os.path.exists(path):
+                raise ValueError(f"Invalid path={path}")
+            elif not path and os.environ.get("JDAVIZ_START_DIR", ""):  # pragma: no cover
+                filename = os.path.join(os.environ["JDAVIZ_START_DIR"], filename)
+
             self.save_movie(i_start, i_end, filename=filename, filetype=filetype)
         except Exception as err:  # pragma: no cover
             self.hub.broadcast(SnackbarMessage(
-                f"Error saving {self.movie_filename}: {err!r}",
-                sender=self, color="error"))
+                f"Error saving {filename}: {err!r}", sender=self, color="error"))
         else:
             # Let the user know where we saved the file.
             self.hub.broadcast(SnackbarMessage(
-                f"Movie saved to {os.path.abspath(self.movie_filename)}"
+                f"Movie saved to {os.path.abspath(filename)} "
                 f"for slices {i_start} to {i_end}, inclusive.",
                 sender=self, color="success"))

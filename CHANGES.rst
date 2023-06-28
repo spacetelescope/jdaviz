@@ -80,6 +80,9 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Moment Map plugin now writes FITS file to working directory if no path provided
+  in standalone mode. [#2264]
+
 Imviz
 ^^^^^
 

@@ -215,12 +215,6 @@ map is created. You can load this into any image
 viewer pane to inspect the result. You can also save the result to
 a FITS format file by pressing :guilabel:`SAVE AS FITS`.
 
-.. note::
-
-    If you are using the standalone app, you must enter full path to the
-    desired output file. Otherwise, it will be saved in some temporary
-    directory that the app launched from.
-
 For example, the middle image viewer in the screenshot above shows the Moment 1 map
 for a continuum-subtracted cube.  Note that the cube should first be
 continuum-subtracted in order to create continuum-free moment maps of an
@@ -286,19 +280,15 @@ This plugin allows exporting the plot in a given viewer to various image formats
 Movie
 -----
 
-If you have ``opencv-python`` installed, you are also able to export selected
-cube slices to a MPEG-4 movie file. Expand the "Export to video" section,
-then enter the desired starting and ending slice indices (inclusive) and
-the filename.
-
-If a path is not given, the file will be saved to current working
-directory. Any existing file with the same name will be silently replaced.
-
 .. note::
 
-    If you are using the standalone app, you must enter full path to the
-    desired output file. Otherwise, it will be saved in some temporary
-    directory that the app launched from.
+    For MPEG-4, this feature needs ``opencv-python`` to be installed;
+    see [opencv-python on PyPI](https://pypi.org/project/opencv-python/).
+
+Expand the "Export to video" section, then enter the desired starting and
+ending slice indices (inclusive) and the filename.
+If a path is not given, the file will be saved to current working
+directory. Any existing file with the same name will be silently replaced.
 
 When you are ready, click the :guilabel:`Export to MP4` button.
 The movie will be recorded at 5 frames per second. While recording is in progress,
