@@ -4,14 +4,20 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
+import astropy.units as u
 from glue.core import BaseData
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage, LinkUpdatedMessage
 from jdaviz.core.helpers import ImageConfigHelper
+from jdaviz.configs.imviz.wcs_utils import (
+    _get_rotated_nddata_from_label, get_compass_info
+)
 
 __all__ = ['Imviz', 'link_image_data']
+
+base_wcs_layer_label = 'Default orientation'
 
 
 class Imviz(ImageConfigHelper):
@@ -402,7 +408,6 @@ def get_reference_image_data(app):
 def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_use_affine=True,
                     error_on_fail=False, update_plugin=True):
     """(Re)link loaded data in Imviz with the desired link type.
-    All existing links will be replaced.
 
     .. note::
 
@@ -477,6 +482,25 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
                                  f" Clear markers with viewer.reset_markers() first")
 
     refdata, iref = get_reference_image_data(app)
+
+    # if linking via WCS, add WCS-only reference data layer:
+    insert_base_wcs_layer = (
+        link_type == 'wcs' and
+        base_wcs_layer_label not in [d.label for d in app.data_collection] and
+        not refdata.meta.get(app._wcs_only_label, False)
+    )
+
+    if insert_base_wcs_layer:
+        degn = get_compass_info(refdata.coords, refdata.shape)[-3]
+        # Default rotation is the same orientation as the original reference data:
+        rotation_angle = -degn * u.deg
+        ndd = _get_rotated_nddata_from_label(
+            app, refdata.label, rotation_angle
+        )
+        app._jdaviz_helper.load_data(ndd, base_wcs_layer_label)
+        app._change_reference_data(base_wcs_layer_label)
+        refdata, iref = get_reference_image_data(app)
+
     links_list = []
     ids0 = refdata.pixel_component_ids
     ndim_range = range(refdata.ndim)
@@ -553,6 +577,9 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
                                              wcs_fallback_scheme == 'pixels',
                                              wcs_use_affine,
                                              sender=app))
+        if insert_base_wcs_layer:
+            app._jdaviz_helper.default_viewer.state.reset_limits()
+
         # reset the progress spinner
         link_plugin.linking_in_progress = False
 

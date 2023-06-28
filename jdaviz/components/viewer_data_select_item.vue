@@ -73,7 +73,7 @@ module.exports = {
       })
     },
     selectRefData() {
-      if (!this.isRefData()) {
+      if (!this.isRefData() && this.$props.item.type === 'wcs-only') {
         this.$emit('change-reference-data', {
           id: this.$props.viewer.id,
           item_id: this.$props.item.id
@@ -165,7 +165,7 @@ module.exports = {
     dataMenuTooltip() {
       if (this.$props.viewer.config === 'imviz' && this.isRefData()) {
         return 'Current viewer orientation'
-      } else if (this.$props.viewer.config === 'imviz') {
+      } else if (this.$props.viewer.config === 'imviz' && this.$props.item.type === 'wcs-only') {
         return 'Set viewer orientation'
       } else {
         return null

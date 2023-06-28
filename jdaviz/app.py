@@ -511,17 +511,24 @@ class Application(VuetifyTemplate, HubListener):
         viewer = self._jdaviz_helper.default_viewer
         old_refdata = viewer.state.reference_data
 
+        # locate the central coordinate of old refdata in this viewer:
+        sky_cen = viewer._get_center_skycoord(old_refdata)
+
+        # estimate FOV in the viewer with old reference data:
+        fov_sky_init = viewer._get_fov(old_refdata)
+
         if new_refdata_label == old_refdata.label:
             # if there's no refdata change, don't do anything:
             return
 
+        # set the new reference data in the viewer:
         new_refdata = self.data_collection[new_refdata_label]
         viewer.state.reference_data = new_refdata
 
-        # Re-link
-        self._jdaviz_helper.link_data(link_type=self._link_type,
-                                      wcs_use_affine=self._wcs_use_affine,
-                                      error_on_fail=True)
+        # also update the viewer item's reference data label:
+        viewer_ref = self._jdaviz_helper.default_viewer.reference
+        viewer_item = self._get_viewer_item(viewer_ref)
+        viewer_item['reference_data_label'] = new_refdata.label
 
         self.hub.broadcast(ChangeRefDataMessage(
             new_refdata,
@@ -530,7 +537,17 @@ class Application(VuetifyTemplate, HubListener):
             old=old_refdata,
             sender=self))
 
-        viewer.state.reset_limits()
+        if all('_WCS_ONLY' in refdata.meta for refdata in [old_refdata, new_refdata]):
+            # adjust zoom to account for new refdata if both the
+            # old and new refdata are WCS-only layers
+            # (which also ensures zoom_level is already determined):
+            fov_sky_final = viewer._get_fov(new_refdata)
+            viewer.zoom(
+                float(fov_sky_final / fov_sky_init)
+            )
+
+        # re-center the viewer on previous location
+        viewer.center_on(sky_cen)
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """

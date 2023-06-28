@@ -1,6 +1,9 @@
 import numpy as np
 
+<<<<<<< HEAD
 from glue.core.link_helpers import LinkSame
+=======
+>>>>>>> c96059e9 (wcs linking requires wcs-only base layer)
 import astropy.units as u
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
@@ -302,6 +305,31 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             raise ValueError(f'{data_label} not found in data collection external links')
 
         return link_type
+
+    def _get_fov(self, data):
+        # compute the mean of the height and width of the
+        # viewer's FOV on ``data`` in world units:
+        x_corners = [
+            self.state.x_min,
+            self.state.x_max,
+            self.state.x_min,
+            self.state.x_max
+        ]
+        y_corners = [
+            self.state.y_min,
+            self.state.y_min,
+            self.state.y_max,
+            self.state.y_max
+        ]
+
+        y_corners, x_corners = self._get_real_xy(
+            data, x_corners, y_corners
+        )[:2]
+        sky_corners = data.coords.pixel_to_world(x_corners * u.pix, y_corners * u.pix)
+        height_sky = abs(sky_corners[0].separation(sky_corners[2]))
+        width_sky = abs(sky_corners[0].separation(sky_corners[1]))
+        fov_sky = u.Quantity([height_sky, width_sky]).mean()
+        return fov_sky
 
     def _get_center_skycoord(self, data=None):
         if data is None:

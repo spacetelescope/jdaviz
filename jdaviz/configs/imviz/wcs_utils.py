@@ -290,7 +290,8 @@ def _rotated_gwcs(
     rotation_angle,
     pixel_scales,
     cdelt_signs,
-    refdata_shape=(2, 2)
+    refdata_shape=(10, 10),
+    image_shape=None
 ):
     # based on ``gwcs_simple_imaging_units`` in gwcs:
     #   https://github.com/spacetelescope/gwcs/blob/
@@ -301,41 +302,34 @@ def _rotated_gwcs(
     rotation_matrix = np.array([[cos_rho, -sin_rho],
                                 [sin_rho, cos_rho]])
 
-    # "rescale" the pixel scales. Scaling constant was tuned so that the
-    # synthetic image is about the same size on the sky as the input image
-    # for some arbitrary test data. If need re-tuning, ask Brett Morris.
-    rescale_pixel_scale = np.array(refdata_shape) / 1000
-
-    shift_by_crpix = (
-        models.Shift(-refdata_shape[0] / 2 * u.pixel) &
-        models.Shift(-refdata_shape[1] / 2 * u.pixel)
-    )
+    pixel_scale_factor = np.mean(image_shape) / np.mean(refdata_shape)
+    pixel_scales = u.Quantity(pixel_scales) * pixel_scale_factor
 
     # Multiplying by +/-1 can flip north/south or east/west.
-    flip_axes = models.Multiply(cdelt_signs[0]) & models.Multiply(cdelt_signs[1])
+    flip_axes = (
+        models.Multiply(cdelt_signs[0]) &
+        models.Multiply(cdelt_signs[1])
+    )
     rotation = models.AffineTransformation2D(
         rotation_matrix * u.deg, translation=[0, 0] * u.deg
     )
     rotation.input_units_equivalencies = {
-        "x": u.pixel_scale(pixel_scales[0] * rescale_pixel_scale[0]),
-        "y": u.pixel_scale(pixel_scales[1] * rescale_pixel_scale[1])
+        "x": u.pixel_scale(pixel_scales[0]),
+        "y": u.pixel_scale(pixel_scales[1])
     }
     rotation.inverse = models.AffineTransformation2D(
         np.linalg.inv(rotation_matrix) * u.pix, translation=[0, 0] * u.pix
     )
     rotation.inverse.input_units_equivalencies = {
-        "x": u.pixel_scale(1 / (pixel_scales[0] * rescale_pixel_scale[0])),
-        "y": u.pixel_scale(1 / (pixel_scales[1] * rescale_pixel_scale[1]))
+        "x": u.pixel_scale(1 / pixel_scales[0]),
+        "y": u.pixel_scale(1 / pixel_scales[1])
     }
     tan = models.Pix2Sky_TAN()
     celestial_rotation = models.RotateNative2Celestial(
         center_world_coord.ra, center_world_coord.dec, 180 * u.deg
     )
 
-    det2sky = (
-        flip_axes | shift_by_crpix | rotation |
-        tan | celestial_rotation
-    )
+    det2sky = flip_axes | rotation | tan | celestial_rotation
     det2sky.name = "linear_transform"
 
     detector_frame = cf.Frame2D(
@@ -360,56 +354,74 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
                             wcs_only_key="_WCS_ONLY", data=None,
                             cdelt_signs=None):
     # get the world coordinates of the central pixel
-    central_pixel_coord = (np.array(real_image_shape) * 0.5) * u.pix
-    central_world_coord = wcs.pixel_to_world(*central_pixel_coord)
+    corner_pixel_coord = [0, 0] * u.pix
+    central_world_coord = wcs.pixel_to_world(*corner_pixel_coord)
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
 
-    # compute the x/y plate scales from the WCS:
+    cdelt = None
+    # compute the x/y pixel scales from the WCS:
     if hasattr(wcs, 'pixel_scale_matrix'):
-        pixel_scales = [
+        pixel_scales = u.Quantity([
             value * (unit / u.pix)
             for value, unit in zip(
                 proj_plane_pixel_scales(wcs), wcs.wcs.cunit
             )
-        ]
-        cdelt = wcs.wcs.cdelt
-    else:
+        ])
+        if getattr(wcs.wcs, 'cd', None) is not None:
+            cdelt = np.diag(wcs.wcs.cd)
+        else:
+            cdelt = wcs.wcs.cdelt
+
+    elif data.meta.get(wcs_only_key, False):
+        # WCS-only layers have pixel scales in meta:
+        pixel_scales = u.Quantity(data.meta['_pixel_scales'])
+
+    elif 'wcsinfo' in data.meta:
         # GWCS doesn't yet have a pixel scale attr, so approximate
         # its behavior from the WCS keys in the header:
         cdelt = [
             v for k, v in data.meta['wcsinfo'].items()
             if k.lower().startswith('cdelt')
         ]
-        pc = [
-            v for k, v in data.meta['wcsinfo'].items()
-            if k.lower().startswith('pc')
-        ]
-        n = int(len(pc) ** 0.5)
-        pc = np.reshape(pc, (n, n))
 
-        pixel_scales = np.dot(cdelt, pc) * u.deg / u.pix
+        pixel_scales = cdelt * u.deg / u.pix
 
     # flip e.g. RA or Dec axes?
-    if cdelt_signs is None:
+    if cdelt_signs is None and cdelt is not None:
         cdelt_signs = np.sign(cdelt)
+    elif cdelt is None:
+        cdelt_signs = [1, -1]
+
+    # pixel scale in x and y may be different, but here we
+    # take the mean pixel scale in either dimension and assume
+    # they're similar, since otherwise the aspect ratio of the
+    # rotated image will appear distorted.
+    pixel_scales = [pixel_scales.mean(), pixel_scales.mean()]
 
     # create a GWCS centered on ``filename``,
     # and rotated by ``rotation_angle``:
     new_rotated_gwcs = _rotated_gwcs(
-        central_world_coord, rotation_angle, pixel_scales, cdelt_signs
+        central_world_coord, rotation_angle,
+        pixel_scales, cdelt_signs,
+        refdata_shape=refdata_shape,
+        image_shape=real_image_shape
     )
 
     # create a fake NDData (we use arange so data boundaries show up in Imviz
     # if it ever is accidentally exposed) with the rotated GWCS:
+    sequential_data = np.arange(
+        np.prod(refdata_shape), dtype=np.int8
+    ).reshape(refdata_shape)
+
     ndd = NDData(
-        data=np.arange(np.prod(refdata_shape), dtype=np.int8).reshape(refdata_shape),
+        data=sequential_data,
         wcs=new_rotated_gwcs,
-        meta={wcs_only_key: True}
+        meta={wcs_only_key: True, '_pixel_scales': pixel_scales}
     )
     return ndd
 
 
-def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shape=(2, 2),
+def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shape=(10, 10),
                                    cdelt_signs=None):
     """
     Create a synthetic NDData which stores GWCS that approximate
@@ -444,6 +456,38 @@ def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shap
     data = app.data_collection[data_label]
     if data.coords is None:
         raise ValueError(f"{data_label} has no WCS for rotation.")
-    return _prepare_rotated_nddata(data.shape, data.coords, rotation_angle, refdata_shape,
-                                   wcs_only_key=app._wcs_only_label, data=data,
-                                   cdelt_signs=cdelt_signs)
+
+    if cdelt_signs is None:
+        # check if East is to the left:
+        viewer = app.get_viewer('imviz-0')
+        wcs = viewer.state.reference_data.coords
+        if any(['lon' in name for name in wcs.world_axis_names]):
+            # works for gwcs:
+            [lon_axis] = [i for i, axis in enumerate(wcs.world_axis_names) if axis == 'lon']
+        else:
+            # works for FITS WCS:
+            [lon_axis] = [i for i, axis in enumerate(wcs.wcs.ctype) if axis.startswith('RA')]
+        offset_coords = [1 if lon_axis == i else 0 for i in range(2)]
+        origin_coords = [0, 0]
+        east_left = (
+            wcs.pixel_to_world_values(*offset_coords)[0] -
+            wcs.pixel_to_world_values(*origin_coords)[0]
+        ) < 0
+
+        if east_left:
+            cdelt_signs = None
+        else:
+            cdelt_signs = [-1 if lon_axis == i else 1 for i in range(2)]
+            if 'imviz-compass' in [item['name'] for item in app.state.tray_items]:
+                compass_plugin = app.get_tray_item_from_name('imviz-compass')
+                compass_plugin.canvas_flip_horizontal = not compass_plugin.canvas_flip_horizontal
+
+    return _prepare_rotated_nddata(
+        data.shape,
+        data.coords,
+        rotation_angle,
+        refdata_shape,
+        wcs_only_key=app._wcs_only_label,
+        data=data,
+        cdelt_signs=cdelt_signs
+    )
