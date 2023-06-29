@@ -286,7 +286,8 @@ Movie
     see [opencv-python on PyPI](https://pypi.org/project/opencv-python/).
 
 Expand the "Export to video" section, then enter the desired starting and
-ending slice indices (inclusive) and the filename.
+ending slice indices (inclusive), the frame rate in frames per second (FPS),
+and the filename.
 If a path is not given, the file will be saved to current working
 directory. Any existing file with the same name will be silently replaced.
 

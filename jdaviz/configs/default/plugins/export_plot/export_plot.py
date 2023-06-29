@@ -40,6 +40,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     # For Cubeviz movie.
     i_start = Any(0).tag(sync=True)
     i_end = Any(0).tag(sync=True)
+    movie_fps = Any(5.0).tag(sync=True)
     movie_filename = Any("mymovie.mp4").tag(sync=True)
 
     @property
@@ -105,7 +106,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         """
         self.save_figure(filetype=filetype)
 
-    def _save_movie(self, i_start, i_end, filename, rm_temp_files):
+    def _save_movie(self, i_start, i_end, fps, filename, rm_temp_files):
         # NOTE: All the stuff here has to be in the same thread but
         #       separate from main app thread to work.
         self.app.loading = True  # Grays out the app
@@ -116,7 +117,6 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         temp_png_files = []
 
         # TODO: Expose to users?
-        fps = 5  # This is arbitrary
         i_step = 1  # Need n_frames check if we allow tweaking
 
         # No wrapping. Forward only.
@@ -159,7 +159,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             for cur_pngfile in temp_png_files:
                 os.remove(cur_pngfile)
 
-    def save_movie(self, i_start, i_end, filename=None, filetype=None, rm_temp_files=True):
+    def save_movie(self, i_start, i_end, fps=5, filename=None, filetype=None, rm_temp_files=True):
         """Save selected slices as a movie.
 
         This method creates a PNG file per frame (``._cubeviz_movie_frame_<n>.png``)
@@ -168,7 +168,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         PNG files are deleted after the movie is created unless otherwise specified.
         If another PNG file with the same name already exists, it will be silently replaced.
 
-        Movie is written out with frame rate of 5 frames per second (fps).
+        Movie is written out with frame rate of 5 frames per second (FPS).
 
         Parameters
         ----------
@@ -176,6 +176,9 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             Slices to record; each slice will be a frame in the movie.
             Unlike Python indexing, ``i_end`` is inclusive.
             Wrapping and reverse indexing are not supported.
+
+        fps : float
+            Frame rate in frames per second (FPS). Default is 5.
 
         filename : str or `None`
             Filename for the movie to be recorded. Include path if necessary.
@@ -212,14 +215,17 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if viewer.shape is None:
             raise ValueError("Selected viewer has no display shape.")
 
+        if fps <= 0:
+            raise ValueError("Invalid frame rate, must be positive non-zero value.")
+
         if filename is None:
             filename = f"mymovie.{filetype}"
 
         threading.Thread(
-            target=lambda: self._save_movie(i_start, i_end, filename, rm_temp_files)
+            target=lambda: self._save_movie(i_start, i_end, fps, filename, rm_temp_files)
         ).start()
 
-    def vue_save_movie(self, filetype):
+    def vue_save_movie(self, filetype, debug=False):
         """
         Callback for save movie events in the front end viewer toolbars. Uses
         the bqplot.Figure save methods.
@@ -227,6 +233,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         try:
             i_start = int(self.i_start)
             i_end = int(self.i_end)
+            fps = float(self.movie_fps)
             filename = self.movie_filename
 
             # Make sure file does not end up in weird places in standalone mode.
@@ -236,13 +243,15 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             elif not path and os.environ.get("JDAVIZ_START_DIR", ""):  # pragma: no cover
                 filename = os.path.join(os.environ["JDAVIZ_START_DIR"], filename)
 
-            self.save_movie(i_start, i_end, filename=filename, filetype=filetype)
+            self.save_movie(i_start, i_end, fps=fps, filename=filename, filetype=filetype)
         except Exception as err:  # pragma: no cover
+            if debug:  # For debugging and testing
+                raise
             self.hub.broadcast(SnackbarMessage(
                 f"Error saving {filename}: {err!r}", sender=self, color="error"))
         else:
             # Let the user know where we saved the file.
             self.hub.broadcast(SnackbarMessage(
                 f"Movie saved to {os.path.abspath(filename)} "
-                f"for slices {i_start} to {i_end}, inclusive.",
+                f"for slices {i_start} to {i_end}, inclusive, at {fps:.1f} FPS.",
                 sender=self, color="success"))

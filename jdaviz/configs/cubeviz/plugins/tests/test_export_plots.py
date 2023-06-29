@@ -62,11 +62,14 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
     # with pytest.raises(ValueError, match="No frames to write"):
     #     plugin.save_movie(0, 0)
 
-    plugin._obj.move_filename = "fake_path/mymovie.mp4"
-    with pytest.raises(ValueError, match="Invalid path"):
-        plugin.save_movie(0, 1)
+    with pytest.raises(ValueError, match="Invalid frame rate"):
+        plugin.save_movie(0, 1, fps=0)
 
-    plugin._obj.move_filename = "mymovie.mp4"
+    plugin._obj.movie_filename = "fake_path/mymovie.mp4"
+    with pytest.raises(ValueError, match="Invalid path"):
+        plugin._obj.vue_save_movie("mp4", debug=True)
+
+    plugin._obj.movie_filename = "mymovie.mp4"
     plugin.viewer = 'spectrum-viewer'
     with pytest.raises(TypeError, match=r".* not supported"):
         plugin.save_movie(0, 1)

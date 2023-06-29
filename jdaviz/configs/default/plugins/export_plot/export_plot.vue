@@ -61,6 +61,17 @@
               <v-row class="row-no-outside-padding row-min-bottom-padding">
                 <v-col>
                   <v-text-field
+                    v-model="movie_fps"
+                    class="mt-0 pt-0"
+                    type="number"
+                    label="FPS"
+                    hint="Frame rate"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row class="row-no-outside-padding row-min-bottom-padding">
+                <v-col>
+                  <v-text-field
                     v-model="movie_filename"
                     class="mt-0 pt-0"
                     label="Filename"
