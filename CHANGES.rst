@@ -53,6 +53,11 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Simple Aperture Photometry plugin: Custom annulus background options are removed.
+  Please draw/load annulus as you would with other region shapes, then select it
+  in the plugin from Subset dropdown for the background. Using annulus region as
+  aperture is not supported. [#2276]
+
 Mosviz
 ^^^^^^
 
