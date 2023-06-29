@@ -31,8 +31,9 @@
        </v-list-item>
       </v-list>
 
-      <v-row v-if="config=='cubeviz'" no-gutters>
-        <v-expansion-panels popout>
+      <v-row v-if="config==='cubeviz'">
+        <v-expansion-panels accordion>
+
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export to Video</span>
@@ -46,7 +47,9 @@
                     type="number"
                     label="Start"
                     hint="Start Slice"
+                    persistent-hint
                   ></v-text-field>
+
                 </v-col>
                 <v-col>
                   <v-text-field
@@ -55,7 +58,9 @@
                     type="number"
                     label="End"
                     hint="End Slice"
+                     persistent-hint
                   ></v-text-field>
+
                 </v-col>
               </v-row>
               <v-row class="row-no-outside-padding row-min-bottom-padding">
@@ -66,7 +71,9 @@
                     type="number"
                     label="FPS"
                     hint="Frame rate"
+                     persistent-hint
                   ></v-text-field>
+
                 </v-col>
               </v-row>
               <v-row class="row-no-outside-padding row-min-bottom-padding">
@@ -76,10 +83,13 @@
                     class="mt-0 pt-0"
                     label="Filename"
                     hint="Movie filename"
+                     persistent-hint
                   ></v-text-field>
+
                 </v-col>
               </v-row>
-              <v-row>
+              <v-row justify='end'>
+
                 <v-btn
                  color="primary"
                  @click="() => save_movie('mp4')"

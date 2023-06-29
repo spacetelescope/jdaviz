@@ -125,7 +125,9 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if i_end > slice_plg.max_value:
             i_end = slice_plg.max_value
         if i_end <= i_start:
+            self.app.loading = False
             raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
+
 
         i = i_start
         while i <= i_end:
