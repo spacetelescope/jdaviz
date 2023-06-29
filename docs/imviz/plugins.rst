@@ -181,15 +181,18 @@ an interactively selected region. A typical workflow is as follows:
    object of interest using its center of mass, if you wish.
    Depending on the object, it may take several iterations for re-centering
    to converge, or it may never converge at all.
+
+   .. note::
+
+       You cannot use annulus region as aperture (an exception will be thrown)
+       but you may use it for background (see below).
+
 5. If you want to subtract background before performing photometry,
    you have the following 3 options. Otherwise if your image is already
    background subtracted, choose "Manual" and leave the background set at 0:
 
   * Manual: Enter the background value in the :guilabel:`Background value` field.
     This value must be in the same unit as display data, if applicable.
-  * Annulus: Enter its inner radius and width in the :guilabel:`Annulus inner radius`
-    and :guilabel:`Annulus width`, respectively. Median of the pixels within
-    the annulus region will be used but the annulus shape will not be shown on display.
   * Subset: Define a region for background calculation (median) using Subset draw tool
     and select that region using the :guilabel:`Background` dropdown menu. Only regions
     created with the :guilabel:`replace` option are acceptable as background regions
