@@ -267,7 +267,7 @@ def identify_helper(filename, ext=1):
     try:
         # try using the specutils registry:
         valid_format, config = identify_data(filename)
-        return (config, hdul)
+        return ([config], hdul)
     except ValueError:
         # if file type not recognized:
         pass
