@@ -247,10 +247,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if path and not os.path.exists(path):
             raise ValueError(f"Invalid path={path}")
         elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
-            if path:
-                filename = os.path.realpath(os.path.join(os.environ["JDAVIZ_START_DIR"], path, filename))  # noqa: E501
-            else:
-                filename = os.path.join(os.environ["JDAVIZ_START_DIR"], filename)
+            filename = os.path.join(os.environ["JDAVIZ_START_DIR"], filename)
 
         if i_start is None:
             i_start = int(self.i_start)

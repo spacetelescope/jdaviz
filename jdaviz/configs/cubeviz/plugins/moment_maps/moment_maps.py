@@ -142,10 +142,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if path and not os.path.exists(path):
             raise ValueError(f"Invalid path={path}")
         elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
-            if path:
-                filename = Path(os.path.join(os.environ["JDAVIZ_START_DIR"], path, self.filename)).resolve()  # noqa: E501
-            else:
-                filename = Path(os.environ["JDAVIZ_START_DIR"]) / self.filename
+            filename = Path(os.environ["JDAVIZ_START_DIR"]) / self.filename
         else:
             filename = Path(self.filename).resolve()
 
