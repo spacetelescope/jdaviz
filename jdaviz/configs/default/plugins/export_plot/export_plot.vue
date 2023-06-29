@@ -33,13 +33,17 @@
 
       <v-row v-if="config==='cubeviz'">
         <v-expansion-panels accordion>
-
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export to Video</span>
             </v-expansion-panel-header>
             <v-expansion-panel-content>
-              <v-row class="row-no-outside-padding row-min-bottom-padding">
+              <v-row v-if="movie_msg!==''">
+                <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                    {{ movie_msg }}
+                </span>
+              </v-row>
+              <v-row v-if="movie_msg===''" class="row-no-outside-padding row-min-bottom-padding">
                 <v-col>
                   <v-text-field
                     v-model="i_start"
@@ -49,7 +53,6 @@
                     hint="Start Slice"
                     persistent-hint
                   ></v-text-field>
-
                 </v-col>
                 <v-col>
                   <v-text-field
@@ -60,10 +63,9 @@
                     hint="End Slice"
                      persistent-hint
                   ></v-text-field>
-
                 </v-col>
               </v-row>
-              <v-row class="row-no-outside-padding row-min-bottom-padding">
+              <v-row v-if="movie_msg===''" class="row-no-outside-padding row-min-bottom-padding">
                 <v-col>
                   <v-text-field
                     v-model="movie_fps"
@@ -73,10 +75,9 @@
                     hint="Frame rate"
                      persistent-hint
                   ></v-text-field>
-
                 </v-col>
               </v-row>
-              <v-row class="row-no-outside-padding row-min-bottom-padding">
+              <v-row v-if="movie_msg===''" class="row-no-outside-padding row-min-bottom-padding">
                 <v-col>
                   <v-text-field
                     v-model="movie_filename"
@@ -85,11 +86,9 @@
                     hint="Movie filename"
                      persistent-hint
                   ></v-text-field>
-
                 </v-col>
               </v-row>
-              <v-row justify='end'>
-
+              <v-row v-if="movie_msg===''" justify='end'>
                 <v-btn
                  color="primary"
                  @click="() => save_movie('mp4')"

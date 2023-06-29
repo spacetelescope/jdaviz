@@ -1,7 +1,7 @@
 import os
 
 from glue_jupyter.bqplot.image import BqplotImageView
-from traitlets import Any
+from traitlets import Any, Unicode
 
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -42,6 +42,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     i_end = Any(0).tag(sync=True)
     movie_fps = Any(5.0).tag(sync=True)
     movie_filename = Any("mymovie.mp4").tag(sync=True)
+    movie_msg = Unicode("").tag(sync=True)
 
     @property
     def user_api(self):
@@ -53,7 +54,11 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         if self.config == "cubeviz":
-            self.session.hub.subscribe(self, AddDataMessage, handler=self._on_cubeviz_data_added)
+            if HAS_OPENCV:
+                self.session.hub.subscribe(self, AddDataMessage, handler=self._on_cubeviz_data_added)
+            else:
+                # NOTE: HTML tags do not work here.
+                self.movie_msg = 'Please install opencv-python to use this feature.'
 
     def _on_cubeviz_data_added(self, msg):
         # NOTE: This needs revising if we allow loading more than one cube.
@@ -127,7 +132,6 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if i_end <= i_start:
             self.app.loading = False
             raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
-
 
         i = i_start
         while i <= i_end:

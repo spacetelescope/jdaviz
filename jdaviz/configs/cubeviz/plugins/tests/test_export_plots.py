@@ -28,6 +28,7 @@ def test_export_movie(cubeviz_helper, spectrum1d_cube, tmp_path):
 def test_no_opencv(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
     plugin = cubeviz_helper.plugins["Export Plot"]
+    assert plugin._obj.movie_msg != ""
     with pytest.raises(ImportError, match="Please install opencv-python"):
         plugin.save_movie(0, 1)
 
@@ -49,6 +50,7 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
     cubeviz_helper.default_viewer.shape = (100, 100)
     plugin = cubeviz_helper.plugins["Export Plot"]
+    assert plugin._obj.movie_msg == ""
     assert plugin._obj.i_start == 0
     assert plugin._obj.i_end == 1
     assert plugin._obj.movie_filename == "mymovie.mp4"
