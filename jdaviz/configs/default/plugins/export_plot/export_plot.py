@@ -1,7 +1,7 @@
 import os
 
 from glue_jupyter.bqplot.image import BqplotImageView
-from traitlets import Any, Unicode
+from traitlets import Any, Bool, Unicode
 
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -43,6 +43,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     movie_fps = Any(5.0).tag(sync=True)
     movie_filename = Any("mymovie.mp4").tag(sync=True)
     movie_msg = Unicode("").tag(sync=True)
+    movie_recording = Bool(False).tag(sync=True)
+    movie_kill = Bool(False).tag(sync=True)
 
     @property
     def user_api(self):
@@ -55,7 +57,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
         if self.config == "cubeviz":
             if HAS_OPENCV:
-                self.session.hub.subscribe(self, AddDataMessage, handler=self._on_cubeviz_data_added)
+                self.session.hub.subscribe(self, AddDataMessage, handler=self._on_cubeviz_data_added)  # noqa: E501
             else:
                 # NOTE: HTML tags do not work here.
                 self.movie_msg = 'Please install opencv-python to use this feature.'
@@ -114,58 +116,61 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     def _save_movie(self, i_start, i_end, fps, filename, rm_temp_files):
         # NOTE: All the stuff here has to be in the same thread but
         #       separate from main app thread to work.
-        self.app.loading = True  # Grays out the app
+
         viewer = self.viewer.selected_obj
         slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
         orig_slice = slice_plg.slice
-        ts = float(slice_plg.play_interval) * 1e-3  # ms to s
         temp_png_files = []
+        i = i_start
+        video = None
 
         # TODO: Expose to users?
         i_step = 1  # Need n_frames check if we allow tweaking
 
-        # No wrapping. Forward only.
-        if i_start < 0:
-            i_start = 0
-        if i_end > slice_plg.max_value:
-            i_end = slice_plg.max_value
-        if i_end <= i_start:
-            self.app.loading = False
-            raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
-
-        i = i_start
-        while i <= i_end:
-            slice_plg._on_slider_updated({'new': i})
-            cur_pngfile = f"._cubeviz_movie_frame_{i}.png"
-            self.save_figure(filename=cur_pngfile, filetype="png")
-            temp_png_files.append(cur_pngfile)
-            i += i_step
-            time.sleep(ts)  # Avoid giving user epilepsy
-
-            # Wait for the roundtrip to the frontend to complete in case the epilepsy
-            # mitigating sleep wasn't long enough
-            while viewer.figure._upload_png_callback is not None:
-                time.sleep(ts)
-
-        # Grab frame size.
-        frame_shape = cv2.imread(temp_png_files[0]).shape
-        frame_size = (frame_shape[1], frame_shape[0])
-
         try:
-            video = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, frame_size, True)  # noqa: E501
-            for cur_pngfile in temp_png_files:
-                video.write(cv2.imread(cur_pngfile))
+            self.movie_recording = True
+
+            while i <= i_end:
+                if self.movie_kill:
+                    break
+
+                slice_plg._on_slider_updated({'new': i})
+                cur_pngfile = f"._cubeviz_movie_frame_{i}.png"
+                self.save_figure(filename=cur_pngfile, filetype="png")
+                temp_png_files.append(cur_pngfile)
+                i += i_step
+
+                # Wait for the roundtrip to the frontend to complete.
+                while viewer.figure._upload_png_callback is not None:
+                    time.sleep(0.05)
+
+            if not self.movie_kill:
+                # Grab frame size.
+                frame_shape = cv2.imread(temp_png_files[0]).shape
+                frame_size = (frame_shape[1], frame_shape[0])
+
+                video = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, frame_size, True)  # noqa: E501
+                for cur_pngfile in temp_png_files:
+                    video.write(cv2.imread(cur_pngfile))
         finally:
             cv2.destroyAllWindows()
-            video.release()
+            if video:
+                video.release()
             slice_plg._on_slider_updated({'new': orig_slice})
-            self.app.loading = False
+            self.movie_recording = False
 
-        if rm_temp_files:
+        if rm_temp_files or self.movie_kill:
             for cur_pngfile in temp_png_files:
-                os.remove(cur_pngfile)
+                if os.path.exists(cur_pngfile):
+                    os.remove(cur_pngfile)
 
-    def save_movie(self, i_start, i_end, fps=5, filename=None, filetype=None, rm_temp_files=True):
+        if self.movie_kill:
+            if os.path.exists(filename):
+                os.remove(filename)
+            self.movie_kill = False
+
+    def save_movie(self, i_start=None, i_end=None, fps=None, filename=None, filetype=None,
+                   rm_temp_files=True):
         """Save selected slices as a movie.
 
         This method creates a PNG file per frame (``._cubeviz_movie_frame_<n>.png``)
@@ -174,21 +179,21 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         PNG files are deleted after the movie is created unless otherwise specified.
         If another PNG file with the same name already exists, it will be silently replaced.
 
-        Movie is written out with frame rate of 5 frames per second (FPS).
-
         Parameters
         ----------
-        i_start, i_end : int
+        i_start, i_end : int or `None`
             Slices to record; each slice will be a frame in the movie.
+            If not given, it is obtained from plugin inputs.
             Unlike Python indexing, ``i_end`` is inclusive.
             Wrapping and reverse indexing are not supported.
 
-        fps : float
-            Frame rate in frames per second (FPS). Default is 5.
+        fps : float or `None`
+            Frame rate in frames per second (FPS).
+            If not given, it is obtained from plugin inputs.
 
         filename : str or `None`
             Filename for the movie to be recorded. Include path if necessary.
-            If not given, it will be named ``mymovie.mp4`` in the working directory.
+            If not given, it is obtained from plugin inputs.
             If another file with the same name already exists, it will be silently replaced.
 
         filetype : {'mp4', `None`}
@@ -197,6 +202,11 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
         rm_temp_files : bool
             Remove temporary PNG files after movie creation. Default is `True`.
+
+        Returns
+        -------
+        out_filename : str
+            The absolute path to the actual output file.
 
         """
         if self.config != "cubeviz":
@@ -221,43 +231,68 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if viewer.shape is None:
             raise ValueError("Selected viewer has no display shape.")
 
+        if fps is None:
+            fps = float(self.movie_fps)
         if fps <= 0:
             raise ValueError("Invalid frame rate, must be positive non-zero value.")
 
         if filename is None:
-            filename = f"mymovie.{filetype}"
+            if self.movie_filename:
+                filename = self.movie_filename
+            else:
+                raise ValueError("Invalid filename.")
+
+        # Make sure file does not end up in weird places in standalone mode.
+        path = os.path.dirname(filename)
+        if path and not os.path.exists(path):
+            raise ValueError(f"Invalid path={path}")
+        elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
+            if path:
+                filename = os.path.realpath(os.path.join(os.environ["JDAVIZ_START_DIR"], path, filename))  # noqa: E501
+            else:
+                filename = os.path.join(os.environ["JDAVIZ_START_DIR"], filename)
+
+        if i_start is None:
+            i_start = int(self.i_start)
+
+        if i_end is None:
+            i_end = int(self.i_end)
+
+        # No wrapping. Forward only.
+        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+        if i_start < 0:  # pragma: no cover
+            i_start = 0
+        if i_end > slice_plg.max_value:  # pragma: no cover
+            i_end = slice_plg.max_value
+        if i_end <= i_start:
+            raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
 
         threading.Thread(
             target=lambda: self._save_movie(i_start, i_end, fps, filename, rm_temp_files)
         ).start()
 
-    def vue_save_movie(self, filetype, debug=False):
+        return os.path.abspath(filename)
+
+    def vue_save_movie(self, filetype):  # pragma: no cover
         """
         Callback for save movie events in the front end viewer toolbars. Uses
         the bqplot.Figure save methods.
         """
         try:
-            i_start = int(self.i_start)
-            i_end = int(self.i_end)
-            fps = float(self.movie_fps)
-            filename = self.movie_filename
-
-            # Make sure file does not end up in weird places in standalone mode.
-            path = os.path.dirname(filename)
-            if path and not os.path.exists(path):
-                raise ValueError(f"Invalid path={path}")
-            elif not path and os.environ.get("JDAVIZ_START_DIR", ""):  # pragma: no cover
-                filename = os.path.join(os.environ["JDAVIZ_START_DIR"], filename)
-
-            self.save_movie(i_start, i_end, fps=fps, filename=filename, filetype=filetype)
+            filename = self.save_movie(filetype=filetype)
         except Exception as err:  # pragma: no cover
-            if debug:  # For debugging and testing
-                raise
             self.hub.broadcast(SnackbarMessage(
-                f"Error saving {filename}: {err!r}", sender=self, color="error"))
+                f"Error saving {self.movie_filename}: {err!r}", sender=self, color="error"))
         else:
             # Let the user know where we saved the file.
+            # NOTE: Because of threading, this will be emitted even as movie as recording.
             self.hub.broadcast(SnackbarMessage(
-                f"Movie saved to {os.path.abspath(filename)} "
-                f"for slices {i_start} to {i_end}, inclusive, at {fps:.1f} FPS.",
+                f"Movie being saved to {filename} for slices {self.i_start} to {self.i_end}, "
+                f"inclusive, at {self.movie_fps} FPS.",
                 sender=self, color="success"))
+
+    def vue_kill_recording(self, *args):  # pragma: no cover
+        self.movie_kill = True
+        self.hub.broadcast(SnackbarMessage(
+            f"Movie recording interrupted by user, {self.movie_filename} will be deleted.",
+            sender=self, color="warning"))

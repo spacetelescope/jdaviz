@@ -30,7 +30,7 @@ def test_no_opencv(cubeviz_helper, spectrum1d_cube):
     plugin = cubeviz_helper.plugins["Export Plot"]
     assert plugin._obj.movie_msg != ""
     with pytest.raises(ImportError, match="Please install opencv-python"):
-        plugin.save_movie(0, 1)
+        plugin.save_movie()
 
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
@@ -38,11 +38,11 @@ def test_export_movie_not_cubeviz(imviz_helper):
     plugin = imviz_helper.plugins["Export Plot"]
 
     with pytest.raises(NotImplementedError, match="save_movie is not available for config"):
-        plugin._obj.save_movie(0, 1)
+        plugin._obj.save_movie()
 
     # Also not available via plugin public API.
     with pytest.raises(AttributeError):
-        plugin.save_movie(0, 1)
+        plugin.save_movie()
 
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
@@ -56,25 +56,30 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
     assert plugin._obj.movie_filename == "mymovie.mp4"
 
     with pytest.raises(NotImplementedError, match="filetype"):
-        plugin.save_movie(0, 1, filetype="gif")
+        plugin.save_movie(filetype="gif")
 
-    # FIXME: Cannot test this because it happens in a thread and raises
-    # pytest.PytestUnhandledThreadExceptionWarning: Exception in thread
-    # that I cannot catch properly in a test.
-    # with pytest.raises(ValueError, match="No frames to write"):
-    #     plugin.save_movie(0, 0)
+    with pytest.raises(NotImplementedError, match="filetype"):
+        plugin.save_movie(filename="mymovie.gif", filetype=None)
+
+    with pytest.raises(ValueError, match="No frames to write"):
+        plugin.save_movie(i_start=0, i_end=0)
 
     with pytest.raises(ValueError, match="Invalid frame rate"):
-        plugin.save_movie(0, 1, fps=0)
+        plugin.save_movie(fps=0)
 
     plugin._obj.movie_filename = "fake_path/mymovie.mp4"
     with pytest.raises(ValueError, match="Invalid path"):
-        plugin._obj.vue_save_movie("mp4", debug=True)
+        plugin.save_movie()
 
     plugin._obj.movie_filename = "mymovie.mp4"
     plugin.viewer = 'spectrum-viewer'
-    with pytest.raises(TypeError, match=r".* not supported"):
-        plugin.save_movie(0, 1)
+    with pytest.raises(TypeError, match=r"Movie for.*is not supported"):
+        plugin.save_movie()
+
+    plugin._obj.movie_filename = ""
+    plugin.viewer = 'uncert-viewer'
+    with pytest.raises(ValueError, match="Invalid filename"):
+        plugin.save_movie()
 
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
@@ -84,4 +89,4 @@ def test_export_movie_cubeviz_empty(cubeviz_helper):
     assert plugin._obj.i_end == 0
 
     with pytest.raises(ValueError, match="Selected viewer has no display shape"):
-        plugin.save_movie(0, 1)
+        plugin.save_movie(i_start=0, i_end=1)

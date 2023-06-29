@@ -292,5 +292,10 @@ If a path is not given, the file will be saved to current working
 directory. Any existing file with the same name will be silently replaced.
 
 When you are ready, click the :guilabel:`Export to MP4` button.
-The movie will be recorded at 5 frames per second. While recording is in progress,
-the entire app will be unusable (grayed out).
+The movie will be recorded at the given FPS. While recording is in progress,
+it is highly recommended that you leave the app alone until it is done.
+
+While recording, there is an option to kill the recording when something
+goes wrong (e.g., it is taking too long or you realized you entered the wrong inputs).
+Click on the stop icon next to the :guilabel:`Export to MP4` button to kill it.
+Doing so will result in no output video.

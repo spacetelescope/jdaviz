@@ -17,6 +17,7 @@
         <v-btn
          color="primary"
          @click="() => save_figure('png')"
+         :disabled="movie_recording"
         >
          Export to PNG
         </v-btn>
@@ -25,6 +26,7 @@
         <v-btn
          color="primary"
          @click="() => save_figure('svg')"
+         :disabled="movie_recording"
         >
          Export to SVG
         </v-btn>
@@ -92,8 +94,12 @@
                 <v-btn
                  color="primary"
                  @click="() => save_movie('mp4')"
+                 :disabled="movie_recording"
                 >
                  Export to MP4
+                </v-btn>
+                <v-btn color="primary" icon @click="kill_recording" :disabled="!movie_recording">
+                  <v-icon>stop</v-icon>
                 </v-btn>
               </v-row>
             </v-expansion-panel-content>
