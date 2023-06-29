@@ -459,7 +459,7 @@ def test_with_invalid_subset_name(cubeviz_helper):
 
 
 def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
     viewer.apply_roi(XRangeROI(6000, 7000))
     reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
@@ -505,7 +505,7 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
 
 
 def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
 
     viewer.apply_roi(XRangeROI(6200, 6800))
@@ -554,7 +554,7 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
 
 
 def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
 
     viewer.apply_roi(XRangeROI(6400, 6600))
@@ -574,7 +574,7 @@ def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
 
 
 def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
 
     viewer.apply_roi(XRangeROI(6400, 7400))
@@ -593,7 +593,7 @@ def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
 
 
 def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
 
     viewer.apply_roi(XRangeROI(6400, 6600))

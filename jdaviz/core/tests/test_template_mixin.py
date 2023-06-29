@@ -11,7 +11,7 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     mask = spectrum1d.flux < spectrum1d.flux.mean()
     spectrum1d.mask = mask
 
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     # create a "Subset 1" entry
     sv.apply_roi(XRangeROI(6500, 7400))

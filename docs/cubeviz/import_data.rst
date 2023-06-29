@@ -74,7 +74,7 @@ Importing data via the API
 
 Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Cubeviz helper class API. Using this API, users can
-load data into the application through code with the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_spectrum`
+load data into the application through code with the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data`
 method, which takes as input a :class:`~specutils.Spectrum1D` object.
 
 FITS Files
@@ -162,7 +162,7 @@ object, you can load it into Cubeviz as follows:
     # Create your spectrum1
     spec3d = Spectrum1D(data, wcs=my_wcs)
     cubeviz = Cubeviz()
-    cubeviz.load_spectrum(spec3d, data_label='My Cube')
+    cubeviz.load_data(spec3d, data_label='My Cube')
     cubeviz.show()
 
 There is no plan to natively load such objects until ``datamodels``

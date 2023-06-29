@@ -14,7 +14,7 @@ from jdaviz.core.marks import LineAnalysisContinuum
 
 def test_plugin(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -79,7 +79,7 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
 
 def test_user_api(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     sv.apply_roi(XRangeROI(6500, 7400))
@@ -109,7 +109,7 @@ def test_user_api(specviz_helper, spectrum1d):
 
 def test_line_identify(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
@@ -180,7 +180,7 @@ def test_coerce_unit():
 
 def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -207,7 +207,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
 
 def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -234,7 +234,7 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
 
 def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -259,7 +259,7 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
 
 def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -286,7 +286,7 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
 
 def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -319,7 +319,7 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
 
 def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -347,7 +347,7 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
 
 def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -375,7 +375,7 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
 
 def test_subset_changed(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.open_in_tray()
@@ -406,12 +406,12 @@ def test_subset_changed(specviz_helper, spectrum1d):
 
 def test_invalid_subset(specviz_helper, spectrum1d):
     # 6000-8000
-    specviz_helper.load_spectrum(spectrum1d, data_label="right_spectrum")
+    specviz_helper.load_data(spectrum1d, data_label="right_spectrum")
 
     # 5000-7000
     sp2 = Spectrum1D(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
                      flux=spectrum1d.flux * 1.25)
-    specviz_helper.load_spectrum(sp2, data_label="left_spectrum")
+    specviz_helper.load_data(sp2, data_label="left_spectrum")
 
     # apply subset that overlaps on left_spectrum, but not right_spectrum
     # NOTE: using a subset that overlaps the right_spectrum (reference) results in errors when

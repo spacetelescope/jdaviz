@@ -12,7 +12,7 @@ from jdaviz.core.linelists import get_available_linelists
 def test_line_lists(specviz_helper):
     spec = Spectrum1D(flux=np.random.rand(100)*u.Jy,
                       spectral_axis=np.arange(6000, 7000, 10)*u.AA)
-    specviz_helper.load_spectrum(spec)
+    specviz_helper.load_data(spec)
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
@@ -51,7 +51,7 @@ def test_redshift(specviz_helper, spectrum1d):
     assert plg._obj.disabled_msg
 
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     assert not plg._obj.disabled_msg
 
@@ -102,7 +102,7 @@ def test_redshift(specviz_helper, spectrum1d):
 def test_load_available_preset_lists(specviz_helper, spectrum1d):
     """ Loads all available line lists and checks the medium requirement """
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     # Check to make sure we got our line lists
     available_linelists = get_available_linelists()
@@ -125,7 +125,7 @@ def test_load_available_preset_lists(specviz_helper, spectrum1d):
 
 def test_line_identify(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
-    specviz_helper.load_spectrum(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d, data_label=label)
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']

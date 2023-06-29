@@ -293,7 +293,7 @@ def open(filename, show=True, **kwargs):
     show : bool
         Determines whether to immediately show the application
 
-    All other arguments are interpreted as load_data/load_spectrum arguments for
+    All other arguments are interpreted as load_data arguments for
     the autoidentified configuration class
 
     Returns
@@ -312,10 +312,7 @@ def open(filename, show=True, **kwargs):
 
     # Load data
     data = hdul if (hdul is not None) else filename
-    if helper_str == "specviz":
-        viz_helper.load_spectrum(data, **kwargs)
-    else:
-        viz_helper.load_data(data, **kwargs)
+    viz_helper.load_data(data, **kwargs)
 
     # Display app
     if show:

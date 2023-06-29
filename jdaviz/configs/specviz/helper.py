@@ -66,7 +66,7 @@ class Specviz(ConfigHelper, LineListMixin):
         self.load_data(data, data_label, format, show_in_viewer, concat_by_file)
 
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
-                      concat_by_file=False):
+                  concat_by_file=False):
         """
         Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
