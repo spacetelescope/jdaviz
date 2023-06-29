@@ -138,6 +138,7 @@ filterwarnings = [
     "ignore::DeprecationWarning:traittypes",
     "ignore::DeprecationWarning:voila",
     "ignore::DeprecationWarning:asteval",
+    "ignore::FutureWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
 ]
 
