@@ -49,6 +49,7 @@ def test_export_movie_not_cubeviz(imviz_helper):
 def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
     cubeviz_helper.default_viewer.shape = (100, 100)
+    cubeviz_helper.app.get_viewer("uncert-viewer").shape = (100, 100)
     plugin = cubeviz_helper.plugins["Export Plot"]
     assert plugin._obj.movie_msg == ""
     assert plugin._obj.i_start == 0
