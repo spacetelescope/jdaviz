@@ -9,8 +9,9 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               HomeTool, BqplotPanZoomMode,
                                               BqplotPanZoomXMode, BqplotPanZoomYMode,
                                               BqplotRectangleMode, BqplotCircleMode,
-                                              BqplotEllipseMode, BqplotXRangeMode,
-                                              BqplotYRangeMode, BqplotSelectionTool,
+                                              BqplotEllipseMode, BqplotCircularAnnulusMode,
+                                              BqplotXRangeMode, BqplotYRangeMode,
+                                              BqplotSelectionTool,
                                               INTERACT_COLOR)
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
@@ -25,6 +26,7 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'icons')
 BqplotRectangleMode.icon = os.path.join(ICON_DIR, 'select_xy.svg')
 BqplotCircleMode.icon = os.path.join(ICON_DIR, 'select_circle.svg')
 BqplotEllipseMode.icon = os.path.join(ICON_DIR, 'select_ellipse.svg')
+BqplotCircularAnnulusMode.icon = os.path.join(ICON_DIR, 'select_annulus.svg')
 BqplotXRangeMode.icon = os.path.join(ICON_DIR, 'select_x.svg')
 BqplotYRangeMode.icon = os.path.join(ICON_DIR, 'select_y.svg')
 

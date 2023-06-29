@@ -7,8 +7,8 @@ import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
-from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
-from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
+from glue.core.subset import RoiSubsetState, RangeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -149,7 +149,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
         if not subset_information:
             return
-        if len(subset_information) == 1:
+        if ((len(subset_information) == 1) and
+                (isinstance(subset_information[0]["subset_state"], RangeSubsetState) or
+                 (isinstance(subset_information[0]["subset_state"], RoiSubsetState) and
+                  isinstance(subset_information[0]["subset_state"].roi,
+                             (CircularROI, RectangularROI, EllipticalROI))))):
             self.is_centerable = True
         else:
             self.is_centerable = False
@@ -161,7 +165,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             glue_state = spec["glue_state"]
             if isinstance(subset_state, RoiSubsetState):
                 if isinstance(subset_state.roi, CircularROI):
-                    x, y = subset_state.roi.get_center()
+                    x, y = subset_state.roi.center()
                     r = subset_state.roi.radius
                     subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
                                          {"name": "Y Center", "att": "yc", "value": y, "orig": y},
@@ -178,8 +182,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
 
                 elif isinstance(subset_state.roi, EllipticalROI):
-                    xc = subset_state.roi.xc
-                    yc = subset_state.roi.yc
+                    xc, yc = subset_state.roi.center()
                     rx = subset_state.roi.radius_x
                     ry = subset_state.roi.radius_y
                     theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
@@ -189,6 +192,17 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
                         {"name": "Y Radius", "att": "radius_y", "value": ry, "orig": ry},
                         {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
+
+                elif isinstance(subset_state.roi, CircularAnnulusROI):
+                    x, y = subset_state.roi.center()
+                    inner_r = subset_state.roi.inner_radius
+                    outer_r = subset_state.roi.outer_radius
+                    subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
+                                         {"name": "Y Center", "att": "yc", "value": y, "orig": y},
+                                         {"name": "Inner radius", "att": "inner_radius",
+                                          "value": inner_r, "orig": inner_r},
+                                         {"name": "Outer radius", "att": "outer_radius",
+                                          "value": outer_r, "orig": outer_r}]
 
                 subset_type = subset_state.roi.__class__.__name__
 
@@ -303,6 +317,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         reason = ""
         for index, sub in enumerate(self.subset_definitions):
             lo = hi = xmin = xmax = ymin = ymax = None
+            inner_radius = outer_radius = None
             for d_att in sub:
                 if d_att["att"] == "lo":
                     lo = d_att["value"]
@@ -320,6 +335,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     ymin = d_att["value"]
                 elif d_att["att"] == "ymax":
                     ymax = d_att["value"]
+                elif d_att["att"] == "outer_radius":
+                    outer_radius = d_att["value"]
+                elif d_att["att"] == "inner_radius":
+                    inner_radius = d_att["value"]
 
                 if lo and hi and hi <= lo:
                     status = False
@@ -328,6 +347,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 elif xmin and xmax and ymin and ymax and (xmax - xmin <= 0 or ymax - ymin <= 0):
                     status = False
                     reason = "Failed to update Subset: width and length must be positive scalars"
+                    break
+                elif inner_radius and outer_radius and inner_radius >= outer_radius:
+                    status = False
+                    reason = "Failed to update Subset: inner radius must be less than outer radius"
                     break
 
         return status, reason
@@ -375,39 +398,13 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             depending on the Subset type, if applicable.
             If Subset is not centerable, this returns `None`.
 
-        Raises
-        ------
-        NotImplementedError
-            Subset type is not supported.
-
         """
         # Composite region cannot be centered.
         if not self.is_centerable:  # no-op
             return
 
         subset_state = self.subset_select.selected_subset_state
-
-        if isinstance(subset_state, RoiSubsetState):
-            sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
-                cen = sbst_obj.get_center()
-            elif isinstance(sbst_obj, RectangularROI):
-                cen = sbst_obj.center()
-            else:  # pragma: no cover
-                raise NotImplementedError(
-                    f'Getting center of {sbst_obj.__class__} is not supported')
-
-        elif isinstance(subset_state, RangeSubsetState):
-            cen = (subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo
-
-        elif isinstance(subset_state, CompositeSubsetState):
-            cen = None
-
-        else:  # pragma: no cover
-            raise NotImplementedError(
-                f'Getting center of {subset_state.__class__} is not supported')
-
-        return cen
+        return subset_state.center()
 
     def set_center(self, new_cen, update=False):
         """Set the desired center for the selected Subset, if applicable.
@@ -439,7 +436,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if isinstance(subset_state, RoiSubsetState):
             x, y = new_cen
             sbst_obj = subset_state.roi
-            if isinstance(sbst_obj, (CircularROI, EllipticalROI)):
+            if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
                 self._set_value_in_subset_definition(0, "X Center", "value", x)
                 self._set_value_in_subset_definition(0, "Y Center", "value", y)
             elif isinstance(sbst_obj, RectangularROI):
@@ -454,7 +451,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')
 
         elif isinstance(subset_state, RangeSubsetState):
-            dx = new_cen - ((subset_state.hi - subset_state.lo) * 0.5 + subset_state.lo)
+            dx = new_cen - subset_state.center()
             self._set_value_in_subset_definition(0, "Lower bound", "value", subset_state.lo + dx)
             self._set_value_in_subset_definition(0, "Upper bound", "value", subset_state.hi + dx)
 
