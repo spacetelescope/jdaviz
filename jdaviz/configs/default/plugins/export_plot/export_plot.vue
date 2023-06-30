@@ -95,21 +95,36 @@
                 </v-col>
               </v-row>
               <v-row v-if="movie_msg===''" justify='end'>
-                <v-btn
-                 color="primary"
-                 @click="() => save_movie('mp4')"
-                 :disabled="movie_recording || viewer_selected==='spectrum-viewer'"
-                >
-                 Export to MP4
-                </v-btn>
                 <v-tooltip top>
                   <template v-slot:activator="{ on, attrs }">
-                    <v-btn color="primary" icon @click="interrupt_recording" v-bind="attrs" v-on="on" :disabled="!movie_recording">
-                      <v-icon>stop</v-icon>
+                    <v-btn
+                     color="primary"
+                     @click="() => save_movie('mp4')"
+                     v-bind="attrs"
+                     v-on="on"
+                     :disabled="movie_recording || viewer_selected==='spectrum-viewer'"
+                    >
+                     Export to MP4
                     </v-btn>
                   </template>
-                  <span>Interrupt recording and delete movie file</span>
+                  <span>Start movie recording</span>
                 </v-tooltip>
+                <div v-if="movie_recording">
+                  <v-tooltip top>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-btn
+                       color="primary"
+                       icon
+                       @click="interrupt_recording"
+                       v-bind="attrs"
+                       v-on="on"
+                       :disabled="!movie_recording">
+                        <v-icon>stop</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>Interrupt recording and delete movie file</span>
+                  </v-tooltip>
+                </div>
               </v-row>
             </v-expansion-panel-content>
           </v-expansion-panel>
