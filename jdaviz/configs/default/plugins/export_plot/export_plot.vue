@@ -48,9 +48,10 @@
               <v-row v-if="movie_msg===''" class="row-no-outside-padding row-min-bottom-padding">
                 <v-col>
                   <v-text-field
-                    v-model="i_start"
+                    v-model.number="i_start"
                     class="mt-0 pt-0"
                     type="number"
+                    :rules="[() => i_start>=0 || 'Must be at least zero.']"
                     label="Start"
                     hint="Start Slice"
                     persistent-hint
@@ -58,9 +59,10 @@
                 </v-col>
                 <v-col>
                   <v-text-field
-                    v-model="i_end"
+                    v-model.number="i_end"
                     class="mt-0 pt-0"
                     type="number"
+                    :rules="[() => i_end>i_start || 'Must be larger than Start Slice.']"
                     label="End"
                     hint="End Slice"
                      persistent-hint
@@ -70,9 +72,10 @@
               <v-row v-if="movie_msg===''" class="row-no-outside-padding row-min-bottom-padding">
                 <v-col>
                   <v-text-field
-                    v-model="movie_fps"
+                    v-model.number="movie_fps"
                     class="mt-0 pt-0"
                     type="number"
+                    :rules="[() => movie_fps>0 || 'Must be positive.']"
                     label="FPS"
                     hint="Frame rate"
                      persistent-hint
@@ -84,6 +87,7 @@
                   <v-text-field
                     v-model="movie_filename"
                     class="mt-0 pt-0"
+                    :rules="[() => movie_filename!=='' || 'Must provide filename.']"
                     label="Filename"
                     hint="Movie filename"
                      persistent-hint

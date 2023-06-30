@@ -3,6 +3,7 @@ import os
 from glue_jupyter.bqplot.image import BqplotImageView
 from traitlets import Any, Bool, Unicode
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
@@ -34,13 +35,17 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`save_figure`
     * :meth:`save_movie` (Cubeviz only)
+    * :prop:`i_start` (Cubeviz only)
+    * :prop:`i_end` (Cubeviz only)
+    * :prop:`movie_fps` (Cubeviz only)
+    * :prop:`movie_filename` (Cubeviz only)
     """
     template_file = __file__, "export_plot.vue"
 
     # For Cubeviz movie.
-    i_start = Any(0).tag(sync=True)
-    i_end = Any(0).tag(sync=True)
-    movie_fps = Any(5.0).tag(sync=True)
+    i_start = IntHandleEmpty(0).tag(sync=True)
+    i_end = IntHandleEmpty(0).tag(sync=True)
+    movie_fps = FloatHandleEmpty(5.0).tag(sync=True)
     movie_filename = Any("mymovie.mp4").tag(sync=True)
     movie_msg = Unicode("").tag(sync=True)
     movie_recording = Bool(False).tag(sync=True)
@@ -49,7 +54,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def user_api(self):
         if self.config == "cubeviz":
-            return PluginUserApi(self, expose=('viewer', 'save_figure', 'save_movie'))
+            return PluginUserApi(self, expose=('viewer', 'save_figure', 'save_movie', 'i_start',
+                                               'i_end', 'movie_fps', 'movie_filename'))
         return PluginUserApi(self, expose=('viewer', 'save_figure'))
 
     def __init__(self, *args, **kwargs):
