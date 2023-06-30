@@ -49,7 +49,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     movie_filename = Any("mymovie.mp4").tag(sync=True)
     movie_msg = Unicode("").tag(sync=True)
     movie_recording = Bool(False).tag(sync=True)
-    movie_kill = Bool(False).tag(sync=True)
+    movie_interrupt = Bool(False).tag(sync=True)
 
     @property
     def user_api(self):
@@ -137,7 +137,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             self.movie_recording = True
 
             while i <= i_end:
-                if self.movie_kill:
+                if self.movie_interrupt:
                     break
 
                 slice_plg._on_slider_updated({'new': i})
@@ -150,7 +150,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
                 while viewer.figure._upload_png_callback is not None:
                     time.sleep(0.05)
 
-            if not self.movie_kill:
+            if not self.movie_interrupt:
                 # Grab frame size.
                 frame_shape = cv2.imread(temp_png_files[0]).shape
                 frame_size = (frame_shape[1], frame_shape[0])
@@ -165,15 +165,15 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             slice_plg._on_slider_updated({'new': orig_slice})
             self.movie_recording = False
 
-        if rm_temp_files or self.movie_kill:
+        if rm_temp_files or self.movie_interrupt:
             for cur_pngfile in temp_png_files:
                 if os.path.exists(cur_pngfile):
                     os.remove(cur_pngfile)
 
-        if self.movie_kill:
+        if self.movie_interrupt:
             if os.path.exists(filename):
                 os.remove(filename)
-            self.movie_kill = False
+            self.movie_interrupt = False
 
     def save_movie(self, i_start=None, i_end=None, fps=None, filename=None, filetype=None,
                    rm_temp_files=True):
@@ -294,8 +294,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
                 f"inclusive, at {self.movie_fps} FPS.",
                 sender=self, color="success"))
 
-    def vue_kill_recording(self, *args):  # pragma: no cover
-        self.movie_kill = True
+    def vue_interrupt_recording(self, *args):  # pragma: no cover
+        self.movie_interrupt = True
         self.hub.broadcast(SnackbarMessage(
             f"Movie recording interrupted by user, {self.movie_filename} will be deleted.",
             sender=self, color="warning"))

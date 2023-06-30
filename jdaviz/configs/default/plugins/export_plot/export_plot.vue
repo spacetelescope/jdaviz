@@ -104,7 +104,7 @@
                 </v-btn>
                 <v-tooltip top>
                   <template v-slot:activator="{ on, attrs }">
-                    <v-btn color="primary" icon @click="kill_recording" v-bind="attrs" v-on="on" :disabled="!movie_recording">
+                    <v-btn color="primary" icon @click="interrupt_recording" v-bind="attrs" v-on="on" :disabled="!movie_recording">
                       <v-icon>stop</v-icon>
                     </v-btn>
                   </template>

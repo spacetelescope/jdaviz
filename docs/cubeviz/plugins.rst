@@ -295,7 +295,7 @@ When you are ready, click the :guilabel:`Export to MP4` button.
 The movie will be recorded at the given FPS. While recording is in progress,
 it is highly recommended that you leave the app alone until it is done.
 
-While recording, there is an option to kill the recording when something
+While recording, there is an option to interrupt the recording when something
 goes wrong (e.g., it is taking too long or you realized you entered the wrong inputs).
-Click on the stop icon next to the :guilabel:`Export to MP4` button to kill it.
+Click on the stop icon next to the :guilabel:`Export to MP4` button to interrupt it.
 Doing so will result in no output video.
