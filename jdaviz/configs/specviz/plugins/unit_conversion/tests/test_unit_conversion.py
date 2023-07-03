@@ -1,5 +1,12 @@
 import pytest
+import numpy as np
+import astropy
 from astropy import units as u
+from astropy.nddata import InverseVariance
+from specutils import Spectrum1D
+from astropy.utils.introspection import minversion
+
+ASTROPY_LT_5_3 = not minversion(astropy, "5.3")
 
 
 # On failure, should not crash; essentially a no-op.
@@ -89,3 +96,29 @@ def test_conv_no_data(specviz_helper):
     with pytest.raises(ValueError, match="no valid unit choices"):
         plg.flux_unit = "erg / (s cm2 Angstrom)"
     assert len(specviz_helper.app.data_collection) == 0
+
+
+@pytest.mark.skipif(ASTROPY_LT_5_3, reason='this feature relies on astropy v5.3+')
+def test_non_stddev_uncertainty(specviz_helper):
+    flux = np.ones(10) * u.Jy
+    stddev = 0.1
+    var = stddev ** 2
+    inv_var = np.ones(len(flux)) / var
+    wavelength = np.linspace(1, 5, len(flux)) * u.um
+    spec = Spectrum1D(
+        flux,
+        uncertainty=InverseVariance(inv_var),
+        spectral_axis=wavelength
+    )
+
+    specviz_helper.load_data(spec)
+
+    po = specviz_helper.plugins['Plot Options']
+    po.uncertainty_visible = True
+
+    # check that the stddev uncertainties are drawn:
+    viewer = specviz_helper.app.get_viewer('spectrum-viewer')
+    np.testing.assert_allclose(
+        np.abs(viewer.figure.marks[-1].y - viewer.figure.marks[-1].y.mean(0)),
+        stddev
+    )
