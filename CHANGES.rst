@@ -11,6 +11,8 @@ New Features
 
 - Plots within plugins can now be popped-out into their own windows. [#2254]
 
+- Replace specviz.load_spectrum with specviz.load_data. [#2273]
+
 Cubeviz
 ^^^^^^^
 
