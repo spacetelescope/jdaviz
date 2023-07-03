@@ -433,7 +433,7 @@ class ConfigHelper(HubListener):
                         # convert the uncertainties to StdDevUncertainties, since
                         # that is assumed in a few places in jdaviz:
                         if uncertainty.unit is None:
-                            uncertainty = uncertainty.unit = data.flux.unit
+                            uncertainty.unit = data.flux.unit
                         if hasattr(uncertainty, 'represent_as'):
                             new_uncert = uncertainty.represent_as(
                                 StdDevUncertainty
