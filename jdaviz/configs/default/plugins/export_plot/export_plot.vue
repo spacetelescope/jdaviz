@@ -12,26 +12,26 @@
     />
 
     <div v-if="viewer_selected">
-      <v-list>
-       <v-list-item>
+      <v-row justify="end" class="row-min-bottom-padding">
         <v-btn
+         text
          color="primary"
          @click="() => save_figure('png')"
          :disabled="movie_recording"
         >
          Export to PNG
         </v-btn>
-       </v-list-item>
-       <v-list-item>
+      </v-row>
+      <v-row justify="end">
         <v-btn
+         text
          color="primary"
          @click="() => save_figure('svg')"
          :disabled="movie_recording"
         >
          Export to SVG
         </v-btn>
-       </v-list-item>
-      </v-list>
+      </v-row>
 
       <v-row v-if="config==='cubeviz' && viewer_selected!=='spectrum-viewer'">
         <v-expansion-panels accordion>
@@ -95,9 +95,25 @@
                 </v-col>
               </v-row>
               <v-row v-if="movie_msg===''" justify='end'>
+                <v-tooltip top v-if="movie_recording">
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                     color="primary"
+                     icon
+                     @click="interrupt_recording"
+                     v-bind="attrs"
+                     v-on="on"
+                     :disabled="!movie_recording">
+                      <v-icon>stop</v-icon>
+                    </v-btn>
+                  </template>
+                  <span>Interrupt recording and delete movie file</span>
+                </v-tooltip>
+
                 <v-tooltip top>
                   <template v-slot:activator="{ on, attrs }">
                     <v-btn
+                     text
                      color="primary"
                      @click="() => save_movie('mp4')"
                      v-bind="attrs"
@@ -109,22 +125,6 @@
                   </template>
                   <span>Start movie recording</span>
                 </v-tooltip>
-                <div v-if="movie_recording">
-                  <v-tooltip top>
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-btn
-                       color="primary"
-                       icon
-                       @click="interrupt_recording"
-                       v-bind="attrs"
-                       v-on="on"
-                       :disabled="!movie_recording">
-                        <v-icon>stop</v-icon>
-                      </v-btn>
-                    </template>
-                    <span>Interrupt recording and delete movie file</span>
-                  </v-tooltip>
-                </div>
               </v-row>
             </v-expansion-panel-content>
           </v-expansion-panel>

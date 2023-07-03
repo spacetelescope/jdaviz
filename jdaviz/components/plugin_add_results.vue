@@ -55,7 +55,8 @@
     <v-row justify="end">
       <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
         <v-btn :disabled="label_invalid_msg.length > 0 || action_disabled"
-          color="accent" text
+          text
+          color="accent"
           @click="$emit('click:action')"
         >{{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
         </v-btn>

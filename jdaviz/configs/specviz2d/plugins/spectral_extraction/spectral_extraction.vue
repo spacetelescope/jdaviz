@@ -159,7 +159,7 @@
       </div>
 
       <v-row>
-        <v-expansion-panels popout>
+        <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export Trace</span>
@@ -273,7 +273,7 @@
       </v-row>
 
       <v-row>
-        <v-expansion-panels popout>
+        <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export Background Image</span>
@@ -297,7 +297,7 @@
         </v-expansion-panels>
       </v-row>
       <v-row>
-        <v-expansion-panels popout>
+        <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export Background Spectrum</span>
@@ -321,7 +321,7 @@
         </v-expansion-panels>
       </v-row>
       <v-row>
-        <v-expansion-panels popout>
+        <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export Background-Subtracted Image</span>
