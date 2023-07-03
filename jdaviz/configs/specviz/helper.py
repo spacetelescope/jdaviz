@@ -41,7 +41,7 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
 
-    @deprecated(since="3.6", alternative="specviz.load_data")
+    @deprecated(since="3.6", alternative="load_data")
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True,
                       concat_by_file=False):
         """
@@ -68,7 +68,7 @@ class Specviz(ConfigHelper, LineListMixin):
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
                   concat_by_file=False):
         """
-        Loads a data file or `~specutils.Spectrum1D` object into Specviz.
+        Load data into Specviz.
 
         Parameters
         ----------
