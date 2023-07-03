@@ -35,10 +35,10 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`save_figure`
     * :meth:`save_movie` (Cubeviz only)
-    * :prop:`i_start` (Cubeviz only)
-    * :prop:`i_end` (Cubeviz only)
-    * :prop:`movie_fps` (Cubeviz only)
-    * :prop:`movie_filename` (Cubeviz only)
+    * `i_start` (Cubeviz only)
+    * `i_end` (Cubeviz only)
+    * `movie_fps` (Cubeviz only)
+    * `movie_filename` (Cubeviz only)
     """
     template_file = __file__, "export_plot.vue"
 

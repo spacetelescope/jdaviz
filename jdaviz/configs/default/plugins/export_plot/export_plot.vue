@@ -102,7 +102,7 @@
                      @click="() => save_movie('mp4')"
                      v-bind="attrs"
                      v-on="on"
-                     :disabled="movie_recording || viewer_selected==='spectrum-viewer'"
+                     :disabled="movie_recording"
                     >
                      Export to MP4
                     </v-btn>
