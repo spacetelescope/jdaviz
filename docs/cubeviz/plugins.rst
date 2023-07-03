@@ -274,3 +274,28 @@ Export Plot
 ===========
 
 This plugin allows exporting the plot in a given viewer to various image formats.
+
+.. _cubeviz-export-video:
+
+Movie
+-----
+
+.. note::
+
+    For MPEG-4, this feature needs ``opencv-python`` to be installed;
+    see [opencv-python on PyPI](https://pypi.org/project/opencv-python/).
+
+Expand the "Export to video" section, then enter the desired starting and
+ending slice indices (inclusive), the frame rate in frames per second (FPS),
+and the filename.
+If a path is not given, the file will be saved to current working
+directory. Any existing file with the same name will be silently replaced.
+
+When you are ready, click the :guilabel:`Export to MP4` button.
+The movie will be recorded at the given FPS. While recording is in progress,
+it is highly recommended that you leave the app alone until it is done.
+
+While recording, there is an option to interrupt the recording when something
+goes wrong (e.g., it is taking too long or you realized you entered the wrong inputs).
+Click on the stop icon next to the :guilabel:`Export to MP4` button to interrupt it.
+Doing so will result in no output video.

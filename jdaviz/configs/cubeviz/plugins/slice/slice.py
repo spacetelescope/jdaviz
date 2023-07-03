@@ -122,7 +122,7 @@ class Slice(PluginTemplateMixin):
     def _on_data_added(self, msg):
         if isinstance(msg.viewer, BqplotImageView):
             if len(msg.data.shape) == 3:
-                self.max_value = msg.data.shape[-1] - 1
+                self.max_value = msg.data.shape[-1] - 1  # Same as i_end in Export Plot plugin
                 self._watch_viewer(msg.viewer, True)
                 msg.viewer.state.slices = (0, 0, int(self.slice))
 

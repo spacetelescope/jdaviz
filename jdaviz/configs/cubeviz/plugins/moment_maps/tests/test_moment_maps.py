@@ -131,3 +131,7 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
         sky = w.pixel_to_world(0, 0)
         assert_allclose(sky.ra.deg, 204.9998877673)
         assert_allclose(sky.dec.deg, 27.0001)
+
+    plugin._obj.filename = "fake_path/test_file.fits"
+    with pytest.raises(ValueError, match="Invalid path"):
+        plugin._obj.vue_save_as_fits()

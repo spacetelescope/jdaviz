@@ -66,6 +66,9 @@ mosviz = "jdaviz.configs.mosviz"
 imviz = "jdaviz.configs.imviz"
 
 [project.optional-dependencies]
+all = [
+    "opencv-python",
+]
 test = [
     "pytest",
     "pytest-astropy",

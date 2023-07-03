@@ -14,6 +14,9 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Added the ability to export cube slices to video. User will need to install
+  ``opencv-python`` separately or use ``[all]`` specifier when installing Jdaviz. [#2264]
+
 Imviz
 ^^^^^
 
@@ -76,6 +79,9 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+
+- Moment Map plugin now writes FITS file to working directory if no path provided
+  in standalone mode. [#2264]
 
 Imviz
 ^^^^^

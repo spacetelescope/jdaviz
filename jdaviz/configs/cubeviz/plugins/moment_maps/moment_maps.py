@@ -137,20 +137,29 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if self.moment is None or not self.filename:  # pragma: no cover
             return
 
-        path = Path(self.filename).resolve()
-        if path.exists():
+        # Make sure file does not end up in weird places in standalone mode.
+        path = os.path.dirname(self.filename)
+        if path and not os.path.exists(path):
+            raise ValueError(f"Invalid path={path}")
+        elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
+            filename = Path(os.environ["JDAVIZ_START_DIR"]) / self.filename
+        else:
+            filename = Path(self.filename).resolve()
+
+        if filename.exists():
             if overwrite:
                 # Try to delete the file
-                path.unlink()
-                if path.exists():
+                filename.unlink()
+                if filename.exists():
                     # Warn the user if the file still exists
-                    raise FileExistsError(f"Unable to delete {path}. Check user permissions.")
+                    raise FileExistsError(f"Unable to delete {filename}. Check user permissions.")
             else:
                 self.overwrite_warn = True
                 return
 
-        self.moment.write(str(path))
+        filename = str(filename)
+        self.moment.write(filename)
 
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(
-            f"Moment map saved to {os.path.abspath(self.filename)}", sender=self, color="success"))
+            f"Moment map saved to {os.path.abspath(filename)}", sender=self, color="success"))
