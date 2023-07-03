@@ -109,6 +109,7 @@ jdaviz = [
     "configs/*/*/*/*.vue",
     "configs/*/*.yaml",
     "jdaviz_cli.ipynb",
+    "jdaviz_cli_launcher.ipynb",
 ]
 "jdaviz.configs.imviz.tests" = [
     "data/*",

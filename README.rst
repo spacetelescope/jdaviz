@@ -80,7 +80,7 @@ from a terminal, type:
 .. code-block:: bash
 
     jdaviz --help
-    jdaviz specviz /path/to/data/spectral_file
+    jdaviz --layout=specviz /path/to/data/spectral_file
 
 For more information on the command line interfaces for each tool, see the
 `Jdaviz docs <https://jdaviz.readthedocs.io/en/latest/index.html>`_.

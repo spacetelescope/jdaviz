@@ -41,13 +41,13 @@ Similarly, an instrument keyword can be specified by the command line. For NIRSp
 
 .. code-block:: bash
 
-    jdaviz mosviz /path/to/my/data --instrument=nirspec
+    jdaviz --layout=mosviz /path/to/my/data --instrument=nirspec
 
 and for NIRISS:
 
 .. code-block:: bash
 
-    jdaviz mosviz /path/to/my/data --instrument=niriss
+    jdaviz --layout=mosviz /path/to/my/data --instrument=niriss
 
 Specifying a data directory and an instrument are required to start Mosviz from the command line.
 If a directory is entered without specifying an instrument, Mosviz will

@@ -50,7 +50,7 @@ a data product is optional:
 
 .. code-block:: bash
 
-    jdaviz cubeviz /my/directory/cube.fits
+    jdaviz --layout=cubeviz /my/directory/cube.fits
 
 .. _cubeviz-import-gui:
 

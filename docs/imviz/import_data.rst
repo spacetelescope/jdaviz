@@ -25,7 +25,7 @@ Multiple data files may be provided:
 
 .. code-block:: bash
 
-    jdaviz imviz /my/image/data1.fits /my/image/data2.fits
+    jdaviz --layout=imviz /my/image/data1.fits /my/image/data2.fits
 
 .. _imviz-import-gui:
 

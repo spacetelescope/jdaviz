@@ -31,7 +31,7 @@ spectrum object and will automatically extract the 1D spectrum):
 
 .. code-block:: bash
 
-    jdaviz specviz2d /my/directory/spectrum1.fits /my/directory/spectrum2.fits
+    jdaviz --layout=specviz2d /my/directory/spectrum1.fits /my/directory/spectrum2.fits
 
 
 .. _specviz2d-import-gui:
