@@ -132,7 +132,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                'spatial_subset_items',
                                                'spatial_subset_selected',
                                                default_text='Entire Cube',
-                                               allowed_type='spatial')
+                                               filters=['is_spatial'])
         else:
             self.spatial_subset = None
 
