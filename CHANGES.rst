@@ -13,9 +13,8 @@ New Features
 
 - The ``specviz.load_spectrum`` method is deprecated; use ``specviz.load_data`` instead. [#2273]
 
-- Add launcher to select config and require --layout argument when launching standalone. [#2257]
-
-- Launcher displays which configs are compatible with a provided dataset. [#2267]
+- Add launcher to select and identify compatible configurations,
+  and require --layout argument when launching standalone. [#2257, #2267]
 
 Cubeviz
 ^^^^^^^
