@@ -37,8 +37,8 @@ class TestConfigHelper:
 
         self.spec2 = spectrum1d._copy(spectral_axis=spectrum1d.spectral_axis+1000*u.AA)
         self.label2 = "Test 1D Spectrum 2"
-        self.spec_app.load_spectrum(spectrum1d, data_label=self.label)
-        self.spec_app.load_spectrum(self.spec2, data_label=self.label2)
+        self.spec_app.load_data(spectrum1d, data_label=self.label)
+        self.spec_app.load_data(self.spec2, data_label=self.label2)
 
         # Add 3 subsets to cover different parts of spec and spec2
         self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6500))

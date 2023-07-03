@@ -29,11 +29,11 @@ example_uri_helper = [
 
 def test_data_menu_toggles(specviz_helper, spectrum1d):
     # load 2 data entries
-    specviz_helper.load_spectrum(spectrum1d, data_label="test")
+    specviz_helper.load_data(spectrum1d, data_label="test")
     app = specviz_helper.app
     sv = app.get_viewer('spectrum-viewer')
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
-    specviz_helper.load_spectrum(new_spec, data_label="test2")
+    specviz_helper.load_data(new_spec, data_label="test2")
 
     # check that both are enabled in the data menu
     selected_data_items = app._viewer_item_by_id('specviz-0')['selected_data_items']

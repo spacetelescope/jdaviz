@@ -10,7 +10,7 @@ from astropy import units as u
      ("micron", "fail", "micron", "Jy")])
 def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, new_flux,
                                expected_spectral_axis, expected_flux):
-    specviz_helper.load_spectrum(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
     plg = specviz_helper.plugins["Unit Conversion"]
 
@@ -34,7 +34,7 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
 def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    specviz_helper.load_spectrum(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
     plg = specviz_helper.plugins["Unit Conversion"]
@@ -50,7 +50,7 @@ def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
 def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    specviz_helper.load_spectrum(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
     plg = specviz_helper.plugins["Unit Conversion"]
@@ -66,7 +66,7 @@ def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
 def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
     if uncert is False:
         spectrum1d.uncertainty = None
-    specviz_helper.load_spectrum(spectrum1d, data_label="Test 1D Spectrum")
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
 
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
     plg = specviz_helper.plugins["Unit Conversion"]

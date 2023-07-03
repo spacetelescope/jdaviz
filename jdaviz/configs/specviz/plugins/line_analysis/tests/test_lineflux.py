@@ -99,7 +99,7 @@ def test_unit_gaussian(specviz_helper, test_case):
     Test an Area 1 Gaussian and ensure the result returns in W/m2
     Test provided by Patrick Ogle
     '''
-    specviz_helper.load_spectrum(test_case)
+    specviz_helper.load_data(test_case)
 
     lineflux_result = _calculate_line_flux(specviz_helper)
     assert_quantity_allclose(float(lineflux_result['result']) * u.Unit(lineflux_result['unit']),
@@ -117,7 +117,7 @@ def test_unit_gaussian_mixed_units_per_steradian(specviz_helper):
     flx_wave = _gauss_with_unity_area(lam_a.value, mn, sig)*1E3*u.erg/u.s/u.cm**2/u.Angstrom/u.sr
     fl_wave = Spectrum1D(spectral_axis=lam_a, flux=flx_wave)
 
-    specviz_helper.load_spectrum(fl_wave)
+    specviz_helper.load_data(fl_wave)
     lineflux_result = _calculate_line_flux(specviz_helper)
     assert_quantity_allclose(float(lineflux_result['result']) * u.Unit(lineflux_result['unit']),
                              1*u.Unit('W/(m2sr)'))

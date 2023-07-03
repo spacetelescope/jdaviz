@@ -23,7 +23,7 @@ class TestSpecvizHelper:
         self.multi_order_spectrum_list = multi_order_spectrum_list
 
         self.label = "Test 1D Spectrum"
-        self.spec_app.load_spectrum(spectrum1d, data_label=self.label)
+        self.spec_app.load_data(spectrum1d, data_label=self.label)
 
     def test_load_spectrum1d(self):
         # starts with a single loaded spectrum1d object:
@@ -38,7 +38,7 @@ class TestSpecvizHelper:
 
     def test_load_spectrum_list_no_labels(self):
         # now load three more spectra from a SpectrumList, without labels
-        self.spec_app.load_spectrum(self.spec_list)
+        self.spec_app.load_data(self.spec_list)
         assert len(self.spec_app.app.data_collection) == 4
         for i in (1, 2, 3):
             assert "specviz_data" in self.spec_app.app.data_collection[i].label
@@ -46,24 +46,24 @@ class TestSpecvizHelper:
     def test_load_spectrum_list_with_labels(self):
         # now load three more spectra from a SpectrumList, with labels:
         labels = ["List test 1", "List test 2", "List test 3"]
-        self.spec_app.load_spectrum(self.spec_list, data_label=labels)
+        self.spec_app.load_data(self.spec_list, data_label=labels)
         assert len(self.spec_app.app.data_collection) == 4
 
     def test_load_multi_order_spectrum_list(self):
         assert len(self.spec_app.app.data_collection) == 1
         # now load ten spectral orders from a SpectrumList:
-        self.spec_app.load_spectrum(self.multi_order_spectrum_list)
+        self.spec_app.load_data(self.multi_order_spectrum_list)
         assert len(self.spec_app.app.data_collection) == 11
 
     def test_mismatched_label_length(self):
         with pytest.raises(ValueError, match='Length'):
             labels = ["List test 1", "List test 2"]
-            self.spec_app.load_spectrum(self.spec_list, data_label=labels)
+            self.spec_app.load_data(self.spec_list, data_label=labels)
 
     def test_load_spectrum_collection(self):
         with pytest.raises(TypeError):
             collection = SpectrumCollection([1]*u.AA)
-            self.spec_app.load_spectrum(collection)
+            self.spec_app.load_data(collection)
 
     def test_get_spectra(self):
         with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
@@ -245,15 +245,15 @@ def test_get_spectra_no_spectra_label_redshift_error(specviz_helper, spectrum1d)
 
 
 def test_add_spectrum_after_subset(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d, data_label="test")
+    specviz_helper.load_data(spectrum1d, data_label="test")
     specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
-    specviz_helper.load_spectrum(new_spec, data_label="test2")
+    specviz_helper.load_data(new_spec, data_label="test2")
 
 
 def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
     # Ensure units we put in are the same as the units we get out
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
     specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
 
     subsets = specviz_helper.get_spectral_regions()
@@ -275,7 +275,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 
     # If the reference (visible) data changes via unit conversion,
     # check that the region's units convert too
-    specviz_helper.load_spectrum(spectrum1d)  # Originally Angstrom
+    specviz_helper.load_data(spectrum1d)  # Originally Angstrom
 
     # Also check coordinates info panel.
     # x=0 -> 6000 A, x=1 -> 6222.222 A
@@ -322,7 +322,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
 
 
 def test_subset_default_thickness(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
 
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     sv.toolbar.active_tool = sv.toolbar.tools['bqplot:xrange']
@@ -350,7 +350,7 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
     # Load two NIRISS x1d files from FITS. They have 19 and 20 EXTRACT1D
     # extensions per file, for a total of 39 spectra to load:
     with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
-        specviz_helper.load_spectrum(data_path)
+        specviz_helper.load_data(data_path)
 
     # NOTE: the length was 3 before specutils 1.9 (https://github.com/astropy/specutils/pull/982)
     expected_len = 39
@@ -377,12 +377,12 @@ def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
     # spectra common to each file into one "Combined" spectrum to load per file.
     # Now the total is (19 EXTRACT 1D + 1 Combined) + (20 EXTRACT 1D + 1 Combined) = 41.
     with pytest.warns(UserWarning, match='SRCTYPE is missing or UNKNOWN in JWST x1d loader'):
-        specviz_helper.load_spectrum(data_path, concat_by_file=True)
+        specviz_helper.load_data(data_path, concat_by_file=True)
     assert len(specviz_helper.app.data_collection) == 41
 
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):
-    specviz_helper.load_spectrum(spectrum1d)
+    specviz_helper.load_data(spectrum1d)
 
     specviz_viewer = specviz_helper.app.get_viewer("spectrum-viewer")
 
@@ -416,7 +416,7 @@ def test_plugin_user_apis(specviz_helper):
 
 def test_data_label_as_posarg(specviz_helper, spectrum1d):
     # Passing in data_label keyword as posarg.
-    specviz_helper.load_spectrum(spectrum1d, 'my_spec')
+    specviz_helper.load_data(spectrum1d, 'my_spec')
     assert specviz_helper.app.data_collection[0].label == 'my_spec'
 
 
@@ -431,8 +431,8 @@ def test_spectra_partial_overlap(specviz_helper):
     flux_2 = ([60] * wave_2.size) * u.nJy
     sp_2 = Spectrum1D(flux=flux_2, spectral_axis=wave_2)
 
-    specviz_helper.load_spectrum(sp_1, data_label='left')
-    specviz_helper.load_spectrum(sp_2, data_label='right')
+    specviz_helper.load_data(sp_1, data_label='left')
+    specviz_helper.load_data(sp_2, data_label='right')
 
     # Test mouseover outside of left but in range for right.
     # Should show right spectrum even when mouse is near left flux.

@@ -1,7 +1,7 @@
 import warnings
 
 from astropy import units as u
-from astropy.utils.decorators import deprecated_renamed_argument
+from astropy.utils.decorators import deprecated_renamed_argument, deprecated
 from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
 from specutils import SpectralRegion, Spectrum1D
@@ -41,10 +41,34 @@ class Specviz(ConfigHelper, LineListMixin):
         self.app.hub.subscribe(self, RedshiftMessage,
                                handler=self._redshift_listener)
 
+    @deprecated(since="3.6", alternative="load_data")
     def load_spectrum(self, data, data_label=None, format=None, show_in_viewer=True,
                       concat_by_file=False):
         """
         Loads a data file or `~specutils.Spectrum1D` object into Specviz.
+
+        Parameters
+        ----------
+        data : str, `~specutils.Spectrum1D`, or `~specutils.SpectrumList`
+            Spectrum1D, SpectrumList, or path to compatible data file.
+        data_label : str
+            The Glue data label found in the ``DataCollection``.
+        format : str
+            Loader format specification used to indicate data format in
+            `~specutils.Spectrum1D.read` io method.
+        show_in_viewer : bool
+            Show data in viewer(s).
+        concat_by_file : bool
+            If True and there is more than one available extension, concatenate
+            the extensions within each spectrum file passed to the parser and
+            add a concatenated spectrum to the data collection.
+        """
+        self.load_data(data, data_label, format, show_in_viewer, concat_by_file)
+
+    def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
+                  concat_by_file=False):
+        """
+        Load data into Specviz.
 
         Parameters
         ----------
