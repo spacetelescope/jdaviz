@@ -33,7 +33,7 @@
        </v-list-item>
       </v-list>
 
-      <v-row v-if="config==='cubeviz'">
+      <v-row v-if="config==='cubeviz' && viewer_selected!=='spectrum-viewer'">
         <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
