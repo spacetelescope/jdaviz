@@ -2287,7 +2287,7 @@ class Application(VuetifyTemplate, HubListener):
         cfg = get_configuration(path=path, section=section, config=config)
         return cfg
 
-    def get_tray_item_from_name(self, name):
+    def get_tray_item_from_name(self, name, return_none_if_not_found=False):
         """Return the instance of a tray item for a given name.
         This is useful for direct programmatic access to Jdaviz plugins
         registered under tray items.
@@ -2297,6 +2297,9 @@ class Application(VuetifyTemplate, HubListener):
         name : str
             The name used when the plugin was registered to
             an internal `~jdaviz.core.registries.TrayRegistry`.
+        return_none_if_not_found : bool`
+            Whether to return ``None`` (instead of raising an error)
+            if the entry does not exist.
 
         Returns
         -------
@@ -2317,7 +2320,7 @@ class Application(VuetifyTemplate, HubListener):
                 tray_item = widget_serialization['from_json'](ipy_model_id, None)
                 break
 
-        if tray_item is None:
+        if tray_item is None and not return_none_if_not_found:
             raise KeyError(f'{name} not found in app.state.tray_items')
 
         return tray_item

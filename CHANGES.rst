@@ -15,6 +15,8 @@ New Features
 
 - Add first-pass launcher to select config and auto-identify data. [#2257]
 
+- Viewer toolbar items hide themselves when they are not applicable. [#2284]
+
 Cubeviz
 ^^^^^^^
 
