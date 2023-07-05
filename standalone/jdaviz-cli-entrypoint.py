@@ -21,4 +21,4 @@ if __name__ == "__main__":
     else:
         import jdaviz.cli
         # should change this to _main, but now it doesn't need arguments
-        jdaviz.cli._imviz()
+        jdaviz.cli.main(layout="")
