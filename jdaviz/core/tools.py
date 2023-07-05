@@ -19,7 +19,7 @@ from jdaviz.core.events import LineIdentifyMessage, SpectralMarksChangedMessage
 
 __all__ = []
 
-ICON_DIR = os.path.join(os.path.dirname(__file__), '..', 'data', 'icons')
+ICON_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'icons'))
 
 
 # Override icons for built-in tools from glue-jupyter

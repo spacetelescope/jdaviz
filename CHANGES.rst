@@ -105,6 +105,10 @@ Other Changes and Additions
 - Gaussian smooth plugin excludes results from the gaussian smooth plugin from the input
   dataset dropdown. [#2239]
 
+- CLI launchers no longer require data to be specified [#1960]
+
+- Added direct launchers for each config (e.g. ``specviz``) [#1960]
+
 3.5.1 (unreleased)
 ==================
 
