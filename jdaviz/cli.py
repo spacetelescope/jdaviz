@@ -1,5 +1,6 @@
 # Command-line interface for jdaviz
 
+import inspect
 import os
 import pathlib
 import sys
@@ -10,9 +11,11 @@ from voila.configuration import VoilaConfiguration
 
 from jdaviz import __version__
 from jdaviz.app import _verbosity_levels
+from jdaviz import configs
 
 __all__ = ['main']
 
+CONFIGS_DIR = str(pathlib.Path(inspect.getfile(configs)).parent)
 JDAVIZ_DIR = pathlib.Path(__file__).parent.resolve()
 DEFAULT_VERBOSITY = 'warning'
 DEFAULT_HISTORY_VERBOSITY = 'info'
@@ -151,3 +154,27 @@ def _main(config=None):
     main(filepaths=args.filepaths, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
          hotreload=args.hotreload)
+
+
+def _specviz():
+    _main(config='specviz')
+
+
+def _specviz2d():
+    _main(config='specviz2d')
+
+
+def _imviz():
+    _main(config='imviz')
+
+
+def _cubeviz():
+    _main(config='cubeviz')
+
+
+def _mosviz():
+    _main(config='mosviz')
+
+
+if __name__ == "__main__":
+    _main()

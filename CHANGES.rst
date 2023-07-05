@@ -458,6 +458,10 @@ New Features
 - Model fitting: API and UI to re-estimate model parameters based on current data/subset selection.
   [#1952]
 
+- CLI launchers no longer require data to be specified [#1960]
+
+- Added direct launchers for each config (e.g. ``specviz``) [#1960]
+
 Cubeviz
 ^^^^^^^
 
