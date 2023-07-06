@@ -14,28 +14,37 @@ try to adhere to the following principles:
   ``j-tray-plugin`` stylesheet (``jdaviz/components/tray_plugin.vue``).
 * Each item should be wrapped in a ``v-row``, but avoid any unnecessary additional wrapping-components
   (``v-card-*``, ``v-container``, etc).
-* Only use ``v-col`` components (within the ``<v-row class="row-no-outside-padding">``) if multiple
+* Only use ``v-col`` components (within a ``<v-row class="row-no-outside-padding">``) if multiple
   components are necessary in a single row.  Always emphasize readability at the default/minimum
   width of the plugin tray, rather than using columns that result in a ton of text overflow.
-* Action buttons should have ``color="primary"`` if it loads something into the plugin, or
-  ``color="accent"`` if applying something to the viewers/apps/data.
+* Use ``<v-row justify="end">`` to align content to the right (such as action buttons).
+* Action buttons should use ``<v-btn text></v-btn>`` with ``color="accent"`` if applying something
+  to the viewers/apps/data, and ``color="primary"`` otherwise.
 * To remove vertical padding from rows (i.e., two successive buttons stacked vertically), use
   ``<v-row class="row-min-bottom-padding">``.
-* Use ``<v-row justify="end">`` to align content to the right (such as action buttons).
 * Use new ``<j-plugin-section-header>Header Text</j-plugin-section-header>`` to separate content
   within a plugin (instead of nested cards, ``v-card-subtitle``, etc).
+* Plugin settings should use ``<v-expansion-panels popout>`` immediately at the top of the plugin.
+  Optional "sections" of a plugin or editing dynamically-created components should use
+  ``<v-expansion-panels accordion>`` to make most use of horizontal and vertical space.
 * Number entries should use a ``<v-text-field type="number" v-model="traitlet_name">`` component
   *unless* requiring support for scientific notation (in which case
   ``<v-text-field @change="python_method">`` can be used with stripping invalid characters and
   type-casting in python).  To handle emptying the input component without raising a traceback,
-  use an ``IntHandleEmpty`` traitlet instead, along with form-validation (see below) and/or
-  checks on the python-side to handle the case of an empty string.
+  use an ``IntHandleEmpty`` or ``FloatHandleEmpty`` traitlet instead, along with form-validation
+  (see below) and/or checks on the python-side to handle the case of an empty string.
 * Use form validation wherever possible, and disable action buttons if the relevant validation
   does not pass.  This is preferred to raising errors through snackbars after pressing an action
   button.  To do this, wrap the relevant section in a ``<v-form v-model="form_valid_section_name">``,
   create a ``form_valid_section_name = Bool(False).tag(sync=True)`` in the python class for the
   plugin, add rules to any relevant inputs, and set ``:disabled="!form_valid_section_name"`` to any
   action buttons.
+* When validation requires checking multiple inputs simultaneously, the validation error message
+  can be displayed as its own element using ``<v-row v-if="condition"><span class="v-messages v-messages__message text--secondary">
+  <b style="color: red !important">WARNING:</b> warning message</span></v-row>``.
+  This should be positioned where the error makes most sense in the flow of the input elements
+  and/or immediately above the action button to explain why it is disabled.
+  For warnings/errors that require more attention, use a ``<v-alert>`` instead.
 * Select input elements should default whenever possible (not start as empty), and self-hide if only
   one valid option. Whenever possible, inputs should use form validation rules with red text
   explaining the error and disabling action buttons. When one selection/check makes others
