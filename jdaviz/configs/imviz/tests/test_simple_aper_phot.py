@@ -2,10 +2,10 @@ import pytest
 import numpy as np
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
-from glue.core.edit_subset_mode import ReplaceMode
 from numpy.testing import assert_allclose, assert_array_equal
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
+from regions import CircleAnnulusPixelRegion, PixCoord
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
@@ -52,7 +52,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
         assert phot_plugin._selected_data is not None
         assert phot_plugin._selected_subset is not None
-        assert phot_plugin.bg_subset.labels == ['Manual', 'Annulus', 'Subset 1']
+        assert phot_plugin.bg_subset.labels == ['Manual', 'Subset 1']
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)
         assert_allclose(phot_plugin.pixel_area, 0)
@@ -159,12 +159,6 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.dataset_selected = 'twos'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
-        # Check rectangle annulus math
-        phot_plugin.bg_subset_selected = 'Annulus'
-        phot_plugin.subset_selected = 'Subset 3'
-        assert_allclose(phot_plugin.bg_annulus_inner_r, 6.363961030678928)  # half-width = 4.5
-        assert_allclose(phot_plugin.bg_annulus_width, 10)
-
         # Curve of growth
         phot_plugin.current_plot_type = 'Curve of Growth'
         phot_plugin.vue_do_aper_phot()
@@ -203,28 +197,37 @@ def test_annulus_background(imviz_helper):
     phot_plugin.dataset_selected = 'ones'
 
     # Mark an object of interest
+    # CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
     imviz_helper._apply_interactive_region('bqplot:circle', (143, 18), (157, 32))
+
+    # Load annulus (this used to be part of the plugin but no longer)
+    annulus_1 = CircleAnnulusPixelRegion(
+        PixCoord(x=150, y=25), inner_radius=7, outer_radius=17)
+    imviz_helper.load_regions([annulus_1])
+
     phot_plugin.subset_selected = 'Subset 1'
-    phot_plugin.bg_subset_selected = 'Annulus'
+    phot_plugin.bg_subset_selected = 'Subset 2'
 
     # Check annulus for ones
-    assert_allclose(phot_plugin.bg_annulus_inner_r, 7)  # From circle
-    assert_allclose(phot_plugin.bg_annulus_width, 10)  # Default
     assert_allclose(phot_plugin.background_value, 1)
 
     # Switch data
     phot_plugin.dataset_selected = 'four_gaussians'
-    assert_allclose(phot_plugin.bg_annulus_inner_r, 7)  # Unchanged
-    assert_allclose(phot_plugin.bg_annulus_width, 10)
     assert_allclose(phot_plugin.background_value, 5.745596129482831)  # Changed
 
     # Draw ellipse on another object
+    # EllipsePixelRegion(center=PixCoord(x=20.5, y=37.5), width=41, height=15)
     imviz_helper._apply_interactive_region('bqplot:ellipse', (0, 30), (41, 45))
-    phot_plugin.subset_selected = 'Subset 2'
+
+    # Load annulus (this used to be part of the plugin but no longer)
+    annulus_2 = CircleAnnulusPixelRegion(
+        PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
+    imviz_helper.load_regions([annulus_2])
+
+    phot_plugin.subset_selected = 'Subset 3'
+    phot_plugin.bg_subset_selected = 'Subset 4'
 
     # Check new annulus for four_gaussians
-    assert_allclose(phot_plugin.bg_annulus_inner_r, 20.5)  # From ellipse half-width
-    assert_allclose(phot_plugin.bg_annulus_width, 10)  # Unchanged
     assert_allclose(phot_plugin.background_value, 5.13918435824334)  # Changed
 
     # Switch to manual, should not change
@@ -236,29 +239,18 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, 44.72559981461203)
 
     # Switch back to annulus, should be same as before in same mode
-    phot_plugin.bg_subset_selected = 'Annulus'
-    assert_allclose(phot_plugin.bg_annulus_inner_r, 20.5)
-    assert_allclose(phot_plugin.bg_annulus_width, 10)
+    phot_plugin.bg_subset_selected = 'Subset 4'
     assert_allclose(phot_plugin.background_value, 5.13918435824334)
 
-    # Manually change inner_r
-    phot_plugin.bg_annulus_inner_r = 40
-    assert_allclose(phot_plugin.background_value, 4.783765940615679)
-
-    # Manually change width
-    phot_plugin.bg_annulus_width = 5
-    assert_allclose(phot_plugin.background_value, 4.894003242594493)
-
-    # Move the last created Subset (ellipse) and make sure background updates
-    imviz_helper.app.session.edit_subset_mode.mode = ReplaceMode
-    imviz_helper._apply_interactive_region('bqplot:ellipse', (0, 30), (51, 55))
-    assert_allclose(phot_plugin.bg_annulus_inner_r, 40)
-    assert_allclose(phot_plugin.bg_annulus_width, 5)
-    assert_allclose(phot_plugin.background_value, 4.894003)
-
-    # Bad annulus should not crash plugin
-    phot_plugin.bg_annulus_inner_r = -1
-    assert_allclose(phot_plugin.background_value, 0)
+    # Edit the annulus and make sure background updates
+    subset_plugin = imviz_helper.plugins["Subset Tools"]._obj
+    subset_plugin.subset_selected = "Subset 4"
+    subset_plugin._set_value_in_subset_definition(0, "X Center", "value", 25.5)
+    subset_plugin._set_value_in_subset_definition(0, "Y Center", "value", 42.5)
+    subset_plugin._set_value_in_subset_definition(0, "Inner radius", "value", 40)
+    subset_plugin._set_value_in_subset_definition(0, "Outer radius", "value", 45)
+    subset_plugin.vue_update_subset()
+    assert_allclose(phot_plugin.background_value, 4.89189)
 
 
 # NOTE: Extracting the cutout for radial profile is aperture

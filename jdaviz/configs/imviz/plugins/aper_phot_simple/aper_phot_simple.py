@@ -14,11 +14,8 @@ from ipywidgets import widget_serialization
 from packaging.version import Version
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture)
-from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
-                     RectanglePixelRegion)
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
-from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
@@ -38,8 +35,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     bg_subset_items = List().tag(sync=True)
     bg_subset_selected = Unicode("").tag(sync=True)
     background_value = Any(0).tag(sync=True)
-    bg_annulus_inner_r = FloatHandleEmpty(0).tag(sync=True)
-    bg_annulus_width = FloatHandleEmpty(10).tag(sync=True)
     pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
     flux_scaling = Any(0).tag(sync=True)
@@ -66,7 +61,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                                       'bg_subset_items',
                                       'bg_subset_selected',
                                       default_text='Manual',
-                                      manual_options=['Manual', 'Annulus'],
+                                      manual_options=['Manual'],
                                       allowed_type='spatial')
 
         headers = ['xcenter', 'ycenter', 'sky_center',
@@ -161,7 +156,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         if self.dataset_selected == '' or self.subset_selected == '':
             return
 
-        # Force background auto-calculation (including annulus) to update when linking has changed.
+        # Force background auto-calculation to update when linking has changed.
         self._subset_selected_changed()
 
     @observe('subset_selected')
@@ -173,18 +168,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         try:
             self._selected_subset = _get_region_from_spatial_subset(self, subset_selected)
             self._selected_subset.meta['label'] = subset_selected
-
-            if isinstance(self._selected_subset, CirclePixelRegion):
-                self.bg_annulus_inner_r = self._selected_subset.radius
-            elif isinstance(self._selected_subset, EllipsePixelRegion):
-                self.bg_annulus_inner_r = max(self._selected_subset.width,
-                                              self._selected_subset.height) * 0.5
-            elif isinstance(self._selected_subset, RectanglePixelRegion):
-                self.bg_annulus_inner_r = np.sqrt(self._selected_subset.width ** 2 +
-                                                  self._selected_subset.height ** 2) * 0.5
-            else:  # pragma: no cover
-                raise TypeError(f'Unsupported region shape: {self._selected_subset.__class__}')
-
             self.subset_area = int(np.ceil(self._selected_subset.area))
 
         except Exception as e:
@@ -206,29 +189,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         # photutils/background/_utils.py --> nanmedian()
         return np.nanmedian(img_stat)  # Naturally in data unit
 
-    @observe('bg_annulus_inner_r', 'bg_annulus_width')
-    def _bg_annulus_updated(self, *args):
-        if self.bg_subset_selected != 'Annulus':
-            return
-
-        try:
-            inner_r = float(self.bg_annulus_inner_r)
-            reg = CircleAnnulusPixelRegion(
-                self._selected_subset.center, inner_radius=inner_r,
-                outer_radius=inner_r + float(self.bg_annulus_width))
-            self.background_value = self._calc_bg_subset_median(reg)
-
-        except Exception:  # Error snackbar suppressed to prevent excessive queue.
-            self.background_value = 0
-
     @observe('bg_subset_selected')
     def _bg_subset_selected_changed(self, event={}):
         bg_subset_selected = event.get('new', self.bg_subset_selected)
         if bg_subset_selected == 'Manual':
             # we'll later access the user's self.background_value directly
-            return
-        if bg_subset_selected == 'Annulus':
-            self._bg_annulus_updated()
             return
 
         try:
