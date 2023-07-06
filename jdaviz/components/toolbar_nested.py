@@ -79,7 +79,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         needs_deactivate_active = False
         for menu_ind in range(self._max_menu_ind):
             has_primary = False
-            nvisible = 0
+            n_visible = 0
             primary_id = None
             if self.active_tool_id:
                 current_primary_active = self.tools_data[self.active_tool_id]['menu_ind'] == menu_ind  # noqa
@@ -90,7 +90,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                     continue
                 visible = self._is_visible(tool_id)
                 if visible:
-                    nvisible += 1
+                    n_visible += 1
 
                 if tool_id == self.active_tool_id:
                     # then the primary was already set by which tool is active
@@ -119,7 +119,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                                             'visible': visible}
             if primary_id:
                 self.tools_data[primary_id] = {**self.tools_data[primary_id],
-                                               'has_suboptions': nvisible > 1}
+                                               'has_suboptions': n_visible > 1}
 
         # mutation to dictionary needs to be manually sent to update the UI
         self.send_state("tools_data")

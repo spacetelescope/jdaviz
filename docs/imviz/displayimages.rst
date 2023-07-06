@@ -85,27 +85,27 @@ are saved when beginning a zoom selection or when activating a pan/zoom tool.
 Box Zoom and Linked Box Zoom
 ============================
 
-Linked Box Zoom is an Imviz-specific feature that allows the user to zoom
-images in multiple different viewers simultaneously, not unlike
+Linked Box Zoom is an Imviz-specific feature enabled only when there are multiple viewers that
+allows the user to zoom images in multiple different viewers simultaneously, not unlike
 :ref:`imviz_pan_zoom`.
 
 Single-viewer Box Zoom is also available and is used in a similar way as in
-other Jdaviz tools. To access this option, right-click on the Linked Box Zoom button
-and left-click on the second option down to select it.
+other Jdaviz tools. To access this option when there are multiple viewers, 
+right-click on the Linked Box Zoom button and left-click on the second option down to select it.
 
 .. _imviz_pan_zoom:
 
 Pan/Zoom and Linked Pan/Zoom
 ============================
 
-Linked Pan/Zoom is an Imviz-specific feature that allows the user to pan and zoom
-images in multiple different viewers simultaneously. This works by matching images
+Linked Pan/Zoom is an Imviz-specific feature enabled only when there are multiple viewers that
+allows the user to pan and zoom images in multiple different viewers simultaneously. This works by matching images
 based on the way they are linked together. Images are linked by pixels on load time,
 but you can re-link them via WCS using :ref:`imviz-link-control`.
 
 Single-viewer Pan/Zoom is also available and is used in a similar way as in
-other Jdaviz tools. To access this option, right-click on the Linked Pan/Zoom button
-and left-click on the second option down to select it.
+other Jdaviz tools. To access this option when there are multiple viewers, right-click on the
+Linked Pan/Zoom button and left-click on the second option down to select it.
 
 When in either of these modes, clicking on the image will recenter the image to the
 location under cursor.
@@ -219,8 +219,9 @@ Blinking
 
 Blinking is an Imviz-specific functionality that allows a user to quickly switch
 between viewing two or more images, as long as they are linked (see :ref:`imviz_pan_zoom` for
-more on linking behavior). This can be done by selecting the |icon-blink| icon and
-then left-clicking on the image to blink forward; right-clicking would blink backwards.
+more on linking behavior). This can be done by selecting the |icon-blink| icon (only available if
+there are more than one image loaded in the viewer) and then left-clicking on the image to blink
+forward; right-clicking would blink backwards.
 
 You can also blink forward by pressing the "b" key on your keyboard while moused over the image.
 If you press Shift + "b" ("B"), you may blink backwards.
