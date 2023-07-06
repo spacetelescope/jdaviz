@@ -85,6 +85,9 @@ class BlinkOnce(CheckableTool):
     def on_click(self, data):
         self.viewer.blink_once(reversed=data['event']=='contextmenu')  # noqa: E225
 
+    def is_visible(self):
+        return len(self.viewer.state.layers) > 1
+
 
 @viewer_tool
 class MatchBoxZoom(_ImvizMatchedZoomMixin, BoxZoom):

@@ -7,7 +7,6 @@ from glue.icons import icon_path
 from glue.viewers.common.tool import CheckableTool
 from glue_jupyter.common.toolbar_vuetify import BasicJupyterToolbar, read_icon
 
-from jdaviz.core.marks import SpectralLine
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 SpectralMarksChangedMessage)
@@ -71,18 +70,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             self.viewer.hub.subscribe(self, msg,
                                       handler=lambda _: self._update_tool_visibilities())
 
-    def _is_visible(self, tool_id, nviewers, nlayers):
-        if tool_id == 'jdaviz:blinkonce':
-            return nlayers > 1
-        elif 'match' in tool_id:
-            return nviewers > 1
-        elif tool_id == 'jdaviz:selectline':
-            return len([m for m in self.viewer.figure.marks if isinstance(m, SpectralLine)]) > 0
-        return True
+    def _is_visible(self, tool_id):
+        # tools can optionally implement self.is_visible(). If not NotImplementedError
+        # the tool will always be visible
+        return getattr(self.tools[tool_id], 'is_visible', lambda: True)()
 
-    def _update_tool_visibilities(self, msg={}):
-        nviewers = len(self.viewer.jdaviz_app._viewer_store)
-        nlayers = len(self.viewer.state.layers)
+    def _update_tool_visibilities(self):
         needs_deactivate_active = False
         for menu_ind in range(self._max_menu_ind):
             has_primary = False
@@ -95,7 +88,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             for tool_id, info in self.tools_data.items():
                 if info['menu_ind'] != menu_ind:
                     continue
-                visible = self._is_visible(tool_id, nviewers, nlayers)
+                visible = self._is_visible(tool_id)
                 if visible:
                     nvisible += 1
 
@@ -109,7 +102,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                         # the tool and allow the default logic to be triggered
                         primary = False
                         needs_deactivate_active = True
-                elif current_primary_active and self._is_visible(self.active_tool_id, nviewers, nlayers):  # noqa
+                elif current_primary_active and self._is_visible(self.active_tool_id):
                     # then we are keeping the previous primary
                     primary = False
                 else:
