@@ -224,6 +224,10 @@ def test_annulus_background(imviz_helper):
         PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
     imviz_helper.load_regions([annulus_2])
 
+    # Subset 4 (annulus) should be available for the background but not the aperture
+    assert 'Subset 4' not in phot_plugin.subset.choices
+    assert 'Subset 4' in phot_plugin.bg_subset.choices
+
     phot_plugin.subset_selected = 'Subset 3'
     phot_plugin.bg_subset_selected = 'Subset 4'
 
