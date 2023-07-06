@@ -1890,7 +1890,7 @@ class AddResults(BasePluginComponent):
         """
 
         # Note that we can only preserve one of percentile or vmin+vmax
-        preserve_attributes=("color", "alpha", "bias", "linewidth", "stretch",
+        preserve_attributes = ("color", "alpha", "bias", "linewidth", "stretch",
                              "v_min", "v_max", "cmap")
 
         if self.label_invalid_msg:
@@ -1935,7 +1935,6 @@ class AddResults(BasePluginComponent):
             for viewer_ref in add_to_viewer_refs:
                 self.app.remove_data_from_viewer(viewer_ref, label)
             self.app.data_collection.remove(self.app.data_collection[label])
-
 
         if not hasattr(data_item, 'meta'):
             data_item.meta = {}
