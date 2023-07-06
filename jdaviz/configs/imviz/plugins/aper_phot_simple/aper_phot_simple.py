@@ -62,7 +62,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                                       'bg_subset_selected',
                                       default_text='Manual',
                                       manual_options=['Manual'],
-                                      filters=['is_spatial'])
+                                      filters=['is_spatial', 'is_not_composite'])
 
         headers = ['xcenter', 'ycenter', 'sky_center',
                    'sum', 'sum_aper_area',

@@ -18,7 +18,7 @@
         :selected.sync="subset_selected"
         :show_if_single_entry="true"
         label="Aperture"
-        hint="Select aperture region for photometry."
+        hint="Select aperture region for photometry (cannot be an annulus or composite subset)."
       />
 
       <div v-if="subset_selected">
@@ -27,7 +27,7 @@
           :selected.sync="bg_subset_selected"
           :show_if_single_entry="true"
           label="Background"
-          hint="Select subset region for background calculation."
+          hint="Select subset region for background calculation (cannot be a composite subset)."
         />
 
         <v-row v-if="subset_selected === bg_subset_selected">
