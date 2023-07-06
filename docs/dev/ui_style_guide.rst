@@ -18,7 +18,7 @@ try to adhere to the following principles:
   components are necessary in a single row.  Always emphasize readability at the default/minimum
   width of the plugin tray, rather than using columns that result in a ton of text overflow.
 * Use ``<v-row justify="end">`` to align content to the right (such as action buttons).
-* Action buttons should use ``<v-btn text></v-btn`` with ``color="accent"`` if applying something
+* Action buttons should use ``<v-btn text></v-btn>`` with ``color="accent"`` if applying something
   to the viewers/apps/data, and ``color="primary"`` otherwise.
 * To remove vertical padding from rows (i.e., two successive buttons stacked vertically), use
   ``<v-row class="row-min-bottom-padding">``.
