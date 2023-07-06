@@ -152,7 +152,6 @@ class SlitOverlay(PluginTemplateMixin):
             # We need to do the following instead of just removing directly on
             # the marks otherwise traitlets doesn't register a change in the
             # marks.
-            marks = image_figure.marks.copy()
-            marks.remove(self._slit_overlay_mark)
-            image_figure.marks = marks
+            image_figure.marks.remove(self._slit_overlay_mark)
+            image_figure.send_state('marks')
             self._slit_overlay_mark = None

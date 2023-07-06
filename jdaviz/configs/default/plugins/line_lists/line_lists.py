@@ -513,10 +513,8 @@ class LineListTool(PluginTemplateMixin):
             list_contents[row["listname"]]["lines"].append(temp_dict)
             tmp_names_rest.append(row["name_rest"])
 
-        self.loaded_lists = []
-        self.loaded_lists = loaded_lists
-        self.list_contents = {}
-        self.list_contents = list_contents
+        self.send_state('loaded_lists')
+        self.send_state('list_contents')
 
         self._viewer.plot_spectral_lines(tmp_names_rest)
         self.update_line_mark_dict()
@@ -654,9 +652,9 @@ class LineListTool(PluginTemplateMixin):
         for line in lc[listname]["lines"]:
             line["show"] = True
             self._viewer.spectral_lines.loc[line["name_rest"]]["show"] = True
-        # Trick traitlets into updating
-        self.list_contents = {}
+
         self.list_contents = lc
+        self.send_state('list_contents')
 
         self._viewer.plot_spectral_lines()
         self.update_line_mark_dict()
@@ -665,14 +663,12 @@ class LineListTool(PluginTemplateMixin):
         """
         Toggle all lines in list to be hidden
         """
-        lc = self.list_contents
         name_rests = []
-        for line in lc[listname]["lines"]:
+        for line in self.list_contents[listname]["lines"]:
             line["show"] = False
             name_rests.append(line["name_rest"])
-        # Trick traitlets into updating
-        self.list_contents = {}
-        self.list_contents = lc
+
+        self.send_state('list_contents')
 
         self._viewer.erase_spectral_lines(name_rest=name_rests)
         self.update_line_mark_dict()
@@ -686,14 +682,12 @@ class LineListTool(PluginTemplateMixin):
                                            sender=self, color="error")
             self.hub.broadcast(warn_message)
             return
-        lc = self.list_contents
-        for listname in lc:
-            for line in lc[listname]["lines"]:
+        for listname in self.list_contents:
+            for line in self.list_contents[listname]["lines"]:
                 line["show"] = True
         self._viewer.spectral_lines["show"] = True
-        # Trick traitlets into updating
-        self.list_contents = {}
-        self.list_contents = lc
+
+        self.send_state('list_contents')
 
         self._viewer.plot_spectral_lines()
         self.update_line_mark_dict()
@@ -707,13 +701,11 @@ class LineListTool(PluginTemplateMixin):
                                            sender=self, color="error")
             self.hub.broadcast(warn_message)
             return
-        lc = self.list_contents
-        for listname in lc:
-            for line in lc[listname]["lines"]:
+        for listname in self.list_contents:
+            for line in self.list_contents[listname]["lines"]:
                 line["show"] = False
-        # Trick traitlets into updating
-        self.list_contents = {}
-        self.list_contents = lc
+
+        self.send_state('list_contents')
 
         self._viewer.erase_spectral_lines()
         self.update_line_mark_dict()
@@ -798,11 +790,10 @@ class LineListTool(PluginTemplateMixin):
         color = data['color']
         if "listname" in data:
             listname = data["listname"]
-            # force a copy so that the change is picked up by traitlets
-            lc = self.list_contents[listname].copy()
-            lc["color"] = color
 
-            for line in lc["lines"]:
+            self.list_contents[listname]["color"] = color
+
+            for line in self.list_contents[listname]["lines"]:
                 line["colors"] = color
                 # Update the astropy table entry
                 name_rest = line["name_rest"]
@@ -811,7 +802,7 @@ class LineListTool(PluginTemplateMixin):
                 if name_rest in self.line_mark_dict:
                     self.line_mark_dict[name_rest].colors = [color]
 
-            self.list_contents = {**self.list_contents, listname: lc}
+            self.send_state('list_contents')
 
         elif "linename" in data:
             pass
