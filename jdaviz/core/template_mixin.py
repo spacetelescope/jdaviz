@@ -1888,6 +1888,11 @@ class AddResults(BasePluginComponent):
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
         """
+
+        # Note that we can only preserve one of percentile or vmin+vmax
+        preserve_attributes=("color", "alpha", "bias", "linewidth", "stretch",
+                             "v_min", "v_max", "cmap")
+
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
 
@@ -1899,27 +1904,38 @@ class AddResults(BasePluginComponent):
             # entry should be the same as the original entry (to avoid deleting reference data)
             add_to_viewer_refs = []
             add_to_viewer_vis = []
+            preserved_attributes = []
             for viewer_select_item in self.add_to_viewer_items[1:]:
                 # index 0 is for "None"
                 viewer_ref = viewer_select_item['reference']
                 viewer_item = self.app._viewer_item_by_reference(viewer_ref)
                 viewer = self.app.get_viewer(viewer_ref)
-                viewer_loaded_labels = [layer.layer.label for layer in viewer.layers]
-                if label in viewer_loaded_labels:
-                    add_to_viewer_refs.append(viewer_ref)
-                    add_to_viewer_vis.append(label in viewer_item['visible_layers'])
+                for layer in viewer.layers:
+                    if layer.layer.label != label:
+                        continue
+                    else:
+                        add_to_viewer_refs.append(viewer_ref)
+                        add_to_viewer_vis.append(label in viewer_item['visible_layers'])
+                        preserve_these = {}
+                        for att in preserve_attributes:
+                            if hasattr(layer.state, att):
+                                preserve_these[att] = getattr(layer.state, att)
+                        preserved_attributes.append(preserve_these)
         else:
             if self.add_to_viewer_selected == 'None':
                 add_to_viewer_refs = []
                 add_to_viewer_vis = []
+                preserved_attributes = []
             else:
                 add_to_viewer_refs = [self.add_to_viewer_selected]
                 add_to_viewer_vis = [True]
+                preserved_attributes = [{}]
 
         if label in self.app.data_collection:
             for viewer_ref in add_to_viewer_refs:
                 self.app.remove_data_from_viewer(viewer_ref, label)
             self.app.data_collection.remove(self.app.data_collection[label])
+
 
         if not hasattr(data_item, 'meta'):
             data_item.meta = {}
@@ -1928,17 +1944,24 @@ class AddResults(BasePluginComponent):
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
         self.app.add_data(data_item, label)
 
-        for viewer_ref, visible in zip(add_to_viewer_refs, add_to_viewer_vis):
+        for viewer_ref, visible, preserved in zip(add_to_viewer_refs, add_to_viewer_vis,
+                                                  preserved_attributes):
             # replace the contents in the selected viewer with the results from this plugin
+            this_viewer = self.app.get_viewer(viewer_ref)
             if replace is not None:
                 this_replace = replace
             else:
-                this_viewer = self.app.get_viewer(viewer_ref)
                 this_replace = isinstance(this_viewer, BqplotImageView)
 
             self.app.add_data_to_viewer(viewer_ref,
                                         label,
                                         visible=visible, clear_other_data=this_replace)
+
+            if preserved != {}:
+                layer_state = [layer.state for layer in this_viewer.layers if
+                               layer.layer.label == label][0]
+                for att in preserved:
+                    setattr(layer_state, att, preserved[att])
 
         # update overwrite warnings, etc
         self._on_label_changed()
