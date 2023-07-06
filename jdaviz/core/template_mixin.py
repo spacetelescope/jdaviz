@@ -1891,7 +1891,7 @@ class AddResults(BasePluginComponent):
 
         # Note that we can only preserve one of percentile or vmin+vmax
         preserve_attributes = ("color", "alpha", "bias", "linewidth", "stretch",
-                             "v_min", "v_max", "cmap")
+                               "v_min", "v_max", "cmap")
 
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
