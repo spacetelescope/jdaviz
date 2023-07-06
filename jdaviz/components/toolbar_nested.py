@@ -73,7 +73,9 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError
         # the tool will always be visible
-        return getattr(self.tools[tool_id], 'is_visible', lambda: True)()
+        if hasattr(self.tools[tool_id], 'is_visible'):
+            return self.tools[tool_id].is_visible()
+        return True
 
     def _update_tool_visibilities(self):
         needs_deactivate_active = False
