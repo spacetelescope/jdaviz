@@ -154,6 +154,36 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     assert test_label in cubeviz_helper.app.data_collection
 
 
+def test_refit_plot_options(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+    modelfit_plugin = specviz_helper.plugins['Model Fitting']
+
+    model = MODELS['Const1D']
+    modelfit_plugin.model_comp_selected = model
+    modelfit_plugin._obj.comp_label = f"C"
+    modelfit_plugin._obj.vue_add_model({})
+
+    with pytest.warns(AstropyUserWarning):
+        modelfit_plugin.calculate_fit()
+
+    sv = specviz_helper.app.get_viewer('spectrum-viewer')
+    att_values = {}
+    atts = {"color": "red", "linewidth": 2, "alpha": 0.8}
+    layer_state = [layer.state for layer in sv.layers if layer.layer.label == "model"][0]
+    print(layer_state)
+    for att in atts:
+        setattr(layer_state, att, atts[att])
+
+    # Refit the model, which will replace the data by default.
+    with pytest.warns(AstropyUserWarning):
+        modelfit_plugin.calculate_fit()
+
+    print(layer_state)
+
+    for att in atts:
+         assert atts[att] == getattr(layer_state, att)
+
+
 def test_user_api(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
