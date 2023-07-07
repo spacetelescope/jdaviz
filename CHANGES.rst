@@ -13,7 +13,8 @@ New Features
 
 - The ``specviz.load_spectrum`` method is deprecated; use ``specviz.load_data`` instead. [#2273]
 
-- Add first-pass launcher to select config and auto-identify data. [#2257]
+- Add launcher to select and identify compatible configurations,
+  and require --layout argument when launching standalone. [#2257, #2267]
 
 Cubeviz
 ^^^^^^^

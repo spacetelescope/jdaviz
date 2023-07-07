@@ -11,8 +11,6 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from stdatamodels import asdf_in_fits
 
 from jdaviz.core.config import list_configurations
-from jdaviz import configs as jdaviz_configs
-from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY
 
 __all__ = [
     'guess_dimensionality',
@@ -156,8 +154,8 @@ def identify_helper(filename, ext=1):
 
     Returns
     -------
-    helper_name : str
-        Name of the best-guess helper for ``filename``.
+    helper_name : list of str
+        Name of the best-guess compatible helpers for ``filename``.
 
     Fits HDUList : astropy.io.fits.HDUList
         The HDUList of the file opened to identify the helper
@@ -172,7 +170,7 @@ def identify_helper(filename, ext=1):
     if filename.lower().endswith('asdf'):
         # ASDF files are only supported in jdaviz for
         # Roman WFI 2D images, so suggest imviz:
-        return ('imviz', None)
+        return (['imviz'], None)
 
     # Must use memmap=False to force close all handles and allow file overwrite
     hdul = fits.open(filename, memmap=False)
@@ -208,10 +206,10 @@ def identify_helper(filename, ext=1):
             # could be 2D spectrum or 2D image. break tie with WCS:
             if has_spectral_axis:
                 if n_axes > 1:
-                    return ('specviz2d', hdul)
-                return ('specviz', hdul)
+                    return (['specviz2d'], hdul)
+                return (['specviz'], hdul)
             elif not isinstance(data, fits.BinTableHDU):
-                return ('imviz', hdul)
+                return (['imviz'], hdul)
 
     # Ensure specviz is chosen when ``data`` is a table or recarray
     # and there's a "known" spectral column name:
@@ -237,7 +235,7 @@ def identify_helper(filename, ext=1):
 
         # if at least one spectral column is found:
         if sum(found_spectral_columns):
-            return ('specviz', hdul)
+            return (['specviz'], hdul)
 
     # If the data could be spectral:
     for cls in [Spectrum1D, SpectrumList]:
@@ -247,10 +245,10 @@ def identify_helper(filename, ext=1):
             # first catch known JWST spectrum types:
             if (n_axes == 3 and
                     recognized_spectrum_format.find('s3d') > -1):
-                return ('cubeviz', hdul)
+                return (['cubeviz'], hdul)
             elif (n_axes == 2 and
                   recognized_spectrum_format.find('x1d') > -1):
-                return ('specviz', hdul)
+                return (['specviz'], hdul)
 
             # we intentionally don't choose specviz2d for
             # data recognized as 's2d' as we did with the cases above,
@@ -260,62 +258,22 @@ def identify_helper(filename, ext=1):
             # Use WCS to break the tie below:
             elif n_axes == 2:
                 if has_spectral_axis:
-                    return ('specviz2d', hdul)
-                return ('imviz', hdul)
+                    return (['specviz2d'], hdul)
+                return (['imviz'], hdul)
 
             elif n_axes == 1:
-                return ('specviz', hdul)
+                return (['specviz'], hdul)
 
     try:
         # try using the specutils registry:
         valid_format, config = identify_data(filename)
-        return (config, hdul)
+        return ([config], hdul)
     except ValueError:
         # if file type not recognized:
         pass
 
     if n_axes == 2 and not has_spectral_axis:
         # at this point, non-spectral 2D data are likely images:
-        return ('imviz', hdul)
+        return (['imviz'], hdul)
 
     raise ValueError(f"No helper could be auto-identified for {filename}.")
-
-
-def open(filename, show=True, **kwargs):
-    '''
-    Automatically detect the correct configuration based on a given file,
-    load the data, and display the configuration
-
-    Parameters
-    ----------
-    filename : str (path-like)
-        Name for a local data file.
-    show : bool
-        Determines whether to immediately show the application
-
-    All other arguments are interpreted as load_data arguments for
-    the autoidentified configuration class
-
-    Returns
-    -------
-    Jdaviz ConfigHelper : jdaviz.core.helpers.ConfigHelper
-        The autoidentified ConfigHelper for the given data
-    '''
-    # Identify the correct config
-    helper_str, hdul = identify_helper(filename)
-    viz_class = getattr(jdaviz_configs, helper_str.capitalize())
-
-    # Create config instance
-    verbosity = kwargs.pop('verbosity', DEFAULT_VERBOSITY)
-    history_verbosity = kwargs.pop('history_verbosity', DEFAULT_HISTORY_VERBOSITY)
-    viz_helper = viz_class(verbosity=verbosity, history_verbosity=history_verbosity)
-
-    # Load data
-    data = hdul if (hdul is not None) else filename
-    viz_helper.load_data(data, **kwargs)
-
-    # Display app
-    if show:
-        viz_helper.show()
-
-    return viz_helper
