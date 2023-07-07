@@ -50,6 +50,7 @@
             :viewer="viewer"
             :multi_select="multi_select"
             :n_data_entries="nDataEntries"
+            :linked_by_wcs="linkedByWcs()"
             @data-item-visibility="$emit('data-item-visibility', $event)"
             @data-item-unload="$emit('data-item-unload', $event)"
             @data-item-remove="$emit('data-item-remove', $event)"
@@ -61,7 +62,7 @@
           <v-row key="extra-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
             <span 
               @click="toggleShowExtraItems"
-              class='text--primary' 
+              class='text--primary'
               style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; cursor: pointer"
             >
               <v-icon class='invert-if-dark'>{{showExtraItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
@@ -69,24 +70,56 @@
                 {{showExtraItems ? 'hide other row data not in viewer' : 'show other row data not in viewer'}}
               </span>
               <span v-else>
-                {{showExtraItems ? 'hide data not in viewer' : 'show data not in viewer'}}                
+                {{showExtraItems ? 'hide data not in viewer' : 'show data not in viewer'}}
               </span>
             </span>
           </v-row>
 
           <v-row v-if="showExtraItems" v-for="item in extraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
+            <div v-if="linkedByWcs()">
             <j-viewer-data-select-item
               :item="item"
               :icon="layer_icons[item.name]"
               :viewer="viewer"
               :multi_select="multi_select"
               :n_data_entries="nDataEntries"
+              :linked_by_wcs="linkedByWcs()"
+              @data-item-visibility="$emit('data-item-visibility', $event)"
+              @data-item-remove="$emit('data-item-remove', $event)"
+              @change-reference-data="$emit('change-reference-data', $event)"
+            ></j-viewer-data-select-item>
+            </div>
+          </v-row>
+        </div>
+
+        <div v-if="linkedByWcs()" style="margin-bottom: -8px;">
+          <v-row key="wcs-only-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD">
+            <span
+              @click="toggleShowWcsOnlyItems"
+              class='text--primary'
+              style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; cursor: pointer"
+            >
+              <v-icon class='invert-if-dark'>{{showWcsOnlyItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
+              <span>
+                {{showWcsOnlyItems ? 'hide orientation options' : 'show orientation options'}}
+              </span>
+            </span>
+          </v-row>
+
+          <v-row v-if="showWcsOnlyItems" v-for="item in wcsOnlyItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
+            <j-viewer-data-select-item
+              :item="item"
+              :icon="layer_icons[item.name]"
+              :viewer="viewer"
+              :multi_select="multi_select"
+              :linked_by_wcs="linkedByWcs()"
               @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
               @change-reference-data="$emit('change-reference-data', $event)"
             ></j-viewer-data-select-item>
           </v-row>
         </div>
+
       </v-list>
     </v-menu>
   </j-tooltip>
@@ -116,7 +149,8 @@ module.exports = {
       multi_select: multi_select,
       showExtraItems: Object.keys(this.$props.viewer.selected_data_items).length == 0,
       valueTrunc: this.value,
-      uncertTrunc: this.uncertainty
+      uncertTrunc: this.uncertainty,
+      showWcsOnlyItems: false
     }
   },
   methods: {
@@ -128,15 +162,13 @@ module.exports = {
     },
     dataItemInViewer(item, returnExtraItems) {
       const inViewer = Object.keys(this.$props.viewer.selected_data_items).includes(item.id)
-      //console.log(item.name+"  "+inViewer)
       if (returnExtraItems) {
         return (!inViewer && (item.meta.mosviz_row === this.$props.app_settings.mosviz_row))
       }
       return inViewer
     },
-    wcsOnlyItemInViewer(item) {
-      const wcsOnly = Object.keys(this.$props.viewer.wcs_only_layers).includes(item.name)
-      return wcsOnly
+    wcsOnlyItem(item) {
+      return item.type == 'wcs-only'
     },
     itemIsVisible(item, returnExtraItems) {
       if (this.$props.viewer.config === 'mosviz') {
@@ -185,7 +217,7 @@ module.exports = {
         }
         return this.dataItemInViewer(item, returnExtraItems)
       } else if (this.$props.viewer.config === 'imviz') {
-        return this.dataItemInViewer(item, returnExtraItems) && !this.wcsOnlyItemInViewer(item)
+        return this.dataItemInViewer(item, returnExtraItems && !this.wcsOnlyItem(item))
       }
       // for any situation not covered above, default to showing the entry
       return this.dataItemInViewer(item, returnExtraItems)
@@ -196,20 +228,25 @@ module.exports = {
     },
     toggleMultiSelect() {
       this.multi_select = !this.multi_select
-      if (this.multi_select === false){
+      if (this.multi_select === false) {
         // If we're toggling to single select, set the first item visibility to replace the rest
         // Find the "first" item
-        for (item_index in this.filteredDataItems){
+        for (item_index in this.filteredDataItems) {
           if (this.$props.viewer.selected_data_items[this.filteredDataItems[item_index].id] === 'visible') {
             this.$emit('data-item-visibility', {
               id: this.$props.viewer.id,
               item_id: this.filteredDataItems[item_index].id,
               visible: true,
-              replace: true})
+              replace: true
+            })
             break;
           }
         }
       }
+    },
+    toggleShowWcsOnlyItems() {
+      // toggle the visibility of the WCS-only items in the menu
+      this.showWcsOnlyItems = !this.showWcsOnlyItems
     },
     isRefData() {
       return this.$props.item.viewer.reference_data_label === this.$props.item.name
@@ -219,6 +256,9 @@ module.exports = {
         id: this.$props.viewer.id,
         item_id: this.$props.item.id
       })
+    },
+    linkedByWcs() {
+      return this.$props.viewer.linked_by_wcs
     }
   },
   computed: {
@@ -245,6 +285,9 @@ module.exports = {
     nDataEntries() {
       // return number of data entries in the entire plugin that were NOT created by a plugin
       return this.$props.data_items.filter((item) => item.meta.Plugin === undefined).length
+    },
+    wcsOnlyItems() {
+      return this.$props.data_items.filter((item) => this.wcsOnlyItem(item))
     },
   }
 };

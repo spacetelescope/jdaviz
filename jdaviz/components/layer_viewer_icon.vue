@@ -17,7 +17,7 @@
 
 <script>
 module.exports = {
-  props: ['span_style', 'color', 'icon', 'linewidth', 'linestyle', 'prevent_invert_if_dark', 'is_ref_data'],
+  props: ['span_style', 'color', 'icon', 'linewidth', 'linestyle', 'prevent_invert_if_dark', 'is_ref_data', 'linked_by_wcs'],
   computed: {
     borderStyle() {
       if (this.$props.linewidth > 0) { 
@@ -28,7 +28,7 @@ module.exports = {
   },
   methods: {
     isRefData() {
-      if (this.$props.is_ref_data === undefined) {
+      if (!this.$props.linked_by_wcs || this.$props.is_ref_data === undefined) {
         return false
       } else {
         return this.$props.is_ref_data

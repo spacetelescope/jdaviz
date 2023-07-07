@@ -34,12 +34,12 @@
               :app_settings="app_settings"
               :layer_icons="layer_icons"
               :icons="icons"
+              :linked_by_wcs="viewer.linked_by_wcs"
               @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-unload="$emit('data-item-unload', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
               @change-reference-data="$emit('change-reference-data', $event)"
             ></j-viewer-data-select>
-
 
             <v-toolbar-items v-if="viewer.reference === 'table-viewer'">
               <j-tooltip tipid='table-prev'>
@@ -64,14 +64,14 @@
           <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
             <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
-                <j-layer-viewer-icon span_style="float: right;" :icon="viewer_icons[viewer.id]"></j-layer-viewer-icon>
+                <j-layer-viewer-icon span_style="float: right;" :icon="viewer_icons[viewer.id]" :linked_by_wcs="viewer.linked_by_wcs"></j-layer-viewer-icon>
               </j-tooltip>
               <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{viewer.reference || viewer.id}}</span>
             </div>
 
             <div v-for="(layer_info, layer_name) in viewer.visible_layers" class="viewer-label invert-if-dark">
               <j-tooltip span_style="white-space: nowrap">
-                <j-layer-viewer-icon span_style="float: right;" :icon="layer_icons[layer_name]" :linewidth="layer_info.linewidth" :linestyle="'solid'" :color="layer_info.color"></j-layer-viewer-icon>
+                <j-layer-viewer-icon span_style="float: right;" :icon="layer_icons[layer_name]" :linewidth="layer_info.linewidth" :linestyle="'solid'" :color="layer_info.color" :linked_by_wcs="viewer.linked_by_wcs"></j-layer-viewer-icon>
               </j-tooltip>
               <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
                 <v-icon v-if="layer_info.prefix_icon" dense>

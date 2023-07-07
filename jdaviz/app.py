@@ -2211,6 +2211,7 @@ class Application(VuetifyTemplate, HubListener):
 
         reference_data = getattr(viewer.state, 'reference_data', None)
         reference_data_label = getattr(reference_data, 'label', None)
+        linked_by_wcs = getattr(viewer.state, 'linked_by_wcs', False)
 
         return {
             'id': vid,
@@ -2228,7 +2229,9 @@ class Application(VuetifyTemplate, HubListener):
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,
-            'reference': reference}
+            'reference': reference,
+            'linked_by_wcs': linked_by_wcs,
+        }
 
     def _on_new_viewer(self, msg, vid=None, name=None):
         """

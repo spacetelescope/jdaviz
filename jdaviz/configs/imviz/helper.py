@@ -481,6 +481,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
                                  f"'{link_type}') when markers are present. "
                                  f" Clear markers with viewer.reset_markers() first")
 
+    old_link_type = getattr(app, '_link_type', None)
     refdata, iref = get_reference_image_data(app)
 
     # if linking via WCS, add WCS-only reference data layer:
@@ -584,5 +585,13 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
         link_plugin.linking_in_progress = False
 
     for viewer in app._viewer_store.values():
+        wcs_linked = link_type == 'wcs'
         # viewer-state needs to know link type for reset_limits behavior
-        viewer.state.linked_by_wcs = link_type == 'wcs'
+        viewer.state.linked_by_wcs = wcs_linked
+        # also need to store a copy in the viewer item for the data dropdown to access
+        viewer_item['linked_by_wcs'] = wcs_linked
+
+        # if changing from one link type to another, reset the limits:
+        if old_link_type is not None and link_type != old_link_type:
+            viewer.state.reset_limits()
+
