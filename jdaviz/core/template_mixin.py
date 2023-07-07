@@ -14,6 +14,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
+from glue.core.roi import CircularAnnulusROI
 from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
@@ -745,7 +746,7 @@ class LayerSelect(SelectPluginComponent):
     """
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
-                 default_text=None, manual_options=[], allowed_type=None,
+                 default_text=None, manual_options=[],
                  default_mode='first'):
         """
         Parameters
@@ -937,8 +938,7 @@ class SubsetSelect(SelectPluginComponent):
 
     * create (empty) traitlets in the plugin
     * register with all the automatic logic in the plugin's init by passing the string names
-      of the respective traitlets.  Pass ``allowed_type='spectral'`` or ``allowed_type='spatial'``
-      to only support spectral or spatial subsets, respectively.
+      of the respective traitlets.
     * use component in plugin template (see below)
     * refer to properties above based on the interally stored reference to the
       instantiated object of this component
@@ -956,7 +956,7 @@ class SubsetSelect(SelectPluginComponent):
 
     """
     def __init__(self, plugin, items, selected, selected_has_subregions=None,
-                 viewers=None, default_text=None, manual_options=[], allowed_type=None,
+                 viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text'):
         """
         Parameters
@@ -975,26 +975,22 @@ class SubsetSelect(SelectPluginComponent):
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
-        manual_options: list
+        manual_options : list
             list of options to provide that are not automatically populated by subsets.  If
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
-        allowed_type : str or None
-            whether to filter to 'spatial' or 'spectral' types of subsets.  If not provided or None,
-            will include both entries.
+        filters : list
+            list of strings (for built-in filters) or callables to filter to only valid options.
         """
         super().__init__(plugin,
                          items=items,
                          selected=selected,
+                         filters=filters,
                          selected_has_subregions=selected_has_subregions,
                          viewers=viewers,
                          default_text=default_text,
                          manual_options=manual_options,
                          default_mode=default_mode)
-
-        if allowed_type not in [None, 'spatial', 'spectral']:
-            raise ValueError("allowed_type must be None, 'spatial', or 'spectral'")
-        self._allowed_type = allowed_type
 
         if selected_has_subregions is not None:
             self.selected_has_subregions = False
@@ -1029,14 +1025,29 @@ class SubsetSelect(SelectPluginComponent):
         if self.selected not in self.labels:
             self._apply_default_selection()
 
-    def _update_subset(self, subset, attribute=None):
-        if self._allowed_type is not None and _subset_type(subset) != self._allowed_type:
-            return
+    def _is_valid_item(self, subset):
+        def is_spectral(subset):
+            return _subset_type(subset) == 'spectral'
 
+        def is_spatial(subset):
+            return _subset_type(subset) == 'spatial'
+
+        def is_not_composite(subset):
+            return not hasattr(subset.subset_state, 'state1')
+
+        def is_not_annulus(subset):
+            # this will be considered "not an annulus" if it is composite, even
+            # if that composite subset contains an annulus
+            return (not is_not_composite(subset)
+                    or not isinstance(subset.subset_state.roi, CircularAnnulusROI))
+
+        return super()._is_valid_item(subset, locals())
+
+    def _update_subset(self, subset, attribute=None):
         if subset.label not in self.labels:
             # NOTE: this logic will need to be revisited if generic renaming of subsets is added
             # see https://github.com/spacetelescope/jdaviz/pull/1175#discussion_r829372470
-            if subset.label.startswith('Subset'):
+            if subset.label.startswith('Subset') and self._is_valid_item(subset):
                 # NOTE: += will not trigger traitlet update
                 self.items = self.items + [self._subset_to_dict(subset)]  # noqa
         else:
@@ -1084,10 +1095,12 @@ class SubsetSelect(SelectPluginComponent):
     @property
     def selected_subset_mask(self):
         get_data_kwargs = {'data_label': self.plugin.dataset.selected}
-        if self._allowed_type:
-            get_data_kwargs[f'{self._allowed_type}_subset'] = self.selected
+        if 'is_spectral' in self.filters:
+            get_data_kwargs['spectral_subset'] = self.selected
+        elif 'is_spatial' in self.filters:
+            get_data_kwargs['spatial_subset'] = self.selected
 
-        if self.app.config == 'cubeviz' and self._allowed_type == 'spectral':
+        if self.app.config == 'cubeviz' and 'is_spectral' in self.filters:
             viewer_ref = getattr(self.plugin,
                                  '_default_spectrum_viewer_reference_name',
                                  self.viewers[0].reference_id)
@@ -1143,7 +1156,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
                                             'spectral_subset_selected_has_subregions',
                                             viewers=[spectrum_viewer],
                                             default_text='Entire Spectrum',
-                                            allowed_type='spectral')
+                                            filters=['is_spectral'])
 
 
 class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
@@ -1180,7 +1193,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            'spatial_subset_selected',
                                            'spatial_subset_selected_has_subregions',
                                            default_text='No Subset',
-                                           allowed_type='spatial')
+                                           filters=['is_spatial'])
 
 
 class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
@@ -1460,6 +1473,8 @@ class DatasetSelect(SelectPluginComponent):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
+        filters : list
+            list of strings (for built-in filters) or callables to filter to only valid options.
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.

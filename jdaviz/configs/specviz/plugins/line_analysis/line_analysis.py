@@ -130,7 +130,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                       'continuum_subset_items',
                                       'continuum_subset_selected',
                                       default_text='Surrounding',
-                                      allowed_type='spectral')
+                                      filters=['is_spectral'])
 
         # when accessing the selected data, access the spectrum-viewer version
         self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
@@ -142,7 +142,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                                'spatial_subset_items',
                                                'spatial_subset_selected',
                                                default_text=SPATIAL_DEFAULT_TEXT,
-                                               allowed_type='spatial')
+                                               filters=['is_spatial'])
         else:
             self.spatial_subset = None
 

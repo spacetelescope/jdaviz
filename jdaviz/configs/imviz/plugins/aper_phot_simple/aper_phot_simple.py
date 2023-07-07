@@ -55,14 +55,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                                    'subset_items',
                                    'subset_selected',
                                    default_text=None,
-                                   allowed_type='spatial')
+                                   filters=['is_spatial', 'is_not_composite', 'is_not_annulus'])
 
         self.bg_subset = SubsetSelect(self,
                                       'bg_subset_items',
                                       'bg_subset_selected',
                                       default_text='Manual',
                                       manual_options=['Manual'],
-                                      allowed_type='spatial')
+                                      filters=['is_spatial', 'is_not_composite'])
 
         headers = ['xcenter', 'ycenter', 'sky_center',
                    'sum', 'sum_aper_area',
