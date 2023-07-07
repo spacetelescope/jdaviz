@@ -241,10 +241,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             m["parameters"] = temp_params
 
-        # Trick traitlets into updating the displayed values
-        component_models = self.component_models
-        self.component_models = []
-        self.component_models = component_models
+        self.send_state('component_models')
 
     def _update_parameters_from_QM(self):
         """
@@ -283,10 +280,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 temp_params += temp_param
             m["parameters"] = temp_params
 
-        # Trick traitlets into updating the displayed values
-        component_models = self.component_models
-        self.component_models = []
-        self.component_models = component_models
+        self.send_state('component_models')
 
     def _update_initialized_parameters(self):
         # If the user changes a parameter value, we need to change it in the
