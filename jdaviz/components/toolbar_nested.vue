@@ -1,7 +1,7 @@
 <template>
   <div style="overflow: hidden">
     <v-btn-toggle v-model="active_tool_id" class="transparent">
-        <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary}] of Object.entries(tools_data)" v-if="primary" bottom>
+        <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
             <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon :value="id" style="min-width: 40px !important" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
                     <img :src="img" width="20px" @click.ctrl.stop=""/>
@@ -22,8 +22,8 @@
     >
       <v-list>
         <v-tooltip
-          v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary}] of Object.entries(tools_data)"
-          v-if="menu_ind==suboptions_ind"
+          v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)"
+          v-if="menu_ind==suboptions_ind && visible"
           :key="id"
           left
         >

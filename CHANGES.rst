@@ -16,6 +16,8 @@ New Features
 - Add launcher to select and identify compatible configurations,
   and require --layout argument when launching standalone. [#2257, #2267]
 
+- Viewer toolbar items hide themselves when they are not applicable. [#2284]
+
 Cubeviz
 ^^^^^^^
 

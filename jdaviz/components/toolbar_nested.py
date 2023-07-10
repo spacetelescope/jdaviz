@@ -2,14 +2,19 @@ import os
 import traitlets
 
 from glue.config import viewer_tool
+from glue.core import HubListener
 from glue.icons import icon_path
 from glue.viewers.common.tool import CheckableTool
 from glue_jupyter.common.toolbar_vuetify import BasicJupyterToolbar, read_icon
 
+from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
+                                ViewerAddedMessage, ViewerRemovedMessage,
+                                SpectralMarksChangedMessage)
+
 __all__ = ['NestedJupyterToolbar']
 
 
-class NestedJupyterToolbar(BasicJupyterToolbar):
+class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
     template_file = (__file__, 'toolbar_nested.vue')
 
     # defined in BasicJupyterToolbar:
@@ -28,6 +33,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
 
     def __init__(self, viewer, tools_nested, default_tool_priority=[]):
         super().__init__(viewer)
+        self.viewer = viewer
+        self._max_menu_ind = len(tools_nested)
 
         # iterate through the nested list.  The first item in each entry
         # is treated as the default primary tool of that subcategory,
@@ -43,7 +50,12 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
                 self.add_tool(tool,
                               menu_ind=menu_ind,
                               has_suboptions=len(subtools) > 1,
-                              primary=i == 0)
+                              primary=i == 0,
+                              visible=True)
+
+        # handle logic for tool visibilities (which will also handle setting the primary
+        # to something other than the first entry, if necessary)
+        self._update_tool_visibilities()
 
         # default_tool_priority allows falling back on an existing tool
         # if its the primary tool.  If no items in default_tool_priority
@@ -53,13 +65,76 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
         self.default_tool_priority = default_tool_priority
         self._handle_default_tool()
 
+        for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
+                    SpectralMarksChangedMessage):
+            self.viewer.hub.subscribe(self, msg,
+                                      handler=lambda _: self._update_tool_visibilities())
+
+    def _is_visible(self, tool_id):
+        # tools can optionally implement self.is_visible(). If not NotImplementedError
+        # the tool will always be visible
+        if hasattr(self.tools[tool_id], 'is_visible'):
+            return self.tools[tool_id].is_visible()
+        return True
+
+    def _update_tool_visibilities(self):
+        needs_deactivate_active = False
+        for menu_ind in range(self._max_menu_ind):
+            has_primary = False
+            n_visible = 0
+            primary_id = None
+            if self.active_tool_id:
+                current_primary_active = self.tools_data[self.active_tool_id]['menu_ind'] == menu_ind  # noqa
+            else:
+                current_primary_active = False
+            for tool_id, info in self.tools_data.items():
+                if info['menu_ind'] != menu_ind:
+                    continue
+                visible = self._is_visible(tool_id)
+                if visible:
+                    n_visible += 1
+
+                if tool_id == self.active_tool_id:
+                    # then the primary was already set by which tool is active
+                    if visible:
+                        # then keep this as primary
+                        primary = True
+                    else:
+                        # then the currently active tool is being removed, so we need to deactivate
+                        # the tool and allow the default logic to be triggered
+                        primary = False
+                        needs_deactivate_active = True
+                elif current_primary_active and self._is_visible(self.active_tool_id):
+                    # then we are keeping the previous primary
+                    primary = False
+                else:
+                    # then there is no primary already in this submenu, so the first visible
+                    # entry will be selected as primary
+                    primary = visible and not has_primary
+
+                if primary:
+                    primary_id = tool_id
+                    has_primary = True
+
+                self.tools_data[tool_id] = {**info,
+                                            'primary': primary,
+                                            'visible': visible}
+            if primary_id:
+                self.tools_data[primary_id] = {**self.tools_data[primary_id],
+                                               'has_suboptions': n_visible > 1}
+
+        # mutation to dictionary needs to be manually sent to update the UI
+        self.send_state("tools_data")
+        if needs_deactivate_active:
+            self.active_tool_id = None
+
     def _handle_default_tool(self):
         # default to the first item in the default_tool_priority list that is currently
         # already primary
         for tool_id in self.default_tool_priority:
             if tool_id not in self.tools_data:
                 continue
-            if self.tools_data[tool_id]['primary']:
+            if self.tools_data[tool_id]['primary'] and self.tools_data[tool_id]['visible']:
                 self.active_tool_id = tool_id
                 break
 
@@ -75,7 +150,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
             if event['old'] is not None:
                 self.active_tool_id = event['old']
 
-    def add_tool(self, tool, menu_ind, has_suboptions=True, primary=False):
+    def add_tool(self, tool, menu_ind, has_suboptions=True, primary=False, visible=True):
         # NOTE: this method is essentially copied from glue-jupyter's BasicJupyterToolbar,
         # but we need extra values in the tools_data dictionary.  We could call super(),
         # but then that would create tools_data twice, which would then cause
@@ -92,7 +167,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar):
                 'img': read_icon(path, 'svg+xml'),
                 'menu_ind': menu_ind,
                 'has_suboptions': has_suboptions,
-                'primary': primary
+                'primary': primary,
+                'visible': visible
             }
         }
 

@@ -16,6 +16,7 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import LineIdentifyMessage, SpectralMarksChangedMessage
+from jdaviz.core.marks import SpectralLine
 
 __all__ = []
 
@@ -115,6 +116,9 @@ class _MatchedZoomMixin:
                         if not np.isnan(value) and (orig_value is None or
                                                     abs(value-orig_lims.get(k, np.inf)) > tol):
                             setattr(viewer.state, k, value)
+
+    def is_visible(self):
+        return len(self.viewer.jdaviz_app._viewer_store) > 1
 
 
 @viewer_tool
@@ -329,6 +333,9 @@ class SelectLine(CheckableTool, HubListener):
         # find line closest to mouse position and transmit event
         msg = LineIdentifyMessage(self.line_names[ind], sender=self)
         self.viewer.session.hub.broadcast(msg)
+
+    def is_visible(self):
+        return len([m for m in self.viewer.figure.marks if isinstance(m, SpectralLine)]) > 0
 
 
 class _BaseSidebarShortcut(Tool):

@@ -138,3 +138,32 @@ def test_compass_open_while_load(imviz_helper):
     # Should not crash even if Compass is open in tray.
     imviz_helper.load_data(np.ones((2, 2)))
     assert len(imviz_helper.app.data_collection) == 1
+
+
+def test_tool_visibility(imviz_helper):
+    imviz_helper.load_data(np.ones((2, 2)))
+    tb = imviz_helper.default_viewer.toolbar
+
+    assert not tb.tools_data['jdaviz:boxzoommatch']['visible']
+
+    assert tb.tools_data['jdaviz:boxzoom']['primary']
+    # activate boxzoom to ensure it remains primary
+    tb.active_tool_id = 'jdaviz:boxzoom'
+
+    imviz_helper.create_image_viewer()
+    imviz_helper.app.set_data_visibility('imviz-1', imviz_helper.app.data_collection[0].label, True)
+
+    assert tb.tools_data['jdaviz:boxzoommatch']['visible']
+    assert tb.active_tool_id == 'jdaviz:boxzoom'
+    assert tb.tools_data['jdaviz:boxzoom']['primary']
+
+    # but the panzoom has updated primary since there was no active tool in that submenu
+    assert tb.tools_data['jdaviz:panzoommatch']['visible']
+    assert tb.tools_data['jdaviz:panzoommatch']['primary']
+
+    # now set the tool to the matched box zoom to ensure it deactivates itself when removing
+    # a viewer
+    tb.active_tool_id = 'jdaviz:boxzoommatch'
+    imviz_helper.destroy_viewer('imviz-1')
+    assert not tb.tools_data['jdaviz:boxzoommatch']['visible']
+    assert tb.active_tool_id is None
