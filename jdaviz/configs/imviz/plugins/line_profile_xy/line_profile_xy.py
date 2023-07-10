@@ -55,7 +55,7 @@ class LineProfileXY(PluginTemplateMixin):
     @observe("selected_viewer")
     def vue_draw_plot(self, *args, **kwargs):
         """Draw line profile plots for given Data across given X and Y indices (0-indexed)."""
-        if not self.selected_x or not self.selected_y or not self.plugin_opened:
+        if not self.selected_x or not self.selected_y:
             return
 
         viewer = self.app.get_viewer_by_id(self.selected_viewer)

@@ -6,6 +6,7 @@ from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
+from astropy.utils.decorators import deprecated
 from astropy import units as u
 from specutils import analysis, Spectrum1D
 from specutils.manipulation import extract_region
@@ -91,12 +92,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
       Width, relative to the overall line spectral region, to fit the linear continuum
       (excluding the region containing the line). If 1, will use endpoints within line region
       only.
-    * :meth:`show_continuum_marks`
     * :meth:`get_results`
 
     """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
+    has_previews = Bool(True).tag(sync=True)
 
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
@@ -205,34 +206,26 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if (msg.subset.label in [self.spectral_subset_selected,
                                  self.spatial_subset_selected,
                                  self.continuum_subset_selected]
-                and self.plugin_opened):
+                and (self.show_previews or self.plugin_opened_in_tray)):
             self._calculate_statistics()
 
     def _on_global_display_unit_changed(self, msg):
-        if self.plugin_opened:
+        if self.show_previews:
             self._calculate_statistics()
 
-    @observe('plugin_opened')
-    def _on_plugin_opened_changed(self, *args):
+    @observe('show_previews')
+    def _show_previews_changed(self, *args):
         if self.disabled_msg:
             return
-        # toggle continuum lines in spectrum viewer based on whether this plugin
-        # is currently open in the tray
-        self.show_continuum_marks(self.plugin_opened)
 
-    def show_continuum_marks(self, show=True):
-        """
-        Show (or hide) the marks indicating the continuum on the spectrum viewer.
-
-        Parameters
-        ----------
-        show : bool
-            Whether to show (or hide) the marks
-        """
         for pos, mark in self.marks.items():
-            mark.visible = show
-        if show:
-            self._calculate_statistics(ignore_plugin_closed=True)
+            mark.visible = self.show_previews
+        if self.show_previews:
+            self._calculate_statistics()
+
+    @deprecated(since="3.6", alternative="persistent_previews")
+    def show_continuum_marks(self):
+        self.persistent_previews = True
 
     @property
     def marks(self):
@@ -254,9 +247,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 return {}
             # then haven't been initialized yet, so initialize with empty
             # marks that will be populated once the first analysis is done.
-            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.plugin_opened),
-                     'center': LineAnalysisContinuumCenter(viewer, visible=self.plugin_opened),
-                     'right': LineAnalysisContinuumRight(viewer, visible=self.plugin_opened)}
+            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.show_previews),
+                     'center': LineAnalysisContinuumCenter(viewer, visible=self.show_previews),
+                     'right': LineAnalysisContinuumRight(viewer, visible=self.show_previews)}
             shadows = [ShadowLine(mark, shadow_width=2) for mark in marks.values()]
             # NOTE: += won't trigger the figure to notice new marks
             viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
@@ -324,8 +317,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         full_spectrum = self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected,  # noqa
                                                                           use_display_units=True)
 
-        if (full_spectrum is None or self.width == "" or
-                (not self.plugin_opened and not kwargs.get('ignore_plugin_closed'))):
+        if full_spectrum is None or self.width == "":
             # this can happen DURING a unit conversion change
             self.update_results(None)
             return

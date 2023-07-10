@@ -1,26 +1,42 @@
 <template>
-  <v-container class="tray-plugin" style="padding-left: 24px; padding-right: 24px; padding-top: 12px">
-    <v-row>
-      <div style="width: calc(100% - 32px)">
-        <j-docs-link :link="link">{{ description }}</j-docs-link>
-      </div>
-      <div style="width: 32px">
-        <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
-      </div>
-    </v-row>
-    
-    <v-row v-if="isDisabled()">
-      <span> {{ getDisabledMsg() }}</span>
-    </v-row>
-    <div v-else>
-      <slot></slot>
+  <div
+    @mouseenter="if (!persistent_previews){$emit('update:plugin_active', true)}"
+    @mouseleave="if (!persistent_previews){$emit('update:plugin_active', false)}"
+    :style="(plugin_active || persistent_previews) ? 'border-left: 4px solid rgb(2 123 161 / 80%)' : 'margin-left: 4px'"
+    >
+      <v-container class="tray-plugin" style="padding-left: 24px; padding-right: 24px; padding-top: 12px">
+        <v-row>
+          <div style="width: calc(100% - 32px)">
+            <j-docs-link :link="link">{{ description }}</j-docs-link>
+          </div>
+          <div style="width: 32px">
+            <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
+          </div>
+        </v-row>
+        
+        <v-row v-if="isDisabled()">
+          <span> {{ getDisabledMsg() }}</span>
+        </v-row>
+        <div v-else>
+          <v-row v-if="has_previews">
+            <v-switch
+              v-model="persistent_previews"
+              @change="$emit('update:persistent_previews', $event)"
+              label="persistent live-preview"
+              hint="show live-preview even when mouse is not over plugin"
+              persistent-hint>
+            </v-switch>
+          </v-row>
+          <slot></slot>
+        </div>
+      </v-container>
     </div>
-  </v-container>
 </template>
 
 <script>
 module.exports = {
-  props: ['disabled_msg', 'description', 'link', 'popout_button'],
+  props: ['disabled_msg', 'description', 'link', 'popout_button',
+          'has_previews', 'plugin_active', 'persistent_previews'],
   methods: {
     isDisabled() {
       return this.getDisabledMsg().length > 0

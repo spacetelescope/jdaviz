@@ -3,6 +3,7 @@ from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import astropy.units as u
 import bqplot
+from contextlib import contextmanager
 import numpy as np
 
 from functools import cached_property
@@ -224,7 +225,11 @@ class PluginTemplateMixin(TemplateMixin):
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
     disabled_msg = Unicode("").tag(sync=True)
-    plugin_opened = Bool(False).tag(sync=True)
+    plugin_opened_in_tray = Bool(False).tag(sync=True)  # plugin is opened in the tray
+    plugin_active = Bool(False).tag(sync=True)  # mouse currently over any instance of plugin
+    has_previews = Bool(False).tag(sync=True)  # whether the plugin has live-preview marks, set in plugins
+    persistent_previews = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of mouseover
+    show_previews = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to settings above
 
     def __init__(self, **kwargs):
         self._viewer_callbacks = {}
@@ -263,7 +268,7 @@ class PluginTemplateMixin(TemplateMixin):
     def _mxn_update_plugin_opened(self, new_value):
         app_state = self.app.state
         tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
-        self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
+        self.plugin_opened_in_tray = app_state.drawer and self._registry_name in tray_names_open
 
     def open_in_tray(self):
         """
@@ -274,6 +279,20 @@ class PluginTemplateMixin(TemplateMixin):
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
+
+    @observe('plugin_active', 'persistent_previews')
+    def _update_show_previews(self, *args):
+        self.show_previews = self.persistent_previews or self.plugin_active
+
+    @contextmanager
+    def temporarily_show_previews(self):
+        """
+        Context manager to temporarily enable persistent live-previews
+        """
+        _persistent_previews = self.persistent_previews
+        self.persistent_previews = True
+        yield
+        self.persistent_previews = _persistent_previews
 
     def show(self, loc="inline", title=None):  # pragma: no cover
         """Display the plugin UI.

@@ -61,7 +61,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         self.canvas_angle = viewer_item.get('canvas_angle', 0)  # noqa
         self.canvas_flip_horizontal = viewer_item.get('canvas_flip_horizontal', False)
 
-    @observe("viewer_selected", "plugin_opened")
+    @observe("viewer_selected", "plugin_opened_in_tray")
     def _compass_with_new_viewer(self, *args, **kwargs):
         if not hasattr(self, 'viewer'):
             # mixin object not yet initialized
@@ -69,7 +69,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
 
         # There can be only one!
         for vid, viewer in self.app._viewer_store.items():
-            if vid == self.viewer.selected_id and (self.plugin_opened or kwargs.get('from_show')):
+            if vid == self.viewer.selected_id and (self.plugin_opened_in_tray or kwargs.get('from_show')):  # noqa
                 viewer.compass = self
                 viewer.on_limits_change()  # Force redraw
 

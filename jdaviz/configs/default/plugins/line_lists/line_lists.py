@@ -322,12 +322,7 @@ class LineListTool(PluginTemplateMixin):
             msg = RedshiftMessage("redshift", value, sender=self)
             self.app.hub.broadcast(msg)
 
-    @observe('plugin_opened')
     def _update_line_list_obs(self, *args):
-        if not self.plugin_opened:
-            return
-
-        new_list_contents = {}
         for list_name, line_list in self.list_contents.items():
             for i, line in enumerate(line_list['lines']):
                 if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:  # noqa
@@ -339,10 +334,9 @@ class LineListTool(PluginTemplateMixin):
                 else:
                     line_list['lines'][i]['obs'] = self._rest_to_obs(float(line['rest']))
 
-            new_list_contents[list_name] = line_list
+            self.list_contents[list_name] = line_list
 
-        self.list_contents = {}
-        self.list_contents = new_list_contents
+        self.send_state('list_contents')
 
     def vue_change_line_obs(self, kwargs):
         # NOTE: we can only pass one argument from vue (it seems), so we'll pass as

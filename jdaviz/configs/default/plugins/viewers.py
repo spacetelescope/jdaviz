@@ -22,7 +22,7 @@ class JdavizViewerMixin:
     toolbar = None
     tools_nested = []
     _prev_limits = None
-    _native_mark_classnames = ('Lines', 'LinesGL')
+    _native_mark_classnames = ('Lines', 'LinesGL', 'FRBImage', 'Contour')
 
     def __init__(self, *args, **kwargs):
         # NOTE: anything here most likely won't be called by viewers because of inheritance order

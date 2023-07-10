@@ -2,6 +2,9 @@
   <j-tray-plugin
     description="2D to 1D spectral extraction."
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
+    :has_previews="has_previews"
+    :plugin_active.sync="plugin_active"
+    :persistent_previews.sync="persistent_previews"
     :popout_button="popout_button">
 
     <v-row>
@@ -25,7 +28,8 @@
     </v-row>
 
 
-    <div @mouseover="() => active_step='trace'">
+    <div @mouseover="() => active_step='trace'"
+      :style="plugin_active && active_step==='trace' ? 'box-shadow: rgb(2 123 161 / 20%) -20px 0px 0px 0px' : ''">
       <j-plugin-section-header>Trace</j-plugin-section-header>
       <v-row>
         <j-docs-link>
@@ -184,7 +188,8 @@
       </v-row>
     </div>
 
-    <div @mouseover="() => active_step='bg'">
+    <div @mouseover="() => active_step='bg'"
+      :style="plugin_active && active_step==='bg' ? 'box-shadow: rgb(2 123 161 / 20%) -20px 0px 0px 0px' : ''">
       <j-plugin-section-header>Background</j-plugin-section-header>
       <v-row>
         <j-docs-link>Create a background and/or background-subtracted image.</j-docs-link>
@@ -346,7 +351,8 @@
       </v-row>
     </div>
 
-    <div @mouseover="() => active_step='ext'">
+    <div @mouseover="() => active_step='ext'"
+      :style="plugin_active && active_step==='ext' ? 'box-shadow: rgb(2 123 161 / 20%) -20px 0px 0px 0px' : ''">
       <j-plugin-section-header>Extraction</j-plugin-section-header>
       <v-row>
         <j-docs-link>
