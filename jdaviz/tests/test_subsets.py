@@ -199,7 +199,7 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
     flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
 
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 1  # noqa
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
 
     subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
     reg = subsets.get('Subset 1')
@@ -226,7 +226,7 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['jdaviz:panzoom']
     spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
     spectrum_viewer.apply_roi(XRangeROI(3, 16))
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 4  # noqa
 
 
 def test_disjoint_spatial_subset(cubeviz_helper, spectral_cube_wcs):

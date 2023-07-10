@@ -4,7 +4,6 @@ from traitlets import Bool, Unicode, observe
 
 from astropy import units as u
 from glue.core import BaseData
-from glue.core.subset import RoiSubsetState
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 
@@ -17,6 +16,7 @@ from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
+from jdaviz.utils import get_subset_type
 
 __all__ = ['CoordsInfo']
 
@@ -443,7 +443,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 continue
 
             if isinstance(lyr.layer, GroupedSubset):
-                if not isinstance(lyr.layer.subset_state, RoiSubsetState):
+                subset_state = getattr(lyr.layer, 'subset_state', None)
+                if subset_state is None:
+                    return False
+                subset_type = get_subset_type(subset_state)
+                if subset_type == 'spectral':
                     # then this is a SPECTRAL subset
                     continue
                 # For use later in data retrieval

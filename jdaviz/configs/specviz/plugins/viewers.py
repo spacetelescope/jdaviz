@@ -17,6 +17,7 @@ from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask, Offs
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
+from jdaviz.utils import get_subset_type
 
 __all__ = ['SpecvizProfileView']
 
@@ -377,7 +378,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         # that new data entries (from model fitting or gaussian smooth, etc) will only be spectra
         # and all subsets affected will be spectral
         for layer in self.state.layers:
-            if "Subset" in layer.layer.label and layer.layer.data.label == data.label:
+            if get_subset_type(layer.layer) == 'spectral' and layer.layer.data.label == data.label:
                 layer.linewidth = 3
 
         return result
