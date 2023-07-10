@@ -290,7 +290,8 @@ def _rotated_gwcs(
     rotation_angle,
     pixel_scales,
     cdelt_signs,
-    refdata_shape=(10, 10),
+    #refdata_shape=(10, 10),
+    refdata_shape=(2, 2),
     image_shape=None
 ):
     # based on ``gwcs_simple_imaging_units`` in gwcs:
@@ -378,13 +379,13 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
 
     elif 'wcsinfo' in data.meta:
         # GWCS doesn't yet have a pixel scale attr, so approximate
-        # its behavior from the WCS keys in the header:
-        cdelt = [
-            v for k, v in data.meta['wcsinfo'].items()
-            if k.lower().startswith('cdelt')
-        ]
-
-        pixel_scales = cdelt * u.deg / u.pix
+        # its behavior using the pixel scale method from jwst:
+        pixel_scales = (2 * [compute_scale(
+            data.meta['wcs'],
+            (data.meta['wcsinfo']['ra_ref'],
+             data.meta['wcsinfo']['dec_ref']),
+            1
+        )]) * u.deg / u.pix
 
     # flip e.g. RA or Dec axes?
     if cdelt_signs is None and cdelt is not None:
@@ -475,7 +476,7 @@ def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shap
         ) < 0
 
         if east_left:
-            cdelt_signs = None
+            cdelt_signs = [1, 1]
         else:
             cdelt_signs = [-1 if lon_axis == i else 1 for i in range(2)]
             if 'imviz-compass' in [item['name'] for item in app.state.tray_items]:
@@ -491,3 +492,60 @@ def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shap
         data=data,
         cdelt_signs=cdelt_signs
     )
+
+
+def compute_scale(wcs, fiducial,
+                  disp_axis, pscale_ratio):
+    """
+    Compute scaling transform. This method comes from the `jwst` package:
+        https://github.com/spacetelescope/jwst/blob/
+        95467186aca9784ece9451b33d437d80d550a795/jwst/assign_wcs/util.py#L103
+
+    Parameters
+    ----------
+    wcs : `~gwcs.wcs.WCS`
+        Reference WCS object from which to compute a scaling factor.
+
+    fiducial : tuple
+        Input fiducial of (RA, DEC) or (RA, DEC, Wavelength) used in calculating reference points.
+
+    disp_axis : int
+        Dispersion axis integer. Assumes the same convention as `wcsinfo.dispersion_direction`
+
+    pscale_ratio : int
+        Ratio of input to output pixel scale
+
+    Returns
+    -------
+    scale : float
+        Scaling factor for x and y or cross-dispersion direction.
+
+    """
+    spectral = 'SPECTRAL' in wcs.output_frame.axes_type
+
+    if spectral and disp_axis is None:
+        raise ValueError('If input WCS is spectral, a disp_axis must be given')
+
+    crpix = np.array(wcs.invert(*fiducial))
+
+    delta = np.zeros_like(crpix)
+    spatial_idx = np.where(np.array(wcs.output_frame.axes_type) == 'SPATIAL')[0]
+    delta[spatial_idx[0]] = 1
+
+    crpix_with_offsets = np.vstack((crpix, crpix + delta, crpix + np.roll(delta, 1))).T
+    crval_with_offsets = wcs(*crpix_with_offsets, with_bounding_box=False)
+
+    coords = SkyCoord(ra=crval_with_offsets[spatial_idx[0]], dec=crval_with_offsets[spatial_idx[1]], unit="deg")
+    xscale = np.abs(coords[0].separation(coords[1]).value)
+    yscale = np.abs(coords[0].separation(coords[2]).value)
+
+    if pscale_ratio is not None:
+        xscale *= pscale_ratio
+        yscale *= pscale_ratio
+
+    if spectral:
+        # Assuming scale doesn't change with wavelength
+        # Assuming disp_axis is consistent with DataModel.meta.wcsinfo.dispersion.direction
+        return yscale if disp_axis == 1 else xscale
+
+    return np.sqrt(xscale * yscale)
