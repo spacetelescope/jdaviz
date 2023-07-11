@@ -1437,8 +1437,12 @@ class LayerSelect(SelectPluginComponent):
         # NOTE: _on_layers_changed is passed without a msg object during init
         # TODO: Handle changes to just one item without recompiling the whole thing
         manual_items = [{'label': label} for label in self.manual_options]
-        all_layers = [layer for viewer in self.viewer_objs
-                      for layer in getattr(viewer, 'layers', [])]
+        all_layers = [
+            layer for viewer in self.viewer_objs
+            for layer in getattr(viewer, 'layers', [])
+            # don't include WCS-only layers:
+            if not layer.layer.meta.get('_WCS_ONLY', False)
+        ]
         # remove duplicates - we'll loop back through all selected viewers to get a list of colors
         # and visibilities later within _layer_to_dict
         layer_labels = [layer.layer.label for layer in all_layers if self.app.state.layer_icons.get(layer.layer.label)]  # noqa
