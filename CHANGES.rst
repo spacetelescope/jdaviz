@@ -18,7 +18,7 @@ New Features
 
 - Viewer toolbar items hide themselves when they are not applicable. [#2284]
 
-- Line Analysis "Redshift from Centroid" only visible when lines are loaded [#2294]
+- Line Analysis "Redshift from Centroid" only visible when lines are loaded. [#2294]
 
 Cubeviz
 ^^^^^^^
