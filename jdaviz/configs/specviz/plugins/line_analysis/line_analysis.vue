@@ -133,55 +133,57 @@
         ></v-progress-circular>
       </div>
 
-      <j-plugin-section-header>Redshift from Centroid</j-plugin-section-header>
-      <v-row>
-        <j-docs-link>Assign the centroid reported above to the observed wavelength of a given line and set the resulting redshift.  Lines must be loaded and plotted through the Line Lists plugin first.</j-docs-link>
-      </v-row>
-      <v-row class="row-no-outside-padding">
-        <v-col cols=2>
-          <j-tooltip tipid='plugin-line-analysis-sync-identify'>
-            <v-btn icon @click="() => sync_identify = !sync_identify" style="margin-top: 14px">
-              <img :class="sync_identify ? 'color-to-accent' : 'invert-if-dark'" :src="sync_identify ? sync_identify_icon_enabled : sync_identify_icon_disabled" width="20"/>
+      <div v-if="lines_loaded">
+        <j-plugin-section-header>Redshift from Centroid</j-plugin-section-header>
+        <v-row>
+          <j-docs-link>Assign the centroid reported above to the observed wavelength of a given line and set the resulting redshift.  Lines must be loaded and plotted through the Line Lists plugin first.</j-docs-link>
+        </v-row>
+        <v-row class="row-no-outside-padding">
+          <v-col cols=2>
+            <j-tooltip tipid='plugin-line-analysis-sync-identify'>
+              <v-btn icon @click="() => sync_identify = !sync_identify" style="margin-top: 14px">
+                <img :class="sync_identify ? 'color-to-accent' : 'invert-if-dark'" :src="sync_identify ? sync_identify_icon_enabled : sync_identify_icon_disabled" width="20"/>
+              </v-btn>
+            </j-tooltip>
+          </v-col>
+          <v-col cols=10>
+            <v-select
+              :menu-props="{ left: true }"
+              attach
+              :items="line_items"
+              v-model="selected_line"
+              label="Line"
+              hint="Select reference line."
+              persistent-hint
+            ></v-select>
+          </v-col>
+        </v-row>
+
+        <v-row v-if="selected_line">
+          <v-text-field
+            :value='selected_line_redshift'
+            class="mt-0 pt-0"
+            type="number"
+            label="Redshift"
+            hint="Redshift that will be applied by assigning centroid to the selected line."
+            persistent-hint
+            disabled
+          ></v-text-field>
+        </v-row>
+
+        <v-row justify="end">
+          <j-tooltip tipid='plugin-line-analysis-assign'>
+            <v-btn 
+            color="accent"
+            style="padding-left: 8px; padding-right: 8px;"
+            text
+            :disabled="!selected_line"
+            @click="line_assign">
+              Assign
             </v-btn>
           </j-tooltip>
-        </v-col>
-        <v-col cols=10>
-          <v-select
-            :menu-props="{ left: true }"
-            attach
-            :items="line_items"
-            v-model="selected_line"
-            label="Line"
-            hint="Select reference line."
-            persistent-hint
-          ></v-select>
-        </v-col>
-      </v-row>
-
-      <v-row v-if="selected_line">
-        <v-text-field
-          :value='selected_line_redshift'
-          class="mt-0 pt-0"
-          type="number"
-          label="Redshift"
-          hint="Redshift that will be applied by assigning centroid to the selected line."
-          persistent-hint
-          disabled
-        ></v-text-field>
-      </v-row>
-
-      <v-row justify="end">
-        <j-tooltip tipid='plugin-line-analysis-assign'>
-          <v-btn 
-           color="accent"
-           style="padding-left: 8px; padding-right: 8px;"
-           text
-           :disabled="!selected_line"
-           @click="line_assign">
-            Assign
-          </v-btn>
-        </j-tooltip>
-      </v-row>
+        </v-row>
+      </div>
     </div>  
   </j-tray-plugin>
 </template>
