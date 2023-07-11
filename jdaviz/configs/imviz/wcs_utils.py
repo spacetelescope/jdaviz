@@ -14,6 +14,7 @@ from astropy import coordinates as coord
 from astropy.coordinates import SkyCoord
 from astropy.modeling import models
 from astropy.nddata import NDData
+from astropy.wcs import WCS
 from astropy.wcs.utils import proj_plane_pixel_scales
 
 from gwcs import coordinate_frames as cf
@@ -377,7 +378,7 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
         # WCS-only layers have pixel scales in meta:
         pixel_scales = u.Quantity(data.meta['_pixel_scales'])
 
-    elif 'wcsinfo' in data.meta:
+    elif 'wcsinfo' in data.meta and 'wcs' in data.meta and 'ra_ref' in data.meta['wcsinfo']:
         # GWCS doesn't yet have a pixel scale attr, so approximate
         # its behavior using the pixel scale method from jwst:
         pixel_scales = (2 * [compute_scale(
@@ -385,6 +386,22 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
             (data.meta['wcsinfo']['ra_ref'],
              data.meta['wcsinfo']['dec_ref']),
             1
+        )]) * u.deg / u.pix
+    else:
+        # fall back on CRVAL cards:
+        wcsinfo = data.meta['wcsinfo']
+        crval1 = float(wcsinfo.get('CRVAL1', wcsinfo.get('crval1')))
+        crval2 = float(wcsinfo.get('CRVAL2', wcsinfo.get('crval2')))
+        cdelt = [
+            float(wcsinfo.get('CDELT1', wcsinfo.get('cdelt1'))),
+            float(wcsinfo.get('CDELT2', wcsinfo.get('cdelt2')))
+        ]
+        unit = u.Unit(wcsinfo.get('CUNIT1', wcsinfo.get('cunit1')))
+        fiducial = [crval1, crval2] * unit
+        pixel_scales = (2 * [compute_scale(
+            WCS(data.meta['_primary_header'])
+            if 'wcs' not in data.meta else data.meta['wcs'],
+            fiducial, None, 1
         )]) * u.deg / u.pix
 
     # flip e.g. RA or Dec axes?

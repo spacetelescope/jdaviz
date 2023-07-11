@@ -491,6 +491,7 @@ class Application(VuetifyTemplate, HubListener):
             if is_wcs_only else 0
         )
         if layer_name not in self.state.layer_icons:
+            print('name', layer_name, 'is wcs', is_wcs_only)
             if is_wcs_only:
                 self.state.layer_icons = {**self.state.layer_icons,
                                           layer_name: wcs_only_refdata_icon}
@@ -525,8 +526,15 @@ class Application(VuetifyTemplate, HubListener):
             # if there's no refdata change, don't do anything:
             return
 
-        # set the new reference data in the viewer:
         new_refdata = self.data_collection[new_refdata_label]
+
+        # make sure new refdata can be selected:
+        refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
+        if new_refdata_label not in refdata_choices:
+            viewer.state.ref_data_helper.append_data(new_refdata)
+        viewer.state.ref_data_helper.refresh()
+
+        # set the new reference data in the viewer:
         viewer.state.reference_data = new_refdata
 
         # also update the viewer item's reference data label:
