@@ -1027,6 +1027,9 @@ class SubsetSelect(SelectPluginComponent):
             self._apply_default_selection()
 
     def _is_valid_item(self, subset):
+        def is_spectral(subset):
+            return _subset_type(subset) == 'spectral'
+
         def is_spatial(subset):
             return _subset_type(subset) == 'spatial'
 
@@ -1042,9 +1045,6 @@ class SubsetSelect(SelectPluginComponent):
         return super()._is_valid_item(subset, locals())
 
     def _update_subset(self, subset, attribute=None):
-        if self._allowed_type is not None and get_subset_type(subset) != self._allowed_type:
-            return
-
         if subset.label not in self.labels:
             # NOTE: this logic will need to be revisited if generic renaming of subsets is added
             # see https://github.com/spacetelescope/jdaviz/pull/1175#discussion_r829372470
