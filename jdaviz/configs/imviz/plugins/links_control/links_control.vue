@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description="'Re-link images by WCS or pixels, or the rotate viewer.'"
+    description="Re-link images by WCS or pixels, or the rotate viewer."
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'"
     :popout_button="popout_button">
 
@@ -20,14 +20,13 @@
           ></v-radio>
         </v-radio-group>
         <v-col>
-          <plugin-viewer-select
-            :items="viewer_items"
-            :selected.sync="viewer_selected"
-            :multiselect="multiselect"
-            :label="multiselect ? 'Viewers' : 'Viewer'"
-            :show_if_single_entry="multiselect"
-            :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
-          />
+          <v-switch
+            label="Fast approximation"
+            hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
+            v-model="wcs_use_affine"
+            v-if="link_type_selected == 'WCS'"
+            persistent-hint>
+          </v-switch>
         </v-col>
 
         <v-row v-if="false">
@@ -39,25 +38,27 @@
           </v-switch>
         </v-row>
 
+        <div style="grid-area: 1/1">
+        </div>
         <div v-if="link_type_selected == 'WCS'">
-
-          <v-switch
-            label="Fast approximation"
-            hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
-            v-model="wcs_use_affine"
-            persistent-hint>
-          </v-switch>
 
           <j-plugin-section-header>Orientation</j-plugin-section-header>
 
-
           <v-col>
+              <plugin-viewer-select
+                :items="viewer_items"
+                :selected.sync="viewer_selected"
+                :multiselect="multiselect"
+                :label="multiselect ? 'Viewers' : 'Viewer'"
+                :show_if_single_entry="multiselect"
+                :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
+              />
               <plugin-layer-select
                 :items="layer_items"
                 :selected.sync="layer_selected"
                 :multiselect=false
                 :show_if_single_entry="true"
-                :label="'Orientation'"
+                :label="'Orientation in viewer'"
                 :hint="'Select the viewer orientation'"
               />
               <v-text-field
