@@ -1,17 +1,23 @@
-from traitlets import List, Unicode, Bool, observe
+from traitlets import List, Unicode, Bool, Float, observe
 
 from glue.core.message import DataCollectionAddMessage
 
-from jdaviz.configs.imviz.helper import link_image_data
-from jdaviz.core.events import LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage
+import astropy.units as u
+from jdaviz.configs.imviz.helper import link_image_data, get_bottom_layer
+from jdaviz.configs.imviz.wcs_utils import get_compass_info, _get_rotated_nddata_from_label
+from jdaviz.core.events import (
+    LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage, ChangeRefDataMessage
+)
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent
+from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelect
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['LinksControl']
 
+link_type_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
-@tray_registry('imviz-links-control', label="Links Control")
+
+@tray_registry('imviz-links-control', label="Links Control", viewer_requirements="image")
 class LinksControl(PluginTemplateMixin):
     """
     See the :ref:`Links Control Plugin Documentation <imviz-link-control>` for more details.
@@ -42,6 +48,18 @@ class LinksControl(PluginTemplateMixin):
     need_clear_markers = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
 
+    # rotation angle, counterclockwise [degrees]
+    rotation_angle = Unicode("0").tag(sync=True)
+    set_on_create = Bool(True).tag(sync=True)
+    relink = Bool(True).tag(sync=True)
+
+    viewer_items = List().tag(sync=True)
+    viewer_selected = Unicode().tag(sync=True)
+    layer_items = List().tag(sync=True)
+    layer_selected = Unicode().tag(sync=True)
+
+    multiselect = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -49,6 +67,10 @@ class LinksControl(PluginTemplateMixin):
                                                items='link_type_items',
                                                selected='link_type_selected',
                                                manual_options=['Pixels', 'WCS'])
+
+        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
+        self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected',
+                                 'multiselect', only_wcs_layers=True)  # noqa
 
         self.hub.subscribe(self, LinkUpdatedMessage,
                            handler=self._on_link_updated)
@@ -62,12 +84,20 @@ class LinksControl(PluginTemplateMixin):
         self.hub.subscribe(self, MarkersChangedMessage,
                            handler=self._on_markers_changed)
 
+        self.hub.subscribe(self, ChangeRefDataMessage,
+                           handler=self._on_refdata_change)
+
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('link_type', 'wcs_use_affine'))
+        return PluginUserApi(
+            self,
+            expose=(
+                'link_type', 'wcs_use_affine', 'viewer', 'layer'
+            )
+        )
 
     def _on_link_updated(self, msg):
-        self.link_type.selected = {'pixels': 'Pixels', 'wcs': 'WCS'}[msg.link_type]
+        self.link_type.selected = link_type_msg_to_trait[msg.link_type]
         self.linking_in_progress = True
         self.wcs_use_fallback = msg.wcs_use_fallback
         self.wcs_use_affine = msg.wcs_use_affine
@@ -127,9 +157,94 @@ class LinksControl(PluginTemplateMixin):
             self.wcs_use_affine = True
 
         self._link_image_data()
-
         self.linking_in_progress = False
 
     def vue_reset_markers(self, *args):
         for viewer in self.app._viewer_store.values():
             viewer.reset_markers()
+
+    def _get_wcs_angles(self):
+        degn, dege, flip = get_compass_info(self.ref_data.coords, self.ref_data.shape)[-3:]
+        return degn, dege, flip
+
+    @property
+    def rotation_angle_deg(self):
+        return float(self.rotation_angle) * u.deg
+
+    def create_new_orientation_from_data(self, data):
+        # Default rotation is the same orientation as the original reference data:
+        degn = get_compass_info(data.coords, data.shape)[-3]
+        ndd = _get_rotated_nddata_from_label(
+            self.app, data.label, -degn * u.deg + self.rotation_angle_deg
+        )
+        data_label = f'CCW {self.rotation_angle} deg'
+        self.app._jdaviz_helper.load_data(
+            ndd, data_label=data_label
+        )
+        if self.relink:
+            # this will trigger linking by wcs if not already selected:
+            self.link_type_selected = 'WCS'
+
+        # add orientation layer to all viewers:
+        self._add_data_to_all_viewers(data_label)
+
+        if self.set_on_create:
+            # set orientation (reference data layer) to be the new option:
+            self.app._change_reference_data(
+                data_label, viewer_id=self.viewer.selected
+            )
+
+    def _add_data_to_all_viewers(self, data_label):
+        for viewer in self.viewer.choices:
+            self.app.add_data_to_viewer(viewer, data_label)
+
+    def vue_create_new_orientation_from_data(self, *args, **kwargs):
+        if 'reference_data' not in kwargs:
+            # if not specified, use first-loaded image layer as the
+            # default rotation:
+            viewer = self.app.get_viewer(self.viewer.selected)
+            reference_data = get_bottom_layer(viewer)
+        self.create_new_orientation_from_data(reference_data)
+
+    @observe('layer_selected')
+    def _change_reference_data(self, *args, **kwargs):
+        if self._refdata_change_available:
+            self.app._change_reference_data(
+                self.layer.selected, viewer_id=self.viewer.selected
+            )
+
+    def _on_refdata_change(self, msg={}):
+        # don't select until viewer is available:
+        if hasattr(self, 'viewer'):
+            ref_data = self.ref_data
+            viewer = self.app.get_viewer(self.viewer.selected)
+
+            # don't select until reference data are available:
+            if ref_data is not None:
+                self.layer.selected = ref_data.label
+                link_type = viewer.get_link_type(ref_data.label)
+                if link_type != 'self':
+                    self.link_type_selected = link_type_msg_to_trait[link_type]
+            elif not len(viewer.data()):
+                self.link_type_selected = link_type_msg_to_trait['pixels']
+
+    @property
+    def ref_data(self):
+        return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
+
+    @property
+    def _refdata_change_available(self):
+        viewer = self.app.get_viewer(self.viewer.selected)
+        ref_data = self.ref_data
+        return (
+            ref_data is not None and len(viewer.data()) and
+            len(self.layer.selected) and len(self.viewer.selected)
+        )
+
+    @observe('viewer_selected')
+    def _on_viewer_change(self, msg={}):
+        # don't update choices until viewer is available:
+        if hasattr(self, 'viewer'):
+            viewer = self.app.get_viewer(self.viewer.selected)
+            self.layer.choices = viewer.state.wcs_only_layers
+            self.layer.selected = self.ref_data.label

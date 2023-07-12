@@ -1262,7 +1262,9 @@ class LayerSelect(SelectPluginComponent):
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
                  default_text=None, manual_options=[],
-                 default_mode='first'):
+                 default_mode='first',
+                 include_wcs=False,
+                 only_wcs_layers=False):
         """
         Parameters
         ----------
@@ -1283,6 +1285,7 @@ class LayerSelect(SelectPluginComponent):
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
         """
+
         super().__init__(plugin,
                          items=items,
                          selected=selected,
@@ -1291,6 +1294,9 @@ class LayerSelect(SelectPluginComponent):
                          default_text=default_text,
                          manual_options=manual_options,
                          default_mode=default_mode)
+
+        self.include_wcs = include_wcs
+        self.only_wcs_layers = only_wcs_layers
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_data_added)
@@ -1437,12 +1443,22 @@ class LayerSelect(SelectPluginComponent):
         # NOTE: _on_layers_changed is passed without a msg object during init
         # TODO: Handle changes to just one item without recompiling the whole thing
         manual_items = [{'label': label} for label in self.manual_options]
-        all_layers = [
-            layer for viewer in self.viewer_objs
-            for layer in getattr(viewer, 'layers', [])
-            # don't include WCS-only layers:
-            if not layer.layer.meta.get('_WCS_ONLY', False)
-        ]
+        # use getattr so the super() call above doesn't try to access the attr before
+        # it is initialized:
+        if not getattr(self, 'only_wcs_layers', False):
+            all_layers = [
+                layer for viewer in self.viewer_objs
+                for layer in getattr(viewer, 'layers', [])
+                # don't include WCS-only layers unless asked:
+                if not layer.layer.meta.get('_WCS_ONLY', False) or self.include_wcs
+            ]
+        else:
+            all_layers = [
+                layer for viewer in self.viewer_objs
+                for layer in getattr(viewer, 'layers', [])
+                # only include WCS-only layers:
+                if layer.layer.meta.get('_WCS_ONLY', False)
+            ]
         # remove duplicates - we'll loop back through all selected viewers to get a list of colors
         # and visibilities later within _layer_to_dict
         layer_labels = [layer.layer.label for layer in all_layers if self.app.state.layer_icons.get(layer.layer.label)]  # noqa

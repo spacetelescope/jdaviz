@@ -1,26 +1,34 @@
 <template>
   <j-tray-plugin
-    description='Re-link images by WCS or pixels.'
+    description="'Re-link images by WCS or pixels, or the rotate viewer.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'"
     :popout_button="popout_button">
 
     <div style="display: grid"> <!-- overlay container -->
       <div style="grid-area: 1/1">
-        <v-row>
-          <v-radio-group 
-            label="Link type"
-            hint="Type of linking to be done."
-            v-model="link_type_selected"
-            persistent-hint
-            row>
-            <v-radio
-              v-for="item in link_type_items"
-              :key="item.label"
-              :label="item.label"
-              :value="item.label"
-            ></v-radio>
-           </v-radio-group>
-        </v-row>
+        <v-radio-group
+          label="Link type"
+          hint="Type of linking to be done."
+          v-model="link_type_selected"
+          persistent-hint
+          row>
+          <v-radio
+            v-for="item in link_type_items"
+            :key="item.label"
+            :label="item.label"
+            :value="item.label"
+          ></v-radio>
+        </v-radio-group>
+        <v-col>
+          <plugin-viewer-select
+            :items="viewer_items"
+            :selected.sync="viewer_selected"
+            :multiselect="multiselect"
+            :label="multiselect ? 'Viewers' : 'Viewer'"
+            :show_if_single_entry="multiselect"
+            :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
+          />
+        </v-col>
 
         <v-row v-if="false">
           <v-switch
@@ -31,14 +39,49 @@
           </v-switch>
         </v-row>
 
-        <v-row v-if="link_type_selected == 'WCS'">
+        <div v-if="link_type_selected == 'WCS'">
+
           <v-switch
             label="Fast approximation"
             hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
             v-model="wcs_use_affine"
             persistent-hint>
           </v-switch>
-        </v-row>
+
+          <j-plugin-section-header>Orientation</j-plugin-section-header>
+
+
+          <v-col>
+              <plugin-layer-select
+                :items="layer_items"
+                :selected.sync="layer_selected"
+                :multiselect=false
+                :show_if_single_entry="true"
+                :label="'Orientation'"
+                :hint="'Select the viewer orientation'"
+              />
+              <v-text-field
+                v-model="rotation_angle"
+                label="Rotation angle"
+                hint="Degrees counterclockwise from default orientation"
+                persistent-hint
+              ></v-text-field>
+              <v-col>
+                <v-row justify="start">
+                  <v-switch
+                    label="Rotate on add"
+                    hint="Select this orientation when added"
+                    v-model="set_on_create"
+                    persistent-hint>
+                  </v-switch>
+                </v-row>
+                <v-row justify="end">
+                  <v-btn color="primary" text @click="create_new_orientation_from_data">Add option</v-btn>
+                </v-row>
+              </v-col>
+        </v-col>
+        </div>
+
       </div>
       <div v-if="need_clear_markers"
             class="text-center"
@@ -77,6 +120,7 @@
           width="6"
         ></v-progress-circular>
       </div>
+    </div>
   </j-tray-plugin>
 </template>
 

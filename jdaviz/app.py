@@ -491,7 +491,6 @@ class Application(VuetifyTemplate, HubListener):
             if is_wcs_only else 0
         )
         if layer_name not in self.state.layer_icons:
-            print('name', layer_name, 'is wcs', is_wcs_only)
             if is_wcs_only:
                 self.state.layer_icons = {**self.state.layer_icons,
                                           layer_name: wcs_only_refdata_icon}
@@ -504,7 +503,7 @@ class Application(VuetifyTemplate, HubListener):
     def _on_refdata_changed(self, msg):
         pass
 
-    def _change_reference_data(self, new_refdata_label):
+    def _change_reference_data(self, new_refdata_label, viewer_id=None):
         """
         Change reference data to Data with ``data_label``
         """
@@ -512,19 +511,22 @@ class Application(VuetifyTemplate, HubListener):
             # this method is only meant for Imviz for now
             return
 
-        viewer_id = f'{self.config}-0'  # Same as the ID in imviz.destroy_viewer()
-        viewer = self._jdaviz_helper.default_viewer
+        if viewer_id is None:
+            viewer = self._jdaviz_helper.default_viewer
+        else:
+            viewer = self.get_viewer(viewer_id)
+
         old_refdata = viewer.state.reference_data
+
+        if new_refdata_label == old_refdata.label:
+            # if there's no refdata change, don't do anything:
+            return
 
         # locate the central coordinate of old refdata in this viewer:
         sky_cen = viewer._get_center_skycoord(old_refdata)
 
         # estimate FOV in the viewer with old reference data:
         fov_sky_init = viewer._get_fov(old_refdata)
-
-        if new_refdata_label == old_refdata.label:
-            # if there's no refdata change, don't do anything:
-            return
 
         new_refdata = self.data_collection[new_refdata_label]
 
@@ -538,14 +540,14 @@ class Application(VuetifyTemplate, HubListener):
         viewer.state.reference_data = new_refdata
 
         # also update the viewer item's reference data label:
-        viewer_ref = self._jdaviz_helper.default_viewer.reference
+        viewer_ref = viewer.reference
         viewer_item = self._get_viewer_item(viewer_ref)
         viewer_item['reference_data_label'] = new_refdata.label
 
         self.hub.broadcast(ChangeRefDataMessage(
             new_refdata,
             viewer,
-            viewer_id=viewer_id,
+            viewer_id=viewer.reference,
             old=old_refdata,
             sender=self))
 
@@ -1881,7 +1883,8 @@ class Application(VuetifyTemplate, HubListener):
 
     def vue_change_reference_data(self, event):
         self._change_reference_data(
-            self._get_data_item_by_id(event['item_id'])['name']
+            self._get_data_item_by_id(event['item_id'])['name'],
+            viewer_id=self._get_viewer_item(event['id'])['name']
         )
 
     def set_data_visibility(self, viewer_reference, data_label, visible=True, replace=False):
@@ -2241,7 +2244,7 @@ class Application(VuetifyTemplate, HubListener):
             'linked_by_wcs': linked_by_wcs,
         }
 
-    def _on_new_viewer(self, msg, vid=None, name=None):
+    def _on_new_viewer(self, msg, vid=None, name=None, add_layers_to_viewer=False):
         """
         Callback for when the `~jdaviz.core.events.NewViewerMessage` message is
         raised. This method asks the application handler to generate a new
@@ -2292,6 +2295,10 @@ class Application(VuetifyTemplate, HubListener):
             viewer=viewer, vid=vid, name=name, reference=name
         )
 
+        if add_layers_to_viewer:
+            ref_data = self._jdaviz_helper.default_viewer.state.reference_data
+            new_viewer_item['reference_data_label'] = ref_data.label
+
         new_stack_item = self._create_stack_item(
             container='gl-stack',
             viewers=[new_viewer_item])
@@ -2308,6 +2315,12 @@ class Application(VuetifyTemplate, HubListener):
 
         # Send out a toast message
         self.hub.broadcast(ViewerAddedMessage(vid, sender=self))
+
+        if add_layers_to_viewer:
+            for layer_label in add_layers_to_viewer:
+                self.add_data_to_viewer(viewer.reference, layer_label)
+
+            viewer.state.reference_data = ref_data
 
         return viewer
 

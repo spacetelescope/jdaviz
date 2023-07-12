@@ -52,9 +52,14 @@ class Imviz(ImageConfigHelper):
 
         # Cannot assign data to real Data because it loads but it will
         # not update checkbox in Data menu.
+
+        # add WCS-only layers from all viewers into the new viewer
+        add_layers_to_viewer = get_wcs_only_layer_labels(self.app)
+
         return self.app._on_new_viewer(
             NewViewerMessage(ImvizImageView, data=None, sender=self.app),
-            vid=viewer_name, name=viewer_name)
+            vid=viewer_name, name=viewer_name,
+            add_layers_to_viewer=add_layers_to_viewer)
 
     def destroy_viewer(self, viewer_id):
         """Destroy a viewer associated with the given ID.
@@ -375,6 +380,19 @@ def layer_is_table_data(layer):
     return isinstance(layer, BaseData) and layer.ndim == 1
 
 
+def get_bottom_layer(viewer):
+    """
+    Get the first-loaded image layer in Imviz.
+    """
+    return [lyr.layer for lyr in viewer.layers
+            if lyr.visible and layer_is_image_data(lyr.layer)][0]
+
+
+def get_wcs_only_layer_labels(app):
+    return [data.label for data in app.data_collection
+            if layer_is_wcs_only(data)]
+
+
 def get_top_layer_index(viewer):
     """Get index of the top visible image layer in Imviz.
     This is because when blinked, first layer might not be top visible layer.
@@ -384,11 +402,15 @@ def get_top_layer_index(viewer):
             if lyr.visible and layer_is_image_data(lyr.layer)][-1]
 
 
-def get_reference_image_data(app):
+def get_reference_image_data(app, viewer_id=None):
     """
     Return the reference data in the first image viewer and its index
     """
-    refdata = app._jdaviz_helper.default_viewer.state.reference_data
+    if viewer_id is None:
+        refdata = app._jdaviz_helper.default_viewer.state.reference_data
+    else:
+        viewer = app.get_viewer_by_id(viewer_id)
+        refdata = viewer.state.reference_data
 
     if refdata is not None:
         iref = app.data_collection.index(refdata)
@@ -451,7 +473,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
         Invalid inputs or reference data.
 
     """
-    if len(app.data_collection) <= 1:  # No need to link, we are done.
+    if len(app.data_collection) <= 1 and link_type != 'wcs':  # No need to link, we are done.
         return
 
     if link_type not in ('pixels', 'wcs'):
@@ -499,7 +521,13 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
             app, refdata.label, rotation_angle
         )
         app._jdaviz_helper.load_data(ndd, base_wcs_layer_label)
-        app._change_reference_data(base_wcs_layer_label)
+
+        # set base layer to reference data in all viewers:
+        for viewer_id in app.get_viewer_ids():
+            app._change_reference_data(
+                base_wcs_layer_label, viewer_id=viewer_id
+            )
+
         refdata, iref = get_reference_image_data(app)
 
     links_list = []
@@ -578,8 +606,12 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
                                              wcs_fallback_scheme == 'pixels',
                                              wcs_use_affine,
                                              sender=app))
+
         if insert_base_wcs_layer:
-            app._jdaviz_helper.default_viewer.state.reset_limits()
+            # update all viewer items with reference data:
+            for viewer_id in app.get_viewer_ids():
+                viewer_item = app._get_viewer_item(viewer_id)
+                viewer_item['reference_data_label'] = refdata.label
 
         # reset the progress spinner
         link_plugin.linking_in_progress = False
