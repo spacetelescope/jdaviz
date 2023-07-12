@@ -17,10 +17,6 @@ from jdaviz.core.marks import PluginScatter
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.utils import get_subset_type
-<<<<<<< HEAD
-=======
-
->>>>>>> 838b075e ( generalize handling of composite subsets when determining subset type)
 
 __all__ = ['CoordsInfo']
 

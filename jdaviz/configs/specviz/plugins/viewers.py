@@ -379,13 +379,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         # that new data entries (from model fitting or gaussian smooth, etc) will only be spectra
         # and all subsets affected will be spectral
         for layer in self.state.layers:
-<<<<<<< HEAD
             if (isinstance(layer.layer, GroupedSubset)
                     and get_subset_type(layer.layer) == 'spectral'
                     and layer.layer.data.label == data.label):
-=======
-            if get_subset_type(layer.layer) == 'spectral' and layer.layer.data.label == data.label:
->>>>>>> 838b075e ( generalize handling of composite subsets when determining subset type)
                 layer.linewidth = 3
 
         return result
