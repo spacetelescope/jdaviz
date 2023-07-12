@@ -24,7 +24,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     * :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
     """
     template_file = __file__, "markers.vue"
-    has_previews = Bool(True).tag(sync=True)
+    uses_active_status = Bool(True).tag(sync=True)
 
     _default_table_values = {'spectral_axis': np.nan,
                              'spectral_axis:unit': '',
@@ -80,7 +80,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
     def _create_viewer_callbacks(self, viewer):
-        if not self.show_previews:
+        if not self.is_active:
             return
 
         callback = self._viewer_callback(viewer, self._on_viewer_key_event)
@@ -107,14 +107,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def coords_info(self):
         return self.app.session.application._tools['g-coords-info']
 
-    @observe('show_previews')
-    def _on_show_previews_changed(self, *args):
+    @observe('is_active')
+    def _on_is_active_changed(self, *args):
         if self.disabled_msg:
             return
 
         # toggle visibility of markers
         for mark in self.marks.values():
-            mark.visible = self.show_previews
+            mark.visible = self.is_active
 
         # subscribe/unsubscribe to keypress events across all viewers
         for viewer in self.app._viewer_store.values():
@@ -123,7 +123,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 continue
             callback = self._viewer_callback(viewer, self._on_viewer_key_event)
 
-            if self.show_previews:
+            if self.is_active:
                 viewer.add_event_callback(callback, events=['keydown'])
             else:
                 viewer.remove_event_callback(callback)

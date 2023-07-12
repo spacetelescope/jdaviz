@@ -28,7 +28,7 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
 
     mp = cubeviz_helper.plugins['Markers']
-    mp.open_in_tray()
+    mp.keep_active = True
 
     # test event in flux viewer
     label_mouseover._viewer_mouse_event(fv,
@@ -112,8 +112,8 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
     assert len(_get_markers_from_viewer(fv).x) == 1
     assert len(_get_markers_from_viewer(sv).x) == 2
 
-    # markers hide when plugin closed (since persistent_previews == False)
-    cubeviz_helper.app.state.drawer = False
+    # markers hide when plugin closed and keep_active = False
+    mp.keep_active = False
     assert _get_markers_from_viewer(fv).visible is False
     assert _get_markers_from_viewer(sv).visible is False
 

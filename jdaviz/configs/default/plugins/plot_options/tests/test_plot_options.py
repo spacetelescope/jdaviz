@@ -63,6 +63,7 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
 def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
     po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
+    po.open_in_tray()
 
     assert po.stretch_histogram is not None
 

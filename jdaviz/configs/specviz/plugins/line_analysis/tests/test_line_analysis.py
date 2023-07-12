@@ -17,7 +17,7 @@ def test_plugin(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -25,8 +25,8 @@ def test_plugin(specviz_helper, spectrum1d):
     assert len(continuum_marks) == 3
     assert np.all([cm.visible for cm in continuum_marks])
 
-    # disabling persistent_previews should hide the continuum
-    plugin.persistent_previews = False
+    # disabling keep_active should hide the continuum
+    plugin.keep_active = False
     assert np.all([cm.visible is False for cm in continuum_marks])
 
     # add a region and rerun stats for that region
@@ -63,7 +63,7 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
     cubeviz_helper.app.state.drawer = True
 
     plugin = cubeviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     plugin.spatial_subset_selected = 'Subset 1'
     plugin.spectral_subset_selected = 'Subset 2'
@@ -85,7 +85,7 @@ def test_user_api(specviz_helper, spectrum1d):
     sv.apply_roi(XRangeROI(6500, 7400))
 
     la = specviz_helper.plugins['Line Analysis']
-    la.persistent_previews = True
+    la.keep_active = True
 
     # spectral subset does not support multiselect
     assert "multiselect" not in la.spectral_subset.__repr__()
@@ -183,7 +183,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -210,7 +210,7 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -237,7 +237,7 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -262,7 +262,7 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -289,7 +289,7 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -322,7 +322,7 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -350,7 +350,7 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
@@ -378,7 +378,7 @@ def test_subset_changed(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    plugin.persistent_previews = True
+    plugin.keep_active = True
 
     # continuum should be created, plotted, and visible
     sv = specviz_helper.app.get_viewer('spectrum-viewer')

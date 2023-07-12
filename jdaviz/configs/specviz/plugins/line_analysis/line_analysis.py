@@ -97,7 +97,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
-    has_previews = Bool(True).tag(sync=True)
+    uses_active_status = Bool(True).tag(sync=True)
 
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
@@ -206,26 +206,26 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if (msg.subset.label in [self.spectral_subset_selected,
                                  self.spatial_subset_selected,
                                  self.continuum_subset_selected]
-                and (self.show_previews or self.plugin_opened_in_tray)):
+                and self.is_active):
             self._calculate_statistics()
 
     def _on_global_display_unit_changed(self, msg):
-        if self.show_previews:
+        if self.is_active:
             self._calculate_statistics()
 
-    @observe('show_previews')
-    def _show_previews_changed(self, *args):
+    @observe('is_active')
+    def _is_active_changed(self, msg):
         if self.disabled_msg:
             return
 
         for pos, mark in self.marks.items():
-            mark.visible = self.show_previews
-        if self.show_previews:
+            mark.visible = self.is_active
+        if self.is_active:
             self._calculate_statistics()
 
-    @deprecated(since="3.6", alternative="persistent_previews")
+    @deprecated(since="3.6", alternative="keep_active")
     def show_continuum_marks(self):
-        self.persistent_previews = True
+        self.keep_active = True
 
     @property
     def marks(self):
@@ -247,9 +247,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 return {}
             # then haven't been initialized yet, so initialize with empty
             # marks that will be populated once the first analysis is done.
-            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.show_previews),
-                     'center': LineAnalysisContinuumCenter(viewer, visible=self.show_previews),
-                     'right': LineAnalysisContinuumRight(viewer, visible=self.show_previews)}
+            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.is_active),
+                     'center': LineAnalysisContinuumCenter(viewer, visible=self.is_active),
+                     'right': LineAnalysisContinuumRight(viewer, visible=self.is_active)}
             shadows = [ShadowLine(mark, shadow_width=2) for mark in marks.values()]
             # NOTE: += won't trigger the figure to notice new marks
             viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())

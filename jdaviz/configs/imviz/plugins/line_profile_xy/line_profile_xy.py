@@ -52,10 +52,10 @@ class LineProfileXY(PluginTemplateMixin):
         self.plot_across_y.clear_all_marks()
 
     # This is also triggered from viewer code.
-    @observe("selected_viewer")
+    @observe("plugin_opened", "selected_viewer")
     def vue_draw_plot(self, *args, **kwargs):
         """Draw line profile plots for given Data across given X and Y indices (0-indexed)."""
-        if not self.selected_x or not self.selected_y:
+        if not self.selected_x or not self.selected_y or not self.plugin_opened:
             return
 
         viewer = self.app.get_viewer_by_id(self.selected_viewer)

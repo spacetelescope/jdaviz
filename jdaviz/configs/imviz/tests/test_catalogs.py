@@ -38,7 +38,7 @@ class TestCatalogs:
         self.imviz = imviz_helper
 
         catalogs_plugin = self.imviz.app.get_tray_item_from_name('imviz-catalogs')
-        catalogs_plugin.plugin_active = True
+        catalogs_plugin.open_in_tray()
         # running the search without any data loaded into Imviz
         catalogs_plugin.vue_do_search()
 
@@ -54,7 +54,7 @@ class TestCatalogs:
         self.imviz = imviz_helper
 
         catalogs_plugin = self.imviz.app.get_tray_item_from_name('imviz-catalogs')
-        catalogs_plugin.plugin_active = True
+        catalogs_plugin.open_in_tray()
         catalogs_plugin.vue_do_search()
 
         # number of results should be 0
@@ -91,7 +91,7 @@ class TestCatalogs:
         self.imviz = imviz_helper
 
         catalogs_plugin = self.imviz.app.get_tray_item_from_name('imviz-catalogs')
-        catalogs_plugin.plugin_active = True
+        catalogs_plugin.open_in_tray()
         # This basically calls the following under the hood:
         #   skycoord_center = SkyCoord(6.62754354, 1.54466139, unit="deg")
         #   zoom_radius = r_max = 3 * u.arcmin

@@ -91,6 +91,9 @@ Bug Fixes
 
 - Fixed ``cls`` input being ignored in ``viz.get_data()``. [#2242]
 
+- Live-previews and keypress events that depend on the plugin being opened now work for inline
+  and popout windows. [#2295]
+
 Cubeviz
 ^^^^^^^
 

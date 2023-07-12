@@ -13,12 +13,12 @@
       <span> {{ getDisabledMsg() }}</span>
     </v-row>
     <div v-else>
-      <v-row v-if="has_previews">
+      <v-row v-if="uses_active_status">
         <v-switch
-          v-model="persistent_previews"
-          @change="$emit('update:persistent_previews', $event)"
-          label="persistent live-preview"
-          hint="show live-preview even when plugin is not opened"
+          v-model="keep_active"
+          @change="$emit('update:keep_active', $event)"
+          label="keep active"
+          hint="consider plugin active (showing any previews and enabling all keypress events) even when not opened"
           persistent-hint>
         </v-switch>
       </v-row>
@@ -30,7 +30,7 @@
 <script>
 module.exports = {
   props: ['disabled_msg', 'description', 'link', 'popout_button',
-          'has_previews', 'plugin_ping', 'persistent_previews'],
+          'uses_active_status', 'plugin_ping', 'keep_active'],
   methods: {
     isDisabled() {
       return this.getDisabledMsg().length > 0
@@ -45,7 +45,7 @@ module.exports = {
       this.$emit('update:plugin_ping', Date.now())
       setTimeout(() => {
         this.sendPing()
-      }, 100)  // ms
+      }, 200)  // ms
     }
   },
   mounted() {

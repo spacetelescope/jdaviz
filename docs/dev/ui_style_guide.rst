@@ -8,7 +8,7 @@ Tray Plugins
 In order to be consistent with layout, styling, and spacing, UI development on plugins should
 try to adhere to the following principles:
 
-* Any tray plugin should utilize ``<j-tray-plugin :has_previews="has_previews" :plugin_ping.sync="plugin_ping" :persistent_previews.sync="persistent_previews" :disabled_msg='disabled_msg' :popout_button="popout_button">`` as the
+* Any tray plugin should utilize ``<j-tray-plugin :uses_active_status="uses_active_status" :plugin_ping.sync="plugin_ping" :keep_active.sync="keep_active" :disabled_msg='disabled_msg' :popout_button="popout_button">`` as the
   outer-container (which provides consistent styling rules).  Any changes to style
   across all plugins should then take place in the
   ``j-tray-plugin`` stylesheet (``jdaviz/components/tray_plugin.vue``).

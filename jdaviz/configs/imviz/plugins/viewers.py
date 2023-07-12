@@ -80,7 +80,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 self.blink_once(reversed=key_pressed=='B')  # noqa: E225
 
             # TODO: move into plugin callback?
-            elif key_pressed == 'l':
+            elif key_pressed == 'l' and self.line_profile_xy.plugin_opened:
                 # Same data as mousemove above.
                 image = self.active_image_layer.layer
                 x = data['domain']['x']
