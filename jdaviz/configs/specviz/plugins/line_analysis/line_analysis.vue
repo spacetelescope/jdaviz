@@ -133,7 +133,7 @@
         ></v-progress-circular>
       </div>
 
-      <div v-if="lines_loaded">
+      <div v-if="line_items.length > 0">
         <j-plugin-section-header>Redshift from Centroid</j-plugin-section-header>
         <v-row>
           <j-docs-link>Assign the centroid reported above to the observed wavelength of a given line and set the resulting redshift.  Lines must be loaded and plotted through the Line Lists plugin first.</j-docs-link>

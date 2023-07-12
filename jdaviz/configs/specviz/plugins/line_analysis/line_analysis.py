@@ -115,7 +115,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     identified_line = Unicode("").tag(sync=True)
     selected_line = Unicode("").tag(sync=True)
     selected_line_redshift = Float(0).tag(sync=True)
-    lines_loaded = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
 
@@ -287,7 +286,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         return self.results
 
     def _on_plotted_lines_changed(self, msg):
-        self.lines_loaded = True if len(msg.marks) > 0 else False
         self.line_marks = msg.marks
         self.line_items = msg.names_rest
         if self.selected_line not in self.line_items:
