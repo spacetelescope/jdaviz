@@ -269,7 +269,8 @@ def get_subset_type(subset):
 
     Parameters
     ----------
-    subset : should have ``subset_state`` as an attribute, otherwise will return ``None``.
+    subset : glue.core.subset.Subset or glue.core.subset_group.GroupedSubset
+        should have ``subset_state`` as an attribute, otherwise will return ``None``.
 
     Returns
     -------
