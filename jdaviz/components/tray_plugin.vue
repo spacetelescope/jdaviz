@@ -13,6 +13,15 @@
       <span> {{ getDisabledMsg() }}</span>
     </v-row>
     <div v-else>
+      <v-row v-if="has_previews">
+        <v-switch
+          v-model="persistent_previews"
+          @change="$emit('update:persistent_previews', $event)"
+          label="persistent live-preview"
+          hint="show live-preview even when plugin is not opened"
+          persistent-hint>
+        </v-switch>
+      </v-row>
       <slot></slot>
     </div>
   </v-container>
@@ -20,7 +29,8 @@
 
 <script>
 module.exports = {
-  props: ['disabled_msg', 'description', 'link', 'popout_button'],
+  props: ['disabled_msg', 'description', 'link', 'popout_button',
+          'has_previews', 'plugin_ping', 'persistent_previews'],
   methods: {
     isDisabled() {
       return this.getDisabledMsg().length > 0
@@ -28,7 +38,19 @@ module.exports = {
     getDisabledMsg() {
       return this.disabled_msg || ''
     },
-  }
+    sendPing() {
+      if (!this.$el.isConnected) {
+        return
+      }
+      this.$emit('update:plugin_ping', Date.now())
+      setTimeout(() => {
+        this.sendPing()
+      }, 100)  // ms
+    }
+  },
+  mounted() {
+    this.sendPing();
+  },
 };
 </script>
 

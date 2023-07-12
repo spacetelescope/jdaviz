@@ -3,7 +3,10 @@ from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import astropy.units as u
 import bqplot
+from contextlib import contextmanager
 import numpy as np
+import threading
+import time
 
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
@@ -19,7 +22,7 @@ from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
-from traitlets import Any, Bool, HasTraits, List, Unicode, observe
+from traitlets import Any, Bool, HasTraits, Integer, List, Unicode, observe
 
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
@@ -225,10 +228,16 @@ class PluginTemplateMixin(TemplateMixin):
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
     disabled_msg = Unicode("").tag(sync=True)
-    plugin_opened = Bool(False).tag(sync=True)
+    plugin_opened_in_tray = Bool(False).tag(sync=True)  # plugin is opened in the tray
+    plugin_ping = Integer(0).tag(sync=True)
+    plugin_active = Bool(False).tag(sync=True)  # any instance of the plugin has recently pinged
+    has_previews = Bool(False).tag(sync=True)  # whether the plugin has live-preview marks, set in plugins
+    persistent_previews = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state
+    show_previews = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to settings above
 
     def __init__(self, **kwargs):
         self._viewer_callbacks = {}
+        self._inactive_thread = None
         super().__init__(**kwargs)
         self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
         self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
@@ -238,6 +247,29 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
+
+    @observe('plugin_ping')
+    def _plugin_ping_changed(self, *args):
+        if self.plugin_ping == 0:
+            return
+        self.plugin_active = True
+
+        if self._inactive_thread is not None and self._inactive_thread.is_alive():
+            return
+
+        self._inactive_thread = threading.Thread(target=self._watch_active)
+        self._inactive_thread.start()
+
+    def _watch_active(self):
+        expected_delay_ms = 100
+        plugin_ping = self.plugin_ping  # ms
+        now = time.time() * 1000  # s -> ms
+        while now - plugin_ping < 1.5 * expected_delay_ms:
+            time.sleep(expected_delay_ms / 1000)
+            now = time.time() * 1000 # s -> ms
+            plugin_ping = self.plugin_ping
+
+        self.plugin_active = False
 
     def _viewer_callback(self, viewer, plugin_method):
         """
@@ -264,7 +296,7 @@ class PluginTemplateMixin(TemplateMixin):
     def _mxn_update_plugin_opened(self, new_value):
         app_state = self.app.state
         tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
-        self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
+        self.plugin_opened_in_tray = app_state.drawer and self._registry_name in tray_names_open
 
     def open_in_tray(self):
         """
@@ -275,6 +307,20 @@ class PluginTemplateMixin(TemplateMixin):
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
+
+    @observe('plugin_active', 'persistent_previews')
+    def _update_show_previews(self, *args):
+        self.show_previews = self.persistent_previews or self.plugin_active
+
+    @contextmanager
+    def temporarily_show_previews(self):
+        """
+        Context manager to temporarily enable persistent live-previews
+        """
+        _persistent_previews = self.persistent_previews
+        self.persistent_previews = True
+        yield
+        self.persistent_previews = _persistent_previews
 
     def show(self, loc="inline", title=None):  # pragma: no cover
         """Display the plugin UI.

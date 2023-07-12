@@ -86,6 +86,8 @@ class PluginUserApi(UserApiWrapper):
     """
     def __init__(self, plugin, expose=[], readonly=[]):
         expose = list(set(list(expose) + ['open_in_tray', 'show']))
+        if plugin.has_previews:
+            expose += ['persistent_previews', 'temporarily_show_previews']
         super().__init__(plugin, expose, readonly)
 
     def __repr__(self):

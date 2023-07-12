@@ -2,6 +2,9 @@
   <j-tray-plugin
     description="Return statistics for a single spectral line."
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-analysis'"
+    :has_previews="has_previews"
+    :plugin_ping.sync="plugin_ping"
+    :persistent_previews.sync="persistent_previews"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">
 

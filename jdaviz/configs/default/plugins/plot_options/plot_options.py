@@ -445,6 +445,10 @@ class PlotOptions(PluginTemplateMixin):
 
         return PluginUserApi(self, expose)
 
+    def show(self, *args, **kwargs):
+        super().show(*args, **kwargs)
+        self._update_stretch_histogram()
+
     @observe('show_viewer_labels')
     def _on_show_viewer_labels_changed(self, event):
         self.app.state.settings['viewer_labels'] = event['new']
@@ -479,8 +483,7 @@ class PlotOptions(PluginTemplateMixin):
         value = data.get('value')
         setattr(self, attr_name, value)
 
-    @observe('plugin_opened', 'layer_selected', 'viewer_selected',
-             'stretch_hist_zoom_limits')
+    @observe('plugin_opened_in_tray', 'layer_selected', 'viewer_selected', 'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, msg={}):
         if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
             # no (image) viewer with stretch function options
@@ -488,9 +491,7 @@ class PlotOptions(PluginTemplateMixin):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet
             return
-        if (not self.plugin_opened
-                or not self.viewer.selected
-                or not self.layer.selected):  # pragma: no cover
+        if (not self.viewer.selected or not self.layer.selected):  # pragma: no cover
             # no need to make updates, updates will be redrawn when plugin is opened
             # NOTE: this won't update when the plugin is shown but not open in the tray
             return
@@ -504,7 +505,8 @@ class PlotOptions(PluginTemplateMixin):
                                  or len(self.layer.selected) > 1):  # pragma: no cover
             # currently only support single-layer/viewer.  For now we'll just clear and return.
             # TODO: add support for multi-layer/viewer
-            bqplot_clear_figure(self.stretch_histogram)
+            if self.stretch_histogram is not None:
+                bqplot_clear_figure(self.stretch_histogram)
             return
 
         viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
