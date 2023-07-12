@@ -5,6 +5,7 @@ from astropy import table
 from astropy import units as u
 from glue.core import BaseData
 from glue.core.subset import Subset
+from glue.core.subset_group import GroupedSubset
 from glue.config import data_translator
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.core.exceptions import IncompatibleAttribute
@@ -378,7 +379,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         # that new data entries (from model fitting or gaussian smooth, etc) will only be spectra
         # and all subsets affected will be spectral
         for layer in self.state.layers:
-            if get_subset_type(layer.layer) == 'spectral' and layer.layer.data.label == data.label:
+            if (isinstance(layer.layer, GroupedSubset)
+                    and get_subset_type(layer.layer) == 'spectral'
+                    and layer.layer.data.label == data.label):
                 layer.linewidth = 3
 
         return result

@@ -445,7 +445,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             if isinstance(lyr.layer, GroupedSubset):
                 subset_state = getattr(lyr.layer, 'subset_state', None)
                 if subset_state is None:
-                    return False
+                    continue
                 subset_type = get_subset_type(subset_state)
                 if subset_type == 'spectral':
                     # then this is a SPECTRAL subset

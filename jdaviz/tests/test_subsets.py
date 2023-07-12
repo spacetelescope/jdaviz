@@ -5,12 +5,14 @@ from astropy.tests.helper import assert_quantity_allclose
 from glue.core import Data
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
+from glue.core.subset_group import GroupedSubset
 from regions import (PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion,
                      CircleAnnulusPixelRegion)
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.marks import ShadowSpatialSpectral
+from jdaviz.utils import get_subset_type
 
 
 def test_region_from_subset_2d(cubeviz_helper):
@@ -409,6 +411,10 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     assert reg[1]['subset_state'].roi.xmin == 25
     assert reg[1]['subset_state'].roi.xmax == 30
 
+    for layer in viewer.state.layers:
+        if isinstance(layer.layer, GroupedSubset):
+            assert get_subset_type(layer.layer.subset_state) == 'spatial'
+
 
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = np.ones((10, 10))
@@ -502,6 +508,10 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
 
     subset_plugin.vue_simplify_subset()
     assert subset_plugin.glue_state_types == ["RangeSubsetState", "OrState"]
+
+    for layer in viewer.state.layers:
+        if isinstance(layer.layer, GroupedSubset):
+            assert get_subset_type(layer.layer.subset_state) == 'spectral'
 
 
 def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
