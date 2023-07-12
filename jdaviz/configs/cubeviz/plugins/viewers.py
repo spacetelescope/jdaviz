@@ -169,10 +169,6 @@ class CubevizProfileView(SpecvizProfileView):
         # delete any ShadowSpatialSpectral mark for which either of the spectral or spatial marks
         # no longer exists by matching the uuid of the msg subset to the uuid of the subsets
         # in ShadowSpatialSpectral
-        # spectral_marks = self._get_marks_for_layers([layer for layer in self._get_spectral_subset_layers() # noqa
-        #                                              if layer.layer.uuid == msg.subset.uuid])
-        # spatial_marks = self._get_marks_for_layers([layer for layer in self._get_spatial_subset_layers() # noqa
-        #                                             if layer.layer.uuid == msg.subset.uuid])
         self.figure.marks = [m for m in self.figure.marks
                              if not (isinstance(m, ShadowSpatialSpectral)
                                      and msg.subset.uuid in [m.spatial_uuid, m.spectral_uuid])]
@@ -230,8 +226,6 @@ class CubevizProfileView(SpecvizProfileView):
                     new_marks.append(new_shadow)
 
         elif subset_type == 'spectral':
-            # layer_state.linewidth = 1
-
             # need to add marks for every intersection between THIS spectral subset and ALL spatial
             # subset marks corresponding to this data
             spatial_layers = [sub_layer for sub_layer in
