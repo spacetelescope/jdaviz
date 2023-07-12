@@ -19,7 +19,11 @@ class _ImvizMatchedZoomMixin(_MatchedZoomMixin):
     disable_matched_zoom_in_other_viewer = False
 
     def _is_matched_viewer(self, viewer):
-        return isinstance(viewer, BqplotImageView)
+        # only match zooms in viewers that share reference data
+        return (
+            isinstance(viewer, BqplotImageView) and
+            viewer.state.reference_data == self.viewer.state.reference_data
+        )
 
     def _post_activate(self):
         # NOTE: For Imviz only.
