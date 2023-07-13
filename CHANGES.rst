@@ -121,6 +121,9 @@ Other Changes and Additions
 
 - Added direct launchers for each config (e.g. ``specviz``) [#1960]
 
+- Replacing existing data from a plugin (e.g., refitting a model with the same label)
+  now preserves the plot options of the data as previously displayed. [#2288]
+
 3.5.1 (unreleased)
 ==================
 
