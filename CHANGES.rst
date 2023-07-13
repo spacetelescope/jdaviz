@@ -95,7 +95,9 @@ Cubeviz
 - Moment Map plugin now writes FITS file to working directory if no path provided
   in standalone mode. [#2264]
 
-- Fixes detection of spatial vs spectral subsets for composite subsets. [#2207, #2266, #2291]
+- Fixes detection of spatial vs spectral subsets for composite subsets.
+  Also fixes the shadow mark that shows the intersection between spatial and spectral
+  subsets. [#2207, #2266, #2291]
 
 Imviz
 ^^^^^
