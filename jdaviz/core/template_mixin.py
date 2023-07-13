@@ -1890,7 +1890,7 @@ class AddResults(BasePluginComponent):
         """
 
         # Note that we can only preserve one of percentile or vmin+vmax
-        ignore_attributes = ("layer", "attribute")
+        ignore_attributes = ("layer", "attribute", "percentile")
 
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
@@ -1917,7 +1917,8 @@ class AddResults(BasePluginComponent):
                         add_to_viewer_vis.append(label in viewer_item['visible_layers'])
                         preserve_these = {}
                         for att in layer.state.as_dict():
-                            if att not in ignore_attributes:
+                            # Can't set cmap_att, size_att, etc
+                            if att not in ignore_attributes and "_att" not in att:
                                 preserve_these[att] = getattr(layer.state, att)
                         preserved_attributes.append(preserve_these)
         else:
