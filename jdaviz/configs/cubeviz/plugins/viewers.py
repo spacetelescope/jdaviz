@@ -112,8 +112,8 @@ class CubevizProfileView(SpecvizProfileView):
                            handler=self._check_if_data_removed)
 
         # TODO: Find out why this is not working
-        self.hub.subscribe(self, DataCollectionDeleteMessage,
-                           handler=self._check_if_data_removed)
+        # self.hub.subscribe(self, DataCollectionDeleteMessage,
+        #                    handler=self._check_if_data_removed)
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._check_if_data_added)
@@ -126,6 +126,9 @@ class CubevizProfileView(SpecvizProfileView):
                                      and m.data_uuid == msg.data.uuid)]
 
     def _check_if_data_added(self, msg=None):
+        # When data is added, make sure that all spatial subset layers
+        # that correspond with that data are checked for intersections
+        # with spectral subset layers
         for layer in self.state.layers:
             if layer.layer.data.label == msg.data.label:
                 if (isinstance(layer.layer, GroupedSubset) and
@@ -133,7 +136,6 @@ class CubevizProfileView(SpecvizProfileView):
                     self._expected_subset_layer_default(layer)
 
     def _is_spatial_subset(self, layer):
-        # spatial subset layers will have the same data-label as the collapsed flux cube
         subset_state = getattr(layer.layer, 'subset_state', None)
         return get_subset_type(subset_state) == 'spatial'
 
