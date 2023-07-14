@@ -10,7 +10,7 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
     def test_plugin_linked_by_pixel(self):
         """Go through plugin logic but does not check plot contents."""
         lp_plugin = self.imviz.app.get_tray_item_from_name('imviz-line-profile-xy')
-        lp_plugin.open_in_tray()
+        lp_plugin.plugin_opened = True
 
         lp_plugin._on_viewers_changed()  # Populate plugin menu items.
         assert lp_plugin.viewer_items == ['imviz-0']

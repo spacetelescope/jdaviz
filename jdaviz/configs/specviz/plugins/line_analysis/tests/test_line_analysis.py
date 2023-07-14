@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.testing import assert_allclose
 import pytest
 from astropy import units as u
 from astropy.table import QTable
@@ -162,7 +163,7 @@ def test_line_identify(specviz_helper, spectrum1d):
 
     # manually update redshift
     la_plugin.vue_line_assign()
-    assert la_plugin.selected_line_redshift == -1.0
+    assert_allclose(la_plugin.selected_line_redshift, 0.4594414354783614)
 
 
 def test_coerce_unit():

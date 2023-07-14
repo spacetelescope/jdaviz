@@ -322,11 +322,7 @@ class LineListTool(PluginTemplateMixin):
             msg = RedshiftMessage("redshift", value, sender=self)
             self.app.hub.broadcast(msg)
 
-    @observe('plugin_opened')
     def _update_line_list_obs(self, *args):
-        if not self.plugin_opened:
-            return
-
         for list_name, line_list in self.list_contents.items():
             for i, line in enumerate(line_list['lines']):
                 if self._rs_line_obs_change[0] == list_name and self._rs_line_obs_change[1] == i:  # noqa

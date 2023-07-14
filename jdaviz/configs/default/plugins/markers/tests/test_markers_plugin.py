@@ -118,7 +118,7 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
     assert _get_markers_from_viewer(sv).visible is False
 
     # markers re-appear when plugin re-opened
-    mp.open_in_tray()
+    mp._obj.plugin_opened = True
     assert _get_markers_from_viewer(fv).visible is True
     assert _get_markers_from_viewer(sv).visible is True
     assert len(_get_markers_from_viewer(fv).x) == 1

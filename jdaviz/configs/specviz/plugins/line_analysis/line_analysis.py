@@ -184,6 +184,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:
+            self.disabled_msg = 'Line Analysis unavailable without spectral data'
             return
 
         if viewer_data.spectral_axis.unit == u.pix:
@@ -275,7 +276,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
             raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
 
-        self._calculate_statistics(ignore_plugin_closed=True)
+        self._calculate_statistics()
         return self.results
 
     def _on_plotted_lines_changed(self, msg):
@@ -304,6 +305,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None or self.dataset_selected == '':  # noqa
             # during initial init, this can trigger before the component is initialized
             return
+        if self.disabled_msg != '':
+            self.update_results(None)
+            return
 
         # call directly since this observe may be triggered before the spectral_subset_valid
         # traitlet is updated
@@ -323,6 +327,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
 
         spectral_axis = full_spectrum.spectral_axis
+        if spectral_axis.unit == u.pix:
+            # plugin should be disabled so not get this far, but can still get here
+            # before the disabled message is set
+            self.update_results(None)
+            return
 
         if self.continuum_subset_selected == self.spectral_subset_selected:
             # already raised a validation error in the UI
