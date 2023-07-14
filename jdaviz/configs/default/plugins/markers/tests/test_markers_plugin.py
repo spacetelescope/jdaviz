@@ -136,7 +136,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
 
         mp = self.imviz.plugins['Markers']
-        mp.open_in_tray()
+        mp.plugin_opened = True
 
         # cycle through dataset options (used for both coords info and markers)
         assert label_mouseover.dataset.choices == ['auto', 'none',
@@ -217,7 +217,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
 
         mp = self.imviz.plugins['Markers']
-        mp.open_in_tray()
+        mp.plugin_opened = True
 
         nv = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs[SCI,1]')

@@ -64,8 +64,7 @@ def test_redshift(specviz_helper, spectrum1d):
         specviz_helper.load_line_list(lt)
 
     # open the plugin so that all updates run
-    ll_plugin.open_in_tray()
-    print("*** 1", ll_plugin.plugin_opened)
+    ll_plugin.plugin_opened = True
     line = ll_plugin.list_contents['Test List']['lines'][0]
     assert_allclose(line['obs'], line['rest'])
     # test API access
@@ -89,7 +88,6 @@ def test_redshift(specviz_helper, spectrum1d):
     ll_plugin.vue_change_line_obs({'list_name': 'Test List',
                                    'line_ind': 0,
                                    'obs_new': 5508})
-    print("***", ll_plugin.plugin_opened)
     assert_allclose(line['obs'], 5508)
     assert ll_plugin.rs_redshift == 0.10005991611743559
 
