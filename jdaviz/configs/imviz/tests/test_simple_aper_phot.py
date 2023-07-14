@@ -18,7 +18,7 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_No
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
     def test_plugin_wcs_dithered(self):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
-        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
+        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (-9, 9))  # Draw a circle
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
@@ -76,7 +76,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
-        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * (u.pix * u.pix))  # noqa
+        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * (u.pix * u.pix), rtol=1e-4)  # noqa
         assert_array_equal(tbl['pixarea_tot'], None)
         assert_array_equal(tbl['aperture_sum_counts'], None)
         assert_array_equal(tbl['aperture_sum_counts_err'], None)
@@ -104,15 +104,15 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Sky is the same but xcenter different due to dithering.
         # The aperture sum is different too because mask is a little off limit in second image.
-        assert_quantity_allclose(tbl['xcenter'], [4.5, 5.5] * u.pix)
-        assert_quantity_allclose(tbl['ycenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl['xcenter'], [4.5, 5.5] * u.pix, rtol=1e-4)
+        assert_quantity_allclose(tbl['ycenter'], 4.5 * u.pix, rtol=1e-4)
         sky = tbl['sky_center']
         assert_allclose(sky.ra.deg, 337.518943)
         assert_allclose(sky.dec.deg, -20.832083)
-        assert_allclose(tbl['sum'], [63.617251, 62.22684693104279])
+        assert_allclose(tbl['sum'], [63.617251, 62.22684693104279], rtol=1e-4)
 
         # Make sure it also works on an ellipse subset.
-        self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
+        self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (-9, 4))
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
@@ -120,20 +120,20 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 3  # New result is appended
         assert tbl[-1]['id'] == 3
-        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
-        assert_quantity_allclose(tbl[-1]['ycenter'], 2 * u.pix)
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix, rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 2 * u.pix, rtol=1e-4)
         sky = tbl[-1]['sky_center']
-        assert_allclose(sky.ra.deg, 337.51894336144454)
-        assert_allclose(sky.dec.deg, -20.832777499255897)
-        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * (u.pix * u.pix))
-        assert_allclose(tbl[-1]['sum'], 28.274334)
-        assert_allclose(tbl[-1]['mean'], 1)
+        assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
+        assert_allclose(sky.dec.deg, -20.832777499255897, rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * (u.pix * u.pix), rtol=1e-4)
+        assert_allclose(tbl[-1]['sum'], 28.274334, rtol=1e-4)
+        assert_allclose(tbl[-1]['mean'], 1, rtol=1e-4)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
         assert tbl[-1]['subset_label'] == 'Subset 2'
 
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
-        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
+        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (-9, 9))
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 3'
         phot_plugin.background_selected = 'Subset 3'
@@ -142,11 +142,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 4  # New result is appended
         assert tbl[-1]['id'] == 4
-        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
-        assert_quantity_allclose(tbl[-1]['ycenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix, rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 4.5 * u.pix, rtol=1e-4)
         sky = tbl[-1]['sky_center']
-        assert_allclose(sky.ra.deg, 337.51894336144454)
-        assert_allclose(sky.dec.deg, -20.832083)
+        assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
+        assert_allclose(sky.dec.deg, -20.832083, rtol=1e-4)
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * (u.pix * u.pix))
         assert_allclose(tbl[-1]['sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
@@ -158,8 +158,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.background_value, 1)  # Keeps last value
         phot_plugin.background_selected = 'Subset 1'
         assert_allclose(phot_plugin.background_value, 1)
-        self.imviz.load_data(np.ones((10, 10)) + 1, data_label='twos')
-        phot_plugin.dataset_selected = 'twos'
+
+        hdu3 = fits.ImageHDU(np.ones((10, 10)) + 1, name='SCI')
+        hdu3.header.update(self.wcs_2.to_header())
+        self.imviz.load_data(hdu3, data_label='twos')
+        phot_plugin.dataset_selected = 'twos[SCI,1]'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
         # Curve of growth

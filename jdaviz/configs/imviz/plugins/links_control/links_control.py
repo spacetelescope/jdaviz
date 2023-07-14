@@ -1,6 +1,8 @@
-from traitlets import List, Unicode, Bool, Float, observe
+from traitlets import List, Unicode, Bool, observe
 
 from glue.core.message import DataCollectionAddMessage
+from glue.core.subset import Subset
+from glue.core.subset_group import GroupedSubset
 
 import astropy.units as u
 from jdaviz.configs.imviz.helper import link_image_data, get_bottom_layer
@@ -9,7 +11,9 @@ from jdaviz.core.events import (
     LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage, ChangeRefDataMessage
 )
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelect
+from jdaviz.core.template_mixin import (
+    PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelect
+)
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['LinksControl']
@@ -236,9 +240,16 @@ class LinksControl(PluginTemplateMixin):
     def _refdata_change_available(self):
         viewer = self.app.get_viewer(self.viewer.selected)
         ref_data = self.ref_data
+        selected_layer = [lyr.layer for lyr in viewer.layers
+                          if lyr.layer.label == self.layer.selected]
+        if len(selected_layer):
+            is_subset = isinstance(selected_layer[0], (Subset, GroupedSubset))
+        else:
+            is_subset = False
         return (
             ref_data is not None and len(viewer.data()) and
-            len(self.layer.selected) and len(self.viewer.selected)
+            len(self.layer.selected) and len(self.viewer.selected) and
+            not is_subset
         )
 
     @observe('viewer_selected')

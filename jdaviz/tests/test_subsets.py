@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from glue.core import Data
@@ -486,7 +487,7 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
 
 
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
-    arr = np.ones((10, 10))
+    arr = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
 
     data_label = 'image-data'
     viewer = imviz_helper.default_viewer._obj

@@ -12,6 +12,7 @@ from astropy import units as u
 from astropy.nddata import NDData
 from astropy.io import fits
 from astropy.time import Time
+from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -481,11 +482,8 @@ class Application(VuetifyTemplate, HubListener):
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
-<<<<<<< HEAD
-        wcs_only_refdata_icon = 'mdi-rotate-left'
-=======
         wcs_only_refdata_icon = 'mdi-compass-outline'
->>>>>>> 8021b45b (click data menu items to set as refdata)
+
         n_wcs_layers = (
             len([icon.startswith('mdi-rotate-left') for icon in self.state.layer_icons])
             if is_wcs_only else 0
@@ -560,8 +558,14 @@ class Application(VuetifyTemplate, HubListener):
                 float(fov_sky_final / fov_sky_init)
             )
 
-        # re-center the viewer on previous location
-        viewer.center_on(sky_cen)
+        # only re-center the viewer if all data layers have WCS:
+        data_has_wcs = [
+            hasattr(d, 'coords') and isinstance(d.coords, BaseHighLevelWCS)
+            for d in viewer.data()
+        ]
+        if all(data_has_wcs):
+            # re-center the viewer on previous location.
+            viewer.center_on(sky_cen)
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """

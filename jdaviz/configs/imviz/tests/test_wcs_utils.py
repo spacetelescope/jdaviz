@@ -9,6 +9,7 @@ from gwcs import coordinate_frames as cf
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz import wcs_utils
+from jdaviz.configs.imviz.helper import base_wcs_layer_label
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_GWCS
 
 
@@ -116,20 +117,23 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         self.imviz.link_data(link_type="wcs")
         assert len(self.imviz.app.data_collection) == 3
 
+        # Confirm the WCS-only layer is created by WCS-linking .
+        assert len(self.viewer.state.wcs_only_layers) == 1
+
         # Load a WCS-only layer, bypassing normal labeling scheme.
         ndd = wcs_utils._get_rotated_nddata_from_label(
             app=self.imviz.app,
             data_label="fits_wcs[DATA]",
             rotation_angle=5 * u.deg
         )
-        self.imviz.load_data(ndd, data_label=self.imviz.app._wcs_only_label)
-        assert self.imviz.app.data_collection[3].label == self.imviz.app._wcs_only_label
+        self.imviz.load_data(ndd, data_label='ndd')
+        assert self.imviz.app.data_collection[3].label == 'ndd'
 
         # Confirm that all data in collection are labeled.
         assert len(self.imviz.app.state.layer_icons) == 4  # 3 + 1
 
-        # Confirm the WCS-only layer is logged.
-        assert len(self.viewer.state.wcs_only_layers) == 1
+        # Confirm the new WCS-only layer is logged.
+        assert len(self.viewer.state.wcs_only_layers) == 2
 
         # Load a second WCS-only layer.
         ndd2 = wcs_utils._get_rotated_nddata_from_label(
@@ -144,12 +148,12 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert len(self.imviz.app.data_collection) == 5  # 3 + 2
         assert len(self.imviz.app.state.layer_icons) == 5
 
-        # Confirm the WCS-only layer is logged.
-        assert len(self.viewer.state.wcs_only_layers) == 2
+        # Confirm the second WCS-only layer is logged
+        assert len(self.viewer.state.wcs_only_layers) == 3
 
         # First entry is image data and the default reference data.
         assert self.imviz.app.state.layer_icons["fits_wcs[DATA]"] == "a"
-        assert self.viewer.state.reference_data.label == "fits_wcs[DATA]"
+        assert self.viewer.state.reference_data.label == base_wcs_layer_label
 
         wcs_only_icon = "mdi-rotate-left"
 
@@ -168,8 +172,8 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
             assert self.imviz.app.state.layer_icons[data_label] == wcs_only_icon
 
         # Change reference back to normal data.
-        self.imviz.app._change_reference_data("fits_wcs[DATA]")
-        assert self.viewer.state.reference_data.label == "fits_wcs[DATA]"
+        self.imviz.app._change_reference_data(base_wcs_layer_label)
+        assert self.viewer.state.reference_data.label == base_wcs_layer_label
         for i in (3, 4):
             data_label = self.imviz.app.data_collection[i].label
             assert self.imviz.app.state.layer_icons[data_label] == wcs_only_icon

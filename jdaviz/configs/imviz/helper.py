@@ -5,6 +5,8 @@ from copy import deepcopy
 
 import numpy as np
 import astropy.units as u
+from astropy.wcs.wcsapi import BaseHighLevelWCS
+from gwcs.wcs import WCS as GWCS
 from glue.core import BaseData
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
@@ -427,7 +429,7 @@ def get_reference_image_data(app, viewer_id=None):
     return refdata, iref
 
 
-def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_use_affine=True,
+def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_affine=True,
                     error_on_fail=False, update_plugin=True):
     """(Re)link loaded data in Imviz with the desired link type.
 
@@ -481,7 +483,21 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):
         raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
                          f"got {wcs_fallback_scheme}")
-
+    if link_type == 'wcs':
+        all_data_have_wcs = all([
+            hasattr(d, 'coords') and isinstance(d.coords, (BaseHighLevelWCS, GWCS))
+            for d in app.data_collection
+        ])
+        if not all_data_have_wcs:
+            if wcs_fallback_scheme is None:
+                if error_on_fail:
+                    raise ValueError("link_type can only be 'wcs' when wcs_fallback_scheme "
+                                     "is 'None' if all data have valid WCS.")
+                else:
+                    return
+            else:
+                # fall back on pixel linking
+                link_type = 'pixels'
     # if the plugin exists, send a message so that the plugin's state is updated and spinner
     # is shown (the plugin will make a call back here)
     if 'imviz-links-control' in [item['name'] for item in app.state.tray_items]:
@@ -626,4 +642,3 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
         # if changing from one link type to another, reset the limits:
         if old_link_type is not None and link_type != old_link_type:
             viewer.state.reset_limits()
-

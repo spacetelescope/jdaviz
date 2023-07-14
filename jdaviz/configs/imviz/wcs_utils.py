@@ -291,8 +291,7 @@ def _rotated_gwcs(
     rotation_angle,
     pixel_scales,
     cdelt_signs,
-    #refdata_shape=(10, 10),
-    refdata_shape=(2, 2),
+    refdata_shape=(10, 10),
     image_shape=None
 ):
     # based on ``gwcs_simple_imaging_units`` in gwcs:
@@ -388,21 +387,32 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
             1
         )]) * u.deg / u.pix
     else:
-        # fall back on CRVAL cards:
-        wcsinfo = data.meta['wcsinfo']
-        crval1 = float(wcsinfo.get('CRVAL1', wcsinfo.get('crval1')))
-        crval2 = float(wcsinfo.get('CRVAL2', wcsinfo.get('crval2')))
-        cdelt = [
-            float(wcsinfo.get('CDELT1', wcsinfo.get('cdelt1'))),
-            float(wcsinfo.get('CDELT2', wcsinfo.get('cdelt2')))
-        ]
-        unit = u.Unit(wcsinfo.get('CUNIT1', wcsinfo.get('cunit1')))
-        fiducial = [crval1, crval2] * unit
-        pixel_scales = (2 * [compute_scale(
-            WCS(data.meta['_primary_header'])
-            if 'wcs' not in data.meta else data.meta['wcs'],
-            fiducial, None, 1
-        )]) * u.deg / u.pix
+        # fall back on CRVAL cards if they're available
+        wcsinfo = (
+            data.meta.get('wcsinfo', None) or
+            data.meta.get('_primary_header', None) or
+            data.meta.get('wcs', None)
+        )
+        if wcsinfo is not None:
+            crval1 = float(wcsinfo.get('CRVAL1', wcsinfo.get('crval1')))
+            crval2 = float(wcsinfo.get('CRVAL2', wcsinfo.get('crval2')))
+            cdelt = [
+                float(wcsinfo.get('CDELT1', wcsinfo.get('cdelt1'))),
+                float(wcsinfo.get('CDELT2', wcsinfo.get('cdelt2')))
+            ]
+            unit = u.Unit(wcsinfo.get('CUNIT1', wcsinfo.get('cunit1')))
+            fiducial = [crval1, crval2] * unit
+            pixel_scales = (2 * [compute_scale(
+                WCS(data.meta['_primary_header'])
+                if 'wcs' not in data.meta else data.meta['wcs'],
+                fiducial, None, 1
+            )]) * u.deg / u.pix
+        else:
+            # fall back on simple approximation:
+            compare_pixel_coords = [[0, 0], [0, 1]] * u.pix
+            compare_sky_coords = data.coords.pixel_to_world(*compare_pixel_coords)
+            separation = compare_sky_coords[0].separation(compare_sky_coords[1])
+            pixel_scales = u.Quantity([separation, separation]) / u.pix
 
     # flip e.g. RA or Dec axes?
     if cdelt_signs is None and cdelt is not None:
@@ -552,7 +562,11 @@ def compute_scale(wcs, fiducial,
     crpix_with_offsets = np.vstack((crpix, crpix + delta, crpix + np.roll(delta, 1))).T
     crval_with_offsets = wcs(*crpix_with_offsets, with_bounding_box=False)
 
-    coords = SkyCoord(ra=crval_with_offsets[spatial_idx[0]], dec=crval_with_offsets[spatial_idx[1]], unit="deg")
+    coords = SkyCoord(
+        ra=crval_with_offsets[spatial_idx[0]],
+        dec=crval_with_offsets[spatial_idx[1]],
+        unit="deg"
+    )
     xscale = np.abs(coords[0].separation(coords[1]).value)
     yscale = np.abs(coords[0].separation(coords[2]).value)
 

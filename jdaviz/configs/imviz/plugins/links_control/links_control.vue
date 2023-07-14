@@ -37,30 +37,32 @@
             persistent-hint>
           </v-switch>
         </v-row>
+        <v-col v-if="link_type_selected == 'WCS'">
+          <plugin-viewer-select
+            :items="viewer_items"
+            :selected.sync="viewer_selected"
+            :multiselect="multiselect"
+            :label="multiselect ? 'Viewers' : 'Viewer'"
+            :show_if_single_entry="multiselect"
+            :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set orientation'"
+          />
+          <plugin-layer-select
+            :items="layer_items"
+            :selected.sync="layer_selected"
+            :multiselect=false
+            :show_if_single_entry="true"
+            :label="'Orientation in viewer'"
+            :hint="'Select the viewer orientation'"
+          />
+        </v-col>
 
         <div style="grid-area: 1/1">
         </div>
         <div v-if="link_type_selected == 'WCS'">
 
-          <j-plugin-section-header>Orientation</j-plugin-section-header>
+          <j-plugin-section-header>Add orientation options</j-plugin-section-header>
 
           <v-col>
-              <plugin-viewer-select
-                :items="viewer_items"
-                :selected.sync="viewer_selected"
-                :multiselect="multiselect"
-                :label="multiselect ? 'Viewers' : 'Viewer'"
-                :show_if_single_entry="multiselect"
-                :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
-              />
-              <plugin-layer-select
-                :items="layer_items"
-                :selected.sync="layer_selected"
-                :multiselect=false
-                :show_if_single_entry="true"
-                :label="'Orientation in viewer'"
-                :hint="'Select the viewer orientation'"
-              />
               <v-text-field
                 v-model="rotation_angle"
                 label="Rotation angle"
