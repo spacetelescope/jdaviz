@@ -1,7 +1,6 @@
 from glue.core import BaseData
 
 from glue.core.subset_group import GroupedSubset
-from glue.core.message import DataCollectionDeleteMessage
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
