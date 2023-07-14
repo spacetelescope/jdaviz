@@ -17,7 +17,8 @@ from jdaviz.core.events import (AddDataMessage,
                                 SpectralMarksChangedMessage,
                                 LineIdentifyMessage,
                                 RedshiftMessage,
-                                GlobalDisplayUnitChanged)
+                                GlobalDisplayUnitChanged,
+                                SnackbarMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -457,10 +458,20 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         flux=spec_subtracted.flux,
                         uncertainty=spec_subtracted.uncertainty)
 
-                    raw_result = analysis.line_flux(freq_spec)
+                    try:
+                        raw_result = analysis.line_flux(freq_spec)
+                    except ValueError as e:
+                        # can happen if interpolation out-of-bounds or any error from specutils
+                        # let's avoid the whole app crashing and instead expose the error to the
+                        # user
+                        self.hub.broadcast(SnackbarMessage(
+                            f"failed to calculate line analysis statistics: {e}", sender=self,
+                            color="warning"))
+                        self.update_results(None)
+                        return
+
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Jy/u.sr):
-
                         final_unit = u.Unit('W/(m2 sr)')
                     else:
                         final_unit = u.Unit('W/m2')
@@ -479,7 +490,17 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                                                        equivalencies=u.spectral()),
                         flux=spec_subtracted.flux,
                         uncertainty=spec_subtracted.uncertainty)
-                    raw_result = analysis.line_flux(wave_spec)
+                    try:
+                        raw_result = analysis.line_flux(wave_spec)
+                    except ValueError as e:
+                        # can happen if interpolation out-of-bounds or any error from specutils
+                        # let's avoid the whole app crashing and instead expose the error to the
+                        # user
+                        self.hub.broadcast(SnackbarMessage(
+                            f"failed to calculate line analysis statistics: {e}", sender=self,
+                            color="warning"))
+                        self.update_results(None)
+                        return
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Unit('W/(m2 m)'/u.sr)):
                         final_unit = u.Unit('W/(m2 sr)')
