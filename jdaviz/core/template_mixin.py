@@ -15,7 +15,6 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
-from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
@@ -28,6 +27,7 @@ from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage)
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
+from jdaviz.utils import get_subset_type
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
@@ -93,18 +93,6 @@ def show_widget(widget, loc, title):  # pragma: no cover
 
     else:
         raise ValueError(f"Unrecognized display location: {loc}")
-
-
-def _subset_type(subset):
-    while hasattr(subset.subset_state, 'state1'):
-        # this assumes no mixing between spatial and spectral subsets and just
-        # taking the first component (down the hierarchical tree) to determine the type
-        subset = subset.subset_state.state1
-
-    if isinstance(subset.subset_state, RoiSubsetState):
-        return 'spatial'
-    else:
-        return 'spectral'
 
 
 class ViewerPropertiesMixin:
@@ -1014,8 +1002,8 @@ class SubsetSelect(SelectPluginComponent):
             for layer in viewer.layers:
                 if layer.layer.label == subset.label:
                     color = layer.state.color
-                    subset_type = _subset_type(subset)
-                    return {"label": subset.label, "color": color, "type": subset_type}
+                    type = get_subset_type(subset)
+                    return {"label": subset.label, "color": color, "type": type}
         return {"label": subset.label, "color": False, "type": False}
 
     def _delete_subset(self, subset):
@@ -1027,10 +1015,10 @@ class SubsetSelect(SelectPluginComponent):
 
     def _is_valid_item(self, subset):
         def is_spectral(subset):
-            return _subset_type(subset) == 'spectral'
+            return get_subset_type(subset) == 'spectral'
 
         def is_spatial(subset):
-            return _subset_type(subset) == 'spatial'
+            return get_subset_type(subset) == 'spatial'
 
         def is_not_composite(subset):
             return not hasattr(subset.subset_state, 'state1')
@@ -1511,7 +1499,7 @@ class DatasetSelect(SelectPluginComponent):
         # for changes in style, etc, we'll try to filter out extra messages in advance.
         def _subset_update(msg):
             if msg.attribute == 'subset_state':
-                if _subset_type(msg.subset) == 'spatial':
+                if get_subset_type(msg.subset) == 'spatial':
                     self._on_data_changed()
 
         self.hub.subscribe(self, SubsetUpdateMessage,
@@ -1624,7 +1612,7 @@ class DatasetSelect(SelectPluginComponent):
         if getattr(self, '_include_spatial_subsets', False):
             # allow for spatial subsets to be listed
             self.items = self.items + [_dc_to_dict(subset) for subset in self.app.data_collection.subset_groups  # noqa
-                                       if _subset_type(subset) == 'spatial']
+                                       if get_subset_type(subset) == 'spatial']
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)
@@ -1903,6 +1891,10 @@ class AddResults(BasePluginComponent):
         Add ``data_item`` to the app's data_collection according to the default or user-provided
         label and adds to any requested viewers.
         """
+
+        # Note that we can only preserve one of percentile or vmin+vmax
+        ignore_attributes = ("layer", "attribute", "percentile")
+
         if self.label_invalid_msg:
             raise ValueError(self.label_invalid_msg)
 
@@ -1914,22 +1906,33 @@ class AddResults(BasePluginComponent):
             # entry should be the same as the original entry (to avoid deleting reference data)
             add_to_viewer_refs = []
             add_to_viewer_vis = []
+            preserved_attributes = []
             for viewer_select_item in self.add_to_viewer_items[1:]:
                 # index 0 is for "None"
                 viewer_ref = viewer_select_item['reference']
                 viewer_item = self.app._viewer_item_by_reference(viewer_ref)
                 viewer = self.app.get_viewer(viewer_ref)
-                viewer_loaded_labels = [layer.layer.label for layer in viewer.layers]
-                if label in viewer_loaded_labels:
-                    add_to_viewer_refs.append(viewer_ref)
-                    add_to_viewer_vis.append(label in viewer_item['visible_layers'])
+                for layer in viewer.layers:
+                    if layer.layer.label != label:
+                        continue
+                    else:
+                        add_to_viewer_refs.append(viewer_ref)
+                        add_to_viewer_vis.append(label in viewer_item['visible_layers'])
+                        preserve_these = {}
+                        for att in layer.state.as_dict():
+                            # Can't set cmap_att, size_att, etc
+                            if att not in ignore_attributes and "_att" not in att:
+                                preserve_these[att] = getattr(layer.state, att)
+                        preserved_attributes.append(preserve_these)
         else:
             if self.add_to_viewer_selected == 'None':
                 add_to_viewer_refs = []
                 add_to_viewer_vis = []
+                preserved_attributes = []
             else:
                 add_to_viewer_refs = [self.add_to_viewer_selected]
                 add_to_viewer_vis = [True]
+                preserved_attributes = [{}]
 
         if label in self.app.data_collection:
             for viewer_ref in add_to_viewer_refs:
@@ -1943,17 +1946,24 @@ class AddResults(BasePluginComponent):
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
         self.app.add_data(data_item, label)
 
-        for viewer_ref, visible in zip(add_to_viewer_refs, add_to_viewer_vis):
+        for viewer_ref, visible, preserved in zip(add_to_viewer_refs, add_to_viewer_vis,
+                                                  preserved_attributes):
             # replace the contents in the selected viewer with the results from this plugin
+            this_viewer = self.app.get_viewer(viewer_ref)
             if replace is not None:
                 this_replace = replace
             else:
-                this_viewer = self.app.get_viewer(viewer_ref)
                 this_replace = isinstance(this_viewer, BqplotImageView)
 
             self.app.add_data_to_viewer(viewer_ref,
                                         label,
                                         visible=visible, clear_other_data=this_replace)
+
+            if preserved != {}:
+                layer_state = [layer.state for layer in this_viewer.layers if
+                               layer.layer.label == label][0]
+                for att in preserved:
+                    setattr(layer_state, att, preserved[att])
 
         # update overwrite warnings, etc
         self._on_label_changed()

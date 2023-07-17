@@ -20,6 +20,8 @@ New Features
 
 - Data menu single select will default to the first element. [#2298]
 
+- Line Analysis "Redshift from Centroid" only visible when lines are loaded. [#2294]
+
 Cubeviz
 ^^^^^^^
 
@@ -97,6 +99,10 @@ Cubeviz
 - Moment Map plugin now writes FITS file to working directory if no path provided
   in standalone mode. [#2264]
 
+- Fixes detection of spatial vs spectral subsets for composite subsets.
+  Also fixes the shadow mark that shows the intersection between spatial and spectral
+  subsets. [#2207, #2266, #2291]
+
 Imviz
 ^^^^^
 
@@ -118,6 +124,9 @@ Other Changes and Additions
 - CLI launchers no longer require data to be specified [#1960]
 
 - Added direct launchers for each config (e.g. ``specviz``) [#1960]
+
+- Replacing existing data from a plugin (e.g., refitting a model with the same label)
+  now preserves the plot options of the data as previously displayed. [#2288]
 
 3.5.1 (unreleased)
 ==================

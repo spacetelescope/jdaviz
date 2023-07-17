@@ -459,7 +459,8 @@ class ShadowSpatialSpectral(Lines, HubListener, ShadowMixin):
     Shadow the mark of a spatial subset collapsed spectrum, with the mask from a spectral subset,
     and the styling from the spatial subset.
     """
-    def __init__(self, spatial_spectrum_mark, spectral_subset_mark):
+    def __init__(self, spatial_spectrum_mark, spectral_subset_mark, spatial_uuid, spectral_uuid,
+                 data_uuid):
         # spatial_spectrum_mark: Lines mark corresponding to the spatially-collapsed spectrum
         # from a spatial subset
         # spectral_subset_mark: Lines mark on the FULL cube corresponding to the glue-highlight
@@ -470,10 +471,13 @@ class ShadowSpatialSpectral(Lines, HubListener, ShadowMixin):
         self._setup_shadowing(spatial_spectrum_mark,
                               ['scales', 'y', 'visible', 'line_style'],
                               ['x'])
+        self.spatial_uuid = spatial_uuid
 
         self._spectral_mark_id = self._get_id(spectral_subset_mark)
         self._setup_shadowing(spectral_subset_mark,
                               ['stroke_width', 'x', 'y', 'visible', 'opacities', 'colors'])
+        self.spectral_uuid = spectral_uuid
+        self.data_uuid = data_uuid
 
     @property
     def spatial_spectrum_mark(self):

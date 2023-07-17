@@ -4,13 +4,15 @@ from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core import Data
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
-from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
+from glue.core.subset_group import GroupedSubset
+from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode, NewMode
 from regions import (PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion,
                      CircleAnnulusPixelRegion)
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.marks import ShadowSpatialSpectral
+from jdaviz.utils import get_subset_type
 
 
 def test_region_from_subset_2d(cubeviz_helper):
@@ -188,7 +190,8 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     # https://github.com/spacetelescope/jdaviz/issues/1853
     cubeviz_helper.plugins['Gaussian Smooth'].smooth(add_data=True)
 
-    spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
+    spectrum_viewer_name = cubeviz_helper._default_spectrum_viewer_reference_name
+    spectrum_viewer = cubeviz_helper.app.get_viewer(spectrum_viewer_name)
     spectrum_viewer.apply_roi(XRangeROI(5, 15.5))
 
     # should be no spatial-spectral intersection marks yet
@@ -199,7 +202,7 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
     flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
 
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 1  # noqa
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
 
     subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
     reg = subsets.get('Subset 1')
@@ -226,7 +229,55 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['jdaviz:panzoom']
     spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
     spectrum_viewer.apply_roi(XRangeROI(3, 16))
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 4  # noqa
+
+    # Delete the spatial subset to make sure ALL ShadowSpatialSpectral marks are removed
+    dc = cubeviz_helper.app.data_collection
+    dc.remove_subset_group(dc.subset_groups[1])
+
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 0  # noqa
+
+    spectrum_viewer.session.edit_subset_mode._mode = NewMode
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
+    flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
+
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 4  # noqa
+
+    # This creates a composite subset, which tests if ShadowSpatialSpectral marks are added
+    # to those types of subsets as well
+    spectrum_viewer.session.edit_subset_mode._mode = OrMode
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
+    flux_viewer.apply_roi(RectangularROI(0, 2, 2, 4))
+
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 4  # noqa
+
+    # Delete one of the spectral subsets to make sure the other is still applied as two
+    # ShadowSpatialSpectral objects. One for the data's spatial subset and the other for the
+    # smoothed data's spatial subset
+    dc.remove_subset_group(dc.subset_groups[0])
+
     assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
+
+    # Make sure that ShadowSpectralSpatial objects become invisible with data
+    cubeviz_helper.app.set_data_visibility(cubeviz_helper._default_spectrum_viewer_reference_name,
+                                           dc[-1].label, visible=False)
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral) and m.visible]) == 1  # noqa
+    cubeviz_helper.app.set_data_visibility(cubeviz_helper._default_spectrum_viewer_reference_name,
+                                           dc[-1].label, visible=True)
+
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
+
+    # Test that removing and adding the data from the viewer removes and adds
+    # the shadow marks accordingly
+    cubeviz_helper.app.remove_data_from_viewer(spectrum_viewer_name, dc[-1].label)
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 1  # noqa
+    cubeviz_helper.app.add_data_to_viewer(spectrum_viewer_name, dc[-1].label)
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
+
+    # Remove the smoothed data to make sure the ShadowSpatialSpectral object still applies to
+    # the original data's spatial subset
+    dc.remove(dc[-1])
+    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 1  # noqa
 
 
 def test_disjoint_spatial_subset(cubeviz_helper, spectral_cube_wcs):
@@ -409,6 +460,10 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     assert reg[1]['subset_state'].roi.xmin == 25
     assert reg[1]['subset_state'].roi.xmax == 30
 
+    for layer in viewer.state.layers:
+        if isinstance(layer.layer, GroupedSubset):
+            assert get_subset_type(layer.layer.subset_state) == 'spatial'
+
 
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = np.ones((10, 10))
@@ -502,6 +557,10 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
 
     subset_plugin.vue_simplify_subset()
     assert subset_plugin.glue_state_types == ["RangeSubsetState", "OrState"]
+
+    for layer in viewer.state.layers:
+        if isinstance(layer.layer, GroupedSubset):
+            assert get_subset_type(layer.layer.subset_state) == 'spectral'
 
 
 def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
