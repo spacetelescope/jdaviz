@@ -203,7 +203,7 @@ class CubevizProfileView(SpecvizProfileView):
             return
 
         this_mark = self._get_marks_for_layers([layer_state])[0]
-        # what new ShadowSpatialSpectral marks will be added
+        # new ShadowSpatialSpectral marks to be added
         new_marks = []
         # ShadowSpatialSpectral marks that already exists in the viewer
         existing_shadows_for_data = [m for m in self.figure.marks
