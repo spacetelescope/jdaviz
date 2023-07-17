@@ -27,7 +27,7 @@
               <j-tooltip :tipid="multi_select ? 'viewer-data-select-enabled' : 'viewer-data-radio-enabled'">
                 <v-btn
                   icon
-                  @click="() => {multi_select = !multi_select}"
+                  @click="toggleMultiSelect"
                   style="opacity: 0.7"
                   >
                     <img :src="multi_select ? icons.checktoradial : icons.radialtocheck" width="24"/>
@@ -175,6 +175,24 @@ module.exports = {
     toggleShowExtraItems() {
       // toggle the visibility of the extra items in the menu
       this.showExtraItems = !this.showExtraItems
+    },
+    toggleMultiSelect() {
+      this.multi_select = !this.multi_select
+      if (this.multi_select === false){
+        // If we're toggling to single select, set the first item visibility to replace the rest
+        // Find the "first" item
+        for (item_index in this.filteredDataItems){
+          if (this.$props.viewer.selected_data_items[this.filteredDataItems[item_index].id] === 'visible') {
+            this.$emit('data-item-visibility', {
+              id: this.$props.viewer.id,
+              item_id: this.filteredDataItems[item_index].id,
+              visible: true,
+              replace: true})
+            break;
+          }
+        }
+      }
+      
     },
   },
   computed: {

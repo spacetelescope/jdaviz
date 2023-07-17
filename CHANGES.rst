@@ -18,6 +18,8 @@ New Features
 
 - Viewer toolbar items hide themselves when they are not applicable. [#2284]
 
+- Data menu single select will default to the first element. [#2298]
+
 - Line Analysis "Redshift from Centroid" only visible when lines are loaded. [#2294]
 
 Cubeviz
