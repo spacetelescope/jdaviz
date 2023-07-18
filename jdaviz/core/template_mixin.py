@@ -22,7 +22,7 @@ from glue.core.subset import RoiSubsetState
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
-from traitlets import Any, Bool, HasTraits, Integer, List, Unicode, observe
+from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
@@ -228,7 +228,6 @@ class PluginTemplateMixin(TemplateMixin):
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
     disabled_msg = Unicode("").tag(sync=True)
-    plugin_ping = Integer(0).tag(sync=True)
     plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
@@ -237,6 +236,7 @@ class PluginTemplateMixin(TemplateMixin):
     def __init__(self, **kwargs):
         self._viewer_callbacks = {}
         self._inactive_thread = None  # thread checking for alive pings to control plugin_opened
+        self._ping_timestamp = 0
         super().__init__(**kwargs)
 
     @property
@@ -245,11 +245,9 @@ class PluginTemplateMixin(TemplateMixin):
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
 
-    @observe('plugin_ping')
-    def _plugin_ping_changed(self, *args):
-        if self.plugin_ping == 0:
-            # initial traitlet state
-            return
+    def vue_plugin_ping(self, ping_timestamp):
+        self._ping_timestamp = ping_timestamp
+
         # we've received a ping, so immediately set plugin_opened state to True
         if not self.plugin_opened:
             self.plugin_opened = True
@@ -271,7 +269,7 @@ class PluginTemplateMixin(TemplateMixin):
         expected_delay_ms = 200
         # plugin_ping (ms) set by setTimeout in tray_plugin.vue
         # time.time() is in s, so need to convert to ms
-        while time.time()*1000 - self.plugin_ping < 2 * expected_delay_ms:
+        while time.time()*1000 - self._ping_timestamp < 2 * expected_delay_ms:
             # at least one plugin has sent an "alive" ping within twice of the expected
             # interval, wait a full (double) interval and then check again
             time.sleep(2 * expected_delay_ms / 1000)

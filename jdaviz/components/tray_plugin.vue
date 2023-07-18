@@ -30,7 +30,7 @@
 <script>
 module.exports = {
   props: ['disabled_msg', 'description', 'link', 'popout_button',
-          'uses_active_status', 'plugin_ping', 'keep_active'],
+          'uses_active_status', 'keep_active'],
   methods: {
     isDisabled() {
       return this.getDisabledMsg().length > 0
@@ -43,7 +43,7 @@ module.exports = {
         return
       }
       if (!document.hidden) {
-        this.$emit('update:plugin_ping', Date.now())
+        this.$emit('plugin-ping', Date.now())
       }
       if (!recursive) {
         return

@@ -3,7 +3,7 @@
     description="2D to 1D spectral extraction."
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :uses_active_status="uses_active_status"
-    :plugin_ping.sync="plugin_ping"
+    @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
     :popout_button="popout_button">
 

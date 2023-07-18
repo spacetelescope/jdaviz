@@ -3,7 +3,7 @@
     description="Return statistics for a single spectral line."
     :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-analysis'"
     :uses_active_status="uses_active_status"
-    :plugin_ping.sync="plugin_ping"
+    @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">
