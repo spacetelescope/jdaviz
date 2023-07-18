@@ -1,20 +1,27 @@
+import os
 from traitlets import List, Unicode, Bool, observe
 
 from glue.core.message import DataCollectionAddMessage
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
+from glue_jupyter.common.toolbar_vuetify import read_icon
 
 import astropy.units as u
-from jdaviz.configs.imviz.helper import link_image_data, get_bottom_layer
-from jdaviz.configs.imviz.wcs_utils import get_compass_info, _get_rotated_nddata_from_label
+from jdaviz.configs.imviz.helper import (
+    link_image_data, get_bottom_layer, base_wcs_layer_label
+)
+from jdaviz.configs.imviz.wcs_utils import (
+    get_compass_info, _get_rotated_nddata_from_label
+)
 from jdaviz.core.events import (
     LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage, ChangeRefDataMessage
 )
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
-    PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelect
+    PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelect, AutoTextField
 )
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['LinksControl']
 
@@ -56,11 +63,23 @@ class LinksControl(PluginTemplateMixin):
     rotation_angle = Unicode("0").tag(sync=True)
     set_on_create = Bool(True).tag(sync=True)
     relink = Bool(True).tag(sync=True)
+    east_left = Bool(True).tag(sync=True)
+
+    icon_nuer = Unicode(
+        read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml')
+    ).tag(sync=True)
+    icon_nuel = Unicode(
+        read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml')
+    ).tag(sync=True)
 
     viewer_items = List().tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
     layer_items = List().tag(sync=True)
     layer_selected = Unicode().tag(sync=True)
+
+    new_layer_label = Unicode().tag(sync=True)
+    new_layer_label_default = Unicode().tag(sync=True)
+    new_layer_label_auto = Bool(True).tag(sync=True)
 
     multiselect = Bool(False).tag(sync=True)
 
@@ -72,9 +91,16 @@ class LinksControl(PluginTemplateMixin):
                                                selected='link_type_selected',
                                                manual_options=['Pixels', 'WCS'])
 
-        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
-        self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected',
-                                 'multiselect', only_wcs_layers=True)  # noqa
+        self.viewer = ViewerSelect(
+            self, 'viewer_items', 'viewer_selected', 'multiselect'
+        )
+        self.layer = LayerSelect(
+            self, 'layer_items', 'layer_selected', 'viewer_selected',
+            'multiselect', only_wcs_layers=True
+        )
+        self.orientation_layer_label = AutoTextField(
+            self, 'new_layer_label', 'new_layer_label_default', 'new_layer_label_auto', None
+        )
 
         self.hub.subscribe(self, LinkUpdatedMessage,
                            handler=self._on_link_updated)
@@ -168,34 +194,49 @@ class LinksControl(PluginTemplateMixin):
             viewer.reset_markers()
 
     def _get_wcs_angles(self):
-        degn, dege, flip = get_compass_info(self.ref_data.coords, self.ref_data.shape)[-3:]
+        viewer = self.app.get_viewer(self.viewer.selected)
+        first_loaded_image = get_bottom_layer(viewer)
+        degn, dege, flip = get_compass_info(
+            first_loaded_image.coords, first_loaded_image.shape
+        )[-3:]
         return degn, dege, flip
 
     @property
     def rotation_angle_deg(self):
-        return float(self.rotation_angle) * u.deg
+        if len(self.rotation_angle):
+            return float(self.rotation_angle) * u.deg
+        return 0 * u.deg
 
     def create_new_orientation_from_data(self, data):
         # Default rotation is the same orientation as the original reference data:
-        degn = get_compass_info(data.coords, data.shape)[-3]
+        degn = self._get_wcs_angles()[0]
+
+        if self.east_left:
+            rotation_angle = -degn * u.deg + self.rotation_angle_deg
+        else:
+            rotation_angle = (180 - degn) * u.deg - self.rotation_angle_deg
+
         ndd = _get_rotated_nddata_from_label(
-            self.app, data.label, -degn * u.deg + self.rotation_angle_deg
+            app=self.app,
+            data_label=data.label,
+            rotation_angle=rotation_angle,
+            target_wcs_east_left=self.east_left,
+            target_wcs_north_up=True,
         )
-        data_label = f'CCW {self.rotation_angle} deg'
         self.app._jdaviz_helper.load_data(
-            ndd, data_label=data_label
+            ndd, data_label=self.new_layer_label
         )
         if self.relink:
             # this will trigger linking by wcs if not already selected:
             self.link_type_selected = 'WCS'
 
         # add orientation layer to all viewers:
-        self._add_data_to_all_viewers(data_label)
+        self._add_data_to_all_viewers(self.new_layer_label)
 
         if self.set_on_create:
             # set orientation (reference data layer) to be the new option:
             self.app._change_reference_data(
-                data_label, viewer_id=self.viewer.selected
+                self.new_layer_label, viewer_id=self.viewer.selected
             )
 
     def _add_data_to_all_viewers(self, data_label):
@@ -232,6 +273,13 @@ class LinksControl(PluginTemplateMixin):
             elif not len(viewer.data()):
                 self.link_type_selected = link_type_msg_to_trait['pixels']
 
+        self._reset_default_rotation_options()
+
+    def _reset_default_rotation_options(self):
+        # return rotation options to these defaults:
+        self.east_left = True
+        self.rotation_angle = "0"
+
     @property
     def ref_data(self):
         return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
@@ -259,3 +307,51 @@ class LinksControl(PluginTemplateMixin):
             viewer = self.app.get_viewer(self.viewer.selected)
             self.layer.choices = viewer.state.wcs_only_layers
             self.layer.selected = self.ref_data.label
+
+        self._reset_default_rotation_options()
+
+    def set_north_up_east_left(self, label="North-up, East-left"):
+        """
+        Set the rotation angle and flip to achieve North up and East left according to the reference
+        image WCS.
+        """
+        if label not in self.layer.choices:
+            degn, dege, flip = self._get_wcs_angles()
+            self.rotation_angle = str(degn)
+            self.east_left = True
+            self.set_on_create = True
+            self.new_layer_label_default = label
+            self.vue_create_new_orientation_from_data()
+        else:
+            self.layer.selected = label
+
+    def set_north_up_east_right(self, label="North-up, East-right"):
+        """
+        Set the rotation angle and flip to achieve North up and East right according to the
+        reference image WCS.
+        """
+        if label not in self.layer.choices:
+            degn, dege, flip = self._get_wcs_angles()
+            self.rotation_angle = str(180 - degn)
+            self.east_left = False
+            self.set_on_create = True
+            self.new_layer_label_default = label
+            self.vue_create_new_orientation_from_data()
+        else:
+            self.layer.selected = label
+
+    def vue_set_north_up_east_left(self, *args, **kwargs):
+        self.set_north_up_east_left()
+
+    def vue_set_north_up_east_right(self, *args, **kwargs):
+        self.set_north_up_east_right()
+
+    def vue_select_default_orientation(self, *args, **kwargs):
+        self.layer.selected = base_wcs_layer_label
+
+    @observe('east_left', 'rotation_angle')
+    def _update_layer_label_default(self, event={}):
+        self.new_layer_label_default = (
+            f'CCW {self.rotation_angle_deg:.2f} ' +
+            ('(E-left)' if self.east_left else '(E-right)')
+        )

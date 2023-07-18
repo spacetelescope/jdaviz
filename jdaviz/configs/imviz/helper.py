@@ -386,8 +386,11 @@ def get_bottom_layer(viewer):
     """
     Get the first-loaded image layer in Imviz.
     """
-    return [lyr.layer for lyr in viewer.layers
-            if lyr.visible and layer_is_image_data(lyr.layer)][0]
+    image_layers = [lyr.layer for lyr in viewer.layers
+                    if lyr.visible and layer_is_image_data(lyr.layer)]
+    if not len(image_layers):
+        return image_layers
+    return image_layers[0]
 
 
 def get_wcs_only_layer_labels(app):
@@ -521,6 +524,8 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
 
     old_link_type = getattr(app, '_link_type', None)
     refdata, iref = get_reference_image_data(app)
+    # default reference layer is the first-loaded image:
+    default_reference_layer = get_bottom_layer(app._jdaviz_helper.default_viewer)
 
     # if linking via WCS, add WCS-only reference data layer:
     insert_base_wcs_layer = (
@@ -530,11 +535,11 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     )
 
     if insert_base_wcs_layer:
-        degn = get_compass_info(refdata.coords, refdata.shape)[-3]
+        degn = get_compass_info(default_reference_layer.coords, default_reference_layer.shape)[-3]
         # Default rotation is the same orientation as the original reference data:
         rotation_angle = -degn * u.deg
         ndd = _get_rotated_nddata_from_label(
-            app, refdata.label, rotation_angle
+            app, default_reference_layer.label, rotation_angle
         )
         app._jdaviz_helper.load_data(ndd, base_wcs_layer_label)
 

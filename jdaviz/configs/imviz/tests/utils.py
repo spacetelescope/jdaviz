@@ -236,7 +236,7 @@ def create_example_gwcs(shape):
     return gwcs_wcs.WCS(pipeline)
 
 
-def create_wfi_image_model(image_shape, **kwargs):
+def create_wfi_image_model(image_shape=(20, 10), **kwargs):
     """
     Create a dummy Roman WFI ImageModel instance with valid values
     for attributes required by the schema.

@@ -287,7 +287,7 @@ def data_outside_gwcs_bounding_box(data, x, y):
 
 
 def _rotated_gwcs(
-    center_world_coord,
+    corner_world_coord,
     rotation_angle,
     pixel_scales,
     cdelt_signs,
@@ -307,7 +307,7 @@ def _rotated_gwcs(
     pixel_scales = u.Quantity(pixel_scales) * pixel_scale_factor
 
     # Multiplying by +/-1 can flip north/south or east/west.
-    flip_axes = (
+    flip_direction = (
         models.Multiply(cdelt_signs[0]) &
         models.Multiply(cdelt_signs[1])
     )
@@ -327,10 +327,10 @@ def _rotated_gwcs(
     }
     tan = models.Pix2Sky_TAN()
     celestial_rotation = models.RotateNative2Celestial(
-        center_world_coord.ra, center_world_coord.dec, 180 * u.deg
+        corner_world_coord.ra, corner_world_coord.dec, 180 * u.deg
     )
 
-    det2sky = flip_axes | rotation | tan | celestial_rotation
+    det2sky = flip_direction | rotation | tan | celestial_rotation
     det2sky.name = "linear_transform"
 
     detector_frame = cf.Frame2D(
@@ -354,11 +354,6 @@ def _rotated_gwcs(
 def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape,
                             wcs_only_key="_WCS_ONLY", data=None,
                             cdelt_signs=None):
-    # get the world coordinates of the central pixel
-    corner_pixel_coord = [0, 0] * u.pix
-    central_world_coord = wcs.pixel_to_world(*corner_pixel_coord)
-    rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
-
     cdelt = None
     # compute the x/y pixel scales from the WCS:
     if hasattr(wcs, 'pixel_scale_matrix'):
@@ -417,8 +412,11 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     # flip e.g. RA or Dec axes?
     if cdelt_signs is None and cdelt is not None:
         cdelt_signs = np.sign(cdelt)
-    elif cdelt is None:
-        cdelt_signs = [1, -1]
+
+    # get the world coordinates of the pixel origin
+    corner_pixel_coord = [0, 0] * u.pix
+    corner_world_coord = wcs.pixel_to_world(*corner_pixel_coord)
+    rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
 
     # pixel scale in x and y may be different, but here we
     # take the mean pixel scale in either dimension and assume
@@ -429,7 +427,7 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     # create a GWCS centered on ``filename``,
     # and rotated by ``rotation_angle``:
     new_rotated_gwcs = _rotated_gwcs(
-        central_world_coord, rotation_angle,
+        corner_world_coord, rotation_angle,
         pixel_scales, cdelt_signs,
         refdata_shape=refdata_shape,
         image_shape=real_image_shape
@@ -449,8 +447,10 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     return ndd
 
 
-def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shape=(10, 10),
-                                   cdelt_signs=None):
+def _get_rotated_nddata_from_label(
+    app, data_label, rotation_angle, refdata_shape=(10, 10),
+    cdelt_signs=None, target_wcs_east_left=True, target_wcs_north_up=True
+):
     """
     Create a synthetic NDData which stores GWCS that approximate
     the WCS in the coords attr of the Data object with label ``data_label``
@@ -485,30 +485,43 @@ def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shap
     if data.coords is None:
         raise ValueError(f"{data_label} has no WCS for rotation.")
 
-    if cdelt_signs is None:
-        # check if East is to the left:
-        viewer = app.get_viewer('imviz-0')
-        wcs = viewer.state.reference_data.coords
-        if any(['lon' in name for name in wcs.world_axis_names]):
-            # works for gwcs:
-            [lon_axis] = [i for i, axis in enumerate(wcs.world_axis_names) if axis == 'lon']
-        else:
-            # works for FITS WCS:
-            [lon_axis] = [i for i, axis in enumerate(wcs.wcs.ctype) if axis.startswith('RA')]
-        offset_coords = [1 if lon_axis == i else 0 for i in range(2)]
-        origin_coords = [0, 0]
-        east_left = (
-            wcs.pixel_to_world_values(*offset_coords)[0] -
-            wcs.pixel_to_world_values(*origin_coords)[0]
-        ) < 0
+    # transform WCS relative to the first loaded data entry:
+    wcs = data.coords
 
-        if east_left:
-            cdelt_signs = [1, 1]
-        else:
-            cdelt_signs = [-1 if lon_axis == i else 1 for i in range(2)]
-            if 'imviz-compass' in [item['name'] for item in app.state.tray_items]:
-                compass_plugin = app.get_tray_item_from_name('imviz-compass')
-                compass_plugin.canvas_flip_horizontal = not compass_plugin.canvas_flip_horizontal
+    has_east_left = _east_increases_towards_left(wcs)
+    has_north_up = _north_increases_upwards(wcs)
+    lat_axis = _get_latitude_axis_idx(wcs)
+    lon_axis = _get_longitude_axis_idx(wcs)
+
+    if (
+        not has_east_left and target_wcs_east_left and
+        'imviz-compass' in [item['name'] for item in app.state.tray_items]
+    ):
+        # if an east/west flip is necessary, pass that along to the compass:
+        compass_plugin = app.get_tray_item_from_name('imviz-compass')
+        compass_plugin.canvas_flip_horizontal = not compass_plugin.canvas_flip_horizontal
+
+    if cdelt_signs is None:
+        cdelt_signs = [None, None]
+        cdelt_signs[lat_axis] = (
+            1 if ((has_east_left and target_wcs_east_left) or
+                  (not has_east_left and not target_wcs_east_left)) else -1
+        )
+        cdelt_signs[lon_axis] = (
+            1 if ((has_north_up and target_wcs_north_up) or
+                  (not has_north_up and not target_wcs_north_up)) else -1
+        )
+    else:
+        if (
+            (not has_east_left and target_wcs_east_left) or
+            (has_east_left and not target_wcs_east_left)
+        ):
+            cdelt_signs[lat_axis] = -1
+        if (
+            (not has_north_up and target_wcs_north_up) or
+            (has_north_up and not target_wcs_north_up)
+        ):
+            cdelt_signs[lon_axis] = -1
 
     return _prepare_rotated_nddata(
         data.shape,
@@ -519,6 +532,54 @@ def _get_rotated_nddata_from_label(app, data_label, rotation_angle, refdata_shap
         data=data,
         cdelt_signs=cdelt_signs
     )
+
+
+def _get_longitude_axis_idx(wcs):
+    if any(['lon' in name.lower() for name in wcs.world_axis_names]):
+        # for gwcs:
+        [lon_axis] = [i for i, axis in enumerate(wcs.world_axis_names)
+                      if axis.lower() == 'lon']
+    else:
+        # for FITS WCS:
+        [lon_axis] = [i for i, axis in enumerate(wcs.wcs.ctype)
+                      if axis.upper().startswith('RA')]
+    return lon_axis
+
+
+def _get_latitude_axis_idx(wcs):
+    if any(['lat' in name.lower() for name in wcs.world_axis_names]):
+        # for gwcs:
+        [lat_axis] = [i for i, axis in enumerate(wcs.world_axis_names)
+                      if axis.lower() == 'lat']
+    else:
+        # for FITS WCS:
+        [lat_axis] = [i for i, axis in enumerate(wcs.wcs.ctype)
+                      if axis.upper().startswith('DEC')]
+    return lat_axis
+
+
+def _east_increases_towards_left(wcs):
+    # check if East is increasing to the left:
+    lon_axis = _get_longitude_axis_idx(wcs)
+    offset_coords = [1 if lon_axis == i else 0 for i in range(2)]
+    origin_coords = [0, 0]
+    data_has_east_left = (
+        wcs.pixel_to_world_values(*offset_coords)[0] -
+        wcs.pixel_to_world_values(*origin_coords)[0]
+    ) > 0
+    return bool(data_has_east_left)
+
+
+def _north_increases_upwards(wcs):
+    # check if North is increasing upwards:
+    lat_axis = _get_latitude_axis_idx(wcs)
+    offset_coords = [1 if lat_axis == i else 0 for i in range(2)]
+    origin_coords = [0, 0]
+    data_has_north_up = (
+        wcs.pixel_to_world_values(*offset_coords)[1] -
+        wcs.pixel_to_world_values(*origin_coords)[1]
+    ) > 0
+    return bool(data_has_north_up)
 
 
 def compute_scale(wcs, fiducial,

@@ -507,6 +507,8 @@ Imviz
 - Added support for new ``CircularAnnulusROI`` subset from glue, including
   a new draw tool. [#2201, #2240]
 
+- Added viewer rotation support via Glue linking [#2179]
+
 Mosviz
 ^^^^^^
 

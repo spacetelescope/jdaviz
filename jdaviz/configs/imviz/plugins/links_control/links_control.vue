@@ -2,10 +2,12 @@
   <j-tray-plugin
     description="Re-link images by WCS or pixels, or the rotate viewer."
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :disabled_msg='disabled_msg'>
 
     <div style="display: grid"> <!-- overlay container -->
       <div style="grid-area: 1/1">
+        <v-row>
         <v-radio-group
           label="Link type"
           hint="Type of linking to be done."
@@ -19,15 +21,17 @@
             :value="item.label"
           ></v-radio>
         </v-radio-group>
-        <v-col>
-          <v-switch
-            label="Fast approximation"
-            hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
-            v-model="wcs_use_affine"
-            v-if="link_type_selected == 'WCS'"
-            persistent-hint>
-          </v-switch>
-        </v-col>
+        </v-row>
+
+        <v-row>
+        <v-switch
+          label="Fast approximation"
+          hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."
+          v-model="wcs_use_affine"
+          v-if="link_type_selected == 'WCS'"
+          persistent-hint>
+        </v-switch>
+        </v-row>
 
         <v-row v-if="false">
           <v-switch
@@ -37,7 +41,9 @@
             persistent-hint>
           </v-switch>
         </v-row>
-        <v-col v-if="link_type_selected == 'WCS'">
+        <div v-if="link_type_selected == 'WCS'">
+
+          <j-plugin-section-header>Select orientation</j-plugin-section-header>
           <plugin-viewer-select
             :items="viewer_items"
             :selected.sync="viewer_selected"
@@ -54,7 +60,25 @@
             :label="'Orientation in viewer'"
             :hint="'Select the viewer orientation'"
           />
-        </v-col>
+          <v-row>
+            <span style="line-height: 36px">Presets:</span>
+            <j-tooltip tooltipcontent="Default orientation">
+              <v-btn icon @click="select_default_orientation">
+                <v-icon>mdi-restore</v-icon>
+              </v-btn>
+            </j-tooltip>
+            <j-tooltip tooltipcontent="north up, east left">
+              <v-btn icon @click="set_north_up_east_left">
+                <img :src="icon_nuel" width="24" class="invert-if-dark" style="opacity: 0.65"/>
+              </v-btn>
+            </j-tooltip>
+            <j-tooltip tooltipcontent="north up, east right">
+              <v-btn icon @click="set_north_up_east_right">
+                <img :src="icon_nuer" width="24" class="invert-if-dark" style="opacity: 0.65"/>
+              </v-btn>
+            </j-tooltip>
+          </v-row>
+        </div>
 
         <div style="grid-area: 1/1">
         </div>
@@ -62,15 +86,22 @@
 
           <j-plugin-section-header>Add orientation options</j-plugin-section-header>
 
-          <v-col>
+              <plugin-auto-label
+                :value.sync="new_layer_label"
+                :default="new_layer_label_default"
+                :auto.sync="new_layer_label_auto"
+                label="Name for orientation option"
+                hint="Label for this new model component."
+              ></plugin-auto-label>
+              <v-row>
               <v-text-field
                 v-model="rotation_angle"
                 label="Rotation angle"
                 hint="Degrees counterclockwise from default orientation"
                 persistent-hint
               ></v-text-field>
-              <v-col>
-                <v-row justify="start">
+              </v-row>
+                <v-row>
                   <v-switch
                     label="Rotate on add"
                     hint="Select this orientation when added"
@@ -78,11 +109,17 @@
                     persistent-hint>
                   </v-switch>
                 </v-row>
-                <v-row justify="end">
-                  <v-btn color="primary" text @click="create_new_orientation_from_data">Add option</v-btn>
+                <v-row>
+                  <v-switch
+                    label="East increases left"
+                    hint="Use the East-left convention"
+                    v-model="east_left"
+                    persistent-hint>
+                  </v-switch>
                 </v-row>
-              </v-col>
-        </v-col>
+                <v-row justify="end">
+                  <v-btn color="primary" color="accent" text @click="create_new_orientation_from_data">Add option</v-btn>
+                </v-row>
         </div>
 
       </div>
