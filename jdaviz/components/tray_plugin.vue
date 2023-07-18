@@ -38,18 +38,28 @@ module.exports = {
     getDisabledMsg() {
       return this.disabled_msg || ''
     },
-    sendPing() {
+    sendPing(recursive) {
       if (!this.$el.isConnected) {
         return
       }
-      this.$emit('update:plugin_ping', Date.now())
+      if (!document.hidden) {
+        this.$emit('update:plugin_ping', Date.now())
+      }
+      if (!recursive) {
+        return
+      }
       setTimeout(() => {
-        this.sendPing()
+        this.sendPing(true)          
       }, 200)  // ms
     }
   },
   mounted() {
-    this.sendPing();
+    this.sendPing(true);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        this.sendPing(false)
+      }
+    });
   },
 };
 </script>
