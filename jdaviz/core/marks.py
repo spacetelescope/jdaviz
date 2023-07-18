@@ -631,3 +631,8 @@ class MarkersMark(PluginScatter):
     def __init__(self, viewer, **kwargs):
         kwargs.setdefault('marker', 'circle')
         super().__init__(viewer, **kwargs)
+
+
+class HistogramMark(Lines):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

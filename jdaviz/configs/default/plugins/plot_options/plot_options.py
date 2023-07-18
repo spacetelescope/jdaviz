@@ -19,6 +19,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import bqplot_clear_figure
+from jdaviz.core.marks import HistogramMark
 
 __all__ = ['PlotOptions']
 
@@ -594,3 +595,30 @@ class PlotOptions(PluginTemplateMixin):
         if len(sub_data) > 0:
             hist_lims = interval.get_limits(sub_data)
             hist_mark.min, hist_mark.max = hist_lims
+
+        self._remove_histogram_marks()
+        self._add_histogram_marks()
+
+    @observe('stretch_vmin_value', 'stretch_vmax_value')
+    def _check_if_v_stretch_changed(self, msg=None):
+        self._remove_histogram_marks()
+        self._add_histogram_marks()
+
+    def _add_histogram_marks(self):
+        if self.stretch_histogram is None:
+            return
+        scales = {'x': self.stretch_histogram.scale_x, 'y': self.stretch_histogram.scale_y}
+        # duplicate the entries to create vertical lines at those v values
+        stretch_v_as_x = [[self.stretch_vmin.value, self.stretch_vmin.value],
+                          [self.stretch_vmax.value, self.stretch_vmax.value]]
+        vertical_line = [[0, 1], [0, 1]]
+        v_lines = HistogramMark(x=stretch_v_as_x, y=vertical_line, scales=scales,
+                                colors=["magenta"], line_style="dashed")
+
+        self.stretch_histogram.marks = self.stretch_histogram.marks + [v_lines]
+
+    def _remove_histogram_marks(self):
+        if self.stretch_histogram is None:
+            return
+        self.stretch_histogram.marks = [mark for mark in self.stretch_histogram.marks
+                                        if not isinstance(mark, HistogramMark)]
