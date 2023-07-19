@@ -2238,7 +2238,7 @@ class Application(VuetifyTemplate, HubListener):
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
             'wcs_only_layers': wcs_only_layers,
-            'reference_data_label': getattr(viewer.state.reference_data, 'label', None),
+            'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
             'config': self.config,  # give viewer access to app config/layout

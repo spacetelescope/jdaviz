@@ -645,5 +645,5 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         viewer_item['linked_by_wcs'] = wcs_linked
 
         # if changing from one link type to another, reset the limits:
-        if old_link_type is not None and link_type != old_link_type:
+        if link_type != old_link_type:
             viewer.state.reset_limits()

@@ -287,7 +287,7 @@ def data_outside_gwcs_bounding_box(data, x, y):
 
 
 def _rotated_gwcs(
-    corner_world_coord,
+    center_world_coord,
     rotation_angle,
     pixel_scales,
     cdelt_signs,
@@ -297,20 +297,27 @@ def _rotated_gwcs(
     # based on ``gwcs_simple_imaging_units`` in gwcs:
     #   https://github.com/spacetelescope/gwcs/blob/
     #   eec9a2b6de8356495f405de3dc6531538589ce5d/gwcs/tests/conftest.py#L165
+    pixel_scale_factor = np.mean(image_shape) / np.mean(refdata_shape)
+    pixel_scales = u.Quantity(pixel_scales) * pixel_scale_factor
+
+    # multiplying by +/-1 can flip north/south or east/west:
+    flip_direction = (
+        models.Multiply(cdelt_signs[0]) &
+        models.Multiply(cdelt_signs[1])
+    )
+
+    # shift to compensate for the difference between the center and corner:
+    shift = (
+        models.Shift(-refdata_shape[0]/2 * u.pix) &
+        models.Shift(-refdata_shape[1]/2 * u.pix)
+    )
+
+    # rotate field of view:
     rho = rotation_angle
     sin_rho = np.sin(rho.to_value(u.rad))
     cos_rho = np.cos(rho.to_value(u.rad))
     rotation_matrix = np.array([[cos_rho, -sin_rho],
                                 [sin_rho, cos_rho]])
-
-    pixel_scale_factor = np.mean(image_shape) / np.mean(refdata_shape)
-    pixel_scales = u.Quantity(pixel_scales) * pixel_scale_factor
-
-    # Multiplying by +/-1 can flip north/south or east/west.
-    flip_direction = (
-        models.Multiply(cdelt_signs[0]) &
-        models.Multiply(cdelt_signs[1])
-    )
     rotation = models.AffineTransformation2D(
         rotation_matrix * u.deg, translation=[0, 0] * u.deg
     )
@@ -325,12 +332,13 @@ def _rotated_gwcs(
         "x": u.pixel_scale(1 / pixel_scales[0]),
         "y": u.pixel_scale(1 / pixel_scales[1])
     }
+
     tan = models.Pix2Sky_TAN()
     celestial_rotation = models.RotateNative2Celestial(
-        corner_world_coord.ra, corner_world_coord.dec, 180 * u.deg
+        center_world_coord.ra, center_world_coord.dec, 180 * u.deg
     )
 
-    det2sky = flip_direction | rotation | tan | celestial_rotation
+    det2sky = shift | flip_direction | rotation | tan | celestial_rotation
     det2sky.name = "linear_transform"
 
     detector_frame = cf.Frame2D(
@@ -414,8 +422,8 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
         cdelt_signs = np.sign(cdelt)
 
     # get the world coordinates of the pixel origin
-    corner_pixel_coord = [0, 0] * u.pix
-    corner_world_coord = wcs.pixel_to_world(*corner_pixel_coord)
+    center_pixel_coord = np.array(real_image_shape) / 2 * u.pix
+    center_world_coord = wcs.pixel_to_world(*center_pixel_coord)
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
 
     # pixel scale in x and y may be different, but here we
@@ -427,8 +435,10 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     # create a GWCS centered on ``filename``,
     # and rotated by ``rotation_angle``:
     new_rotated_gwcs = _rotated_gwcs(
-        corner_world_coord, rotation_angle,
-        pixel_scales, cdelt_signs,
+        center_world_coord,
+        rotation_angle,
+        pixel_scales,
+        cdelt_signs,
         refdata_shape=refdata_shape,
         image_shape=real_image_shape
     )
@@ -487,9 +497,9 @@ def _get_rotated_nddata_from_label(
 
     # transform WCS relative to the first loaded data entry:
     wcs = data.coords
-
-    has_east_left = _east_increases_towards_left(wcs)
-    has_north_up = _north_increases_upwards(wcs)
+    degn, dege, flip = get_compass_info(data.coords, data.shape)[-3:]
+    has_east_left = flip
+    has_north_up = True  # assumed
     lat_axis = _get_latitude_axis_idx(wcs)
     lon_axis = _get_longitude_axis_idx(wcs)
 
@@ -503,25 +513,19 @@ def _get_rotated_nddata_from_label(
 
     if cdelt_signs is None:
         cdelt_signs = [None, None]
-        cdelt_signs[lat_axis] = (
+        cdelt_signs[lon_axis] = (
             1 if ((has_east_left and target_wcs_east_left) or
                   (not has_east_left and not target_wcs_east_left)) else -1
         )
-        cdelt_signs[lon_axis] = (
+        cdelt_signs[lat_axis] = (
             1 if ((has_north_up and target_wcs_north_up) or
                   (not has_north_up and not target_wcs_north_up)) else -1
         )
     else:
-        if (
-            (not has_east_left and target_wcs_east_left) or
-            (has_east_left and not target_wcs_east_left)
-        ):
-            cdelt_signs[lat_axis] = -1
-        if (
-            (not has_north_up and target_wcs_north_up) or
-            (has_north_up and not target_wcs_north_up)
-        ):
+        if has_east_left != target_wcs_east_left:
             cdelt_signs[lon_axis] = -1
+        if has_north_up != target_wcs_north_up:
+            cdelt_signs[lat_axis] = -1
 
     return _prepare_rotated_nddata(
         data.shape,
@@ -556,30 +560,6 @@ def _get_latitude_axis_idx(wcs):
         [lat_axis] = [i for i, axis in enumerate(wcs.wcs.ctype)
                       if axis.upper().startswith('DEC')]
     return lat_axis
-
-
-def _east_increases_towards_left(wcs):
-    # check if East is increasing to the left:
-    lon_axis = _get_longitude_axis_idx(wcs)
-    offset_coords = [1 if lon_axis == i else 0 for i in range(2)]
-    origin_coords = [0, 0]
-    data_has_east_left = (
-        wcs.pixel_to_world_values(*offset_coords)[0] -
-        wcs.pixel_to_world_values(*origin_coords)[0]
-    ) > 0
-    return bool(data_has_east_left)
-
-
-def _north_increases_upwards(wcs):
-    # check if North is increasing upwards:
-    lat_axis = _get_latitude_axis_idx(wcs)
-    offset_coords = [1 if lat_axis == i else 0 for i in range(2)]
-    origin_coords = [0, 0]
-    data_has_north_up = (
-        wcs.pixel_to_world_values(*offset_coords)[1] -
-        wcs.pixel_to_world_values(*origin_coords)[1]
-    ) > 0
-    return bool(data_has_north_up)
 
 
 def compute_scale(wcs, fiducial,

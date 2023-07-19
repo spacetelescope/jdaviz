@@ -18,7 +18,7 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_No
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
     def test_plugin_wcs_dithered(self):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
-        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (-9, 9))  # Draw a circle
+        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
@@ -112,7 +112,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(tbl['sum'], [63.617251, 62.22684693104279], rtol=1e-4)
 
         # Make sure it also works on an ellipse subset.
-        self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (-9, 4))
+        self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
@@ -133,7 +133,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
-        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (-9, 9))
+        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 3'
         phot_plugin.background_selected = 'Subset 3'
