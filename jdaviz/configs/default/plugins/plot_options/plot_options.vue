@@ -494,7 +494,7 @@
             </glue-state-sync-wrapper>
           </div>
         </div>
-
+      </div>
       </div>
       <div v-if="contour_spinner"
            class="text-center"

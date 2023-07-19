@@ -507,6 +507,13 @@ class PlotOptions(PluginTemplateMixin):
             bqplot_clear_figure(self.stretch_histogram)
             return
 
+        spectrum_viewer_reference = getattr(
+            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', None
+        )
+        if self.viewer.selected == spectrum_viewer_reference:
+            # don't update a histogram if the spectrum viewer is selected:
+            return
+
         viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
 
         # manage viewer zoom limit callbacks
@@ -522,7 +529,14 @@ class PlotOptions(PluginTemplateMixin):
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                     vs_old.remove_callback(attr, self._update_stretch_histogram)
 
-        data = self.layer.selected_obj[0][0].layer if self.multiselect else self.layer.selected_obj[0].layer  # noqa
+        if self.multiselect:
+            data = self.layer.selected_obj[0][0].layer
+        elif len(self.layer.selected_obj):
+            data = self.layer.selected_obj[0].layer
+        else:
+            # skip further updates if no data are available:
+            return
+
         comp = data.get_component(data.main_components[0])
 
         if self.stretch_hist_zoom_limits:
