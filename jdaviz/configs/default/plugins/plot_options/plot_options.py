@@ -608,14 +608,15 @@ class PlotOptions(PluginTemplateMixin):
         if self.stretch_histogram is None:
             return
         scales = {'x': self.stretch_histogram.scale_x, 'y': self.stretch_histogram.scale_y}
-        # duplicate the entries to create vertical lines at those v values
-        stretch_v_as_x = [[self.stretch_vmin.value, self.stretch_vmin.value],
-                          [self.stretch_vmax.value, self.stretch_vmax.value]]
-        vertical_line = [[0, 1], [0, 1]]
-        v_lines = HistogramMark(x=stretch_v_as_x, y=vertical_line, scales=scales,
-                                colors=["magenta"], line_style="dashed")
+        vertical_line = [0, 1]
+        vmin_lines = HistogramMark(x=[self.stretch_vmin.value, self.stretch_vmin.value],
+                                   y=vertical_line, scales=scales,
+                                   colors=["magenta"], line_style="dashed")
+        vmax_lines = HistogramMark(x=[self.stretch_vmax.value, self.stretch_vmax.value],
+                                   y=vertical_line, scales=scales,
+                                   colors=["magenta"], line_style="dashed")
 
-        self.stretch_histogram.marks = self.stretch_histogram.marks + [v_lines]
+        self.stretch_histogram.marks = self.stretch_histogram.marks + [vmin_lines, vmax_lines]
 
     def _remove_histogram_marks(self):
         if self.stretch_histogram is None:
