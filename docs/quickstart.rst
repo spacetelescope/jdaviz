@@ -40,11 +40,17 @@ To see the syntax and usage, from a terminal, type::
 
 Typical usage to load a file into a desired configuration::
 
-    jdaviz [imviz|specviz|cubeviz|mosviz] /path/to/data/file
+    jdaviz --layout=[imviz|specviz|cubeviz|mosviz] /path/to/data/file
 
 For example, to load a FITS image into Imviz::
 
-    jdaviz imviz my_image.fits
+    jdaviz --layout=imviz my_image.fits
 
 To learn more about the various ``jdaviz`` application configurations and loading data,
 see the :ref:`imviz`, :ref:`specviz`, :ref:`cubeviz`, or :ref:`mosviz` tools.
+
+.. note::
+
+   The command ``jdaviz`` can be run from the command line but it is a work in progress.
+   You can pick a configuration and then import a file from there if you want to test
+   this feature.
