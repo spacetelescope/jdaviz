@@ -51,6 +51,9 @@ see the :ref:`imviz`, :ref:`specviz`, :ref:`cubeviz`, or :ref:`mosviz` tools.
 
 .. note::
 
-   The command ``jdaviz`` can be run from the command line but it is a work in progress.
-   You can pick a configuration and then import a file from there if you want to test
-   this feature.
+   The command ``jdaviz`` without any additional input will run a launcher which is a work
+   in progress (in particular, the file tab is not very user friendly at the moment).
+   We apologize for the inconvenience. After launching jdaviz, the user can select the
+   desired configuration by clicking one of the buttons without specifying a file.
+   A blank configuration will open and the IMPORT button will be available to select
+   a file from a proper file picker.
