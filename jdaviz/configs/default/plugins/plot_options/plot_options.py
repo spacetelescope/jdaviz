@@ -608,12 +608,16 @@ class PlotOptions(PluginTemplateMixin):
         if self.stretch_histogram is None:
             return
         scales = {'x': self.stretch_histogram.axes[0].scale, 'y': bqplot.LinearScale()}
-        vmin_lines = HistogramMark(min_max_value=[self.stretch_vmin.value, self.stretch_vmin.value], # noqa
-                                   scales=scales)
-        vmax_lines = HistogramMark(min_max_value=[self.stretch_vmax.value, self.stretch_vmax.value], # noqa
-                                   scales=scales)
-
-        self.stretch_histogram.marks = self.stretch_histogram.marks + [vmin_lines, vmax_lines]
+        v_stretch_lines = []
+        if self.stretch_vmin.value >= self.stretch_histogram.marks[0].min:
+            vmin_lines = HistogramMark(min_max_value=[self.stretch_vmin.value, self.stretch_vmin.value], # noqa
+                                       scales=scales)
+            v_stretch_lines.append(vmin_lines)
+        if self.stretch_vmax.value <= self.stretch_histogram.marks[0].max:
+            vmax_lines = HistogramMark(min_max_value=[self.stretch_vmax.value, self.stretch_vmax.value], # noqa
+                                       scales=scales)
+            v_stretch_lines.append(vmax_lines)
+        self.stretch_histogram.marks = self.stretch_histogram.marks + v_stretch_lines
 
     def _remove_histogram_marks(self):
         if self.stretch_histogram is None:
