@@ -327,7 +327,7 @@ class LinksControl(PluginTemplateMixin):
             self.set_on_create = set_on_create
             self.new_layer_label_default = label
             self.vue_create_new_orientation_from_data()
-        else:
+        elif set_on_create:
             self.layer.selected = label
 
     def create_north_up_east_right(self, label="North-up, East-right", set_on_create=False):
@@ -342,7 +342,7 @@ class LinksControl(PluginTemplateMixin):
             self.set_on_create = set_on_create
             self.new_layer_label_default = label
             self.vue_create_new_orientation_from_data()
-        else:
+        elif set_on_create:
             self.layer.selected = label
 
     def vue_set_north_up_east_left(self, *args, **kwargs):
