@@ -638,6 +638,6 @@ class HistogramMark(Lines):
         # Vertical line in LinearScale
         y = [0, 1]
         colors = '#c75d2c'
-        line_style = "dashed"
+        line_style = "solid"
         super().__init__(x=min_max_value, y=y, scales=scales, colors=colors, line_style=line_style,
                          **kwargs)
