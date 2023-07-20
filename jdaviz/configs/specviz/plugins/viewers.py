@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 from astropy import table
 from astropy import units as u
+from astropy.nddata import StdDevUncertainty, VarianceUncertainty, InverseVariance
 from glue.core import BaseData
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
@@ -21,6 +22,13 @@ from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.utils import get_subset_type
 
 __all__ = ['SpecvizProfileView']
+
+
+uncertainty_str_to_cls_mapping = {
+    "std": StdDevUncertainty,
+    "var": VarianceUncertainty,
+    "ivar": InverseVariance
+}
 
 
 @viewer_registry("specviz-profile-viewer", label="Profile 1D (Specviz)")
@@ -450,6 +458,11 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             # Ignore data that does not have an uncertainty component
             if "uncertainty" in comps:  # noqa
                 error = np.array(lyr['uncertainty'].data)
+
+                # ensure that the uncertainties are represented as stddev:
+                uncertainty_type_str = lyr.meta.get('uncertainty_type', 'stddev')
+                uncert_cls = uncertainty_str_to_cls_mapping[uncertainty_type_str]
+                error = uncert_cls(error).represent_as(StdDevUncertainty).array
 
                 data_obj = lyr.data.get_object()
                 data_x = data_obj.spectral_axis.value

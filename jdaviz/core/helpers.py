@@ -14,7 +14,7 @@ from inspect import isclass
 import numpy as np
 import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
-from astropy.nddata import CCDData
+from astropy.nddata import CCDData, StdDevUncertainty
 from regions.core.core import Region
 from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
@@ -428,7 +428,23 @@ class ConfigHelper(HubListener):
                     flux_unit = self.app._get_display_unit('flux')
                     # TODO: any other attributes (meta, wcs, etc)?
                     # TODO: implement uncertainty.to upstream
-                    new_uncert = data.uncertainty.__class__(data.uncertainty.quantity.to(flux_unit)) if data.uncertainty is not None else None  # noqa
+                    uncertainty = data.uncertainty
+                    if uncertainty is not None:
+                        # convert the uncertainties to StdDevUncertainties, since
+                        # that is assumed in a few places in jdaviz:
+                        if uncertainty.unit is None:
+                            uncertainty.unit = data.flux.unit
+                        if hasattr(uncertainty, 'represent_as'):
+                            new_uncert = uncertainty.represent_as(
+                                StdDevUncertainty
+                            ).quantity.to(flux_unit)
+                        else:
+                            # if not specified as NDUncertainty, assume stddev:
+                            new_uncert = uncertainty.quantity.to(flux_unit)
+                        new_uncert = StdDevUncertainty(new_uncert, unit=flux_unit)
+                    else:
+                        new_uncert = None
+
                     data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
                                                                           u.spectral()),
                                       flux=data.flux.to(flux_unit,
