@@ -8,6 +8,7 @@ User Guide
   :maxdepth: 2
 
   installation
+  quickstart
   imviz/index
   specviz/index
   cubeviz/index
