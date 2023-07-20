@@ -240,8 +240,13 @@ class LinksControl(PluginTemplateMixin):
             )
 
     def _add_data_to_all_viewers(self, data_label):
-        for viewer in self.viewer.choices:
-            self.app.add_data_to_viewer(viewer, data_label)
+        for viewer_ref in self.viewer.choices:
+            layers_in_viewer = [
+                layer.layer.label for layer in
+                self.app.get_viewer_by_id(self.viewer.selected).layers
+            ]
+            if data_label not in layers_in_viewer:
+                self.app.add_data_to_viewer(viewer_ref, data_label, visible=False)
 
     def vue_create_new_orientation_from_data(self, *args, **kwargs):
         if 'reference_data' not in kwargs:
@@ -310,41 +315,41 @@ class LinksControl(PluginTemplateMixin):
 
         self._reset_default_rotation_options()
 
-    def set_north_up_east_left(self, label="North-up, East-left"):
+    def create_north_up_east_left(self, label="North-up, East-left", set_on_create=False):
         """
-        Set the rotation angle and flip to achieve North up and East left according to the reference
-        image WCS.
+        Set the rotation angle and flip to achieve North up and East left
+        according to the reference image WCS.
         """
         if label not in self.layer.choices:
-            degn, dege, flip = self._get_wcs_angles()
+            degn = self._get_wcs_angles()[-3]
             self.rotation_angle = str(degn)
             self.east_left = True
-            self.set_on_create = True
+            self.set_on_create = set_on_create
             self.new_layer_label_default = label
             self.vue_create_new_orientation_from_data()
         else:
             self.layer.selected = label
 
-    def set_north_up_east_right(self, label="North-up, East-right"):
+    def create_north_up_east_right(self, label="North-up, East-right", set_on_create=False):
         """
-        Set the rotation angle and flip to achieve North up and East right according to the
-        reference image WCS.
+        Set the rotation angle and flip to achieve North up and East right
+        according to the reference image WCS.
         """
         if label not in self.layer.choices:
-            degn, dege, flip = self._get_wcs_angles()
+            degn = self._get_wcs_angles()[-3]
             self.rotation_angle = str(180 - degn)
             self.east_left = False
-            self.set_on_create = True
+            self.set_on_create = set_on_create
             self.new_layer_label_default = label
             self.vue_create_new_orientation_from_data()
         else:
             self.layer.selected = label
 
     def vue_set_north_up_east_left(self, *args, **kwargs):
-        self.set_north_up_east_left()
+        self.create_north_up_east_left(set_on_create=True)
 
     def vue_set_north_up_east_right(self, *args, **kwargs):
-        self.set_north_up_east_right()
+        self.create_north_up_east_right(set_on_create=True)
 
     def vue_select_default_orientation(self, *args, **kwargs):
         self.layer.selected = base_wcs_layer_label

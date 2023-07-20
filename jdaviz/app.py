@@ -1942,8 +1942,12 @@ class Application(VuetifyTemplate, HubListener):
 
         # set visibility state of all applicable layers
         for layer in viewer.layers:
+            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
             if layer.layer.data.label == data_label:
-                if visible and not layer.visible:
+                if layer_is_wcs_only:
+                    layer.visible = False
+                    layer.update()
+                elif visible and not layer.visible:
                     layer.visible = True
                     layer.update()
                 else:
@@ -1965,11 +1969,10 @@ class Application(VuetifyTemplate, HubListener):
                 if id != data_id:
                     selected_items[id] = 'hidden'
 
-        # remove WCS-only data from selected items,
-        # add to wcs_only_layers:
+        # remove WCS-only data from selected items, add to wcs_only_layers:
         for layer in viewer.layers:
-            is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
-            if layer.layer.data.label == data_label and is_wcs_only:
+            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
+            if layer.layer.data.label == data_label and layer_is_wcs_only:
                 layer.visible = False
                 viewer.state.wcs_only_layers.append(data_label)
                 selected_items.pop(data_id)

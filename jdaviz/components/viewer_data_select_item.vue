@@ -26,9 +26,6 @@
         <span>
           {{itemNameExtension}}
         </span>
-        <span v-if="this.$props.viewer.config === 'imviz' && isRefData()">
-          {{"*"}}
-        </span>
       </div>
       </span>
     </j-tooltip>

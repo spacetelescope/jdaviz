@@ -184,23 +184,21 @@ class Imviz(ImageConfigHelper):
         # above instead of having to refind it
         applied_labels = []
         applied_visible = []
+        applied_is_wcs = []
         for data in self.app.data_collection:
             label = data.label
             if label not in prev_data_labels:
                 applied_labels.append(label)
-                if not data.meta.get(self.app._wcs_only_label, False):
-                    applied_visible.append(True)
-                else:
-                    applied_visible.append(False)
+                applied_visible.append(True)
+                applied_is_wcs.append(data.meta.get(self.app._wcs_only_label, False))
 
         if show_in_viewer is True:
             show_in_viewer = f"{self.app.config}-0"
 
-        # NOTE: We will never try to batch load WCS-only, but if we do, add extra logic
-        #       in batch_load within core/helpers.py module.
         if self._in_batch_load and show_in_viewer:
-            for applied_label in applied_labels:
-                self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
+            for applied_label, layer_is_wcs in zip(applied_labels, applied_is_wcs):
+                if not layer_is_wcs:
+                    self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
 
         else:
             if 'Links Control' not in self.plugins.keys():
