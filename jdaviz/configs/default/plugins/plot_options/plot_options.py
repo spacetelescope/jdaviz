@@ -607,14 +607,11 @@ class PlotOptions(PluginTemplateMixin):
     def _add_histogram_marks(self):
         if self.stretch_histogram is None:
             return
-        scales = {'x': self.stretch_histogram.scale_x, 'y': self.stretch_histogram.scale_y}
-        vertical_line = [0, 1]
-        vmin_lines = HistogramMark(x=[self.stretch_vmin.value, self.stretch_vmin.value],
-                                   y=vertical_line, scales=scales,
-                                   colors=["magenta"], line_style="dashed")
-        vmax_lines = HistogramMark(x=[self.stretch_vmax.value, self.stretch_vmax.value],
-                                   y=vertical_line, scales=scales,
-                                   colors=["magenta"], line_style="dashed")
+        scales = {'x': self.stretch_histogram.axes[0].scale, 'y': bqplot.LinearScale()}
+        vmin_lines = HistogramMark(min_max_value=[self.stretch_vmin.value, self.stretch_vmin.value], # noqa
+                                   scales=scales)
+        vmax_lines = HistogramMark(min_max_value=[self.stretch_vmax.value, self.stretch_vmax.value], # noqa
+                                   scales=scales)
 
         self.stretch_histogram.marks = self.stretch_histogram.marks + [vmin_lines, vmax_lines]
 
