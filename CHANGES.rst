@@ -123,7 +123,7 @@ Mosviz
 Specviz
 ^^^^^^^
 
-- Removed assumption that NDUncertainty's given to Specviz are always standard deviation type [#2283]
+- Uncertainties in spectra given to Specviz will now work correctly when non-standard deviation type [#2283]
 
 Specviz2d
 ^^^^^^^^^
