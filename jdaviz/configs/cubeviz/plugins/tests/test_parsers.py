@@ -11,7 +11,7 @@ from numpy.testing import assert_allclose, assert_array_equal
 
 from jdaviz.utils import PRIHDR_KEY
 
-ASTROPY_LT_5_3 = not minversion(astropy, "5.3.dev")
+ASTROPY_LT_5_3 = not minversion(astropy, "5.3")
 
 
 @pytest.mark.filterwarnings('ignore')

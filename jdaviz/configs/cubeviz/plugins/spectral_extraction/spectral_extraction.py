@@ -18,7 +18,7 @@ from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct
 
 __all__ = ['SpectralExtraction']
 
-ASTROPY_LT_5_3_DEV = Version(astropy.__version__) < Version('5.3.dev')
+ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
 
 
 @tray_registry(
@@ -59,8 +59,8 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_spectrum_viewer']
 
-        if ASTROPY_LT_5_3_DEV:
-            self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy 5.3.dev"
+        if ASTROPY_LT_5_3_2:
+            self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy 5.3.2+"
 
     @property
     def user_api(self):
@@ -86,14 +86,14 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
         # get glue Data objects for the spectral cube and uncertainties
-        [spectral_cube] = self._app.get_data_from_viewer(
-            self._app._jdaviz_helper._default_flux_viewer_reference_name,
-            include_subsets=False
-        ).values()
-        [uncert_cube] = self._app.get_data_from_viewer(
-            self._app._jdaviz_helper._default_uncert_viewer_reference_name,
-            include_subsets=False
-        ).values()
+        flux_viewer = self._app.get_viewer(
+            self._app._jdaviz_helper._default_flux_viewer_reference_name
+        )
+        uncert_viewer = self._app.get_viewer(
+            self._app._jdaviz_helper._default_uncert_viewer_reference_name
+        )
+        [spectral_cube] = flux_viewer.data()
+        [uncert_cube] = uncert_viewer.data()
 
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
@@ -118,9 +118,6 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
         flux = nddata.data << nddata.unit
         mask = nddata.mask
-        # Here we move the spectral axis to the last axis, to match specutils convention.
-        # We'll need to update this after https://github.com/astropy/specutils/pull/999
-        wcs, flux, mask, uncertainties = _move_spectral_axis(wcs, flux, mask, uncertainties)
 
         nddata_reshaped = NDDataArray(
             flux, mask=mask, uncertainty=uncertainties, wcs=wcs, meta=nddata.meta
@@ -133,7 +130,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
         # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
         # is always wavelength. This may need adjustment after the following
-        # specutils PR is merged: https://github.com/astropy/specutils/pull/999
+        # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
         spatial_axes = (0, 1)
 
         collapsed_nddata = getattr(nddata_reshaped, self.function_selected.lower())(

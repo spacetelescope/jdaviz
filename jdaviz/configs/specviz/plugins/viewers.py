@@ -458,6 +458,8 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
             # Ignore data that does not have an uncertainty component
             if "uncertainty" in comps:  # noqa
+                error = np.array(lyr['uncertainty'].data)
+
                 # ensure that the uncertainties are represented as stddev:
                 uncertainty_type_str = lyr.meta.get('uncertainty_type', 'stddev')
                 uncert_cls = uncertainty_str_to_cls_mapping[uncertainty_type_str]
@@ -465,7 +467,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
                 # Then we assume that last axis is always wavelength.
                 # This may need adjustment after the following
-                # specutils PR is merged: https://github.com/astropy/specutils/pull/999
+                # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
                 spectral_axis = -1
                 data_obj = lyr.data.get_object(cls=Spectrum1D, statistic=None)
 

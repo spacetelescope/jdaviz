@@ -18,7 +18,7 @@ from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 from traitlets import Dict, Bool, Unicode, Any
-from specutils import Spectrum1D, SpectralRegion, SpectralAxis
+from specutils import Spectrum1D, SpectralRegion
 import matplotlib.cm as cm
 import numpy as np
 
@@ -33,7 +33,8 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetUpdateMessage,
                                SubsetDeleteMessage)
 from glue.core.state_objects import State
-from glue.core.subset import CompositeSubsetState, InvertState
+from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
+                              CompositeSubsetState, InvertState)
 from glue.core.units import unit_converter
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region

@@ -6,23 +6,23 @@ from astropy.nddata import NDDataArray, StdDevUncertainty
 from specutils import Spectrum1D
 from regions import CirclePixelRegion, PixCoord
 
-ASTROPY_LT_5_3_DEV = Version(astropy.__version__) < Version('5.3.dev')
+ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
 
 
-@pytest.mark.skipif(not ASTROPY_LT_5_3_DEV, reason='Needs astropy 5.2 or earlier')
-def test_version_before_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert):
+@pytest.mark.skipif(not ASTROPY_LT_5_3_2, reason='Needs astropy <5.3.2')
+def test_version_before_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
     # Also test that plugin is disabled before data is loaded.
     plg = cubeviz_helper.plugins['Spectral Extraction']
     assert plg._obj.disabled_msg != ''
 
 
-@pytest.mark.skipif(ASTROPY_LT_5_3_DEV, reason='Needs astropy 5.3.dev or later')
-def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert):
+@pytest.mark.skipif(ASTROPY_LT_5_3_2, reason='Needs astropy 5.3.2 or later')
+def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
     # Also test that plugin is disabled before data is loaded.
     plg = cubeviz_helper.plugins['Spectral Extraction']
     assert plg._obj.disabled_msg == ''
 
-    cubeviz_helper.load_data(spectrum1d_cube_with_uncert)
+    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
 
     spectral_cube = cubeviz_helper.app.data_collection[0].get_object(NDDataArray)
     uncert_cube = cubeviz_helper.app.data_collection[1].get_object(StdDevUncertainty)
@@ -44,7 +44,7 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     )
 
 
-@pytest.mark.skipif(ASTROPY_LT_5_3_DEV, reason='Needs astropy 5.3.dev or later')
+@pytest.mark.skipif(ASTROPY_LT_5_3_2, reason='Needs astropy 5.3.2 or later')
 @pytest.mark.parametrize(
     "function, expected_uncert",
     zip(
@@ -53,8 +53,13 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     )
 )
 def test_subset(
-    cubeviz_helper, spectrum1d_cube_with_uncert, function, expected_uncert
+    cubeviz_helper, spectrum1d_cube_with_uncerts, function, expected_uncert
 ):
+    # give uniform unit uncertainties for this test:
+    spectrum1d_cube_with_uncerts.uncertainty = StdDevUncertainty(
+        np.ones_like(spectrum1d_cube_with_uncerts.data)
+    )
+
     regions = [
         # create a subset with a single pixel:
         CirclePixelRegion(PixCoord(0, 1), radius=0.7),
@@ -62,7 +67,7 @@ def test_subset(
         CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)
     ]
 
-    cubeviz_helper.load_data(spectrum1d_cube_with_uncert)
+    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
     cubeviz_helper.load_regions(regions)
 
     plg = cubeviz_helper.plugins['Spectral Extraction']
