@@ -596,8 +596,7 @@ class PlotOptions(PluginTemplateMixin):
             hist_lims = interval.get_limits(sub_data)
             hist_mark.min, hist_mark.max = hist_lims
 
-        self._remove_histogram_marks()
-        self._add_histogram_marks()
+        self._check_if_v_stretch_changed()
 
     @observe('stretch_vmin_value', 'stretch_vmax_value')
     def _check_if_v_stretch_changed(self, msg=None):
