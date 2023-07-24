@@ -14,21 +14,21 @@
     
     <v-row>
       <v-btn
-        prepend-icon="mdi-check-circle"
-        class="ma-2"
+        v-for="config in configs"
         color="primary"
         outlined=True
-        v-for="config in configs"
+        style="height: 160px"
         @click="launch_config(config)"
         :disabled="!compatible_configs.includes(config)">
-        <v-img
-            contain
-            max-height="100"
-            max-width="100"
-            :alt="config.charAt(0).toUpperCase() + config.slice(1)"
-            :title="config.charAt(0).toUpperCase() + config.slice(1)"
-            :src="config_icons[config]"><v-img>        
-        {{ config }}
+          <v-img
+              max-height="100"
+              max-width="100"
+              :alt="config.charAt(0).toUpperCase() + config.slice(1)"
+              :title="config.charAt(0).toUpperCase() + config.slice(1)"
+              :src="config_icons[config]"></v-img>
+          <span style="position: absolute; bottom: -24px">
+              {{ config }}
+          </span>
       </v-btn>
     </v-row>
   </div>
