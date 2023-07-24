@@ -21,11 +21,14 @@
         v-for="config in configs"
         @click="launch_config(config)"
         :disabled="!compatible_configs.includes(config)">
-        <img
+        <v-img
+            contain
+            max-height="100"
+            max-width="100"
             :alt="config.charAt(0).toUpperCase() + config.slice(1)"
             :title="config.charAt(0).toUpperCase() + config.slice(1)"
-            width="100px"
-            :src="config_icons[config]">
+            :src="config_icons[config]"><v-img>        
+        {{ config }}
       </v-btn>
     </v-row>
   </div>

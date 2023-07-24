@@ -89,11 +89,11 @@ class Launcher(v.VuetifyTemplate):
     hint = Unicode().tag(sync=True)
 
     # Define Icons
-    cubeviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'cubeviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
-    specviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'specviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
-    specviz2d_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'specviz2d.svg'), 'svg+xml')).tag(sync=True)  # noqa
-    mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
-    imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    cubeviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'cubeviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    specviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'specviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    specviz2d_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'specviz2d_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, *args, **kwargs):
         self.main = main
