@@ -494,7 +494,6 @@
             </glue-state-sync-wrapper>
           </div>
         </div>
-
       </div>
       <div v-if="contour_spinner"
            class="text-center"
@@ -511,7 +510,7 @@
           width="6"
         ></v-progress-circular>
       </div>
-
+    </div>
     <!-- GENERAL:AXES -->
     <j-plugin-section-header v-if="axes_visible_sync.in_subscribed_states && config !== 'imviz'">Axes</j-plugin-section-header>
     <glue-state-sync-wrapper v-if="config !== 'imviz'":sync="axes_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('axes_visible')">
