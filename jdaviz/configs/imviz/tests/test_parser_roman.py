@@ -4,7 +4,6 @@ import pytest
 roman_datamodels = pytest.importorskip("roman_datamodels")
 
 from astropy.utils.data import get_pkg_data_filename
-from erfa.core import ErfaWarning
 from gwcs import WCS as GWCS
 
 
@@ -15,8 +14,7 @@ from gwcs import WCS as GWCS
      (['data', 'var_rnoise'], 2)])
 def test_roman_wfi_ext_options(imviz_helper, ext_list, n_dc):
     filename = get_pkg_data_filename('data/roman_wfi_image_model.asdf')
-    with pytest.warns(ErfaWarning, match=r".*dubious year"):
-        imviz_helper.load_data(filename, ext=ext_list)
+    imviz_helper.load_data(filename, ext=ext_list)
     dc = imviz_helper.app.data_collection
     assert len(dc) == n_dc
 

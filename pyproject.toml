@@ -77,7 +77,7 @@ docs = [
     "tomli; python_version <\"3.11\""
 ]
 roman = [
-    "roman_datamodels>=0.14.2",
+    "roman_datamodels>=0.16.1",
 ]
 
 [build-system]
