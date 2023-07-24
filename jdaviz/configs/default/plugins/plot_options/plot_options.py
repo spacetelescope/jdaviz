@@ -482,6 +482,10 @@ class PlotOptions(PluginTemplateMixin):
     @observe('plugin_opened', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, msg={}):
+        # Import here to prevent circular import.
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+
         if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
             # no (image) viewer with stretch function options
             return
@@ -507,6 +511,10 @@ class PlotOptions(PluginTemplateMixin):
             bqplot_clear_figure(self.stretch_histogram)
             return
 
+        if not isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView)):
+            # don't update histogram if selected viewer is not an image viewer:
+            return
+
         viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
 
         # manage viewer zoom limit callbacks
@@ -522,7 +530,14 @@ class PlotOptions(PluginTemplateMixin):
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                     vs_old.remove_callback(attr, self._update_stretch_histogram)
 
-        data = self.layer.selected_obj[0][0].layer if self.multiselect else self.layer.selected_obj[0].layer  # noqa
+        if self.multiselect:
+            data = self.layer.selected_obj[0][0].layer
+        elif len(self.layer.selected_obj):
+            data = self.layer.selected_obj[0].layer
+        else:
+            # skip further updates if no data are available:
+            return
+
         comp = data.get_component(data.main_components[0])
 
         if self.stretch_hist_zoom_limits:
