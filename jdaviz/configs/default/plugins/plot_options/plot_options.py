@@ -482,6 +482,9 @@ class PlotOptions(PluginTemplateMixin):
     @observe('plugin_opened', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, msg={}):
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+
         if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
             # no (image) viewer with stretch function options
             return
@@ -507,11 +510,8 @@ class PlotOptions(PluginTemplateMixin):
             bqplot_clear_figure(self.stretch_histogram)
             return
 
-        spectrum_viewer_reference = getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', None
-        )
-        if self.viewer.selected == spectrum_viewer_reference:
-            # don't update a histogram if the spectrum viewer is selected:
+        if not isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView)):
+            # don't update histogram if selected viewer is not an image viewer:
             return
 
         viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
