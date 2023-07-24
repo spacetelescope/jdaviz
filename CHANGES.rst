@@ -9,7 +9,7 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
-- Prevent Plot Options plugin from hanging when selecting a spectrum viewer in Cubeviz [#2305]
+- Prevent Plot Options plugin from hanging when selecting a spectrum viewer in Cubeviz. [#2305]
 
 Imviz
 ^^^^^

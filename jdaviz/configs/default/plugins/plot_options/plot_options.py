@@ -482,6 +482,7 @@ class PlotOptions(PluginTemplateMixin):
     @observe('plugin_opened', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, msg={}):
+        # Import here to prevent circular import.
         from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 
