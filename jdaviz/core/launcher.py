@@ -1,9 +1,15 @@
+import os
+from pathlib import Path
+
+from glue_jupyter.common.toolbar_vuetify import read_icon
 import ipyvuetify as v
 from ipywidgets import jslink
+from traitlets import List, Unicode, Dict, observe
 
 from jdaviz import configs as jdaviz_configs
 from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY, ALL_JDAVIZ_CONFIGS
 from jdaviz.core.data_formats import identify_helper
+from jdaviz.core.tools import ICON_DIR
 
 
 def open(filename, show=True, **kwargs):
@@ -74,62 +80,72 @@ def _launch_config_with_data(config, data=None, show=True, **kwargs):
     return viz_helper
 
 
-def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']):
-    main = v.Sheet(
-        class_="mx-4",
-        attributes={"id": "popout-widget-container"},
-        _metadata={'mount_id': 'content'})
-    main.children = []
+class Launcher(v.VuetifyTemplate):
+    template_file = __file__, "launcher.vue"
+    configs = List().tag(sync=True)
+    filepath = Unicode().tag(sync=True)
+    compatible_configs = List().tag(sync=True)
+    config_icons = Dict().tag(sync=True)
+    hint = Unicode().tag(sync=True)
 
-    # Create Intro Row
-    intro_row = v.Row()
-    welcome_text = v.Html(tag='h1', attributes={'title': 'a title'},
-                          children=['Welcome to Jdaviz'])
-    intro_row.children = [welcome_text]
+    # Define Icons
+    cubeviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'cubeviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    specviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'specviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    specviz2d_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'specviz2d.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    # Config buttons
-    def create_config(config, data=None):
-        helper = _launch_config_with_data(config, data, show=False)
-        main.children = [helper.app]
+    def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, *args, **kwargs):
+        self.main = main
+        self.configs = configs
+        # Set all configs to compatible at first load (for loading blank config)
+        self.compatible_configs = configs
 
-    btns = {}
-    loaded_data = None
-    for config in configs:
-        config_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
-                           children=[config.capitalize()])
-        config_btn.on_event('click', lambda btn, event, data: create_config(btn.children[0],
-                                                                            loaded_data))
-        btns[config] = config_btn
+        self.config_icons = {
+            'cubeviz': self.cubeviz_icon,
+            'specviz': self.specviz_icon,
+            'specviz2d': self.specviz2d_icon,
+            'mosviz': self.mosviz_icon,
+            'imviz': self.imviz_icon
+        }
+        
+        self.loaded_data = None
+        self.hint = "No filepath provided; will load blank tool"
+        super().__init__(*args, **kwargs)
 
-    # Create button row
-    btn_row = v.Row()
-    btn_row.children = list(btns.values())
-
-    # Filepath row
-    filepath_row = v.Row()
-    text_field = v.TextField(label="File Path", v_model=None)
-
-    def enable_compatible_configs(filepath):
-        nonlocal loaded_data
-        if filepath in (None, ''):
-            compatible_helpers = ALL_JDAVIZ_CONFIGS
-            loaded_data = None
+    @observe('filepath')
+    def _filepath_changed(self, *args):
+        self.hint = "Identifying file..."
+        self.compatible_configs = []
+        if self.filepath in (None, ''):
+            self.compatible_configs = self.configs
+            self.loaded_data = None
+            self.hint = "No filepath provided; will load blank tool"
         else:
-            compatible_helpers, loaded_data = identify_helper(filepath)
-            if len(compatible_helpers) > 0 and loaded_data is None:
-                loaded_data = filepath
+            path = Path(self.filepath)
+            if not path.is_file():
+                self.loaded_data = None
+                self.hint = "Cannot find file on disk. Please check your filepath"
+            else:
+                try:
+                    self.compatible_configs, self.loaded_data = identify_helper(self.filepath)
+                    self.hint = "Compatible configs identified! Please select your config:"
+                except Exception:
+                    self.hint = "Could not autoidentify compatible config. Please manually select config to load your data into:"
+                    self.compatible_configs = self.configs
+                    self.loaded_data = self.filepath
+                finally:
+                    if len(self.compatible_configs) > 0 and self.loaded_data is None:
+                        self.loaded_data = self.filepath
+        # Clear hint if it's still stuck on "Identifying". We're in an ambiguous state
+        self.hint = '' if self.hint == "Identifying file..." else self.hint
 
-        for config, btn in btns.items():
-            btn.disabled = not (config in compatible_helpers)
+    def vue_launch_config(self, config):
+        helper = _launch_config_with_data(config, self.loaded_data, show=False)
+        self.main.children = [helper.app]
 
-    id_data_btn = v.Btn(class_="ma-2", outlined=True, color="primary",
-                        children=[v.Icon(children=["mdi-magnify"])])
-    id_data_btn.on_event('click', lambda btn, event, data: enable_compatible_configs(btn.value))
-    jslink((text_field, 'v_model'), (id_data_btn, 'value'))
-
-    filepath_row.children = [text_field, id_data_btn]
-
-    # Create Launcher
-    main.children = [intro_row, filepath_row, btn_row]
+def show_launcher(configs=ALL_JDAVIZ_CONFIGS):
+    main = v.Sheet(class_="mx-4", attributes={"id": "popout-widget-container"}, _metadata={'mount_id': 'content'})
+    main.children = [Launcher(main, configs)]
 
     return main
