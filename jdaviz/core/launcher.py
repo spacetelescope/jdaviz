@@ -7,6 +7,7 @@ from ipywidgets import jslink
 from traitlets import List, Unicode, Dict, observe
 
 from jdaviz import configs as jdaviz_configs
+from jdaviz import __version__
 from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY, ALL_JDAVIZ_CONFIGS
 from jdaviz.core.data_formats import identify_helper
 from jdaviz.core.tools import ICON_DIR
@@ -148,7 +149,7 @@ class Launcher(v.VuetifyTemplate):
         self.main.children = [helper.app]
 
 def show_launcher(configs=ALL_JDAVIZ_CONFIGS):
-    main = v.Sheet(class_="mx-4", attributes={"id": "popout-widget-container"}, _metadata={'mount_id': 'content'})
+    main = v.Sheet(class_="mx-4", attributes={"id": "popout-widget-container"}, color="turquoise", _metadata={'mount_id': 'content'})
     main.children = [Launcher(main, configs)]
 
     return main
