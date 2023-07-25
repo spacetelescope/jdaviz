@@ -2,6 +2,8 @@ import pytest
 from numpy import allclose
 from numpy.testing import assert_allclose
 
+from jdaviz.core.marks import HistogramMark
+
 
 @pytest.mark.filterwarnings('ignore')
 def test_multiselect(cubeviz_helper, spectrum1d_cube):
@@ -85,6 +87,32 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     # set to listen to viewer limits, the length of the samples will change
     po.stretch_hist_zoom_limits = True
     assert len(po.stretch_histogram.marks[0].sample) != len(flux_cube_sample)
+
+    po.stretch_vmin.value = po.stretch_histogram.marks[0].min
+    po.stretch_vmax.value = po.stretch_histogram.marks[0].max
+
+    v_min_max_marks = [mark for mark in po.stretch_histogram.marks
+                       if isinstance(mark, HistogramMark)]
+    assert len(v_min_max_marks) == 2
+    assert v_min_max_marks[0].x[0] == po.stretch_vmin.value
+    assert v_min_max_marks[1].x[0] == po.stretch_vmax.value
+
+    po._remove_histogram_marks()
+    assert len([mark for mark in po.stretch_histogram.marks
+                if isinstance(mark, HistogramMark)]) == 0
+    po._add_histogram_marks()
+    v_min_max_marks2 = [mark for mark in po.stretch_histogram.marks
+                        if isinstance(mark, HistogramMark)]
+    assert len(v_min_max_marks2) == 2
+    assert v_min_max_marks2[0].x[0] == po.stretch_vmin.value
+    assert v_min_max_marks2[1].x[0] == po.stretch_vmax.value
+
+    po.stretch_vmin.value = po.stretch_histogram.marks[0].min - 1
+    po.stretch_vmax.value = po.stretch_histogram.marks[0].max + 1
+
+    v_min_max_marks3 = [mark for mark in po.stretch_histogram.marks
+                        if isinstance(mark, HistogramMark)]
+    assert len(v_min_max_marks3) == 0
 
 
 @pytest.mark.filterwarnings('ignore')
