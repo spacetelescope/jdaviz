@@ -189,7 +189,7 @@ class PlotOptions(PluginTemplateMixin):
     stretch_vmax_sync = Dict().tag(sync=True)
 
     stretch_hist_zoom_limits = Bool().tag(sync=True)
-    stretch_hist_bin_size = Int().tag(sync=True)
+    stretch_hist_nbins = Int().tag(sync=True)
     stretch_histogram = Any().tag(sync=True, **widget_serialization)
 
     subset_visible_value = Bool().tag(sync=True)
@@ -600,7 +600,7 @@ class PlotOptions(PluginTemplateMixin):
                                                        label='density')]
 
             self.bqplot_figs_resize = [self.stretch_histogram]
-            self.stretch_hist_bin_size = 25
+            self.stretch_hist_nbins = 25
 
         else:
             hist_mark = self.stretch_histogram.marks[0]
@@ -641,7 +641,7 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram.marks = [mark for mark in self.stretch_histogram.marks
                                         if not isinstance(mark, HistogramMark)]
 
-    @observe("stretch_hist_bin_size")
+    @observe("stretch_hist_nbins")
     def set_histogram_bin_size(self, msg):
         if self.stretch_histogram is None or msg['new'] < 1:
             return
