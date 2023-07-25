@@ -2048,15 +2048,25 @@ class Application(VuetifyTemplate, HubListener):
             typ = 'cube'
         else:
             typ = 'unknown'
+
         # we'll expose any information we need here.  For "meta", not all entries are guaranteed
         # to be serializable, so we'll just send those that we need.
+
+        def _expose_meta(key):
+            if key in ('Plugin', 'mosviz_row'):
+                return True
+            if key[0] == '_':
+                # other internal metadata (like lcviz's '_LCVIZ_EPHEMERIS')
+                return True
+            return False
+
         return {
             'id': str(uuid.uuid4()),
             'name': data.label,
             'locked': False,
             'ndims': data.ndim,
             'type': typ,
-            'meta': {k: v for k, v in data.meta.items() if k in ['Plugin', 'mosviz_row']},
+            'meta': {k: v for k, v in data.meta.items() if _expose_meta(k)},
             'children': []}
 
     @staticmethod
