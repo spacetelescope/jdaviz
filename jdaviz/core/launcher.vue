@@ -1,5 +1,19 @@
 <template>
   <div>
+    <span style="float: right">
+        <a :href="'https://jdaviz.readthedocs.io/en/'+vdocs" target="__blank">
+            <b>Learn More</b>
+        </a>
+        |
+        <a :href="'https://spacetelescope.github.io/jdat_notebooks/'" target="__blank">
+            <b>Notebooks</b>
+        </a>
+        |
+        <a :href="'https://github.com/spacetelescope/jdaviz'" target="__blank">
+            <b>GitHub</b>
+        </a>
+    </span>
+
     <h1>Welcome to jdaviz!</h1>
     
     <v-row>

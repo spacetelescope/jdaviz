@@ -87,6 +87,7 @@ class Launcher(v.VuetifyTemplate):
     compatible_configs = List().tag(sync=True)
     config_icons = Dict().tag(sync=True)
     hint = Unicode().tag(sync=True)
+    vdocs = Unicode("").tag(sync=True) # App not available yet, so we need to recompute it here
 
     # Define Icons
     cubeviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'cubeviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -96,6 +97,8 @@ class Launcher(v.VuetifyTemplate):
     imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, *args, **kwargs):
+        self.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
+        
         self.main = main
         self.configs = configs
         # Set all configs to compatible at first load (for loading blank config)
