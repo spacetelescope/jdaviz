@@ -113,17 +113,17 @@ class Launcher(v.VuetifyTemplate):
         }
         
         self.loaded_data = None
-        self.hint = "No filepath provided; will load blank tool"
+        self.hint = "No filepath provided. Choose a config to load a blank tool:"
         super().__init__(*args, **kwargs)
 
     @observe('filepath')
     def _filepath_changed(self, *args):
-        self.hint = "Identifying file..."
+        self.hint = "Please wait. Identifying file..."
         self.compatible_configs = []
         if self.filepath in (None, ''):
             self.compatible_configs = self.configs
             self.loaded_data = None
-            self.hint = "No filepath provided; will load blank tool"
+            self.hint = "No filepath provided. Choose a config to load a blank tool:"
         else:
             path = Path(self.filepath)
             if not path.is_file():
@@ -141,7 +141,7 @@ class Launcher(v.VuetifyTemplate):
                     if len(self.compatible_configs) > 0 and self.loaded_data is None:
                         self.loaded_data = self.filepath
         # Clear hint if it's still stuck on "Identifying". We're in an ambiguous state
-        self.hint = '' if self.hint == "Identifying file..." else self.hint
+        self.hint = '' if self.hint == "Please wait. Identifying file..." else self.hint
 
     def vue_launch_config(self, config):
         helper = _launch_config_with_data(config, self.loaded_data, show=False)

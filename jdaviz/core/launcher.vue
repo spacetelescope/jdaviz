@@ -22,10 +22,17 @@
         label="File Path"
         :hint="hint"
         persistent-hint
-      >
-      </v-text-field>
+        >
+        </v-text-field>
+        <v-progress-circular
+            v-if="hint === 'Please wait. Identifying file...'"
+            indeterminate
+            color="spinner"
+            size="45"
+            width="4"
+        ></v-progress-circular>
     </v-row>
-    
+
     <v-row>
       <v-btn
         v-for="config in configs"
