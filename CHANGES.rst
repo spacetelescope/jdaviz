@@ -22,7 +22,7 @@ New Features
 
 - Line Analysis "Redshift from Centroid" only visible when lines are loaded. [#2294]
 
-- Add lines representing the stretch vmin and vmax to the plot options histogram. [2301]
+- Add lines representing the stretch vmin and vmax to the plot options histogram. [#2301]
 
 Cubeviz
 ^^^^^^^
