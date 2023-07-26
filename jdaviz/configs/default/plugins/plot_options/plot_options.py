@@ -97,6 +97,9 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
+    * :meth: `set_histogram_nbins`
+    * :meth: `set_histogram_x_limits`
+    * :meth: `set_histogram_y_limits`
     """
     template_file = __file__, "plot_options.vue"
 
@@ -430,7 +433,8 @@ class PlotOptions(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        expose = ['multiselect', 'viewer', 'layer', 'select_all', 'subset_visible']
+        expose = ['multiselect', 'viewer', 'layer', 'select_all', 'subset_visible',
+                  'set_histogram_nbins', 'set_histogram_x_limits', 'set_histogram_y_limits']
         if self.config == "cubeviz":
             expose += ['collapse_function']
         if self.config != "imviz":
@@ -653,9 +657,9 @@ class PlotOptions(PluginTemplateMixin):
     def histogram_nbins_changed(self, msg):
         if self.stretch_histogram is None or msg['new'] == '' or msg['new'] < 1:
             return
-        self.set_histogram_num_bins(msg['new'])
+        self.set_histogram_nbins(msg['new'])
 
-    def set_histogram_num_bins(self, nbins):
+    def set_histogram_nbins(self, nbins):
         self.stretch_histogram.marks[0].bins = nbins
         self.stretch_hist_nbins = nbins
 

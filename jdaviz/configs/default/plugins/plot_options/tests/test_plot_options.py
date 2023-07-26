@@ -98,7 +98,7 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert v_min_max_marks[1].x[0] == po.stretch_vmax.value
 
     assert po.stretch_histogram.marks[0].bins == 25
-    po.set_histogram_num_bins(20)
+    po.set_histogram_nbins(20)
     assert po.stretch_histogram.marks[0].bins == 20
 
     po.set_histogram_x_limits(x_min=0.25, x_max=2)
