@@ -75,7 +75,10 @@ def _launch_config_with_data(config, data=None, show=True, **kwargs):
 
 
 def show_launcher(configs=['imviz', 'specviz', 'mosviz', 'cubeviz', 'specviz2d']):
-    main = v.Sheet(class_="mx-4", _metadata={'mount_id': 'content'})
+    main = v.Sheet(
+        class_="mx-4",
+        attributes={"id": "popout-widget-container"},
+        _metadata={'mount_id': 'content'})
     main.children = []
 
     # Create Intro Row
