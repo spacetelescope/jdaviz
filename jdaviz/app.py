@@ -2021,8 +2021,7 @@ class Application(VuetifyTemplate, HubListener):
 
         self._clear_object_cache(msg.data.label)
 
-    @staticmethod
-    def _create_data_item(data):
+    def _create_data_item(self, data):
         ndims = len(data.shape)
         wcsaxes = data.meta.get('WCSAXES', None)
         if wcsaxes is None:
@@ -2055,7 +2054,7 @@ class Application(VuetifyTemplate, HubListener):
         def _expose_meta(key):
             if key in ('Plugin', 'mosviz_row'):
                 return True
-            if key[0] == '_':
+            if key.lower().startswith(f'_{self.config}'):
                 # other internal metadata (like lcviz's '_LCVIZ_EPHEMERIS')
                 return True
             return False
