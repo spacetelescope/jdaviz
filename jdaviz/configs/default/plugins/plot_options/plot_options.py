@@ -18,6 +18,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
                                         PlotOptionsSyncState)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.utils import bqplot_clear_figure
 from jdaviz.core.marks import HistogramMark
 
@@ -189,7 +190,7 @@ class PlotOptions(PluginTemplateMixin):
     stretch_vmax_sync = Dict().tag(sync=True)
 
     stretch_hist_zoom_limits = Bool().tag(sync=True)
-    stretch_hist_nbins = Int().tag(sync=True)
+    stretch_hist_nbins = IntHandleEmpty().tag(sync=True)
     stretch_histogram = Any().tag(sync=True, **widget_serialization)
 
     subset_visible_value = Bool().tag(sync=True)
@@ -642,10 +643,14 @@ class PlotOptions(PluginTemplateMixin):
                                         if not isinstance(mark, HistogramMark)]
 
     @observe("stretch_hist_nbins")
-    def set_histogram_bin_size(self, msg):
-        if self.stretch_histogram is None or msg['new'] < 1:
+    def histogram_nbins_changed(self, msg):
+        if self.stretch_histogram is None or msg['new'] == '' or msg['new'] < 1:
             return
-        self.stretch_histogram.marks[0].bins = msg['new']
+        self.set_histogram_num_bins(msg['new'])
+
+    def set_histogram_num_bins(self, nbins):
+        self.stretch_histogram.marks[0].bins = nbins
+        self.stretch_hist_nbins = nbins
 
     def set_histogram_x_limits(self, x_min, x_max):
         if x_min:

@@ -351,11 +351,11 @@
       <v-text-field
           ref="stretch_hist_nbins"
           type="number"
-          label="Bin Size"
+          label="Number of Bins"
           v-model.number="stretch_hist_nbins"
           hint="The amount of bins used in the histogram."
           persistent-hint
-          :rules="[() => stretch_hist_nbins > 0 || 'Bin size must be greater than zero']"
+          :rules="[() => stretch_hist_nbins > 0 || 'Number of Bins must be greater than zero']"
       ></v-text-field>
       <v-switch
         v-model="stretch_hist_zoom_limits"
