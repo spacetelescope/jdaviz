@@ -1,20 +1,20 @@
 <template>
-  <div>
-    <span style="float: right">
-        <a :href="'https://jdaviz.readthedocs.io/en/'+vdocs" target="__blank">
+  <div class="mx-4">
+    <span style="float: right; font-weight: 100; color: white">
+        <a :href="'https://jdaviz.readthedocs.io/en/'+vdocs" target="__blank" style="color: white">
             <b>Learn More</b>
         </a>
         |
-        <a :href="'https://spacetelescope.github.io/jdat_notebooks/'" target="__blank">
+        <a :href="'https://spacetelescope.github.io/jdat_notebooks/'" target="__blank" style="color: white">
             <b>Notebooks</b>
         </a>
         |
-        <a :href="'https://github.com/spacetelescope/jdaviz'" target="__blank">
+        <a :href="'https://github.com/spacetelescope/jdaviz'" target="__blank" style="color: white">
             <b>GitHub</b>
         </a>
     </span>
 
-    <h1>Welcome to jdaviz!</h1>
+    <h2 class="my-2" style="color: white">Welcome to Jdaviz!</h1>
     
     <v-row>
         <v-text-field
@@ -65,12 +65,11 @@
          </v-dialog>
     </v-row>
 
-    <v-row>
+    <v-row justify="center">
       <v-btn
         v-for="config in configs"
-        class="mx-2"
-        color="primary"
-        outlined=True
+        class="mx-4"
+        color="#141414"
         style="height: 160px"
         @click="launch_config(config)"
         :disabled="!compatible_configs.includes(config)">
@@ -81,7 +80,8 @@
                 :title="config.charAt(0).toUpperCase() + config.slice(1)"
                 :style="!compatible_configs.includes(config) ? 'filter: opacity(25%) saturate(0)' : ''"
                 :src="config_icons[config]"></v-img>
-            <span style="position: absolute; bottom: -24px">
+            <span :style="compatible_configs.includes(config) ? 'position: absolute; bottom: -24px; color: #2196F3'
+                                                              : 'position: absolute; bottom: -24px; color: #2196F375'">
                 {{ config }}
             </span>
       </v-btn>

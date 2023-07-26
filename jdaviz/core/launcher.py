@@ -165,7 +165,8 @@ class Launcher(v.VuetifyTemplate):
         self.main.children = [helper.app]
 
 def show_launcher(configs=ALL_JDAVIZ_CONFIGS):
-    main = v.Sheet(class_="mx-4", attributes={"id": "popout-widget-container"}, color="turquoise", _metadata={'mount_id': 'content'})
+    # Color defined manually due to the custom theme not being defined yet (in app.vue)
+    main = v.Sheet(class_="mx-0", attributes={"id": "popout-widget-container"}, color="#153A4B", _metadata={'mount_id': 'content'})
     main.children = [Launcher(main, configs)]
 
     return main
