@@ -626,11 +626,18 @@ class PlotOptions(PluginTemplateMixin):
             return
         scales = {'x': self.stretch_histogram.axes[0].scale, 'y': bqplot.LinearScale()}
         v_stretch_lines = []
-        if self.stretch_vmin.value >= self.stretch_histogram.marks[0].min:
+        # Set the viewer limits if they are None
+        if self.stretch_histogram.axes[0].scale.min is None:
+            self.stretch_histogram.axes[0].scale.min = self.stretch_histogram.marks[0].min
+        if self.stretch_histogram.axes[0].scale.max is None:
+            self.stretch_histogram.axes[0].scale.max = self.stretch_histogram.marks[0].max
+
+        # If the stretch limits are within the viewer limits, draw the HistogramMark
+        if self.stretch_vmin.value >= self.stretch_histogram.axes[0].scale.min:
             vmin_lines = HistogramMark(min_max_value=[self.stretch_vmin.value, self.stretch_vmin.value], # noqa
                                        scales=scales)
             v_stretch_lines.append(vmin_lines)
-        if self.stretch_vmax.value <= self.stretch_histogram.marks[0].max:
+        if self.stretch_vmax.value <= self.stretch_histogram.axes[0].scale.max:
             vmax_lines = HistogramMark(min_max_value=[self.stretch_vmax.value, self.stretch_vmax.value], # noqa
                                        scales=scales)
             v_stretch_lines.append(vmax_lines)
