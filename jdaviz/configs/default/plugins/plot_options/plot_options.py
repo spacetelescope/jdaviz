@@ -97,6 +97,7 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
     """
     template_file = __file__, "plot_options.vue"
+    uses_active_status = Bool(True).tag(sync=True)
 
     # multiselect is shared between viewer and layer
     multiselect = Bool(False).tag(sync=True)
@@ -479,7 +480,7 @@ class PlotOptions(PluginTemplateMixin):
         value = data.get('value')
         setattr(self, attr_name, value)
 
-    @observe('plugin_opened', 'layer_selected', 'viewer_selected',
+    @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, msg={}):
         if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
@@ -488,7 +489,7 @@ class PlotOptions(PluginTemplateMixin):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet
             return
-        if (not self.plugin_opened
+        if (not self.is_active
                 or not self.viewer.selected
                 or not self.layer.selected):  # pragma: no cover
             # no need to make updates, updates will be redrawn when plugin is opened
