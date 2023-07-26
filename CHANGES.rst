@@ -59,6 +59,9 @@ API Changes
 - ``viz.get_data()`` now takes optional ``**kwargs``; e.g., you could pass in
   ``function="sum"`` to collapse a cube in Cubeviz. [#2242]
 
+- Live-previews and keypress events that depend on the plugin being opened now work for inline
+  and popout windows. [#2295]
+
 Cubeviz
 ^^^^^^^
 
@@ -91,8 +94,8 @@ Bug Fixes
 
 - Fixed ``cls`` input being ignored in ``viz.get_data()``. [#2242]
 
-- Live-previews and keypress events that depend on the plugin being opened now work for inline
-  and popout windows. [#2295]
+- Line analysis plugin's ``show_continuum_marks`` is deprecated, use ``plugin.as_active()`` 
+  instead. [#2295]
 
 Cubeviz
 ^^^^^^^

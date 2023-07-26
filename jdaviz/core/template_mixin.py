@@ -263,7 +263,7 @@ class PluginTemplateMixin(TemplateMixin):
         self._inactive_thread.start()
 
     def _watch_active(self):
-        # expected_delay_ms hould match value in setTimeout in tray_plugin.vue
+        # expected_delay_ms should match value in setTimeout in tray_plugin.vue
         # NOTE: could control with a traitlet, but then would need to pass through each
         # <j-tray-plugin> component
         expected_delay_ms = 200
