@@ -368,7 +368,7 @@
       ></v-switch>
       <!-- NOTE: height defined here should match that in the custom CSS rules
            below for the bqplot class -->
-      <jupyter-widget :widget="stretch_histogram" class="stretch-hist" style="width: 100%; height: 320px; margin-top: -60px; margin-bottom: -40px" />
+      <jupyter-widget :widget="stretch_histogram_widget"/>
     </v-row>
 
     <!-- IMAGE:IMAGE -->
@@ -574,8 +574,5 @@ module.exports = {
     font-size: 16px;
     padding-left: 16px;
     border: 2px solid rgba(0,0,0,0.54);
-}
-.stretch-hist > .bqplot {
-  height: 320px !important;
 }
 </style>

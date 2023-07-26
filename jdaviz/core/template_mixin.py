@@ -2651,30 +2651,57 @@ class Plot(PluginSubcomponent):
     def clear_marks(self, *mark_labels):
         for mark_label, mark in self.marks.items():
             if mark_label in mark_labels:
-                mark.x, mark.y = [], []
+                if isinstance(mark, bqplot.Bins):
+                    mark.bins = 0
+                else:
+                    mark.x, mark.y = [], []
 
     def clear_all_marks(self):
         self.clear_marks(*self.marks.keys())
 
-    def _add_mark(self, cls, label, **kwargs):
+    def _add_mark(self, cls, label, xnorm=False, ynorm=False, **kwargs):
         if label in self._marks:
             raise ValueError(f"mark with label '{label}' already exists")
-        mark = cls(scales={'x': self.figure.axes[0].scale,
-                           'y': self.figure.axes[1].scale},
+        mark = cls(scales={'x': bqplot.LinearScale() if xnorm else self.figure.axes[0].scale,
+                           'y': bqplot.LinearScale() if ynorm else self.figure.axes[1].scale},
                    **kwargs)
         self.figure.marks = self.figure.marks + [mark]
         self._marks[label] = mark
         return mark
 
-    def add_line(self, label, x=[], y=[], **kwargs):
+    def add_line(self, label, x=[], y=[], xnorm=False, ynorm=False, **kwargs):
         return self._add_mark(bqplot.Lines, label, x=x, y=y,
+                              xnorm=xnorm, ynorm=ynorm,
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
 
-    def add_scatter(self, label, x=[], y=[], **kwargs):
+    def add_scatter(self, label, x=[], y=[], xnorm=False, ynorm=False, **kwargs):
         return self._add_mark(bqplot.Scatter, label, x=x, y=y,
+                              xnorm=xnorm, ynorm=ynorm,
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
+
+    def add_bins(self, label, sample=[1], bins=1, density=True, **kwargs):
+        return self._add_mark(bqplot.Bins, label, sample=sample, bins=bins,
+                              density=density,
+                              colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
+                              **kwargs)
+
+    def set_xlims(self, x_min=None, x_max=None):
+        ax = self.figure.axes[0]
+        if x_min is None:
+            x_min = ax.scale.min
+        if x_max is None:
+            x_max = ax.scale.max
+        ax.scale.min, ax.scale.max = x_min, x_max
+
+    def set_ylims(self, y_min=None, y_max=None):
+        ax = self.figure.axes[1]
+        if y_min is None:
+            y_min = ax.scale.min
+        if y_max is None:
+            y_max = ax.scale.max
+        ax.scale.min, ax.scale.max = y_min, y_max
 
 
 class PlotMixin(VuetifyTemplate, HubListener):
