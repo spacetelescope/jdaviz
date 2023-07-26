@@ -153,7 +153,6 @@ class Launcher(v.VuetifyTemplate):
         self.hint = '' if self.hint == "Please wait. Identifying file..." else self.hint
 
     def vue_choose_file(self, *args, **kwargs):
-        print(self._file_chooser.file_path)
         if self._file_chooser.file_path is None:
             self.error_message = "No file selected"
         elif Path(self._file_chooser.file_path).is_file():

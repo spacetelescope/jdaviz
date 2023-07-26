@@ -68,6 +68,9 @@ const tooltips = {
   'viewer-data-disable': 'Disable data within this viewer (will be hidden and unavailable from plugins until re-enabled)',
   'viewer-data-delete': 'Remove data entry across entire app',
 
+  // Launcher tooltip
+  'launcher-file-chooser': 'Select data using a file chooser',
+
   'table-prev': 'Select previous row in table',
   'table-next': 'Select next row in table',
   'table-play-pause-toggle': 'Toggle cycling through rows of table',

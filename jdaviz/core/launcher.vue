@@ -31,20 +31,24 @@
 
         <v-dialog v-model="file_chooser_visible" height="400" width="600">
             <template v-slot:activator="{ on }">
-            <v-btn
-                v-on="on"
-                class="ma-2"
-                style="top: 8px; height: 56px"
-                outlined
-                dark>
-                <v-icon>mdi-file-upload</v-icon
-                <g-file-import id="file-chooser"></g-file-import>
-            </v-btn>
+            <j-tooltip tipid="launcher-file-chooser">
+                <v-btn
+                    v-on="on"
+                    class="ma-2"
+                    style="top: 8px; height: 56px"
+                    outlined
+                    dark>
+                    <v-icon>mdi-file-upload</v-icon
+                    <g-file-import id="file-chooser"></g-file-import>
+                </v-btn>
+            </j-tooltip>
             </template>
             <v-card>
-                <v-card-title class="headline" color="primary" primary-title>Import Data</v-card-title>
+                <v-card-title class="headline" color="primary" primary-title>Select Data</v-card-title>
                 <v-card-text>
-                Select a file with data you want to load into this instance of Jdaviz
+                Select a file with data you want to load into this instance of Jdaviz. Jdaviz will
+                attempt to identify a compatible configuration for your selected dataset. If one cannot
+                be found, you can manually select a configuration to load your data into.
                 <v-container>
                     <v-row>
                     <v-col>
