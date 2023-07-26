@@ -4,11 +4,12 @@ from pathlib import Path
 from glue_jupyter.common.toolbar_vuetify import read_icon
 import ipyvuetify as v
 from ipywidgets import jslink
-from traitlets import List, Unicode, Dict, observe
+from traitlets import List, Unicode, Dict, Bool, observe
 
 from jdaviz import configs as jdaviz_configs
 from jdaviz import __version__
 from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY, ALL_JDAVIZ_CONFIGS
+from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.data_formats import identify_helper
 from jdaviz.core.tools import ICON_DIR
 
@@ -89,6 +90,10 @@ class Launcher(v.VuetifyTemplate):
     config_icons = Dict().tag(sync=True)
     hint = Unicode().tag(sync=True)
     vdocs = Unicode("").tag(sync=True) # App not available yet, so we need to recompute it here
+    # File picker Traitlets
+    error_message = Unicode().tag(sync=True)
+    valid_path = Bool(True).tag(sync=True)
+    file_chooser_visible = Bool(False).tag(sync=True)
 
     # Define Icons
     cubeviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'cubeviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -112,7 +117,10 @@ class Launcher(v.VuetifyTemplate):
             'mosviz': self.mosviz_icon,
             'imviz': self.imviz_icon
         }
-        
+
+        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
+        self._file_chooser = FileChooser(start_path)
+        self.components = {'g-file-import': self._file_chooser}
         self.loaded_data = None
         self.hint = "No filepath provided. Choose a config to load a blank tool:"
         super().__init__(*args, **kwargs)
@@ -143,6 +151,14 @@ class Launcher(v.VuetifyTemplate):
                         self.loaded_data = self.filepath
         # Clear hint if it's still stuck on "Identifying". We're in an ambiguous state
         self.hint = '' if self.hint == "Please wait. Identifying file..." else self.hint
+
+    def vue_choose_file(self, *args, **kwargs):
+        print(self._file_chooser.file_path)
+        if self._file_chooser.file_path is None:
+            self.error_message = "No file selected"
+        elif Path(self._file_chooser.file_path).is_file():
+            self.file_chooser_visible = False
+            self.filepath = self._file_chooser.file_path
 
     def vue_launch_config(self, config):
         helper = _launch_config_with_data(config, self.loaded_data, show=False)

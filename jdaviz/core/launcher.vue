@@ -18,20 +18,51 @@
     
     <v-row>
         <v-text-field
-        v-model="filepath"
-        class="mb-4"
-        label="File Path"
-        :hint="hint"
-        persistent-hint
+            v-model="filepath"
+            class="my-4"
+            dark
+            outlined
+            label="File Path"
+            :hint="hint"
+            persistent-hint
+            :loading="hint === 'Please wait. Identifying file...' ? '#C75109' : 'false' " 
         >
         </v-text-field>
-        <v-progress-circular
-            v-if="hint === 'Please wait. Identifying file...'"
-            indeterminate
-            color="spinner"
-            size="45"
-            width="4"
-        ></v-progress-circular>
+
+        <v-dialog v-model="file_chooser_visible" height="400" width="600">
+            <template v-slot:activator="{ on }">
+            <v-btn
+                v-on="on"
+                class="ma-2"
+                style="top: 8px; height: 56px"
+                outlined
+                dark>
+                <v-icon>mdi-file-upload</v-icon
+                <g-file-import id="file-chooser"></g-file-import>
+            </v-btn>
+            </template>
+            <v-card>
+                <v-card-title class="headline" color="primary" primary-title>Import Data</v-card-title>
+                <v-card-text>
+                Select a file with data you want to load into this instance of Jdaviz
+                <v-container>
+                    <v-row>
+                    <v-col>
+                        <g-file-import id="file-chooser"></g-file-import>
+                        <span style="color: red;">{{ error_message }}</span>
+                    </v-col>
+                    </v-row>
+                </v-container>
+                </v-card-text>
+
+                <v-card-actions>
+                <div class="flex-grow-1"></div>
+                    <v-btn color="primary" text @click="file_chooser_visible = false">Cancel</v-btn>
+                    <v-btn color="primary" text @click="choose_file" :disabled="!valid_path">Import</v-btn>
+                </v-card-actions>
+
+            </v-card>
+         </v-dialog>
     </v-row>
 
     <v-row>
