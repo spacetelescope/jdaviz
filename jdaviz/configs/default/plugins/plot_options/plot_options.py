@@ -98,8 +98,6 @@ class PlotOptions(PluginTemplateMixin):
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
     * :meth: `set_histogram_nbins`
-    * :meth: `set_histogram_x_limits`
-    * :meth: `set_histogram_y_limits`
     """
     template_file = __file__, "plot_options.vue"
 
@@ -434,7 +432,7 @@ class PlotOptions(PluginTemplateMixin):
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'layer', 'select_all', 'subset_visible',
-                  'set_histogram_nbins', 'set_histogram_x_limits', 'set_histogram_y_limits']
+                  'set_histogram_nbins']
         if self.config == "cubeviz":
             expose += ['collapse_function']
         if self.config != "imviz":
