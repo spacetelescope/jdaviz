@@ -381,7 +381,7 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram.figure.axes[0].tick_format = '0.1e'
         self.stretch_histogram.figure.axes[1].label = 'density'
         self.stretch_histogram.figure.axes[1].num_ticks = 2
-        self.stretch_histogram_widget = 'IPY_MODEL_'+self.stretch_histogram.model_id
+        self.stretch_histogram_widget = f'IPY_MODEL_{self.stretch_histogram.model_id}'
 
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'subset_visible_value', 'subset_visible_sync',
@@ -598,13 +598,13 @@ class PlotOptions(PluginTemplateMixin):
 
     @observe('stretch_vmin_value')
     def _stretch_vmin_changed(self, msg=None):
-        self.stretch_histogram.marks['vmin'].x = [self.stretch_vmin_value] * 2
+        self.stretch_histogram.marks['vmin'].x = [self.stretch_vmin_value, self.stretch_vmin_value]
 
     @observe('stretch_vmax_value')
     def _stretch_vmax_changed(self, msg=None):
-        self.stretch_histogram.marks['vmax'].x = [self.stretch_vmax_value] * 2
+        self.stretch_histogram.marks['vmax'].x = [self.stretch_vmax_value, self.stretch_vmax_value]
 
-    @observe('stretch_hist_nbins')
+    @observe("stretch_hist_nbins")
     def _histogram_nbins_changed(self, msg):
         if self.stretch_histogram is None or msg['new'] == '' or msg['new'] < 1:
             return
