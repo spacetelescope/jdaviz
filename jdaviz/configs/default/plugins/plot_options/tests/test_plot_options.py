@@ -88,14 +88,26 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     po.stretch_hist_zoom_limits = True
     assert len(po.stretch_histogram.marks[0].sample) != len(flux_cube_sample)
 
-    po.stretch_vmin.value = po.stretch_histogram.marks[0].min
-    po.stretch_vmax.value = po.stretch_histogram.marks[0].max
+    po.stretch_vmin.value = 0.5
+    po.stretch_vmax.value = 1
 
     v_min_max_marks = [mark for mark in po.stretch_histogram.marks
                        if isinstance(mark, HistogramMark)]
     assert len(v_min_max_marks) == 2
     assert v_min_max_marks[0].x[0] == po.stretch_vmin.value
     assert v_min_max_marks[1].x[0] == po.stretch_vmax.value
+
+    assert po.stretch_histogram.marks[0].bins == 25
+    po.set_histogram_nbins(20)
+    assert po.stretch_histogram.marks[0].bins == 20
+
+    po.set_histogram_x_limits(x_min=0.25, x_max=2)
+    assert po.stretch_histogram.axes[0].scale.min == 0.25
+    assert po.stretch_histogram.axes[0].scale.max == 2
+
+    po.set_histogram_y_limits(y_min=1, y_max=2)
+    assert po.stretch_histogram.axes[1].scale.min == 1
+    assert po.stretch_histogram.axes[1].scale.max == 2
 
     po._remove_histogram_marks()
     assert len([mark for mark in po.stretch_histogram.marks

@@ -18,6 +18,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
                                         PlotOptionsSyncState)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.utils import bqplot_clear_figure
 from jdaviz.core.marks import HistogramMark
 
@@ -96,6 +97,7 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Linear".
     * ``contour_custom_levels`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. This only applies when ``contour_mode`` is "Custom".
+    * :meth: `set_histogram_nbins`
     """
     template_file = __file__, "plot_options.vue"
 
@@ -189,6 +191,7 @@ class PlotOptions(PluginTemplateMixin):
     stretch_vmax_sync = Dict().tag(sync=True)
 
     stretch_hist_zoom_limits = Bool().tag(sync=True)
+    stretch_hist_nbins = IntHandleEmpty().tag(sync=True)
     stretch_histogram = Any().tag(sync=True, **widget_serialization)
 
     subset_visible_value = Bool().tag(sync=True)
@@ -428,7 +431,8 @@ class PlotOptions(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        expose = ['multiselect', 'viewer', 'layer', 'select_all', 'subset_visible']
+        expose = ['multiselect', 'viewer', 'layer', 'select_all', 'subset_visible',
+                  'set_histogram_nbins']
         if self.config == "cubeviz":
             expose += ['collapse_function']
         if self.config != "imviz":
@@ -599,6 +603,7 @@ class PlotOptions(PluginTemplateMixin):
                                                        label='density')]
 
             self.bqplot_figs_resize = [self.stretch_histogram]
+            self.stretch_hist_nbins = 25
 
         else:
             hist_mark = self.stretch_histogram.marks[0]
@@ -623,11 +628,18 @@ class PlotOptions(PluginTemplateMixin):
             return
         scales = {'x': self.stretch_histogram.axes[0].scale, 'y': bqplot.LinearScale()}
         v_stretch_lines = []
-        if self.stretch_vmin.value >= self.stretch_histogram.marks[0].min:
+        # Set the viewer limits if they are None
+        if self.stretch_histogram.axes[0].scale.min is None:
+            self.stretch_histogram.axes[0].scale.min = self.stretch_histogram.marks[0].min
+        if self.stretch_histogram.axes[0].scale.max is None:
+            self.stretch_histogram.axes[0].scale.max = self.stretch_histogram.marks[0].max
+
+        # If the stretch limits are within the viewer limits, draw the HistogramMark
+        if self.stretch_vmin.value >= self.stretch_histogram.axes[0].scale.min:
             vmin_lines = HistogramMark(min_max_value=[self.stretch_vmin.value, self.stretch_vmin.value], # noqa
                                        scales=scales)
             v_stretch_lines.append(vmin_lines)
-        if self.stretch_vmax.value <= self.stretch_histogram.marks[0].max:
+        if self.stretch_vmax.value <= self.stretch_histogram.axes[0].scale.max:
             vmax_lines = HistogramMark(min_max_value=[self.stretch_vmax.value, self.stretch_vmax.value], # noqa
                                        scales=scales)
             v_stretch_lines.append(vmax_lines)
@@ -638,3 +650,25 @@ class PlotOptions(PluginTemplateMixin):
             return
         self.stretch_histogram.marks = [mark for mark in self.stretch_histogram.marks
                                         if not isinstance(mark, HistogramMark)]
+
+    @observe("stretch_hist_nbins")
+    def histogram_nbins_changed(self, msg):
+        if self.stretch_histogram is None or msg['new'] == '' or msg['new'] < 1:
+            return
+        self.set_histogram_nbins(msg['new'])
+
+    def set_histogram_nbins(self, nbins):
+        self.stretch_histogram.marks[0].bins = nbins
+        self.stretch_hist_nbins = nbins
+
+    def set_histogram_x_limits(self, x_min, x_max):
+        if x_min:
+            self.stretch_histogram.axes[0].scale.min = x_min
+        if x_max:
+            self.stretch_histogram.axes[0].scale.max = x_max
+
+    def set_histogram_y_limits(self, y_min, y_max):
+        if y_min:
+            self.stretch_histogram.axes[1].scale.min = y_min
+        if y_max:
+            self.stretch_histogram.axes[1].scale.max = y_max
