@@ -30,20 +30,17 @@
         </v-text-field>
 
         <v-dialog v-model="file_chooser_visible" height="400" width="600">
-            <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
-                    <v-btn
-                        v-on="on"
-                        class="ma-2"
-                        style="top: 8px; height: 56px"
-                        outlined
-                        dark>
-                        <v-icon>mdi-file-upload</v-icon
-                        <g-file-import id="file-chooser"></g-file-import>
-                    </v-btn>
-                </template>
-                <span>Select data using a file chooser</span>
-            </v-tooltip>
+            <template v-slot:activator="{ on }">
+                <v-btn
+                    v-on="on"
+                    class="ma-2"
+                    style="top: 8px; height: 56px"
+                    outlined
+                    dark>
+                    <v-icon>mdi-file-upload</v-icon
+                    <g-file-import id="file-chooser"></g-file-import>
+                </v-btn>
+            </template>
             <v-card>
                 <v-card-title class="headline" color="primary" primary-title>Select Data</v-card-title>
                 <v-card-text>
