@@ -171,9 +171,9 @@ class Launcher(v.VuetifyTemplate):
 def show_launcher(configs=ALL_JDAVIZ_CONFIGS, height="100%"):
     # Color defined manually due to the custom theme not being defined yet (in app.vue)
     height = f"{height}px" if isinstance(height, int) else height
-    main = v.Sheet(class_="mx-0",
+    main = v.Sheet(class_="mx-25",
                    attributes={"id": "popout-widget-container"}, 
-                   color="#153A4B",
+                   color="#00212C",
                    height=height,
                    _metadata={'mount_id': 'content'})
     main.children = [Launcher(main, configs, height)]

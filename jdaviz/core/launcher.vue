@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-4">
+  <div class="mx-12">
     <span style="float: right; font-weight: 100; color: white">
         <a :href="'https://jdaviz.readthedocs.io/en/'+vdocs" target="__blank" style="color: white">
             <b>Learn More</b>
@@ -14,12 +14,13 @@
         </a>
     </span>
 
-    <h2 class="my-2" style="color: white">Welcome to Jdaviz!</h1>
+    <h1 class="mt-8 mb-6" style="color: white">Welcome to Jdaviz!</h1>
     
     <v-row>
         <v-text-field
             v-model="filepath"
             class="my-4"
+            autofocus="true"
             dark
             outlined
             label="File Path"
@@ -34,10 +35,10 @@
                 <v-btn
                     v-on="on"
                     class="ma-2"
-                    style="top: 8px; height: 56px"
-                    outlined
+                    color="#1E617F"
+                    style="top: 7px; height: 57px"
                     dark>
-                    <v-icon>mdi-file-upload</v-icon
+                    <v-icon large>mdi-file-upload</v-icon
                     <g-file-import id="file-chooser"></g-file-import>
                 </v-btn>
             </template>
@@ -71,21 +72,25 @@
       <v-btn
         v-for="config in configs"
         class="mx-4"
-        color="#141414"
-        style="height: 160px"
+        color="#FFFFFF"
+        style="height: 180px"
         @click="launch_config(config)"
         :disabled="!compatible_configs.includes(config)">
-            <v-img
-                max-height="100"
-                max-width="100"
-                :alt="config.charAt(0).toUpperCase() + config.slice(1)"
-                :title="config.charAt(0).toUpperCase() + config.slice(1)"
-                :style="!compatible_configs.includes(config) ? 'filter: opacity(25%) saturate(0)' : ''"
-                :src="config_icons[config]"></v-img>
-            <span :style="compatible_configs.includes(config) ? 'position: absolute; bottom: -24px; color: #2196F3'
-                                                              : 'position: absolute; bottom: -24px; color: #2196F375'">
-                {{ config }}
-            </span>
+            <div class="item" align="center">
+                <v-img
+                    max-height="100"
+                    max-width="100"
+                    :alt="config.charAt(0).toUpperCase() + config.slice(1)"
+                    :title="config.charAt(0).toUpperCase() + config.slice(1)"
+                    :style="!compatible_configs.includes(config) ? 'filter: opacity(25%) saturate(0)' : ''"
+                    :src="config_icons[config]"></v-img>
+                
+                <span class="bold" :style="compatible_configs.includes(config) ? 'font-size: 1.3em; color: #013B4D'
+                                                                            : 'font-size: 1.3em; color: #013B4D75'">
+                    <br>
+                    {{ config }}
+                </span>
+            </div>
       </v-btn>
     </v-row>
   </div>
