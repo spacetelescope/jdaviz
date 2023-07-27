@@ -1,18 +1,18 @@
-from traitlets import Any, Bool, List, Unicode, observe
+from traitlets import Any, Bool, Unicode, observe
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
-from jdaviz.core.events import ViewerAddedMessage, ViewerRemovedMessage
+from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, Plot
+from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, Plot
 
 __all__ = ['LineProfileXY']
 
 
 @tray_registry('imviz-line-profile-xy', label="Imviz Line Profiles (XY)")
-class LineProfileXY(PluginTemplateMixin):
+class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "line_profile_xy.vue"
-    viewer_items = List([]).tag(sync=True)
-    selected_viewer = Unicode("").tag(sync=True)
+    uses_active_status = Bool(True).tag(sync=True)
+
     plot_available = Bool(False).tag(sync=True)
     selected_x = Any('').tag(sync=True)
     selected_y = Any('').tag(sync=True)
@@ -22,7 +22,6 @@ class LineProfileXY(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._default_viewer = f'{self.app.config}-0'
 
         self.plot_across_x = Plot(self)
         self.plot_across_x.add_line('line', color='gray')
@@ -34,31 +33,62 @@ class LineProfileXY(PluginTemplateMixin):
         self.plot_across_y.figure.axes[0].label = 'X (pix)'
         self.plot_across_y_widget = 'IPY_MODEL_'+self.plot_across_y.model_id
 
-        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewers_changed)
-        self.hub.subscribe(self, ViewerRemovedMessage, handler=self._on_viewers_changed)
-
-        self._on_viewers_changed()  # Populate it on start-up
-
-    def _on_viewers_changed(self, msg=None):
-        self.viewer_items = self.app.get_viewer_ids()
-
-        # Selected viewer was removed but Imviz always has a default viewer to fall back on.
-        if self.selected_viewer not in self.viewer_items:
-            self.selected_viewer = self._default_viewer
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
     def reset_results(self):
         self.plot_available = False
         self.plot_across_x.clear_all_marks()
         self.plot_across_y.clear_all_marks()
 
-    # This is also triggered from viewer code.
-    @observe("selected_viewer")
-    def vue_draw_plot(self, *args, **kwargs):
-        """Draw line profile plots for given Data across given X and Y indices (0-indexed)."""
-        if not self.selected_x or not self.selected_y or not self.plugin_opened:
+    def _create_viewer_callbacks(self, viewer):
+        if not self.is_active:
             return
 
-        viewer = self.app.get_viewer_by_id(self.selected_viewer)
+        callback = self._viewer_callback(viewer, self._on_viewer_key_event)
+        viewer.add_event_callback(callback, events=['keydown'])
+
+    def _on_viewer_added(self, msg):
+        self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+
+    @observe('is_active')
+    def on_is_active_changed(self, *args):
+        # subscribe/unsubscribe to keypress events across all viewers
+        for viewer in self.app._viewer_store.values():
+            if not hasattr(viewer, 'figure'):
+                # table viewer, etc
+                continue
+            callback = self._viewer_callback(viewer, self._on_viewer_key_event)
+
+            if self.is_active:
+                viewer.add_event_callback(callback, events=['keydown'])
+            else:
+                viewer.remove_event_callback(callback)
+
+        if self.is_active:
+            self.vue_draw_plot()
+
+    def _on_viewer_key_event(self, viewer, data):
+        if data['key'] == 'l':
+            image = viewer.active_image_layer.layer
+            x = data['domain']['x']
+            y = data['domain']['y']
+            if x is None or y is None:  # Out of bounds
+                return
+            x, y, _, _ = viewer._get_real_xy(image, x, y)
+            self.selected_x = x
+            self.selected_y = y
+            self.viewer_selected = viewer.reference_id
+            # TODO: remove manual calls to vue_draw_plot and trigger
+            # by changes to selected_x/selected_y as well as viewer_selected
+            self.vue_draw_plot()
+
+    @observe("viewer_selected")
+    def vue_draw_plot(self, *args, **kwargs):
+        """Draw line profile plots for given Data across given X and Y indices (0-indexed)."""
+        if not self.selected_x or not self.selected_y or not self.is_active:
+            return
+
+        viewer = self.viewer.selected_obj
         i = get_top_layer_index(viewer)
         data = viewer.state.layers[i].layer
 

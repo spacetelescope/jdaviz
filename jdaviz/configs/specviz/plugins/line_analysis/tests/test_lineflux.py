@@ -62,7 +62,8 @@ def _calculate_line_flux(viz_helper):
     # Open the plugin and force the calculation
     viz_helper.app.state.drawer = True
     line_analysis_plugin = viz_helper.app.get_tray_item_from_name('specviz-line-analysis')
-    line_analysis_plugin.open_in_tray()
+    line_analysis_plugin.keep_active = True
+
     # Retrieve Results
     for result in line_analysis_plugin.results:
         if result['function'] == 'Line Flux':

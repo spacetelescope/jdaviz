@@ -24,7 +24,7 @@ def test_plugin(specviz2d_helper):
     sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
     assert len(sp2dv.figure.marks) == 2
 
-    pext.open_in_tray()
+    pext.keep_active = True
     assert len(sp2dv.figure.marks) == 11
     assert pext.marks['trace'].visible is True
     assert len(pext.marks['trace'].x) > 0
@@ -156,7 +156,7 @@ def test_user_api(specviz2d_helper):
     specviz2d_helper.load_data(spectrum_2d=fn)
 
     pext = specviz2d_helper.plugins['Spectral Extraction']
-    pext.open_in_tray()
+    pext.keep_active = True
 
     # test that setting a string to an AddResults object redirects to the label
     pext.bg_sub_add_results = 'override label'

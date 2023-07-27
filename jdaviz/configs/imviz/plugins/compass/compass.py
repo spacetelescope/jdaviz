@@ -23,6 +23,8 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     * ``data_label``: label of the top-layer shown in the compass (read-only)
     """
     template_file = __file__, "compass.vue"
+    uses_active_status = Bool(True).tag(sync=True)
+
     icon = Unicode("").tag(sync=True)
     data_label = Unicode("").tag(sync=True)
     img_data = Unicode("").tag(sync=True)
@@ -39,10 +41,6 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('viewer',), readonly=('data_label',))
-
-    def show(self, *args, **kwargs):
-        super().show(*args, **kwargs)
-        self._compass_with_new_viewer(from_show=True)
 
     def _on_viewer_data_changed(self, msg=None):
         if self.viewer_selected:
@@ -61,7 +59,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         self.canvas_angle = viewer_item.get('canvas_angle', 0)  # noqa
         self.canvas_flip_horizontal = viewer_item.get('canvas_flip_horizontal', False)
 
-    @observe("viewer_selected", "plugin_opened")
+    @observe("viewer_selected", "is_active")
     def _compass_with_new_viewer(self, *args, **kwargs):
         if not hasattr(self, 'viewer'):
             # mixin object not yet initialized
@@ -69,7 +67,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
 
         # There can be only one!
         for vid, viewer in self.app._viewer_store.items():
-            if vid == self.viewer.selected_id and (self.plugin_opened or kwargs.get('from_show')):
+            if vid == self.viewer.selected_id and self.plugin_opened:
                 viewer.compass = self
                 viewer.on_limits_change()  # Force redraw
 

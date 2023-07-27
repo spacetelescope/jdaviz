@@ -79,19 +79,6 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             if key_pressed in ('b', 'B'):
                 self.blink_once(reversed=key_pressed=='B')  # noqa: E225
 
-            elif key_pressed == 'l' and self.line_profile_xy.plugin_opened:
-                # Same data as mousemove above.
-                image = self.active_image_layer.layer
-                x = data['domain']['x']
-                y = data['domain']['y']
-                if x is None or y is None:  # Out of bounds
-                    return
-                x, y, _, _ = self._get_real_xy(image, x, y)
-                self.line_profile_xy.selected_x = x
-                self.line_profile_xy.selected_y = y
-                self.line_profile_xy.selected_viewer = self.reference_id
-                self.line_profile_xy.vue_draw_plot()
-
     def blink_once(self, reversed=False):
         # Simple blinking of images - this will make it so that only one
         # layer is visible at a time and cycles through the layers.
@@ -139,7 +126,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                             'imviz-line-profile-xy')
                     except KeyError:  # pragma: no cover
                         return
-                self.line_profile_xy.selected_viewer = self.reference_id
+                self.line_profile_xy.viewer_selected = self.reference_id
                 self.line_profile_xy.vue_draw_plot()
 
     def on_limits_change(self, *args):

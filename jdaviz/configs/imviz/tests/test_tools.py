@@ -133,7 +133,7 @@ def test_blink(imviz_helper):
 
 def test_compass_open_while_load(imviz_helper):
     plg = imviz_helper.plugins['Compass']
-    plg.open_in_tray()
+    plg.plugin_opened = True
 
     # Should not crash even if Compass is open in tray.
     imviz_helper.load_data(np.ones((2, 2)))
