@@ -120,6 +120,7 @@ def test_line_identify(specviz_helper, spectrum1d):
 
     ll_plugin = specviz_helper.app.get_tray_item_from_name('g-line-list')
     la_plugin = specviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    la_plugin.plugin_opened = True
     rest_names = [line['name_rest'] for line in ll_plugin.list_contents['Test List']['lines']]
 
     # will default to no selection
@@ -131,7 +132,7 @@ def test_line_identify(specviz_helper, spectrum1d):
     # but selecting a line from line-list (or clicking) should change the dropdown value
     # since sync is enabled by default
     assert la_plugin.sync_identify is True
-    # think this is the problem and we need to send the rest name here!
+
     msg = LineIdentifyMessage(rest_names[1],
                               sender=specviz_helper)
     specviz_helper.app.session.hub.broadcast(msg)
@@ -163,7 +164,12 @@ def test_line_identify(specviz_helper, spectrum1d):
 
     # manually update redshift
     la_plugin.vue_line_assign()
-    assert_allclose(la_plugin.selected_line_redshift, 0.4594414354783614)
+    assert_allclose(la_plugin.results_centroid, 7307.4232674401555)
+    line_mark = la_plugin.line_marks[la_plugin.line_items.index(la_plugin.selected_line)]
+    assert_allclose(line_mark.rest_value, 5007)
+    z = la_plugin._compute_redshift_for_selected_line()
+    assert_allclose(z, (la_plugin.results_centroid - line_mark.rest_value)/line_mark.rest_value)
+    assert_allclose(la_plugin.selected_line_redshift, z)
 
 
 def test_coerce_unit():
