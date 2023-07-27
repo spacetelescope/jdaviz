@@ -118,7 +118,8 @@
                   </v-switch>
                 </v-row>
                 <v-row justify="end">
-                  <v-btn color="primary" color="accent" text @click="create_new_orientation_from_data">Add option</v-btn>
+                  <v-btn color="primary" color="accent" text :disabled="rotation_angle===''" @click="create_new_orientation_from_data">Add option</v-btn>
+
                 </v-row>
         </div>
 
