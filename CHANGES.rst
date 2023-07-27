@@ -24,6 +24,10 @@ New Features
 
 - Add lines representing the stretch vmin and vmax to the plot options histogram. [#2301]
 
+- Add option to set bin size in plot options plugin and API call to change histogram
+  viewer limits. [#2309]
+
+
 Cubeviz
 ^^^^^^^
 
