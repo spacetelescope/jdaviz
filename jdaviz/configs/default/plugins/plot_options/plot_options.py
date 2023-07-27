@@ -377,7 +377,10 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
         self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
         self.stretch_histogram.figure.axes[0].label = 'pixel value'
+        self.stretch_histogram.figure.axes[0].num_ticks = 3
+        self.stretch_histogram.figure.axes[0].tick_format = '0.1e'
         self.stretch_histogram.figure.axes[1].label = 'density'
+        self.stretch_histogram.figure.axes[1].num_ticks = 2
         self.stretch_histogram_widget = 'IPY_MODEL_'+self.stretch_histogram.model_id
 
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
