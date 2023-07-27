@@ -2,8 +2,6 @@ import pytest
 from numpy import allclose
 from numpy.testing import assert_allclose
 
-from jdaviz.core.marks import HistogramMark
-
 
 @pytest.mark.filterwarnings('ignore')
 def test_multiselect(cubeviz_helper, spectrum1d_cube):
@@ -69,62 +67,49 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
 
     assert po.stretch_histogram is not None
 
-    flux_cube_sample = po.stretch_histogram.marks[0].sample
+    hist_mark = po.stretch_histogram.marks['histogram']
+    flux_cube_sample = hist_mark.sample
 
     # changing viewer should change results
     po.viewer.selected = 'uncert-viewer'
-    assert not allclose(po.stretch_histogram.marks[0].sample, flux_cube_sample)
+    assert not allclose(hist_mark.sample, flux_cube_sample)
 
     po.viewer.selected = 'flux-viewer'
-    assert_allclose(po.stretch_histogram.marks[0].sample, flux_cube_sample)
+    assert_allclose(hist_mark.sample, flux_cube_sample)
 
     # change viewer limits
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     fv.state.x_max = 0.5 * fv.state.x_max
     # viewer limits should not be affected by default
-    assert_allclose(po.stretch_histogram.marks[0].sample, flux_cube_sample)
+    assert_allclose(hist_mark.sample, flux_cube_sample)
 
     # set to listen to viewer limits, the length of the samples will change
     po.stretch_hist_zoom_limits = True
-    assert len(po.stretch_histogram.marks[0].sample) != len(flux_cube_sample)
+    assert len(hist_mark.sample) != len(flux_cube_sample)
 
     po.stretch_vmin.value = 0.5
     po.stretch_vmax.value = 1
 
-    v_min_max_marks = [mark for mark in po.stretch_histogram.marks
-                       if isinstance(mark, HistogramMark)]
-    assert len(v_min_max_marks) == 2
-    assert v_min_max_marks[0].x[0] == po.stretch_vmin.value
-    assert v_min_max_marks[1].x[0] == po.stretch_vmax.value
+    assert po.stretch_histogram.marks['vmin'].x[0] == po.stretch_vmin.value
+    assert po.stretch_histogram.marks['vmax'].x[0] == po.stretch_vmax.value
 
-    assert po.stretch_histogram.marks[0].bins == 25
-    po.set_histogram_nbins(20)
-    assert po.stretch_histogram.marks[0].bins == 20
+    assert hist_mark.bins == 25
+    po.stretch_hist_nbins = 20
+    assert hist_mark.bins == 20
 
     po.set_histogram_x_limits(x_min=0.25, x_max=2)
-    assert po.stretch_histogram.axes[0].scale.min == 0.25
-    assert po.stretch_histogram.axes[0].scale.max == 2
+    assert po.stretch_histogram.figure.axes[0].scale.min == 0.25
+    assert po.stretch_histogram.figure.axes[0].scale.max == 2
 
     po.set_histogram_y_limits(y_min=1, y_max=2)
-    assert po.stretch_histogram.axes[1].scale.min == 1
-    assert po.stretch_histogram.axes[1].scale.max == 2
+    assert po.stretch_histogram.figure.axes[1].scale.min == 1
+    assert po.stretch_histogram.figure.axes[1].scale.max == 2
 
-    po._remove_histogram_marks()
-    assert len([mark for mark in po.stretch_histogram.marks
-                if isinstance(mark, HistogramMark)]) == 0
-    po._add_histogram_marks()
-    v_min_max_marks2 = [mark for mark in po.stretch_histogram.marks
-                        if isinstance(mark, HistogramMark)]
-    assert len(v_min_max_marks2) == 2
-    assert v_min_max_marks2[0].x[0] == po.stretch_vmin.value
-    assert v_min_max_marks2[1].x[0] == po.stretch_vmax.value
+    po.stretch_vmin.value = hist_mark.min - 1
+    po.stretch_vmax.value = hist_mark.max + 1
 
-    po.stretch_vmin.value = po.stretch_histogram.marks[0].min - 1
-    po.stretch_vmax.value = po.stretch_histogram.marks[0].max + 1
-
-    v_min_max_marks3 = [mark for mark in po.stretch_histogram.marks
-                        if isinstance(mark, HistogramMark)]
-    assert len(v_min_max_marks3) == 0
+    assert po.stretch_histogram.marks['vmin'].x[0] == po.stretch_vmin.value
+    assert po.stretch_histogram.marks['vmax'].x[0] == po.stretch_vmax.value
 
 
 @pytest.mark.filterwarnings('ignore')
