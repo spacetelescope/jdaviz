@@ -589,6 +589,7 @@ class PlotOptions(PluginTemplateMixin):
         hist_mark = self.stretch_histogram.marks['histogram']
         hist_mark.sample = sub_data
         hist_mark.bins = self.stretch_hist_nbins
+        hist_mark.send_state('sample')
 
         interval = PercentileInterval(95)
         if len(sub_data) > 0:

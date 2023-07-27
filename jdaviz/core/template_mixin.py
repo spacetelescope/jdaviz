@@ -2652,7 +2652,7 @@ class Plot(PluginSubcomponent):
         for mark_label, mark in self.marks.items():
             if mark_label in mark_labels:
                 if isinstance(mark, bqplot.Bins):
-                    mark.bins = 0
+                    mark.samples = []
                 else:
                     mark.x, mark.y = [], []
 
