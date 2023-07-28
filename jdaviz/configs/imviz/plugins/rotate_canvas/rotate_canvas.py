@@ -1,4 +1,5 @@
 import os
+from astropy.utils.decorators import deprecated
 from traitlets import Bool, Unicode, observe
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -51,6 +52,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
 
     @property
+    @deprecated(since="3.9", alternative="Links Control plugin")
     def user_api(self):
         return PluginUserApi(self, expose=('viewer', 'angle', 'flip_horizontal', 'reset',
                                            'set_north_up_east_right', 'set_north_up_east_left'))

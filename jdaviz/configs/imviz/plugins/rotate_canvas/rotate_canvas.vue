@@ -4,6 +4,12 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'"
     :disabled_msg="isChromium() ? '' : 'Image rotation is not supported by your browser. Please see our docs for more information.'"
     :popout_button="popout_button">
+
+    <v-alert type='warning'>
+      This plugin is deprecated in favor of rotation via Links Control and will be removed
+      in a future release.
+    </v-alert>
+
     <plugin-viewer-select
       :items="viewer_items"
       :selected.sync="viewer_selected"

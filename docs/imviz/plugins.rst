@@ -352,6 +352,11 @@ To import a regions file or object from the API:
 Canvas Rotation
 ===============
 
+.. note::
+
+    This plugin is deprecated in favor of rotation via :ref:`imviz-link-control` and will be removed
+    in a future release.
+
 The canvas rotation plugin allows rotating and horizontally flipping the image to any arbitrary 
 value by rotating the canvas axes themselves.  Note that this does not affect the underlying data, and
 exporting data to the notebook via the API will therefore not exhibit the same rotation.
