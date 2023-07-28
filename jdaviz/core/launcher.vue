@@ -30,42 +30,44 @@
         >
         </v-text-field>
 
-        <v-dialog v-model="file_chooser_visible" height="400" width="600">
-            <template v-slot:activator="{ on }">
-                <v-btn
-                    v-on="on"
-                    class="ma-2"
-                    color="#1E617F"
-                    style="top: 7px; height: 57px"
-                    dark>
-                    <v-icon large>mdi-file-upload</v-icon
-                    <g-file-import id="file-chooser"></g-file-import>
-                </v-btn>
-            </template>
-            <v-card>
-                <v-card-title class="headline" color="primary" primary-title>Select Data</v-card-title>
-                <v-card-text>
-                Select a file with data you want to load into this instance of Jdaviz. Jdaviz will
-                attempt to identify a compatible configuration for your selected dataset. If one cannot
-                be found, you can manually select a configuration to load your data into.
-                <v-container>
-                    <v-row>
-                    <v-col>
-                        <g-file-import id="file-chooser"></g-file-import>
-                        <span style="color: red;">{{ error_message }}</span>
-                    </v-col>
-                    </v-row>
-                </v-container>
-                </v-card-text>
+        <j-tooltip tooltipcontent="select file from disk" span_style="height: 80px">
+          <v-dialog v-model="file_chooser_visible" height="400" width="600">
+              <template v-slot:activator="{ on }">
+                  <v-btn
+                      v-on="on"
+                      class="ma-2"
+                      color="#1E617F"
+                      style="top: 7px; height: 57px"
+                      dark>
+                      <v-icon large>mdi-file-upload</v-icon
+                      <g-file-import id="file-chooser"></g-file-import>
+                  </v-btn>
+              </template>
+              <v-card>
+                  <v-card-title class="headline" color="primary" primary-title>Select Data</v-card-title>
+                  <v-card-text>
+                  Select a file with data you want to load into this instance of Jdaviz. Jdaviz will
+                  attempt to identify a compatible configuration for your selected dataset. If one cannot
+                  be found, you can manually select a configuration to load your data into.
+                  <v-container>
+                      <v-row>
+                      <v-col>
+                          <g-file-import id="file-chooser"></g-file-import>
+                          <span style="color: red;">{{ error_message }}</span>
+                      </v-col>
+                      </v-row>
+                  </v-container>
+                  </v-card-text>
 
-                <v-card-actions>
-                <div class="flex-grow-1"></div>
-                    <v-btn color="primary" text @click="file_chooser_visible = false">Cancel</v-btn>
-                    <v-btn color="primary" text @click="choose_file" :disabled="!valid_path">Import</v-btn>
-                </v-card-actions>
+                  <v-card-actions>
+                  <div class="flex-grow-1"></div>
+                      <v-btn color="primary" text @click="file_chooser_visible = false">Cancel</v-btn>
+                      <v-btn color="primary" text @click="choose_file" :disabled="!valid_path">Import</v-btn>
+                  </v-card-actions>
 
-            </v-card>
-         </v-dialog>
+              </v-card>
+           </v-dialog>
+        </j-tooltip>
     </v-row>
 
     <v-row justify="center">
