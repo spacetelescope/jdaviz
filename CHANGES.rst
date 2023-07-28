@@ -1,4 +1,4 @@
-3.6 (unreleased)
+3.6 (2023-07-28)
 ================
 
 New Features
@@ -115,6 +115,8 @@ Cubeviz
   Also fixes the shadow mark that shows the intersection between spatial and spectral
   subsets. [#2207, #2266, #2291]
 
+- Prevent Plot Options plugin from hanging when selecting a spectrum viewer in Cubeviz. [#2305]
+
 Imviz
 ^^^^^
 
@@ -123,6 +125,8 @@ Mosviz
 
 Specviz
 ^^^^^^^
+
+- Uncertainties in spectra given to Specviz will now work correctly when non-standard deviation type [#2283]
 
 Specviz2d
 ^^^^^^^^^
@@ -139,31 +143,6 @@ Other Changes and Additions
 
 - Replacing existing data from a plugin (e.g., refitting a model with the same label)
   now preserves the plot options of the data as previously displayed. [#2288]
-
-3.5.1 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-- Prevent Plot Options plugin from hanging when selecting a spectrum viewer in Cubeviz. [#2305]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-- Uncertainties in spectra given to Specviz will now work correctly when non-standard deviation type [#2283]
-
-Specviz2d
-^^^^^^^^^
 
 3.5 (2023-05-25)
 ================
