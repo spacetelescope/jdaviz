@@ -2652,7 +2652,10 @@ class Plot(PluginSubcomponent):
         for mark_label, mark in self.marks.items():
             if mark_label in mark_labels:
                 if isinstance(mark, bqplot.Bins):
-                    mark.samples = []
+                    # NOTE: cannot completely empty samples
+                    # may want to also set mark.visible=False manually if clearing
+                    # (but this will still at least clear any internal arrays)
+                    mark.samples = [0]
                 else:
                     mark.x, mark.y = [], []
 
@@ -2681,7 +2684,8 @@ class Plot(PluginSubcomponent):
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
 
-    def add_bins(self, label, sample=[1], bins=1, density=True, **kwargs):
+    def add_bins(self, label, sample=[0], bins=2, density=True, **kwargs):
+        # NOTE: initializing with bins=1 breaks the figure until a resize event
         return self._add_mark(bqplot.Bins, label, sample=sample, bins=bins,
                               density=density,
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),

@@ -587,14 +587,16 @@ class PlotOptions(PluginTemplateMixin):
             sub_data = sub_data[~np.isnan(sub_data)]
 
         hist_mark = self.stretch_histogram.marks['histogram']
-        hist_mark.sample = sub_data
-        hist_mark.bins = self.stretch_hist_nbins
-        hist_mark.send_state('sample')
-
-        interval = PercentileInterval(95)
-        if len(sub_data) > 0:
-            hist_lims = interval.get_limits(sub_data)
-            hist_mark.min, hist_mark.max = hist_lims
+        with hist_mark.hold_sync():
+            hist_mark.sample = sub_data
+            interval = PercentileInterval(95)
+            if len(sub_data) > 0:
+                hist_lims = interval.get_limits(sub_data)
+                hist_mark.min, hist_mark.max = hist_lims
+            hist_mark.bins = self.stretch_hist_nbins
+            # in case only the sample has changed but its length has not,
+            # we'll force the traitlet to trigger a change
+            hist_mark.send_state('sample')
 
     @observe('stretch_vmin_value')
     def _stretch_vmin_changed(self, msg=None):
