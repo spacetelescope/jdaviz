@@ -10,6 +10,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- The stretch histogram within plot options can now be popped-out into its own window. [#2314]
+
 Mosviz
 ^^^^^^
 
