@@ -3,10 +3,7 @@ from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import astropy.units as u
 import bqplot
-from contextlib import contextmanager
 import numpy as np
-import threading
-import time
 
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
@@ -215,55 +212,19 @@ class PluginTemplateMixin(TemplateMixin):
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
     disabled_msg = Unicode("").tag(sync=True)
-    plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)
-    uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
-    keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
-    is_active = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to plugin_opened and keep_active
+    plugin_opened = Bool(False).tag(sync=True)
 
     def __init__(self, **kwargs):
         self._viewer_callbacks = {}
-        self._inactive_thread = None  # thread checking for alive pings to control plugin_opened
-        self._ping_timestamp = 0
         super().__init__(**kwargs)
+        self.app.state.add_callback('tray_items_open', self._mxn_update_plugin_opened)
+        self.app.state.add_callback('drawer', self._mxn_update_plugin_opened)
 
     @property
     def user_api(self):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
-
-    def vue_plugin_ping(self, ping_timestamp):
-        self._ping_timestamp = ping_timestamp
-
-        # we've received a ping, so immediately set plugin_opened state to True
-        if not self.plugin_opened:
-            self.plugin_opened = True
-
-        if self._inactive_thread is not None and self._inactive_thread.is_alive():
-            # a thread already exists to check for pings, the latest ping will allow
-            # the existing while-loop to continue
-            return
-
-        # create a thread to monitor for pings.  If a ping hasn't been received in the
-        # expected time, then plugin_opened will be set to False.
-        self._inactive_thread = threading.Thread(target=self._watch_active)
-        self._inactive_thread.start()
-
-    def _watch_active(self):
-        # expected_delay_ms should match value in setTimeout in tray_plugin.vue
-        # NOTE: could control with a traitlet, but then would need to pass through each
-        # <j-tray-plugin> component
-        expected_delay_ms = 200
-        # plugin_ping (ms) set by setTimeout in tray_plugin.vue
-        # time.time() is in s, so need to convert to ms
-        while time.time()*1000 - self._ping_timestamp < 2 * expected_delay_ms:
-            # at least one plugin has sent an "alive" ping within twice of the expected
-            # interval, wait a full (double) interval and then check again
-            time.sleep(2 * expected_delay_ms / 1000)
-
-        # "alive" ping has not been received within the expected time, consider all instances
-        # of the plugin to be closed
-        self.plugin_opened = False
 
     def _viewer_callback(self, viewer, plugin_method):
         """
@@ -287,6 +248,11 @@ class PluginTemplateMixin(TemplateMixin):
             self._viewer_callbacks[key] = plugin_viewer_callback(viewer, plugin_method)
         return self._viewer_callbacks.get(key)
 
+    def _mxn_update_plugin_opened(self, new_value):
+        app_state = self.app.state
+        tray_names_open = [app_state.tray_items[i]['name'] for i in app_state.tray_items_open]
+        self.plugin_opened = app_state.drawer and self._registry_name in tray_names_open
+
     def open_in_tray(self):
         """
         Open the plugin in the sidebar/tray (and open the sidebar if it is not already).
@@ -296,21 +262,6 @@ class PluginTemplateMixin(TemplateMixin):
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
-
-    @observe('plugin_opened', 'keep_active')
-    def _update_is_active(self, *args):
-        self.is_active = self.keep_active or self.plugin_opened
-
-    @contextmanager
-    def as_active(self):
-        """
-        Context manager to temporarily enable keep_active and enable live-previews and keypress
-        events, even if the plugin UI is not opened.
-        """
-        _keep_active = self.keep_active
-        self.keep_active = True
-        yield
-        self.keep_active = _keep_active
 
     def show(self, loc="inline", title=None):  # pragma: no cover
         """Display the plugin UI.

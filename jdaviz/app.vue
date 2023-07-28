@@ -120,7 +120,7 @@
                       </j-tooltip>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px;">
-                      <jupyter-widget :widget="trayItem.widget" v-if="state.tray_items_open.includes(index)"></jupyter-widget>
+                      <jupyter-widget :widget="trayItem.widget"></jupyter-widget>
                     </v-expansion-panel-content>
                   </div>
                 </v-expansion-panel>

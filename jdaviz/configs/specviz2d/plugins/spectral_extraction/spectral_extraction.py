@@ -95,7 +95,6 @@ class SpectralExtraction(PluginTemplateMixin):
     """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "spectral_extraction.vue"
-    uses_active_status = Bool(True).tag(sync=True)
 
     active_step = Unicode().tag(sync=True)
     interactive_extract = Bool(True).tag(sync=True)
@@ -397,6 +396,7 @@ class SpectralExtraction(PluginTemplateMixin):
             Step in the extraction process to visualize.  Must be one of: 'trace', 'bg', 'ext'.
         """
         if step is not None:
+            self.plugin_opened = True
             if step == 'trace':
                 self._interaction_in_trace_step()
             elif step == 'bg':
@@ -406,12 +406,18 @@ class SpectralExtraction(PluginTemplateMixin):
             else:
                 raise ValueError("step must be one of: trace, bg, ext")
 
-    @observe('is_active', 'interactive_extract')
+    def clear_marks(self):
+        """
+        Manually clear the live-preview marks.
+        """
+        self.plugin_opened = False
+
+    @observe('plugin_opened', 'interactive_extract')
     def _update_plugin_marks(self, *args):
         if not self._do_marks:
             return
 
-        if not (self.is_active):
+        if not self.plugin_opened:
             for step, mark in self.marks.items():
                 mark.visible = False
             return
@@ -469,22 +475,22 @@ class SpectralExtraction(PluginTemplateMixin):
 
         # the marks haven't been initialized yet, so initialize with empty
         # marks that will be populated once the first analysis is done.
-        self._marks = {'trace': PluginLine(viewer2d, visible=self.is_active),
-                       'ext_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'ext_upper': PluginLine(viewer2d, visible=self.is_active),
-                       'bg1_center': PluginLine(viewer2d, visible=self.is_active,
+        self._marks = {'trace': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'ext_lower': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'ext_upper': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'bg1_center': PluginLine(viewer2d, visible=self.plugin_opened,
                                                 line_style='dotted'),
-                       'bg1_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'bg1_upper': PluginLine(viewer2d, visible=self.is_active),
-                       'bg2_center': PluginLine(viewer2d, visible=self.is_active,
+                       'bg1_lower': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'bg1_upper': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'bg2_center': PluginLine(viewer2d, visible=self.plugin_opened,
                                                 line_style='dotted'),
-                       'bg2_lower': PluginLine(viewer2d, visible=self.is_active),
-                       'bg2_upper': PluginLine(viewer2d, visible=self.is_active)}
+                       'bg2_lower': PluginLine(viewer2d, visible=self.plugin_opened),
+                       'bg2_upper': PluginLine(viewer2d, visible=self.plugin_opened)}
         # NOTE: += won't trigger the figure to notice new marks
         viewer2d.figure.marks = viewer2d.figure.marks + list(self._marks.values())
 
-        self._marks['extract'] = PluginLine(viewer1d, visible=self.is_active)
-        self._marks['bg_spec'] = PluginLine(viewer1d, visible=self.is_active, stroke_width=1)  # noqa
+        self._marks['extract'] = PluginLine(viewer1d, visible=self.plugin_opened)
+        self._marks['bg_spec'] = PluginLine(viewer1d, visible=self.plugin_opened, stroke_width=1)  # noqa
 
         # NOTE: += won't trigger the figure to notice new marks
         viewer1d.figure.marks = viewer1d.figure.marks + [self._marks['extract'],
@@ -497,7 +503,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_pixel', 'trace_peak_method_selected',
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
-        if not self.is_active or not self._do_marks:
+        if not self.plugin_opened or not self._do_marks:
             return
         if event.get('name', '') == 'active_step' and event.get('new') != 'trace':
             return
@@ -518,7 +524,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
     def _interaction_in_bg_step(self, event={}):
-        if not self.is_active or not self._do_marks:
+        if not self.plugin_opened or not self._do_marks:
             return
         if event.get('name', '') == 'active_step' and event.get('new') != 'bg':
             return
@@ -574,7 +580,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @observe('ext_dataset_selected', 'ext_trace_selected',
              'ext_type_selected', 'ext_width', 'active_step')
     def _interaction_in_ext_step(self, event={}):
-        if not self.is_active or not self._do_marks:
+        if not self.plugin_opened or not self._do_marks:
             return
         if event.get('name', '') == 'active_step' and event.get('new') != 'ext':
             return

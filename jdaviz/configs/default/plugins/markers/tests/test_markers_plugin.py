@@ -28,7 +28,7 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
 
     mp = cubeviz_helper.plugins['Markers']
-    mp.keep_active = True
+    mp.open_in_tray()
 
     # test event in flux viewer
     label_mouseover._viewer_mouse_event(fv,
@@ -112,13 +112,13 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
     assert len(_get_markers_from_viewer(fv).x) == 1
     assert len(_get_markers_from_viewer(sv).x) == 2
 
-    # markers hide when plugin closed and keep_active = False
-    mp.keep_active = False
+    # markers hide when plugin closed
+    cubeviz_helper.app.state.drawer = False
     assert _get_markers_from_viewer(fv).visible is False
     assert _get_markers_from_viewer(sv).visible is False
 
     # markers re-appear when plugin re-opened
-    mp._obj.plugin_opened = True
+    mp.open_in_tray()
     assert _get_markers_from_viewer(fv).visible is True
     assert _get_markers_from_viewer(sv).visible is True
     assert len(_get_markers_from_viewer(fv).x) == 1
@@ -136,7 +136,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
 
         mp = self.imviz.plugins['Markers']
-        mp.plugin_opened = True
+        mp.open_in_tray()
 
         # cycle through dataset options (used for both coords info and markers)
         assert label_mouseover.dataset.choices == ['auto', 'none',
@@ -217,7 +217,7 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
 
         mp = self.imviz.plugins['Markers']
-        mp.plugin_opened = True
+        mp.open_in_tray()
 
         nv = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs[SCI,1]')

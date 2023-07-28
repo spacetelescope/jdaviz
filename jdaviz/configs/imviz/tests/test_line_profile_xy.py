@@ -12,8 +12,9 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         lp_plugin = self.imviz.app.get_tray_item_from_name('imviz-line-profile-xy')
         lp_plugin.plugin_opened = True
 
-        assert lp_plugin.viewer.labels == ['imviz-0']
-        assert lp_plugin.viewer_selected == 'imviz-0'
+        lp_plugin._on_viewers_changed()  # Populate plugin menu items.
+        assert lp_plugin.viewer_items == ['imviz-0']
+        assert lp_plugin.selected_viewer == 'imviz-0'
 
         # Plot attempt with null X/Y should not crash but also no-op.
         assert len(lp_plugin.plot_across_x.marks['line'].x) == 0
@@ -22,9 +23,8 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         assert not lp_plugin.plot_available
 
         # Mimic "l" key pressed.
-        lp_plugin._on_viewer_key_event(self.viewer,
-                                       {'event': 'keydown', 'key': 'l',
-                                        'domain': {'x': 5.1, 'y': 5}})
+        self.viewer.on_mouse_or_key_event(
+            {'event': 'keydown', 'key': 'l', 'domain': {'x': 5.1, 'y': 5}})
         assert_allclose(lp_plugin.selected_x, 5.1)
         assert_allclose(lp_plugin.selected_y, 5)
         assert len(lp_plugin.plot_across_x.marks['line'].x) > 0
@@ -42,8 +42,8 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         # Blink also triggers viewer takeover and line profile redraw,
         # similar to the "l" key but without touching X and Y.
         viewer_2.blink_once()
-        assert lp_plugin.viewer.labels == ['imviz-0', 'imviz-1']
-        assert lp_plugin.viewer_selected == 'imviz-1'
+        assert lp_plugin.viewer_items == ['imviz-0', 'imviz-1']
+        assert lp_plugin.selected_viewer == 'imviz-1'
         assert_allclose(lp_plugin.selected_x, 5.1)
         assert_allclose(lp_plugin.selected_y, 5)
         assert len(lp_plugin.plot_across_x.marks['line'].x) > 0
@@ -60,15 +60,14 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         # Mimic manual GUI inputs.
         lp_plugin.selected_x = '1.1'
         lp_plugin.selected_y = '9'
-        lp_plugin.viewer_selected = 'imviz-0'
+        lp_plugin.selected_viewer = 'imviz-0'
         assert len(lp_plugin.plot_across_x.marks['line'].x) > 0
         assert len(lp_plugin.plot_across_y.marks['line'].x) > 0
         assert lp_plugin.plot_available
 
         # Nothing should update on "l" when plugin closed.
         lp_plugin.plugin_opened = False
-        lp_plugin._on_viewer_key_event(self.viewer,
-                                       {'event': 'keydown', 'key': 'l',
-                                        'domain': {'x': 5.1, 'y': 5}})
+        self.viewer.on_mouse_or_key_event(
+            {'event': 'keydown', 'key': 'l', 'domain': {'x': 5.1, 'y': 5}})
         lp_plugin.selected_x = '1.1'
         lp_plugin.selected_y = '9'

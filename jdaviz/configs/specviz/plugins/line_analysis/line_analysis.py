@@ -6,7 +6,6 @@ from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
-from astropy.utils.decorators import deprecated
 from astropy import units as u
 from specutils import analysis, Spectrum1D
 from specutils.manipulation import extract_region
@@ -17,8 +16,7 @@ from jdaviz.core.events import (AddDataMessage,
                                 SpectralMarksChangedMessage,
                                 LineIdentifyMessage,
                                 RedshiftMessage,
-                                GlobalDisplayUnitChanged,
-                                SnackbarMessage)
+                                GlobalDisplayUnitChanged)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -93,12 +91,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
       Width, relative to the overall line spectral region, to fit the linear continuum
       (excluding the region containing the line). If 1, will use endpoints within line region
       only.
+    * :meth:`show_continuum_marks`
     * :meth:`get_results`
 
     """
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
-    uses_active_status = Bool(True).tag(sync=True)
 
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
@@ -185,7 +183,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:
-            self.disabled_msg = 'Line Analysis unavailable without spectral data'
             return
 
         if viewer_data.spectral_axis.unit == u.pix:
@@ -208,26 +205,34 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if (msg.subset.label in [self.spectral_subset_selected,
                                  self.spatial_subset_selected,
                                  self.continuum_subset_selected]
-                and self.is_active):
+                and self.plugin_opened):
             self._calculate_statistics()
 
     def _on_global_display_unit_changed(self, msg):
-        if self.is_active:
+        if self.plugin_opened:
             self._calculate_statistics()
 
-    @observe('is_active')
-    def _is_active_changed(self, msg):
+    @observe('plugin_opened')
+    def _on_plugin_opened_changed(self, *args):
         if self.disabled_msg:
             return
+        # toggle continuum lines in spectrum viewer based on whether this plugin
+        # is currently open in the tray
+        self.show_continuum_marks(self.plugin_opened)
 
+    def show_continuum_marks(self, show=True):
+        """
+        Show (or hide) the marks indicating the continuum on the spectrum viewer.
+
+        Parameters
+        ----------
+        show : bool
+            Whether to show (or hide) the marks
+        """
         for pos, mark in self.marks.items():
-            mark.visible = self.is_active
-        if self.is_active:
-            self._calculate_statistics()
-
-    @deprecated(since="3.6", alternative="keep_active")
-    def show_continuum_marks(self):
-        self.keep_active = True
+            mark.visible = show
+        if show:
+            self._calculate_statistics(ignore_plugin_closed=True)
 
     @property
     def marks(self):
@@ -249,9 +254,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 return {}
             # then haven't been initialized yet, so initialize with empty
             # marks that will be populated once the first analysis is done.
-            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.is_active),
-                     'center': LineAnalysisContinuumCenter(viewer, visible=self.is_active),
-                     'right': LineAnalysisContinuumRight(viewer, visible=self.is_active)}
+            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.plugin_opened),
+                     'center': LineAnalysisContinuumCenter(viewer, visible=self.plugin_opened),
+                     'right': LineAnalysisContinuumRight(viewer, visible=self.plugin_opened)}
             shadows = [ShadowLine(mark, shadow_width=2) for mark in marks.values()]
             # NOTE: += won't trigger the figure to notice new marks
             viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
@@ -277,7 +282,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
             raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
 
-        self._calculate_statistics()
+        self._calculate_statistics(ignore_plugin_closed=True)
         return self.results
 
     def _on_plotted_lines_changed(self, msg):
@@ -306,9 +311,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None or self.dataset_selected == '':  # noqa
             # during initial init, this can trigger before the component is initialized
             return
-        if self.disabled_msg != '':
-            self.update_results(None)
-            return
 
         # call directly since this observe may be triggered before the spectral_subset_valid
         # traitlet is updated
@@ -322,17 +324,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         full_spectrum = self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected,  # noqa
                                                                           use_display_units=True)
 
-        if full_spectrum is None or self.width == "":
+        if (full_spectrum is None or self.width == "" or
+                (not self.plugin_opened and not kwargs.get('ignore_plugin_closed'))):
             # this can happen DURING a unit conversion change
             self.update_results(None)
             return
 
         spectral_axis = full_spectrum.spectral_axis
-        if spectral_axis.unit == u.pix:
-            # plugin should be disabled so not get this far, but can still get here
-            # before the disabled message is set
-            self.update_results(None)
-            return
 
         if self.continuum_subset_selected == self.spectral_subset_selected:
             # already raised a validation error in the UI
@@ -458,20 +456,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         flux=spec_subtracted.flux,
                         uncertainty=spec_subtracted.uncertainty)
 
-                    try:
-                        raw_result = analysis.line_flux(freq_spec)
-                    except ValueError as e:
-                        # can happen if interpolation out-of-bounds or any error from specutils
-                        # let's avoid the whole app crashing and instead expose the error to the
-                        # user
-                        self.hub.broadcast(SnackbarMessage(
-                            f"failed to calculate line analysis statistics: {e}", sender=self,
-                            color="warning"))
-                        self.update_results(None)
-                        return
-
+                    raw_result = analysis.line_flux(freq_spec)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Jy/u.sr):
+
                         final_unit = u.Unit('W/(m2 sr)')
                     else:
                         final_unit = u.Unit('W/m2')
@@ -490,17 +478,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                                                                        equivalencies=u.spectral()),
                         flux=spec_subtracted.flux,
                         uncertainty=spec_subtracted.uncertainty)
-                    try:
-                        raw_result = analysis.line_flux(wave_spec)
-                    except ValueError as e:
-                        # can happen if interpolation out-of-bounds or any error from specutils
-                        # let's avoid the whole app crashing and instead expose the error to the
-                        # user
-                        self.hub.broadcast(SnackbarMessage(
-                            f"failed to calculate line analysis statistics: {e}", sender=self,
-                            color="warning"))
-                        self.update_results(None)
-                        return
+                    raw_result = analysis.line_flux(wave_spec)
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
                     if flux_unit.is_equivalent(u.Unit('W/(m2 m)'/u.sr)):
                         final_unit = u.Unit('W/(m2 sr)')
