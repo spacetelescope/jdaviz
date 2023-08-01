@@ -348,28 +348,32 @@
       <glue-float-field label="Stretch VMax" :value.sync="stretch_vmax_value" />
     </glue-state-sync-wrapper>
 
-    <v-row v-if="stretch_function_sync.in_subscribed_states">
-      <!-- z-index to ensure on top of the jupyter widget with negative margin-top -->
-      <v-text-field
-          ref="stretch_hist_nbins"
-          type="number"
-          label="Number of Bins"
-          v-model.number="stretch_hist_nbins"
-          hint="The amount of bins used in the histogram."
-          persistent-hint
-          :rules="[() => stretch_hist_nbins !== '' || 'This field is required',
-                   () => stretch_hist_nbins > 0 || 'Number of Bins must be greater than zero']"
-      ></v-text-field>
-      <v-switch
-        v-model="stretch_hist_zoom_limits"
-        class="hide-input"
-        label="Limit histogram to current zoom limits"
-        style="z-index: 1"
-      ></v-switch>
-      <!-- NOTE: height defined here should match that in the custom CSS rules
-           below for the bqplot class -->
-      <jupyter-widget :widget="stretch_histogram_widget"/>
-    </v-row>
+    <div v-if="stretch_function_sync.in_subscribed_states">
+      <v-row>
+        <v-text-field
+            ref="stretch_hist_nbins"
+            type="number"
+            label="Number of Bins"
+            v-model.number="stretch_hist_nbins"
+            hint="The amount of bins used in the histogram."
+            persistent-hint
+            :rules="[() => stretch_hist_nbins !== '' || 'This field is required',
+                     () => stretch_hist_nbins > 0 || 'Number of Bins must be greater than zero']"
+        ></v-text-field>
+      </v-row>
+      <v-row>
+        <!-- z-index to ensure on top of the jupyter widget with negative margin-top -->
+        <v-switch
+          v-model="stretch_hist_zoom_limits"
+          class="hide-input"
+          label="Limit histogram to current zoom limits"
+          style="z-index: 1"
+        ></v-switch>
+        <!-- NOTE: height defined here should match that in the custom CSS rules
+             below for the bqplot class -->
+      </v-row>
+        <jupyter-widget :widget="stretch_histogram_widget"/>
+      </div>
 
     <!-- IMAGE:IMAGE -->
     <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
