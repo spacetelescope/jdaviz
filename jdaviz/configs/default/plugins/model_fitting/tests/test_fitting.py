@@ -5,7 +5,7 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.io.registry.base import IORegistryError
-from astropy.modeling import models, parameters as params
+from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs import WCS
@@ -217,7 +217,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     assert isinstance(fitted_model[0].amplitude.value, np.float64)
     assert fitted_model[0].amplitude.unit == u.Jy
 
-    assert isinstance(fitted_model[0], params.Parameter)
+    assert isinstance(fitted_model[0], models.Gaussian1D)
     assert isinstance(fitted_model[0].mean.value, np.float64)
     assert fitted_model[0].mean.unit == u.um
 
