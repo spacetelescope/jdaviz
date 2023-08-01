@@ -251,7 +251,7 @@ class TestParseImage:
         # --- Since download is expensive, we attach GWCS-specific tests here. ---
 
         # Ensure interactive region supports GWCS. Also see test_regions.py
-        imviz_helper._apply_interactive_region('bqplot:circle',
+        imviz_helper._apply_interactive_region('bqplot:truecircle',
                                                (965, 1122),
                                                (976.9, 1110.1))  # Star
         imviz_helper._apply_interactive_region('bqplot:rectangle',

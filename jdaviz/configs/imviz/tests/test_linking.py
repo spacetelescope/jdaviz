@@ -113,7 +113,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         self.viewer.cuts = (0, 100)
 
         # Add subsets, both interactive and static.
-        self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
+        self.imviz._apply_interactive_region('bqplot:truecircle', (1.5, 2.5), (3.6, 4.6))
         self.imviz.load_regions([CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5),
                                  PolygonPixelRegion(vertices=PixCoord(x=[1, 2, 2], y=[1, 1, 2])),
                                  PolygonPixelRegion(vertices=PixCoord(x=[2, 3, 3], y=[2, 2, 3]))])

@@ -18,7 +18,7 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_No
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
     def test_plugin_wcs_dithered(self):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
-        self.imviz._apply_interactive_region('bqplot:circle', (0, 0), (9, 9))  # Draw a circle
+        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
@@ -171,7 +171,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
     def test_plugin_no_wcs(self):
         # Most things already tested above, so not re-tested here.
-        self.imviz._apply_interactive_region('bqplot:circle', (0, 0), (9, 9))  # Draw a circle
+        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
         phot_plugin.dataset_selected = 'has_wcs[SCI,1]'
@@ -277,7 +277,7 @@ def test_annulus_background(imviz_helper):
 
     # Mark an object of interest
     # CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
-    imviz_helper._apply_interactive_region('bqplot:circle', (143, 18), (157, 32))
+    imviz_helper._apply_interactive_region('bqplot:truecircle', (143, 18), (157, 32))
 
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(

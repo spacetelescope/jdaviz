@@ -116,7 +116,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
     def test_regions_sky_has_wcs(self):
         # Mimic interactive region (before)
-        self.imviz._apply_interactive_region('bqplot:circle', (1.5, 2.5), (3.6, 4.6))
+        self.imviz._apply_interactive_region('bqplot:truecircle', (1.5, 2.5), (3.6, 4.6))
 
         sky = SkyCoord(ra=337.5202808, dec=-20.833333059999998, unit='deg')
         # These will become indistinguishable from normal Subset.
@@ -234,9 +234,9 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
 class TestGetInteractiveRegions(BaseImviz_WCS_NoWCS):
     def test_annulus(self):
         # Outer circle
-        self.imviz._apply_interactive_region('bqplot:circle', (0, 0), (9, 9))
+        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))
         # Inner circle
-        self.imviz._apply_interactive_region('bqplot:circle', (2, 2), (7, 7))
+        self.imviz._apply_interactive_region('bqplot:truecircle', (2, 2), (7, 7))
 
         # At this point, there should be two normal circles.
         subsets = self.imviz.get_interactive_regions()

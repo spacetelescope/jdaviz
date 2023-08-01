@@ -24,7 +24,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoommatch', 'jdaviz:boxzoom'],
                     ['jdaviz:panzoommatch', 'jdaviz:imagepanzoom'],
-                    ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse', 'bqplot:circannulus',
+                    ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse', 'bqplot:circannulus',
                      'jdaviz:singlepixelregion'],
                     ['jdaviz:blinkonce', 'jdaviz:contrastbias'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export', 'jdaviz:sidebar_compass']
