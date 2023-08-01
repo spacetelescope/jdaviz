@@ -12,6 +12,7 @@ from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY, ALL_JDAVIZ_
 from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.data_formats import identify_helper
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.core.template_mixin import show_widget
 
 
 def open(filename, show=True, **kwargs):
@@ -169,6 +170,15 @@ class Launcher(v.VuetifyTemplate):
         
 
 def show_launcher(configs=ALL_JDAVIZ_CONFIGS, height="100%"):
+    '''Display an interactive Jdaviz launcher to select your data and compatible configuration
+
+    Parameters
+    ----------
+    height: int, optional
+        The height of the top-level application widget, in pixels. Will be passed and processed
+        by the selected configuration. Applies to the launcher and all instances of the same
+        application in the notebook.
+    '''
     # Color defined manually due to the custom theme not being defined yet (in app.vue)
     height = f"{height}px" if isinstance(height, int) else height
     main = v.Sheet(class_="mx-25",
@@ -178,4 +188,4 @@ def show_launcher(configs=ALL_JDAVIZ_CONFIGS, height="100%"):
                    _metadata={'mount_id': 'content'})
     main.children = [Launcher(main, configs, height)]
 
-    return main
+    show_widget(main, loc='inline', title=None)
