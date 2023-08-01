@@ -207,22 +207,22 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
             spectrum, model_list, expression, n_cpu=n_cpu)
 
     # Check that parameter results are formatted as expected.
-    assert type(fitted_parameters) == list
+    assert isinstance(fitted_parameters, list)
     assert len(fitted_parameters) == IMAGE_SIZE_X * IMAGE_SIZE_Y
 
     for m in fitted_parameters:
         if m['x'] == 3 and m['y'] == 2:
             fitted_model = m['model']
 
-    assert type(fitted_model[0].amplitude.value) == np.float64
+    assert isinstance(fitted_model[0].amplitude.value, np.float64)
     assert fitted_model[0].amplitude.unit == u.Jy
 
-    assert type(fitted_model[0] == params.Parameter)
-    assert type(fitted_model[0].mean.value) == np.float64
+    assert isinstance(fitted_model[0], params.Parameter)
+    assert isinstance(fitted_model[0].mean.value, np.float64)
     assert fitted_model[0].mean.unit == u.um
 
     # Check that spectrum result is formatted as expected.
-    assert type(fitted_spectrum) == Spectrum1D
+    assert isinstance(fitted_spectrum, Spectrum1D)
     assert len(fitted_spectrum.shape) == 3
     assert fitted_spectrum.shape == (IMAGE_SIZE_X, IMAGE_SIZE_Y, SPECTRUM_SIZE)
     assert fitted_spectrum.flux.unit == u.Jy
