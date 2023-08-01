@@ -60,7 +60,7 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-3.6.1 (unreleased)
+3.6.2 (unreleased)
 ==================
 
 Bug Fixes
@@ -72,12 +72,6 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Fixes possible extreme lag when opening the Plot Options plugin. [#2326]
-
-- Fixes minor layout issues in the Plot Options plugin. [#2326]
-
-- Fixes compass updating in popout/inline mode. [#2326]
-
 Mosviz
 ^^^^^^
 
@@ -86,6 +80,21 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+3.6.1 (2023-08-01)
+==================
+
+Bug Fixes
+---------
+
+Imviz
+^^^^^
+
+- Fixes possible extreme lag when opening the Plot Options plugin. [#2326]
+
+- Fixes minor layout issues in the Plot Options plugin. [#2326]
+
+- Fixes compass updating in popout/inline mode. [#2326]
 
 3.6 (2023-07-28)
 ================
