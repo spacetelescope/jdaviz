@@ -3,7 +3,6 @@ from pathlib import Path
 
 from glue_jupyter.common.toolbar_vuetify import read_icon
 import ipyvuetify as v
-from ipywidgets import jslink
 from traitlets import List, Unicode, Dict, Bool, observe
 
 from jdaviz import configs as jdaviz_configs
@@ -90,7 +89,7 @@ class Launcher(v.VuetifyTemplate):
     compatible_configs = List().tag(sync=True)
     config_icons = Dict().tag(sync=True)
     hint = Unicode().tag(sync=True)
-    vdocs = Unicode("").tag(sync=True) # App not available yet, so we need to recompute it here
+    vdocs = Unicode("").tag(sync=True)  # App not available yet, so we need to recompute it here
     # File picker Traitlets
     error_message = Unicode().tag(sync=True)
     valid_path = Bool(True).tag(sync=True)
@@ -105,7 +104,7 @@ class Launcher(v.VuetifyTemplate):
 
     def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, height=None, *args, **kwargs):
         self.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
-        
+
         self.main = main
         self.configs = configs
         self.height = f"{height}px" if isinstance(height, int) else height
@@ -143,16 +142,19 @@ class Launcher(v.VuetifyTemplate):
             else:
                 try:
                     self.compatible_configs, self.loaded_data = identify_helper(self.filepath)
-                    self.hint = "The below tools can best visualize your file. Pick which one you want to use."
+                    self.hint = """The below tools can best visualize your file.
+                                Pick which one you want to use."""
                 except Exception:
-                    self.hint = "We couldn’t identify which tool is best for your file. Pick a tool below to use."
+                    self.hint = """We couldn’t identify which tool is best for your file.
+                                Pick a tool below to use."""
                     self.compatible_configs = self.configs
                     self.loaded_data = self.filepath
                 finally:
                     if len(self.compatible_configs) > 0 and self.loaded_data is None:
                         self.loaded_data = self.filepath
         # Clear hint if it's still stuck on "Identifying". We're in an ambiguous state
-        self.hint = '' if self.hint == "Identifying which tool is best to visualize your file..." else self.hint
+        self.hint = ('' if self.hint == "Identifying which tool is best to visualize your file..."
+                     else self.hint)
 
     def vue_choose_file(self, *args, **kwargs):
         if self._file_chooser.file_path is None:
@@ -183,7 +185,7 @@ def show_launcher(configs=ALL_JDAVIZ_CONFIGS, height=None):
     # Color defined manually due to the custom theme not being defined yet (in app.vue)
     height = f"{height}px" if isinstance(height, int) else height
     main = v.Sheet(class_="mx-25",
-                   attributes={"id": "popout-widget-container"}, 
+                   attributes={"id": "popout-widget-container"},
                    color="#00212C",
                    height=height,
                    _metadata={'mount_id': 'content'})
