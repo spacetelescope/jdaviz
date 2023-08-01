@@ -65,9 +65,12 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
             # mixin object not yet initialized
             return
 
+        if not self.is_active:
+            return
+
         # There can be only one!
         for vid, viewer in self.app._viewer_store.items():
-            if vid == self.viewer.selected_id and self.plugin_opened:
+            if vid == self.viewer.selected_id:
                 viewer.compass = self
                 viewer.on_limits_change()  # Force redraw
 

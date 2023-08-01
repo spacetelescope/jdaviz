@@ -252,6 +252,12 @@ class PlotOptions(PluginTemplateMixin):
     show_viewer_labels = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
+        # track whether the stretch histogram needs an update (some entry has changed) if is_active
+        # becomes True, to address potential lag from a backlog of calls to
+        # _update_stretch_histogram if the browser throttles pings
+        # (https://github.com/spacetelescope/jdaviz/issues/2317)
+        self._stretch_histogram_needs_update = True
+
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')  # noqa
@@ -488,26 +494,37 @@ class PlotOptions(PluginTemplateMixin):
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     def _update_stretch_histogram(self, msg={}):
-        # Import here to prevent circular import.
-        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-        from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+        if not hasattr(self, 'viewer'):  # pragma: no cover
+            # plugin hasn't been fully initialized yet
+            return
+
+        if not isinstance(msg, dict):  # pragma: no cover
+            # then this is from the limits callbacks
+            # IMPORTANT: this assumes the only non-observe callback to this method comes
+            # from state callbacks from zoom limits.
+            if not self.stretch_hist_zoom_limits:
+                # there isn't anything to update, let's not waste resources
+                return
+            # override msg as an empty dict so that the rest of the logic doesn't have to check
+            # its type
+            msg = {}
+
+        if msg.get('name', None) == 'is_active' and not self._stretch_histogram_needs_update:
+            # this could be re-triggering if the browser is throttling pings on the js-side
+            # and since this is expensive, could result in laggy behavior
+            return
+        elif msg.get('name', None) != 'is_active' and not self.is_active:
+            # next time is_active becomes True, we need to update the histogram plot
+            self._stretch_histogram_needs_update = True
+            return
 
         if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
             # no (image) viewer with stretch function options
             return
-        if not hasattr(self, 'viewer'):  # pragma: no cover
-            # plugin hasn't been fully initialized yet
-            return
-        if (not self.is_active
-                or not self.viewer.selected
-                or not self.layer.selected):  # pragma: no cover
-            # no need to make updates, updates will be redrawn when plugin is opened
-            # NOTE: this won't update when the plugin is shown but not open in the tray
-            return
-        if not isinstance(msg, dict) and not self.stretch_hist_zoom_limits:  # pragma: no cover
-            # then this is from the limits callbacks and we don't want to waste resources
-            # IMPORTANT: this assumes the only non-observe callback to this method comes
-            # from state callbacks from zoom limits.
+
+        if (not self.viewer.selected or not self.layer.selected):  # pragma: no cover
+            # nothing to plot
+            self.stretch_histogram.clear_all_marks()
             return
 
         if self.multiselect and (len(self.viewer.selected) > 1
@@ -516,6 +533,11 @@ class PlotOptions(PluginTemplateMixin):
             # TODO: add support for multi-layer/viewer
             bqplot_clear_figure(self.stretch_histogram)
             return
+
+        # Import here to prevent circular import (and not at the top of the method so the import
+        # check is avoided, whenever possible).
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 
         if not isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView)):
             # don't update histogram if selected viewer is not an image viewer:
@@ -546,6 +568,7 @@ class PlotOptions(PluginTemplateMixin):
 
         comp = data.get_component(data.main_components[0])
 
+        # TODO: further optimization could be done by caching sub_data
         if self.stretch_hist_zoom_limits:
             if hasattr(viewer, '_get_zoom_limits'):
                 # Viewer limits. This takes account of Imviz linking.
@@ -618,6 +641,7 @@ class PlotOptions(PluginTemplateMixin):
             hist_mark.min, hist_mark.max = hist_lims
 
         self._check_if_v_stretch_changed()
+        self._stretch_histogram_needs_update = False
 
     @observe('stretch_vmin_value', 'stretch_vmax_value')
     def _check_if_v_stretch_changed(self, msg=None):
