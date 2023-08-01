@@ -37,5 +37,5 @@ def test_autoconfig(uris):
 
         viz_helper = jdaviz_open(download_path, show=False)
 
-        assert type(viz_helper) == helper_class
+        assert isinstance(viz_helper, helper_class)
         assert len(viz_helper.app.data_collection) > 0
