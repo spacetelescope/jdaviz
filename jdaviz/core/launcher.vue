@@ -26,7 +26,7 @@
             label="File Path"
             :hint="hint"
             persistent-hint
-            :loading="hint === 'Please wait. Identifying file...' ? '#C75109' : 'false' " 
+            :loading="hint === 'Identifying which tool is best to visualize your file...' ? '#C75109' : 'false' " 
         >
         </v-text-field>
 

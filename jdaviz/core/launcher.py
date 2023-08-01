@@ -124,35 +124,35 @@ class Launcher(v.VuetifyTemplate):
         self._file_chooser = FileChooser(start_path)
         self.components = {'g-file-import': self._file_chooser}
         self.loaded_data = None
-        self.hint = "No filepath provided. Choose a config to load a blank tool:"
+        self.hint = "Provide a file path, or pick which viz tool to open"
         super().__init__(*args, **kwargs)
 
     @observe('filepath')
     def _filepath_changed(self, *args):
-        self.hint = "Please wait. Identifying file..."
+        self.hint = "Identifying which tool is best to visualize your file..."
         self.compatible_configs = []
         if self.filepath in (None, ''):
             self.compatible_configs = self.configs
             self.loaded_data = None
-            self.hint = "No filepath provided. Choose a config to load a blank tool:"
+            self.hint = "Provide a file path, or pick which viz tool to open"
         else:
             path = Path(self.filepath)
             if not path.is_file():
                 self.loaded_data = None
-                self.hint = "Cannot find file on disk. Please check your filepath"
+                self.hint = "Error: Cannot find file. Please check your file path."
             else:
                 try:
                     self.compatible_configs, self.loaded_data = identify_helper(self.filepath)
-                    self.hint = "Compatible configs identified! Please select your config:"
+                    self.hint = "The below tools can best visualize your file. Pick which one you want to use."
                 except Exception:
-                    self.hint = "Could not autoidentify compatible config. Please manually select config to load your data into:"
+                    self.hint = "We couldn’t identify which tool is best for your file. Pick a tool below to use."
                     self.compatible_configs = self.configs
                     self.loaded_data = self.filepath
                 finally:
                     if len(self.compatible_configs) > 0 and self.loaded_data is None:
                         self.loaded_data = self.filepath
         # Clear hint if it's still stuck on "Identifying". We're in an ambiguous state
-        self.hint = '' if self.hint == "Please wait. Identifying file..." else self.hint
+        self.hint = '' if self.hint == "Identifying which tool is best to visualize your file..." else self.hint
 
     def vue_choose_file(self, *args, **kwargs):
         if self._file_chooser.file_path is None:
