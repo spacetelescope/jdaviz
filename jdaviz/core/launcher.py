@@ -163,13 +163,14 @@ class Launcher(v.VuetifyTemplate):
 
     def vue_launch_config(self, config):
         helper = _launch_config_with_data(config, self.loaded_data, show=False)
-        helper.app.layout.height = self.height
-        helper.app.state.settings['context']['notebook']['max_height'] = self.height
+        if self.height is not None:
+            helper.app.layout.height = self.height
+            helper.app.state.settings['context']['notebook']['max_height'] = self.height
         self.main.color = 'transparent'
         self.main.children = [helper.app]
-        
 
-def show_launcher(configs=ALL_JDAVIZ_CONFIGS, height="100%"):
+
+def show_launcher(configs=ALL_JDAVIZ_CONFIGS, height=None):
     '''Display an interactive Jdaviz launcher to select your data and compatible configuration
 
     Parameters
