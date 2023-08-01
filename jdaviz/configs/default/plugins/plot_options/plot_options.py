@@ -504,6 +504,17 @@ class PlotOptions(PluginTemplateMixin):
             # plugin hasn't been fully initialized yet
             return
 
+        if not isinstance(msg, dict):  # pragma: no cover
+            # then this is from the limits callbacks
+            # IMPORTANT: this assumes the only non-observe callback to this method comes
+            # from state callbacks from zoom limits.
+            if not self.stretch_hist_zoom_limits:
+                # there isn't anything to update, let's not waste resources
+                return
+            # override msg as an empty dict so that the rest of the logic doesn't have to check
+            # its type
+            msg = {}
+
         if msg.get('name', None) == 'is_active' and not self._stretch_histogram_needs_update:
             # this could be re-triggering if the browser is throttling pings on the js-side
             # and since this is expensive, could result in laggy behavior
@@ -520,11 +531,6 @@ class PlotOptions(PluginTemplateMixin):
         if (not self.viewer.selected or not self.layer.selected):  # pragma: no cover
             # nothing to plot
             self.stretch_histogram.clear_all_marks()
-            return
-        if not isinstance(msg, dict) and not self.stretch_hist_zoom_limits:  # pragma: no cover
-            # then this is from the limits callbacks and we don't want to waste resources
-            # IMPORTANT: this assumes the only non-observe callback to this method comes
-            # from state callbacks from zoom limits.
             return
 
         if self.multiselect and (len(self.viewer.selected) > 1
