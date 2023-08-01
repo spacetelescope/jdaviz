@@ -76,6 +76,8 @@ Imviz
 
 - Fixes minor layout issues in the Plot Options plugin. [#2326]
 
+- Fixes compass updating in popout/inline mode. [#2326]
+
 Mosviz
 ^^^^^^
 
