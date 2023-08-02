@@ -29,7 +29,7 @@ try to adhere to the following principles:
 * Plugin settings should use ``<v-expansion-panels popout>`` immediately at the top of the plugin.
   Optional "sections" of a plugin or editing dynamically-created components should use
   ``<v-expansion-panels accordion>`` to make most use of horizontal and vertical space.
-* Number entries should use a ``<v-text-field type="number" v-model="traitlet_name">`` component
+* Number entries should use a ``<v-text-field type="number" v-model.number="traitlet_name">`` component
   *unless* requiring support for scientific notation (in which case
   ``<v-text-field @change="python_method">`` can be used with stripping invalid characters and
   type-casting in python).  To handle emptying the input component without raising a traceback,
