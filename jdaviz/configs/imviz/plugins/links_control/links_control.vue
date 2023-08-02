@@ -89,8 +89,10 @@
               <v-row>
               <v-text-field
                 v-model="rotation_angle"
+                type="number"
                 label="Rotation angle"
                 hint="Degrees counterclockwise from default orientation"
+                :rules="[() => rotation_angle !== '' || 'This field is required']"
                 persistent-hint
               ></v-text-field>
               </v-row>
@@ -104,7 +106,7 @@
                 </v-row>
                 <v-row>
                   <v-switch
-                    label="East increases left"
+                    label="East increases left of north"
                     hint="Use the East-left convention"
                     v-model="east_left"
                     persistent-hint>

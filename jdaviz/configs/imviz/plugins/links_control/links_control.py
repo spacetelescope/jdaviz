@@ -16,6 +16,7 @@ from jdaviz.configs.imviz.wcs_utils import (
 from jdaviz.core.events import (
     LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage, ChangeRefDataMessage
 )
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
     PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
@@ -60,10 +61,10 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     linking_in_progress = Bool(False).tag(sync=True)
 
     # rotation angle, counterclockwise [degrees]
-    rotation_angle = Unicode("0").tag(sync=True)
+    rotation_angle = FloatHandleEmpty(0).tag(sync=True)
     set_on_create = Bool(True).tag(sync=True)
     relink = Bool(True).tag(sync=True)
-    east_left = Bool(True).tag(sync=True)
+    east_left = Bool(True).tag(sync=True)  # set convention for east left of north
 
     icon_nuer = Unicode(
         read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml')
@@ -201,8 +202,8 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def rotation_angle_deg(self):
-        if len(self.rotation_angle):
-            return float(self.rotation_angle) * u.deg
+        if self.rotation_angle is not None:
+            return self.rotation_angle * u.deg
         return 0 * u.deg
 
     def create_new_orientation_from_data(self, data):
@@ -281,7 +282,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     def _reset_default_rotation_options(self):
         # return rotation options to these defaults:
         self.east_left = True
-        self.rotation_angle = "0"
+        self.rotation_angle = 0
 
     @property
     def ref_data(self):
@@ -320,7 +321,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         """
         if label not in self.layer.choices:
             degn = self._get_wcs_angles()[-3]
-            self.rotation_angle = str(degn)
+            self.rotation_angle = degn
             self.east_left = True
             self.set_on_create = set_on_create
             self.new_layer_label_default = label
@@ -335,7 +336,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         """
         if label not in self.layer.choices:
             degn = self._get_wcs_angles()[-3]
-            self.rotation_angle = str(180 - degn)
+            self.rotation_angle = 180 - degn
             self.east_left = False
             self.set_on_create = set_on_create
             self.new_layer_label_default = label
