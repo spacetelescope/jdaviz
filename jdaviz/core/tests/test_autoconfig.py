@@ -6,7 +6,6 @@ from tempfile import TemporaryDirectory
 import pytest
 from astroquery.mast import Observations
 from astropy.utils.data import download_file
-from ipyvuetify import Sheet
 
 from jdaviz import open as jdaviz_open
 from jdaviz.cli import ALL_JDAVIZ_CONFIGS
@@ -24,6 +23,7 @@ AUTOCONFIG_EXAMPLES = (
     # Check that MaNGA cubes go to cubeviz. This file is originally from:
     # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz)
 )
+
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
@@ -44,6 +44,7 @@ def test_autoconfig(uris):
 
         assert isinstance(viz_helper, helper_class)
         assert len(viz_helper.app.data_collection) > 0
+
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
@@ -82,4 +83,4 @@ def test_launcher():
     # Test reseting to empty state
     launcher.filepath = ""
     assert launcher.hint == STATUS_HINTS['idle']
-    assert launcher.compatible_configs == ALL_JDAVIZ_CONFIGS   
+    assert launcher.compatible_configs == ALL_JDAVIZ_CONFIGS
