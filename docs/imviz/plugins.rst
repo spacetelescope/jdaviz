@@ -313,6 +313,15 @@ are not stored. To save the current result before submitting a new query, you ca
     The table returned from the API above may cover more sources than shown in the currently zoomed-in
     portion of the image. Additional steps will be needed to filter out these points, if necessary.
 
+
+.. _imviz-footprints:
+
+Footprints
+==========
+
+This plugin supports loading and overplotting instrument footprints on the image viewers.
+
+
 .. _rotate-canvas:
 
 Canvas Rotation
