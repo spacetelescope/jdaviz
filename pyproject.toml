@@ -174,7 +174,3 @@ exclude_lines = [
     "pragma: py{ignore_python_version}",
     "def _ipython_key_completions_",
 ]
-
-[tool.build_sphinx]
-edit_on_github = true
-github_project = "spacetelescope/jdaviz"
