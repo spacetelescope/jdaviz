@@ -102,7 +102,7 @@ class Launcher(v.VuetifyTemplate):
     mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, height=None, *args, **kwargs):
+    def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, filepath=None, height=None, *args, **kwargs):
         self.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
 
         self.main = main
@@ -124,6 +124,9 @@ class Launcher(v.VuetifyTemplate):
         self.components = {'g-file-import': self._file_chooser}
         self.loaded_data = None
         self.hint = "Provide a file path, or pick which viz tool to open"
+
+        self.filepath = filepath
+
         super().__init__(*args, **kwargs)
 
     @observe('filepath')
@@ -172,11 +175,14 @@ class Launcher(v.VuetifyTemplate):
         self.main.children = [helper.app]
 
 
-def show_launcher(configs=ALL_JDAVIZ_CONFIGS, height=None):
+def show_launcher(configs=ALL_JDAVIZ_CONFIGS, filepath=None, height=None):
     '''Display an interactive Jdaviz launcher to select your data and compatible configuration
 
     Parameters
     ----------
+    filepath: str, optional
+        The path to the file to load into Jdaviz. Will autopopulate the File Path field
+
     height: int, optional
         The height of the top-level application widget, in pixels. Will be passed and processed
         by the selected configuration. Applies to the launcher and all instances of the same
@@ -189,6 +195,6 @@ def show_launcher(configs=ALL_JDAVIZ_CONFIGS, height=None):
                    color="#00212C",
                    height=height,
                    _metadata={'mount_id': 'content'})
-    main.children = [Launcher(main, configs, height)]
+    main.children = [Launcher(main, configs, filepath, height)]
 
     show_widget(main, loc='inline', title=None)
