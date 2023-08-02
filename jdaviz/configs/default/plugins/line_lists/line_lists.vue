@@ -132,7 +132,7 @@
                   <v-menu>
                     <template v-slot:activator="{ on }">
                         <span class="linelist-color-menu"
-                              :style="`background:${list_contents[item].color}`"
+                              :style="`background:${list_contents[item].color}; cursor: pointer`"
                               @click.stop="on.click"
                         >&nbsp;</span>
                     </template>
