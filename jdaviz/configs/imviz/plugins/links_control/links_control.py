@@ -18,7 +18,7 @@ from jdaviz.core.events import (
 )
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
-    PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelect, AutoTextField
+    PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
 )
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
@@ -29,7 +29,7 @@ link_type_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
 @tray_registry('imviz-links-control', label="Links Control", viewer_requirements="image")
-class LinksControl(PluginTemplateMixin):
+class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     """
     See the :ref:`Links Control Plugin Documentation <imviz-link-control>` for more details.
 
@@ -91,9 +91,6 @@ class LinksControl(PluginTemplateMixin):
                                                selected='link_type_selected',
                                                manual_options=['Pixels', 'WCS'])
 
-        self.viewer = ViewerSelect(
-            self, 'viewer_items', 'viewer_selected', 'multiselect'
-        )
         self.layer = LayerSelect(
             self, 'layer_items', 'layer_selected', 'viewer_selected',
             'multiselect', only_wcs_layers=True
@@ -122,7 +119,8 @@ class LinksControl(PluginTemplateMixin):
         return PluginUserApi(
             self,
             expose=(
-                'link_type', 'wcs_use_affine', 'viewer', 'layer'
+                'link_type', 'wcs_use_affine', 'viewer',
+                'layer', 'rotation_angle', 'east_left'
             )
         )
 

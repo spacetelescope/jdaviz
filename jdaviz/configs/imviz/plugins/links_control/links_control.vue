@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description="Re-link images by WCS or pixels, or the rotate viewer."
+    description="Re-link images by WCS or pixels, or change the viewer orientation."
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'"
     :popout_button="popout_button"
     :disabled_msg='disabled_msg'>
@@ -47,10 +47,10 @@
           <plugin-viewer-select
             :items="viewer_items"
             :selected.sync="viewer_selected"
-            :multiselect="multiselect"
-            :label="multiselect ? 'Viewers' : 'Viewer'"
+            :multiselect=false
+            :label="'Viewer'"
             :show_if_single_entry="multiselect"
-            :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set orientation'"
+            :hint="'Select the viewer to set orientation'"
           />
           <plugin-layer-select
             :items="layer_items"
@@ -86,13 +86,6 @@
 
           <j-plugin-section-header>Add orientation options</j-plugin-section-header>
 
-              <plugin-auto-label
-                :value.sync="new_layer_label"
-                :default="new_layer_label_default"
-                :auto.sync="new_layer_label_auto"
-                label="Name for orientation option"
-                hint="Label for this new model component."
-              ></plugin-auto-label>
               <v-row>
               <v-text-field
                 v-model="rotation_angle"
@@ -117,9 +110,15 @@
                     persistent-hint>
                   </v-switch>
                 </v-row>
+                <plugin-auto-label
+                  :value.sync="new_layer_label"
+                  :default="new_layer_label_default"
+                  :auto.sync="new_layer_label_auto"
+                  label="Name for orientation option"
+                  hint="Label for this new orientation option."
+                ></plugin-auto-label>
                 <v-row justify="end">
-                  <v-btn color="primary" color="accent" text :disabled="rotation_angle===''" @click="create_new_orientation_from_data">Add option</v-btn>
-
+                  <v-btn color="primary" color="accent" text :disabled="rotation_angle===''" @click="create_new_orientation_from_data">Add orientation</v-btn>
                 </v-row>
         </div>
 

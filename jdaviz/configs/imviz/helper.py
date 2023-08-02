@@ -387,7 +387,7 @@ def get_bottom_layer(viewer):
     image_layers = [lyr.layer for lyr in viewer.layers
                     if lyr.visible and layer_is_image_data(lyr.layer)]
     if not len(image_layers):
-        return image_layers
+        return None
     return image_layers[0]
 
 
