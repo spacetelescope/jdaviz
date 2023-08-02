@@ -136,6 +136,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-subset-select': 'components/plugin_subset_select.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
                      'plugin-layer-select': 'components/plugin_layer_select.vue',
+                     'plugin-editable-select': 'components/plugin_editable_select.vue',
                      'plugin-add-results': 'components/plugin_add_results.vue',
                      'plugin-auto-label': 'components/plugin_auto_label.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue'}
