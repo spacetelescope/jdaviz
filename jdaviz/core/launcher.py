@@ -102,7 +102,7 @@ class Launcher(v.VuetifyTemplate):
     mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, filepath=None, height=None, *args, **kwargs):
+    def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, filepath='', height=None, *args, **kwargs):
         self.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
 
         self.main = main
@@ -175,7 +175,7 @@ class Launcher(v.VuetifyTemplate):
         self.main.children = [helper.app]
 
 
-def show_launcher(configs=ALL_JDAVIZ_CONFIGS, filepath=None, height=None):
+def show_launcher(configs=ALL_JDAVIZ_CONFIGS, filepath='', height=None):
     '''Display an interactive Jdaviz launcher to select your data and compatible configuration
 
     Parameters
