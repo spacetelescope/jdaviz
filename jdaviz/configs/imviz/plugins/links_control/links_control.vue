@@ -88,7 +88,7 @@
 
               <v-row>
               <v-text-field
-                v-model="rotation_angle"
+                v-model.number="rotation_angle"
                 type="number"
                 label="Rotation angle"
                 hint="Degrees counterclockwise from default orientation"

@@ -203,7 +203,11 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def rotation_angle_deg(self):
         if self.rotation_angle is not None:
-            return self.rotation_angle * u.deg
+            if (
+                (isinstance(self.rotation_angle, str) and len(self.rotation_angle)) or
+                isinstance(self.rotation_angle, float)
+            ):
+                return float(self.rotation_angle) * u.deg
         return 0 * u.deg
 
     def create_new_orientation_from_data(self, data):
