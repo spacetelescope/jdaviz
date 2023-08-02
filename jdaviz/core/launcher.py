@@ -13,6 +13,15 @@ from jdaviz.core.data_formats import identify_helper
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.template_mixin import show_widget
 
+STATUS_HINTS = {
+    'idle': "Provide a file path, or pick which viz tool to open",
+    'identifying': "Identifying which tool is best to visualize your file...",
+    'invalid path': "Error: Cannot find file. Please check your file path.",
+    'id ok': "The below tools can best visualize your file. Pick which one you want to use.",
+    'id failed': "We couldn’t identify which tool is best for your file. Pick a tool below to use."
+
+}
+
 
 def open(filename, show=True, **kwargs):
     '''
@@ -123,7 +132,7 @@ class Launcher(v.VuetifyTemplate):
         self._file_chooser = FileChooser(start_path)
         self.components = {'g-file-import': self._file_chooser}
         self.loaded_data = None
-        self.hint = "Provide a file path, or pick which viz tool to open"
+        self.hint = STATUS_HINTS['idle']
 
         self.filepath = filepath
 
@@ -131,33 +140,30 @@ class Launcher(v.VuetifyTemplate):
 
     @observe('filepath')
     def _filepath_changed(self, *args):
-        self.hint = "Identifying which tool is best to visualize your file..."
+        self.hint = STATUS_HINTS['identifying']
         self.compatible_configs = []
         if self.filepath in (None, ''):
             self.compatible_configs = self.configs
             self.loaded_data = None
-            self.hint = "Provide a file path, or pick which viz tool to open"
+            self.hint = STATUS_HINTS['idle']
         else:
             path = Path(self.filepath)
             if not path.is_file():
                 self.loaded_data = None
-                self.hint = "Error: Cannot find file. Please check your file path."
+                self.hint = STATUS_HINTS['invalid path']
             else:
                 try:
                     self.compatible_configs, self.loaded_data = identify_helper(self.filepath)
-                    self.hint = """The below tools can best visualize your file.
-                                Pick which one you want to use."""
+                    self.hint = STATUS_HINTS['id ok']
                 except Exception:
-                    self.hint = """We couldn’t identify which tool is best for your file.
-                                Pick a tool below to use."""
+                    self.hint = STATUS_HINTS['id failed']
                     self.compatible_configs = self.configs
                     self.loaded_data = self.filepath
                 finally:
                     if len(self.compatible_configs) > 0 and self.loaded_data is None:
                         self.loaded_data = self.filepath
         # Clear hint if it's still stuck on "Identifying". We're in an ambiguous state
-        self.hint = ('' if self.hint == "Identifying which tool is best to visualize your file..."
-                     else self.hint)
+        self.hint = ('' if self.hint == STATUS_HINTS['identifying'] else self.hint)
 
     def vue_choose_file(self, *args, **kwargs):
         if self._file_chooser.file_path is None:
