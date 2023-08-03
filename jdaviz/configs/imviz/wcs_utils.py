@@ -563,7 +563,7 @@ def _get_latitude_axis_idx(wcs):
 
 
 def compute_scale(wcs, fiducial,
-                  disp_axis, pscale_ratio):
+                  disp_axis, pscale_ratio=1):
     """
     Compute scaling transform. This method comes from the `jwst` package:
         https://github.com/spacetelescope/jwst/blob/
