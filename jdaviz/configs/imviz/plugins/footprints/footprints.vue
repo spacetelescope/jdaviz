@@ -42,7 +42,7 @@
           <v-menu>
             <template v-slot:activator="{ on }">
                 <span class="linelist-color-menu"
-                      :style="`background:${color}; cursor: pointer`"
+                      :style="`background:${color}; cursor: pointer; margin-left: 6px`"
                       @click.stop="on.click"
                 >&nbsp;</span>
             </template>
@@ -51,7 +51,7 @@
                             @update:color="throttledSetColor($event.hexa)"></v-color-picker>
             </div>
           </v-menu>
-        <span>
+        <span style="padding-left: 12px; padding-top: 3px">
           Footprint Overlay Color
         </span>
       </v-row>
