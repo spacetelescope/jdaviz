@@ -91,7 +91,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
         """
         if filename is not None:
-            filename = Path(filename)
+            filename = Path(filename).expanduser()
 
         if filetype is None:
             if filename is not None and filename.suffix:
@@ -235,11 +235,11 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
         if filename is None:
             if self.movie_filename:
-                filename = Path(self.movie_filename)
+                filename = self.movie_filename
             else:
                 raise ValueError("Invalid filename.")
-        else:
-            filename = Path(filename)
+
+        filename = Path(filename).expanduser()
 
         if filetype is None:
             if filename.suffix:
