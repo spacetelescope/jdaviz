@@ -54,12 +54,6 @@ class Slice(PluginTemplateMixin):
     play_interval = Int(200).tag(sync=True)  # milliseconds
 
     def __init__(self, *args, **kwargs):
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
-        )
         super().__init__(*args, **kwargs)
 
         self._watched_viewers = []
@@ -88,6 +82,18 @@ class Slice(PluginTemplateMixin):
         # update internal wavelength when x display unit is changed (preserving slice)
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_global_display_unit_changed)
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+        )
+
+    @property
+    def _default_image_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_image_viewer_reference_name', 'image-viewer'
+        )
 
     @property
     def user_api(self):

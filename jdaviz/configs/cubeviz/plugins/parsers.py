@@ -289,10 +289,10 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
         app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 
-def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewer',
-                   flux_viewer_reference_name=None, spectrum_viewer_reference_name=None):
+def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', spectrum_viewer_reference_name=None):
     hdu = hdulist[ext]
     data_type = _get_data_type_by_hdu(hdu)
+    flux_viewer_reference_name = viewer_name = app._default_flux_viewer_reference_name
 
     if ext == 'QUALITY':  # QUALITY flags have no unit
         flux = hdu.data << u.dimensionless_unscaled

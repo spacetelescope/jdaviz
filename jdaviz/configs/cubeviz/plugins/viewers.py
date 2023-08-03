@@ -33,18 +33,26 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._default_flux_viewer_reference_name = kwargs.get(
-            "flux_viewer_reference_name", "flux-viewer"
-        )
-        self._default_uncert_viewer_reference_name = kwargs.get(
-            "uncert_viewer_reference_name", "uncert-viewer"
-        )
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return getattr(
+            self.jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+        )
+
+    @property
+    def _default_flux_viewer_reference_name(self):
+        return getattr(
+            self.jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
+        )
+
+    @property
+    def _default_uncert_viewer_reference_name(self):
+        return getattr(
+            self.jdaviz_helper, '_default_uncert_viewer_reference_name', 'uncert-viewer'
+        )
 
     @property
     def active_image_layer(self):
@@ -104,9 +112,6 @@ class CubevizProfileView(SpecvizProfileView):
         kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
         super().__init__(*args, **kwargs)
 
-        self._default_flux_viewer_reference_name = kwargs.get(
-            "flux_viewer_reference_name", "flux-viewer"
-        )
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._check_if_data_removed)
 
@@ -116,6 +121,12 @@ class CubevizProfileView(SpecvizProfileView):
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._check_if_data_added)
+
+    @property
+    def _default_flux_viewer_reference_name(self):
+        return getattr(
+            self.jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
+        )
 
     def _check_if_data_removed(self, msg):
         # isinstance and the data uuid check will be true for the data

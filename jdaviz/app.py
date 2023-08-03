@@ -50,7 +50,8 @@ from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage)
+                                ViewerAddedMessage, ViewerRemovedMessage,
+                                ViewerRenamedMessage)
 from jdaviz.core.style_widget import StyleWidget
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
@@ -1569,6 +1570,49 @@ class Application(VuetifyTemplate, HubListener):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
+
+    def update_viewer_reference_name(
+        self, old_reference, new_reference,
+        old_reference_helper_attr=None, update_id=False
+    ):
+        """
+        Update viewer reference names.
+
+        Viewer IDs will not be changed unless `update_id` is True.
+        """
+        if new_reference in self.get_viewer_reference_names():
+            raise ValueError(f"viewer with reference='{new_reference}' already exists")
+
+        # update the viewer item's reference name
+        viewer_item = self._get_viewer_item(old_reference)
+        viewer_item['reference'] = new_reference
+
+        if viewer_item['name'] == old_reference:
+            viewer_item['name'] = new_reference
+
+        # optionally update the viewer IDs:
+        if update_id and viewer_item['id'] == old_reference:
+            # update the id as well
+            old_id = viewer_item['id']
+            viewer_item['id'] = new_reference
+            self._viewer_store[new_reference] = self._viewer_store.pop(old_id)
+            self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
+
+        # Update the viewer name attributes on the helper. First check if
+        # an attr for this viewer reference name is stored on the helper:
+        if old_reference_helper_attr is None:
+            old_viewer_ref_attrs = [
+                attr for attr in dir(self._jdaviz_helper)
+                if old_reference.replace('-', '_') in attr
+            ]
+            if old_viewer_ref_attrs:
+                old_reference_helper_attr = old_viewer_ref_attrs[0]
+
+        # if there is a detectable attr to update, update it:
+        if old_reference_helper_attr:
+            setattr(self._jdaviz_helper, old_reference_helper_attr, new_reference)
+
+        self.hub.broadcast(ViewerRenamedMessage(old_reference, new_reference, sender=self))
 
     def _get_first_viewer_reference_name(
             self, require_no_selected_data=False,

@@ -69,15 +69,10 @@ class LineListTool(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_flux_viewer_reference_name = kwargs.get(
-            "flux_viewer_reference_name", "flux-viewer"
-        )
         self._viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
         self._spectrum1d = None
-        self.available_lists = self._viewer.available_linelists()
+        if self._viewer:
+            self.available_lists = self._viewer.available_linelists()
         self.list_to_load = None
         self.loaded_lists = ["Custom"]
         self.list_contents = {"Custom": {"lines": [],
@@ -122,12 +117,25 @@ class LineListTool(PluginTemplateMixin):
                            handler=lambda x: self.update_line_mark_dict())
 
         # if set to auto (default), update the slider range when zooming on the spectrum viewer
-        self._viewer.state.add_callback("x_min",
-                                        lambda x_min: self._on_spectrum_viewer_limits_changed())
-        self._viewer.state.add_callback("x_max",
-                                        lambda x_max: self._on_spectrum_viewer_limits_changed())
+        if self._viewer:
+            self._viewer.state.add_callback("x_min",
+                                            lambda x_min: self._on_spectrum_viewer_limits_changed())
+            self._viewer.state.add_callback("x_max",
+                                            lambda x_max: self._on_spectrum_viewer_limits_changed())
 
         self._disable_if_no_data()
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+        )
+
+    @property
+    def _default_flux_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
+        )
 
     def _disable_if_no_data(self):
         if len(self.app.data_collection) == 0:
