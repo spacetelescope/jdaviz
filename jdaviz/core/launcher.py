@@ -174,10 +174,11 @@ class Launcher(v.VuetifyTemplate):
 
     def vue_launch_config(self, config):
         helper = _launch_config_with_data(config, self.loaded_data, show=False)
-        if self.height is not '100%':
+        if self.height != '100%':
             # We're in jupyter mode. Set to default height
-            helper.app.layout.height = helper.app.state.settings['context']['notebook']['max_height']
-            self.main.height = helper.app.state.settings['context']['notebook']['max_height']
+            default_height = helper.app.state.settings['context']['notebook']['max_height']
+            helper.app.layout.height = default_height
+            self.main.height = default_height
         self.main.color = 'transparent'
         self.main.children = [helper.app]
 
