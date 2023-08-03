@@ -1579,6 +1579,18 @@ class Application(VuetifyTemplate, HubListener):
         Update viewer reference names.
 
         Viewer IDs will not be changed unless `update_id` is True.
+
+        Parameters
+        ----------
+        old_reference : str
+            The viewer reference name to be changed
+        new_reference : str
+            The viewer reference name to use instead of ``old_reference``
+        old_reference_helper_attr : str, optional
+            If one exists, update the helper's attribute `old_reference_helper_attr`
+            with the new viewer reference name. Default is None.
+        update_id : bool, optional
+            If True, update the viewer IDs as well as the viewer reference names.
         """
         if new_reference in self.get_viewer_reference_names():
             raise ValueError(f"viewer with reference='{new_reference}' already exists")
