@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from glue_jupyter.bqplot.image import BqplotImageView
 from traitlets import Any, Bool, Unicode
@@ -89,26 +90,37 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             Filetype (PNG or SVG).  If `None`, will default based on filename or to PNG.
 
         """
+        if filename is not None:
+            filename = Path(filename)
+
         if filetype is None:
-            if filename is not None and '.' in filename:
-                filetype = filename.split('.')[-1]
+            if filename is not None and filename.suffix:
+                filetype = filename.suffix[1:].lower()
             else:
-                # default to png
-                filetype = 'png'
+                filetype = "png"  # default to png
 
         viewer = self.viewer.selected_obj
+
         if filetype == "png":
             if filename is None:
                 viewer.figure.save_png()
             else:
+                if not filename.parent.exists():
+                    raise ValueError(f"Invalid path={filename.parent}")
+
                 # support writing without save dialog
                 # https://github.com/bqplot/bqplot/pull/1397
                 def on_img_received(data):
-                    with open(os.path.expanduser(filename), 'bw') as f:
+                    with filename.open(mode='bw') as f:
                         f.write(data)
+
                 viewer.figure.get_png_data(on_img_received)
+
         elif filetype == "svg":
+            if filename is not None:
+                filename = str(filename)
             viewer.figure.save_svg(filename)
+
         else:
             raise NotImplementedError(f"filetype={filetype} not supported")
 
@@ -221,12 +233,19 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if not HAS_OPENCV:
             raise ImportError("Please install opencv-python to save cube as movie.")
 
-        if filetype is None:
-            if filename is not None and '.' in filename:
-                filetype = filename.split('.')[-1]
+        if filename is None:
+            if self.movie_filename:
+                filename = Path(self.movie_filename)
             else:
-                # default to MPEG-4
-                filetype = "mp4"
+                raise ValueError("Invalid filename.")
+        else:
+            filename = Path(filename)
+
+        if filetype is None:
+            if filename.suffix:
+                filetype = filename.suffix[1:].lower()
+            else:
+                filetype = "mp4"  # default to MPEG-4
 
         if filetype != "mp4":
             raise NotImplementedError(f"filetype={filetype} not supported")
@@ -242,18 +261,12 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if fps <= 0:
             raise ValueError("Invalid frame rate, must be positive non-zero value.")
 
-        if filename is None:
-            if self.movie_filename:
-                filename = self.movie_filename
-            else:
-                raise ValueError("Invalid filename.")
-
         # Make sure file does not end up in weird places in standalone mode.
-        path = os.path.dirname(filename)
-        if path and not os.path.exists(path):
+        path = filename.parent
+        if path and not path.exists():
             raise ValueError(f"Invalid path={path}")
-        elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
-            filename = os.path.join(os.environ["JDAVIZ_START_DIR"], filename)
+        elif (not path or str(path).startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
+            filename = os.environ["JDAVIZ_START_DIR"] / filename
 
         if i_start is None:
             i_start = int(self.i_start)
@@ -270,11 +283,12 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         if i_end <= i_start:
             raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
 
+        filename = str(filename.resolve())
         threading.Thread(
             target=lambda: self._save_movie(i_start, i_end, fps, filename, rm_temp_files)
         ).start()
 
-        return os.path.abspath(filename)
+        return filename
 
     def vue_save_movie(self, filetype):  # pragma: no cover
         """

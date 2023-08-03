@@ -66,6 +66,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Explot Plot now throws exception if its "save_figure" method is called
+  with a path that contains invalid directory. [#2339]
+
 Cubeviz
 ^^^^^^^
 
