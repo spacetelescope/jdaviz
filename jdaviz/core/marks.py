@@ -17,7 +17,7 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'PluginMark', 'LinesAutoUnit', 'PluginLine', 'PluginScatter',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
-           'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark']
+           'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark', 'FootprintOverlay']
 
 
 class OffscreenLinesMarks(HubListener):
@@ -578,7 +578,8 @@ class PluginLine(Lines, PluginMark, HubListener):
     def __init__(self, viewer, x=[], y=[], **kwargs):
         self.viewer = viewer
         # color is same blue as import button
-        super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
+        kwargs.setdefault('colors', ["#007BA1"])
+        super().__init__(x=x, y=y, scales=viewer.scales, **kwargs)
 
 
 class PluginScatter(Scatter, PluginMark, HubListener):
@@ -631,6 +632,20 @@ class MarkersMark(PluginScatter):
     def __init__(self, viewer, **kwargs):
         kwargs.setdefault('marker', 'circle')
         super().__init__(viewer, **kwargs)
+
+
+class FootprintOverlay(PluginLine):
+    def __init__(self, viewer, footprint, **kwargs):
+        self._footprint = footprint
+        kwargs.setdefault('stroke_width', 2)
+        kwargs.setdefault('close_path', True)
+        kwargs.setdefault('opacities', [0.9])
+        kwargs.setdefault('fill_opacities', [0.7])
+        super().__init__(viewer, **kwargs)
+
+    @property
+    def footprint(self):
+        return self._footprint
 
 
 class HistogramMark(Lines):

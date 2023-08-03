@@ -69,24 +69,38 @@
         ></v-select>
       </v-row>
 
-      <v-row v-if="ra_dec_instruments.includes(instrument_selected)">
+      <v-row v-if="pos_instruments.includes(instrument_selected)">
         <v-text-field
           v-model.number="ra"
           type="number"
-          :rules="[() => ra>=0 || 'Must be at least zero.']"
+          step="0.01"
+          :rules="[() => ra!=='' || 'This field is required']"
           label="RA"
           hint="Right Ascension"
           persistent-hint
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="ra_dec_instruments.includes(instrument_selected)">
+      <v-row v-if="pos_instruments.includes(instrument_selected)">
         <v-text-field
           v-model.number="dec"
           type="number"
-          :rules="[() => dec>=0 || 'Must be at least zero.']"
+          step="0.01"
+          :rules="[() => dec!=='' || 'This field is required']"
           label="Dec"
           hint="Declination"
+          persistent-hint
+        ></v-text-field>
+      </v-row>
+
+      <v-row v-if="pos_instruments.includes(instrument_selected)">
+        <v-text-field
+          v-model.number="pa"
+          type="number"
+          :rules="[() => pa!=='' || 'This field is required']"
+          label="Position Angle"
+          hint="Position Angle in degrees measured from North
+                to central vertical axis in North to East direction."
           persistent-hint
         ></v-text-field>
       </v-row>
@@ -95,7 +109,7 @@
         <v-text-field
           v-model.number="v2_offset"
           type="number"
-          :rules="[() => v2_offset>=0 || 'Must be at least zero.']"
+          :rules="[() => v2_offset!=='' || 'This field is required']"
           label="V2 Offset"
           hint="V2 Offset"
           persistent-hint
@@ -106,7 +120,7 @@
         <v-text-field
           v-model.number="v3_offset"
           type="number"
-          :rules="[() => v3_offset>=0 || 'Must be at least zero.']"
+          :rules="[() => v3_offset!=='' || 'This field is required']"
           label="V3 Offset"
           hint="V3 Offset"
           persistent-hint
