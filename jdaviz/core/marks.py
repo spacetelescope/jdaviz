@@ -639,8 +639,9 @@ class FootprintOverlay(PluginLine):
         self._footprint = footprint
         kwargs.setdefault('stroke_width', 2)
         kwargs.setdefault('close_path', True)
-        kwargs.setdefault('opacities', [0.9])
-        kwargs.setdefault('fill_opacities', [0.7])
+        kwargs.setdefault('opacities', [0.8])
+        kwargs.setdefault('fill', 'inside')
+        kwargs.setdefault('fill_opacities', [0.2])
         super().__init__(viewer, **kwargs)
 
     @property

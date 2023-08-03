@@ -55,6 +55,10 @@
           Footprint Overlay Color
         </span>
       </v-row>
+      <div>
+        <v-subheader class="pl-0 slider-label" style="height: 12px">Fill Opacity</v-subheader>
+        <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="fill_opacity" hide-details class="no-hint" />
+      </div>
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
       <v-row>

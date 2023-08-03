@@ -38,6 +38,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
     # viewer
     visible = Bool(True).tag(sync=True)
     color = Unicode('#c75109').tag(sync=True)  # "active" orange
+    fill_opacity = FloatHandleEmpty(0.1).tag(sync=True)
 
     # PRESET FOOTPRINTS AND OPTIONS
     instrument_items = List().tag(sync=True)
@@ -93,7 +94,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         # TODO: implement hidden_if in pluginuserapi
         return PluginUserApi(self, expose=('footprint',
                                            'rename_footprint', 'add_footprint', 'remove_footprint',
-                                           'viewer', 'visible', 'color',
+                                           'viewer', 'visible', 'color', 'fill_opacity',
                                            'instrument', 'ra', 'dec', 'pa',
                                            'v2_offset', 'v3_offset',
                                            'footprint_regions'))
@@ -189,7 +190,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         # traitlets simultaneously (and since we're only updating traitlets to a previously-set
         # footprint, we shouldn't have to update anything with the marks themselves)
         self._ignore_traitlet_change = True
-        for attr in ('instrument_selected', 'visible', 'color', 'viewer_selected',
+        for attr in ('instrument_selected', 'visible', 'color', 'fill_opacity', 'viewer_selected',
                      'ra', 'dec', 'pa', 'v2_offset', 'v3_offset'):
             key = attr.split('_selected')[0]
             if attr in ('ra', 'dec', 'pa') and self.instrument_selected not in self.pos_instruments:
@@ -216,7 +217,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         else:
             return fp.get('visible', False)
 
-    @observe('viewer_selected', 'visible', 'color')
+    @observe('viewer_selected', 'visible', 'color', 'fill_opacity')
     def _overlay_args_changed(self, msg={}):
         if self._ignore_traitlet_change:
             return
@@ -241,6 +242,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             for mark in existing_marks:
                 mark.visible = visible
                 mark.colors = [self.color]
+                mark.fill_opacities = [self.fill_opacity]
 
     @property
     def footprint_regions(self):
@@ -331,6 +333,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                             x=x_coords,
                             y=y_coords,
                             colors=[self.color],
+                            fill_opacities=[self.fill_opacity],
                             visible=visible
                         )
                         new_marks.append(mark)
