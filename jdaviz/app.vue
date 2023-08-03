@@ -1,5 +1,5 @@
 <template>
-  <v-app id="web-app" :class="'jdaviz ' + config" ref="mainapp">
+  <v-app id="web-app" :style="checkNotebookContext() ? 'display: inline' : 'display: flex'" :class="'jdaviz ' + config" ref="mainapp">
     <jupyter-widget
       v-if="state.style_widget"
       :widget="state.style_widget"
