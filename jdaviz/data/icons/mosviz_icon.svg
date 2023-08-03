@@ -1,1 +1,30 @@
-<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 77.35 77.35"><defs><style>.cls-1{fill:#0a6382;}.cls-2{fill:#fff;}</style></defs><circle class="cls-1" cx="38.68" cy="38.68" r="38.67"/><path class="cls-2" d="M61.64,31.11l-35.56-.18a1.67,1.67,0,0,1,0-3.34l35.6.19a1.67,1.67,0,0,1,0,3.34Z"/><path class="cls-2" d="M57.92,42.52,21.6,42.35a.83.83,0,1,1,0-1.66l36.33.16a.84.84,0,0,1,0,1.67Z"/><path class="cls-2" d="M49.86,37.58l-36.33-.17a.84.84,0,0,1-.91-.76.83.83,0,0,1,.76-.91.43.43,0,0,1,.16,0l36.33.16a.84.84,0,0,1,0,1.68Z"/><path class="cls-2" d="M67,46.85l-36.86-.19a.42.42,0,0,1-.42-.42.41.41,0,0,1,.42-.42L67,46.07a.43.43,0,0,1,.42.42A.42.42,0,0,1,67,46.85Z"/><path class="cls-2" d="M60.77,53.89,25.2,53.71a1.26,1.26,0,0,1,0-2.51l35.6.21A1.25,1.25,0,1,1,61,53.9h-.21Z"/><ellipse class="cls-2" cx="21.83" cy="51.5" rx="2.07" ry="0.58" transform="translate(-31.52 34.71) rotate(-49.56)"/><ellipse class="cls-2" cx="21.83" cy="51.5" rx="0.6" ry="1.83" transform="translate(-31.52 34.71) rotate(-49.56)"/><ellipse class="cls-2" cx="20.92" cy="28.6" rx="3.2" ry="1.02" transform="matrix(0.83, -0.55, 0.55, 0.83, -12.31, 16.29)"/><ellipse class="cls-2" cx="20.92" cy="28.6" rx="1.06" ry="3.25" transform="matrix(0.83, -0.55, 0.55, 0.83, -12.31, 16.29)"/><ellipse class="cls-2" cx="19.02" cy="41.23" rx="0.34" ry="1.36" transform="translate(-20.95 19.69) rotate(-36.91)"/><ellipse class="cls-2" cx="18.98" cy="41.25" rx="1.1" ry="0.36" transform="translate(-20.97 19.67) rotate(-36.91)"/><ellipse class="cls-2" cx="9.17" cy="36.53" rx="0.41" ry="1.29" transform="translate(-20.42 13.23) rotate(-37.69)"/><ellipse class="cls-2" cx="9.17" cy="36.53" rx="1.59" ry="0.43" transform="translate(-20.42 13.23) rotate(-37.69)"/><ellipse class="cls-2" cx="28.25" cy="46.24" rx="0.34" ry="1.08" transform="translate(-22.38 26.92) rotate(-37.69)"/><ellipse class="cls-2" cx="28.25" cy="46.24" rx="1.1" ry="0.36" transform="translate(-22.38 26.92) rotate(-37.69)"/></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" width="77.35" height="77.35" viewBox="0 0 77.35 77.35">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #0a6382;
+      }
+    </style>
+  </defs>
+  <circle class="cls-2" cx="38.67" cy="38.36" r="38.56"/>
+  <path class="cls-1" d="m61.56,30.81l-35.46-.18c-.92,0-1.67-.75-1.67-1.67s.75-1.67,1.67-1.67l35.5.19c.92,0,1.67.75,1.67,1.67s-.75,1.67-1.67,1.67h-.04Z"/>
+  <path class="cls-1" d="m57.86,42.19l-36.22-.17c-.46,0-.83-.37-.83-.83,0-.46.37-.83.83-.83h0l36.23.16c.46.05.79.46.74.92-.04.39-.35.7-.74.74h0Z"/>
+  <path class="cls-1" d="m49.82,37.26l-36.23-.17c-.46.04-.87-.3-.91-.76-.05-.45.29-.86.74-.91,0,0,.01,0,.02,0,.05,0,.11,0,.16,0l36.23.16c.46,0,.84.38.84.84s-.38.84-.84.84h0Z"/>
+  <path class="cls-1" d="m66.91,46.51l-36.76-.19c-.23,0-.42-.19-.42-.42,0-.23.17-.41.4-.42,0,0,.01,0,.02,0l36.76.25c.23,0,.41.19.42.42-.03.21-.21.36-.42.36Z"/>
+  <path class="cls-1" d="m60.7,53.53l-35.47-.18c-.69-.06-1.2-.67-1.14-1.36.05-.61.53-1.09,1.14-1.14l35.5.21c.68-.08,1.3.4,1.39,1.09.08.68-.4,1.3-1.09,1.39-.03,0-.07,0-.1,0h-.23Z"/>
+  <ellipse class="cls-1" cx="21.87" cy="51.14" rx="2.06" ry=".58" transform="translate(-31.24 34.62) rotate(-49.56)"/>
+  <ellipse class="cls-1" cx="21.87" cy="51.14" rx=".6" ry="1.82" transform="translate(-31.24 34.62) rotate(-49.56)"/>
+  <ellipse class="cls-1" cx="20.82" cy="28.23" rx="3.18" ry="1.01" transform="translate(-12.13 16.2) rotate(-33.53)"/>
+  <ellipse class="cls-1" cx="20.82" cy="28.23" rx="1.05" ry="3.23" transform="translate(-12.13 16.2) rotate(-33.53)"/>
+  <ellipse class="cls-1" cx="19.07" cy="40.91" rx=".34" ry="1.36" transform="translate(-20.75 19.65) rotate(-36.91)"/>
+  <ellipse class="cls-1" cx="19.03" cy="40.93" rx="1.1" ry=".36" transform="translate(-20.77 19.63) rotate(-36.91)"/>
+  <ellipse class="cls-1" cx="9.24" cy="36.22" rx=".41" ry="1.29" transform="translate(-20.21 13.21) rotate(-37.69)"/>
+  <ellipse class="cls-1" cx="9.24" cy="36.22" rx="1.59" ry=".43" transform="translate(-20.21 13.21) rotate(-37.69)"/>
+  <ellipse class="cls-1" cx="28.27" cy="45.9" rx=".34" ry="1.08" transform="translate(-22.16 26.86) rotate(-37.69)"/>
+  <ellipse class="cls-1" cx="28.27" cy="45.9" rx="1.1" ry=".36" transform="translate(-22.16 26.86) rotate(-37.69)"/>
+</svg>
