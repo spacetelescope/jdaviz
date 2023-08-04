@@ -62,11 +62,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             self.disabled_msg = 'this plugin requires pysiaf to be installed'
 
         self._ignore_traitlet_change = False
-        self._footprints = {'default': {}}
+        self._footprints = {}
 
         super().__init__(*args, **kwargs)
         self.viewer.multiselect = True  # multiselect always enabled
-        self.keep_active = True
 
         self.footprint = EditableSelectPluginComponent(self,
                                                        name='footprint',
@@ -98,7 +97,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         def instrument_in(instruments=[]):
             return lambda instrument: instrument in instruments
 
-        # TODO: implement hidden_if in pluginuserapi
+        # TODO: implement inapplicable_attrs in PluginUserApi
         return PluginUserApi(self, expose=('footprint',
                                            'rename_footprint', 'add_footprint', 'remove_footprint',
                                            'viewer', 'visible', 'color', 'fill_opacity',
@@ -106,19 +105,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                            'v2_offset', 'v3_offset',
                                            'footprint_regions'))
 
-#                             hidden_if={'ra': instrument_in(self.'pos_instruments'),
-#                                        'dec': instrument_in(self.pos_instruments),
-#                                        'pa': instrument_in(self.pos_instruments),
-#                                        'v2_offset': instrument_in(self.offset_instruments),
-#                                        'v3_offset': instrument_in(self.offset_instruments)})
-
     def _get_marks(self, viewer, footprint=None):
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, FootprintOverlay) and (mark.footprint == footprint or footprint is None)]
         return matches
-
-#        mark = FootprintOverlay(viewer, footprint)  # TODO: will need multiple instances, and that depends on the instrument (probably re-create on new instrument?)
-#        viewer.figure.marks = viewer.figure.marks + [mark]
-#        return mark
 
     @property
     def marks(self):
@@ -171,6 +160,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             return
 
         if self.is_active:
+            if not len(self._footprints):
+                # create the first default footprint
+                self._change_footprint()
             self._footprint_args_changed()
 
         for footprint, viewer_marks in self.marks.items():
@@ -185,11 +177,15 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             # plugin/traitlet startup
             return
         if self.footprint_selected == '':
-            # no footprintt selected (this can happen when removing all footprints)
+            # no footprint selected (this can happen when removing all footprints)
+            return
+        if not self.is_active:
             return
 
         if self.footprint_selected not in self._footprints:
-            self._footprints[self.footprint_selected] = {}
+            # create new entry with defaults (any defaults not provided here will be carried over
+            # from the previous selection based on current traitlet values)
+            self._footprints[self.footprint_selected] = {'color': '#c75109'}
 
         fp = self._footprints[self.footprint_selected]
 
@@ -201,15 +197,22 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                      'ra', 'dec', 'pa', 'v2_offset', 'v3_offset'):
             key = attr.split('_selected')[0]
             if attr in ('ra', 'dec', 'pa') and self.instrument_selected not in self.pos_instruments:
-                _ = fp.pop(attr, None)  # TODO: this isn't actually removing from the dict
+                if attr in fp:
+                    del fp[attr]
                 continue
             if attr in ('v2_offset', 'v3_offset') and self.instrument_selected not in self.offset_instruments:
-                _ = fp.pop(attr, None)  # TODO: this isn't actually removing from the dict
+                if attr in fp:
+                    del fp[attr]
                 continue
 
             if key in fp:
+                # then take the value previously set in the dictionary and apply it to the traitlet
+                # (which corresponds to the current selection).
                 setattr(self, attr, fp[key])
             else:
+                # then adopt the value from the traitlet (copy from the previous selection).
+                # This should only ever occur for entries that are not defined in the default
+                # dict above.
                 fp[key] = getattr(self, attr)
         self._ignore_traitlet_change = False
 
@@ -230,11 +233,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             return
         if not self.footprint_selected:
             return
+        if self.footprint_selected not in self._footprints:
+            # default dictionary has not been created yet
+            return
+        if not self.is_active:
+            return
         name = msg.get('name', '').split('_selected')[0]
         if len(name):
             self._footprints[self.footprint_selected][name] = msg.get('new')
-
-        # TODO: need to create marks instances (with visible=False) when a new viewer is created
 
         # update existing mark (or add/remove from viewers)
         for viewer_id, viewer in self.app._viewer_store.items():
@@ -260,7 +266,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         callable = getattr(preset_regions,
                            f"{self.instrument_selected.replace(' ', '_').lower()}_footprint")
 
-        callable_kwargs = {}
+        callable_kwargs = {'include_center': False}
         if self.instrument_selected in self.pos_instruments:
             for arg in ('ra', 'dec', 'pa'):
                 callable_kwargs[arg] = getattr(self, arg)
@@ -277,6 +283,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             return
         if not self.footprint_selected:
             return
+        if self.footprint_selected not in self._footprints:
+            # default dictionary has not been created yet
+            return
         if not self.is_active:
             return
         name = msg.get('name', '').split('_selected')[0]
@@ -287,9 +296,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
         for viewer_id, viewer in self.app._viewer_store.items():
             visible = self._mark_visible(viewer_id)
+            # TODO: need to re-call this logic when the reference_data is changed... which might
+            # warrant some refactoring so we don't have to loop over all viewers if it has only
+            # changed in one viewer
             wcs = getattr(viewer.state.reference_data, 'coords', None)
             if wcs is None:
-#                print("*** skipping viewer because ref data has no WCS")
                 continue
             existing_overlays = self._get_marks(viewer, self.footprint_selected)
             regs = [r for r in regs if isinstance(r, regions.PolygonSkyRegion)]
@@ -297,111 +308,35 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             if not update_existing and len(existing_overlays):
                 # clear any existing marks (length has changed, perhaps a new instrument)
                 viewer.figure.marks = [m for m in viewer.figure.marks if getattr(m, 'footprint', None) != self.footprint_selected]
-#            print("*** viewer, update_existing:", update_existing, len(regs))
+
+            # the following logic is adapted from https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
             new_marks = []
             for i, reg in enumerate(regs):
                 pixel_region = reg.to_pixel(wcs)
                 if not isinstance(reg, regions.PolygonSkyRegion):
-#                    print(f"*** skipping reg {i}/{len(regs)} because not PolygonSkyRegion")
+                    # if we ever want to support plotting centers as well, see
+                    # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
                     continue
-#                if isinstance(pixel_region, regions.PointPixelRegion):
-#                    continue
-#                    if update_existing:
-#                        mark = existing_overlays[i]
-#                        with mark.hold_sync():
-#                            mark.x = [pixel_region.center.x]
-#                            mark.y = [pixel_regions.center.y]
-#                    else:
-#                        # instrument center point
-#                        # TODO: need to make this a FootprintOverlay object of some sort, even though its scatter
-#                        mark = bqplot.Scatter(
-#                            x=[pixel_region.center.x],
-#                            y=[pixel_region.center.y],
-#                            scales=scales,   # TODO: scales
-#                            colors=[self.color],
-#                            marker="plus",
-#                        )
-#                        new_marks.append(mark)
 
-                else:
-#                    print(f"*** processing reg {i}/{len(regs)}")
-                    x_coords = pixel_region.vertices.x
-                    y_coords = pixel_region.vertices.y
-                    if update_existing:
-                        mark = existing_overlays[i]
-                        with mark.hold_sync():
-                            mark.x = x_coords
-                            mark.y = y_coords
-                    else:
-                        # instrument aperture regions
-                        mark = FootprintOverlay(
-                            viewer,
-                            self.footprint_selected,
-                            x=x_coords,
-                            y=y_coords,
-                            colors=[self.color],
-                            fill_opacities=[self.fill_opacity],
-                            visible=visible
-                        )
-                        new_marks.append(mark)
-
-            if not update_existing and len(new_marks):
-                viewer.figure.marks = viewer.figure.marks + new_marks
-
-
-"""
-    def region_to_marks(self):
-        marks = []
-        for i, reg in enumerate(regs):
-            pixel_region = reg.to_pixel(wcs)
-            if isinstance(pixel_region, regions.PointPixelRegion):
-                if update_patches is not None:
-                    mark = update_patches[i]
-                    with mark.hold_sync():
-                        mark.x = [pixel_region.center.x]
-                        mark.y = [pixel_region.center.y]
-                        mark.colors = [color]
-                        mark.default_opacities = [alpha]
-                else:
-                    # instrument center point
-                    mark = bqplot.Scatter(
-                        x=[pixel_region.center.x],
-                        y=[pixel_region.center.y],
-                        scales=scales,
-                        colors=[color],
-                        marker="plus",
-                    )
-                    mark.default_opacities = [alpha]
-            else:
                 x_coords = pixel_region.vertices.x
                 y_coords = pixel_region.vertices.y
-                if update_patches is not None:
-                    mark = update_patches[i]
+                if update_existing:
+                    mark = existing_overlays[i]
                     with mark.hold_sync():
                         mark.x = x_coords
                         mark.y = y_coords
-                        mark.fill = fill
-                        mark.colors = [color]
-                        mark.opacities = [alpha]
-                        mark.fill_opacities = [fill_alpha]
                 else:
                     # instrument aperture regions
-                    mark = bqplot.Lines(
+                    mark = FootprintOverlay(
+                        viewer,
+                        self.footprint_selected,
                         x=x_coords,
                         y=y_coords,
-                        scales=scales,
-                        fill=fill,
-                        colors=[color],
-                        stroke_width=2,
-                        close_path=True,
-                        opacities=[alpha],
-                        fill_opacities=[fill_alpha],
+                        colors=[self.color],
+                        fill_opacities=[self.fill_opacity],
+                        visible=visible
                     )
+                    new_marks.append(mark)
 
-            mark.visible = visible
-            marks.append(mark)
-
-        if update_patches is None:
-            fig.marks = fig.marks + marks
-        return marks
-"""
+            if not update_existing and len(new_marks):
+                viewer.figure.marks = viewer.figure.marks + new_marks
