@@ -1994,12 +1994,14 @@ class DatasetSelect(SelectPluginComponent):
 
     def selected_spectrum_for_spatial_subset(self,
                                              spatial_subset=SPATIAL_DEFAULT_TEXT,
-                                             use_display_units=True):
+                                             use_display_units=True,
+                                             cls=None):
         if spatial_subset == SPATIAL_DEFAULT_TEXT:
             spatial_subset = None
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
                                                     spatial_subset=spatial_subset,
-                                                    use_display_units=use_display_units)
+                                                    use_display_units=use_display_units,
+                                                    cls=cls)
 
     def _is_valid_item(self, data):
         def not_from_plugin(data):

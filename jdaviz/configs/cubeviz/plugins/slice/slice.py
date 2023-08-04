@@ -15,6 +15,7 @@ from jdaviz.core.events import (AddDataMessage, SliceToolStateMessage,
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.configs.cubeviz.plugins.parsers import cubeviz_ramp_meta_flag
 
 __all__ = ['Slice']
 
@@ -111,9 +112,15 @@ class Slice(PluginTemplateMixin):
                                              self._viewer_slices_changed)
                 self._watched_viewers.remove(viewer)
         elif isinstance(viewer, BqplotProfileView) and watch:
+            viewer_data = viewer.data()
             if self._x_all is None and len(viewer.data()):
-                # cache wavelengths so that wavelength <> slice conversion can be done efficiently
-                self._update_data(viewer.data()[0].spectral_axis)
+                if hasattr(viewer_data, 'spectral_axis'):
+                    # cache wavelengths so that wavelength <> slice
+                    # conversion can be done efficiently
+                    self._update_data(viewer_data[0].spectral_axis)
+                else:
+                    sample_index = np.arange(1, 1 + viewer_data[0].shape[-1]) * u.one
+                    self._update_data(sample_index)
 
             if viewer not in self._indicator_viewers:
                 self._indicator_viewers.append(viewer)
@@ -134,7 +141,12 @@ class Slice(PluginTemplateMixin):
     def _update_reference_data(self, reference_data):
         if reference_data is None:
             return  # pragma: no cover
-        self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
+
+        if reference_data.meta.get(cubeviz_ramp_meta_flag, False):
+            sample_index = np.arange(1, 1 + reference_data['flux'].shape[-1]) * u.one
+            self._update_data(sample_index)
+        else:
+            self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
 
     def _update_data(self, x_all):
         self._x_all = x_all.value

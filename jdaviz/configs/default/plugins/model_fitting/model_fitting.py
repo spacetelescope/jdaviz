@@ -8,7 +8,9 @@ from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe
 from glue.core.data import Data
 
-from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
+from jdaviz.core.events import (
+    SnackbarMessage, GlobalDisplayUnitChanged, ViewerRenamedMessage
+)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
@@ -25,6 +27,7 @@ from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_mod
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
                                                                        initialize,
                                                                        get_model_parameters)
+from jdaviz.configs.cubeviz.plugins.parsers import cubeviz_ramp_meta_flag
 
 __all__ = ['ModelFitting']
 
@@ -166,6 +169,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+
+        self.hub.subscribe(self, ViewerRenamedMessage,
+                           handler=self._on_viewer_renamed)
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -332,6 +338,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None or self.dataset_selected == '':  # noqa
             # during initial init, this can trigger before the component is initialized
             return
+
+        if self.dataset.selected_obj:
+            if self.dataset.selected_obj.meta.get(cubeviz_ramp_meta_flag, False):
+                return
 
         selected_spec = self._get_1d_spectrum()
         if selected_spec is None:
@@ -999,3 +1009,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             spectrum.mask = subset_mask
         return spectrum
+
+    def _on_viewer_renamed(self, msg):
+        if msg.old_viewer_ref in self.dataset._viewers:
+            self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
