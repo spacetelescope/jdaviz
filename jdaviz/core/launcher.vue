@@ -73,15 +73,15 @@
     <v-row justify="center">
       <v-btn
         v-for="config in configs"
-        class="mx-4"
+        class="mx-3"
         color="#FFFFFF"
-        style="height: 180px"
+        style="height: 180px; width: 115px"
         @click="launch_config(config)"
         :disabled="!compatible_configs.includes(config)">
             <div class="item" align="center">
                 <v-img
-                    max-height="100"
-                    max-width="100"
+                    height="100"
+                    width="100"
                     :alt="config.charAt(0).toUpperCase() + config.slice(1)"
                     :title="config.charAt(0).toUpperCase() + config.slice(1)"
                     :style="!compatible_configs.includes(config) ? 'filter: opacity(25%) saturate(0)' : ''"
