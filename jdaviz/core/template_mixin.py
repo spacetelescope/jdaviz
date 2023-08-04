@@ -747,12 +747,81 @@ class UnitSelectPluginComponent(SelectPluginComponent):
 
 
 class EditableSelectPluginComponent(SelectPluginComponent):
+    """
+    Plugin select with support for renaming, adding, and deleting items (by the user).
+
+    Useful API methods/attributes:
+
+    * :meth:`~EditableSelectPluginComponent.choices`
+    * ``selected``
+    * :meth:`~EditableSelectPluginComponent.add_choice`
+    * :meth:`~EditableSelectPluginComponent.rename_choice`
+    * :meth:`~EditableSelectPluginComponent.remove_choice`
+    """
+
+    """
+    Traitlets (in the object, custom traitlets in the plugin)
+
+    * ``items`` (list of dicts with keys: label, color)
+    * ``selected`` (string)
+    * ``mode`` (string)
+    * ``edit_value`` (string)
+
+    Properties (in the object only):
+
+    * ``labels`` (list of labels corresponding to items)
+
+
+    To use in a plugin:
+
+    * create (empty) traitlets in the plugin
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets.
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+    * observe the traitlets created and defined in the plugin, as necessary
+
+    Example template (label and hint are optional)::
+
+      <plugin-editable-select
+        :mode.sync="mode"
+        :edit_value.sync="edit_value"
+        :items="items"
+        :selected.sync="selected"
+        label="Label"
+        hint="Select an item to modify."
+      </plugin-editable-select>
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        edit_value : str
+            the name of the traitlet containing the temporary edit value defined in ``plugin``
+        manual_options : list
+            list of entries present before user-modification
+        name : str
+            the user-friendly name of the items, used in error message in place of "entry"
+        on_add : callable
+            callback when a new item is added
+        on_rename : callable
+            callback when an item is renamed
+        on_remove : callable
+            callback when an item is removed
+        """
         super().__init__(*args, **kwargs)
         if self.is_multiselect:
             self._multiselect_changed()
         self.add_observe(kwargs.get('mode'), self._mode_changed)
         self.mode = 'select'  # select, rename, add
+        self._name = kwargs.get('name', 'entry')  # used for error messages
         self._on_add = kwargs.get('on_add', lambda *args: None)
         self._on_rename = kwargs.get('on_rename', lambda *args: None)
         self._on_remove = kwargs.get('on_remove', lambda *args: None)
@@ -770,8 +839,8 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         if self.mode == 'rename:accept':
             try:
                 self.rename_choice(self.selected, self.edit_value)
-            except ValueError:
-                self.hub.broadcast(SnackbarMessage("Renaming entry failed",
+            except ValueError as e:
+                self.hub.broadcast(SnackbarMessage(f"Renaming {self._name} failed: {e}",
                                    sender=self, color="error"))
             else:
                 self.mode = 'select'
@@ -779,8 +848,8 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         elif self.mode == 'add:accept':
             try:
                 self.add_choice(self.edit_value)
-            except ValueError:
-                self.hub.broadcast(SnackbarMessage("Adding entry failed",
+            except ValueError as e:
+                self.hub.broadcast(SnackbarMessage(f"Adding {self._name} failed: {e}",
                                    sender=self, color="error"))
             else:
                 self.mode = 'select'
@@ -802,6 +871,16 @@ class EditableSelectPluginComponent(SelectPluginComponent):
             raise ValueError(f"'{label}' is already a valid choice")
 
     def add_choice(self, label, set_as_selected=True):
+        """
+        Add a new entry/choice.
+
+        Parameters
+        ----------
+        * label : str
+            label of the new entry, must not already be one of the choices
+        * set_as_selected : bool
+            whether to immediately set the new entry as the selected entry
+        """
         self._check_new_choice(label)
         self._manual_options += [label]
         self._update_items()
@@ -810,6 +889,15 @@ class EditableSelectPluginComponent(SelectPluginComponent):
             self.selected = label
 
     def remove_choice(self, label=None):
+        """
+        Remove an existing entry.
+
+        Parameters
+        ----------
+        * label : str
+            label of an existing entry.  If not provided, will default to the currently selected
+            entry
+        """
         if label is None:
             label = self.selected
         if label not in self.choices:
@@ -820,6 +908,16 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         self._on_remove(label)
 
     def rename_choice(self, old, new):
+        """
+        Rename an existing entry.
+
+        Parameters
+        ----------
+        * old : str
+            label of the existing entry to modify
+        * new : str
+            new label.  Must not be another existing entry.
+        """
         if old not in self.choices:
             raise ValueError(f"'{old}' not one of available choices ({self.choices})")
         self._check_new_choice(new)
@@ -847,7 +945,7 @@ class LayerSelect(SelectPluginComponent):
     """
 
     """
-    Traitlets (in the object, custom traitlets in the plugin
+    Traitlets (in the object, custom traitlets in the plugin)
 
     * ``items`` (list of dicts with keys: label, color)
     * ``selected`` (string)

@@ -46,7 +46,7 @@
     <v-text-field
       v-else
       v-model="edit_value"
-      @change="$emit('update:edit_value', $event)"
+      @keyup="$emit('update:edit_value', $event.target.value)"
       :label="label"
       :hint="mode == 'rename' ? 'rename '+label.toLowerCase() : 'add '+label.toLowerCase()"
       persistent-hint

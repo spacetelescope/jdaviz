@@ -63,6 +63,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
         # TODO: migrate from lcviz to here (as part of this PR)
         self.footprint = EditableSelectPluginComponent(self,
+                                                       name='footprint',
                                                        mode='footprint_mode',
                                                        edit_value='footprint_edit_value',
                                                        items='footprint_items',
