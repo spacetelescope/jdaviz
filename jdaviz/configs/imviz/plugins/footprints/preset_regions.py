@@ -1,11 +1,18 @@
 # adapted from https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/footprints.py
 
 import numpy as np
-import pysiaf
 import regions
 from astropy import coordinates
 
+try:
+    import pysiaf
+except ImportError:
+    _has_pysiaf = True
+else:
+    _has_pysiaf = False
+
 __all__ = [
+    "_has_pysiaf",
     "nirspec_footprint",
     "nircam_short_footprint",
     "nircam_long_footprint",

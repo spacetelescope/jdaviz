@@ -11,6 +11,7 @@ from jdaviz.core.user_api import PluginUserApi
 
 from . import preset_regions
 
+
 __all__ = ['Footprints']
 
 
@@ -54,6 +55,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
     # TODO: dithering/mosaic options?
 
     def __init__(self, *args, **kwargs):
+        if not preset_regions._has_pysiaf:
+            # NOTE: if we want to keep this as a soft-dependency and implement other
+            # footprint/region options later, we could just disable the JWST presets
+            # instead of the entire plugin
+            self.disabled_msg = 'this plugin requires pysiaf to be installed'
+
         self._ignore_traitlet_change = False
         self._footprints = {'default': {}}
 
@@ -61,7 +68,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         self.viewer.multiselect = True  # multiselect always enabled
         self.keep_active = True
 
-        # TODO: migrate from lcviz to here (as part of this PR)
         self.footprint = EditableSelectPluginComponent(self,
                                                        name='footprint',
                                                        mode='footprint_mode',
