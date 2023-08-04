@@ -80,7 +80,7 @@
           step="0.01"
           :rules="[() => ra!=='' || 'This field is required']"
           label="RA"
-          hint="Right Ascension"
+          hint="Right Ascension (degrees)"
           persistent-hint
         ></v-text-field>
       </v-row>
@@ -92,7 +92,7 @@
           step="0.01"
           :rules="[() => dec!=='' || 'This field is required']"
           label="Dec"
-          hint="Declination"
+          hint="Declination (degrees)"
           persistent-hint
         ></v-text-field>
       </v-row>
@@ -103,7 +103,7 @@
           type="number"
           :rules="[() => pa!=='' || 'This field is required']"
           label="Position Angle"
-          hint="Position Angle in degrees measured from North
+          hint="Position Angle (degrees) measured from North
                 to central vertical axis in North to East direction."
           persistent-hint
         ></v-text-field>
@@ -115,7 +115,8 @@
           type="number"
           :rules="[() => v2_offset!=='' || 'This field is required']"
           label="V2 Offset"
-          hint="V2 Offset"
+          hint="Additional V2 offset in telescope coordinates to apply to instrument
+                center, as from a dither pattern."
           persistent-hint
         ></v-text-field>
       </v-row>
@@ -126,7 +127,8 @@
           type="number"
           :rules="[() => v3_offset!=='' || 'This field is required']"
           label="V3 Offset"
-          hint="V3 Offset"
+          hint="Additional V3 offset in telescope coordinates to apply to instrument
+                center, as from a dither pattern."
           persistent-hint
         ></v-text-field>
       </v-row>
