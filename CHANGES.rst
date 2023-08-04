@@ -310,6 +310,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Added viewer rotation support via Glue linking [#2179]
+
 - The stretch histogram within plot options can now be popped-out into its own window. [#2314]
 
 - vmin/vmax step size in the plot options plugin is now dynamic based on the full range of the
@@ -506,8 +508,6 @@ Imviz
 
 - Added support for new ``CircularAnnulusROI`` subset from glue, including
   a new draw tool. [#2201, #2240]
-
-- Added viewer rotation support via Glue linking [#2179]
 
 Mosviz
 ^^^^^^
