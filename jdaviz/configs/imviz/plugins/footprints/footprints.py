@@ -186,6 +186,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             # create new entry with defaults (any defaults not provided here will be carried over
             # from the previous selection based on current traitlet values)
             self._footprints[self.footprint_selected] = {'color': '#c75109'}
+            if len(self._footprints) == 1 and len(self.viewer.selected):
+                # default to the center of the current zoom limits of the first selected viewer
+                center_coord = self.viewer.selected_obj[0]._get_center_skycoord()
+                self._footprints[self.footprint_selected]['ra'] = center_coord.ra.to_value('deg')
+                self._footprints[self.footprint_selected]['dec'] = center_coord.dec.to_value('deg')
 
         fp = self._footprints[self.footprint_selected]
 
