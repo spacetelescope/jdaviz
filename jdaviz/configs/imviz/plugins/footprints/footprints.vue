@@ -41,7 +41,7 @@
       <v-row>
           <v-menu>
             <template v-slot:activator="{ on }">
-                <span class="linelist-color-menu"
+                <span class="color-menu"
                       :style="`background:${color}; cursor: pointer; margin-left: 6px`"
                       @click.stop="on.click"
                 >&nbsp;</span>
@@ -144,3 +144,15 @@
     }
   }
 </script>
+
+<style>
+  .v-slider {
+    margin: 0px !important;
+  }
+
+  .color-menu {
+      font-size: 16px;
+      padding-left: 16px;
+      border: 2px solid rgba(0,0,0,0.54);
+  }
+</style>
