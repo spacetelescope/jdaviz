@@ -54,27 +54,27 @@ def _get_region_from_spatial_subset(plugin_obj, subset_label):
     regions2roi
 
     """
+    from glue_astronomy.translators.regions import roi_subset_state_to_region
+
     for subset_grp in plugin_obj.app.data_collection.subset_groups:
         if subset_grp.label == subset_label:
-            for sbst in subset_grp.subsets:
-                if sbst.data.label == plugin_obj.dataset_selected:
-                    reg = sbst.data.get_selection_definition(
-                        subset_id=subset_label, format='astropy-regions')
+            sbst = subset_grp.subset_state
 
-                    # Works around https://github.com/glue-viz/glue-astronomy/issues/52
-                    # Even with multiple viewers, they all seem to share the same
-                    # reference image even when it is not loaded in all the viewers,
-                    # so use default viewer.
-                    viewer = plugin_obj.app._jdaviz_helper.default_viewer
-                    link_type = viewer.get_link_type(plugin_obj.dataset_selected)
+            # Works around https://github.com/glue-viz/glue-astronomy/issues/52
+            # Even with multiple viewers, they all seem to share the same
+            # reference image even when it is not loaded in all the viewers,
+            # so use default viewer.
+            viewer = plugin_obj.app._jdaviz_helper.default_viewer
+            link_type = viewer.get_link_type(plugin_obj.dataset_selected)
 
-                    if link_type == 'wcs':
-                        return reg.to_sky(
-                            plugin_obj.app.data_collection[plugin_obj.dataset_selected].coords)
-                    else:  # pixels or self
-                        return reg
-    else:
-        raise ValueError(f'Subset "{subset_label}" not found')
+            if link_type == 'wcs':
+                to_sky = True
+            else:
+                to_sky = False
+
+            return roi_subset_state_to_region(sbst, to_sky=to_sky)
+
+    raise ValueError(f'Subset "{subset_label}" not found')
 
 
 def regions2roi(region_shape, wcs=None):
