@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Improved design of Launcher and pass filepath arg from cli when no config specified. [#2311]
+
 Cubeviz
 ^^^^^^^
 

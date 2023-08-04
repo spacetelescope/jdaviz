@@ -64,8 +64,11 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     else:
         file_list = []
 
-    if len(file_list) == 0 and layout == '':
-        notebook = "jdaviz_cli_launcher.ipynb"
+    if layout == '':
+        if len(file_list) <= 1:
+            notebook = "jdaviz_cli_launcher.ipynb"
+        else:
+            raise ValueError("'layout' argument is required when specifying multiple files")
     else:
         notebook = "jdaviz_cli.ipynb"
 
