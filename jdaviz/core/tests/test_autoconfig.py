@@ -48,7 +48,7 @@ def test_autoconfig(uris):
 
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
-def test_launcher():
+def test_launcher(tmp_path):
     launcher = Launcher(None, ALL_JDAVIZ_CONFIGS)
 
     # Test starting state
@@ -66,19 +66,17 @@ def test_launcher():
     assert launcher.compatible_configs == ALL_JDAVIZ_CONFIGS
 
     # Test with real files
-    # Setup temporary directory
-    with TemporaryDirectory(ignore_cleanup_errors=True) as tempdir:
-        for uri, config in AUTOCONFIG_EXAMPLES:
-            if uri.startswith("mast:"):
-                download_path = str(Path(tempdir) / Path(uri).name)
-                Observations.download_file(uri, local_path=download_path)
-            elif uri.startswith("http"):
-                download_path = download_file(uri, cache=True, timeout=100)
-            launcher.filepath = download_path
-            # In testing, setting the filepath will stall until identifying is complete
-            # No need to be concerned for race condition here
-            assert launcher.hint == STATUS_HINTS['id ok']
-            assert launcher.compatible_configs == [config().__class__.__name__.lower()]
+    for uri, config in AUTOCONFIG_EXAMPLES:
+        if uri.startswith("mast:"):
+            download_path = str(tmp_path / Path(uri).name)
+            Observations.download_file(uri, local_path=download_path)
+        elif uri.startswith("http"):
+            download_path = download_file(uri, cache=True, timeout=100)
+        launcher.filepath = download_path
+        # In testing, setting the filepath will stall until identifying is complete
+        # No need to be concerned for race condition here
+        assert launcher.hint == STATUS_HINTS['id ok']
+        assert launcher.compatible_configs == [config().__class__.__name__.lower()]
 
     # Test reseting to empty state
     launcher.filepath = ""
