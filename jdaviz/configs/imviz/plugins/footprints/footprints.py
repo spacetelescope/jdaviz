@@ -84,9 +84,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         self.instrument = SelectPluginComponent(self,
                                                 items='instrument_items',
                                                 selected='instrument_selected',
-                                                manual_options=['nirspec',
-                                                                'nircam short',
-                                                                'nircam long'])
+                                                manual_options=preset_regions._instruments.keys())
 
 
         # force the original entry in ephemerides with defaults
@@ -273,16 +271,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         """
         Access the regions objects corresponding to the current settings
         """
-        # construct callable function to get region from preset_regions.py
-        callable = getattr(preset_regions,
-                           f"{self.instrument_selected.replace(' ', '_').lower()}_footprint")
 
-        callable_kwargs = {'include_center': False}
-        for arg in ('ra', 'dec', 'pa', 'v2_offset', 'v3_offset'):
-            if arg not in self.inapplicable_attrs:
-                callable_kwargs[arg] = getattr(self, arg)
+        callable_kwargs = {k: getattr(self, k)
+                           for k in ('ra', 'dec', 'pa', 'v2_offset', 'v3_offset')}
 
-        regs = callable(**callable_kwargs)
+        regs = preset_regions.jwst_footprint(self.instrument_selected, **callable_kwargs)
         return regs
 
     @observe('instrument_selected', 'ra', 'dec', 'pa', 'v2_offset', 'v3_offset')
