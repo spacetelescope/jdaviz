@@ -1,4 +1,3 @@
-#import bqplot
 from traitlets import Bool, List, Unicode, observe
 import regions
 
@@ -28,6 +27,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
     """
     template_file = __file__, "footprints.vue"
     uses_active_status = Bool(True).tag(sync=True)
+    inapplicable_attrs = List().tag(sync=True)
 
     # FOOTPRINT LABEL
     footprint_mode = Unicode().tag(sync=True)
@@ -36,7 +36,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
     footprint_selected = Unicode().tag(sync=True)
 
     # STYLING OPTIONS
-    # viewer
+    # viewer (via mixin)
     visible = Bool(True).tag(sync=True)
     color = Unicode('#c75109').tag(sync=True)  # "active" orange
     fill_opacity = FloatHandleEmpty(0.1).tag(sync=True)
@@ -48,10 +48,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
     ra = FloatHandleEmpty().tag(sync=True)
     dec = FloatHandleEmpty().tag(sync=True)
     pa = FloatHandleEmpty().tag(sync=True)
-    pos_instruments = List(['nirspec', 'nircam short', 'nircam long']).tag(sync=True)  # read-only
     v2_offset = FloatHandleEmpty().tag(sync=True)
     v3_offset = FloatHandleEmpty().tag(sync=True)
-    offset_instruments = List(['nircam short', 'nircam long']).tag(sync=True)  # read-only
     # TODO: dithering/mosaic options?
 
     def __init__(self, *args, **kwargs):
@@ -78,6 +76,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                                        on_rename=self._on_footprint_rename,
                                                        on_remove=self._on_footprint_remove)
 
+        self._update_inapplicable_attrs()
+
         # FUTURE IMPROVEMENT: could add 'From File...' entry here that works similar to that in
         # the catalogs plugin, loads in a region file, and replaces any input UI elements with just
         # a reference to the filename or some text
@@ -97,13 +97,23 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         def instrument_in(instruments=[]):
             return lambda instrument: instrument in instruments
 
-        # TODO: implement inapplicable_attrs in PluginUserApi
         return PluginUserApi(self, expose=('footprint',
                                            'rename_footprint', 'add_footprint', 'remove_footprint',
                                            'viewer', 'visible', 'color', 'fill_opacity',
                                            'instrument', 'ra', 'dec', 'pa',
                                            'v2_offset', 'v3_offset',
-                                           'footprint_regions'))
+                                           'footprint_regions'),
+                             inapplicable_attrs='inapplicable_attrs')
+
+    def _update_inapplicable_attrs(self):
+        # update inapplicable_attrs based on the selected instrument
+        # (which then controls which UI elements are shown, which are
+        # available through the user API, and which are passed along through
+        # kwargs to create the region)
+        if self.instrument_selected not in ['nircam short', 'nircam long']:
+            self.inapplicable_attrs = ['v2_offset', 'v3_offset']
+        else:
+            self.inapplicable_attrs = []
 
     def _get_marks(self, viewer, footprint=None):
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, FootprintOverlay) and (mark.footprint == footprint or footprint is None)]
@@ -201,11 +211,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         for attr in ('instrument_selected', 'visible', 'color', 'fill_opacity', 'viewer_selected',
                      'ra', 'dec', 'pa', 'v2_offset', 'v3_offset'):
             key = attr.split('_selected')[0]
-            if attr in ('ra', 'dec', 'pa') and self.instrument_selected not in self.pos_instruments:
-                if attr in fp:
-                    del fp[attr]
-                continue
-            if attr in ('v2_offset', 'v3_offset') and self.instrument_selected not in self.offset_instruments:
+            if attr in self.inapplicable_attrs:
                 if attr in fp:
                     del fp[attr]
                 continue
@@ -272,11 +278,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                            f"{self.instrument_selected.replace(' ', '_').lower()}_footprint")
 
         callable_kwargs = {'include_center': False}
-        if self.instrument_selected in self.pos_instruments:
-            for arg in ('ra', 'dec', 'pa'):
-                callable_kwargs[arg] = getattr(self, arg)
-        if self.instrument_selected in self.offset_instruments:
-            for arg in ('v2_offset', 'v3_offset'):
+        for arg in ('ra', 'dec', 'pa', 'v2_offset', 'v3_offset'):
+            if arg not in self.inapplicable_attrs:
                 callable_kwargs[arg] = getattr(self, arg)
 
         regs = callable(**callable_kwargs)
@@ -288,12 +291,17 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             return
         if not self.footprint_selected:
             return
+
+        name = msg.get('name', '').split('_selected')[0]
+        if name == 'instrument':
+            self._update_inapplicable_attrs()
+
         if self.footprint_selected not in self._footprints:
             # default dictionary has not been created yet
             return
         if not self.is_active:
             return
-        name = msg.get('name', '').split('_selected')[0]
+
         if len(name):
             self._footprints[self.footprint_selected][name] = msg.get('new')
 

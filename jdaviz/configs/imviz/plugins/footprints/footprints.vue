@@ -73,7 +73,7 @@
         ></v-select>
       </v-row>
 
-      <v-row v-if="pos_instruments.includes(instrument_selected)">
+      <v-row v-if="!inapplicable_attrs.includes('ra')">
         <v-text-field
           v-model.number="ra"
           type="number"
@@ -85,7 +85,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="pos_instruments.includes(instrument_selected)">
+      <v-row v-if="!inapplicable_attrs.includes('dec')">
         <v-text-field
           v-model.number="dec"
           type="number"
@@ -97,7 +97,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="pos_instruments.includes(instrument_selected)">
+      <v-row v-if="!inapplicable_attrs.includes('pa')">
         <v-text-field
           v-model.number="pa"
           type="number"
@@ -109,7 +109,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="offset_instruments.includes(instrument_selected)">
+      <v-row v-if="!inapplicable_attrs.includes('v2_offset')">
         <v-text-field
           v-model.number="v2_offset"
           type="number"
@@ -120,7 +120,7 @@
         ></v-text-field>
       </v-row>
       
-      <v-row v-if="offset_instruments.includes(instrument_selected)">
+      <v-row v-if="!inapplicable_attrs.includes('v3_offset')">
         <v-text-field
           v-model.number="v3_offset"
           type="number"
