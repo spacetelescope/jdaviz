@@ -1,5 +1,6 @@
 import numpy as np
 
+import astropy.units as u
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
 from glue.core.link_helpers import LinkSame
@@ -300,3 +301,19 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             raise ValueError(f'{data_label} not found in data collection external links')
 
         return link_type
+
+    def _get_center_skycoord(self, data=None):
+        if data is None:
+            data = self.state.reference_data
+        # get SkyCoord for the center of ``data`` in this viewer:
+        width = self.state.x_max - self.state.x_min
+        height = self.state.y_max - self.state.y_min
+        x_cen = self.state.x_min + (width * 0.5)
+        y_cen = self.state.y_min + (height * 0.5)
+        x_cen, y_cen = self._get_real_xy(
+            data, x_cen, y_cen
+        )[:2]
+        sky_cen = data.coords.pixel_to_world(
+            x_cen * u.pix, y_cen * u.pix
+        )
+        return sky_cen
