@@ -25,8 +25,14 @@ def test_create_destroy_viewer(imviz_helper, desired_name, actual_name):
     # Make sure plugins that store viewer_items are updated.
     assert sorted(imviz_helper.plugins['Compass'].viewer.labels) == viewer_names
 
+    po = imviz_helper.plugins['Plot Options']
+    po.multiselect = True
+    po.viewer = viewer_names
+
     imviz_helper.destroy_viewer(actual_name)
     assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
+    assert po.viewer.selected == ['imviz-0']
+    assert po.viewer.labels == ['imviz-0']
 
 
 def test_get_viewer_created(imviz_helper):
