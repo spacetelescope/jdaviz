@@ -51,22 +51,36 @@ class SlitOverlay(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._default_table_viewer_reference_name = kwargs.get(
-            "table_viewer_reference_name", "table-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
-        )
-        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
-            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
-        )
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
         table = self.app.get_viewer(self._default_table_viewer_reference_name)
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 
         self._slit_overlay_mark = None
+
+    @property
+    def _default_table_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_table_viewer_reference_name', 'table-viewer'
+        )
+
+    @property
+    def _default_image_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_image_viewer_reference_name', 'image-viewer'
+        )
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+        )
+
+    @property
+    def _default_spectrum_2d_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper,
+            '_default_spectrum_2d_viewer_reference_name',
+            'spectrum-2d-viewer'
+        )
 
     def vue_change_visible(self, *args, **kwargs):
         if self.visible:

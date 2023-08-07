@@ -115,12 +115,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_flux_viewer_reference_name = kwargs.get(
-            "flux_viewer_reference_name", "flux-viewer"
-        )
         self._units = {}
         self._fitted_model = None
         self._fitted_spectrum = None
@@ -172,6 +166,18 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+        )
+
+    @property
+    def _default_flux_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
+        )
 
     @property
     def user_api(self):

@@ -86,13 +86,6 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         # Setup viewer option defaults
         self.state.aspect = 'auto'
 
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
-        )
-
         self.session.hub.subscribe(self, AddDataToViewerMessage,
                                    handler=self._on_viewer_data_changed)
         self.session.hub.subscribe(self, RemoveDataFromViewerMessage,
@@ -254,18 +247,21 @@ class MosvizTableViewer(TableViewer, JdavizViewerMixin):
         self._on_row_selected_begin = None
         self._on_row_selected_end = None
 
-        self._default_table_viewer_reference_name = kwargs.get(
-            "table_viewer_reference_name", "table-viewer"
-        )
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_spectrum_2d_viewer_reference_name = kwargs.get(
-            "spectrum_2d_viewer_reference_name", "spectrum-2d-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
-        )
+    @property
+    def _default_table_viewer_reference_name(self):
+        return self.jdaviz_helper._default_table_viewer_reference_name
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return self.jdaviz_helper._default_spectrum_viewer_reference_name
+
+    @property
+    def _default_spectrum_2d_viewer_reference_name(self):
+        return self.jdaviz_helper._default_spectrum_2d_viewer_reference_name
+
+    @property
+    def _default_image_viewer_reference_name(self):
+        return self.jdaviz_helper._default_image_viewer_reference_name
 
     def redraw(self):
 

@@ -40,10 +40,6 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
 
     def __init__(self, *args, **kwargs):
 
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-
         super().__init__(*args, **kwargs)
 
         self._label_counter = 0
@@ -55,6 +51,10 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return self.jdaviz_helper._default_spectrum_viewer_reference_name
 
     @property
     def user_api(self):
