@@ -20,6 +20,11 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     assert po.layer.multiselect is True
 
     po.viewer.selected = ['flux-viewer', 'uncert-viewer']
+    # any internal call to reset the defaults (due to a change in the choices by adding or removing
+    # a viewer, etc) should not reset the selection
+    po.viewer._apply_default_selection(skip_if_current_valid=True)
+    assert po.viewer.selected == ['flux-viewer', 'uncert-viewer']
+
     # from API could call po.axes_visible.value = False, but we'll also test the vue-level wrapper
     po.vue_set_value({'name': 'axes_visible_value', 'value': False})
     assert po.axes_visible.value is False
