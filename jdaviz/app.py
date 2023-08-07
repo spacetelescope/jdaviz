@@ -1572,8 +1572,7 @@ class Application(VuetifyTemplate, HubListener):
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
     def update_viewer_reference_name(
-        self, old_reference, new_reference,
-        old_reference_helper_attr=None, update_id=False
+        self, old_reference, new_reference, update_id=False
     ):
         """
         Update viewer reference names.
@@ -1586,9 +1585,6 @@ class Application(VuetifyTemplate, HubListener):
             The viewer reference name to be changed
         new_reference : str
             The viewer reference name to use instead of ``old_reference``
-        old_reference_helper_attr : str, optional
-            If one exists, update the helper's attribute `old_reference_helper_attr`
-            with the new viewer reference name. Default is None.
         update_id : bool, optional
             If True, update the viewer IDs as well as the viewer reference names.
         """
@@ -1610,19 +1606,15 @@ class Application(VuetifyTemplate, HubListener):
             self._viewer_store[new_reference] = self._viewer_store.pop(old_id)
             self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
 
-        # Update the viewer name attributes on the helper. First check if
-        # an attr for this viewer reference name is stored on the helper:
-        if old_reference_helper_attr is None:
-            old_viewer_ref_attrs = [
-                attr for attr in dir(self._jdaviz_helper)
-                if old_reference.replace('-', '_') in attr
-            ]
-            if old_viewer_ref_attrs:
-                old_reference_helper_attr = old_viewer_ref_attrs[0]
-
-        # if there is a detectable attr to update, update it:
-        if old_reference_helper_attr:
-            setattr(self._jdaviz_helper, old_reference_helper_attr, new_reference)
+        # update the viewer name attributes on the helper:
+        old_viewer_ref_attrs = [
+            attr for attr in dir(self._jdaviz_helper)
+            if attr.startswith('_default_') and
+            getattr(self._jdaviz_helper, attr) == old_reference
+        ]
+        if old_viewer_ref_attrs:
+            # if there is an attr to update, update it:
+            setattr(self._jdaviz_helper, old_viewer_ref_attrs[0], new_reference)
 
         self.hub.broadcast(ViewerRenamedMessage(old_reference, new_reference, sender=self))
 
