@@ -319,11 +319,11 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @property
     def _default_spectrum_viewer_reference_name(self):
-        return self.jdaviz_helper._default_spectrum_viewer_reference_name
+        return self.app._jdaviz_helper._default_spectrum_viewer_reference_name
 
     @property
     def _default_spectrum_2d_viewer_reference_name(self):
-        return self.jdaviz_helper._default_spectrum_2d_viewer_reference_name
+        return self.app._jdaviz_helper._default_spectrum_2d_viewer_reference_name
 
     @property
     def user_api(self):
