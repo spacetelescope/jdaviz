@@ -91,3 +91,13 @@ def test_export_movie_cubeviz_empty(cubeviz_helper):
 
     with pytest.raises(ValueError, match="Selected viewer has no display shape"):
         plugin.save_movie(i_start=0, i_end=1)
+
+
+def test_export_plot_exceptions(cubeviz_helper):
+    plugin = cubeviz_helper.plugins["Export Plot"]
+
+    with pytest.raises(NotImplementedError, match="filetype.*not supported"):
+        plugin.save_figure(filetype="gif")
+
+    with pytest.raises(ValueError, match="Invalid path"):
+        plugin.save_figure(filename="/fake/path/image.png")
