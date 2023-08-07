@@ -7,9 +7,9 @@ from astropy import coordinates
 try:
     import pysiaf
 except ImportError:
-    _has_pysiaf = True
-else:
     _has_pysiaf = False
+else:
+    _has_pysiaf = True
 
 __all__ = [
     "_has_pysiaf",
@@ -87,6 +87,9 @@ def jwst_footprint(instrument, ra, dec, pa, v2_offset=0.0, v3_offset=0.0, apertu
     footprint : regions.Regions
         Footprint regions as Polygon regions in sky coordinates.
     """
+    if not _has_pysiaf:
+        raise ImportError('jwst_footprint requires pysiaf to be installed')
+
     if instrument not in _instruments:
         raise ValueError(f"instrument must be one of {[', '].join(_instruments.keys())}")
 

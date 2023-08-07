@@ -72,7 +72,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                                        items='footprint_items',
                                                        selected='footprint_selected',
                                                        manual_options=['default'],
-                                                      #on_add=self._on_footprint_add,
                                                        on_rename=self._on_footprint_rename,
                                                        on_remove=self._on_footprint_remove)
 
@@ -85,7 +84,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                                 items='instrument_items',
                                                 selected='instrument_selected',
                                                 manual_options=preset_regions._instruments.keys())
-
 
         # force the original entry in ephemerides with defaults
         self._change_footprint()
@@ -114,7 +112,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             self.inapplicable_attrs = []
 
     def _get_marks(self, viewer, footprint=None):
-        matches = [mark for mark in viewer.figure.marks if isinstance(mark, FootprintOverlay) and (mark.footprint == footprint or footprint is None)]
+        matches = [mark for mark in viewer.figure.marks
+                   if (isinstance(mark, FootprintOverlay) and
+                       (mark.footprint == footprint or footprint is None))]
         return matches
 
     @property
@@ -129,13 +129,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         # NOTE: the footprint will call _on_footprint_rename after updating
         self.footprint.rename_choice(old_lbl, new_lbl)
 
-    def add_footprint(self, lbl, set_as_selected=True):
+    def add_footprint(self, lbl):
         # TODO: ability to pass options which would avoid updating the marks until all are set,
         # probably by setattr(self.user_api, k, v) (and checks in advance that all are valid?)
-        self.footprint.add_choice(lbl, set_as_selected=set_as_selected)
-        if not set_as_selected:
-            # NOTE: otherwise will trigger _change_footprint via the observe on footprint_selected
-            print("*** TODO: need to handle creating mark for footprint that isn't selected (or not allow set_as_selected=False)!")
+        self.footprint.add_choice(lbl, set_as_selected=True)
 
     def remove_footprint(self, lbl):
         # NOTE: the footprint will call _on_footprint_remove after updating
@@ -159,7 +156,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         for viewer_id, viewer in self.app._viewer_store.items():
             if not hasattr(viewer, 'figure'):
                 continue
-            viewer.figure.marks = [m for m in viewer.figure.marks if getattr(m, 'footprint', None) != lbl]
+            viewer.figure.marks = [m for m in viewer.figure.marks
+                                   if getattr(m, 'footprint', None) != lbl]
 
     @observe('is_active')
     def _on_is_active_changed(self, *args):
@@ -313,15 +311,17 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             update_existing = len(existing_overlays) == len(regs)
             if not update_existing and len(existing_overlays):
                 # clear any existing marks (length has changed, perhaps a new instrument)
-                viewer.figure.marks = [m for m in viewer.figure.marks if getattr(m, 'footprint', None) != self.footprint_selected]
+                viewer.figure.marks = [m for m in viewer.figure.marks
+                                       if getattr(m, 'footprint', None) != self.footprint_selected]
 
-            # the following logic is adapted from https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
+            # the following logic is adapted from
+            # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
             new_marks = []
             for i, reg in enumerate(regs):
                 pixel_region = reg.to_pixel(wcs)
                 if not isinstance(reg, regions.PolygonSkyRegion):
-                    # if we ever want to support plotting centers as well, see
-                    # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
+                    # if we ever want to support plotting centers as well,
+                    # see jwst_novt/interact/display.py
                     continue
 
                 x_coords = pixel_region.vertices.x

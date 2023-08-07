@@ -14,6 +14,8 @@ Imviz
 
 - The stretch histogram within plot options can now be popped-out into its own window. [#2314]
 
+- Footprints plugin for plotting overlays of instrument footprints in the image viewer. [#2341]
+
 Mosviz
 ^^^^^^
 
