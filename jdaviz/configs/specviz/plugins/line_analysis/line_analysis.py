@@ -162,9 +162,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
     @property
     def _default_spectrum_viewer_reference_name(self):
-        return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
-        )
+        return self.app._jdaviz_helper._default_spectrum_viewer_reference_name
 
     @property
     def user_api(self):

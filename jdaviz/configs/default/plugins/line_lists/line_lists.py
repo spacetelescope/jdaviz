@@ -127,15 +127,11 @@ class LineListTool(PluginTemplateMixin):
 
     @property
     def _default_spectrum_viewer_reference_name(self):
-        return getattr(
-            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
-        )
+        return self.app._jdaviz_helper._default_spectrum_viewer_reference_name
 
     @property
     def _default_flux_viewer_reference_name(self):
-        return getattr(
-            self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
-        )
+        return self.app._jdaviz_helper._default_flux_viewer_reference_name
 
     def _disable_if_no_data(self):
         if len(self.app.data_collection) == 0:
