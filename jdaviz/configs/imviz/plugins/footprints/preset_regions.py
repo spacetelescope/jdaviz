@@ -19,23 +19,23 @@ __all__ = [
     "jwst_footprint"
 ]
 
-_instruments = {'NIRspec': 'NIRSpec',
-                'NIRcam:short': 'NIRCam',
-                'NIRcam:long': 'NIRCam',
+_instruments = {'NIRSpec': 'NIRSpec',
+                'NIRCam:short': 'NIRCam',
+                'NIRCam:long': 'NIRCam',
                 'NIRISS': 'NIRISS',
                 'MIRI': 'MIRI',
                 'FGS': 'FGS'
                 }
 
-_full_apertures = {'NIRspec': 'NRS_FULL_MSA',
-                   'NIRcam:short': 'NRCALL_FULL',
-                   'NIRcam:long': 'NRCALL_FULL',
+_full_apertures = {'NIRSpec': 'NRS_FULL_MSA',
+                   'NIRCam:short': 'NRCALL_FULL',
+                   'NIRCam:long': 'NRCALL_FULL',
                    'NIRISS': 'NIS_AMIFULL',
                    'MIRI': 'MIRIM_FULL',
                    'FGS': 'FGS1_FULL'
                    }
 
-_all_apertures = {'NIRspec': ["NRS_FULL_MSA1",
+_all_apertures = {'NIRSpec': ["NRS_FULL_MSA1",
                               "NRS_FULL_MSA2",
                               "NRS_FULL_MSA3",
                               "NRS_FULL_MSA4",
@@ -45,7 +45,7 @@ _all_apertures = {'NIRspec': ["NRS_FULL_MSA1",
                               "NRS_S400A1_SLIT",
                               "NRS_S1600A1_SLIT",
                               "NRS_S200B1_SLIT"],
-                  'NIRcam:short': ["NRCA1_FULL",
+                  'NIRCam:short': ["NRCA1_FULL",
                                    "NRCA2_FULL",
                                    "NRCA3_FULL",
                                    "NRCA4_FULL",
@@ -53,7 +53,7 @@ _all_apertures = {'NIRspec': ["NRS_FULL_MSA1",
                                    "NRCB2_FULL",
                                    "NRCB3_FULL",
                                    "NRCB4_FULL",],
-                  'NIRcam:long': ["NRCA5_FULL", "NRCB5_FULL"],
+                  'NIRCam:long': ["NRCA5_FULL", "NRCB5_FULL"],
                   'NIRISS': ['NIS_AMIFULL'],
                   'MIRI': ['MIRIM_FULL'],
                   'FGS': ['FGS1_FULL', 'FGS2_FULL']
@@ -98,20 +98,20 @@ def jwst_footprint(instrument, ra, dec, pa, v2_offset=0.0, v3_offset=0.0, apertu
     siaf_interface = pysiaf.Siaf(_instruments.get(instrument))
 
     # Get center and PA offset from full aperture
-    nrc_full = siaf_interface.apertures[_full_apertures.get(instrument)]
-    nrc_corners = nrc_full.corners("tel", rederive=False)
-    nrc_v2 = np.mean(nrc_corners[0]) - v2_offset
-    nrc_v3 = np.mean(nrc_corners[1]) + v3_offset
-    pa_offset = nrc_full.V3IdlYAngle
+    full = siaf_interface.apertures[_full_apertures.get(instrument)]
+    corners = full.corners("tel", rederive=False)
+    v2 = np.mean(corners[0]) - v2_offset
+    v3 = np.mean(corners[1]) + v3_offset
+    pa_offset = full.V3IdlYAngle
 
     # Attitude matrix for sky coordinates
-    attmat = pysiaf.utils.rotations.attitude(nrc_v2, nrc_v3, ra, dec, pa - pa_offset)
+    attmat = pysiaf.utils.rotations.attitude(v2, v3, ra, dec, pa - pa_offset)
 
     if apertures is None:
         apertures = _all_apertures.get(instrument)
 
     # Aperture regions
-    nrc_regions = []
+    ap_regions = []
     for aperture_name in apertures:
         aperture = siaf_interface.apertures[aperture_name]
         aperture.set_attitude_matrix(attmat)
@@ -119,6 +119,6 @@ def jwst_footprint(instrument, ra, dec, pa, v2_offset=0.0, v3_offset=0.0, apertu
 
         sky_coord = coordinates.SkyCoord(*poly_points, unit="deg")
         reg = regions.PolygonSkyRegion(sky_coord)
-        nrc_regions.append(reg)
+        ap_regions.append(reg)
 
-    return regions.Regions(nrc_regions)
+    return regions.Regions(ap_regions)
