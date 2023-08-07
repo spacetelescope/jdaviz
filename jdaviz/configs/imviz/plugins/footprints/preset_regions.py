@@ -14,6 +14,8 @@ else:
 __all__ = [
     "_has_pysiaf",
     "_instruments",
+    "_full_apertures",
+    "_all_apertures",
     "jwst_footprint"
 ]
 

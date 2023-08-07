@@ -24,6 +24,38 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``footprint`` (:class:`~jdaviz.core.template_mixin.EditableSelectPluginComponent`): the
+        currently active footprint (all other traitlets control this footprint instance)
+    * :meth:``rename_footprint``
+        rename any footprint
+    * :meth:``add_footprint``
+        add a new footprint instance (and select as active)
+    * :meth:``remove_footprint``
+        remove any footprint
+    * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
+        viewer(s) to show the current footprint
+    * ``visible``
+        whether the currently selected footprint should be visible in the selected viewers
+    * ``color``
+        color of the currently selected footprint overlay
+    * ``fill_opacity``
+        opacity of the filled region of the currently selected footprint overlay
+    * ``instrument`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+        selected instrument
+    * ``ra``
+        central right ascension for the footprint overlay
+    * ``dec``
+        central declination (in degrees) for the footprint overlay
+    * ``pa``
+        position angle (in degrees) measured from North to central vertical axis in North to East
+        direction.
+    * ``v2_offset``
+        Additional V2 offset in telescope coordinates to apply to instrument center, as from a
+        dither pattern.
+    * ``v3_offset``
+        Additional V3 offset in telescope coordinates to apply to instrument center, as from a
+        dither pattern.
+    * :meth:``footprint_regions``
     """
     template_file = __file__, "footprints.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -126,15 +158,43 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                 for footprint in self.footprint.choices}
 
     def rename_footprint(self, old_lbl, new_lbl):
+        """
+        Rename an existing footprint instance
+
+        Parameters
+        ----------
+        old_lbl : string
+            current label of the footprint
+        new_lbl : string
+            new label of the footprint
+        """
         # NOTE: the footprint will call _on_footprint_rename after updating
         self.footprint.rename_choice(old_lbl, new_lbl)
 
     def add_footprint(self, lbl):
+        """
+        Add a new footprint instance, and set it as selected.  Once selected, the traitlets
+        will then control the options of the new footprint.
+
+        Parameters
+        ----------
+        lbl : string
+            label of the footprint
+        """
         # TODO: ability to pass options which would avoid updating the marks until all are set,
         # probably by setattr(self.user_api, k, v) (and checks in advance that all are valid?)
         self.footprint.add_choice(lbl, set_as_selected=True)
 
     def remove_footprint(self, lbl):
+        """
+        Remove a footprint instance.  If selected, the selected footprint will default to the
+        first entry in the list.
+
+        Parameters
+        ----------
+        lbl : string
+            label of the footprint
+        """
         # NOTE: the footprint will call _on_footprint_remove after updating
         self.footprint.remove_choice(lbl)
 
