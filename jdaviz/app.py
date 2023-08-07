@@ -1577,7 +1577,7 @@ class Application(VuetifyTemplate, HubListener):
         """
         Update viewer reference names.
 
-        Viewer IDs will not be changed unless `update_id` is True.
+        Viewer IDs will not be changed unless ``update_id`` is True.
 
         Parameters
         ----------

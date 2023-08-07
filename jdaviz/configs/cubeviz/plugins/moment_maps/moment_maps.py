@@ -60,15 +60,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @property
     def _default_image_viewer_reference_name(self):
-        return getattr(
-            self.jdaviz_helper, '_default_image_viewer_reference_name', 'image-viewer'
-        )
+        return self.jdaviz_helper._default_image_viewer_reference_name
 
     @property
     def _default_spectrum_viewer_reference_name(self):
-        return getattr(
-            self.jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
-        )
+        return self.jdaviz_helper._default_spectrum_viewer_reference_name
 
     @property
     def user_api(self):

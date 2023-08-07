@@ -38,21 +38,15 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
 
     @property
     def _default_spectrum_viewer_reference_name(self):
-        return getattr(
-            self.jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
-        )
+        return self.jdaviz_helper_default_spectrum_viewer_reference_name
 
     @property
     def _default_flux_viewer_reference_name(self):
-        return getattr(
-            self.jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
-        )
+        return self.jdaviz_helper._default_flux_viewer_reference_name
 
     @property
     def _default_uncert_viewer_reference_name(self):
-        return getattr(
-            self.jdaviz_helper, '_default_uncert_viewer_reference_name', 'uncert-viewer'
-        )
+        return self.jdaviz_helper._default_uncert_viewer_reference_name
 
     @property
     def active_image_layer(self):
@@ -124,9 +118,7 @@ class CubevizProfileView(SpecvizProfileView):
 
     @property
     def _default_flux_viewer_reference_name(self):
-        return getattr(
-            self.jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
-        )
+        return self.jdaviz_helper._default_flux_viewer_reference_name
 
     def _check_if_data_removed(self, msg):
         # isinstance and the data uuid check will be true for the data
