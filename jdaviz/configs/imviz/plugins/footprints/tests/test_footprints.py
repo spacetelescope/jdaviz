@@ -18,14 +18,14 @@ def test_user_api(imviz_helper, image_2d_wcs):
 
     plugin = imviz_helper.plugins['Footprints']
     with plugin.as_active():
-        # test that each of the supported instruments work
-        for instrument in plugin.instrument.choices:
-            plugin.instrument = instrument
+        # test that each of the supported instruments/presets work
+        for preset in plugin.preset.choices:
+            plugin.preset = preset
 
             viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
-            assert len(viewer_marks) == len(_all_apertures.get(instrument))
+            assert len(viewer_marks) == len(_all_apertures.get(preset))
 
-        # change the color/opacity of the first/default footprint
+        # change the color/opacity of the first/default overlay
         default_color = plugin.color
         default_opacity = plugin.fill_opacity
         plugin.color = '#ffffff'
@@ -35,12 +35,12 @@ def test_user_api(imviz_helper, image_2d_wcs):
         assert viewer_marks[0].colors == ['#ffffff']
         assert viewer_marks[0].fill_opacities == [0.5]
 
-        # add a second footprint from the API
+        # add a second overlay from the API
         with pytest.raises(ValueError):
-            plugin.add_footprint(plugin.footprint.selected)
+            plugin.add_overlay(plugin.overlay.selected)
 
-        plugin.add_footprint('second footprint')
-        assert plugin.footprint.selected == 'second footprint'
+        plugin.add_overlay('second overlay')
+        assert plugin.overlay.selected == 'second overlay'
 
         # color should reset, opacity should carry over
         assert plugin.color == default_color
@@ -48,14 +48,14 @@ def test_user_api(imviz_helper, image_2d_wcs):
 
         plugin.color = '#000000'
 
-        # rename footprint
-        plugin.rename_footprint('second footprint', 'renamed footprint')
-        assert plugin.footprint.selected == 'renamed footprint'
+        # rename overlay
+        plugin.rename_overlay('second overlay', 'renamed overlay')
+        assert plugin.overlay.selected == 'renamed overlay'
         assert plugin.color == '#000000'
 
-        # remove footprint, selection should default to first entry and traitlets update
-        plugin.remove_footprint('renamed footprint')
-        assert plugin.footprint.selected == 'default'
+        # remove overlay, selection should default to first entry and traitlets update
+        plugin.remove_overlay('renamed overlay')
+        assert plugin.overlay.selected == 'default'
         assert plugin.color == '#ffffff'
 
         # test toggling visibility of markers

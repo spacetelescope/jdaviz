@@ -8,17 +8,17 @@
     :popout_button="popout_button">
 
     <plugin-editable-select
-      :mode.sync="footprint_mode"
-      :edit_value.sync="footprint_edit_value"
-      :items="footprint_items"
-      :selected.sync="footprint_selected"
-      label="Footprint"
-      hint="Select a footprint to modify."
+      :mode.sync="overlay_mode"
+      :edit_value.sync="overlay_edit_value"
+      :items="overlay_items"
+      :selected.sync="overlay_selected"
+      label="Overlay"
+      hint="Select an overlay to modify."
       >
     </plugin-editable-select>
 
-    <div v-if="footprint_selected">
-      <j-plugin-section-header>Overlay Options</j-plugin-section-header>
+    <div v-if="overlay_selected">
+      <j-plugin-section-header>Display Options</j-plugin-section-header>
 
       <plugin-viewer-select
         :items="viewer_items"
@@ -26,7 +26,7 @@
         :multiselect="true"
         label="Viewers"
         :show_if_single_entry="false"
-        hint="Select viewers to display this footprint"
+        hint="Select viewers to display this overlay"
       />
 
       <v-row>
@@ -34,7 +34,7 @@
           <v-btn icon @click.stop="visible = !visible">
             <v-icon>mdi-eye{{ visible ? '' : '-off' }}</v-icon>
           </v-btn>
-          Show Footprint Overlay
+          Show Overlay
         </span>
       </v-row>
 
@@ -52,7 +52,7 @@
             </div>
           </v-menu>
         <span style="padding-left: 12px; padding-top: 3px">
-          Footprint Overlay Color
+          Overlay Color
         </span>
       </v-row>
       <div>
@@ -65,10 +65,10 @@
         <v-select
           :menu-props="{ left: true }"
           attach
-          :items="instrument_items.map(i => i.label)"
-          v-model="instrument_selected"
-          label="Instrument"
-          hint="Select instrument to define footprint."
+          :items="preset_items.map(i => i.label)"
+          v-model="preset_selected"
+          label="Preset"
+          hint="Select the preset instrument footprint."
           persistent-hint
         ></v-select>
       </v-row>

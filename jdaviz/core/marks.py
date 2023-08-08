@@ -635,8 +635,8 @@ class MarkersMark(PluginScatter):
 
 
 class FootprintOverlay(PluginLine):
-    def __init__(self, viewer, footprint, **kwargs):
-        self._footprint = footprint
+    def __init__(self, viewer, overlay, **kwargs):
+        self._overlay = overlay
         kwargs.setdefault('stroke_width', 2)
         kwargs.setdefault('close_path', True)
         kwargs.setdefault('opacities', [0.8])
@@ -645,8 +645,8 @@ class FootprintOverlay(PluginLine):
         super().__init__(viewer, **kwargs)
 
     @property
-    def footprint(self):
-        return self._footprint
+    def overlay(self):
+        return self._overlay
 
 
 class HistogramMark(Lines):
