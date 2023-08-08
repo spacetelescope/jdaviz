@@ -10,8 +10,6 @@ on:
   pull_request_target:
     branches:
       - 'debug-standalone-build'
-    paths:
-      - 'standalone.yml'
 
 defaults:
   run:
