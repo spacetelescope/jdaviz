@@ -159,9 +159,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if isinstance(subset_state.roi, CircularROI):
                     x, y = subset_state.roi.center()
                     r = subset_state.roi.radius
-                    subset_definition += [{"name": "X Center", "att": "xc", "value": x, "orig": x},
-                                          {"name": "Y Center", "att": "yc", "value": y, "orig": y},
-                                          {"name": "Radius", "att": "radius", "value": r, "orig": r}]
+                    subset_definition += [
+                        {"name": "X Center", "att": "xc", "value": x, "orig": x},
+                        {"name": "Y Center", "att": "yc", "value": y, "orig": y},
+                        {"name": "Radius", "att": "radius", "value": r, "orig": r}]
 
                 elif isinstance(subset_state.roi, RectangularROI):
                     for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
