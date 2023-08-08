@@ -59,7 +59,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
     """
     template_file = __file__, "footprints.vue"
     uses_active_status = Bool(True).tag(sync=True)
-    inapplicable_attrs = List().tag(sync=True)
 
     # FOOTPRINT LABEL
     footprint_mode = Unicode().tag(sync=True)
@@ -107,8 +106,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                                        on_rename=self._on_footprint_rename,
                                                        on_remove=self._on_footprint_remove)
 
-        self._update_inapplicable_attrs()
-
         # FUTURE IMPROVEMENT: could add 'From File...' entry here that works similar to that in
         # the catalogs plugin, loads in a region file, and replaces any input UI elements with just
         # a reference to the filename or some text
@@ -130,15 +127,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                            'viewer', 'visible', 'color', 'fill_opacity',
                                            'instrument', 'ra', 'dec', 'pa',
                                            'v2_offset', 'v3_offset',
-                                           'footprint_regions'),
-                             inapplicable_attrs='inapplicable_attrs')
+                                           'footprint_regions'))
 
-    def _update_inapplicable_attrs(self):
-        # update inapplicable_attrs based on the selected instrument
-        # (which then controls which UI elements are shown, which are
-        # available through the user API, and which are passed along through
-        # kwargs to create the region)
-        self.inapplicable_attrs = []
 
     def _get_marks(self, viewer, footprint=None):
         matches = [mark for mark in viewer.figure.marks
@@ -264,10 +254,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         for attr in ('instrument_selected', 'visible', 'color', 'fill_opacity', 'viewer_selected',
                      'ra', 'dec', 'pa', 'v2_offset', 'v3_offset'):
             key = attr.split('_selected')[0]
-            if attr in self.inapplicable_attrs:
-                if attr in fp:
-                    del fp[attr]
-                continue
 
             if key in fp:
                 # then take the value previously set in the dictionary and apply it to the traitlet
@@ -341,8 +327,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             return
 
         name = msg.get('name', '').split('_selected')[0]
-        if name == 'instrument':
-            self._update_inapplicable_attrs()
 
         if self.footprint_selected not in self._footprints:
             # default dictionary has not been created yet

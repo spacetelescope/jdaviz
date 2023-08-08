@@ -2,7 +2,7 @@ import astropy.units as u
 
 __all__ = ['UserApiWrapper', 'PluginUserApi']
 
-_internal_attrs = ('_obj', '_expose', '_readonly', '_inapplicable_attrs', '__doc__')
+_internal_attrs = ('_obj', '_expose', '_readonly', '__doc__')
 
 
 class UserApiWrapper:
@@ -10,11 +10,10 @@ class UserApiWrapper:
     This is an API wrapper around an internal object.  For a full list of attributes/methods,
     call dir(object).
     """
-    def __init__(self, obj, expose=[], readonly=[], inapplicable_attrs=None):
+    def __init__(self, obj, expose=[], readonly=[]):
         self._obj = obj
         self._expose = list(expose) + list(readonly)
         self._readonly = readonly
-        self._inapplicable_attrs = inapplicable_attrs  # string of a traitlet in obj or None
         if obj.__doc__ is not None:
             self.__doc__ = self.__doc__ + "\n\n\n" + obj.__doc__
 
@@ -31,20 +30,12 @@ class UserApiWrapper:
         if attr in _internal_attrs or attr not in self._expose:
             return super().__getattribute__(attr)
 
-        if self._inapplicable_attrs is not None:
-            if attr in getattr(self._obj, self._inapplicable_attrs):
-                raise AttributeError(f"{attr} is not currently applicable due to values of other parameters")  # noqa
-
         exp_obj = getattr(self._obj, attr)
         return getattr(exp_obj, 'user_api', exp_obj)
 
     def __setattr__(self, attr, value):
         if attr in _internal_attrs or attr not in self._expose:
             return super().__setattr__(attr, value)
-
-        if self._inapplicable_attrs is not None:
-            if attr in getattr(self._obj, self._inapplicable_attrs):
-                raise AttributeError(f"{attr} is not currently applicable due to values of other parameters")  # noqa
 
         if attr in self._readonly:
             raise AttributeError("cannot set read-only item")
@@ -95,11 +86,11 @@ class PluginUserApi(UserApiWrapper):
     For example::
       help(plugin_object.show)
     """
-    def __init__(self, plugin, expose=[], readonly=[], inapplicable_attrs=None):
+    def __init__(self, plugin, expose=[], readonly=[]):
         expose = list(set(list(expose) + ['open_in_tray', 'show']))
         if plugin.uses_active_status:
             expose += ['keep_active', 'as_active']
-        super().__init__(plugin, expose, readonly, inapplicable_attrs)
+        super().__init__(plugin, expose, readonly)
 
     def __repr__(self):
         return f'<{self._obj._registry_label} API>'

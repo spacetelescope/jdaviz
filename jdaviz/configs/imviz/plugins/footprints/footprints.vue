@@ -73,7 +73,7 @@
         ></v-select>
       </v-row>
 
-      <v-row v-if="!inapplicable_attrs.includes('ra')">
+      <v-row>
         <v-text-field
           v-model.number="ra"
           type="number"
@@ -85,7 +85,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="!inapplicable_attrs.includes('dec')">
+      <v-row>
         <v-text-field
           v-model.number="dec"
           type="number"
@@ -97,7 +97,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="!inapplicable_attrs.includes('pa')">
+      <v-row>
         <v-text-field
           v-model.number="pa"
           type="number"
@@ -109,7 +109,7 @@
         ></v-text-field>
       </v-row>
 
-      <v-row v-if="!inapplicable_attrs.includes('v2_offset')">
+      <v-row>
         <v-text-field
           v-model.number="v2_offset"
           type="number"
@@ -121,7 +121,7 @@
         ></v-text-field>
       </v-row>
       
-      <v-row v-if="!inapplicable_attrs.includes('v3_offset')">
+      <v-row>
         <v-text-field
           v-model.number="v3_offset"
           type="number"
