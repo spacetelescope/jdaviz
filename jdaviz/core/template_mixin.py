@@ -810,11 +810,17 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         name : str
             the user-friendly name of the items, used in error message in place of "entry"
         on_add : callable
-            callback when a new item is added
+            callback when a new item is added, but before the selection is updated
+        on_add_after_selection : callable
+            callback when a new item is added and the selection is updated
         on_rename : callable
-            callback when an item is renamed
+            callback when an item is renamed, but before the selection is updated
+        on_rename_after_selection : callable
+            callback when an item is renamed and the selection is updated
         on_remove : callable
-            callback when an item is removed
+            callback when an item is removed, but before the selection is updated
+        on_remove_after_selection : callable
+            callback when an item is removed and the selection is updated
         """
         super().__init__(*args, **kwargs)
         if self.is_multiselect:
@@ -823,8 +829,11 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         self.mode = 'select'  # select, rename, add
         self._name = kwargs.get('name', 'entry')  # used for error messages
         self._on_add = kwargs.get('on_add', lambda *args: None)
+        self._on_add_after_selection = kwargs.get('on_add_after_selection', lambda *args: None)
         self._on_rename = kwargs.get('on_rename', lambda *args: None)
+        self._on_rename_after_selection = kwargs.get('on_rename_after_selection', lambda *args: None)  # noqa
         self._on_remove = kwargs.get('on_remove', lambda *args: None)
+        self._on_remove_after_selection = kwargs.get('on_remove_after_selection', lambda *args: None)  # noqa
 
     def _multiselect_changed(self):
         # already subscribed to traitlet by SelectPluginComponent
@@ -887,6 +896,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         self._on_add(label)
         if set_as_selected:
             self.selected = label
+        self._on_add_after_selection(label)
 
     def remove_choice(self, label=None):
         """
@@ -904,8 +914,9 @@ class EditableSelectPluginComponent(SelectPluginComponent):
             raise ValueError(f"'{label}' not one of available choices ({self.choices})")
         self._manual_options.remove(label)
         self._update_items()
-        self._apply_default_selection(skip_if_current_valid=True)
         self._on_remove(label)
+        self._apply_default_selection(skip_if_current_valid=True)
+        self._on_remove_after_selection(label)
 
     def rename_choice(self, old, new):
         """
@@ -924,9 +935,10 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         was_selected = self.selected == old
         self._manual_options[self._manual_options.index(old)] = new
         self._update_items()
+        self._on_rename(old, new)
         if was_selected:
             self.selected = new
-        self._on_rename(old, new)
+        self._on_rename_after_selection(old, new)
 
 
 class LayerSelect(SelectPluginComponent):

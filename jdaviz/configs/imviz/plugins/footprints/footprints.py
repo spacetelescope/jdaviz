@@ -129,7 +129,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                            'v2_offset', 'v3_offset',
                                            'footprint_regions'))
 
-
     def _get_marks(self, viewer, footprint=None):
         matches = [mark for mark in viewer.figure.marks
                    if (isinstance(mark, FootprintOverlay) and
