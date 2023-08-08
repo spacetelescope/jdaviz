@@ -22,6 +22,9 @@ Specviz2d
 API Changes
 -----------
 
+- Plugin user APIs now hide attributes that are not applicable based on the values of other options
+  within the plugin. [#2347]
+
 Cubeviz
 ^^^^^^^
 
