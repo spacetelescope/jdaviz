@@ -320,6 +320,15 @@ Footprints
 ==========
 
 This plugin supports loading and overplotting instrument footprints on the image viewers.
+Any number of footprint overlays can be plotted simultaneously from any number of the available
+preset instruments.
+
+The top dropdown allows renaming, adding, and removing footprint overlays.  To modify the display
+and input parameters for a given footprint, select it in the dropdown, and modify the choices
+in the plugin to change its color, opacity, visibilities in any image viewer in the app, or to
+select between various preset instruments and change the input options (position on the sky,
+position angle, offsets, etc).
+
 
 
 .. _rotate-canvas:
