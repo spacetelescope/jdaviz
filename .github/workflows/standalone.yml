@@ -7,6 +7,7 @@ on:
     - 'v*'
     tags:
     - 'v*'
+  pull_request:
 
 defaults:
   run:
@@ -113,7 +114,7 @@ jobs:
       uses: ifaxity/wait-on-action@v1
       with:
         resource: tcp:8866
-        timeout: 60000
+        timeout: 180000
 
     - name: Test standalone
       run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test.py --video=on)
