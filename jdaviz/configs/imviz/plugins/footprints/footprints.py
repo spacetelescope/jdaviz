@@ -138,10 +138,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         # (which then controls which UI elements are shown, which are
         # available through the user API, and which are passed along through
         # kwargs to create the region)
-        if self.instrument_selected not in ['nircam short', 'nircam long']:
-            self.inapplicable_attrs = ['v2_offset', 'v3_offset']
-        else:
-            self.inapplicable_attrs = []
+        self.inapplicable_attrs = []
 
     def _get_marks(self, viewer, footprint=None):
         matches = [mark for mark in viewer.figure.marks
