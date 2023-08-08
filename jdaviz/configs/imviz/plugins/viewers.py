@@ -1,12 +1,9 @@
 import numpy as np
 
-<<<<<<< HEAD
-from glue.core.link_helpers import LinkSame
-=======
->>>>>>> c96059e9 (wcs linking requires wcs-only base layer)
 import astropy.units as u
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
+from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz import wcs_utils

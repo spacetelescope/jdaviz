@@ -297,8 +297,9 @@ def _rotated_gwcs(
     # based on ``gwcs_simple_imaging_units`` in gwcs:
     #   https://github.com/spacetelescope/gwcs/blob/
     #   eec9a2b6de8356495f405de3dc6531538589ce5d/gwcs/tests/conftest.py#L165
-    pixel_scale_factor = np.mean(image_shape) / np.mean(refdata_shape)
-    pixel_scales = u.Quantity(pixel_scales) * pixel_scale_factor
+    image_extent = u.Quantity(image_shape, u.pix) * u.Quantity(pixel_scales)
+    refdata_extent = image_extent.max()
+    pixel_scales = refdata_extent / u.Quantity(refdata_shape, u.pix)
 
     # multiplying by +/-1 can flip north/south or east/west:
     flip_direction = (
@@ -308,8 +309,8 @@ def _rotated_gwcs(
 
     # shift to compensate for the difference between the center and corner:
     shift = (
-        models.Shift(-refdata_shape[0]/2 * u.pix) &
-        models.Shift(-refdata_shape[1]/2 * u.pix)
+        models.Shift((0.5 - refdata_shape[0])/2 * u.pix) &
+        models.Shift((0.5 - refdata_shape[1])/2 * u.pix)
     )
 
     # rotate field of view:
@@ -392,11 +393,11 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
     else:
         # fall back on CRVAL cards if they're available
         wcsinfo = (
-            data.meta.get('wcsinfo', None) or
             data.meta.get('_primary_header', None) or
+            data.meta.get('wcsinfo', None) or
             data.meta.get('wcs', None)
         )
-        if wcsinfo is not None:
+        if wcsinfo is not None and not isinstance(wcsinfo, GWCS):
             crval1 = float(wcsinfo.get('CRVAL1', wcsinfo.get('crval1')))
             crval2 = float(wcsinfo.get('CRVAL2', wcsinfo.get('crval2')))
             cdelt = [
@@ -423,14 +424,8 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
 
     # get the world coordinates of the pixel origin
     center_pixel_coord = np.array(real_image_shape) / 2 * u.pix
-    center_world_coord = wcs.pixel_to_world(*center_pixel_coord)
+    center_world_coord = wcs.pixel_to_world(*center_pixel_coord[::-1])
     rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
-
-    # pixel scale in x and y may be different, but here we
-    # take the mean pixel scale in either dimension and assume
-    # they're similar, since otherwise the aspect ratio of the
-    # rotated image will appear distorted.
-    pixel_scales = [pixel_scales.mean(), pixel_scales.mean()]
 
     # create a GWCS centered on ``filename``,
     # and rotated by ``rotation_angle``:
