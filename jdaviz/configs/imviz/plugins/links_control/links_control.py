@@ -31,8 +31,10 @@ class LinksControl(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``link_type`` (`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``wcs_use_affine``
+        Only applicable if ``link_type`` is 'WCS'
     """
     template_file = __file__, "links_control.vue"
+    inapplicable_attrs = List().tag(sync=True)
 
     link_type_items = List().tag(sync=True)
     link_type_selected = Unicode().tag(sync=True)
@@ -62,9 +64,18 @@ class LinksControl(PluginTemplateMixin):
         self.hub.subscribe(self, MarkersChangedMessage,
                            handler=self._on_markers_changed)
 
+        self._update_inapplicable_attrs()
+
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('link_type', 'wcs_use_affine'))
+        return PluginUserApi(self, expose=('link_type', 'wcs_use_affine'),
+                             inapplicable_attrs='inapplicable_attrs')
+
+    def _update_inapplicable_attrs(self):
+        if self.link_type.selected == 'Pixels':
+            self.inapplicable_attrs = ['wcs_use_affine']
+        else:
+            self.inapplicable_attrs = []
 
     def _on_link_updated(self, msg):
         self.link_type.selected = {'pixels': 'Pixels', 'wcs': 'WCS'}[msg.link_type]
@@ -126,6 +137,7 @@ class LinksControl(PluginTemplateMixin):
             # reset wcs_use_affine to be True
             self.wcs_use_affine = True
 
+        self._update_inapplicable_attrs()
         self._link_image_data()
 
         self.linking_in_progress = False
