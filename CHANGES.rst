@@ -71,6 +71,10 @@ Bug Fixes
 - Explot Plot now throws exception if its "save_figure" method is called
   with a path that contains invalid directory. [#2339]
 
+- Plugin dropdown elements with multiselect mode enabled will no longer reset
+  the selection when the choices change if any of the previous entries are still
+  valid. [#2344]
+
 Cubeviz
 ^^^^^^^
 

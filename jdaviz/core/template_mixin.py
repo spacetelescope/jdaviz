@@ -633,7 +633,18 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return self._default_mode
 
     def _apply_default_selection(self, skip_if_current_valid=True):
-        # TODO: make this multi-ready
+        if self.is_multiselect:
+            if skip_if_current_valid and len(self.selected) == 0:
+                # current selection is empty and so should remain that way
+                return
+            is_valid = [s in self.labels for s in self.selected]
+            if skip_if_current_valid and np.any(is_valid):
+                if np.all(is_valid):
+                    return
+                self.selected = [s for s in self.labels if s in self.selected]
+                return
+            is_valid = False
+
         is_valid = self.selected in self.labels
         if callable(self.default_mode):
             # callable was defined and passed by the plugin or inheriting component.
