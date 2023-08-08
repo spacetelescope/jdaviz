@@ -84,7 +84,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
     # TODO: dithering/mosaic options?
 
     def __init__(self, *args, **kwargs):
-        if not preset_regions._has_pysiaf:
+        if not preset_regions._has_pysiaf:  # pragma: nocover
             # NOTE: if we want to keep this as a soft-dependency and implement other
             # footprint/region options later, we could just disable the JWST presets
             # instead of the entire plugin
@@ -119,9 +119,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def user_api(self):
-        def instrument_in(instruments=[]):
-            return lambda instrument: instrument in instruments
-
         return PluginUserApi(self, expose=('footprint',
                                            'rename_footprint', 'add_footprint', 'remove_footprint',
                                            'viewer', 'visible', 'color', 'fill_opacity',
@@ -190,7 +187,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
         # change the reference on any marks entries for this footprint (in any viewer)
         for viewer_id, viewer in self.app._viewer_store.items():
-            if not hasattr(viewer, 'figure'):
+            if not hasattr(viewer, 'figure'):  # pragma: nocover
+                # should only be table viewers in mosviz, but will leave this in case we
+                # ever enable the plugin for the image-viewer in mosviz
                 continue
             for mark in self._get_marks(viewer, old_lbl):
                 mark._footprint = new_lbl
@@ -200,14 +199,16 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
         # remove any marks objects (corresponding to this footprint) from all figures
         for viewer_id, viewer in self.app._viewer_store.items():
-            if not hasattr(viewer, 'figure'):
+            if not hasattr(viewer, 'figure'):  # pragma: nocover
+                # should only be table viewers in mosviz, but will leave this in case we
+                # ever enable the plugin for the image-viewer in mosviz
                 continue
             viewer.figure.marks = [m for m in viewer.figure.marks
                                    if getattr(m, 'footprint', None) != lbl]
 
     @observe('is_active')
     def _on_is_active_changed(self, *args):
-        if not hasattr(self, 'footprint'):
+        if not hasattr(self, 'footprint'):  # pragma: nocover
             # plugin/traitlet startup
             return
 
@@ -225,7 +226,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
     @observe('footprint_selected')
     def _change_footprint(self, *args):
-        if not hasattr(self, 'footprint'):
+        if not hasattr(self, 'footprint'):  # pragma: nocover
             # plugin/traitlet startup
             return
         if self.footprint_selected == '':
@@ -359,7 +360,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             new_marks = []
             for i, reg in enumerate(regs):
                 pixel_region = reg.to_pixel(wcs)
-                if not isinstance(reg, regions.PolygonSkyRegion):
+                if not isinstance(reg, regions.PolygonSkyRegion):  # pragma: nocover
                     # if we ever want to support plotting centers as well,
                     # see jwst_novt/interact/display.py
                     continue
