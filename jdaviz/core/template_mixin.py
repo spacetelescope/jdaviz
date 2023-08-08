@@ -752,7 +752,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
 
     Useful API methods/attributes:
 
-    * :meth:`~EditableSelectPluginComponent.choices`
+    * :meth:`~SelectPluginComponent.choices`
     * ``selected``
     * :meth:`~EditableSelectPluginComponent.add_choice`
     * :meth:`~EditableSelectPluginComponent.rename_choice`
