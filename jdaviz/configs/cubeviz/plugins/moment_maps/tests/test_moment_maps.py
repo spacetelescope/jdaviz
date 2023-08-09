@@ -84,7 +84,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert dc[2].label == 'moment 1'
 
     assert len(dc.links) == 22
-    assert len(dc.external_links) == 2
+    assert len(dc.external_links) == 4  # pixel linked
     # Link 3D z to 2D x and 3D y to 2D y
 
     # Coordinate display should be unaffected.
