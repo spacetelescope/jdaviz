@@ -342,7 +342,7 @@ def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
         yield data, new_data_label
 
 
-def _asdf_2d_to_glue_data(file_obj, data_label, ext=None):
+def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None):
     if ext == '*' or ext is None:
         # NOTE: Update as needed. Should cover all the image extensions available.
         ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
