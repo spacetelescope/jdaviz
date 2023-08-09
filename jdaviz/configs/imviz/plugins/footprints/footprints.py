@@ -114,9 +114,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                             selected='preset_selected',
                                             manual_options=preset_regions._instruments.keys())
 
-        # force the original entry in overlay with defaults
-        self._change_overlay()
-
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('overlay',
@@ -216,7 +213,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             if not len(self._overlays):
                 # create the first default overlay
                 self._change_overlay()
-            self._preset_args_changed()
+                # update the marks
+                self._preset_args_changed()
 
         for overlay, viewer_marks in self.marks.items():
             for viewer_id, marks in viewer_marks.items():
@@ -231,8 +229,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             return
         if self.overlay_selected == '':
             # no overlay selected (this can happen when removing all overlays)
-            return
-        if not self.is_active:
             return
 
         if self.overlay_selected not in self._overlays:
@@ -330,8 +326,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
         if self.overlay_selected not in self._overlays:
             # default dictionary has not been created yet
-            return
-        if not self.is_active:
             return
 
         if len(name):
