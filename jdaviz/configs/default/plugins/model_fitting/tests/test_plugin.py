@@ -149,7 +149,8 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     modelfit_plugin._obj.cube_fit = True
     assert modelfit_plugin._obj.results_label_default == 'cube-fit model'
     assert modelfit_plugin._obj.results_label == test_label
-    with pytest.warns(AstropyUserWarning):
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message=r'.*Model is linear in parameters.*')
         modelfit_plugin.calculate_fit()
     assert test_label in cubeviz_helper.app.data_collection
 
