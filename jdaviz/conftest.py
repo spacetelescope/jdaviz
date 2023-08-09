@@ -14,6 +14,8 @@ from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectrumCollection, SpectrumList
 
 from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
+from jdaviz.configs.imviz.tests.utils import create_wfi_image_model
+from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
 SPECTRUM_SIZE = 10  # length of spectrum
 
@@ -288,6 +290,12 @@ def mos_image():
     np.random.seed(42)
     data = np.random.sample((55, 55))
     return CCDData(data, wcs=wcs, unit='Jy', meta=header)
+
+
+@pytest.fixture
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
+def roman_imagemodel():
+    return create_wfi_image_model((20, 10))
 
 
 try:
