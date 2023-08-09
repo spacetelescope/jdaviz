@@ -1478,7 +1478,9 @@ class Application(VuetifyTemplate, HubListener):
             defined data set.
         """
         if ('mosviz_row' in self.state.settings and
-            not (self.get_viewer("table-viewer").row_selection_in_progress) and
+            not (self.get_viewer(
+                self._jdaviz_helper._default_table_viewer_reference_name
+            ).row_selection_in_progress) and
             self.data_collection[data_label].meta['mosviz_row'] !=
                 self.state.settings['mosviz_row']):
             raise NotImplementedError("Intra-row plotting not supported. "
