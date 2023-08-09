@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData, StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
-from astropy.utils.data import download_file, get_pkg_data_filename
+from astropy.utils.data import download_file
 from astropy.wcs import WCS
 from gwcs import WCS as GWCS
 from numpy.testing import assert_allclose, assert_array_equal
@@ -506,7 +506,6 @@ def test_load_valid_not_valid(imviz_helper):
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_roman_parser(imviz_helper):
-    filename = get_pkg_data_filename('data/roman_wfi_image_model.asdf')
-    imviz_helper.load_data(filename)
+def test_roman_parser(imviz_helper, roman_imagemodel):
+    imviz_helper.load_data(roman_imagemodel, data_label='roman_wfi_image_model', ext='data')
     assert len(imviz_helper.app.data_collection) == 1
