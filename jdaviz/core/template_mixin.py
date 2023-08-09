@@ -1115,15 +1115,13 @@ class SubsetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_obj(self):
-        if self.selected in self.manual_options or self.selected not in self.labels:
+        if (
+            self.selected in self.manual_options or
+            self.selected not in self.labels or
+            self.selected is None
+        ):
             return None
-        # NOTE: we use reference names here instead of IDs since get_subsets requires
-        # that.  For imviz, this will mean we won't be able to loop through each of the viewers,
-        # but the original viewer should have access to all the subsets.
-        for viewer_ref in self.viewer_refs:
-            match = self.app.get_subsets(self.selected)
-            if match is not None:
-                return match
+        return self.app.get_subsets(self.selected)
 
     @property
     def selected_subset_state(self):
