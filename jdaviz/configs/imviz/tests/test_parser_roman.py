@@ -3,7 +3,6 @@ import pytest
 # NOTE: Since this is optional dependency, codecov coverage does not include this test module.
 roman_datamodels = pytest.importorskip("roman_datamodels")
 
-from astropy.utils.data import get_pkg_data_filename
 from gwcs import WCS as GWCS
 
 
@@ -12,9 +11,8 @@ from gwcs import WCS as GWCS
     [(None, 5),
      ('data', 1),
      (['data', 'var_rnoise'], 2)])
-def test_roman_wfi_ext_options(imviz_helper, ext_list, n_dc):
-    filename = get_pkg_data_filename('data/roman_wfi_image_model.asdf')
-    imviz_helper.load_data(filename, ext=ext_list)
+def test_roman_wfi_ext_options(imviz_helper, roman_imagemodel, ext_list, n_dc):
+    imviz_helper.load_data(roman_imagemodel, data_label='roman_wfi_image_model', ext=ext_list)
     dc = imviz_helper.app.data_collection
     assert len(dc) == n_dc
 

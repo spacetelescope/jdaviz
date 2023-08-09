@@ -79,7 +79,7 @@ docs = [
     "sphinx_design"
 ]
 roman = [
-    "roman_datamodels>=0.16.1",
+    "roman_datamodels>=0.17.1",
 ]
 
 [build-system]
