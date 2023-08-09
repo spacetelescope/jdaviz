@@ -1,5 +1,6 @@
 import os
 
+import asdf
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -76,12 +77,14 @@ def parse_data(app, file_obj, ext=None, data_label=None):
             _parse_image(app, pf, data_label, ext=ext)
 
         elif file_obj_lower.endswith('.asdf'):
-            if not HAS_ROMAN_DATAMODELS:
-                raise ImportError(
-                    "ASDF detected but roman-datamodels is not installed."
-                )
-            with rdd.open(file_obj) as pf:
-                _parse_image(app, pf, data_label, ext=ext)
+            try:
+                if HAS_ROMAN_DATAMODELS:
+                    with rdd.open(file_obj) as pf:
+                        _parse_image(app, pf, data_label, ext=ext)
+            except TypeError:
+                # if roman_datamodels cannot parse the file, load it with asdf:
+                with asdf.open(file_obj) as af:
+                    _parse_image(app, af, data_label, ext=ext)
 
         elif file_obj_lower.endswith('.reg'):
             # This will load DS9 regions as Subset but only if there is already data.
@@ -148,9 +151,13 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
     elif isinstance(file_obj, np.ndarray):
         data_iter = _ndarray_to_glue_data(file_obj, data_label)
 
-    # Roman 2D datamodels
+    # load Roman 2D datamodels:
     elif HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
         data_iter = _roman_2d_to_glue_data(file_obj, data_label, ext=ext)
+
+    # load ASDF files that may not validate as Roman datamodels:
+    elif isinstance(file_obj, asdf.AsdfFile):
+        data_iter = _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=ext)
 
     else:
         raise NotImplementedError(f'Imviz does not support {file_obj}')
@@ -333,6 +340,35 @@ def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
         data.meta.update(standardize_metadata(dict(meta)))
 
         yield data, new_data_label
+
+
+def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None):
+    if ext == '*' or ext is None:
+        # NOTE: Update as needed. Should cover all the image extensions available.
+        ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
+    elif isinstance(ext, (list, tuple)):
+        ext_list = ext
+    else:
+        ext_list = (ext, )
+
+    roman = file_obj.tree.get('roman')
+    meta = roman.get('meta', {})
+    coords = meta.get('wcs', None)
+
+    for cur_ext in ext_list:
+        if cur_ext in roman:
+            comp_label = cur_ext.upper()
+            new_data_label = f'{data_label}[{comp_label}]'
+            data = Data(coords=coords, label=new_data_label)
+
+            # This could be a quantity or a ndarray:
+            ext_values = roman.get(cur_ext)
+            bunit = getattr(ext_values, 'unit', '')
+            component = Component(np.array(ext_values), units=bunit)
+            data.add_component(component=component, label=comp_label)
+            data.meta.update(standardize_metadata(dict(meta)))
+
+            yield data, new_data_label
 
 
 # ---- Functions that handle input from non-JWST, non-Roman FITS files -----

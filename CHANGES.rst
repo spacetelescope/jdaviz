@@ -15,6 +15,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Improved ASDF parsing support for non-standard Roman-like data products. [#2351]
+
 Mosviz
 ^^^^^^
 
