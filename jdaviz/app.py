@@ -1573,7 +1573,7 @@ class Application(VuetifyTemplate, HubListener):
         # Cannot sort because of None
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
-    def update_viewer_reference_name(
+    def _update_viewer_reference_name(
         self, old_reference, new_reference, update_id=False
     ):
         """
@@ -1591,7 +1591,11 @@ class Application(VuetifyTemplate, HubListener):
             If True, update the viewer IDs as well as the viewer reference names.
         """
         if new_reference in self.get_viewer_reference_names():
-            raise ValueError(f"viewer with reference='{new_reference}' already exists")
+            raise ValueError(f"Viewer with reference='{new_reference}' already exists.")
+
+        if old_reference == 'imviz-0':
+            raise ValueError(f"The default Imviz viewer reference "
+                             f"'{old_reference}' cannot be changed.")
 
         # update the viewer item's reference name
         viewer_item = self._get_viewer_item(old_reference)
