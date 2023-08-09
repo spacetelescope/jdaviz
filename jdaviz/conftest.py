@@ -293,9 +293,9 @@ def mos_image():
 
 
 @pytest.fixture
-@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def roman_imagemodel():
-    return create_wfi_image_model((20, 10))
+    if HAS_ROMAN_DATAMODELS:
+        return create_wfi_image_model((20, 10))
 
 
 try:
