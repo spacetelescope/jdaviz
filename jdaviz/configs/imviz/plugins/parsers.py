@@ -157,7 +157,7 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
 
     # load ASDF files that may not validate as Roman datamodels:
     elif isinstance(file_obj, asdf.AsdfFile):
-        data_iter = _asdf_2d_to_glue_data(file_obj, data_label, ext=ext)
+        data_iter = _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=ext)
 
     else:
         raise NotImplementedError(f'Imviz does not support {file_obj}')
