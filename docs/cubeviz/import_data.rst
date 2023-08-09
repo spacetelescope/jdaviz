@@ -133,7 +133,7 @@ You can create your own :class:`~specutils.Spectrum1D` object by hand to load in
 JWST datamodels
 ---------------
 
-If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
+If you have a `stdatamodels.datamodels <https://stdatamodels.readthedocs.io/en/latest/jwst/datamodels/index.html#data-models>`_
 object, you can load it into Cubeviz as follows:
 
 .. code-block:: python

@@ -89,7 +89,7 @@ You can create your own array to load into Imviz:
 JWST datamodels
 ---------------
 
-If you have a `jwst.datamodels <https://jwst-pipeline.readthedocs.io/en/latest/jwst/datamodels/index.html>`_
+If you have a `stdatamodels.datamodels <https://stdatamodels.readthedocs.io/en/latest/jwst/datamodels/index.html#data-models>`_
 object, you can load it into Imviz as follows:
 
 .. code-block:: python
