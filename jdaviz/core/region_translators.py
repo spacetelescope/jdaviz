@@ -20,8 +20,8 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
 __all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
 
 
-def _get_region_from_spatial_subset(plugin_obj, subset_label):
-    """Convert a ``glue`` ROI in the given subset to ``regions`` shape.
+def _get_region_from_spatial_subset(plugin_obj, subset_state):
+    """Convert the given ``glue`` ROI subset state to ``regions`` shape.
 
     .. note:: This is for internal use only in Imviz plugins.
 
@@ -31,23 +31,17 @@ def _get_region_from_spatial_subset(plugin_obj, subset_label):
         Plugin instance that needs this translation.
         The plugin is assumed to have a special setup that gives
         it access to these attributes: ``app`` and ``dataset_selected``.
-        The ``app._jdaviz_helper.default_viewer`` attribute must also
-        exist and point to an image viewer that has a ``get_link_type``
-        method.
+        The ``app._jdaviz_helper.get_link_type`` method must also
+        exist.
 
-    subset_label : str
-        Label of selected subset in the plugin.
+    subset_state : obj
+        ROI subset state to translate.
 
     Returns
     -------
     reg : `regions.Region`
         An equivalent ``regions`` shape. This can be a pixel or sky
         region, so the plugin needs to be able to deal with both.
-
-    Raises
-    ------
-    ValueError
-        Subset is not found.
 
     See Also
     --------
@@ -56,25 +50,18 @@ def _get_region_from_spatial_subset(plugin_obj, subset_label):
     """
     from glue_astronomy.translators.regions import roi_subset_state_to_region
 
-    for subset_grp in plugin_obj.app.data_collection.subset_groups:
-        if subset_grp.label == subset_label:
-            sbst = subset_grp.subset_state
+    # Subset is defined against its parent. This is not necessarily
+    # the current viewer reference data for when we can change that.
+    # See https://github.com/spacetelescope/jdaviz/issues/2230
+    link_type = plugin_obj.app._jdaviz_helper.get_link_type(
+        subset_state.xatt.parent.label, plugin_obj.dataset_selected)
 
-            # Works around https://github.com/glue-viz/glue-astronomy/issues/52
-            # Even with multiple viewers, they all seem to share the same
-            # reference image even when it is not loaded in all the viewers,
-            # so use default viewer.
-            viewer = plugin_obj.app._jdaviz_helper.default_viewer
-            link_type = viewer.get_link_type(plugin_obj.dataset_selected)
+    if link_type == 'wcs':
+        to_sky = True
+    else:
+        to_sky = False
 
-            if link_type == 'wcs':
-                to_sky = True
-            else:
-                to_sky = False
-
-            return roi_subset_state_to_region(sbst, to_sky=to_sky)
-
-    raise ValueError(f'Subset "{subset_label}" not found')
+    return roi_subset_state_to_region(subset_state, to_sky=to_sky)
 
 
 def regions2roi(region_shape, wcs=None):
@@ -200,7 +187,7 @@ def regions2aperture(region_shape):
     elif isinstance(region_shape, EllipseSkyRegion):
         aperture = SkyEllipticalAperture(
             region_shape.center, region_shape.width * 0.5, region_shape.height * 0.5,
-            theta=region_shape.angle)
+            theta=(region_shape.angle - (90 * u.deg)))
 
     elif isinstance(region_shape, RectanglePixelRegion):
         aperture = RectangularAperture(
@@ -209,7 +196,8 @@ def regions2aperture(region_shape):
 
     elif isinstance(region_shape, RectangleSkyRegion):
         aperture = SkyRectangularAperture(
-            region_shape.center, region_shape.width, region_shape.height, theta=region_shape.angle)
+            region_shape.center, region_shape.width, region_shape.height,
+            theta=(region_shape.angle - (90 * u.deg)))
 
     elif isinstance(region_shape, CircleAnnulusPixelRegion):
         aperture = CircularAnnulus(
@@ -229,7 +217,7 @@ def regions2aperture(region_shape):
         aperture = SkyEllipticalAnnulus(
             region_shape.center, region_shape.inner_width * 0.5, region_shape.outer_width * 0.5,
             region_shape.outer_height * 0.5, b_in=region_shape.inner_height * 0.5,
-            theta=region_shape.angle)
+            theta=(region_shape.angle - (90 * u.deg)))
 
     elif isinstance(region_shape, RectangleAnnulusPixelRegion):
         aperture = RectangularAnnulus(
@@ -240,7 +228,8 @@ def regions2aperture(region_shape):
     elif isinstance(region_shape, RectangleAnnulusSkyRegion):
         aperture = SkyRectangularAnnulus(
             region_shape.center, region_shape.inner_width, region_shape.outer_width,
-            region_shape.outer_height, h_in=region_shape.inner_height, theta=region_shape.angle)
+            region_shape.outer_height, h_in=region_shape.inner_height,
+            theta=(region_shape.angle - (90 * u.deg)))
 
     else:
         raise NotImplementedError(f'{region_shape.__class__.__name__} is not supported')
@@ -299,7 +288,7 @@ def aperture2regions(aperture):
     elif isinstance(aperture, SkyEllipticalAperture):
         region_shape = EllipseSkyRegion(
             center=aperture.positions, width=aperture.a * 2, height=aperture.b * 2,
-            angle=aperture.theta)
+            angle=(aperture.theta + (90 * u.deg)))
 
     elif isinstance(aperture, RectangularAperture):
         region_shape = RectanglePixelRegion(
@@ -308,7 +297,8 @@ def aperture2regions(aperture):
 
     elif isinstance(aperture, SkyRectangularAperture):
         region_shape = RectangleSkyRegion(
-            center=aperture.positions, width=aperture.w, height=aperture.h, angle=aperture.theta)
+            center=aperture.positions, width=aperture.w, height=aperture.h,
+            angle=(aperture.theta + (90 * u.deg)))
 
     elif isinstance(aperture, CircularAnnulus):
         region_shape = CircleAnnulusPixelRegion(
@@ -329,7 +319,8 @@ def aperture2regions(aperture):
         region_shape = EllipseAnnulusSkyRegion(
             center=aperture.positions, inner_width=aperture.a_in * 2,
             inner_height=aperture.b_in * 2, outer_width=aperture.a_out * 2,
-            outer_height=aperture.b_out * 2, angle=aperture.theta)
+            outer_height=aperture.b_out * 2,
+            angle=(aperture.theta + (90 * u.deg)))
 
     elif isinstance(aperture, RectangularAnnulus):
         region_shape = RectangleAnnulusPixelRegion(
@@ -340,7 +331,8 @@ def aperture2regions(aperture):
     elif isinstance(aperture, SkyRectangularAnnulus):
         region_shape = RectangleAnnulusSkyRegion(
             center=aperture.positions, inner_width=aperture.w_in, inner_height=aperture.h_in,
-            outer_width=aperture.w_out, outer_height=aperture.h_out, angle=aperture.theta)
+            outer_width=aperture.w_out, outer_height=aperture.h_out,
+            angle=(aperture.theta + (90 * u.deg)))
 
     else:  # pragma: no cover
         raise NotImplementedError(f'{aperture.__class__.__name__} is not supported')
@@ -362,5 +354,5 @@ def positions2pixcoord(positions):
 
 
 def theta2angle(theta):
-    """Convert ``photutils`` theta to ``regions`` angle."""
+    """Convert ``photutils`` theta to ``regions`` angle for pixel regions."""
     return Angle(theta, u.radian)

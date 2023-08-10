@@ -357,29 +357,39 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             raise NotImplementedError(
                 f'Cannot recenter: is_centerable={self.is_centerable}, config={self.config}')
 
+        from astropy.wcs.utils import pixel_to_pixel
         from photutils.aperture import ApertureStats
         from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 
         try:
-            reg = _get_region_from_spatial_subset(self, self.subset_selected)
+            reg = _get_region_from_spatial_subset(self, self.subset_select.selected_subset_state)
             aperture = regions2aperture(reg)
             data = self.dataset.selected_dc_item
             comp = data.get_component(data.main_components[0])
             comp_data = comp.data
             phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords)
 
-            # Centroid was calculated in selected data, which might or might not be
-            # the reference data. However, Subset is always defined w.r.t.
-            # the reference data, so we need to convert back.
-            viewer = self.app._jdaviz_helper.default_viewer
-            x, y, _, _ = viewer._get_real_xy(
-                data, phot_aperstats.xcentroid, phot_aperstats.ycentroid, reverse=True)
+            # Sky region from WCS linking, need to convert centroid back to pixels.
+            if hasattr(reg, "to_pixel"):
+                # Centroid was calculated in selected data.
+                # However, Subset is always defined w.r.t. its parent,
+                # so we need to convert back.
+                x, y = pixel_to_pixel(
+                    data.coords,
+                    self.subset_select.selected_subset_state.xatt.parent.coords,
+                    phot_aperstats.xcentroid,
+                    phot_aperstats.ycentroid)
+
+            else:
+                x = phot_aperstats.xcentroid
+                y = phot_aperstats.ycentroid
+
             if not np.all(np.isfinite((x, y))):
                 raise ValueError(f'Invalid centroid ({x}, {y})')
         except Exception as err:
             self.set_center(self.get_center(), update=False)
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
+                f"Failed to calculate centroid: {err!r}", color='error', sender=self))
         else:
             self.set_center((x, y), update=True)
 

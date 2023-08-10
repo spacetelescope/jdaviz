@@ -7,7 +7,8 @@ from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose, assert_array_equal
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
-from regions import CircleAnnulusPixelRegion, CirclePixelRegion, RectanglePixelRegion, PixCoord
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
+                     RectanglePixelRegion, PixCoord)
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
@@ -206,10 +207,13 @@ class TestAdvancedAperPhot:
 
         # Regions to be used for aperture photometry
         regions = []
-        positions = [(145.1, 168.3), (84.7, 224.1), (48.3, 200.3)]
+        positions = [(145.1, 168.3), (48.3, 200.3)]
         for x, y in positions:
             regions.append(CirclePixelRegion(center=PixCoord(x=x, y=y), radius=5))
-        regions.append(RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=5))
+        regions += [
+            EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9,
+                               angle=2.356 * u.rad),
+            RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7)]
         imviz_helper.load_regions(regions)
 
         self.imviz = imviz_helper
@@ -224,9 +228,9 @@ class TestAdvancedAperPhot:
         ('no_wcs', 5.0)])
     @pytest.mark.parametrize(('subset_label', 'expected_sum'), [
         ('Subset 1', 738.8803424408962),
-        ('Subset 2', 348.33262363800094),
-        ('Subset 3', 857.5194857987592),
-        ('Subset 4', 762.3263959884644)])
+        ('Subset 2', 857.5194857987592),
+        ('Subset 3', 472.17364321556005),
+        ('Subset 4', 837.0023608207703)])
     def test_aperphot(self, data_label, local_bkg, subset_label, expected_sum):
         """All data should give similar result for the same Subset."""
         self.phot_plugin.dataset_selected = data_label
@@ -235,7 +239,6 @@ class TestAdvancedAperPhot:
         self.phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
 
-        # FIXME: Subset 4 (rectangle) has huge difference, why???
         # Imperfect down-sampling and imperfect apertures, so 10% is good enough.
         assert_allclose(tbl['sum'][-1], expected_sum, rtol=0.1)
 
