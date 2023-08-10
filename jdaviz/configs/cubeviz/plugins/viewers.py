@@ -21,8 +21,8 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
     # overflow to second row when opening the tray
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoommatch', 'jdaviz:boxzoom',
-                     'jdaviz:simplepanzoommatch', 'jdaviz:panzoom'],
+                    ['jdaviz:boxzoommatchnowcs', 'jdaviz:boxzoom',
+                     'jdaviz:panzoommatchnowcs', 'jdaviz:panzoom'],
                     ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
                     ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
