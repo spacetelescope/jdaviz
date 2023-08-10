@@ -247,13 +247,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                     sky_center = None
 
             aperture = regions2aperture(reg)
-
-# UNTIL HERE - pass in pixel region explicitly and see if answers are correct
-#            print("HERE 1", reg)
-#            print("HERE 2", aperture)
-#            if hasattr(reg, "to_pixel"):
-#                print("HERE 3", reg.to_pixel(data.coords))
-
             include_pixarea_fac = False
             include_counts_fac = False
             include_flux_scale = False
