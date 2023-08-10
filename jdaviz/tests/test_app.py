@@ -159,8 +159,14 @@ def test_viewer_renaming_specviz(specviz_helper):
 
 
 def test_viewer_renaming_imviz(imviz_helper):
-    with pytest.raises(ValueError, match='already exists'):
+    with pytest.raises(ValueError, match="'imviz-0' cannot be changed"):
         imviz_helper.app._update_viewer_reference_name(
             old_reference='imviz-0',
+            new_reference='this-is-forbidden'
+        )
+
+    with pytest.raises(ValueError, match="does not exist"):
+        imviz_helper.app._update_viewer_reference_name(
+            old_reference='non-existent',
             new_reference='this-is-forbidden'
         )

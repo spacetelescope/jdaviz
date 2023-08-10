@@ -1593,12 +1593,20 @@ class Application(VuetifyTemplate, HubListener):
         if old_reference == new_reference:  # no-op
             return
 
-        if new_reference in self.get_viewer_reference_names():
+        # ensure new reference is a string:
+        new_reference = str(new_reference)
+
+        viewer_reference_names = self.get_viewer_reference_names()
+
+        if new_reference in viewer_reference_names:
             raise ValueError(f"Viewer with reference='{new_reference}' already exists.")
 
         if old_reference == 'imviz-0':
             raise ValueError(f"The default Imviz viewer reference "
                              f"'{old_reference}' cannot be changed.")
+
+        if old_reference not in viewer_reference_names:
+            raise ValueError(f"Viewer with reference='{old_reference}' does not exist.")
 
         # update the viewer item's reference name
         viewer_item = self._get_viewer_item(old_reference)
