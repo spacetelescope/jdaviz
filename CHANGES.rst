@@ -60,8 +60,6 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-- Add support for changing viewer reference names [#2338]
-
 3.6.2 (unreleased)
 ==================
 
