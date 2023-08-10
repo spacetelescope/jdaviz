@@ -1590,6 +1590,9 @@ class Application(VuetifyTemplate, HubListener):
         update_id : bool, optional
             If True, update the viewer IDs as well as the viewer reference names.
         """
+        if old_reference == new_reference:  # no-op
+            return
+
         if new_reference in self.get_viewer_reference_names():
             raise ValueError(f"Viewer with reference='{new_reference}' already exists.")
 
