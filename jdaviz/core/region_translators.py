@@ -57,12 +57,7 @@ def _get_region_from_spatial_subset(plugin_obj, subset_state):
     link_type = plugin_obj.app._jdaviz_helper.get_link_type(
         subset_state.xatt.parent.label, plugin_obj.dataset_selected)
 
-    if link_type == 'wcs':
-        to_sky = True
-    else:
-        to_sky = False
-
-    return roi_subset_state_to_region(subset_state, to_sky=to_sky)
+    return roi_subset_state_to_region(subset_state, to_sky=(link_type == 'wcs'))
 
 
 def regions2roi(region_shape, wcs=None):
