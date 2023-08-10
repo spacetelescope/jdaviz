@@ -5,6 +5,7 @@
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
+    :disabled_msg="disabled_msg"
     :popout_button="popout_button">
 
     <plugin-editable-select

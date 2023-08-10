@@ -208,6 +208,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         if not hasattr(self, 'overlay'):  # pragma: nocover
             # plugin/traitlet startup
             return
+        if len(self.disabled_msg):
+            # no pysiaf, we don't want to try updating overlays
+            return
 
         if self.is_active:
             if not len(self._overlays):
