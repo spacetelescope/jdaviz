@@ -389,7 +389,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         except Exception as err:
             self.set_center(self.get_center(), update=False)
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to calculate centroid: {err!r}", color='error', sender=self))
+                f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
         else:
             self.set_center((x, y), update=True)
 

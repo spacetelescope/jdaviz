@@ -51,7 +51,8 @@ def _get_region_from_spatial_subset(plugin_obj, subset_state):
     from glue_astronomy.translators.regions import roi_subset_state_to_region
 
     # Subset is defined against its parent. This is not necessarily
-    # the current viewer reference data for when we can change that.
+    # the current viewer reference data, which can be changed.
+
     # See https://github.com/spacetelescope/jdaviz/issues/2230
     link_type = plugin_obj.app._jdaviz_helper.get_link_type(
         subset_state.xatt.parent.label, plugin_obj.dataset_selected)

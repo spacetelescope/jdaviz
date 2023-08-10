@@ -83,6 +83,7 @@
           :value="item.value"
           style="padding-top: 0px; margin-top: 0px"
           :readonly="true"
+          hint="Subset was defined with respect to this reference data (read-only)"
         ></v-text-field>
         <v-text-field v-if="item.name !== 'Parent'"
           :label="item.name"

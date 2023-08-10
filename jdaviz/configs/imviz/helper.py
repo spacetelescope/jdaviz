@@ -219,7 +219,7 @@ class Imviz(ImageConfigHelper):
         """Find the type of ``glue`` linking between the given
         data labels. A link is bi-directional. If there are
         more than 2 data in the collection, one of the given
-        label should be the reference data or look-up will fail.
+        labels should be the reference data or look-up will fail.
 
         Parameters
         ----------
