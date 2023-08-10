@@ -130,14 +130,6 @@ the side of the cell output to collapse or expand the scrollable window. This
 has the unintended consequence of changing the contrast of the image displayed
 in the Cubeviz cube viewer.
 
-On Windows OS, latency increases exponentially with number of subsets
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This seems to be an issue with Windows OS specifically, although we are still
-investigating exactly what causes it.
-See `Issue #2263 <https://github.com/spacetelescope/jdaviz/issues/2263>`_ for
-updates on this topic.
-
 .. _known_issues_imviz:
 
 Imviz
