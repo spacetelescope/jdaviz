@@ -4,12 +4,10 @@ on:
   push:
     branches:
     - main
+    - 'debug-standalone-build'
     - 'v*'
     tags:
     - 'v*'
-  pull_request_target:
-    branches:
-      - 'debug-standalone-build'
 
 defaults:
   run:
