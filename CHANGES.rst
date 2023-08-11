@@ -80,6 +80,8 @@ Cubeviz
 
 - Fix laggy behavior with WCS-TAB cubes by always linking by pixel instead of WCS. [#2343]
 
+- Fix matched zoom tool behavior. [#2359]
+
 Imviz
 ^^^^^
 

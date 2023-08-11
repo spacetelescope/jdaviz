@@ -2,26 +2,46 @@ import time
 import os
 
 from glue.config import viewer_tool
+from glue_jupyter.bqplot.image import BqplotImageView
 from glue.viewers.common.tool import CheckableTool
 
 from jdaviz.configs.imviz.plugins.tools import _MatchedZoomMixin
 from jdaviz.core.events import SliceToolStateMessage
-from jdaviz.core.tools import PanZoom, SinglePixelRegion
+from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion
 
 __all__ = []
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 
 
+class _PixelMatchedZoomMixin(_MatchedZoomMixin):
+    match_keys = ('x_min', 'x_max', 'y_min', 'y_max')
+    disable_matched_zoom_in_other_viewer = False
+
+    def _is_matched_viewer(self, viewer):
+        return isinstance(viewer, BqplotImageView)
+
+
 @viewer_tool
-class SimpleMatchPanZoom(_MatchedZoomMixin, PanZoom):
+class PixelMatchPanZoom(_PixelMatchedZoomMixin, PanZoom):
     """Like MatchPanZoom in Imviz but without complicated
     WCS linking logic because it is not needed for Cubeviz.
     """
     icon = os.path.join(ICON_DIR, 'panzoom_match.svg')
-    tool_id = 'jdaviz:simplepanzoommatch'
+    tool_id = 'jdaviz:pixelpanzoommatch'
     action_text = 'Pan, matching between viewers'
     tool_tip = 'Pan (click-drag) and zoom (scroll) in this viewer to see the same regions in other viewers'  # noqa
+
+
+@viewer_tool
+class PixelMatchBoxZoom(_PixelMatchedZoomMixin, BoxZoom):
+    """Like MatchBoxZoom in Imviz but without complicated
+    WCS linking logic because it is not needed for Cubeviz.
+    """
+    icon = os.path.join(ICON_DIR, 'zoom_box_match.svg')
+    tool_id = 'jdaviz:pixelboxzoommatch'
+    action_text = 'Box zoom, matching between viewers'
+    tool_tip = 'Zoom to a drawn rectangle in all viewers'
 
 
 @viewer_tool
