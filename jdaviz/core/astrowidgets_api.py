@@ -1,6 +1,7 @@
+import os
+
 import gwcs
 import numpy as np
-import os
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.wcs import NoConvergence
