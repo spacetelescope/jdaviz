@@ -843,10 +843,7 @@ class Mosviz(ConfigHelper, LineListMixin):
                 raise FileExistsError(f"File {filename} exists, choose another"
                                       " file name or set overwrite=True")
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning,
-                                    message=".*VisibleDeprecationWarning.*")
-            table_df = self.app.data_collection['MOS Table'].to_dataframe()
+        table_df = self.app.data_collection['MOS Table'].to_dataframe()
 
         if filename[-4:] != ".csv":
             filename += ".csv"
