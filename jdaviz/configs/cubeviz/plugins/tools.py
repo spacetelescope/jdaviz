@@ -14,7 +14,7 @@ __all__ = []
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
 
 
-class _CubevizMatchedZoomMixin(_MatchedZoomMixin):
+class _PixelMatchedZoomMixin(_MatchedZoomMixin):
     match_keys = ('x_min', 'x_max', 'y_min', 'y_max')
     disable_matched_zoom_in_other_viewer = False
 
@@ -23,23 +23,23 @@ class _CubevizMatchedZoomMixin(_MatchedZoomMixin):
 
 
 @viewer_tool
-class MatchPanZoomNoWCS(_CubevizMatchedZoomMixin, PanZoom):
+class PixelMatchPanZoom(_PixelMatchedZoomMixin, PanZoom):
     """Like MatchPanZoom in Imviz but without complicated
     WCS linking logic because it is not needed for Cubeviz.
     """
     icon = os.path.join(ICON_DIR, 'panzoom_match.svg')
-    tool_id = 'jdaviz:panzoommatchnowcs'
+    tool_id = 'jdaviz:pixelpanzoommatch'
     action_text = 'Pan, matching between viewers'
     tool_tip = 'Pan (click-drag) and zoom (scroll) in this viewer to see the same regions in other viewers'  # noqa
 
 
 @viewer_tool
-class MatchBoxZoomNoWCS(_CubevizMatchedZoomMixin, BoxZoom):
+class PixelMatchBoxZoom(_PixelMatchedZoomMixin, BoxZoom):
     """Like MatchBoxZoom in Imviz but without complicated
     WCS linking logic because it is not needed for Cubeviz.
     """
     icon = os.path.join(ICON_DIR, 'zoom_box_match.svg')
-    tool_id = 'jdaviz:boxzoommatchnowcs'
+    tool_id = 'jdaviz:pixelboxzoommatch'
     action_text = 'Box zoom, matching between viewers'
     tool_tip = 'Zoom to a drawn rectangle in all viewers'
 
