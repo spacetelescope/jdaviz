@@ -660,12 +660,13 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             # current selection is valid
             return
 
+        default_empty = [] if self.is_multiselect else ''
         if self.default_mode == 'first':
-            self.selected = self.labels[0] if len(self.labels) else ''
+            self.selected = self.labels[0] if len(self.labels) else default_empty
         elif self.default_mode == 'default_text':
-            self.selected = self._default_text if self._default_text else ''
+            self.selected = self._default_text if self._default_text else default_empty
         else:
-            self.selected = ''
+            self.selected = default_empty
 
     def _is_valid_item(self, item, filter_callables={}):
         for valid_filter in self.filters:
@@ -1599,6 +1600,13 @@ class ViewerSelect(SelectPluginComponent):
                     return
         return super()._selected_changed(event)
 
+    def add_filter(self, *filters):
+        super().add_filter(*filters)
+        if 'reference_has_wcs' in filters:
+            # reference data can change whenever data is added OR removed from a viewer
+            self.hub.subscribe(self, AddDataMessage, handler=self._on_viewers_changed)
+            self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewers_changed)
+
     def _is_valid_item(self, viewer):
         def is_spectrum_viewer(viewer):
             return 'ProfileView' in viewer.__class__.__name__
@@ -1608,6 +1616,9 @@ class ViewerSelect(SelectPluginComponent):
 
         def is_image_viewer(viewer):
             return 'ImageView' in viewer.__class__.__name__
+
+        def reference_has_wcs(viewer):
+            return getattr(viewer.state.reference_data, 'coords', None) is not None
 
         return super()._is_valid_item(viewer, locals())
 

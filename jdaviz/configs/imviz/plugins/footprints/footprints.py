@@ -95,6 +95,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
         super().__init__(*args, **kwargs)
         self.viewer.multiselect = True  # multiselect always enabled
+        # require a viewer's reference data to have WCS so that footprints can be mapped to sky
+        self.viewer.add_filter('reference_has_wcs')
 
         self.overlay = EditableSelectPluginComponent(self,
                                                      name='overlay',
@@ -203,13 +205,18 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             viewer.figure.marks = [m for m in viewer.figure.marks
                                    if getattr(m, 'overlay', None) != lbl]
 
-    @observe('is_active')
+    @observe('is_active', 'viewer_items')
     def _on_is_active_changed(self, *args):
         if not hasattr(self, 'overlay'):  # pragma: nocover
             # plugin/traitlet startup
             return
         if len(self.disabled_msg):
             # no pysiaf, we don't want to try updating overlays
+            return
+
+        if not len(self.viewer.choices):
+            # no valid viewers to show footprints
+            # TODO: if a viewer becomes valid, we want to call the block below
             return
 
         if self.is_active:
