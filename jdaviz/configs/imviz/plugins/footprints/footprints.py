@@ -42,6 +42,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         opacity of the filled region of the currently selected overlay
     * ``preset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
         selected overlay preset
+    * :meth:``center_on_viewer``
     * ``ra``
         central right ascension for the footprint overlay
     * ``dec``
@@ -121,7 +122,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
         return PluginUserApi(self, expose=('overlay',
                                            'rename_overlay', 'add_overlay', 'remove_overlay',
                                            'viewer', 'visible', 'color', 'fill_opacity',
-                                           'preset', 'ra', 'dec', 'pa',
+                                           'preset', 'center_on_viewer', 'ra', 'dec', 'pa',
                                            'v2_offset', 'v3_offset',
                                            'overlay_regions'))
 
@@ -232,6 +233,30 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                 for mark in marks:
                     mark.visible = visible
 
+    def center_on_viewer(self, viewer_ref=None):
+        """
+        Center the values of RA and DEC based on the current zoom-limits of a viewer.
+
+        Parameters
+        ----------
+        viewer_ref : string, optional
+            Reference of the viewer to center, will default to the first selected viewer
+        """
+        if viewer_ref is None:
+            if not len(self.viewer.selected):  # pragma: nocover
+                raise ValueError("no viewers selected, provide viewer reference")
+            viewer_ref = self.viewer.selected[0]
+        viewer = self.app.get_viewer(viewer_ref)
+        center_coord = viewer._get_center_skycoord()
+        self._ignore_traitlet_change = True
+        self.ra = center_coord.ra.to_value('deg')
+        self.dec = center_coord.dec.to_value('deg')
+        self._ignore_traitlet_change = False
+        self._preset_args_changed()  # process ra/dec simultaneously
+
+    def vue_center_on_viewer(self, viewer_ref):
+        self.center_on_viewer(viewer_ref)
+
     @observe('overlay_selected')
     def _change_overlay(self, *args):
         if not hasattr(self, 'overlay'):  # pragma: nocover
@@ -247,9 +272,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
             self._overlays[self.overlay_selected] = {'color': '#c75109'}
             if len(self._overlays) == 1 and len(self.viewer.selected):
                 # default to the center of the current zoom limits of the first selected viewer
-                center_coord = self.viewer.selected_obj[0]._get_center_skycoord()
-                self._overlays[self.overlay_selected]['ra'] = center_coord.ra.to_value('deg')
-                self._overlays[self.overlay_selected]['dec'] = center_coord.dec.to_value('deg')
+                self.center_on_viewer(self.viewer.selected[0])
 
         fp = self._overlays[self.overlay_selected]
 

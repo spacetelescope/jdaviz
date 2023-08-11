@@ -18,7 +18,12 @@
       >
     </plugin-editable-select>
 
-    <div v-if="overlay_selected">
+    <div v-if="viewer_items.length===0">
+      <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
+          no valid viewers (with necessary WCS information) to show footprint overlay
+      </v-alert>
+    </div>
+    <div v-else-if="overlay_selected">
       <j-plugin-section-header>Display Options</j-plugin-section-header>
 
       <plugin-viewer-select
@@ -72,6 +77,15 @@
           hint="Select the preset instrument footprint."
           persistent-hint
         ></v-select>
+      </v-row>
+
+      <v-row>
+        <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
+        <j-tooltip v-for="viewer_ref in viewer_selected" :tooltipcontent="'center RA/DEC on current zoom-limits of '+viewer_ref">
+        <v-btn @click="() => center_on_viewer(viewer_ref)">
+          {{viewer_ref}}
+        </v-btn>
+        </j-tooltip>
       </v-row>
 
       <v-row>

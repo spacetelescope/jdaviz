@@ -70,6 +70,9 @@ def test_user_api(imviz_helper, image_2d_wcs):
         plugin.viewer.select_all()
         assert viewer_marks[0].visible is True
 
+        # test centering logic
+        plugin.center_on_viewer()
+
     # with the plugin no longer active, marks should not be visible
     assert plugin._obj.is_active is False
     assert viewer_marks[0].visible is False
