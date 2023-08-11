@@ -5,6 +5,7 @@ from collections import deque
 
 import matplotlib.pyplot as plt
 from astropy.io import fits
+from astropy.utils import minversion
 from ipyvue import watch
 from glue.config import settings
 from glue.core.subset import RangeSubsetState, RoiSubsetState
@@ -12,6 +13,8 @@ from glue.core.subset import RangeSubsetState, RoiSubsetState
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type']
+
+NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'

@@ -442,7 +442,7 @@ class AstrowidgetsImageViewerMixin:
             Invalid marker name.
 
         """
-        from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerState
+        from glue.viewers.scatter.state import ScatterLayerState
 
         if marker_name is None:
             marker_name = self._default_mark_tag_name
@@ -489,7 +489,7 @@ class AstrowidgetsImageViewerMixin:
             # Only can set alpha and color using self.add_data(), so brute force here instead.
             # https://github.com/glue-viz/glue/issues/2201
             for lyr in self.state.layers:
-                if isinstance(lyr, BqplotScatterLayerState) and lyr.layer.label == marker_name:
+                if isinstance(lyr, ScatterLayerState) and lyr.layer.label == marker_name:
                     for key, val in self.marker.items():
                         setattr(lyr, {'markersize': 'size'}.get(key, key), val)
                     break
