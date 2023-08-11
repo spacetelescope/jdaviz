@@ -1,7 +1,10 @@
 from traitlets import Bool, List, Unicode, observe
 import regions
 
+from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
+
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.events import LinkUpdatedMessage
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
@@ -61,6 +64,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "footprints.vue"
     uses_active_status = Bool(True).tag(sync=True)
 
+    is_pixel_linked = Bool(True).tag(sync=True)  # plugin disabled if linked by pixel (default)
+
     # OVERLAY LABEL
     overlay_mode = Unicode().tag(sync=True)
     overlay_edit_value = Unicode().tag(sync=True)
@@ -117,6 +122,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                             selected='preset_selected',
                                             manual_options=preset_regions._instruments.keys())
 
+        # disable if pixel-linked AND only a single item in the data collection
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
+        self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_link_type_updated)
+        self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_link_type_updated)
+        self._on_link_type_updated()
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('overlay',
@@ -139,6 +150,18 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                           for viewer_id, viewer in self.app._viewer_store.items()
                           if hasattr(viewer, 'figure')}
                 for overlay in self.overlay.choices}
+
+    def _on_link_type_updated(self, msg=None):
+        self.is_pixel_linked = (getattr(self.app, '_link_type', None) == 'pixels' and
+                                len(self.app.data_collection) > 1)
+        # toggle visibility as necessary
+        self._on_is_active_changed()
+
+    def vue_link_by_wcs(self, *args):
+        # call other plugin so that other options (wcs_use_affine, wcs_use_fallback)
+        # are retained.  Remove this method if support for plotting footprints
+        # when pixel-linked is reintroduced.
+        self.app._jdaviz_helper.plugins['Links Control'].link_type = 'WCS'
 
     def rename_overlay(self, old_lbl, new_lbl):
         """
@@ -297,6 +320,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
     def _mark_visible(self, viewer_id, overlay=None):
         if not self.is_active:
+            return False
+        if self.is_pixel_linked:
             return False
         if overlay is None:
             overlay = self.overlay_selected

@@ -14,10 +14,16 @@ def _get_markers_from_viewer(viewer):
 def test_user_api(imviz_helper, image_2d_wcs):
     arr = np.ones((10, 10))
     ndd = NDData(arr, wcs=image_2d_wcs)
+    # load the image twice to test linking
+    imviz_helper.load_data(ndd)
     imviz_helper.load_data(ndd)
 
     plugin = imviz_helper.plugins['Footprints']
     with plugin.as_active():
+        assert plugin._obj.is_pixel_linked is True
+        plugin._obj.vue_link_by_wcs()
+        assert plugin._obj.is_pixel_linked is False
+
         # test that each of the supported instruments/presets work
         for preset in plugin.preset.choices:
             plugin.preset = preset
@@ -32,6 +38,7 @@ def test_user_api(imviz_helper, image_2d_wcs):
         plugin.fill_opacity = 0.5
 
         viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        assert viewer_marks[0].visible is True
         assert viewer_marks[0].colors == ['#ffffff']
         assert viewer_marks[0].fill_opacities == [0.5]
 
