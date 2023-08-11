@@ -51,18 +51,20 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     overwrite_warn = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-        self._default_image_viewer_reference_name = kwargs.get(
-            "image_viewer_reference_name", "image-viewer"
-        )
         super().__init__(*args, **kwargs)
 
         self.moment = None
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
+
+    @property
+    def _default_image_viewer_reference_name(self):
+        return self.jdaviz_helper._default_image_viewer_reference_name
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return self.jdaviz_helper._default_spectrum_viewer_reference_name
 
     @property
     def user_api(self):

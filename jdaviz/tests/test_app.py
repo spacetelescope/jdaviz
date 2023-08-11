@@ -141,3 +141,32 @@ def test_case_that_used_to_break_return_label(specviz_helper, spectrum1d):
     dc = specviz_helper.app.data_collection
     assert dc[0].label == "this used to break (1)"
     assert dc[1].label == "this used to break (2)"
+
+
+def test_viewer_renaming_specviz(specviz_helper):
+    viewer_names = [
+        'spectrum-viewer',
+        'second-viewer-name',
+        'third-viewer-name'
+    ]
+
+    for i in range(len(viewer_names) - 1):
+        specviz_helper.app._update_viewer_reference_name(
+            old_reference=viewer_names[i],
+            new_reference=viewer_names[i + 1]
+        )
+        assert specviz_helper.app.get_viewer(viewer_names[i+1]) is not None
+
+
+def test_viewer_renaming_imviz(imviz_helper):
+    with pytest.raises(ValueError, match="'imviz-0' cannot be changed"):
+        imviz_helper.app._update_viewer_reference_name(
+            old_reference='imviz-0',
+            new_reference='this-is-forbidden'
+        )
+
+    with pytest.raises(ValueError, match="does not exist"):
+        imviz_helper.app._update_viewer_reference_name(
+            old_reference='non-existent',
+            new_reference='this-is-forbidden'
+        )

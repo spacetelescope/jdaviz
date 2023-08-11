@@ -120,10 +120,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
     def __init__(self, *args, **kwargs):
 
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-
         super().__init__(**kwargs)
 
         self.update_results(None)
@@ -163,6 +159,12 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                            handler=self._on_identified_line_changed)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
+
+    @property
+    def _default_spectrum_viewer_reference_name(self):
+        return getattr(
+            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+        )
 
     @property
     def user_api(self):
@@ -233,6 +235,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     def marks(self):
         marks = {}
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        if viewer is None:
+            return {}
         for mark in viewer.figure.marks:
             if isinstance(mark, LineAnalysisContinuum):
                 # NOTE: we don't use isinstance anymore because of nested inheritance

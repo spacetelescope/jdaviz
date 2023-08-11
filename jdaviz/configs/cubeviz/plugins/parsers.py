@@ -289,8 +289,8 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
         app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 
-def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewer',
-                   flux_viewer_reference_name=None, spectrum_viewer_reference_name=None):
+def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None,
+                   spectrum_viewer_reference_name=None):
     hdu = hdulist[ext]
     data_type = _get_data_type_by_hdu(hdu)
 
@@ -327,9 +327,8 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', viewer_name='flux-viewe
     if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
         app.data_collection[-1].get_component("flux").units = flux.unit
 
-    app.add_data_to_viewer(viewer_name, data_label)
-    if viewer_name == flux_viewer_reference_name:
-        app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
+    app.add_data_to_viewer(flux_viewer_reference_name, data_label)
+    app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,

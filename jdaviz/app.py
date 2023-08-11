@@ -49,7 +49,8 @@ from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
-                                ViewerAddedMessage, ViewerRemovedMessage)
+                                ViewerAddedMessage, ViewerRemovedMessage,
+                                ViewerRenamedMessage)
 from jdaviz.core.style_widget import StyleWidget
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
@@ -1474,7 +1475,9 @@ class Application(VuetifyTemplate, HubListener):
             defined data set.
         """
         if ('mosviz_row' in self.state.settings and
-            not (self.get_viewer("table-viewer").row_selection_in_progress) and
+            not (self.get_viewer(
+                self._jdaviz_helper._default_table_viewer_reference_name
+            ).row_selection_in_progress) and
             self.data_collection[data_label].meta['mosviz_row'] !=
                 self.state.settings['mosviz_row']):
             raise NotImplementedError("Intra-row plotting not supported. "
@@ -1566,6 +1569,68 @@ class Application(VuetifyTemplate, HubListener):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
+
+    def _update_viewer_reference_name(
+        self, old_reference, new_reference, update_id=False
+    ):
+        """
+        Update viewer reference names.
+
+        Viewer IDs will not be changed unless ``update_id`` is True.
+
+        Parameters
+        ----------
+        old_reference : str
+            The viewer reference name to be changed
+        new_reference : str
+            The viewer reference name to use instead of ``old_reference``
+        update_id : bool, optional
+            If True, update the viewer IDs as well as the viewer reference names.
+        """
+        if old_reference == new_reference:  # no-op
+            return
+
+        # ensure new reference is a string:
+        new_reference = str(new_reference)
+
+        viewer_reference_names = self.get_viewer_reference_names()
+
+        if new_reference in viewer_reference_names:
+            raise ValueError(f"Viewer with reference='{new_reference}' already exists.")
+
+        if old_reference == 'imviz-0':
+            raise ValueError(f"The default Imviz viewer reference "
+                             f"'{old_reference}' cannot be changed.")
+
+        if old_reference not in viewer_reference_names:
+            raise ValueError(f"Viewer with reference='{old_reference}' does not exist.")
+
+        # update the viewer item's reference name
+        viewer_item = self._get_viewer_item(old_reference)
+        viewer_item['reference'] = new_reference
+
+        if viewer_item['name'] == old_reference:
+            viewer_item['name'] = new_reference
+
+        # optionally update the viewer IDs:
+        if update_id and viewer_item['id'] == old_reference:
+            # update the id as well
+            old_id = viewer_item['id']
+            viewer_item['id'] = new_reference
+            self._viewer_store[new_reference] = self._viewer_store.pop(old_id)
+            self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
+
+        # update the viewer name attributes on the helper:
+        old_viewer_ref_attrs = [
+            attr for attr in dir(self._jdaviz_helper)
+            if attr.startswith('_default_') and
+            getattr(self._jdaviz_helper, attr) == old_reference
+        ]
+        if old_viewer_ref_attrs:
+            # if there is an attr to update, update it:
+            setattr(self._jdaviz_helper, old_viewer_ref_attrs[0], new_reference)
+
+        self.hub.broadcast(ViewerRenamedMessage(old_reference, new_reference, sender=self))
 
     def _get_first_viewer_reference_name(
             self, require_no_selected_data=False,
