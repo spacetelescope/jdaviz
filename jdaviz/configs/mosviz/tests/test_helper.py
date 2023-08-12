@@ -7,10 +7,8 @@ import pytest
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.specviz2d.helper import Specviz2d
-from jdaviz.utils import NUMPY_LT_2_0
 
 
-@pytest.mark.skipif(not NUMPY_LT_2_0, reason="https://github.com/pandas-dev/pandas/issues/54505")
 def test_to_csv(tmp_path, mosviz_helper, spectrum_collection):
     labels = [f"Test Spectrum Collection {i}" for i in range(5)]
     mosviz_helper.load_1d_spectra(spectrum_collection, data_labels=labels, add_redshift_column=True)
