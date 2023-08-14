@@ -68,12 +68,12 @@ imviz = "jdaviz.configs.imviz"
 [project.optional-dependencies]
 all = [
     "opencv-python",
+    "pysiaf"
 ]
 test = [
     "pytest",
     "pytest-astropy",
-    "pytest-tornasync",
-    "pysiaf"
+    "pytest-tornasync"
 ]
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",

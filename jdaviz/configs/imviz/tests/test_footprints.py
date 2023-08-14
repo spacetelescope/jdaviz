@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
-
 from astropy.nddata import NDData
 
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.configs.imviz.plugins.footprints.preset_regions import _all_apertures
+
+pytest.importorskip("pysiaf")
 
 
 def _get_markers_from_viewer(viewer):
