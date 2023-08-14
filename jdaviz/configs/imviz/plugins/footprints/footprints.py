@@ -11,7 +11,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         SelectPluginComponent, EditableSelectPluginComponent)
 from jdaviz.core.user_api import PluginUserApi
 
-from . import preset_regions
+from jdaviz.configs.imviz.plugins.footprints import preset_regions
 
 
 __all__ = ['Footprints']
@@ -130,12 +130,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('overlay',
-                                           'rename_overlay', 'add_overlay', 'remove_overlay',
-                                           'viewer', 'visible', 'color', 'fill_opacity',
-                                           'preset', 'center_on_viewer', 'ra', 'dec', 'pa',
-                                           'v2_offset', 'v3_offset',
-                                           'overlay_regions'))
+        if preset_regions._has_pysiaf:
+            return PluginUserApi(self, expose=('overlay',
+                                               'rename_overlay', 'add_overlay', 'remove_overlay',
+                                               'viewer', 'visible', 'color', 'fill_opacity',
+                                               'preset', 'center_on_viewer', 'ra', 'dec', 'pa',
+                                               'v2_offset', 'v3_offset',
+                                               'overlay_regions'))
+        return PluginUserApi(self)
 
     def _get_marks(self, viewer, overlay=None):
         matches = [mark for mark in viewer.figure.marks
