@@ -438,4 +438,16 @@ a:active {
    * appearing */
   overflow: hidden;
 }
+
+.cubeviz .jupyter-widgets.bqplot.figure .axislabel {
+    font-size: 12pt !important;
+}
+
+.specviz .jupyter-widgets.bqplot.figure .axislabel {
+    font-size: 14pt !important;
+}
+
+.specviz2d .jupyter-widgets.bqplot.figure .axislabel {
+    font-size: 12pt !important;
+}
 </style>

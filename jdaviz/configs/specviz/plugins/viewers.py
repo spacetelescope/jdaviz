@@ -544,8 +544,14 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         self.figure.axes[0].label = f"{spectral_axis_unit_type} [{self.state.x_display_unit}]"
         self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
 
-        # Make it so y axis label is not covering tick numbers.
-        self.figure.axes[1].label_offset = "-50"
+        # Make it so axis labels are not covering tick numbers.
+        self.figure.fig_margin["left"] = 80
+        self.figure.send_state('fig_margin')  # Force update
+        self.figure.axes[0].label_offset = "40"
+        self.figure.axes[1].label_offset = "-65"
 
         # Set Y-axis to scientific notation
         self.figure.axes[1].tick_format = '0.1e'
+
+        for i in (0, 1):
+            self.figure.axes[i].tick_style = {'font-size': 16, 'font-weight': 'bold'}
