@@ -94,7 +94,7 @@
         <v-menu>
           <template v-slot:activator="{ on }">
               <span class="color-menu"
-                    :style="`background:${subset_color_value}`"
+                    :style="`background:${subset_color_value}; cursor: pointer`"
                     @click.stop="on.click"
               >&nbsp;</span>
           </template>
@@ -127,7 +127,7 @@
         <v-menu>
           <template v-slot:activator="{ on }">
               <span class="color-menu"
-                    :style="`background:${line_color_value}`"
+                    :style="`background:${line_color_value}; cursor: pointer`"
                     @click.stop="on.click"
               >&nbsp;</span>
           </template>
@@ -257,7 +257,7 @@
           <v-menu>
             <template v-slot:activator="{ on }">
                 <span class="color-menu"
-                      :style="`background:${marker_color_value}`"
+                      :style="`background:${marker_color_value}; cursor: pointer`"
                       @click.stop="on.click"
                 >&nbsp;</span>
             </template>
@@ -416,7 +416,7 @@
           <v-menu>
             <template v-slot:activator="{ on }">
                 <span class="color-menu"
-                      :style="`background:${image_color_value}`"
+                      :style="`background:${image_color_value}; cursor: pointer`"
                       @click.stop="on.click"
                 >&nbsp;</span>
             </template>

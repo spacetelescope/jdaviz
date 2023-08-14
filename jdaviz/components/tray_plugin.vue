@@ -13,7 +13,7 @@
       <span> {{ getDisabledMsg() }}</span>
     </v-row>
     <div v-else>
-      <v-row v-if="uses_active_status && keep_active !== undefined">
+      <v-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
         <v-switch
           v-model="keep_active"
           @change="$emit('update:keep_active', $event)"

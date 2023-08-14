@@ -27,17 +27,17 @@ from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
 
 from jdaviz import __version__
-from jdaviz.core.events import (
-    AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
-    ViewerRenamedMessage
-)
+from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
+                                ViewerAddedMessage, ViewerRemovedMessage,
+                                ViewerRenamedMessage, SnackbarMessage)
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.utils import get_subset_type
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ViewerPropertiesMixin',
-           'BasePluginComponent', 'SelectPluginComponent', 'UnitSelectPluginComponent',
+           'BasePluginComponent',
+           'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin',
@@ -660,12 +660,13 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             # current selection is valid
             return
 
+        default_empty = [] if self.is_multiselect else ''
         if self.default_mode == 'first':
-            self.selected = self.labels[0] if len(self.labels) else ''
+            self.selected = self.labels[0] if len(self.labels) else default_empty
         elif self.default_mode == 'default_text':
-            self.selected = self._default_text if self._default_text else ''
+            self.selected = self._default_text if self._default_text else default_empty
         else:
-            self.selected = ''
+            self.selected = default_empty
 
     def _is_valid_item(self, item, filter_callables={}):
         for valid_filter in self.filters:
@@ -746,6 +747,201 @@ class UnitSelectPluginComponent(SelectPluginComponent):
         self.selected = self.labels[ind]
 
 
+class EditableSelectPluginComponent(SelectPluginComponent):
+    """
+    Plugin select with support for renaming, adding, and deleting items (by the user).
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :meth:`~EditableSelectPluginComponent.add_choice`
+    * :meth:`~EditableSelectPluginComponent.rename_choice`
+    * :meth:`~EditableSelectPluginComponent.remove_choice`
+    """
+
+    """
+    Traitlets (in the object, custom traitlets in the plugin)
+
+    * ``items`` (list of dicts with keys: label, color)
+    * ``selected`` (string)
+    * ``mode`` (string)
+    * ``edit_value`` (string)
+
+    Properties (in the object only):
+
+    * ``labels`` (list of labels corresponding to items)
+
+
+    To use in a plugin:
+
+    * create (empty) traitlets in the plugin
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets.
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+    * observe the traitlets created and defined in the plugin, as necessary
+
+    Example template (label and hint are optional)::
+
+      <plugin-editable-select
+        :mode.sync="mode"
+        :edit_value.sync="edit_value"
+        :items="items"
+        :selected.sync="selected"
+        label="Label"
+        hint="Select an item to modify."
+      </plugin-editable-select>
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        edit_value : str
+            the name of the traitlet containing the temporary edit value defined in ``plugin``
+        manual_options : list
+            list of entries present before user-modification
+        name : str
+            the user-friendly name of the items, used in error message in place of "entry"
+        on_add : callable
+            callback when a new item is added, but before the selection is updated
+        on_add_after_selection : callable
+            callback when a new item is added and the selection is updated
+        on_rename : callable
+            callback when an item is renamed, but before the selection is updated
+        on_rename_after_selection : callable
+            callback when an item is renamed and the selection is updated
+        on_remove : callable
+            callback when an item is removed, but before the selection is updated
+        on_remove_after_selection : callable
+            callback when an item is removed and the selection is updated
+        """
+        super().__init__(*args, **kwargs)
+        if self.is_multiselect:
+            self._multiselect_changed()
+        self.add_observe(kwargs.get('mode'), self._mode_changed)
+        self.mode = 'select'  # select, rename, add
+        self._name = kwargs.get('name', 'entry')  # used for error messages
+        self._on_add = kwargs.get('on_add', lambda *args: None)
+        self._on_add_after_selection = kwargs.get('on_add_after_selection', lambda *args: None)
+        self._on_rename = kwargs.get('on_rename', lambda *args: None)
+        self._on_rename_after_selection = kwargs.get('on_rename_after_selection', lambda *args: None)  # noqa
+        self._on_remove = kwargs.get('on_remove', lambda *args: None)
+        self._on_remove_after_selection = kwargs.get('on_remove_after_selection', lambda *args: None)  # noqa
+
+    def _multiselect_changed(self):
+        # already subscribed to traitlet by SelectPluginComponent
+        if self.multiselect:
+            raise ValueError("EditableSelectPluginComponent does not support multiselect")
+
+    def _selected_changed(self, event):
+        super()._selected_changed(event)
+        self.edit_value = self.selected
+
+    def _mode_changed(self, event):
+        if self.mode == 'rename:accept':
+            try:
+                self.rename_choice(self.selected, self.edit_value)
+            except ValueError as e:
+                self.hub.broadcast(SnackbarMessage(f"Renaming {self._name} failed: {e}",
+                                   sender=self, color="error"))
+            else:
+                self.mode = 'select'
+                self.edit_value = self.selected
+        elif self.mode == 'add:accept':
+            try:
+                self.add_choice(self.edit_value)
+            except ValueError as e:
+                self.hub.broadcast(SnackbarMessage(f"Adding {self._name} failed: {e}",
+                                   sender=self, color="error"))
+            else:
+                self.mode = 'select'
+                self.edit_value = self.selected
+        elif self.mode == 'remove:accept':
+            self.remove_choice(self.edit_value)
+            if len(self.choices):
+                self.mode = 'select'
+            else:
+                self.mode = 'add'
+
+    def _update_items(self):
+        self.items = [{"label": opt} for opt in self._manual_options]
+
+    def _check_new_choice(self, label):
+        if not len(label):
+            raise ValueError("new choice must not be blank")
+        if label in self.choices:
+            raise ValueError(f"'{label}' is already a valid choice")
+
+    def add_choice(self, label, set_as_selected=True):
+        """
+        Add a new entry/choice.
+
+        Parameters
+        ----------
+        * label : str
+            label of the new entry, must not already be one of the choices
+        * set_as_selected : bool
+            whether to immediately set the new entry as the selected entry
+        """
+        self._check_new_choice(label)
+        self._manual_options += [label]
+        self._update_items()
+        self._on_add(label)
+        if set_as_selected:
+            self.selected = label
+        self._on_add_after_selection(label)
+
+    def remove_choice(self, label=None):
+        """
+        Remove an existing entry.
+
+        Parameters
+        ----------
+        * label : str
+            label of an existing entry.  If not provided, will default to the currently selected
+            entry
+        """
+        if label is None:
+            label = self.selected
+        if label not in self.choices:
+            raise ValueError(f"'{label}' not one of available choices ({self.choices})")
+        self._manual_options.remove(label)
+        self._update_items()
+        self._on_remove(label)
+        self._apply_default_selection(skip_if_current_valid=True)
+        self._on_remove_after_selection(label)
+
+    def rename_choice(self, old, new):
+        """
+        Rename an existing entry.
+
+        Parameters
+        ----------
+        * old : str
+            label of the existing entry to modify
+        * new : str
+            new label.  Must not be another existing entry.
+        """
+        if old not in self.choices:
+            raise ValueError(f"'{old}' not one of available choices ({self.choices})")
+        self._check_new_choice(new)
+        was_selected = self.selected == old
+        self._manual_options[self._manual_options.index(old)] = new
+        self._update_items()
+        self._on_rename(old, new)
+        if was_selected:
+            self.selected = new
+        self._on_rename_after_selection(old, new)
+
+
 class LayerSelect(SelectPluginComponent):
     """
     Plugin select for layers, with support for single or multi-selection.
@@ -762,7 +958,7 @@ class LayerSelect(SelectPluginComponent):
     """
 
     """
-    Traitlets (in the object, custom traitlets in the plugin
+    Traitlets (in the object, custom traitlets in the plugin)
 
     * ``items`` (list of dicts with keys: label, color)
     * ``selected`` (string)
@@ -1404,6 +1600,13 @@ class ViewerSelect(SelectPluginComponent):
                     return
         return super()._selected_changed(event)
 
+    def add_filter(self, *filters):
+        super().add_filter(*filters)
+        if 'reference_has_wcs' in filters:
+            # reference data can change whenever data is added OR removed from a viewer
+            self.hub.subscribe(self, AddDataMessage, handler=self._on_viewers_changed)
+            self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewers_changed)
+
     def _is_valid_item(self, viewer):
         def is_spectrum_viewer(viewer):
             return 'ProfileView' in viewer.__class__.__name__
@@ -1414,16 +1617,20 @@ class ViewerSelect(SelectPluginComponent):
         def is_image_viewer(viewer):
             return 'ImageView' in viewer.__class__.__name__
 
+        def reference_has_wcs(viewer):
+            return getattr(viewer.state.reference_data, 'coords', None) is not None
+
         return super()._is_valid_item(viewer, locals())
 
     @observe('filters')
     def _on_viewers_changed(self, msg=None):
         # NOTE: _on_viewers_changed is passed without a msg object during init
         # list of dictionaries with id, ref, ref_or_id
+        was_empty = len(self.items) == 0
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
                                      for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])] # noqa
-        self._apply_default_selection()
+        self._apply_default_selection(skip_if_current_valid=not was_empty)
 
 
 class ViewerSelectMixin(VuetifyTemplate, HubListener):

@@ -2,6 +2,8 @@ import astropy.units as u
 
 __all__ = ['UserApiWrapper', 'PluginUserApi']
 
+_internal_attrs = ('_obj', '_expose', '_readonly', '__doc__')
+
 
 class UserApiWrapper:
     """
@@ -25,14 +27,14 @@ class UserApiWrapper:
         return self._obj.__eq__(other)
 
     def __getattr__(self, attr):
-        if attr in ['_obj', '_expose', '_readonly', '__doc__'] or attr not in self._expose:
+        if attr in _internal_attrs or attr not in self._expose:
             return super().__getattribute__(attr)
 
         exp_obj = getattr(self._obj, attr)
         return getattr(exp_obj, 'user_api', exp_obj)
 
     def __setattr__(self, attr, value):
-        if attr in ['_obj', '_expose', '_readonly', '__doc__'] or attr not in self._expose:
+        if attr in _internal_attrs or attr not in self._expose:
             return super().__setattr__(attr, value)
 
         if attr in self._readonly:

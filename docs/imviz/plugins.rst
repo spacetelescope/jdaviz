@@ -313,6 +313,24 @@ are not stored. To save the current result before submitting a new query, you ca
     The table returned from the API above may cover more sources than shown in the currently zoomed-in
     portion of the image. Additional steps will be needed to filter out these points, if necessary.
 
+
+.. _imviz-footprints:
+
+Footprints
+==========
+
+This plugin supports loading and overplotting instrument footprint overlays on the image viewers.
+Any number of overlays can be plotted simultaneously from any number of the available
+preset instruments.
+
+The top dropdown allows renaming, adding, and removing footprint overlays.  To modify the display
+and input parameters for a given overlay, select it in the dropdown, and modify the choices
+in the plugin to change its color, opacity, visibilities in any image viewer in the app, or to
+select between various preset instruments and change the input options (position on the sky,
+position angle, offsets, etc).
+
+
+
 .. _rotate-canvas:
 
 Canvas Rotation

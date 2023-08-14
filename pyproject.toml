@@ -73,6 +73,7 @@ test = [
     "pytest",
     "pytest-astropy",
     "pytest-tornasync",
+    "pysiaf"
 ]
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",
