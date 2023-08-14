@@ -128,6 +128,8 @@ filterwarnings = [
     "error",
     "ignore:numpy\\.ufunc size changed:RuntimeWarning",
     "ignore:numpy\\.ndarray size changed:RuntimeWarning",
+    "ignore:The numpy\\.array_api submodule is still experimental.*:UserWarning",
+    "ignore:((.|\\n)*)numpy\\.distutils*:DeprecationWarning",
     "ignore:distutils Version classes are deprecated:DeprecationWarning",
     "ignore:Passing unrecognized arguments to super:DeprecationWarning",
     "ignore:.*With traitlets 4\\.1, metadata should be set using the \\.tag\\(\\) method:DeprecationWarning",
@@ -142,6 +144,7 @@ filterwarnings = [
     "ignore::DeprecationWarning:traittypes",
     "ignore::DeprecationWarning:voila",
     "ignore::DeprecationWarning:asteval",
+    "ignore::DeprecationWarning:dask",
     "ignore::FutureWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
 ]
