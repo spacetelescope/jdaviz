@@ -21,7 +21,7 @@ dependencies = [
     "ipysplitpanes>=0.1.0",
     "ipygoldenlayout>=0.3.0",
     "ipywidgets>=8.0.6",
-    "voila>=0.4",
+    "voila>=0.4,<0.5",
     "pyyaml>=5.4.1",
     "specutils>=1.9",
     "specreduce>=1.3.0,<1.4.0",
@@ -39,6 +39,7 @@ dependencies = [
     "ipypopout>=0.0.11",
     "astroquery",
     "y_py<0.5.5;python_version=='3.9'",
+    "jsonschema<4.18",
 ]
 dynamic = [
     "version",
