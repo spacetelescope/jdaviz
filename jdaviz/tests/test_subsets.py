@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils.data import get_pkg_data_filename
 from glue.core import Data
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset_group import GroupedSubset
@@ -505,6 +506,38 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI',
                                           'CircularAnnulusROI']
     assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'AndNotState', 'OrState']
+
+
+def test_recenter_linked_by_wcs(imviz_helper):
+    """Similar test case as TestAdvancedAperPhot.
+    Images are only aligned if linked by WCS.
+    """
+    # Reference image
+    imviz_helper.load_data(get_pkg_data_filename(
+        'data/gauss100_fits_wcs.fits', package='jdaviz.configs.imviz.tests'))
+    # Different pixel scale
+    imviz_helper.load_data(get_pkg_data_filename(
+        'data/gauss100_fits_wcs_block_reduced.fits', package='jdaviz.configs.imviz.tests'))
+
+    # Link them by WCS
+    imviz_helper.link_data(link_type='wcs')
+
+    # This rectangle is over a real object in reference image but
+    # only the last row in the second image if linked by pixel.
+    imviz_helper.load_regions(
+        RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7))
+
+    subset_plugin = imviz_helper.plugins["Subset Tools"]._obj
+    subset_plugin.subset_selected = "Subset 1"
+    subset_plugin.dataset_selected = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
+
+    # Do it a few times to converge.
+    for _ in range(5):
+        subset_plugin.vue_recenter_subset()
+
+    # If handled correctly, it won't change much.
+    # But if not, it move down by 7 pix or so (229.05, 145.92) and fails the test.
+    assert_allclose(subset_plugin.get_center(), (229.067822, 152.371943))
 
 
 def test_with_invalid_subset_name(cubeviz_helper):

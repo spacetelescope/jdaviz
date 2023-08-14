@@ -25,6 +25,8 @@ from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
 
+ASTROPY_LT_5_2 = Version(astropy.__version__) < Version('5.2')
+
 
 @tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
 class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin, PlotMixin):
@@ -166,9 +168,15 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             return
 
         try:
-            self._selected_subset = _get_region_from_spatial_subset(self, subset_selected)
+            self._selected_subset = _get_region_from_spatial_subset(
+                self, self.subset.selected_subset_state)
             self._selected_subset.meta['label'] = subset_selected
-            self.subset_area = int(np.ceil(self._selected_subset.area))
+
+            # Sky subset does not have area. Not worth it to calculate just for a warning.
+            if hasattr(self._selected_subset, 'area'):
+                self.subset_area = int(np.ceil(self._selected_subset.area))
+            else:
+                self.subset_area = 0
 
         except Exception as e:
             self._selected_subset = None
@@ -183,6 +191,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         # except here we only care about one stat for the background.
         data = self._selected_data
         comp = data.get_component(data.main_components[0])
+        if hasattr(reg, 'to_pixel'):
+            reg = reg.to_pixel(data.coords)
         aper_mask_stat = reg.to_mask(mode='center')
         img_stat = aper_mask_stat.get_values(comp.data, mask=None)
 
@@ -197,7 +207,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             return
 
         try:
-            reg = _get_region_from_spatial_subset(self, bg_subset_selected)
+            reg = _get_region_from_spatial_subset(self, self.bg_subset.selected_subset_state)
             self.background_value = self._calc_bg_subset_median(reg)
         except Exception as e:
             self.background_value = 0
@@ -212,8 +222,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         data = self._selected_data
         reg = self._selected_subset
-        xcenter = reg.center.x
-        ycenter = reg.center.y
 
         # Reset last fitted model
         fit_model = None
@@ -226,10 +234,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 bg = float(self.background_value)
             except ValueError:  # Clearer error message
                 raise ValueError('Missing or invalid background value')
-            if data.coords is not None:
-                sky_center = data.coords.pixel_to_world(xcenter, ycenter)
+
+            if hasattr(reg, 'to_pixel'):
+                sky_center = reg.center
+                xcenter, ycenter = data.coords.world_to_pixel(sky_center)
             else:
-                sky_center = None
+                xcenter = reg.center.x
+                ycenter = reg.center.y
+                if data.coords is not None:
+                    sky_center = data.coords.pixel_to_world(xcenter, ycenter)
+                else:
+                    sky_center = None
+
             aperture = regions2aperture(reg)
             include_pixarea_fac = False
             include_counts_fac = False
@@ -359,7 +375,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                     gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std,
                                     fixed={'amplitude': True},
                                     bounds={'amplitude': (y_max * 0.5, y_max)})
-                    if Version(astropy.__version__) < Version('5.2'):
+                    if ASTROPY_LT_5_2:
                         fitter_kw = {}
                     else:
                         fitter_kw = {'filter_non_finite': True}
@@ -522,6 +538,9 @@ def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0
 
     """
     n_datapoints += 1  # n + 1
+
+    if hasattr(aperture, 'to_pixel'):
+        aperture = aperture.to_pixel(wcs)
 
     if isinstance(aperture, CircularAperture):
         x_label = 'Radius (pix)'

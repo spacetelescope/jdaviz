@@ -6,6 +6,8 @@ New Features
 
 - Improved design of Launcher and pass filepath arg from cli when no config specified. [#2311]
 
+- Subset Tools plugin now displays the parent data of a spatial (ROI) subset. [#2154]
+
 Cubeviz
 ^^^^^^^
 
@@ -33,6 +35,16 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Fixed Subset Tools unable to re-center non-composite spatial subset on an image
+  that is not the reference data when linked by WCS. [#2154]
+
+- Fixed inaccurate results when aperture photometry is performed on non-reference data
+  that are of a different pixel scale or are rotated w.r.t. the reference data when
+  linked by WCS. [#2154]
+
+- Fixed wrong angle translations between sky regions in ``regions`` and ``photutils``.
+  They were previously off by 90 degrees. [#2154]
 
 Mosviz
 ^^^^^^

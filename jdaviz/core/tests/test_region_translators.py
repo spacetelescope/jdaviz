@@ -15,7 +15,7 @@ from regions import (CirclePixelRegion, EllipsePixelRegion, RectanglePixelRegion
                      RectangleAnnulusPixelRegion, PolygonPixelRegion, PixCoord)
 
 from jdaviz.core.region_translators import (
-    regions2roi, regions2aperture, aperture2regions, _get_region_from_spatial_subset)
+    regions2roi, regions2aperture, aperture2regions)
 
 
 # TODO: Use proper method from upstream when that is available.
@@ -94,7 +94,7 @@ def test_translation_ellipse(image_2d_wcs):
     assert aperture_sky.positions == region_sky.center  # SkyCoord
     assert_quantity_allclose(aperture_sky.a * 2, region_sky.width)
     assert_quantity_allclose(aperture_sky.b * 2, region_sky.height)
-    assert_quantity_allclose(aperture_sky.theta, region_sky.angle)
+    assert_quantity_allclose(aperture_sky.theta + (90 * u.deg), region_sky.angle)
 
     # Roundtrip
     compare_region_shapes(region_shape, aperture2regions(aperture))
@@ -147,7 +147,7 @@ def test_translation_rectangle(image_2d_wcs):
     assert aperture_sky.positions == region_sky.center  # SkyCoord
     assert_quantity_allclose(aperture_sky.w, region_sky.width)
     assert_quantity_allclose(aperture_sky.h, region_sky.height)
-    assert_quantity_allclose(aperture_sky.theta, region_sky.angle)
+    assert_quantity_allclose(aperture_sky.theta + (90 * u.deg), region_sky.angle)
 
     # Roundtrip
     compare_region_shapes(region_shape, aperture2regions(aperture))
@@ -238,7 +238,7 @@ def test_translation_ellipse_annulus(image_2d_wcs):
     assert_quantity_allclose(aperture_sky.a_out * 2, region_sky.outer_width)
     assert_quantity_allclose(aperture_sky.b_in * 2, region_sky.inner_height)
     assert_quantity_allclose(aperture_sky.b_out * 2, region_sky.outer_height)
-    assert_quantity_allclose(aperture_sky.theta, region_sky.angle)
+    assert_quantity_allclose(aperture_sky.theta + (90 * u.deg), region_sky.angle)
 
     # Roundtrip
     compare_region_shapes(region_shape, aperture2regions(aperture))
@@ -293,7 +293,7 @@ def test_translation_rectangle_annulus(image_2d_wcs):
     assert_quantity_allclose(aperture_sky.w_out, region_sky.outer_width)
     assert_quantity_allclose(aperture_sky.h_in, region_sky.inner_height)
     assert_quantity_allclose(aperture_sky.h_out, region_sky.outer_height)
-    assert_quantity_allclose(aperture_sky.theta, region_sky.angle)
+    assert_quantity_allclose(aperture_sky.theta + (90 * u.deg), region_sky.angle)
 
     # Roundtrip
     compare_region_shapes(region_shape, aperture2regions(aperture))
@@ -333,9 +333,3 @@ def test_translation_polygon():
         regions2aperture(region_shape)
     with pytest.raises(NotImplementedError, match='is not supported'):
         regions2roi(region_shape)
-
-
-def test_get_region_invalid(imviz_helper):
-    plugin_obj = imviz_helper.plugins['Subset Tools']
-    with pytest.raises(ValueError, match='not found'):
-        _get_region_from_spatial_subset(plugin_obj._obj, 'Subset 99')

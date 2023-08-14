@@ -215,6 +215,48 @@ class Imviz(ImageConfigHelper):
         """
         link_image_data(self.app, **kwargs)
 
+    def get_link_type(self, data_label_1, data_label_2):
+        """Find the type of ``glue`` linking between the given
+        data labels. A link is bi-directional. If there are
+        more than 2 data in the collection, one of the given
+        labels should be the reference data or look-up will fail.
+
+        Parameters
+        ----------
+        data_label_1, data_label_2 : str
+           Labels for the data linked together.
+
+        Returns
+        -------
+        link_type : {'pixels', 'wcs', 'self'}
+            One of the link types accepted by :func:`~jdaviz.configs.imviz.helper.link_image_data`
+            or ``'self'`` if the labels are identical.
+
+        Raises
+        ------
+        ValueError
+            Link look-up failed.
+
+        """
+        if data_label_1 == data_label_2:
+            return "self"
+
+        link_type = None
+        for elink in self.app.data_collection.external_links:
+            elink_labels = (elink.data1.label, elink.data2.label)
+            if data_label_1 in elink_labels and data_label_2 in elink_labels:
+                if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
+                    link_type = 'pixels'
+                else:  # If not pixels, must be WCS
+                    link_type = 'wcs'
+                break  # Might have duplicate, just grab first match
+
+        if link_type is None:
+            raise ValueError(f'{data_label_1} and {data_label_2} combo not found '
+                             'in data collection external links')
+
+        return link_type
+
     def get_aperture_photometry_results(self):
         """Return aperture photometry results, if any.
         Results are calculated using :ref:`aper-phot-simple` plugin.

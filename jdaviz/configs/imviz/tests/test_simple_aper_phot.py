@@ -1,11 +1,14 @@
 import pytest
 import numpy as np
 from astropy import units as u
+from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils.data import get_pkg_data_filename
 from numpy.testing import assert_allclose, assert_array_equal
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
-from regions import CircleAnnulusPixelRegion, PixCoord
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
+                     RectanglePixelRegion, PixCoord)
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
@@ -182,6 +185,82 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1  # Old table discarded due to incompatible column
         assert_array_equal(tbl['sky_center'], None)
+
+
+class TestAdvancedAperPhot:
+    @pytest.fixture(autouse=True)
+    def setup_class(self, imviz_helper):
+        # Reference image
+        fn_1 = get_pkg_data_filename('data/gauss100_fits_wcs.fits')
+        imviz_helper.load_data(fn_1)
+        # Different pixel scale
+        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced.fits'))
+        # Different pixel scale + rotated
+        imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
+
+        # Reference image again but without any WCS
+        data = fits.getdata(fn_1, ext=0)
+        imviz_helper.load_data(data, data_label='no_wcs')
+
+        # Link them by WCS
+        imviz_helper.link_data(link_type='wcs')
+
+        # Regions to be used for aperture photometry
+        regions = []
+        positions = [(145.1, 168.3), (48.3, 200.3)]
+        for x, y in positions:
+            regions.append(CirclePixelRegion(center=PixCoord(x=x, y=y), radius=5))
+        regions += [
+            EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9,
+                               angle=2.356 * u.rad),
+            RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7)]
+        imviz_helper.load_regions(regions)
+
+        self.imviz = imviz_helper
+        self.viewer = imviz_helper.default_viewer
+        self.phot_plugin = imviz_helper.plugins["Imviz Simple Aperture Photometry"]._obj
+
+    @pytest.mark.parametrize(('data_label', 'local_bkg'), [
+        ('gauss100_fits_wcs[PRIMARY,1]', 5.0),
+        ('gauss100_fits_wcs_block_reduced[PRIMARY,1]', 20.0),
+        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 20.0),
+        ('no_wcs', 5.0)])
+    @pytest.mark.parametrize(('subset_label', 'expected_sum'), [
+        ('Subset 1', 738.8803424408962),
+        ('Subset 2', 857.5194857987592),
+        ('Subset 3', 472.17364321556005),
+        ('Subset 4', 837.0023608207703)])
+    def test_aperphot(self, data_label, local_bkg, subset_label, expected_sum):
+        """All data should give similar result for the same Subset."""
+        self.phot_plugin.dataset_selected = data_label
+        self.phot_plugin.subset_selected = subset_label
+        self.phot_plugin.bg_subset_selected = 'Manual'
+        self.phot_plugin.background_value = local_bkg
+        self.phot_plugin.vue_do_aper_phot()
+        tbl = self.imviz.get_aperture_photometry_results()
+
+        # Imperfect down-sampling and imperfect apertures, so 10% is good enough.
+        assert_allclose(tbl['sum'][-1], expected_sum, rtol=0.1)
+
+    @pytest.mark.parametrize(('data_label', 'fac'), [
+        ('gauss100_fits_wcs[PRIMARY,1]', 1),
+        ('gauss100_fits_wcs_block_reduced[PRIMARY,1]', 4),
+        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 4),
+        ('no_wcs', 1)])
+    @pytest.mark.parametrize(('bg_label', 'expected_bg'), [
+        ('Subset 2', 12.269274711608887),
+        ('Subset 3', 7.935906410217285),
+        ('Subset 4', 11.120951652526855)])
+    def test_sky_background(self, data_label, fac, bg_label, expected_bg):
+        """All background (median) should give similar result for the same Subset.
+        Down-sampled data has higher factor due to flux conservation.
+        """
+        self.phot_plugin.dataset_selected = data_label
+        self.phot_plugin.subset_selected = "Subset 1"  # Does not matter
+        self.phot_plugin.bg_subset_selected = bg_label
+
+        # Imperfect down-sampling and abusing apertures, so 10% is good enough.
+        assert_allclose(float(self.phot_plugin.background_value), expected_bg * fac, rtol=0.1)
 
 
 def test_annulus_background(imviz_helper):

@@ -78,7 +78,14 @@
       </v-row>
 
       <v-row v-for="(item, index2) in region" class="row-no-outside-padding">
-        <v-text-field
+        <v-text-field v-if="item.name === 'Parent'"
+          :label="item.name"
+          :value="item.value"
+          style="padding-top: 0px; margin-top: 0px"
+          :readonly="true"
+          hint="Subset was defined with respect to this reference data (read-only)"
+        ></v-text-field>
+        <v-text-field v-if="item.name !== 'Parent'"
           :label="item.name"
           v-model.number="item.value"
           type="number"

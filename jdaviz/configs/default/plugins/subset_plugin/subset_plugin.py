@@ -126,23 +126,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if m != self.session.edit_subset_mode.edit_subset:
             self.session.edit_subset_mode.edit_subset = m
 
-    '''
-    # This will be needed once we use a dropdown instead of the actual
-    # g-subset-mode component
-    @observe("mode_selected")
-    def _mode_selected_changed(self, event={}):
-        if self.session.edit_subset_mode != self.mode_selected:
-            self.session.edit_subset_mode = self.mode_selected
-    '''
-
     def _unpack_get_subsets_for_ui(self):
         """
         Convert what app.get_subsets returns into something the UI of this plugin
         can display.
-
-        Returns
-        -------
-
         """
         subset_information = self.app.get_subsets(self.subset_selected, simplify_spectral=False,
                                                   use_display_units=True)
@@ -164,12 +151,18 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             subset_state = spec["subset_state"]
             glue_state = spec["glue_state"]
             if isinstance(subset_state, RoiSubsetState):
+                subset_definition.append({
+                    "name": "Parent", "att": "parent",
+                    "value": subset_state.xatt.parent.label,
+                    "orig": subset_state.xatt.parent.label})
+
                 if isinstance(subset_state.roi, CircularROI):
                     x, y = subset_state.roi.center()
                     r = subset_state.roi.radius
-                    subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
-                                         {"name": "Y Center", "att": "yc", "value": y, "orig": y},
-                                         {"name": "Radius", "att": "radius", "value": r, "orig": r}]
+                    subset_definition += [
+                        {"name": "X Center", "att": "xc", "value": x, "orig": x},
+                        {"name": "Y Center", "att": "yc", "value": y, "orig": y},
+                        {"name": "Radius", "att": "radius", "value": r, "orig": r}]
 
                 elif isinstance(subset_state.roi, RectangularROI):
                     for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
@@ -186,7 +179,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     rx = subset_state.roi.radius_x
                     ry = subset_state.roi.radius_y
                     theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
-                    subset_definition = [
+                    subset_definition += [
                         {"name": "X Center", "att": "xc", "value": xc, "orig": xc},
                         {"name": "Y Center", "att": "yc", "value": yc, "orig": yc},
                         {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
@@ -197,12 +190,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     x, y = subset_state.roi.center()
                     inner_r = subset_state.roi.inner_radius
                     outer_r = subset_state.roi.outer_radius
-                    subset_definition = [{"name": "X Center", "att": "xc", "value": x, "orig": x},
-                                         {"name": "Y Center", "att": "yc", "value": y, "orig": y},
-                                         {"name": "Inner radius", "att": "inner_radius",
-                                          "value": inner_r, "orig": inner_r},
-                                         {"name": "Outer radius", "att": "outer_radius",
-                                          "value": outer_r, "orig": outer_r}]
+                    subset_definition += [{"name": "X Center", "att": "xc", "value": x, "orig": x},
+                                          {"name": "Y Center", "att": "yc", "value": y, "orig": y},
+                                          {"name": "Inner radius", "att": "inner_radius",
+                                           "value": inner_r, "orig": inner_r},
+                                          {"name": "Outer radius", "att": "outer_radius",
+                                           "value": outer_r, "orig": outer_r}]
 
                 subset_type = subset_state.roi.__class__.__name__
 
@@ -282,6 +275,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 return
             sub_states = self.subset_states[index]
             for d_att in sub:
+                if d_att["att"] == 'parent':  # Read-only
+                    continue
+
                 if d_att["att"] == 'theta':  # Humans use degrees but glue uses radians
                     d_val = np.radians(d_att["value"])
                 else:
@@ -361,23 +357,33 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             raise NotImplementedError(
                 f'Cannot recenter: is_centerable={self.is_centerable}, config={self.config}')
 
+        from astropy.wcs.utils import pixel_to_pixel
         from photutils.aperture import ApertureStats
         from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 
         try:
-            reg = _get_region_from_spatial_subset(self, self.subset_selected)
+            reg = _get_region_from_spatial_subset(self, self.subset_select.selected_subset_state)
             aperture = regions2aperture(reg)
             data = self.dataset.selected_dc_item
             comp = data.get_component(data.main_components[0])
             comp_data = comp.data
-            phot_aperstats = ApertureStats(comp_data, aperture)
+            phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords)
 
-            # Centroid was calculated in selected data, which might or might not be
-            # the reference data. However, Subset is always defined w.r.t.
-            # the reference data, so we need to convert back.
-            viewer = self.app._jdaviz_helper.default_viewer
-            x, y, _, _ = viewer._get_real_xy(
-                data, phot_aperstats.xcentroid, phot_aperstats.ycentroid, reverse=True)
+            # Sky region from WCS linking, need to convert centroid back to pixels.
+            if hasattr(reg, "to_pixel"):
+                # Centroid was calculated in selected data.
+                # However, Subset is always defined w.r.t. its parent,
+                # so we need to convert back.
+                x, y = pixel_to_pixel(
+                    data.coords,
+                    self.subset_select.selected_subset_state.xatt.parent.coords,
+                    phot_aperstats.xcentroid,
+                    phot_aperstats.ycentroid)
+
+            else:
+                x = phot_aperstats.xcentroid
+                y = phot_aperstats.ycentroid
+
             if not np.all(np.isfinite((x, y))):
                 raise ValueError(f'Invalid centroid ({x}, {y})')
         except Exception as err:
