@@ -35,7 +35,7 @@ def open(filename, show=True, **kwargs):
     show : bool
         Determines whether to immediately show the application
 
-    All other arguments are interpreted as load_data/load_spectrum arguments for
+    All other arguments are interpreted as load_data arguments for
     the autoidentified configuration class
 
     Returns
@@ -65,7 +65,7 @@ def _launch_config_with_data(config, data=None, show=True, **kwargs):
     show : bool
         Determines whether to immediately show the application
 
-    All other arguments are interpreted as load_data/load_spectrum arguments for
+    All other arguments are interpreted as load_data arguments for
     the autoidentified configuration class
 
     Returns
