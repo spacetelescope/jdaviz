@@ -93,7 +93,7 @@ def jwst_footprint(instrument, ra, dec, pa, v2_offset=0.0, v3_offset=0.0, apertu
         raise ImportError('jwst_footprint requires pysiaf to be installed')
 
     if instrument not in _instruments:
-        raise ValueError(f"instrument must be one of {[', '].join(_instruments.keys())}")
+        raise ValueError(f"instrument must be one of {', '.join(_instruments.keys())}")
 
     siaf_interface = pysiaf.Siaf(_instruments.get(instrument))
 
