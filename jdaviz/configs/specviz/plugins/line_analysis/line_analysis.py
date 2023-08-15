@@ -539,7 +539,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 temp_result = FUNCTIONS[function](spec_subtracted, region=None)
                 self.results_centroid = temp_result.to_value(u.AA, equivalencies=u.spectral())
             else:
-                temp_result = FUNCTIONS[function](spec_subtracted)
+                # if the minimum flux is negative, translate the spectrum until it is
+                # non-negative for the these line analysis functions:
+                if spec_subtracted.flux.min() < 0:
+                    spec_subtracted_nonneg_flux = (
+                            spec_subtracted - np.min((spectrum - continuum).flux)
+                    )
+                else:
+                    spec_subtracted_nonneg_flux = spec_subtracted
+                temp_result = FUNCTIONS[function](spec_subtracted_nonneg_flux)
 
             temp_result = _coerce_unit(temp_result)
             temp_results.append({'function': function,

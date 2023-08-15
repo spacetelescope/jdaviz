@@ -11,6 +11,9 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Add Spectral Extraction plugin for Cubeviz, which converts spectral cubes
+  to 1D spectra with propagated uncertainties [#2039]
+
 Imviz
 ^^^^^
 

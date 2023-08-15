@@ -1315,7 +1315,10 @@ class SubsetSelect(SelectPluginComponent):
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
-            if self.selected in self._manual_options:
+            if (
+                self.selected in self._manual_options or
+                not hasattr(self.selected_obj, 'subregions')
+            ):
                 self.selected_has_subregions = False
             else:
                 self.selected_has_subregions = len(self.selected_obj.subregions) > 1
@@ -1436,7 +1439,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            'spatial_subset_items',
                                            'spatial_subset_selected',
                                            'spatial_subset_selected_has_subregions',
-                                           default_text='No Subset',
+                                           default_text='Entire Cube',
                                            filters=['is_spatial'])
 
 

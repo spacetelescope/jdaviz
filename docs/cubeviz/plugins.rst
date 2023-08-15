@@ -268,6 +268,27 @@ in a notebook. The line or continuum flux in each spatial pixel
 can then be computed by integrating over the line or continuum
 spectral region of interest.
 
+
+.. _spectral-extraction:
+
+Spectral Extraction
+===================
+
+.. image:: ../img/cubeviz_spectral_extraction.png
+
+.. note::
+
+    Spectral Extraction requires at least version 5.3.2 of astropy.
+
+The Spectral Extraction plugin produces a 1D spectrum from a spectral
+cube. The 1D spectrum can be computed via the sum, mean, minimum, or
+maximum of the spatial dimensions in the spectral cube. Select an
+extraction operation from the :guilabel:`Function` dropdown, and
+optionally choose a :guilabel:`Spatial region`, if you have one.
+Click :guilabel:`EXTRACT` to produce a new 1D spectrum dataset
+from the spectral cube, which has uncertainties propagated by
+`astropy.nddata <https://docs.astropy.org/en/stable/nddata/nddata.html>`_.
+
 .. _cubeviz-export-plot:
 
 Export Plot

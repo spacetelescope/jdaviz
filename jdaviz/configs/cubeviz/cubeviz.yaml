@@ -28,6 +28,7 @@ tray:
   - g-line-list
   - specviz-line-analysis
   - cubeviz-moment-maps
+  - cubeviz-spectral-extraction
   - g-export-plot
 viewer_area:
   - container: col
