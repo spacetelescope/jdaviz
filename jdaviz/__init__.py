@@ -20,6 +20,7 @@ from jdaviz.configs.cubeviz import Cubeviz  # noqa: F401
 from jdaviz.configs.imviz import Imviz  # noqa: F401
 from jdaviz.utils import enable_hot_reloading  # noqa: F401
 from jdaviz.core.launcher import open  # noqa: F401
+from jdaviz.core.launcher import show_launcher as show  # noqa: F401
 
 # Clean up namespace.
 del os
