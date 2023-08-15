@@ -276,6 +276,10 @@ Spectral Extraction
 
 .. image:: ../img/cubeviz_spectral_extraction.png
 
+.. note::
+
+    Spectral Extraction requires at least version 5.3.2 of astropy.
+
 The Spectral Extraction plugin produces a 1D spectrum from a spectral
 cube. The 1D spectrum can be computed via the sum, mean, minimum, or
 maximum of the spatial dimensions in the spectral cube. Select an
