@@ -11,13 +11,13 @@ from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
-                                        SelectPluginComponent)
+                                        SelectPluginComponent, FileImportMixin)
 
 __all__ = ['Catalogs']
 
 
 @tray_registry('imviz-catalogs', label="Catalog Search")
-class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
+class Catalogs(PluginTemplateMixin, ViewerSelectMixin, FileImportMixin):
     """
     See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
 
@@ -30,8 +30,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "catalogs.vue"
     catalog_items = List([]).tag(sync=True)
     catalog_selected = Unicode("").tag(sync=True)
-    from_file = Unicode().tag(sync=True)
-    from_file_message = Unicode().tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
 
@@ -43,38 +41,22 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
                                              selected='catalog_selected',
                                              manual_options=['SDSS', 'From File...'])
 
-        # file chooser for From File
-        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
-        self._file_upload = FileChooser(start_path)
-        self.components = {'g-file-import': self._file_upload}
-        self._file_upload.observe(self._on_file_path_changed, names='file_path')
-        self._cached_table_from_file = {}
         self._marker_name = 'catalog_results'
 
-    def _on_file_path_changed(self, event):
-        self.from_file_message = 'Checking if file is valid'
-        path = event['new']
-        if (path is not None
-                and not os.path.exists(path)
-                or not os.path.isfile(path)):
-            self.from_file_message = 'File path does not exist'
-            return
+        # set the custom file parser for importing catalogs
+        self.file_import._file_parser = self._file_parser
 
+    @staticmethod
+    def _file_parser(path):
         try:
             table = QTable.read(path)
         except Exception:
-            self.from_file_message = 'Could not parse file with astropy.table.QTable.read'
-            return
+            return 'Could not parse file with astropy.table.QTable.read', {}
 
         if 'sky_centroid' not in table.colnames:
-            self.from_file_message = 'Table does not contain required sky_centroid column'
-            return
+            return 'Table does not contain required sky_centroid column', {}
 
-        # since we loaded the file already to check if its valid, we might as well cache the table
-        # so we don't have to re-load it when clicking search.  We'll only keep the latest entry
-        # though, but store in a dict so we can catch if the file path was changed from the API
-        self._cached_table_from_file = {path: table}
-        self.from_file_message = ''
+        return '', {path: table}
 
     @observe('from_file')
     def _from_file_changed(self, event):
@@ -86,9 +68,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
             # NOTE: select_default will change the value even if the current value is valid
             # (so will change from 'From File...' to the first entry in the dropdown)
             self.catalog.select_default()
-
-    def vue_set_file_from_dialog(self, *args, **kwargs):
-        self.from_file = self._file_upload.file_path
 
     def search(self):
         """
@@ -165,7 +144,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin):
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
             # but this exceptions might be raised here if setting from_file from the UI
-            table = self._cached_table_from_file.get(self.from_file, QTable.read(self.from_file))
+            table = self.file_import.selected_obj
             self.app._catalog_source_table = table
             skycoord_table = table['sky_centroid']
 
