@@ -60,7 +60,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         self.add_results.viewer.filters = ['is_spectrum_viewer']
 
         if ASTROPY_LT_5_3_2:
-            self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy 5.3.2+"
+            self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy>=5.3.2"
 
     @property
     def user_api(self):

@@ -7,8 +7,7 @@ authors = [
 ]
 dependencies = [
     "packaging",
-    # switch to astropy>=5.3.2 once available:
-    "astropy @ git+https://github.com/astropy/astropy.git",
+    "astropy>=4.3",
     "matplotlib",
     "traitlets>=5.0.5",
     "bqplot>=0.12.37",
