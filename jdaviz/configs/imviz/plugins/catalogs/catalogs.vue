@@ -12,42 +12,20 @@
        hint="Select a viewer to search."
     />
 
-    <v-row>
-       <v-select
-         :menu-props="{ left: true }"
-         attach
-         :items="catalog_items.map(i => i.label)"
-         v-model="catalog_selected"
-         label="Catalog"
-         hint="Select a catalog to search with."
-         persistent-hint
-       ></v-select>
-       <v-chip v-if="catalog_selected === 'From File...'"
-         close
-         close-icon="mdi-close"
-         label
-         @click:close="() => {if (from_file.length) {from_file = ''} else {catalog_selected = catalog_items[0].label}}"
-         style="margin-top: -50px; width: 100%"
-       >
-        <!-- @click:close resets from_file and relies on the @observe in python to reset catalog 
-             to its default, but the traitlet change wouldn't be fired if from_file is already
-             empty (which should only happen if setting from the API but not setting from_file) -->
-          <span style="overflow-x: hidden; whitespace: nowrap; text-overflow: ellipsis; width: 100%">
-            {{from_file.split("/").slice(-1)[0]}}
-          </span>
-       </v-chip>
-    </v-row>
-
-    <plugin-file-import
-      title="Import Catalog"
-      hint="Select a file containing a catalog"
-      :show="catalog_selected === 'From File...' && from_file.length === 0"
-      :from_file="from_file"
-      :from_file_message.sync="from_file_message"
-      @click-cancel="catalog_selected=catalog_items[0].label"
-      @click-import="file_import_accept()">
-        <g-file-import id="file-uploader"></g-file-import>
-    </plugin-file-import>
+    <plugin-file-import-select
+      :items="catalog_items"
+      :selected.sync="catalog_selected"
+      label="Catalog"
+      hint="Select a catalog to search."
+      :from_file.sync="from_file"
+      :from_file_message="from_file_message"
+      dialog_title="Import Catalog"
+      dialog_hint="Select a file containing a catalog"
+      @click-cancel="file_import_cancel()"
+      @click-import="file_import_accept()"
+    >
+      <g-file-import id="file-uploader"></g-file-import>
+    </plugin-file-import-select>
 
     <v-row class="row-no-outside-padding">
        <v-col>
@@ -65,9 +43,3 @@
 
   </j-tray-plugin>
 </template>
- 
-<style scoped>
-  .v-chip__content {
-    width: 100%
-  }
-</style>

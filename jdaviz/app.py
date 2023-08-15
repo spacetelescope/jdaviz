@@ -140,7 +140,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-editable-select': 'components/plugin_editable_select.vue',
                      'plugin-add-results': 'components/plugin_add_results.vue',
                      'plugin-auto-label': 'components/plugin_auto_label.vue',
-                     'plugin-file-import': 'components/plugin_file_import.vue',
+                     'plugin-file-import-select': 'components/plugin_file_import_select.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')

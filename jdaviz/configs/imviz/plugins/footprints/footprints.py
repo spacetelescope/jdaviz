@@ -8,8 +8,8 @@ from jdaviz.core.events import LinkUpdatedMessage
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
-                                        SelectPluginComponent, EditableSelectPluginComponent,
-                                        FileImportMixin)
+                                        EditableSelectPluginComponent,
+                                        FileImportSelectPluginComponent, HasFileImportSelect)
 from jdaviz.core.user_api import PluginUserApi
 
 from jdaviz.configs.imviz.plugins.footprints import preset_regions
@@ -19,7 +19,7 @@ __all__ = ['Footprints']
 
 
 @tray_registry('imviz-footprints', label="Footprints")
-class Footprints(PluginTemplateMixin, ViewerSelectMixin, FileImportMixin):
+class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     """
     See the :ref:`Footprints Plugin Documentation <imviz-footprints>` for more details.
 
@@ -115,13 +115,13 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, FileImportMixin):
                                                      on_rename=self._on_overlay_rename,
                                                      on_remove=self._on_overlay_remove)
 
-        self.preset = SelectPluginComponent(self,
-                                            items='preset_items',
-                                            selected='preset_selected',
-                                            manual_options=list(preset_regions._instruments.keys())+['From File...'])  # noqa
+        self.preset = FileImportSelectPluginComponent(self,
+                                                      items='preset_items',
+                                                      selected='preset_selected',
+                                                      manual_options=list(preset_regions._instruments.keys())+['From File...'])  # noqa
 
         # set the custom file parser for importing catalogs
-        self.file_import._file_parser = self._file_parser
+        self.preset._file_parser = self._file_parser
 
         # disable if pixel-linked AND only a single item in the data collection
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
@@ -329,19 +329,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, FileImportMixin):
                 # dict above.
                 fp[key] = getattr(self, attr)
         self._ignore_traitlet_change = False
-
-    @observe('from_file')
-    def _from_file_changed(self, event):
-        # NOTE: duplicated logic from catalogs.... move into the component if possible
-        import os
-        if len(event['new']):
-            if not os.path.exists(event['new']):
-                raise ValueError(f"{event['new']} does not exist")
-            self.preset.selected = 'From File...'
-        else:
-            # NOTE: select_default will change the value even if the current value is valid
-            # (so will change from 'From File...' to the first entry in the dropdown)
-            self.preset.select_default()
 
     def _mark_visible(self, viewer_id, overlay=None):
         if not self.is_active:

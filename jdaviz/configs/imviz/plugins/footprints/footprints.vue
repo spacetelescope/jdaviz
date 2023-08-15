@@ -78,42 +78,20 @@
       </div>
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
-      <v-row>
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          :items="preset_items.map(i => i.label)"
-          v-model="preset_selected"
-          label="Preset"
-          hint="Preset instrument or import from a file."
-          persistent-hint
-        ></v-select>
-        <v-chip v-if="preset_selected === 'From File...'"
-          close
-          close-icon="mdi-close"
-          label
-          @click:close="() => {if (from_file.length) {from_file = ''} else {preset_selected = preset_items[0].label}}"
-          style="margin-top: -50px; width: 100%"
-        >
-         <!-- @click:close resets from_file and relies on the @observe in python to reset preset 
-              to its default, but the traitlet change wouldn't be fired if from_file is already
-              empty (which should only happen if setting from the API but not setting from_file) -->
-           <span style="overflow-x: hidden; whitespace: nowrap; text-overflow: ellipsis; width: 100%">
-             {{from_file.split("/").slice(-1)[0]}}
-           </span>
-        </v-chip>
-      </v-row>
-
-      <plugin-file-import
-        title="Import Region"
-        hint="Select a region file"
-        :show="preset_selected === 'From File...' && from_file.length === 0"
-        :from_file="from_file"
-        :from_file_message.sync="from_file_message"
-        @click-cancel="preset_selected=preset_items[0].label"
-        @click-import="file_import_accept()">
-          <g-file-import id="file-uploader"></g-file-import>
-      </plugin-file-import>
+      <plugin-file-import-select
+        :items="preset_items"
+        :selected.sync="preset_selected"
+        label="Preset"
+        hint="Preset instrument or import from a file."
+        :from_file.sync="from_file"
+        :from_file_message="from_file_message"
+        dialog_title="Import Region"
+        dialog_hint="Select a region file"
+        @click-cancel="file_import_cancel()"
+        @click-import="file_import_accept()"
+      >
+        <g-file-import id="file-uploader"></g-file-import>
+      </plugin-file-import-select>
 
       <v-row>
         <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
@@ -208,9 +186,4 @@
       padding-left: 16px;
       border: 2px solid rgba(0,0,0,0.54);
   }
-
-  .v-chip__content {
-    width: 100%
-  }
-
 </style>

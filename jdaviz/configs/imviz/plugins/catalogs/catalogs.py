@@ -1,23 +1,20 @@
-import os
-
 import numpy as np
 import numpy.ma as ma
 from astropy import units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
-from traitlets import List, Unicode, Bool, Int, observe
+from traitlets import List, Unicode, Bool, Int
 
-from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
-                                        SelectPluginComponent, FileImportMixin)
+                                        FileImportSelectPluginComponent, HasFileImportSelect)
 
 __all__ = ['Catalogs']
 
 
 @tray_registry('imviz-catalogs', label="Catalog Search")
-class Catalogs(PluginTemplateMixin, ViewerSelectMixin, FileImportMixin):
+class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     """
     See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
 
@@ -36,15 +33,15 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, FileImportMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.catalog = SelectPluginComponent(self,
-                                             items='catalog_items',
-                                             selected='catalog_selected',
-                                             manual_options=['SDSS', 'From File...'])
-
-        self._marker_name = 'catalog_results'
+        self.catalog = FileImportSelectPluginComponent(self,
+                                                       items='catalog_items',
+                                                       selected='catalog_selected',
+                                                       manual_options=['SDSS', 'From File...'])
 
         # set the custom file parser for importing catalogs
-        self.file_import._file_parser = self._file_parser
+        self.catalog._file_parser = self._file_parser
+
+        self._marker_name = 'catalog_results'
 
     @staticmethod
     def _file_parser(path):
@@ -57,17 +54,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, FileImportMixin):
             return 'Table does not contain required sky_centroid column', {}
 
         return '', {path: table}
-
-    @observe('from_file')
-    def _from_file_changed(self, event):
-        if len(event['new']):
-            if not os.path.exists(event['new']):
-                raise ValueError(f"{event['new']} does not exist")
-            self.catalog.selected = 'From File...'
-        else:
-            # NOTE: select_default will change the value even if the current value is valid
-            # (so will change from 'From File...' to the first entry in the dropdown)
-            self.catalog.select_default()
 
     def search(self):
         """
@@ -144,7 +130,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, FileImportMixin):
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
             # but this exceptions might be raised here if setting from_file from the UI
-            table = self.file_import.selected_obj
+            table = self.catalog.selected_obj
             self.app._catalog_source_table = table
             skycoord_table = table['sky_centroid']
 

@@ -46,7 +46,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
-           'FileImportMixin',
+           'FileImportSelectPluginComponent', 'HasFileImportSelect',
            'Table', 'TableMixin',
            'Plot', 'PlotMixin',
            'AutoTextField', 'AutoTextFieldMixin',
@@ -786,6 +786,96 @@ class UnitSelectPluginComponent(SelectPluginComponent):
         # convert to default string representation from the valid choices
         ind = self.unit_choices.index(new_u)
         self.selected = self.labels[ind]
+
+
+class FileImportSelectPluginComponent(SelectPluginComponent):
+    """
+    IMPORTANT: Always accompany with HasFileImportSelect
+    IMPORTANT: currently assumed only one instance per-plugin
+    """
+    def __init__(self, plugin, **kwargs):
+        """
+        """
+        if "From File..." not in kwargs['manual_options']:
+            kwargs['manual_options'] += ['From File...']
+
+        if not isinstance(plugin, HasFileImportSelect):
+            raise NotImplementedError("plugin must inherit from HasFileImportSelect")
+
+        super().__init__(plugin,
+                         from_file='from_file', from_file_message='from_file_message',
+                         **kwargs)
+
+        self.plugin._file_chooser.observe(self._on_file_path_changed, names='file_path')
+        # reference back here so the plugin can reset to default
+        self.plugin._file_chooser._select_component = self
+
+        def _default_file_parser(path):
+            return '', {}
+
+        self._file_parser = kwargs.pop('file_parser', _default_file_parser)
+        self.add_observe('from_file', self._from_file_changed)
+
+    @property
+    def selected_obj(self):
+        if self.selected == 'From File...':
+            return self._cached_file.get(self.from_file, self._file_parser(self.from_file)[1])
+        return super().selected_obj
+
+    def _from_file_changed(self, event):
+        if len(event['new']):
+            if not os.path.exists(event['new']):
+                raise ValueError(f"{event['new']} does not exist")
+            self.selected = 'From File...'
+        else:
+            # NOTE: select_default will change the value even if the current value is valid
+            # (so will change from 'From File...' to the first entry in the dropdown)
+            self.select_default()
+
+    def _on_file_path_changed(self, event):
+        self.from_file_message = 'Checking if file is valid'
+        path = event['new']
+        if (path is not None
+                and not os.path.exists(path)
+                or not os.path.isfile(path)):
+            self.from_file_message = 'File path does not exist'
+            return
+
+        self.from_file_message, self._cached_file = self._file_parser(path)
+
+
+class HasFileImportSelect(VuetifyTemplate, HubListener):
+    """
+
+    <plugin-file-import
+      title="Import File"
+      hint="Select a file to import"
+      :show="method_selected === 'From File...' && from_file.length === 0"
+      :from_file="from_file"
+      :from_file_message.sync="from_file_message"
+      @click-cancel="method_selected=method_items[0].label"
+      @click-import="file_import_accept()">
+        <g-file-import id="file-uploader"></g-file-import>
+    </plugin-file-import>
+    """
+    from_file = Unicode().tag(sync=True)
+    from_file_message = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
+
+        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
+        self._file_chooser = FileChooser(start_path)
+        self.components = {'g-file-import': self._file_chooser}
+
+    def vue_file_import_accept(self, *args, **kwargs):
+        self.from_file = self._file_chooser.file_path
+
+    def vue_file_import_cancel(self, *args, **kwargs):
+        self._file_chooser._select_component.select_default()
+        self.from_file = ''
 
 
 class EditableSelectPluginComponent(SelectPluginComponent):
@@ -2326,68 +2416,6 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
                                       'results_label_default', 'results_label_auto',
                                       'results_label_invalid_msg', 'results_label_overwrite',
                                       'add_to_viewer_items', 'add_to_viewer_selected')
-
-
-class FileImport(BasePluginComponent):
-    """
-    NOT CURRENTLY ABLE TO USE MULTIPLE INSTANCES - USE FileImportMixin INSTEAD
-    """
-    def __init__(self, plugin, from_file, from_file_message, *args, **kwargs):
-        from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
-
-        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
-        self._file_chooser = FileChooser(start_path)
-
-        plugin.components = {'g-file-import': self._file_chooser}
-
-        self._file_chooser.observe(self._on_file_path_changed, names='file_path')
-
-        super().__init__(plugin, from_file=from_file, from_file_message=from_file_message)
-
-        def _default_file_parser(path):
-            return '', {}
-
-        self._file_parser = kwargs.pop('file_parser', _default_file_parser)
-
-    @property
-    def selected_obj(self):
-        return self._cached_file.get(self.from_file, self._file_parser(self.from_file)[1])
-
-    def _on_file_path_changed(self, event):
-        self.from_file_message = 'Checking if file is valid'
-        path = event['new']
-        if (path is not None
-                and not os.path.exists(path)
-                or not os.path.isfile(path)):
-            self.from_file_message = 'File path does not exist'
-            return
-
-        self.from_file_message, self._cached_file = self._file_parser(path)
-
-
-class FileImportMixin(VuetifyTemplate, HubListener):
-    """
-
-    <plugin-file-import
-      title="Import File"
-      hint="Select a file to import"
-      :show="method_selected === 'From File...' && from_file.length === 0"
-      :from_file="from_file"
-      :from_file_message.sync="from_file_message"
-      @click-cancel="method_selected=method_items[0].label"
-      @click-import="file_import_accept()">
-        <g-file-import id="file-uploader"></g-file-import>
-    </plugin-file-import>
-    """
-    from_file = Unicode().tag(sync=True)
-    from_file_message = Unicode().tag(sync=True)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.file_import = FileImport(self, 'from_file', 'from_file_message')
-
-    def vue_file_import_accept(self, *args, **kwargs):
-        self.from_file = self.file_import._file_chooser.file_path
 
 
 class PlotOptionsSyncState(BasePluginComponent):
