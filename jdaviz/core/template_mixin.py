@@ -835,13 +835,24 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
 
     def _from_file_changed(self, event):
         if len(event['new']):
-            if not os.path.exists(event['new']):
-                raise ValueError(f"{event['new']} does not exist")
+            if event['new'] != self.plugin._file_chooser.file_path:
+                # then need to run the parser or check for valid path
+                if not os.path.exists(event['new']):
+                    if self.selected == 'From File...':
+                        self.select_previous()
+                    raise ValueError(f"{event['new']} is not a valid file path")
+
+                # run through the parsers and check the validity
+                self._on_file_path_changed(event)
+                if self.from_file_message:
+                    if self.selected == 'From File...':
+                        self.select_previous()
+                    raise ValueError(self.from_file_message)
+
             self.selected = 'From File...'
-        else:
-            # NOTE: select_default will change the value even if the current value is valid
-            # (so will change from 'From File...' to the first entry in the dropdown)
-            self.select_default()
+
+        elif self.selected == 'From File...':
+            self.select_previous()
 
     def _on_file_path_changed(self, event):
         self.from_file_message = 'Checking if file is valid'
@@ -853,6 +864,12 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
             return
 
         self.from_file_message, self._cached_file = self._file_parser(path)
+
+    def import_file(self, path):
+        """
+        Select 'From File...' and set the path
+        """
+        self.from_file = path
 
 
 class HasFileImportSelect(VuetifyTemplate, HubListener):
