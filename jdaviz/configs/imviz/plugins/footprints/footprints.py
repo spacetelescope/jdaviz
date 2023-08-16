@@ -156,10 +156,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     @staticmethod
     def _file_parser(path):
-        if path.endswith('.png'):
-            return '', {path: None}
-
-        return 'Could not parse region from file', {}
+        try:
+            region = regions.Regions.read(path)
+        except Exception:
+            return 'Could not parse region from file', {}
+        else:
+            return '', {path: region}
 
     def _on_link_type_updated(self, msg=None):
         self.is_pixel_linked = (getattr(self.app, '_link_type', None) == 'pixels' and
@@ -305,6 +307,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             # create new entry with defaults (any defaults not provided here will be carried over
             # from the previous selection based on current traitlet values)
             self._overlays[self.overlay_selected] = {'color': '#c75109'}
+            if self.preset_selected == 'From File...':
+                # don't carry over the imported file/region to the next selection
+                # TODO: but the new one isn't being generated immediately...
+                self._overlays[self.overlay_selected]['from_file'] = ''
+                self._overlays[self.overlay_selected]['preset'] = self.preset.choices[0]
             if len(self._overlays) == 1 and len(self.viewer.selected):
                 # default to the center of the current zoom limits of the first selected viewer
                 self.center_on_viewer(self.viewer.selected[0])
@@ -315,7 +322,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         # traitlets simultaneously (and since we're only updating traitlets to a previously-set
         # overlay, we shouldn't have to update anything with the marks themselves)
         self._ignore_traitlet_change = True
-        for attr in ('preset_selected', 'visible', 'color', 'fill_opacity', 'viewer_selected',
+        for attr in ('from_file', 'preset_selected',
+                     'visible', 'color', 'fill_opacity', 'viewer_selected',
                      'ra', 'dec', 'pa', 'v2_offset', 'v3_offset'):
             key = attr.split('_selected')[0]
 
@@ -329,6 +337,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 # dict above.
                 fp[key] = getattr(self, attr)
         self._ignore_traitlet_change = False
+        self._preset_args_changed()
 
     def _mark_visible(self, viewer_id, overlay=None):
         if not self.is_active:
@@ -382,13 +391,15 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         callable_kwargs = {k: getattr(self, k)
                            for k in ('ra', 'dec', 'pa', 'v2_offset', 'v3_offset')}
 
-        if self.preset_selected in preset_regions._instruments:
+        if self.preset_selected == 'From File...':
+            regs = self.preset.selected_obj
+        elif self.preset_selected in preset_regions._instruments:
             regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
         else:
             regs = []
         return regs
 
-    @observe('preset_selected', 'ra', 'dec', 'pa', 'v2_offset', 'v3_offset')
+    @observe('preset_selected', 'from_file', 'ra', 'dec', 'pa', 'v2_offset', 'v3_offset')
     def _preset_args_changed(self, msg={}):
         if self._ignore_traitlet_change:
             return
