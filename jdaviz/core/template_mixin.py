@@ -807,7 +807,7 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
     def __init__(self, plugin, **kwargs):
         """
         """
-        self._cached_file = {}
+        self._cached_obj = {}
 
         if "From File..." not in kwargs['manual_options']:
             kwargs['manual_options'] += ['From File...']
@@ -832,10 +832,13 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
     @property
     def selected_obj(self):
         if self.selected == 'From File...':
-            return self._cached_file.get(self.from_file, self._file_parser(self.from_file)[1])
+            return self._cached_obj.get(self.from_file, self._file_parser(self.from_file)[1])
         return super().selected_obj
 
     def _from_file_changed(self, event):
+        if event['new'].startswith('API:'):
+            # object imported from the API: parsing is already handled
+            return
         if len(event['new']):
             if event['new'] != self.plugin._file_chooser.file_path:
                 # then need to run the parser or check for valid path
@@ -865,13 +868,25 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
             self.from_file_message = 'File path does not exist'
             return
 
-        self.from_file_message, self._cached_file = self._file_parser(path)
+        self.from_file_message, self._cached_obj = self._file_parser(path)
 
     def import_file(self, path):
         """
         Select 'From File...' and set the path
         """
+        # NOTE: this will trigger self._from_file_changed which in turn will
+        # pass through the parser, raise an error if necessary, and set
+        # self.selected accordingly
         self.from_file = path
+
+    def import_obj(self, obj):
+        """
+        """
+        msg, self._cached_obj = self._file_parser(obj)
+        if msg:
+            raise ValueError(msg)
+        self.selected = 'From File...'
+        self.from_file = list(self._cached_obj.keys())[0]
 
 
 class HasFileImportSelect(VuetifyTemplate, HubListener):

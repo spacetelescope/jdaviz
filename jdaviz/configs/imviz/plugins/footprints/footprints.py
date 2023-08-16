@@ -46,6 +46,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         opacity of the filled region of the currently selected overlay
     * ``preset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
         selected overlay preset
+    * :meth:``import_region``
     * :meth:``center_on_viewer``
     * ``ra``
         central right ascension for the footprint overlay
@@ -135,7 +136,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             return PluginUserApi(self, expose=('overlay',
                                                'rename_overlay', 'add_overlay', 'remove_overlay',
                                                'viewer', 'visible', 'color', 'fill_opacity',
-                                               'preset', 'center_on_viewer', 'ra', 'dec', 'pa',
+                                               'preset', 'import_region',
+                                               'center_on_viewer', 'ra', 'dec', 'pa',
                                                'v2_offset', 'v3_offset',
                                                'overlay_regions'))
         return PluginUserApi(self)
@@ -156,6 +158,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     @staticmethod
     def _file_parser(path):
+        if isinstance(path, regions.Regions):
+            from_file_string = f'API: {path.__class__.__name__} object'
+            return '', {from_file_string: path}
+
         try:
             region = regions.Regions.read(path)
         except Exception:
@@ -381,6 +387,21 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 mark.visible = visible
                 mark.colors = [self.color]
                 mark.fill_opacities = [self.fill_opacity]
+
+    def import_region(self, region):
+        """
+        Import an astropy regions object (or file).
+
+        Parameters
+        ----------
+        region : str or regions.Regions object
+        """
+        if isinstance(region, regions.Regions):
+            self.preset.import_obj(region)
+        elif isinstance(region, str):
+            self.preset.import_file(region)
+        else:
+            raise ValueError("region must be a regions.Regions object or file path")
 
     @property
     def overlay_regions(self):
