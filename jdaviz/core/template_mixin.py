@@ -521,6 +521,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         filters = kwargs.pop('filters', [])[:]  # [:] needed to force copy from kwarg default
 
         super().__init__(*args, **kwargs)
+        self._selected_previous = None
         self._cached_properties = ["selected_obj", "selected_item"]
 
         self._default_mode = default_mode
@@ -609,6 +610,15 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         cycle = self.choices
         curr_ind = cycle.index(self.selected)
         self.selected = cycle[(curr_ind + 1) % len(cycle)]
+        return self.selected
+
+    def select_previous(self):
+        """
+        Apply and return the previous selection (or default option if no previous selection)
+        """
+        if self._selected_previous is None:
+            return self.select_default()
+        self.selected = self._selected_previous
         return self.selected
 
     @property
@@ -732,6 +742,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             self._apply_default_selection()
 
     def _selected_changed(self, event):
+        self._selected_previous = event['old']
         self._clear_cache()
         if self.is_multiselect:
             if not isinstance(event['new'], list):
@@ -874,7 +885,7 @@ class HasFileImportSelect(VuetifyTemplate, HubListener):
         self.from_file = self._file_chooser.file_path
 
     def vue_file_import_cancel(self, *args, **kwargs):
-        self._file_chooser._select_component.select_default()
+        self._file_chooser._select_component.select_previous()
         self.from_file = ''
 
 
