@@ -6,6 +6,8 @@ New Features
 
 - Improved design of Launcher and pass filepath arg from cli when no config specified. [#2311]
 
+- Expose launcher as jdaviz.open(). [#2378]
+
 - Subset Tools plugin now displays the parent data of a spatial (ROI) subset. [#2154]
 
 Cubeviz
