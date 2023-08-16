@@ -4,13 +4,57 @@
 Quickstart
 ==========
 
-Once installed, ``jdaviz`` can be run either in a Jupyter notebook or as a standalone web application.
-Detailed workflows are given within the documentation, but some quick-start tips are given below.
+Once installed, ``jdaviz`` can be run either as a standalone web application in your browser, or
+more powerfully, integrated into your Jupyter notebook workflow. Detailed workflows are given
+within the documentation, but some quick-start tips are given below.
+
+To see the syntax and usage, from a terminal, call Jdaviz with the ``--help`` flag::
+
+    jdaviz --help
+
+Launcher
+--------
+
+For a guided introduction to ``jdaviz``, the included launcher can be invoked either from the command-line::
+
+    jdaviz
+
+or from within a Jupyter notebook workflow::
+
+    import jdaviz
+    jdaviz.open()
+
+.. image:: ./img/launcher.png
+    :alt: Jdaviz Launcher
+
+By default, the file-path field is left empty. By selecting an availble configuration below, the tool will
+start with in a blank state (with no data loaded). The IMPORT button will be available to select a file
+from a proper file picker.
+
+Config Auto-Identification
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Providing a valid filepath to the launcher will attempt to automatically identify a compatible confirguation.
+To do this, enter a filepath into the filepath field, or invoke the launcher with a filepath.
+
+Command-line::
+
+    jdaviz /path/to/a/data/file.fits
+
+Jupyter Notebook::
+
+    import jdaviz
+    jdaviz.open("/path/to/a/data/file.fits")
+
+Creating a configuration
+------------------------
+
+You can also manually select a specific configuration and not invoke the launcher instead:
 
 In a Jupyter Notebook
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
-The power of Jdaviz is that it can integrated into your Jupyter notebook workflow::
+Within any Jupyter Notebook::
 
     from jdaviz import Imviz
 
@@ -31,12 +75,7 @@ Alternately, if you are using Jupyter Lab::
     jupyter lab /path/to/jdaviz/notebooks/ImvizExample.ipynb
 
 As a Standalone Application
----------------------------
-
-``jdaviz`` provides a command-line tool to start the standalone desktop application in a browser. 
-To see the syntax and usage, from a terminal, type::
-
-    jdaviz --help
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Typical usage to load a file into a desired configuration::
 
@@ -48,12 +87,3 @@ For example, to load a FITS image into Imviz::
 
 To learn more about the various ``jdaviz`` application configurations and loading data,
 see the :ref:`imviz`, :ref:`specviz`, :ref:`cubeviz`, or :ref:`mosviz` tools.
-
-.. note::
-
-   The command ``jdaviz`` without any additional input will run a launcher which is a work
-   in progress (in particular, the file tab is not very user friendly at the moment).
-   We apologize for the inconvenience. After launching jdaviz, the user can select the
-   desired configuration by clicking one of the buttons without specifying a file.
-   A blank configuration will open and the IMPORT button will be available to select
-   a file from a proper file picker.
