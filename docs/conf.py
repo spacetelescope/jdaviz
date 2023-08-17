@@ -260,7 +260,8 @@ for line in open('nitpick-exceptions'):
 
 # Extra intersphinx in addition to what is already in sphinx-astropy
 intersphinx_mapping.update({  # noqa: F405
-    'glue': ('http://docs.glueviz.org/en/stable/', None),
+    'glueviz': ('https://docs.glueviz.org/en/stable/', None),
+    'glue': ('https://glue-core.readthedocs.io/en/latest/', None),
     'glue_jupyter': ('https://glue-jupyter.readthedocs.io/en/stable/', None),
     'photutils': ('https://photutils.readthedocs.io/en/stable/', None),
     'regions': ('https://astropy-regions.readthedocs.io/en/stable/', None),
