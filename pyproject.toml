@@ -76,6 +76,8 @@ test = [
     "pytest-tornasync"
 ]
 docs = [
+    "glue-core!=1.13.1",
+    "sphinx!=7.2.0",
     "sphinx-astropy[confv2]>=1.9.1",
     "sphinx_design"
 ]
