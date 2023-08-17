@@ -317,13 +317,16 @@ Footprints
 
 This plugin supports loading and overplotting instrument footprint overlays on the image viewers.
 Any number of overlays can be plotted simultaneously from any number of the available
-preset instruments.
+preset instruments or by loading an astropy regions object from a file.
 
 The top dropdown allows renaming, adding, and removing footprint overlays.  To modify the display
 and input parameters for a given overlay, select it in the dropdown, and modify the choices
 in the plugin to change its color, opacity, visibilities in any image viewer in the app, or to
 select between various preset instruments and change the input options (position on the sky,
 position angle, offsets, etc).
+
+To import a file, choose "From File..." from the presets dropdown and select a valid file (must
+be able to be parsed by `regions.Regions.read`).
 
 
 

@@ -803,6 +803,19 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
     """
     IMPORTANT: Always accompany with HasFileImportSelect
     IMPORTANT: currently assumed only one instance per-plugin
+
+    Example template (label and hint are optional)::
+
+      <plugin-file-import
+        title="Import File"
+        hint="Select a file to import"
+        :show="method_selected === 'From File...' && from_file.length === 0"
+        :from_file="from_file"
+        :from_file_message.sync="from_file_message"
+        @click-cancel="method_selected=method_items[0].label"
+        @click-import="file_import_accept()">
+          <g-file-import id="file-uploader"></g-file-import>
+      </plugin-file-import>
     """
     def __init__(self, plugin, **kwargs):
         """
@@ -812,7 +825,7 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
         if "From File..." not in kwargs['manual_options']:
             kwargs['manual_options'] += ['From File...']
 
-        if not isinstance(plugin, HasFileImportSelect):
+        if not isinstance(plugin, HasFileImportSelect):  # pragma: no cover
             raise NotImplementedError("plugin must inherit from HasFileImportSelect")
 
         super().__init__(plugin,
@@ -824,7 +837,8 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
         self.plugin._file_chooser._select_component = self
 
         def _default_file_parser(path):
-            return '', {}
+            # by default, just return the file path itself (and allow all files)
+            return '', {path: path}
 
         self._file_parser = kwargs.pop('file_parser', _default_file_parser)
         self.add_observe('from_file', self._from_file_changed)
@@ -890,19 +904,6 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
 
 
 class HasFileImportSelect(VuetifyTemplate, HubListener):
-    """
-
-    <plugin-file-import
-      title="Import File"
-      hint="Select a file to import"
-      :show="method_selected === 'From File...' && from_file.length === 0"
-      :from_file="from_file"
-      :from_file_message.sync="from_file_message"
-      @click-cancel="method_selected=method_items[0].label"
-      @click-import="file_import_accept()">
-        <g-file-import id="file-uploader"></g-file-import>
-    </plugin-file-import>
-    """
     from_file = Unicode().tag(sync=True)
     from_file_message = Unicode().tag(sync=True)
 

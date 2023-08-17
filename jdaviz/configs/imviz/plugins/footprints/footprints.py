@@ -398,10 +398,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         """
         if isinstance(region, regions.Regions):
             self.preset.import_obj(region)
-        elif isinstance(region, str):
+        elif isinstance(region, str):  # TODO: support path objects?
             self.preset.import_file(region)
         else:
-            raise ValueError("region must be a regions.Regions object or file path")
+            raise ValueError("region must be a regions.Regions object or string (file path)")
 
     @property
     def overlay_regions(self):

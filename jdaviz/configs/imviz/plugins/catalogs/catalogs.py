@@ -173,6 +173,21 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         return skycoord_table
 
+    def import_catalog(self, catalog):
+        """
+        Import a catalog from a file path.
+
+        Parameters
+        ----------
+        catalog : str
+          Path to a file that can be parsed by astropy QTable
+        """
+        # TODO: self.catalog.import_obj for a QTable directly (see footprints implementation)
+        if isinstance(catalog, str):
+            self.catalog.import_file(catalog)
+        else:  # pragma: no cover
+            raise ValueError("catalog must be a string (file path)")
+
     def vue_do_search(self, *args, **kwargs):
         # calls self.search() which handles all of the searching logic
         self.search()
