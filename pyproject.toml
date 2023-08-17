@@ -76,6 +76,7 @@ test = [
     "pytest-tornasync"
 ]
 docs = [
+    "sphinx==7.2.1",
     "sphinx-astropy[confv2]>=1.9.1",
     "sphinx_design"
 ]
