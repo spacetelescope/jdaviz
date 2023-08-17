@@ -7,7 +7,7 @@ import pytest
 from astroquery.mast import Observations
 from astropy.utils.data import download_file
 
-from jdaviz import open as jdaviz_open
+from jdaviz.core.launcher import open as jdaviz_open
 from jdaviz.cli import ALL_JDAVIZ_CONFIGS
 from jdaviz.configs import Specviz2d, Cubeviz, Imviz  # , Specviz
 from jdaviz.core.launcher import Launcher, STATUS_HINTS
