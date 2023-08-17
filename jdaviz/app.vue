@@ -439,15 +439,11 @@ a:active {
   overflow: hidden;
 }
 
-.cubeviz .jupyter-widgets.bqplot.figure .axislabel {
-    font-size: 12pt !important;
+.jupyter-widgets.bqplot.figure .axislabel {
+    /* consistent with other labels (legend, buttons, plugin expansion menu labels, etc)*/
+    font-size: 15px !important;
+    font-family: Roboto, sans-serif !important;
+    font-weight: 500 !important;
 }
 
-.specviz .jupyter-widgets.bqplot.figure .axislabel {
-    font-size: 14pt !important;
-}
-
-.specviz2d .jupyter-widgets.bqplot.figure .axislabel {
-    font-size: 12pt !important;
-}
 </style>

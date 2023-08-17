@@ -545,13 +545,18 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
 
         # Make it so axis labels are not covering tick numbers.
-        self.figure.fig_margin["left"] = 80
+        self.figure.fig_margin["left"] = 95
+        self.figure.fig_margin["bottom"] = 60
         self.figure.send_state('fig_margin')  # Force update
         self.figure.axes[0].label_offset = "40"
-        self.figure.axes[1].label_offset = "-65"
+        self.figure.axes[1].label_offset = "-70"
+        # NOTE: with tick_style changed below, the default responsive ticks in bqplot result
+        # in overlapping tick labels.  For now we'll hardcode at 8, but this could be removed
+        # (default to None) if/when bqplot auto ticks react to styling options.
+        self.figure.axes[1].num_ticks = 8
 
         # Set Y-axis to scientific notation
         self.figure.axes[1].tick_format = '0.1e'
 
         for i in (0, 1):
-            self.figure.axes[i].tick_style = {'font-size': 16, 'font-weight': 'bold'}
+            self.figure.axes[i].tick_style = {'font-size': 15, 'font-weight': 600}
