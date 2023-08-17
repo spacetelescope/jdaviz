@@ -118,6 +118,16 @@ jobs:
         resource: tcp:8866
         timeout: 120000
 
+    - name: Test standalone
+      run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test.py --video=on)
+
+    - name: Upload Test artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.os }}
+        path: standalone/test-results
+
     - name: Upload jdaviz standalone (non-OSX)
       if: ${{ always() && (matrix.os != 'macos') }}
       uses: actions/upload-artifact@v3
