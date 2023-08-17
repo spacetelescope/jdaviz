@@ -11,7 +11,7 @@ See :meth:`jdaviz.configs.imviz.helper.Imviz.load_data` for more information.
 .. note::
 
     Loading too many datasets will cause performance problems due to
-    the number of links necessary; see :ref:`glue:linking-framework`
+    the number of links necessary; see :ref:`glueviz:linking-framework`
     for more information.
 
 .. _imviz-import-commandline:
