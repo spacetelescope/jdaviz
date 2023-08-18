@@ -1,6 +1,9 @@
 import numpy as np
 import pytest
+import astropy.units as u
 from astropy.nddata import NDData
+from astropy.coordinates import SkyCoord
+from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
 
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.configs.imviz.plugins.footprints.preset_regions import _all_apertures
@@ -96,8 +99,23 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         assert plugin.preset.selected == 'From File...'
         assert plugin.preset.from_file == tmp_file
 
+        # test single region (footprints contain multiple regions)
+        valid_region_sky = CircleSkyRegion(center=SkyCoord(42, 43, unit='deg', frame='fk5'),
+                                           radius=3 * u.deg)
+        plugin.import_region(valid_region_sky)
+
         with pytest.raises(ValueError):
             plugin.import_region('./invalid_path.reg')
+        with pytest.raises(TypeError):
+            plugin.import_region(5)
+
+        invalid_region = CirclePixelRegion(PixCoord(x=8, y=7), radius=3.5)
+        with pytest.raises(ValueError):
+            plugin.import_region(invalid_region)
+        tmp_invalid_file = str(tmp_path / 'test_invalid_region.reg')
+        invalid_region.write(tmp_invalid_file, format='ds9')
+        with pytest.raises(ValueError):
+            plugin.import_region(tmp_invalid_file)
         assert plugin.preset.selected == preset
 
     # with the plugin no longer active, marks should not be visible

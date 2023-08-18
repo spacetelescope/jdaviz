@@ -1,5 +1,6 @@
 from traitlets import Bool, List, Unicode, observe
 import regions
+import numpy as np
 
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
@@ -158,7 +159,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     @staticmethod
     def _file_parser(path):
-        if isinstance(path, regions.Regions):
+        def _ensure_sky(region):
+            if isinstance(region, regions.Regions):
+                return np.all([_ensure_sky(reg) for reg in region.regions])
+            return hasattr(region, 'to_pixel')
+
+        if isinstance(path, (regions.Region, regions.Regions)):
+            if not _ensure_sky(path):
+                return 'Region is not a SkyRegion', {}
             from_file_string = f'API: {path.__class__.__name__} object'
             return '', {from_file_string: path}
 
@@ -166,8 +174,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             region = regions.Regions.read(path)
         except Exception:
             return 'Could not parse region from file', {}
-        else:
-            return '', {path: region}
+        if not _ensure_sky(region):
+            return 'Region is not a SkyRegion', {}
+        return '', {path: region}
 
     def _on_link_type_updated(self, msg=None):
         self.is_pixel_linked = (getattr(self.app, '_link_type', None) == 'pixels' and
@@ -315,7 +324,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             self._overlays[self.overlay_selected] = {'color': '#c75109'}
             if self.preset_selected == 'From File...':
                 # don't carry over the imported file/region to the next selection
-                # TODO: but the new one isn't being generated immediately...
                 self._overlays[self.overlay_selected]['from_file'] = ''
                 self._overlays[self.overlay_selected]['preset'] = self.preset.choices[0]
             if len(self._overlays) == 1 and len(self.viewer.selected):
@@ -396,12 +404,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         ----------
         region : str or regions.Regions object
         """
-        if isinstance(region, regions.Regions):
+        if isinstance(region, (regions.Region, regions.Regions)):
             self.preset.import_obj(region)
         elif isinstance(region, str):  # TODO: support path objects?
             self.preset.import_file(region)
         else:
-            raise ValueError("region must be a regions.Regions object or string (file path)")
+            raise TypeError("region must be a regions.Regions object or string (file path)")
 
     @property
     def overlay_regions(self):
@@ -421,7 +429,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             regs = overlay.get('regions')
         elif self.preset_selected in preset_regions._instruments:
             regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
-        else:
+        else:  # pragma: no cover
             regs = []
         return regs
 
