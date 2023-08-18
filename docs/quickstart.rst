@@ -27,14 +27,14 @@ or from within a Jupyter notebook workflow::
 .. image:: ./img/launcher.png
     :alt: Jdaviz Launcher
 
-By default, the file-path field is left empty. By selecting an availble configuration below, the tool will
+By default, the file-path field is left empty. By selecting an available configuration below, the tool will
 start with in a blank state (with no data loaded). The IMPORT button will be available to select a file
 from a proper file picker.
 
 Config Auto-Identification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Providing a valid filepath to the launcher will attempt to automatically identify a compatible confirguation.
+Providing a valid filepath to the launcher will attempt to automatically identify a compatible configuration.
 To do this, enter a filepath into the filepath field, or invoke the launcher with a filepath.
 
 Command-line::
