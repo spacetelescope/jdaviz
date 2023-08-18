@@ -39,7 +39,7 @@ jobs:
     - uses: browser-actions/setup-chrome@v1
 
     - name: Install jdaviz
-      run: pip install .
+      run: pip install .[test]
 
     - name: Install pyinstaller
       run: pip install pyinstaller==5.11
