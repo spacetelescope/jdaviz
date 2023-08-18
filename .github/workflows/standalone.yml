@@ -128,7 +128,7 @@ jobs:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
-      - name: Upload Test screenshot
+    - name: Upload Test screenshot
       if: always()
       uses: actions/upload-artifact@v3
       with:
