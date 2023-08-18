@@ -886,7 +886,7 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
 
     def import_file(self, path):
         """
-        Select 'From File...' and set the path
+        Select 'From File...' and set the path.
         """
         # NOTE: this will trigger self._from_file_changed which in turn will
         # pass through the parser, raise an error if necessary, and set
@@ -895,12 +895,13 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
 
     def import_obj(self, obj):
         """
+        Import a supported object directly from the API.
         """
         msg, self._cached_obj = self._file_parser(obj)
         if msg:
             raise ValueError(msg)
-        self.selected = 'From File...'
         self.from_file = list(self._cached_obj.keys())[0]
+        self.selected = 'From File...'
 
 
 class HasFileImportSelect(VuetifyTemplate, HubListener):

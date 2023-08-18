@@ -413,7 +413,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                            for k in ('ra', 'dec', 'pa', 'v2_offset', 'v3_offset')}
 
         if self.preset_selected == 'From File...':
-            regs = self.preset.selected_obj
+            # we need to cache these locally in order to support multiple files/regions between
+            # different overlay entries all selecting From File...
+            overlay = self._overlays.get(self.overlay_selected, {})
+            if 'regions' not in overlay and isinstance(self.preset.selected_obj, regions.Regions):
+                overlay['regions'] = self.preset.selected_obj
+            regs = overlay.get('regions')
         elif self.preset_selected in preset_regions._instruments:
             regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
         else:
