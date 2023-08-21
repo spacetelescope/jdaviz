@@ -8,7 +8,8 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
-                                        AddResults)
+                                        AddResults,
+                                        skip_if_no_updates_since_last_active)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
@@ -409,7 +410,8 @@ class SpectralExtraction(PluginTemplateMixin):
                 raise ValueError("step must be one of: trace, bg, ext")
 
     @observe('is_active', 'interactive_extract')
-    def _update_plugin_marks(self, *args):
+    @skip_if_no_updates_since_last_active
+    def _update_plugin_marks(self, msg={}):
         if not self._do_marks:
             return
 
@@ -420,7 +422,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if self.active_step == '':
             # on load, default to 'extract' (this will then trigger the observe to update the marks)
-            self._interaction_in_ext_step()
+            self._interaction_in_ext_step(msg)
             return
 
         # update extracted 1d spectrum preview, regardless of the step
@@ -498,6 +500,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_trace_selected', 'trace_offset', 'trace_order',
              'trace_pixel', 'trace_peak_method_selected',
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
+    @skip_if_no_updates_since_last_active
     def _interaction_in_trace_step(self, event={}):
         if not self.is_active or not self._do_marks:
             return
@@ -519,6 +522,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @observe('bg_dataset_selected', 'bg_type_selected',
              'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
+    @skip_if_no_updates_since_last_active
     def _interaction_in_bg_step(self, event={}):
         if not self.is_active or not self._do_marks:
             return
@@ -575,6 +579,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('ext_dataset_selected', 'ext_trace_selected',
              'ext_type_selected', 'ext_width', 'active_step')
+    @skip_if_no_updates_since_last_active
     def _interaction_in_ext_step(self, event={}):
         if not self.is_active or not self._do_marks:
             return
