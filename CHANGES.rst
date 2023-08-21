@@ -30,6 +30,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Improve visibility of live-collapsed spectra from spatial regions in Cubeviz [#2387]
+
 Specviz2d
 ^^^^^^^^^
 

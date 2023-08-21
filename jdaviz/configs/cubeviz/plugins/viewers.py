@@ -1,6 +1,7 @@
 from glue.core import BaseData
 
 from glue.core.subset_group import GroupedSubset
+from bqplot_image_gl import LinesGL
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
@@ -213,6 +214,15 @@ class CubevizProfileView(SpecvizProfileView):
                                      if isinstance(m, ShadowSpatialSpectral)]
         if subset_type == 'spatial':
             layer_state.linewidth = 1
+
+            # change opacity for live-collapsed spectra from spatial subsets in Cubeviz:
+            layers_and_marks = zip(
+                self.state.layers, self._get_marks_for_layers(self.state.layers)
+            )
+            for layer, mark in layers_and_marks:
+                # if using WebGL and this is a subset:
+                if isinstance(mark, LinesGL) and layer.layer.label.startswith("Subset"):
+                    mark.set_trait('opacities', [0.8])
 
             # need to add marks for every intersection between THIS spatial subset and ALL spectral
             # subset marks corresponding to this data
