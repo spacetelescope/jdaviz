@@ -19,6 +19,9 @@ Imviz
 
 - The stretch histogram within plot options can now be popped-out into its own window. [#2314]
 
+- vmin/vmax step size in the plot options plugin is now dynamic based on the full range of the
+  image. [#2388]
+
 - Footprints plugin for plotting overlays of instrument footprints in the image viewer. [#2341]
 
 Mosviz

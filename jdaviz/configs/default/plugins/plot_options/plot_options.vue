@@ -341,11 +341,25 @@
     </glue-state-sync-wrapper>
 
     <glue-state-sync-wrapper :sync="stretch_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmin')">
-      <glue-float-field label="Stretch VMin" :value.sync="stretch_vmin_value" />
+      <v-text-field
+        ref="stretch_vmin"
+        type="number"
+        label="Stretch VMin"
+        v-model.number="stretch_vmin_value"
+        type="number"
+        :step="stretch_vstep"
+      ></v-text-field>
     </glue-state-sync-wrapper>
 
     <glue-state-sync-wrapper :sync="stretch_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmax')">
-      <glue-float-field label="Stretch VMax" :value.sync="stretch_vmax_value" />
+      <v-text-field
+        ref="stretch_vmax"
+        type="number"
+        label="Stretch VMax"
+        v-model.number="stretch_vmax_value"
+        type="number"
+        :step="stretch_vstep"
+      ></v-text-field>
     </glue-state-sync-wrapper>
 
     <div v-if="stretch_function_sync.in_subscribed_states">
