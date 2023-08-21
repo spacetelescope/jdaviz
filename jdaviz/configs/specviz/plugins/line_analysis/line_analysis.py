@@ -300,7 +300,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
     @observe("spatial_subset_selected", "spectral_subset_selected", "dataset_selected",
              "continuum_subset_selected", "width")
-    @skip_if_no_updates_since_last_active
+    @skip_if_no_updates_since_last_active()
     def _calculate_statistics(self, msg={}):
         """
         Run the line analysis functions on the selected data/subset and

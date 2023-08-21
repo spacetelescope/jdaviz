@@ -65,6 +65,8 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             else:
                 viewer.remove_event_callback(callback)
 
+        # pass along the msg object so that @skip_if_no_updates_since_last_active can be used
+        # to avoid re-drawing if no changes since the last time is_active was set
         self.vue_draw_plot(msg)
 
     def _on_viewer_key_event(self, viewer, data):
@@ -83,7 +85,7 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             self.vue_draw_plot()
 
     @observe("viewer_selected")
-    @skip_if_no_updates_since_last_active
+    @skip_if_no_updates_since_last_active()  # called with msg passed along from _is_active_changed
     def vue_draw_plot(self, msg={}):
         """Draw line profile plots for given Data across given X and Y indices (0-indexed)."""
         if not self.selected_x or not self.selected_y:

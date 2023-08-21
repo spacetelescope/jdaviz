@@ -61,7 +61,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         self.canvas_flip_horizontal = viewer_item.get('canvas_flip_horizontal', False)
 
     @observe("viewer_selected", "is_active")
-    @skip_if_no_updates_since_last_active
+    @skip_if_no_updates_since_last_active()
     def _compass_with_new_viewer(self, msg={}):
         if not hasattr(self, 'viewer'):
             # mixin object not yet initialized

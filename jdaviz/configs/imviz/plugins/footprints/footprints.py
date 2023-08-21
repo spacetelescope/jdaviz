@@ -8,8 +8,7 @@ from jdaviz.core.events import LinkUpdatedMessage
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
-                                        SelectPluginComponent, EditableSelectPluginComponent,
-                                        skip_if_no_updates_since_last_active)
+                                        SelectPluginComponent, EditableSelectPluginComponent)
 from jdaviz.core.user_api import PluginUserApi
 
 from jdaviz.configs.imviz.plugins.footprints import preset_regions
@@ -233,7 +232,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                    if getattr(m, 'overlay', None) != lbl]
 
     @observe('is_active', 'viewer_items')
-    @skip_if_no_updates_since_last_active
+    # NOTE: intentionally not using skip_if_no_updates_since_last_active since this only controls
+    # visibility of overlay (and creating the first instance)
     def _on_is_active_changed(self, *args):
         if not hasattr(self, 'overlay'):  # pragma: nocover
             # plugin/traitlet startup

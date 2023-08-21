@@ -499,7 +499,7 @@ class PlotOptions(PluginTemplateMixin):
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
-    @skip_if_no_updates_since_last_active
+    @skip_if_no_updates_since_last_active()
     def _update_stretch_histogram(self, msg={}):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet

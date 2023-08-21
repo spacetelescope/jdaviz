@@ -213,29 +213,33 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
                                   if k.split(':')[0] != viewer_id}
 
 
-def skip_if_no_updates_since_last_active(meth):
-    def wrapper(self, msg={}):
-        if isinstance(msg, dict) and msg.get('name', None) == 'is_active':
-            if meth.__name__ in self._methods_skip_since_last_active:
-                # then we haven't received any other messages since the last time the plugin
-                # received an is_active switch, and so we should skip calling the method.
-                return
-        elif not self.is_active:
-            # then we've received some other message while the plugin is inactive.
-            # Next time the plugin becomes active we want to call the wrapped method,
-            # so we'll remove from the skip list.
-            if meth.__name__ in self._methods_skip_since_last_active:
-                self._methods_skip_since_last_active.remove(meth.__name__)
-            return
+def skip_if_no_updates_since_last_active(skip_if_not_active=True):
+    def decorator(meth):
+        def wrapper(self, msg={}):
+            if isinstance(msg, dict) and msg.get('name', None) == 'is_active':
+                if self.is_active and meth.__name__ in self._methods_skip_since_last_active:
+                    # then we haven't received any other messages since the last time the plugin
+                    # received an is_active switch, and so we should skip calling the method.
+                    return
+            elif not self.is_active:
+                # then we've received some other message while the plugin is inactive.
+                # Next time the plugin becomes active we want to call the wrapped method,
+                # so we'll remove from the skip list.
+                if meth.__name__ in self._methods_skip_since_last_active:
+                    self._methods_skip_since_last_active.remove(meth.__name__)
 
-        # call the method as normal, and add it to the skip list (to be skipped if is_active
-        # toggles before any *other* messages are received)
-        ret_ = meth(self, msg)
-        if meth.__name__ not in self._methods_skip_since_last_active:
-            self._methods_skip_since_last_active.append(meth.__name__)
-        return ret_
- 
-    return wrapper
+            if skip_if_not_active and not self.is_active:
+                return
+
+            # call the method as normal, and add it to the skip list (to be skipped if is_active
+            # toggles before any *other* messages are received)
+            ret_ = meth(self, msg)
+            if meth.__name__ not in self._methods_skip_since_last_active:
+                self._methods_skip_since_last_active.append(meth.__name__)
+            return ret_
+
+        return wrapper
+    return decorator
 
 
 class PluginTemplateMixin(TemplateMixin):
@@ -257,7 +261,7 @@ class PluginTemplateMixin(TemplateMixin):
         # set to True because no changes have been made.  This can be used to prevent queuing
         # of expensive method calls, especially when the browser throttles the ping resulting
         # in repeated toggling of is_active.  To use, decorate any method that observes traitlet
-        # changes (including is_active) with @skip_if_no_updates_since_last_active
+        # changes (including is_active) with @skip_if_no_updates_since_last_active()
         self._methods_skip_since_last_active = []
         super().__init__(**kwargs)
 
