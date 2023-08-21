@@ -426,7 +426,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             overlay = self._overlays.get(self.overlay_selected, {})
             if 'regions' not in overlay and isinstance(self.preset.selected_obj, regions.Regions):
                 overlay['regions'] = self.preset.selected_obj
-            regs = overlay.get('regions')
+            regs = overlay.get('regions', [])
         elif self.preset_selected in preset_regions._instruments:
             regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
         else:  # pragma: no cover
