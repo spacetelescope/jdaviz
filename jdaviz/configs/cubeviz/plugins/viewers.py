@@ -140,6 +140,7 @@ class CubevizProfileView(SpecvizProfileView):
                 if (isinstance(layer.layer, GroupedSubset) and
                         get_subset_type(layer.layer.subset_state) == 'spatial'):
                     self._expected_subset_layer_default(layer)
+        self.set_plot_axes()
 
     def _is_spatial_subset(self, layer):
         subset_state = getattr(layer.layer, 'subset_state', None)

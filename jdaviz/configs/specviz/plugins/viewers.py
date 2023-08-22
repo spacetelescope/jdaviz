@@ -561,7 +561,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         else:
             flux_unit_type = "Counts"
             spectral_axis_unit_type = "Sample"
-            x_disp_unit = ''
+            x_disp_unit = self.state.x_display_unit = ''
 
         self.figure.axes[0].label = f"{spectral_axis_unit_type} {x_disp_unit}"
         self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
