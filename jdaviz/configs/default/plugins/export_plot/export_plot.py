@@ -114,6 +114,10 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
                     with filename.open(mode='bw') as f:
                         f.write(data)
 
+                if viewer.figure._upload_png_callback is not None:
+                    raise ValueError("previous png export is still in progress.  Wait to complete "
+                                     "before making another call to save_figure")
+
                 viewer.figure.get_png_data(on_img_received)
 
         elif filetype == "svg":
