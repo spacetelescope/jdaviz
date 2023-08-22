@@ -378,6 +378,8 @@ class PlotOptions(PluginTemplateMixin):
                                                      state_filter=is_image)
         # use add_observe to ensure that the glue state syncs with the traitlet choice:
         self.stretch_function.add_observe('stretch_function_value', self._update_stretch_curve)
+        # self.stretch_function.add_observe('image_contrast_value', self._update_stretch_curve)
+        # self.stretch_function.add_observe('image_bias_value', self._update_stretch_curve)
 
         self.stretch_preset = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
                                                    'stretch_preset_value', 'stretch_preset_sync',
@@ -636,7 +638,8 @@ class PlotOptions(PluginTemplateMixin):
         self._stretch_histogram_needs_update = False
 
     @observe('stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
-             'stretch_function_value', 'stretch_hist_nbins')
+             'stretch_function_value', 'stretch_hist_nbins',
+             'image_contrast_value', 'image_bias_value')
     def _update_stretch_curve(self, msg=None):
         if not hasattr(self, 'stretch_histogram'):
             return
