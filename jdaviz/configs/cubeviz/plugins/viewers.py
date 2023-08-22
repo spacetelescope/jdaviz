@@ -215,15 +215,6 @@ class CubevizProfileView(SpecvizProfileView):
         if subset_type == 'spatial':
             layer_state.linewidth = 1
 
-            # change opacity for live-collapsed spectra from spatial subsets in Cubeviz:
-            layers_and_marks = zip(
-                self.state.layers, self._get_marks_for_layers(self.state.layers)
-            )
-            for layer, mark in layers_and_marks:
-                # if using WebGL and this is a subset:
-                if isinstance(mark, LinesGL) and layer.layer.label.startswith("Subset"):
-                    mark.set_trait('opacities', [0.8])
-
             # need to add marks for every intersection between THIS spatial subset and ALL spectral
             # subset marks corresponding to this data
             spectral_layers = [sub_layer for sub_layer in
@@ -238,6 +229,15 @@ class CubevizProfileView(SpecvizProfileView):
                                                    data_uuid=layer_state.layer.data.uuid)
                 if _is_unique(new_shadow):
                     new_marks.append(new_shadow)
+
+            # change opacity for live-collapsed spectra from spatial subsets in Cubeviz:
+            spatial_layers = [sub_layer for sub_layer in
+                              self._get_spatial_subset_layers(layer_state.layer.data.label)]
+            spatial_marks = self._get_marks_for_layers(spatial_layers)
+            for layer, mark in zip(spatial_layers, spatial_marks):
+                # if using WebGL and this is a subset:
+                if isinstance(mark, LinesGL) and layer.layer.label.startswith("Subset"):
+                    mark.set_trait('opacities', [0.8])
 
         elif subset_type == 'spectral':
             # need to add marks for every intersection between THIS spectral subset and ALL spatial
