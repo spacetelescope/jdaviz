@@ -1,10 +1,14 @@
 import os
 import numpy as np
 
-from astropy.visualization import PercentileInterval
+from astropy.visualization import (
+    ManualInterval, ContrastBiasStretch, PercentileInterval
+)
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.core.subset_group import GroupedSubset
+import bqplot
+from glue.config import stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState
@@ -625,6 +629,67 @@ class PlotOptions(PluginTemplateMixin):
             # in case only the sample has changed but its length has not,
             # we'll force the traitlet to trigger a change
             hist_mark.send_state('sample')
+
+        self._stretch_histogram_needs_update = False
+
+    @observe('stretch_vmin_value', 'stretch_vmax_value', 'layer_selected'
+             'stretch_function_value', 'stretch_hist_nbins')
+    def _update_stretch_curve(self, msg=None):
+        if not hasattr(self, 'stretch_histogram'):
+            return
+
+        layers = self.layer.selected_obj
+        mark_label_prefix = "stretch_curve: "
+        for layer in layers:
+            # clear old mark, if it exists:
+            mark_label = f'{mark_label_prefix}{layer.label}'
+            mark_exists = mark_label in self.stretch_histogram.marks
+            if mark_exists:
+                self.stretch_histogram.clear_marks(mark_label)
+
+            # create the new/updated mark following the colormapping
+            # procedure in glue's CompositeArray:
+            layer_state = layer.state.as_dict()
+            interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
+            contrast_bias = ContrastBiasStretch(layer_state['contrast'], layer_state['bias'])
+            stretch = stretches.members[layer_state['stretch']]
+            layer_cmap = layer_state['cmap']
+
+            # create a photoshop style "curve" for the stretch function
+            curve_x = np.linspace(self.stretch_vmin.value, self.stretch_vmax.value, 50)
+            curve_y = interval(curve_x, clip=False)
+            curve_y = contrast_bias(curve_y, out=curve_y, clip=False)
+            curve_y = stretch(curve_y, out=curve_y, clip=False)
+            curve_y = layer_cmap(curve_y)[:, 0]
+
+            if not mark_exists:
+                self.stretch_histogram.add_line(
+                    mark_label,
+                    x=curve_x,
+                    y=curve_y,
+                    ynorm=True,
+                    color='#000000',
+                    opacities=[0.3],
+                )
+
+            for existing_mark_label, mark in self.stretch_histogram.marks.items():
+                if mark_label == existing_mark_label:
+                    # update this mark
+                    mark.x = curve_x
+                    mark.y = curve_y
+                elif existing_mark_label.startswith(mark_label_prefix):
+                    # clear this mark
+                    mark.x = []
+                    mark.y = []
+
+            # reorder marks so histogram is on top:
+            figure_marks = self.stretch_histogram.figure.marks
+            for i, fig_mark in enumerate(figure_marks):
+                if isinstance(fig_mark, bqplot.Bins):
+                    hist_mark = figure_marks.pop(i)
+                    break
+            self.stretch_histogram.figure.marks = figure_marks + [hist_mark]
+>>>>>>> acf31432 (adding photoshop-style 'curves' feature to plot options hist)
 
     @observe('stretch_vmin_value')
     def _stretch_vmin_changed(self, msg=None):
