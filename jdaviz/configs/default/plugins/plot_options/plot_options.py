@@ -641,7 +641,17 @@ class PlotOptions(PluginTemplateMixin):
              'stretch_function_value', 'stretch_hist_nbins',
              'image_contrast_value', 'image_bias_value')
     def _update_stretch_curve(self, msg=None):
-        if not hasattr(self, 'stretch_histogram'):
+        # Import here to prevent circular import (and not at the top of the method so the import
+        # check is avoided, whenever possible).
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+
+        if (
+            not isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView)) or
+            not hasattr(self, 'stretch_histogram')
+        ):
+            # don't update histogram if selected viewer is not an image viewer,
+            # or the stretch histogram hasn't been initialized:
             return
 
         mark_label_prefix = "stretch_curve: "
