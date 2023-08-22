@@ -1,7 +1,7 @@
 from glue.core import BaseData
 
 from glue.core.subset_group import GroupedSubset
-from bqplot_image_gl import LinesGL
+from bqplot import Lines
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
@@ -235,8 +235,8 @@ class CubevizProfileView(SpecvizProfileView):
                               self._get_spatial_subset_layers(layer_state.layer.data.label)]
             spatial_marks = self._get_marks_for_layers(spatial_layers)
             for layer, mark in zip(spatial_layers, spatial_marks):
-                # if using WebGL and this is a subset:
-                if isinstance(mark, LinesGL) and layer.layer.label.startswith("Subset"):
+                # update profile opacities for spatial subset:
+                if isinstance(mark, Lines):
                     mark.set_trait('opacities', [0.8])
 
         elif subset_type == 'spectral':
