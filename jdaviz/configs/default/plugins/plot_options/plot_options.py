@@ -376,6 +376,9 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
                                                      'stretch_function_value', 'stretch_function_sync',  # noqa
                                                      state_filter=is_image)
+        # use add_observe to ensure that the glue state syncs with the traitlet choice:
+        self.stretch_function.add_observe('stretch_function_value', self._update_stretch_curve)
+
         self.stretch_preset = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
                                                    'stretch_preset_value', 'stretch_preset_sync',
                                                    state_filter=is_image)
@@ -632,20 +635,17 @@ class PlotOptions(PluginTemplateMixin):
 
         self._stretch_histogram_needs_update = False
 
-    @observe('stretch_vmin_value', 'stretch_vmax_value', 'layer_selected'
+    @observe('stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
              'stretch_function_value', 'stretch_hist_nbins')
     def _update_stretch_curve(self, msg=None):
         if not hasattr(self, 'stretch_histogram'):
             return
 
-        layers = self.layer.selected_obj
         mark_label_prefix = "stretch_curve: "
-        for layer in layers:
+        for layer in self.layer.selected_obj:
             # clear old mark, if it exists:
             mark_label = f'{mark_label_prefix}{layer.label}'
             mark_exists = mark_label in self.stretch_histogram.marks
-            if mark_exists:
-                self.stretch_histogram.clear_marks(mark_label)
 
             # create the new/updated mark following the colormapping
             # procedure in glue's CompositeArray:
@@ -668,8 +668,8 @@ class PlotOptions(PluginTemplateMixin):
                     x=curve_x,
                     y=curve_y,
                     ynorm=True,
-                    color='#000000',
-                    opacities=[0.3],
+                    color='#c75d2c',
+                    opacities=[0.5],
                 )
 
             for existing_mark_label, mark in self.stretch_histogram.marks.items():

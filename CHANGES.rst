@@ -24,6 +24,9 @@ Imviz
 
 - Footprints plugin for plotting overlays of instrument footprints in the image viewer. [#2341]
 
+- Add a curve to stretch histograms in the Plot Options plugin representing the colormap
+  stretch function. [#2390]
+
 Mosviz
 ^^^^^^
 
