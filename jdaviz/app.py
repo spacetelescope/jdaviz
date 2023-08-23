@@ -58,7 +58,7 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import SnackbarQueue, alpha_index
 from ipypopout import PopoutButton
 
-__all__ = ['Application']
+__all__ = ['Application', 'ALL_JDAVIZ_CONFIGS']
 
 SplitPanes()
 GoldenLayout()
@@ -67,6 +67,7 @@ CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
 EXT_TYPES = dict(flux=['flux', 'sci'],
                  uncert=['ivar', 'err', 'var', 'uncert'],
                  mask=['mask', 'dq'])
+ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 
 
 @unit_converter('custom-jdaviz')
@@ -247,6 +248,7 @@ class Application(VuetifyTemplate, HubListener):
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
+    docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
 
     def __init__(self, configuration=None, *args, **kwargs):
@@ -2252,8 +2254,12 @@ class Application(VuetifyTemplate, HubListener):
         # store the loaded config object
         self._loaded_configuration = config
         # give the vue templates access to the current config/layout
-        self.config = config['settings'].get('configuration', 'unknown')
+        self.config = config['settings'].get('configuration', 'unknown').lower()
         self.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
+        if self.config in ALL_JDAVIZ_CONFIGS:
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/{self.config}/index.html'  # noqa
+        else:
+            self.docs_link = 'https://jdaviz.readthedocs.io'
 
         self.state.settings.update(config.get('settings'))
 

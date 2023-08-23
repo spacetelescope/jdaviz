@@ -10,7 +10,7 @@ from voila.app import Voila
 from voila.configuration import VoilaConfiguration
 
 from jdaviz import __version__
-from jdaviz.app import _verbosity_levels
+from jdaviz.app import _verbosity_levels, ALL_JDAVIZ_CONFIGS
 from jdaviz import configs
 
 __all__ = ['main']
@@ -19,7 +19,6 @@ CONFIGS_DIR = str(pathlib.Path(inspect.getfile(configs)).parent)
 JDAVIZ_DIR = pathlib.Path(__file__).parent.resolve()
 DEFAULT_VERBOSITY = 'warning'
 DEFAULT_HISTORY_VERBOSITY = 'info'
-ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 
 
 def main(filepaths=None, layout='default', instrument=None, browser='default',
