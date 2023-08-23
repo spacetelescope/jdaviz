@@ -623,8 +623,11 @@ class PlotOptions(PluginTemplateMixin):
             if len(sub_data) > 0:
                 hist_lims = interval.get_limits(sub_data)
                 hist_mark.min, hist_mark.max = hist_lims
+                # set the stepsize for vmin/vmax to be approximately 1% of the range of the
+                # histogram (within the percentile interval), rounded to 1-2 significant digits
+                # to avoid random step sizes.  This logic is somewhat arbitrary and can be safely
+                # modified or eventually exposed to the user if that would be useful.
                 stretch_vstep = (hist_lims[1] - hist_lims[0]) / 100.
-                # round to 1-2 significant digits to avoid random step sizes
                 self.stretch_vstep = np.round(stretch_vstep, decimals=-int(np.log10(stretch_vstep))+1)  # noqa
             hist_mark.bins = self.stretch_hist_nbins
             # in case only the sample has changed but its length has not,
