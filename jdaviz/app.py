@@ -247,6 +247,7 @@ class Application(VuetifyTemplate, HubListener):
     loading = Bool(False).tag(sync=True)
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
+    docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
 
     def __init__(self, configuration=None, *args, **kwargs):
@@ -2254,6 +2255,10 @@ class Application(VuetifyTemplate, HubListener):
         # give the vue templates access to the current config/layout
         self.config = config['settings'].get('configuration', 'unknown')
         self.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
+        if self.config != 'unknown':
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/{self.config}/index.html'  # noqa
+        else:
+            self.docs_link = 'https://jdaviz.readthedocs.io'
 
         self.state.settings.update(config.get('settings'))
 
