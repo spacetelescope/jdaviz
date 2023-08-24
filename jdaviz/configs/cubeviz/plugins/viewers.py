@@ -237,7 +237,13 @@ class CubevizProfileView(SpecvizProfileView):
             for layer, mark in zip(spatial_layers, spatial_marks):
                 # update profile opacities for spatial subset:
                 if isinstance(mark, Lines):
-                    mark.set_trait('opacities', [0.8])
+                    mark.set_trait(
+                        'opacities',
+                        # set the alpha for the spectrum in the profile viewer
+                        # to be 50% more opaque than the alpha for the spatial subset
+                        # in the flux-viewer
+                        [min(1.5 * layer.alpha, 1)]
+                    )
 
         elif subset_type == 'spectral':
             # need to add marks for every intersection between THIS spectral subset and ALL spatial
