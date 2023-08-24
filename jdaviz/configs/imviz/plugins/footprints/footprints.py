@@ -7,6 +7,7 @@ from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMess
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import LinkUpdatedMessage
 from jdaviz.core.marks import FootprintOverlay
+from jdaviz.core.region_translators import regions2roi
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         EditableSelectPluginComponent,
@@ -460,7 +461,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             if wcs is None:
                 continue
             existing_overlays = self._get_marks(viewer, self.overlay_selected)
-            regs = [r for r in regs if isinstance(r, regions.PolygonSkyRegion)]
             update_existing = len(existing_overlays) == len(regs)
             if not update_existing and len(existing_overlays):
                 # clear any existing marks (length has changed, perhaps a new preset)
@@ -471,21 +471,38 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
             new_marks = []
             for i, reg in enumerate(regs):
-                pixel_region = reg.to_pixel(wcs)
-                if not isinstance(reg, regions.PolygonSkyRegion):  # pragma: nocover
-                    # if we ever want to support plotting centers as well,
-                    # see jwst_novt/interact/display.py
-                    continue
+                if not isinstance(reg, regions.Region) and not hasattr(reg, 'to_pixel'):  # pragma: nocover
+                    # NOTE: this is pre-checked for API/file selection in the file-parser
+                    # and built-in presets should be designed to never hit this error
+                    # in the future we may support pixel regions as well, but need to decide how
+                    # to properly handle those scenarios for both WCS and pixel-linking
+                    raise NotImplementedError("regions must all be SkyRegions")
 
-                x_coords = pixel_region.vertices.x
-                y_coords = pixel_region.vertices.y
+                pixel_region = reg.to_pixel(wcs)
+
+                if isinstance(pixel_region, regions.PolygonPixelRegion):
+                    x_coords = pixel_region.vertices.x
+                    y_coords = pixel_region.vertices.y
+
+                # bqplot marker does not respect image pixel sizes, so need to render as polygon.
+                elif isinstance(pixel_region, regions.RectanglePixelRegion):
+                    pixel_region = pixel_region.to_polygon()
+                    x_coords = pixel_region.vertices.x
+                    y_coords = pixel_region.vertices.y
+                elif isinstance(pixel_region, (regions.CirclePixelRegion,
+                                               regions.EllipsePixelRegion,
+                                               regions.CircleAnnulusPixelRegion)):
+                    roi = regions2roi(pixel_region)
+                    x_coords, y_coords = roi.to_polygon()
+                else:  # pragma: no cover
+                    raise NotImplementedError("could not parse coordinates from regions - please report this issue")  # noqa
+
                 if update_existing:
                     mark = existing_overlays[i]
                     with mark.hold_sync():
                         mark.x = x_coords
                         mark.y = y_coords
                 else:
-                    # instrument aperture regions
                     mark = FootprintOverlay(
                         viewer,
                         self.overlay_selected,
@@ -493,8 +510,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                         y=y_coords,
                         colors=[self.color],
                         fill_opacities=[self.fill_opacity],
-                        visible=visible
-                    )
+                        visible=visible)
                     new_marks.append(mark)
 
             if not update_existing and len(new_marks):

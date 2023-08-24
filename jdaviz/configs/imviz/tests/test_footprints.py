@@ -3,7 +3,7 @@ import pytest
 import astropy.units as u
 from astropy.nddata import NDData
 from astropy.coordinates import SkyCoord
-from regions import PixCoord, CirclePixelRegion, CircleSkyRegion
+from regions import PixCoord, CirclePixelRegion, CircleSkyRegion, RectangleSkyRegion
 
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.configs.imviz.plugins.footprints.preset_regions import _all_apertures
@@ -102,6 +102,11 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         # test single region (footprints contain multiple regions)
         valid_region_sky = CircleSkyRegion(center=SkyCoord(42, 43, unit='deg', frame='fk5'),
                                            radius=3 * u.deg)
+        plugin.import_region(valid_region_sky)
+
+        # test RectangleSkyRegion -> RectanglePixelRegion
+        valid_region_sky = RectangleSkyRegion(center=SkyCoord(42, 43, unit='deg', frame='fk5'),
+                                              height=3 * u.deg, width=2 * u.deg)
         plugin.import_region(valid_region_sky)
 
         with pytest.raises(ValueError):

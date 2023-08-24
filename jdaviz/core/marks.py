@@ -59,7 +59,7 @@ class OffscreenLinesMarks(HubListener):
         self.right.text = [f'{oob_right} \u25b6' if oob_right > 0 else '']
 
 
-class PluginMark():
+class PluginMark:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.xunit = None
