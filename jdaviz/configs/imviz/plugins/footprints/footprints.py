@@ -411,6 +411,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             self.preset.import_file(region)
         else:
             raise TypeError("region must be a regions.Regions object or string (file path)")
+        # _preset_args_changed was probably already triggered by from_file traitlet changing, but
+        # that may have been before the file was fully parsed and available from preset.selected_obj
+        self._preset_args_changed()
 
     @property
     def overlay_regions(self):
@@ -449,6 +452,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         if len(name):
             self._overlays[self.overlay_selected][name] = msg.get('new')
+        if name == 'from_file' and 'regions' in self._overlays[self.overlay_selected]:
+            # then the file may have been changed from the API, so we need to clear the cache
+            # the cache will then be re-populated on the call to self.overlay_regions below
+            del self._overlays[self.overlay_selected]['regions']
 
         regs = self.overlay_regions
 
@@ -471,7 +478,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
             new_marks = []
             for i, reg in enumerate(regs):
-                if not isinstance(reg, regions.Region) and not hasattr(reg, 'to_pixel'):  # pragma: nocover
+                if (not isinstance(reg, regions.Region)
+                        and not hasattr(reg, 'to_pixel')):  # pragma: nocover
                     # NOTE: this is pre-checked for API/file selection in the file-parser
                     # and built-in presets should be designed to never hit this error
                     # in the future we may support pixel regions as well, but need to decide how
