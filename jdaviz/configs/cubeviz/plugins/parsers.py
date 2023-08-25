@@ -506,7 +506,7 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
 def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
                    flux_viewer_reference_name=None,
                    uncert_viewer_reference_name=None,
-                   meta=None):
+                   meta={}):
     if data_label is None:
         data_label = app.return_data_label(file_obj)
 

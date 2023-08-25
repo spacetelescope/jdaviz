@@ -602,33 +602,29 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             # default to Flux Density for flux density or uncaught types
             flux_unit_type = "Flux density"
 
-        # Set x axes labels for the spectrum viewer
-        x_disp_unit = self.state.x_display_unit
-
         is_ramp = (
             self.state.reference_data and
             self.state.reference_data.meta.get(cubeviz_ramp_meta_flag, False)
         )
 
-        if not is_ramp:
-            flux_unit_type = "Flux density"
-            x_unit = u.Unit(x_disp_unit) if x_disp_unit else u.dimensionless_unscaled
-            if x_unit.is_equivalent(u.m):
-                spectral_axis_unit_type = "Wavelength"
-            elif x_unit.is_equivalent(u.Hz):
-                spectral_axis_unit_type = "Frequency"
-            elif x_unit.is_equivalent(u.pixel):
-                spectral_axis_unit_type = "Pixel"
-            else:
-                spectral_axis_unit_type = str(x_unit.physical_type).title()
-            x_disp_unit = f'[{self.state.x_display_unit}]'
-        else:
-            flux_unit_type = "Counts"
+        # Set x axes labels for the spectrum viewer
+        x_disp_unit = self.state.x_display_unit
+        x_unit = u.Unit(x_disp_unit) if x_disp_unit else u.dimensionless_unscaled
+
+        if is_ramp:
             spectral_axis_unit_type = "Sample"
-            x_disp_unit = self.state.x_display_unit = ''
+            self.state.x_display_unit = ''
+        elif x_unit.is_equivalent(u.m):
+            spectral_axis_unit_type = "Wavelength"
+        elif x_unit.is_equivalent(u.Hz):
+            spectral_axis_unit_type = "Frequency"
+        elif x_unit.is_equivalent(u.pixel):
+            spectral_axis_unit_type = "Pixel"
+        else:
+            spectral_axis_unit_type = str(x_unit.physical_type).title()
 
         with self.figure.hold_sync():
-            self.figure.axes[0].label = f"{spectral_axis_unit_type} {x_disp_unit}"
+            self.figure.axes[0].label = f"{spectral_axis_unit_type} [{self.state.x_display_unit}]"
             self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
 
             # Make it so axis labels are not covering tick numbers.

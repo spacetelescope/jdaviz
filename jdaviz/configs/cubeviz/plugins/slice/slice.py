@@ -172,7 +172,7 @@ class Slice(PluginTemplateMixin):
                     # conversion can be done efficiently
                     self._update_data(viewer_data[0].spectral_axis)
                 else:
-                    sample_index = np.arange(1, 1 + viewer_data[0].shape[-1]) * u.one
+                    sample_index = np.arange(viewer_data[0].shape[-1]) * u.one
                     self._update_data(sample_index)
 
             if viewer not in self._indicator_viewers:
@@ -196,7 +196,7 @@ class Slice(PluginTemplateMixin):
             return  # pragma: no cover
 
         if reference_data.meta.get(cubeviz_ramp_meta_flag, False):
-            sample_index = np.arange(1, 1 + reference_data['flux'].shape[-1]) * u.one
+            sample_index = np.arange(reference_data['flux'].shape[-1]) * u.one
             self._update_data(sample_index)
         else:
             self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
