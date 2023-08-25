@@ -818,8 +818,6 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
       </plugin-file-import>
     """
     def __init__(self, plugin, **kwargs):
-        """
-        """
         self._cached_obj = {}
 
         if "From File..." not in kwargs['manual_options']:
@@ -911,6 +909,7 @@ class HasFileImportSelect(VuetifyTemplate, HubListener):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # imported here to avoid circular import
         from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 
         start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)

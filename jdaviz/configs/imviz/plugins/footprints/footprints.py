@@ -1,6 +1,6 @@
 from traitlets import Bool, List, Unicode, observe
-import regions
 import numpy as np
+import regions
 
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
@@ -397,7 +397,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     def import_region(self, region):
         """
-        Import an astropy regions object (or file).
+        Import an Astropy regions object (or file).
 
         Parameters
         ----------
@@ -477,7 +477,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             new_marks = []
             for i, reg in enumerate(regs):
                 if (not isinstance(reg, regions.Region)
-                        and not hasattr(reg, 'to_pixel')):  # pragma: nocover
+                        or not hasattr(reg, 'to_pixel')):   # pragma: no cover
                     # NOTE: this is pre-checked for API/file selection in the file-parser
                     # and built-in presets should be designed to never hit this error
                     # in the future we may support pixel regions as well, but need to decide how
