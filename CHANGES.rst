@@ -11,6 +11,9 @@ Bug Fixes
   the selection when the choices change if any of the previous entries are still
   valid. [#2344]
 
+- Fixed Plot Options stretch histogram bug that raised an error when a spatial subset
+  was selected in Imviz and Cubeviz. [#2393]
+
 Cubeviz
 ^^^^^^^
 
