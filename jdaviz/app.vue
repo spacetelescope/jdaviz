@@ -431,4 +431,12 @@ a:active {
    * appearing */
   overflow: hidden;
 }
+
+.jupyter-widgets.bqplot.figure .axislabel {
+    /* consistent with other labels (legend, buttons, plugin expansion menu labels, etc)*/
+    font-size: 15px !important;
+    font-family: Roboto, sans-serif !important;
+    font-weight: 500 !important;
+}
+
 </style>

@@ -36,6 +36,9 @@ Specviz2d
 API Changes
 -----------
 
+- Adjusted axis ticks and labels for spectrum viewers to be more readable.
+  Axes on image viewers no longer show by default. [#2372]
+
 Cubeviz
 ^^^^^^^
 

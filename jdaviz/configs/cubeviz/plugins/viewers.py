@@ -36,6 +36,9 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
 
+        # Hide axes by default
+        self.state.show_axes = False
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.jdaviz_helper._default_spectrum_viewer_reference_name

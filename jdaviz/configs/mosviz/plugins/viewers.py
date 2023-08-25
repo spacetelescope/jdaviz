@@ -212,10 +212,22 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
         self.figure.axes[1].label = "y: pixels"
         self.figure.axes[1].tick_format = None
-        self.figure.axes[1].label_location = "start"
+        self.figure.axes[1].label_location = "middle"
 
+        # Sync with Spectrum1D viewer (that is also used by other viz).
         # Make it so y axis label is not covering tick numbers.
-        self.figure.axes[1].label_offset = "-50"
+        self.figure.fig_margin["left"] = 95
+        self.figure.fig_margin["bottom"] = 60
+        self.figure.send_state('fig_margin')  # Force update
+        self.figure.axes[0].label_offset = "40"
+        self.figure.axes[1].label_offset = "-70"
+        # NOTE: with tick_style changed below, the default responsive ticks in bqplot result
+        # in overlapping tick labels.  For now we'll hardcode at 8, but this could be removed
+        # (default to None) if/when bqplot auto ticks react to styling options.
+        self.figure.axes[1].num_ticks = 8
+
+        for i in (0, 1):
+            self.figure.axes[i].tick_style = {'font-size': 15, 'font-weight': 600}
 
 
 @viewer_registry("mosviz-profile-viewer", label="Profile 1D")
@@ -229,6 +241,10 @@ class MosvizProfileView(SpecvizProfileView):
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
+
+    def set_plot_axes(self):
+        super().set_plot_axes()
+        self.figure.axes[1].num_ticks = 5
 
 
 @viewer_registry("mosviz-table-viewer", label="Table (Mosviz)")
