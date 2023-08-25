@@ -6,6 +6,7 @@ from astropy.visualization import PercentileInterval
 from ipywidgets import widget_serialization
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
+from glue.core.subset_group import GroupedSubset
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState
@@ -568,6 +569,10 @@ class PlotOptions(PluginTemplateMixin):
             data = self.layer.selected_obj[0].layer
         else:
             # skip further updates if no data are available:
+            return
+
+        if isinstance(data, GroupedSubset):
+            # don't update histogram for subsets:
             return
 
         comp = data.get_component(data.main_components[0])
