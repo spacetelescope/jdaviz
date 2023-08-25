@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: [ubuntu, windows, macos]
+        os: [macos]
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
