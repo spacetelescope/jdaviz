@@ -1,6 +1,6 @@
 <template>
   <div>
-  <v-row v-if="items.length > 1 || show_if_single_entry">
+  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry">
     <v-select
       :menu-props="{ left: true }"
       attach
