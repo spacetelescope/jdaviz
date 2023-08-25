@@ -233,8 +233,10 @@ def skip_if_no_updates_since_last_active(skip_if_not_active=True):
 
             # call the method as normal, and add it to the skip list (to be skipped if is_active
             # toggles before any *other* messages are received)
+            # if the method returns False, then the method is not considered to have fully run
+            # and so is NOT added to the skip list
             ret_ = meth(self, msg)
-            if meth.__name__ not in self._methods_skip_since_last_active:
+            if ret_ is not False and meth.__name__ not in self._methods_skip_since_last_active:  # noqa
                 self._methods_skip_since_last_active.append(meth.__name__)
             return ret_
 
