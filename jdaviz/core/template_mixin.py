@@ -35,6 +35,7 @@ from jdaviz.utils import get_subset_type
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
+           'skip_if_no_updates_since_last_active',
            'ViewerPropertiesMixin',
            'BasePluginComponent',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
@@ -212,6 +213,37 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
                                   if k.split(':')[0] != viewer_id}
 
 
+def skip_if_no_updates_since_last_active(skip_if_not_active=True):
+    def decorator(meth):
+        def wrapper(self, msg={}):
+            if isinstance(msg, dict) and msg.get('name', None) == 'is_active':
+                if self.is_active and meth.__name__ in self._methods_skip_since_last_active:
+                    # then we haven't received any other messages since the last time the plugin
+                    # received an is_active switch, and so we should skip calling the method.
+                    return
+            elif not self.is_active:
+                # then we've received some other message while the plugin is inactive.
+                # Next time the plugin becomes active we want to call the wrapped method,
+                # so we'll remove from the skip list.
+                if meth.__name__ in self._methods_skip_since_last_active:
+                    self._methods_skip_since_last_active.remove(meth.__name__)
+
+            if skip_if_not_active and not self.is_active:
+                return
+
+            # call the method as normal, and add it to the skip list (to be skipped if is_active
+            # toggles before any *other* messages are received)
+            # if the method returns False, then the method is not considered to have fully run
+            # and so is NOT added to the skip list
+            ret_ = meth(self, msg)
+            if ret_ is not False and meth.__name__ not in self._methods_skip_since_last_active:  # noqa
+                self._methods_skip_since_last_active.append(meth.__name__)
+            return ret_
+
+        return wrapper
+    return decorator
+
+
 class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
@@ -224,8 +256,15 @@ class PluginTemplateMixin(TemplateMixin):
 
     def __init__(self, **kwargs):
         self._viewer_callbacks = {}
-        self._inactive_thread = None  # thread checking for alive pings to control plugin_opened
+        # _inactive_thread: thread checking for alive pings to control plugin_opened
+        self._inactive_thread = None
         self._ping_timestamp = 0
+        # _methods_skip_since_last_active: methods that should be skipped when is_active is next
+        # set to True because no changes have been made.  This can be used to prevent queuing
+        # of expensive method calls, especially when the browser throttles the ping resulting
+        # in repeated toggling of is_active.  To use, decorate any method that observes traitlet
+        # changes (including is_active) with @skip_if_no_updates_since_last_active()
+        self._methods_skip_since_last_active = []
         super().__init__(**kwargs)
 
     @property

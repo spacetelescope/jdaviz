@@ -8,7 +8,8 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
-                                        AddResults)
+                                        AddResults,
+                                        skip_if_no_updates_since_last_active)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
@@ -199,7 +200,7 @@ class SpectralExtraction(PluginTemplateMixin):
         super().__init__(*args, **kwargs)
 
         self._marks = {}
-        self._do_marks = kwargs.get('interactive', True)
+        self._do_marks = False
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
@@ -317,6 +318,10 @@ class SpectralExtraction(PluginTemplateMixin):
         self.ext_add_results.label_whitelist_overwrite = ['Spectrum 1D']
         self.ext_results_label_default = 'Spectrum 1D'
 
+        # continue to not use live-preview marks for the instance of the plugin used for the
+        # initial spectral extraction during load_data
+        self._do_marks = kwargs.get('interactive', True)
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -408,9 +413,15 @@ class SpectralExtraction(PluginTemplateMixin):
             else:
                 raise ValueError("step must be one of: trace, bg, ext")
 
-    @observe('is_active', 'interactive_extract')
-    def _update_plugin_marks(self, *args):
+    # also listens to is_active from any _interaction_in_*_step methods
+    def _update_plugin_marks(self, msg={}):
         if not self._do_marks:
+            return
+        if self.app._jdaviz_helper is None:
+            return
+        if not len(self._marks):
+            # plugin has never been opened, no need to create marks just to hide them,
+            # we'll create marks when the plugin is first opened
             return
 
         if not (self.is_active):
@@ -420,25 +431,8 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if self.active_step == '':
             # on load, default to 'extract' (this will then trigger the observe to update the marks)
-            self._interaction_in_ext_step()
+            self.active_step = 'ext'
             return
-
-        # update extracted 1d spectrum preview, regardless of the step
-        if self.interactive_extract:
-            try:
-                sp1d = self.export_extract_spectrum(add_data=False)
-            except Exception as e:
-                # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
-                # NOTE: FitTrace or manual background are often giving a
-                # "background regions overlapped" error from specreduce
-                self.ext_specreduce_err = repr(e)
-                self.marks['extract'].clear()
-            else:
-                self.ext_specreduce_err = ''
-                self.marks['extract'].update_xy(sp1d.spectral_axis.value,
-                                                sp1d.flux.value)
-        else:
-            self.marks['extract'].clear()
 
         display_marks = {'trace': ['trace', 'extract'],
                          'bg': ['trace',
@@ -462,6 +456,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         if not self._do_marks:
             return {}
+
         viewer2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
         viewer1d = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
 
@@ -494,14 +489,49 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return self._marks
 
-    @observe('trace_dataset_selected', 'trace_type_selected',
+    @observe('interactive_extract')
+    @skip_if_no_updates_since_last_active()
+    def _update_interactive_extract(self, event={}):
+        # also called by any of the _interaction_in_*_step
+        if not self._do_marks:
+            return False
+
+        if self.interactive_extract:
+            try:
+                sp1d = self.export_extract_spectrum(add_data=False)
+            except Exception as e:
+                # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
+                # NOTE: FitTrace or manual background are often giving a
+                # "background regions overlapped" error from specreduce
+                self.ext_specreduce_err = repr(e)
+                self.marks['extract'].clear()
+            else:
+                self.ext_specreduce_err = ''
+                self.marks['extract'].update_xy(sp1d.spectral_axis.value,
+                                                sp1d.flux.value)
+        else:
+            self.marks['extract'].clear()
+
+        if self.interactive_extract and self.active_step == 'bg':
+            try:
+                spec = self.export_bg_spectrum()
+            except Exception:
+                self.marks['bg_spec'].clear()
+            else:
+                self.marks['bg_spec'].update_xy(spec.spectral_axis, spec.flux)
+        else:
+            self.marks['bg_spec'].clear()
+
+    @observe('is_active', 'trace_dataset_selected', 'trace_type_selected',
              'trace_trace_selected', 'trace_offset', 'trace_order',
              'trace_pixel', 'trace_peak_method_selected',
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
-        if not self.is_active or not self._do_marks:
+        if not self._do_marks:
             return
-        if event.get('name', '') == 'active_step' and event.get('new') != 'trace':
+        if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'trace')
+                or not self.is_active):
+            self._update_plugin_marks(event)
             return
 
         try:
@@ -513,16 +543,21 @@ class SpectralExtraction(PluginTemplateMixin):
             self.marks['trace'].update_xy(range(len(trace.trace)),
                                           trace.trace)
             self.marks['trace'].line_style = 'solid'
-        self.active_step = 'trace'
-        self._update_plugin_marks()
 
-    @observe('bg_dataset_selected', 'bg_type_selected',
+        self._update_interactive_extract(event)
+
+        self.active_step = 'trace'
+        self._update_plugin_marks(event)
+
+    @observe('is_active', 'bg_dataset_selected', 'bg_type_selected',
              'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
     def _interaction_in_bg_step(self, event={}):
-        if not self.is_active or not self._do_marks:
+        if not self._do_marks:
             return
-        if event.get('name', '') == 'active_step' and event.get('new') != 'bg':
+        if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
+                or not self.is_active):
+            self._update_plugin_marks(event)
             return
 
         try:
@@ -563,22 +598,19 @@ class SpectralExtraction(PluginTemplateMixin):
                 for mark in ['bg2_center', 'bg2_lower', 'bg2_upper']:
                     self.marks[mark].clear()
 
-        try:
-            spec = self.export_bg_spectrum()
-        except Exception:
-            self.marks['bg_spec'].clear()
-        else:
-            self.marks['bg_spec'].update_xy(spec.spectral_axis, spec.flux)
+        self._update_interactive_extract(event)
 
         self.active_step = 'bg'
-        self._update_plugin_marks()
+        self._update_plugin_marks(event)
 
-    @observe('ext_dataset_selected', 'ext_trace_selected',
+    @observe('is_active', 'ext_dataset_selected', 'ext_trace_selected',
              'ext_type_selected', 'ext_width', 'active_step')
     def _interaction_in_ext_step(self, event={}):
-        if not self.is_active or not self._do_marks:
+        if not self._do_marks:
             return
-        if event.get('name', '') == 'active_step' and event.get('new') != 'ext':
+        if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
+                or not self.is_active):
+            self._update_plugin_marks(event)
             return
 
         try:
@@ -601,8 +633,10 @@ class SpectralExtraction(PluginTemplateMixin):
                 for mark in ['ext_lower', 'ext_upper']:
                     self.marks[mark].clear()
 
+        self._update_interactive_extract(event)
+
         self.active_step = 'ext'
-        self._update_plugin_marks()
+        self._update_plugin_marks(event)
 
         # TODO: remove this, the traitlet, and the row in spectral_extraction.vue
         # when specutils handles the warning/exception

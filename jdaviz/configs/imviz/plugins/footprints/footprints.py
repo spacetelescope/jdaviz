@@ -232,6 +232,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin):
                                    if getattr(m, 'overlay', None) != lbl]
 
     @observe('is_active', 'viewer_items')
+    # NOTE: intentionally not using skip_if_no_updates_since_last_active since this only controls
+    # visibility of overlay (and creating the first instance)
     def _on_is_active_changed(self, *args):
         if not hasattr(self, 'overlay'):  # pragma: nocover
             # plugin/traitlet startup

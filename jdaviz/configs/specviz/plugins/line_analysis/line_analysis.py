@@ -30,7 +30,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
                                         SubsetSelect,
-                                        SPATIAL_DEFAULT_TEXT)
+                                        SPATIAL_DEFAULT_TEXT,
+                                        skip_if_no_updates_since_last_active)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 
@@ -209,13 +210,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         """
         if (msg.subset.label in [self.spectral_subset_selected,
                                  self.spatial_subset_selected,
-                                 self.continuum_subset_selected]
-                and self.is_active):
-            self._calculate_statistics()
+                                 self.continuum_subset_selected]):
+            self._calculate_statistics(msg)
 
     def _on_global_display_unit_changed(self, msg):
-        if self.is_active:
-            self._calculate_statistics()
+        self._calculate_statistics(msg)
 
     @observe('is_active')
     def _is_active_changed(self, msg):
@@ -224,8 +223,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         for pos, mark in self.marks.items():
             mark.visible = self.is_active
-        if self.is_active:
-            self._calculate_statistics()
+        self._calculate_statistics(msg)
 
     @deprecated(since="3.6", alternative="keep_active")
     def show_continuum_marks(self):
@@ -302,7 +300,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
     @observe("spatial_subset_selected", "spectral_subset_selected", "dataset_selected",
              "continuum_subset_selected", "width")
-    def _calculate_statistics(self, *args, **kwargs):
+    @skip_if_no_updates_since_last_active()
+    def _calculate_statistics(self, msg={}):
         """
         Run the line analysis functions on the selected data/subset and
         display the results.

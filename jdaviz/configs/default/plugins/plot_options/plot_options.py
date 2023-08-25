@@ -13,7 +13,8 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
-                                        PlotOptionsSyncState, Plot)
+                                        PlotOptionsSyncState, Plot,
+                                        skip_if_no_updates_since_last_active)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
@@ -257,12 +258,6 @@ class PlotOptions(PluginTemplateMixin):
     show_viewer_labels = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-        # track whether the stretch histogram needs an update (some entry has changed) if is_active
-        # becomes True, to address potential lag from a backlog of calls to
-        # _update_stretch_histogram if the browser throttles pings
-        # (https://github.com/spacetelescope/jdaviz/issues/2317)
-        self._stretch_histogram_needs_update = True
-
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')  # noqa
@@ -507,6 +502,7 @@ class PlotOptions(PluginTemplateMixin):
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
+    @skip_if_no_updates_since_last_active()
     def _update_stretch_histogram(self, msg={}):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet
@@ -522,15 +518,6 @@ class PlotOptions(PluginTemplateMixin):
             # override msg as an empty dict so that the rest of the logic doesn't have to check
             # its type
             msg = {}
-
-        if msg.get('name', None) == 'is_active' and not self._stretch_histogram_needs_update:
-            # this could be re-triggering if the browser is throttling pings on the js-side
-            # and since this is expensive, could result in laggy behavior
-            return
-        elif msg.get('name', None) != 'is_active' and not self.is_active:
-            # next time is_active becomes True, we need to update the histogram plot
-            self._stretch_histogram_needs_update = True
-            return
 
         if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
             # no (image) viewer with stretch function options
@@ -638,8 +625,6 @@ class PlotOptions(PluginTemplateMixin):
             # in case only the sample has changed but its length has not,
             # we'll force the traitlet to trigger a change
             hist_mark.send_state('sample')
-
-        self._stretch_histogram_needs_update = False
 
     @observe('stretch_vmin_value')
     def _stretch_vmin_changed(self, msg=None):

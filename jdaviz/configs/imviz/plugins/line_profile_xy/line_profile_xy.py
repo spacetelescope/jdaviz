@@ -3,7 +3,8 @@ from traitlets import Any, Bool, Unicode, observe
 from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, Plot
+from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, Plot,
+                                        skip_if_no_updates_since_last_active)
 
 __all__ = ['LineProfileXY']
 
@@ -51,7 +52,7 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
     @observe('is_active')
-    def on_is_active_changed(self, *args):
+    def _is_active_changed(self, msg):
         # subscribe/unsubscribe to keypress events across all viewers
         for viewer in self.app._viewer_store.values():
             if not hasattr(viewer, 'figure'):
@@ -64,8 +65,9 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             else:
                 viewer.remove_event_callback(callback)
 
-        if self.is_active:
-            self.vue_draw_plot()
+        # pass along the msg object so that @skip_if_no_updates_since_last_active can be used
+        # to avoid re-drawing if no changes since the last time is_active was set
+        self.vue_draw_plot(msg)
 
     def _on_viewer_key_event(self, viewer, data):
         if data['key'] == 'l':
@@ -83,9 +85,10 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             self.vue_draw_plot()
 
     @observe("viewer_selected")
-    def vue_draw_plot(self, *args, **kwargs):
+    @skip_if_no_updates_since_last_active()  # called with msg passed along from _is_active_changed
+    def vue_draw_plot(self, msg={}):
         """Draw line profile plots for given Data across given X and Y indices (0-indexed)."""
-        if not self.selected_x or not self.selected_y or not self.is_active:
+        if not self.selected_x or not self.selected_y:
             return
 
         viewer = self.viewer.selected_obj

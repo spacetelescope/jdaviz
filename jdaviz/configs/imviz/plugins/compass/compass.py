@@ -2,7 +2,8 @@ from traitlets import Bool, Float, Unicode, observe
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, CanvasRotationChangedMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
+from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
+                                        skip_if_no_updates_since_last_active)
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Compass']
@@ -60,7 +61,8 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         self.canvas_flip_horizontal = viewer_item.get('canvas_flip_horizontal', False)
 
     @observe("viewer_selected", "is_active")
-    def _compass_with_new_viewer(self, *args, **kwargs):
+    @skip_if_no_updates_since_last_active()
+    def _compass_with_new_viewer(self, msg={}):
         if not hasattr(self, 'viewer'):
             # mixin object not yet initialized
             return
