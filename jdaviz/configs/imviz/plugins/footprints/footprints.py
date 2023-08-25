@@ -83,6 +83,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     fill_opacity = FloatHandleEmpty(0.1).tag(sync=True)
 
     # PRESET OVERLAYS AND OPTIONS
+    has_pysiaf = Bool(preset_regions._has_pysiaf).tag(sync=True)
     preset_items = List().tag(sync=True)
     preset_selected = Unicode().tag(sync=True)
 
@@ -94,12 +95,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     # TODO: dithering/mosaic options?
 
     def __init__(self, *args, **kwargs):
-        if not preset_regions._has_pysiaf:  # pragma: nocover
-            # NOTE: if we want to keep this as a soft-dependency and implement other
-            # footprint/region options later, we could just disable the JWST presets
-            # instead of the entire plugin
-            self.disabled_msg = 'this plugin requires pysiaf to be installed'
-
         self._ignore_traitlet_change = False
         self._overlays = {}
 
@@ -118,10 +113,15 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_rename=self._on_overlay_rename,
                                                      on_remove=self._on_overlay_remove)
 
+        if self.has_pysiaf:
+            preset_options = list(preset_regions._instruments.keys())
+        else:
+            preset_options = ['None']
+        preset_options.append('From File...')
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
                                                       selected='preset_selected',
-                                                      manual_options=list(preset_regions._instruments.keys())+['From File...'])  # noqa
+                                                      manual_options=preset_options)
 
         # set the custom file parser for importing catalogs
         self.preset._file_parser = self._file_parser
@@ -134,15 +134,13 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     @property
     def user_api(self):
-        if preset_regions._has_pysiaf:
-            return PluginUserApi(self, expose=('overlay',
-                                               'rename_overlay', 'add_overlay', 'remove_overlay',
-                                               'viewer', 'visible', 'color', 'fill_opacity',
-                                               'preset', 'import_region',
-                                               'center_on_viewer', 'ra', 'dec', 'pa',
-                                               'v2_offset', 'v3_offset',
-                                               'overlay_regions'))
-        return PluginUserApi(self)
+        return PluginUserApi(self, expose=('overlay',
+                                           'rename_overlay', 'add_overlay', 'remove_overlay',
+                                           'viewer', 'visible', 'color', 'fill_opacity',
+                                           'preset', 'import_region',
+                                           'center_on_viewer', 'ra', 'dec', 'pa',
+                                           'v2_offset', 'v3_offset',
+                                           'overlay_regions'))
 
     def _get_marks(self, viewer, overlay=None):
         matches = [mark for mark in viewer.figure.marks
@@ -431,7 +429,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             if 'regions' not in overlay and isinstance(self.preset.selected_obj, regions.Regions):
                 overlay['regions'] = self.preset.selected_obj
             regs = overlay.get('regions', [])
-        elif self.preset_selected in preset_regions._instruments:
+        elif self.has_pysiaf and self.preset_selected in preset_regions._instruments:
             regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
         else:  # pragma: no cover
             regs = []

@@ -78,6 +78,10 @@
       </div>
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
+      <v-alert v-if="!has_pysiaf" type="warning" style="margin-left: -12px; margin-right: -12px">
+        <span>To use JWST footprints, install pysiaf and restart jdaviz</span>
+      </v-alert>
+
       <plugin-file-import-select
         :items="preset_items"
         :selected.sync="preset_selected"
@@ -93,7 +97,7 @@
         <g-file-import id="file-uploader"></g-file-import>
       </plugin-file-import-select>
 
-      <div v-if="preset_selected !== 'From File...'">
+      <div v-if="preset_selected !== 'From File...' && preset_selected !== 'None'">
         <v-row>
           <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
           <j-tooltip v-for="viewer_ref in viewer_selected" :tooltipcontent="'center RA/DEC on current zoom-limits of '+viewer_ref">
