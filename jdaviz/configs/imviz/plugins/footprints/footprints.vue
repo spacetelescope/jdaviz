@@ -78,86 +78,95 @@
       </div>
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
-      <v-row>
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          :items="preset_items.map(i => i.label)"
-          v-model="preset_selected"
-          label="Preset"
-          hint="Select the preset instrument footprint."
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <v-alert v-if="!has_pysiaf" type="warning" style="margin-left: -12px; margin-right: -12px">
+        <span>To use JWST footprints, install pysiaf and restart jdaviz</span>
+      </v-alert>
 
-      <v-row>
-        <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
-        <j-tooltip v-for="viewer_ref in viewer_selected" :tooltipcontent="'center RA/DEC on current zoom-limits of '+viewer_ref">
-        <v-btn @click="() => center_on_viewer(viewer_ref)">
-          {{viewer_ref}}
-        </v-btn>
-        </j-tooltip>
-      </v-row>
+      <plugin-file-import-select
+        :items="preset_items"
+        :selected.sync="preset_selected"
+        label="Preset"
+        hint="Preset instrument or import from a file."
+        :from_file.sync="from_file"
+        :from_file_message="from_file_message"
+        dialog_title="Import Region"
+        dialog_hint="Select a region file"
+        @click-cancel="file_import_cancel()"
+        @click-import="file_import_accept()"
+      >
+        <g-file-import id="file-uploader"></g-file-import>
+      </plugin-file-import-select>
 
-      <v-row>
-        <v-text-field
-          v-model.number="ra"
-          type="number"
-          step="0.01"
-          :rules="[() => ra!=='' || 'This field is required']"
-          label="RA"
-          hint="Right Ascension (degrees)"
-          persistent-hint
-        ></v-text-field>
-      </v-row>
+      <div v-if="preset_selected !== 'From File...' && preset_selected !== 'None'">
+        <v-row>
+          <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
+          <j-tooltip v-for="viewer_ref in viewer_selected" :tooltipcontent="'center RA/DEC on current zoom-limits of '+viewer_ref">
+          <v-btn @click="() => center_on_viewer(viewer_ref)">
+            {{viewer_ref}}
+          </v-btn>
+          </j-tooltip>
+        </v-row>
 
-      <v-row>
-        <v-text-field
-          v-model.number="dec"
-          type="number"
-          step="0.01"
-          :rules="[() => dec!=='' || 'This field is required']"
-          label="Dec"
-          hint="Declination (degrees)"
-          persistent-hint
-        ></v-text-field>
-      </v-row>
+        <v-row>
+          <v-text-field
+            v-model.number="ra"
+            type="number"
+            step="0.01"
+            :rules="[() => ra!=='' || 'This field is required']"
+            label="RA"
+            hint="Right Ascension (degrees)"
+            persistent-hint
+          ></v-text-field>
+        </v-row>
 
-      <v-row>
-        <v-text-field
-          v-model.number="pa"
-          type="number"
-          :rules="[() => pa!=='' || 'This field is required']"
-          label="Position Angle"
-          hint="Position Angle (degrees) measured from North
-                to central vertical axis in North to East direction."
-          persistent-hint
-        ></v-text-field>
-      </v-row>
+        <v-row>
+          <v-text-field
+            v-model.number="dec"
+            type="number"
+            step="0.01"
+            :rules="[() => dec!=='' || 'This field is required']"
+            label="Dec"
+            hint="Declination (degrees)"
+            persistent-hint
+          ></v-text-field>
+        </v-row>
 
-      <v-row>
-        <v-text-field
-          v-model.number="v2_offset"
-          type="number"
-          :rules="[() => v2_offset!=='' || 'This field is required']"
-          label="V2 Offset"
-          hint="Additional V2 offset in telescope coordinates to apply to instrument
-                center, as from a dither pattern."
-          persistent-hint
-        ></v-text-field>
-      </v-row>
-      
-      <v-row>
-        <v-text-field
-          v-model.number="v3_offset"
-          type="number"
-          :rules="[() => v3_offset!=='' || 'This field is required']"
-          label="V3 Offset"
-          hint="Additional V3 offset in telescope coordinates to apply to instrument
-                center, as from a dither pattern."
-          persistent-hint
-        ></v-text-field>
-      </v-row>
+        <v-row>
+          <v-text-field
+            v-model.number="pa"
+            type="number"
+            :rules="[() => pa!=='' || 'This field is required']"
+            label="Position Angle"
+            hint="Position Angle (degrees) measured from North
+                  to central vertical axis in North to East direction."
+            persistent-hint
+          ></v-text-field>
+        </v-row>
+
+        <v-row>
+          <v-text-field
+            v-model.number="v2_offset"
+            type="number"
+            :rules="[() => v2_offset!=='' || 'This field is required']"
+            label="V2 Offset"
+            hint="Additional V2 offset in telescope coordinates to apply to instrument
+                  center, as from a dither pattern."
+            persistent-hint
+          ></v-text-field>
+        </v-row>
+        
+        <v-row>
+          <v-text-field
+            v-model.number="v3_offset"
+            type="number"
+            :rules="[() => v3_offset!=='' || 'This field is required']"
+            label="V3 Offset"
+            hint="Additional V3 offset in telescope coordinates to apply to instrument
+                  center, as from a dither pattern."
+            persistent-hint
+          ></v-text-field>
+        </v-row>
+      </div>
     </div>
 
   </j-tray-plugin>

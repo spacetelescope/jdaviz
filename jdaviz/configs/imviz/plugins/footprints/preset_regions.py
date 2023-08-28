@@ -52,7 +52,7 @@ _all_apertures = {'NIRSpec': ["NRS_FULL_MSA1",
                                    "NRCB1_FULL",
                                    "NRCB2_FULL",
                                    "NRCB3_FULL",
-                                   "NRCB4_FULL",],
+                                   "NRCB4_FULL"],
                   'NIRCam:long': ["NRCA5_FULL", "NRCB5_FULL"],
                   'NIRISS': ['NIS_AMIFULL'],
                   'MIRI': ['MIRIM_FULL'],
@@ -92,8 +92,8 @@ def jwst_footprint(instrument, ra, dec, pa, v2_offset=0.0, v3_offset=0.0, apertu
     if not _has_pysiaf:
         raise ImportError('jwst_footprint requires pysiaf to be installed')
 
-    if instrument not in _instruments:
-        raise ValueError(f"instrument must be one of {[', '].join(_instruments.keys())}")
+    if instrument not in _instruments:  # pragma: no cover
+        raise ValueError(f"instrument must be one of {', '.join(_instruments.keys())}")
 
     siaf_interface = pysiaf.Siaf(_instruments.get(instrument))
 

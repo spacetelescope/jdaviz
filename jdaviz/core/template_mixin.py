@@ -5,6 +5,7 @@ import astropy.units as u
 import bqplot
 from contextlib import contextmanager
 import numpy as np
+import os
 import threading
 import time
 
@@ -45,6 +46,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'DatasetSelect', 'DatasetSelectMixin',
+           'FileImportSelectPluginComponent', 'HasFileImportSelect',
            'Table', 'TableMixin',
            'Plot', 'PlotMixin',
            'AutoTextField', 'AutoTextFieldMixin',
@@ -519,6 +521,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         filters = kwargs.pop('filters', [])[:]  # [:] needed to force copy from kwarg default
 
         super().__init__(*args, **kwargs)
+        self._selected_previous = None
         self._cached_properties = ["selected_obj", "selected_item"]
 
         self._default_mode = default_mode
@@ -607,6 +610,15 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         cycle = self.choices
         curr_ind = cycle.index(self.selected)
         self.selected = cycle[(curr_ind + 1) % len(cycle)]
+        return self.selected
+
+    def select_previous(self):
+        """
+        Apply and return the previous selection (or default option if no previous selection)
+        """
+        if self._selected_previous is None:
+            return self.select_default()
+        self.selected = self._selected_previous
         return self.selected
 
     @property
@@ -730,6 +742,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             self._apply_default_selection()
 
     def _selected_changed(self, event):
+        self._selected_previous = event['old']
         self._clear_cache()
         if self.is_multiselect:
             if not isinstance(event['new'], list):
@@ -784,6 +797,131 @@ class UnitSelectPluginComponent(SelectPluginComponent):
         # convert to default string representation from the valid choices
         ind = self.unit_choices.index(new_u)
         self.selected = self.labels[ind]
+
+
+class FileImportSelectPluginComponent(SelectPluginComponent):
+    """
+    IMPORTANT: Always accompany with HasFileImportSelect
+    IMPORTANT: currently assumed only one instance per-plugin
+
+    Example template (label and hint are optional)::
+
+      <plugin-file-import
+        title="Import File"
+        hint="Select a file to import"
+        :show="method_selected === 'From File...' && from_file.length === 0"
+        :from_file="from_file"
+        :from_file_message.sync="from_file_message"
+        @click-cancel="method_selected=method_items[0].label"
+        @click-import="file_import_accept()">
+          <g-file-import id="file-uploader"></g-file-import>
+      </plugin-file-import>
+    """
+    def __init__(self, plugin, **kwargs):
+        self._cached_obj = {}
+
+        if "From File..." not in kwargs['manual_options']:
+            kwargs['manual_options'] += ['From File...']
+
+        if not isinstance(plugin, HasFileImportSelect):  # pragma: no cover
+            raise NotImplementedError("plugin must inherit from HasFileImportSelect")
+
+        super().__init__(plugin,
+                         from_file='from_file', from_file_message='from_file_message',
+                         **kwargs)
+
+        self.plugin._file_chooser.observe(self._on_file_path_changed, names='file_path')
+        # reference back here so the plugin can reset to default
+        self.plugin._file_chooser._select_component = self
+
+        def _default_file_parser(path):
+            # by default, just return the file path itself (and allow all files)
+            return '', {path: path}
+
+        self._file_parser = kwargs.pop('file_parser', _default_file_parser)
+        self.add_observe('from_file', self._from_file_changed)
+
+    @property
+    def selected_obj(self):
+        if self.selected == 'From File...':
+            return self._cached_obj.get(self.from_file, self._file_parser(self.from_file)[1])
+        return super().selected_obj
+
+    def _from_file_changed(self, event):
+        if event['new'].startswith('API:'):
+            # object imported from the API: parsing is already handled
+            return
+        if len(event['new']):
+            if event['new'] != self.plugin._file_chooser.file_path:
+                # then need to run the parser or check for valid path
+                if not os.path.exists(event['new']):
+                    if self.selected == 'From File...':
+                        self.select_previous()
+                    raise ValueError(f"{event['new']} is not a valid file path")
+
+                # run through the parsers and check the validity
+                self._on_file_path_changed(event)
+                if self.from_file_message:
+                    if self.selected == 'From File...':
+                        self.select_previous()
+                    raise ValueError(self.from_file_message)
+
+            self.selected = 'From File...'
+
+        elif self.selected == 'From File...':
+            self.select_previous()
+
+    def _on_file_path_changed(self, event):
+        self.from_file_message = 'Checking if file is valid'
+        path = event['new']
+        if (path is not None
+                and not os.path.exists(path)
+                or not os.path.isfile(path)):
+            self.from_file_message = 'File path does not exist'
+            return
+
+        self.from_file_message, self._cached_obj = self._file_parser(path)
+
+    def import_file(self, path):
+        """
+        Select 'From File...' and set the path.
+        """
+        # NOTE: this will trigger self._from_file_changed which in turn will
+        # pass through the parser, raise an error if necessary, and set
+        # self.selected accordingly
+        self.from_file = path
+
+    def import_obj(self, obj):
+        """
+        Import a supported object directly from the API.
+        """
+        msg, self._cached_obj = self._file_parser(obj)
+        if msg:
+            raise ValueError(msg)
+        self.from_file = list(self._cached_obj.keys())[0]
+        self.selected = 'From File...'
+
+
+class HasFileImportSelect(VuetifyTemplate, HubListener):
+    from_file = Unicode().tag(sync=True)
+    from_file_message = Unicode().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # imported here to avoid circular import
+        from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
+
+        start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
+        self._file_chooser = FileChooser(start_path)
+        self.components = {'g-file-import': self._file_chooser}
+
+    def vue_file_import_accept(self, *args, **kwargs):
+        self.from_file = self._file_chooser.file_path
+
+    def vue_file_import_cancel(self, *args, **kwargs):
+        self._file_chooser._select_component.select_previous()
+        self.from_file = ''
 
 
 class EditableSelectPluginComponent(SelectPluginComponent):
