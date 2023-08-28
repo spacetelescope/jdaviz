@@ -353,6 +353,18 @@ can be accessed with ``plot_options.stretch_function.choices``:
     plot_options.select_all()
     plot_options.stretch_function = 'Square Root'
 
+
+A histogram is displayed showing the distribution of pixel values, with
+vertical lines representing the ``stretch_vmin`` and ``stretch_vmin``
+values. A stretch "curve" can be plotted under the histogram to represent
+how pixel values are mapped to the colorbar. This feature can be toggled
+on from the API with:
+
+.. code-block:: python
+
+    plot_options = imviz.plugins['Plot Options']
+    plot_options.stretch_curve_visible = True
+
 Percentile
 ----------
 

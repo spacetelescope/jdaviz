@@ -1,10 +1,14 @@
 import os
 import numpy as np
 
-from astropy.visualization import PercentileInterval
+from astropy.visualization import (
+    ManualInterval, ContrastBiasStretch, PercentileInterval
+)
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.core.subset_group import GroupedSubset
+import bqplot
+from glue.config import stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState
@@ -76,6 +80,8 @@ class PlotOptions(PluginTemplateMixin):
       limits instead of all data within the layer; not exposed for Specviz.
     * ``stretch_hist_nbins`` : number of bins to use in creating the histogram; not exposed
       for Specviz.
+    * ``stretch_curve_visible`` : (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      whether the stretch histogram's colormap "curve" is visible; not exposed for Specviz.
     * ``image_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       whether the image bitmap is visible; not exposed for Specviz.
     * ``image_color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -200,6 +206,9 @@ class PlotOptions(PluginTemplateMixin):
     stretch_hist_zoom_limits = Bool().tag(sync=True)
     stretch_hist_nbins = IntHandleEmpty(25).tag(sync=True)
     stretch_histogram_widget = Unicode().tag(sync=True)
+
+    stretch_curve_visible_value = Bool().tag(sync=True)
+    stretch_curve_visible_sync = Dict().tag(sync=True)
 
     subset_visible_value = Bool().tag(sync=True)
     subset_visible_sync = Dict().tag(sync=True)
@@ -372,6 +381,9 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch',
                                                      'stretch_function_value', 'stretch_function_sync',  # noqa
                                                      state_filter=is_image)
+        # use add_observe to ensure that the glue state syncs with the traitlet choice:
+        self.stretch_function.add_observe('stretch_function_value', self._update_stretch_curve)
+
         self.stretch_preset = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
                                                    'stretch_preset_value', 'stretch_preset_sync',
                                                    state_filter=is_image)
@@ -381,6 +393,13 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
+
+        self.stretch_curve_visible = PlotOptionsSyncState(self, self.viewer, self.layer,
+                                                          'stretch_curve_visible',
+                                                          'stretch_curve_visible_value',
+                                                          'stretch_curve_visible_sync',
+                                                          state_filter=is_image)
+
         self.stretch_histogram = Plot(self)
         self.stretch_histogram.add_bins('histogram', color='gray')
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
@@ -462,7 +481,8 @@ class PlotOptions(PluginTemplateMixin):
                        'image_color', 'image_colormap', 'image_opacity',
                        'image_contrast', 'image_bias',
                        'contour_visible', 'contour_mode',
-                       'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels']
+                       'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
+                       'stretch_curve_visible']
 
         return PluginUserApi(self, expose)
 
@@ -535,12 +555,7 @@ class PlotOptions(PluginTemplateMixin):
             self.stretch_histogram.clear_all_marks()
             return
 
-        # Import here to prevent circular import (and not at the top of the method so the import
-        # check is avoided, whenever possible).
-        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-        from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
-
-        if not isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView)):
+        if not self._viewer_is_image_viewer():
             # don't update histogram if selected viewer is not an image viewer:
             return
 
@@ -626,6 +641,75 @@ class PlotOptions(PluginTemplateMixin):
             # we'll force the traitlet to trigger a change
             hist_mark.send_state('sample')
 
+        self._stretch_histogram_needs_update = False
+
+    @observe('stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
+             'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',
+             'stretch_curve_visible_value')
+    def _update_stretch_curve(self, msg=None):
+        mark_label_prefix = "stretch_curve: "
+
+        if not self._viewer_is_image_viewer() or not hasattr(self, 'stretch_histogram'):
+            # don't update histogram if selected viewer is not an image viewer,
+            # or the stretch histogram hasn't been initialized:
+            return
+
+        if not self.stretch_curve_visible_value:
+            # clear marks if curve is not visible:
+            for existing_mark_label, mark in self.stretch_histogram.marks.items():
+                if existing_mark_label.startswith(mark_label_prefix):
+                    # clear this mark
+                    mark.x = []
+                    mark.y = []
+            return
+
+        for layer in self.layer.selected_obj:
+            # clear old mark, if it exists:
+            mark_label = f'{mark_label_prefix}{layer.label}'
+            mark_exists = mark_label in self.stretch_histogram.marks
+
+            # create the new/updated mark following the colormapping
+            # procedure in glue's CompositeArray:
+            interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
+            contrast_bias = ContrastBiasStretch(layer.state.contrast, layer.state.bias)
+            stretch = stretches.members[layer.state.stretch]
+            layer_cmap = layer.state.cmap
+
+            # create a photoshop style "curve" for the stretch function
+            curve_x = np.linspace(self.stretch_vmin.value, self.stretch_vmax.value, 50)
+            curve_y = interval(curve_x, clip=False)
+            curve_y = contrast_bias(curve_y, out=curve_y, clip=False)
+            curve_y = stretch(curve_y, out=curve_y, clip=False)
+            curve_y = layer_cmap(curve_y)[:, 0]
+
+            for existing_mark_label, mark in self.stretch_histogram.marks.items():
+                if mark_label == existing_mark_label:
+                    # update this mark
+                    mark.x = curve_x
+                    mark.y = curve_y
+                elif existing_mark_label.startswith(mark_label_prefix):
+                    # clear this mark
+                    mark.x = []
+                    mark.y = []
+
+            if not mark_exists:
+                self.stretch_histogram.add_line(
+                    mark_label,
+                    x=curve_x,
+                    y=curve_y,
+                    ynorm=True,
+                    color='#c75d2c',
+                    opacities=[0.5],
+                )
+
+            # reorder marks so histogram is on top:
+            figure_marks = self.stretch_histogram.figure.marks
+            for i, fig_mark in enumerate(figure_marks):
+                if isinstance(fig_mark, bqplot.Bins):
+                    hist_mark = figure_marks.pop(i)
+                    break
+            self.stretch_histogram.figure.marks = figure_marks + [hist_mark]
+
     @observe('stretch_vmin_value')
     def _stretch_vmin_changed(self, msg=None):
         self.stretch_histogram.marks['vmin'].x = [self.stretch_vmin_value, self.stretch_vmin_value]
@@ -647,3 +731,11 @@ class PlotOptions(PluginTemplateMixin):
     def set_histogram_y_limits(self, y_min, y_max):
         # NOTE: leaving this out of user API until API is finalized with interactive setting
         self.stretch_histogram.set_ylims(y_min, y_max)
+
+    def _viewer_is_image_viewer(self):
+        # Import here to prevent circular import (and not at the top of the method so the import
+        # check is avoided, whenever possible).
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+        from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+
+        return isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView))

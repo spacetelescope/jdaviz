@@ -383,6 +383,14 @@
           label="Limit histogram to current zoom limits"
           style="z-index: 1"
         ></v-switch>
+      </v-row>
+      <v-row>
+        <v-switch
+          v-model="stretch_curve_visible_value"
+          class="hide-input"
+          label="Show stretch function curve"
+          style="z-index: 1"
+        ></v-switch>
         <!-- NOTE: height defined here should match that in the custom CSS rules
              below for the bqplot class -->
       </v-row>
