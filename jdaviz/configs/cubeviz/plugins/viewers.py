@@ -1,6 +1,7 @@
 from glue.core import BaseData
 
 from glue.core.subset_group import GroupedSubset
+from bqplot import Lines
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
@@ -231,6 +232,21 @@ class CubevizProfileView(SpecvizProfileView):
                                                    data_uuid=layer_state.layer.data.uuid)
                 if _is_unique(new_shadow):
                     new_marks.append(new_shadow)
+
+            # change opacity for live-collapsed spectra from spatial subsets in Cubeviz:
+            spatial_layers = [sub_layer for sub_layer in
+                              self._get_spatial_subset_layers(layer_state.layer.data.label)]
+            spatial_marks = self._get_marks_for_layers(spatial_layers)
+            for layer, mark in zip(spatial_layers, spatial_marks):
+                # update profile opacities for spatial subset:
+                if isinstance(mark, Lines):
+                    mark.set_trait(
+                        'opacities',
+                        # set the alpha for the spectrum in the profile viewer
+                        # to be 50% more opaque than the alpha for the spatial subset
+                        # in the flux-viewer
+                        [min(1.5 * layer.alpha, 1)]
+                    )
 
         elif subset_type == 'spectral':
             # need to add marks for every intersection between THIS spectral subset and ALL spatial

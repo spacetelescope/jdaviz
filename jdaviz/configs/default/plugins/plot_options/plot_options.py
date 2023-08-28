@@ -523,7 +523,7 @@ class PlotOptions(PluginTemplateMixin):
             # no (image) viewer with stretch function options
             return
 
-        if (not self.viewer.selected or not self.layer.selected):  # pragma: no cover
+        if not self.viewer.selected or not self.layer.selected:  # pragma: no cover
             # nothing to plot
             self.stretch_histogram.clear_all_marks()
             return
