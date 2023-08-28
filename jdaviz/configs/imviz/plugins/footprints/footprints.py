@@ -189,6 +189,13 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         # when pixel-linked is reintroduced.
         self.app._jdaviz_helper.plugins['Links Control'].link_type = 'WCS'
 
+    def _ensure_first_overlay(self):
+        if not len(self._overlays):
+            # create the first default overlay
+            self._change_overlay()
+            # update the marks
+            self._preset_args_changed()
+
     def rename_overlay(self, old_lbl, new_lbl):
         """
         Rename an existing overlay instance
@@ -272,11 +279,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             return
 
         if self.is_active:
-            if not len(self._overlays):
-                # create the first default overlay
-                self._change_overlay()
-                # update the marks
-                self._preset_args_changed()
+            self._ensure_first_overlay()
 
         for overlay, viewer_marks in self.marks.items():
             for viewer_id, marks in viewer_marks.items():
@@ -403,6 +406,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         ----------
         region : str or regions.Regions object
         """
+        self._ensure_first_overlay()
         if isinstance(region, (regions.Region, regions.Regions)):
             self.preset.import_obj(region)
         elif isinstance(region, str):  # TODO: support path objects?
