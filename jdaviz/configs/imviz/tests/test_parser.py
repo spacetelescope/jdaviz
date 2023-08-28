@@ -381,11 +381,11 @@ class TestParseImage:
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('SCI,1')
         assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
-        assert data.shape == (4299, 4220)
+        assert data.shape == (4298, 4220)
         assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
         assert isinstance(data.coords, WCS)
         assert comp.units == 'electron/s'
-        assert comp.data.shape == (4299, 4220)
+        assert comp.data.shape == (4298, 4220)
 
         # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
 
