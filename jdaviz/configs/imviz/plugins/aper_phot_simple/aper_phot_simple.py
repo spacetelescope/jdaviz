@@ -437,6 +437,112 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             self.result_available = True
             self.plot_available = True
 
+    def unpack_batch_options(self, **options):
+        """
+        Unpacks a dictionary of options for batch mode, including all combinations of any values
+        passed as tuples or lists.  For example::
+
+            unpack_batch_options(dataset=['image1', 'image2'],
+                                 subset=['Subset 1', 'Subset 2'],
+                                 bg_subset=['Subset 3'],
+                                 flux_scaling=3
+                                 )
+
+        would result in::
+
+            [{'subset': 'Subset 1',
+              'dataset': 'image1',
+              'bg_subset': 'Subset 3',
+              'flux_scaling': 3},
+             {'subset': 'Subset 2',
+              'dataset': 'image1',
+              'bg_subset': 'Subset 3',
+              'flux_scaling': 3},
+             {'subset': 'Subset 1',
+              'dataset': 'image2',
+              'bg_subset': 'Subset 3',
+              'flux_scaling': 3},
+             {'subset': 'Subset 2',
+              'dataset': 'image2',
+              'bg_subset': 'Subset 3',
+              'flux_scaling': 3}]
+
+        Parameters
+        ----------
+        options : dict
+            Dictionary of values to override from the values set in the plugin/traitlets.  Each
+            entry can either be a single value, or a list.  All combinations of those that contain
+            a list will be exposed
+
+        Returns
+        -------
+        options : list
+            List of all combinations of input parameters, which can then be used as input to
+            `batch_aper_phot`
+        """
+        if not isinstance(options, dict):
+            raise TypeError("options must be a dictionary")
+        # TODO: when enabling user API for this plugin, this should check that all inputs are
+        # exposed to self.user_api (rather than the internal self)
+        user_api = self  # .user_api
+        invalid_keys = [k for k in options.keys() if not hasattr(user_api, k)]
+        if len(invalid_keys):
+            raise ValueError(f"{invalid_keys} are not valid inputs for batch photometry")
+
+        def _is_single(v):
+            if isinstance(v, (list, tuple)):
+                if len(v) == 1:
+                    return True, v[0]
+                return False, v
+            return True, v
+
+        single_values, mult_values = {}, {}
+        for k, v in options.items():
+            is_single, this_value = _is_single(v)
+            if is_single:
+                single_values[k] = this_value
+            else:
+                mult_values[k] = this_value
+
+        def _unpack_dict_list(mult_values, single_values):
+            options_list = []
+            # loop over the first item in mult_values
+            # any remaining mult values will require recursion
+            this_attr, this_values = list(mult_values.items())[0]
+            remaining_mult_values = {k: v for j, (k, v) in enumerate(mult_values.items()) if j > 0}
+
+            for this_value in this_values:
+                if not len(remaining_mult_values):
+                    options_list += [{this_attr: this_value, **single_values}]
+                    continue
+                options_list += _unpack_dict_list(remaining_mult_values,
+                                                  {this_attr: this_value, **single_values})
+
+            return options_list
+
+        return _unpack_dict_list(mult_values, single_values)
+
+    def batch_aper_phot(self, options):
+        """
+        Parameters
+        ----------
+        options : list
+            Each entry will result in one computation of aperture photometry and should be
+            a dictionary of values to override from the values set in the plugin/traitlets.
+        """
+        # input validation
+        if not isinstance(options, list):
+            raise TypeError("options must be a list of dictionaries")
+        if not np.all([isinstance(option, dict) for option in options]):
+            raise TypeError("options must be a list of dictionaries")
+
+        for option in options:
+            # run aperture photometry with **option
+            # log result in table
+            pass
+
+        return
+
 
 # NOTE: These are hidden because the APIs are for internal use only
 # but we need them as a separate functions for unit testing.
