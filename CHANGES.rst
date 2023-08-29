@@ -1,3 +1,28 @@
+3.6.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Fixes turning off multiselect mode for a dropdown when no selections are currently made. 
+  Previously this resulted in a traceback, but now applies the default selection for 
+  single-select mode. [#2404]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
 3.6.2 (2023-08-25)
 ==================
 
