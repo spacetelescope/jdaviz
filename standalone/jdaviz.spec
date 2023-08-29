@@ -8,6 +8,7 @@ from PyInstaller.building.api import COLLECT, EXE, PYZ
 from PyInstaller.building.osx import BUNDLE
 
 import jdaviz
+from jdaviz.configs import Specviz, Specviz2d, Cubeviz, Mosviz, Imviz
 codesign_identity = os.environ.get("DEVELOPER_ID_APPLICATION")
 
 # this copies over the nbextensions enabling json and the js assets

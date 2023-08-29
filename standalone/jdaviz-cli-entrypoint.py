@@ -1,6 +1,5 @@
 import sys
 
-
 def start_as_kernel():
     # similar to https://github.com/astrofrog/voila-qt-app/blob/master/voila_demo.py
     import sys
