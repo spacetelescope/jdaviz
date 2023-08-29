@@ -36,8 +36,6 @@ jobs:
       with:
         python-version: "3.10"
 
-    - uses: browser-actions/setup-chrome@v1
-
     - name: Install jdaviz
       run: pip install .[test]
 
@@ -119,7 +117,7 @@ jobs:
         timeout: 60000
 
     - name: Test standalone
-      run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test.py --video=on)
+      run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test_standalone.py --video=on)
 
     - name: Upload Test artifacts
       if: always()
