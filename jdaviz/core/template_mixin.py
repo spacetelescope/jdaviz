@@ -736,7 +736,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         self._clear_cache()
         if self.is_multiselect:
             self.selected = [self.selected]
-        elif isinstance(self.selected, list):
+        elif isinstance(self.selected, list) and len(self.selected):
             self.selected = self.selected[0]
         else:
             self._apply_default_selection()
