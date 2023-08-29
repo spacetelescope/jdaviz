@@ -524,6 +524,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
     def batch_aper_phot(self, options):
         """
+        Run aperture photometry over a list of options.  Values will be looped in order and any
+        unprovided options will remain at there previous values (either from a previous entry
+        in the list or from the plugin).  The plugin itself will update and will remain at the
+        final state from the last entry in the list.
+
+        To provide a list of values per-input, use `unpack_batch_options` to and pass that as input
+        here.
+
         Parameters
         ----------
         options : list
@@ -537,11 +545,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             raise TypeError("options must be a list of dictionaries")
 
         for option in options:
-            # run aperture photometry with **option
-            # log result in table
-            pass
-
-        return
+            # NOTE: if we do not want the UI to update (and end up in the final state), then
+            # we would need to refactor the plugin so that all we can compute computed values
+            # from the selected dataset without necessarily observing and updating traitlets.
+            # We would still want to check any select component against the valid choices.
+            # We could then also skip creating/showing the plot and have a manual call to
+            # vue_do_aper_phot re-enable plotting
+            for attr, value in option.items():
+                # TODO: when enabling user_api, skip this and call setattr directly on self.user_api
+                if hasattr(self, f'{attr}_selected'):
+                    attr = f'{attr}_selected'
+                setattr(self, attr, value)
+            self.vue_do_aper_phot()
 
 
 # NOTE: These are hidden because the APIs are for internal use only
