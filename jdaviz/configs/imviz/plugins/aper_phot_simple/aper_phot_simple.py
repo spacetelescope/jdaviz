@@ -522,7 +522,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         return _unpack_dict_list(mult_values, single_values)
 
-    def batch_aper_phot(self, options):
+    def batch_aper_phot(self, options, full_exceptions=False):
         """
         Run aperture photometry over a list of options.  Values will be looped in order and any
         unprovided options will remain at there previous values (either from a previous entry
@@ -537,6 +537,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         options : list
             Each entry will result in one computation of aperture photometry and should be
             a dictionary of values to override from the values set in the plugin/traitlets.
+        full_exceptions : bool, optional
+            Whether to expose the full exception message for all failed iterations.
         """
         # input validation
         if not isinstance(options, list):
@@ -549,7 +551,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         attrs_auto_update = ('counts_factor', 'pixel_area', 'flux_scaling',
                              'subset_area', 'background_value')
 
-        for option in options:
+        failed_iters, exceptions = [], []
+        for i, option in enumerate(options):
             # NOTE: if we do not want the UI to update (and end up in the final state), then
             # we would need to refactor the plugin so that all we can compute computed values
             # from the selected dataset without necessarily observing and updating traitlets.
@@ -565,12 +568,26 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             option_ordered = {k: v for k, v in option.items() if k not in attrs_auto_update}
             option_ordered.update(**option)
 
-            for attr, value in option.items():
-                # TODO: when enabling user_api, skip this and call setattr directly on self.user_api
-                if hasattr(self, f'{attr}_selected'):
-                    attr = f'{attr}_selected'
-                setattr(self, attr, value)
-            self.vue_do_aper_phot()
+            try:
+                for attr, value in option.items():
+                    # TODO: when enabling user_api, skip this and call setattr directly
+                    # on self.user_api
+                    if hasattr(self, f'{attr}_selected'):
+                        attr = f'{attr}_selected'
+                    setattr(self, attr, value)
+                self.vue_do_aper_phot()
+            except Exception as e:
+                failed_iters.append(i)
+                if full_exceptions:
+                    exceptions.append(e)
+
+        if len(failed_iters):
+            err_msg = f"inputs {failed_iters} failed and were skipped."
+            if full_exceptions:
+                err_msg += f"  Exception messages: {exceptions}"
+            else:
+                err_msg += "  To see full exceptions, run individually or pass full_exceptions=True"  # noqa
+            raise RuntimeError(err_msg)
 
 
 # NOTE: These are hidden because the APIs are for internal use only
