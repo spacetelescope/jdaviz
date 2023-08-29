@@ -97,6 +97,10 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixes turning off multiselect mode for a dropdown when no selections are currently made. 
+  Previously this resulted in a traceback, but now applies the default selection for 
+  single-select mode. [#2404]
+
 Cubeviz
 ^^^^^^^
 
