@@ -12,9 +12,6 @@ def start_as_kernel():
 
 
 if __name__ == "__main__":
-    print("Pysiaf constants:")
-    print(pysiaf.constants._DATA_ROOT)
-    print(pysiaf.constants.AVAILABLE_PRD_JWST_VERSIONS)
     # When voila starts a kernel under pyinstaller, it will use sys.executable
     # (which is this entry point again)
     # if called like [sys.argv[0], "-m", "ipykernel_launcher", ...]
