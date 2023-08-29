@@ -544,6 +544,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         if not np.all([isinstance(option, dict) for option in options]):
             raise TypeError("options must be a list of dictionaries")
 
+        # these traitlets are automatically set based on the values of other traitlets in the
+        # plugin, and so we should apply any user-overrides LAST
+        attrs_auto_update = ('counts_factor', 'pixel_area', 'flux_scaling',
+                             'subset_area', 'background_value')
+
         for option in options:
             # NOTE: if we do not want the UI to update (and end up in the final state), then
             # we would need to refactor the plugin so that all we can compute computed values
@@ -551,6 +556,15 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             # We would still want to check any select component against the valid choices.
             # We could then also skip creating/showing the plot and have a manual call to
             # vue_do_aper_phot re-enable plotting
+
+            # order the dictionary so that items that might be automatically set based on other
+            # selections are applied LATER so that user-overrides can take place.
+            # NOTE: this could have non-obvious consequences if providing the override for
+            # one entry but not another.  Alternatively, we could reset all traitlets to the
+            # original state between each iteration of the for-loop
+            option_ordered = {k: v for k, v in option.items() if k not in attrs_auto_update}
+            option_ordered.update(**option)
+
             for attr, value in option.items():
                 # TODO: when enabling user_api, skip this and call setattr directly on self.user_api
                 if hasattr(self, f'{attr}_selected'):
