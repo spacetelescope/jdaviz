@@ -205,6 +205,7 @@ class PlotOptions(PluginTemplateMixin):
 
     stretch_hist_zoom_limits = Bool().tag(sync=True)
     stretch_hist_nbins = IntHandleEmpty(25).tag(sync=True)
+    stretch_hist_downsampled = List([0, 0]).tag(sync=True)
     stretch_histogram_widget = Unicode().tag(sync=True)
 
     stretch_curve_visible_value = Bool().tag(sync=True)
@@ -600,7 +601,18 @@ class PlotOptions(PluginTemplateMixin):
                 y_min = max(y_limits.min(), 0)
                 y_max = y_limits.max()
 
-                sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
+                arr = comp.data[y_min:y_max, x_min:x_max]
+
+                size = arr.shape[0] * arr.shape[1]
+                if size > 400**2:
+                    xstep = max(1, round(arr.shape[1] / 400))
+                    ystep = max(1, round(arr.shape[0] / 400))
+                    arr = arr[::ystep, ::xstep]
+                    self.stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
+                else:
+                    self.stretch_hist_downsampled = [size, size]  # not downsampled
+
+                sub_data = arr.ravel()
 
             else:
                 # spectrum-2d-viewer, for example.  We'll assume the viewer
@@ -614,10 +626,23 @@ class PlotOptions(PluginTemplateMixin):
                                 (y_data >= viewer.state.y_min) &
                                 (y_data <= viewer.state.y_max))
 
+                # downsampling not currently implemented for 2d spectrum
+                self.stretch_hist_downsampled = [0, 0]
+
                 sub_data = comp.data[inds].ravel()
         else:
             # include all data, regardless of zoom limits
-            sub_data = comp.data.ravel()
+            arr = comp.data
+            size = arr.shape[0] * arr.shape[1]
+            if size > 400**2:
+                xstep = max(1, round(arr.shape[1] / 400))
+                ystep = max(1, round(arr.shape[0] / 400))
+                arr = arr[::ystep, ::xstep]
+                self.stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
+            else:
+                self.stretch_hist_downsampled = [size, size]  # not downsampled
+
+            sub_data = arr.ravel()
 
         # filter out nans (or else bqplot will fail)
         if np.any(np.isnan(sub_data)):
