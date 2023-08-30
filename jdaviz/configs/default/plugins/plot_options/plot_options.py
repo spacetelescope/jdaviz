@@ -613,8 +613,11 @@ class PlotOptions(PluginTemplateMixin):
                 x_data = data.get_component(data.components[1]).data
                 y_data = data.get_component(data.components[0]).data
 
-                inds = np.where((x_data >= viewer.state.x_min) &
-                                (x_data <= viewer.state.x_max) &
+                inverted_x = getattr(viewer, 'inverted_x_axis', False)
+                x_min = viewer.state.x_min if not inverted_x else viewer.state.x_max
+                x_max = viewer.state.x_max if not inverted_x else viewer.state.x_min
+                inds = np.where((x_data >= x_min) &
+                                (x_data <= x_max) &
                                 (y_data >= viewer.state.y_min) &
                                 (y_data <= viewer.state.y_max))
 
