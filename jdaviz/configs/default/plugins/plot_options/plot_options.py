@@ -759,5 +759,7 @@ class PlotOptions(PluginTemplateMixin):
         # check is avoided, whenever possible).
         from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+        from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile2DView
 
-        return isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView))
+        return isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView,
+                                                     MosvizImageView, MosvizProfile2DView))
