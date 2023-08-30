@@ -1587,6 +1587,7 @@ class Application(VuetifyTemplate, HubListener):
         data_label : str
             The Glue data label found in the ``DataCollection``.
         """
+        print(f"Removing {data_label} from viewer")
         viewer_item = self._get_viewer_item(viewer_reference)
         viewer_id = viewer_item['id']
         viewer = self.get_viewer_by_id(viewer_id)
