@@ -386,7 +386,7 @@
       </v-row>
       <v-row>
         <v-switch
-          v-model="stretch_curve_visible_value"
+          v-model="stretch_curve_visible"
           class="hide-input"
           label="Show stretch function curve"
           style="z-index: 1"

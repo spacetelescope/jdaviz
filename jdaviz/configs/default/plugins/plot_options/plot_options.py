@@ -80,7 +80,7 @@ class PlotOptions(PluginTemplateMixin):
       limits instead of all data within the layer; not exposed for Specviz.
     * ``stretch_hist_nbins`` : number of bins to use in creating the histogram; not exposed
       for Specviz.
-    * ``stretch_curve_visible`` : (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+    * ``stretch_curve_visible`` : bool
       whether the stretch histogram's colormap "curve" is visible; not exposed for Specviz.
     * ``image_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       whether the image bitmap is visible; not exposed for Specviz.
@@ -208,8 +208,7 @@ class PlotOptions(PluginTemplateMixin):
     stretch_hist_downsampled = List([0, 0]).tag(sync=True)
     stretch_histogram_widget = Unicode().tag(sync=True)
 
-    stretch_curve_visible_value = Bool().tag(sync=True)
-    stretch_curve_visible_sync = Dict().tag(sync=True)
+    stretch_curve_visible = Bool().tag(sync=True)
 
     subset_visible_value = Bool().tag(sync=True)
     subset_visible_sync = Dict().tag(sync=True)
@@ -394,12 +393,6 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
-
-        self.stretch_curve_visible = PlotOptionsSyncState(self, self.viewer, self.layer,
-                                                          'stretch_curve_visible',
-                                                          'stretch_curve_visible_value',
-                                                          'stretch_curve_visible_sync',
-                                                          state_filter=is_image)
 
         self.stretch_histogram = Plot(self)
         self.stretch_histogram.add_bins('histogram', color='gray')
@@ -670,7 +663,7 @@ class PlotOptions(PluginTemplateMixin):
 
     @observe('stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
              'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',
-             'stretch_curve_visible_value')
+             'stretch_curve_visible')
     def _update_stretch_curve(self, msg=None):
         mark_label_prefix = "stretch_curve: "
 
@@ -679,7 +672,7 @@ class PlotOptions(PluginTemplateMixin):
             # or the stretch histogram hasn't been initialized:
             return
 
-        if not self.stretch_curve_visible_value:
+        if not self.stretch_curve_visible:
             # clear marks if curve is not visible:
             for existing_mark_label, mark in self.stretch_histogram.marks.items():
                 if existing_mark_label.startswith(mark_label_prefix):
