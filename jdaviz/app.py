@@ -1585,6 +1585,7 @@ class Application(VuetifyTemplate, HubListener):
         data_label : str
             The Glue data label found in the ``DataCollection``.
         """
+        print(f"Removing {data_label} from viewer")
         viewer_item = self._get_viewer_item(viewer_reference)
         viewer_id = viewer_item['id']
         viewer = self.get_viewer_by_id(viewer_id)
@@ -1598,18 +1599,15 @@ class Application(VuetifyTemplate, HubListener):
         # Set subset attributes to match remaining data.
         for l in viewer.layers:
             if hasattr(l.layer, "subset_state"):
-                for att in ("att", "x_att", "y_att"):
+                for att in ("att", "xatt", "yatt", "x_att", "y_att"):
                     if hasattr(l.layer.subset_state, att):
                         subset_att = getattr(l.layer.subset_state, att)
+                        print(f"Got {subset_att} for {att}")
                         data_components = l.layer.data.components
                         if subset_att not in data_components:
-                            new_atts = []
-                            a_labels = [a.label for a in l.layer.subset_state.attributes]
-                            for label in a_labels:
-                                cid = [c for c in data_components if c.label == label][0]
-                                new_atts.append(cid)
-                            new_atts = tuple(new_atts)
-                        l.layer.subset_state.att = new_atts[0]
+                            cid = [c for c in data_components if c.label == subset_att.label][0]
+                            print(f"Didn't find in data components, setting to {cid}")
+                            setattr(l.layer.subset_state, att, cid)
 
         remove_data_message = RemoveDataMessage(data, viewer,
                                                 viewer_id=viewer_id,
