@@ -1594,6 +1594,23 @@ class Application(VuetifyTemplate, HubListener):
         viewer.remove_data(data)
         viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
                                                 if layer_info['data_label'] != data.label]  # noqa
+        
+        # Set subset attributes to match remaining data.
+        for l in viewer.layers:
+            if hasattr(l.layer, "subset_state"):
+                for att in ("att", "x_att", "y_att"):
+                    if hasattr(l.layer.subset_state, att):
+                        subset_att = getattr(l.layer.subset_state, att)
+                        data_components = l.layer.data.components
+                        if subset_att not in data_components:
+                            new_atts = []
+                            a_labels = [a.label for a in l.layer.subset_state.attributes]
+                            for label in a_labels:
+                                cid = [c for c in data_components if c.label == label][0]
+                                new_atts.append(cid)
+                            new_atts = tuple(new_atts)
+                        l.layer.subset_state.att = new_atts[0]
+
         remove_data_message = RemoveDataMessage(data, viewer,
                                                 viewer_id=viewer_id,
                                                 sender=self)
