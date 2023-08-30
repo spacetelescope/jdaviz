@@ -28,6 +28,8 @@ Imviz
 - Add a curve to stretch histograms in the Plot Options plugin representing the colormap
   stretch function. [#2390]
 
+- The stretch histogram is now downsampled for large images for improved performance. [#2408]
+
 Mosviz
 ^^^^^^
 
