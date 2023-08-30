@@ -659,11 +659,10 @@ class PlotOptions(PluginTemplateMixin):
             # we'll force the traitlet to trigger a change
             hist_mark.send_state('sample')
 
-        self._stretch_histogram_needs_update = False
-
-    @observe('stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
+    @observe('is_active', 'stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
              'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',
              'stretch_curve_visible')
+    @skip_if_no_updates_since_last_active()
     def _update_stretch_curve(self, msg=None):
         mark_label_prefix = "stretch_curve: "
 
