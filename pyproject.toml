@@ -21,6 +21,7 @@ dependencies = [
     "ipysplitpanes>=0.1.0",
     "ipygoldenlayout>=0.3.0",
     "ipywidgets>=8.0.6",
+    "notebook<7",
     "voila>=0.4,<0.5",
     "pyyaml>=5.4.1",
     "specutils>=1.9",
