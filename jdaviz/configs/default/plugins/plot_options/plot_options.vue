@@ -386,7 +386,7 @@
       </v-row>
       <v-row>
         <v-switch
-          v-model="stretch_curve_visible_value"
+          v-model="stretch_curve_visible"
           class="hide-input"
           label="Show stretch function curve"
           style="z-index: 1"
@@ -394,7 +394,7 @@
         <!-- NOTE: height defined here should match that in the custom CSS rules
              below for the bqplot class -->
       </v-row>
-        <jupyter-widget :widget="stretch_histogram_widget"/>
+      <jupyter-widget :widget="stretch_histogram_widget"/>
       </div>
 
     <!-- IMAGE:IMAGE -->

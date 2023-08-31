@@ -80,7 +80,7 @@ class PlotOptions(PluginTemplateMixin):
       limits instead of all data within the layer; not exposed for Specviz.
     * ``stretch_hist_nbins`` : number of bins to use in creating the histogram; not exposed
       for Specviz.
-    * ``stretch_curve_visible`` : (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+    * ``stretch_curve_visible`` : bool
       whether the stretch histogram's colormap "curve" is visible; not exposed for Specviz.
     * ``image_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       whether the image bitmap is visible; not exposed for Specviz.
@@ -207,8 +207,7 @@ class PlotOptions(PluginTemplateMixin):
     stretch_hist_nbins = IntHandleEmpty(25).tag(sync=True)
     stretch_histogram_widget = Unicode().tag(sync=True)
 
-    stretch_curve_visible_value = Bool().tag(sync=True)
-    stretch_curve_visible_sync = Dict().tag(sync=True)
+    stretch_curve_visible = Bool().tag(sync=True)
 
     subset_visible_value = Bool().tag(sync=True)
     subset_visible_sync = Dict().tag(sync=True)
@@ -393,12 +392,6 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
-
-        self.stretch_curve_visible = PlotOptionsSyncState(self, self.viewer, self.layer,
-                                                          'stretch_curve_visible',
-                                                          'stretch_curve_visible_value',
-                                                          'stretch_curve_visible_sync',
-                                                          state_filter=is_image)
 
         self.stretch_histogram = Plot(self)
         self.stretch_histogram.add_bins('histogram', color='gray')
@@ -600,7 +593,18 @@ class PlotOptions(PluginTemplateMixin):
                 y_min = max(y_limits.min(), 0)
                 y_max = y_limits.max()
 
-                sub_data = comp.data[y_min:y_max, x_min:x_max].ravel()
+                arr = comp.data[y_min:y_max, x_min:x_max]
+
+                size = arr.shape[0] * arr.shape[1]
+                if size > 400**2:
+                    xstep = max(1, round(arr.shape[1] / 400))
+                    ystep = max(1, round(arr.shape[0] / 400))
+                    arr = arr[::ystep, ::xstep]
+                    stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
+                else:
+                    stretch_hist_downsampled = size
+
+                sub_data = arr.ravel()
 
             else:
                 # spectrum-2d-viewer, for example.  We'll assume the viewer
@@ -615,9 +619,23 @@ class PlotOptions(PluginTemplateMixin):
                                 (y_data <= viewer.state.y_max))
 
                 sub_data = comp.data[inds].ravel()
+
+                # downsampling not currently implemented for 2d spectrum
+                stretch_hist_downsampled = len(sub_data)
+
         else:
             # include all data, regardless of zoom limits
-            sub_data = comp.data.ravel()
+            arr = comp.data
+            size = arr.shape[0] * arr.shape[1]
+            if size > 400**2:
+                xstep = max(1, round(arr.shape[1] / 400))
+                ystep = max(1, round(arr.shape[0] / 400))
+                arr = arr[::ystep, ::xstep]
+                stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
+            else:
+                stretch_hist_downsampled = size
+
+            sub_data = arr.ravel()
 
         # filter out nans (or else bqplot will fail)
         if np.any(np.isnan(sub_data)):
@@ -640,12 +658,16 @@ class PlotOptions(PluginTemplateMixin):
             # in case only the sample has changed but its length has not,
             # we'll force the traitlet to trigger a change
             hist_mark.send_state('sample')
+        if isinstance(stretch_hist_downsampled, list):
+            title = f"{stretch_hist_downsampled[1]} of {stretch_hist_downsampled[0]} pixels"
+        else:
+            title = f"{stretch_hist_downsampled} pixels"
+        self.stretch_histogram.figure.title = title
 
-        self._stretch_histogram_needs_update = False
-
-    @observe('stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
+    @observe('is_active', 'stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
              'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',
-             'stretch_curve_visible_value')
+             'stretch_curve_visible')
+    @skip_if_no_updates_since_last_active()
     def _update_stretch_curve(self, msg=None):
         mark_label_prefix = "stretch_curve: "
 
@@ -654,7 +676,7 @@ class PlotOptions(PluginTemplateMixin):
             # or the stretch histogram hasn't been initialized:
             return
 
-        if not self.stretch_curve_visible_value:
+        if not self.stretch_curve_visible:
             # clear marks if curve is not visible:
             for existing_mark_label, mark in self.stretch_histogram.marks.items():
                 if existing_mark_label.startswith(mark_label_prefix):
