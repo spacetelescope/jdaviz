@@ -91,9 +91,6 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-- Pinned Jupyter Notebook version to less than 7 to avoid buggy behavior due
-  to incompatibility. [#2415]
-
 3.6.3 (unreleased)
 ==================
 
@@ -103,6 +100,9 @@ Bug Fixes
 - Fixes turning off multiselect mode for a dropdown when no selections are currently made. 
   Previously this resulted in a traceback, but now applies the default selection for 
   single-select mode. [#2404]
+
+- Pinned Jupyter Notebook version to less than 7 to avoid buggy behavior due
+  to incompatibility. [#2415]
 
 Cubeviz
 ^^^^^^^
