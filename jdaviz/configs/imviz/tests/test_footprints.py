@@ -23,6 +23,9 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
     imviz_helper.load_data(ndd)
 
     plugin = imviz_helper.plugins['Footprints']
+    default_color = plugin.color
+    default_opacity = plugin.fill_opacity
+    plugin.color = '#333333'
     with plugin.as_active():
         assert plugin._obj.is_pixel_linked is True
         plugin._obj.vue_link_by_wcs()
@@ -35,9 +38,12 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
             viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
             assert len(viewer_marks) == len(_all_apertures.get(preset))
 
+        # regression test for user-set traitlets (specifically color) being reset
+        # when the plugin is opened
+        assert plugin.color == '#333333'
+        assert viewer_marks[0].colors == ['#333333']
+
         # change the color/opacity of the first/default overlay
-        default_color = plugin.color
-        default_opacity = plugin.fill_opacity
         plugin.color = '#ffffff'
         plugin.fill_opacity = 0.5
 
