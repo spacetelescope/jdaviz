@@ -8,6 +8,8 @@ Bug Fixes
   Previously this resulted in a traceback, but now applies the default selection for 
   single-select mode. [#2404]
 
+- Fixes tracebacks from plugins opened in popout windows. [#2411]
+
 Cubeviz
 ^^^^^^^
 
