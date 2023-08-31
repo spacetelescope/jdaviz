@@ -233,6 +233,10 @@ class PluginTemplateMixin(TemplateMixin):
         return PluginUserApi(self, expose=[])
 
     def vue_plugin_ping(self, ping_timestamp):
+        if isinstance(ping_timestamp, dict):
+            # popout windows can sometimes ping but send an empty dictionary instead of the
+            # timestamp, in that case, let's set the latest ping time to now
+            ping_timestamp = time.time() * 1000
         self._ping_timestamp = ping_timestamp
 
         # we've received a ping, so immediately set plugin_opened state to True
