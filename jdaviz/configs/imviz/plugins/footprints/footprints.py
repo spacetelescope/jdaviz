@@ -323,7 +323,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         if self.overlay_selected not in self._overlays:
             # create new entry with defaults (any defaults not provided here will be carried over
             # from the previous selection based on current traitlet values)
-            self._overlays[self.overlay_selected] = {'color': '#c75109'}
+            # if this is the first overlay, there is a chance the traitlet for color was already set
+            # to something other than the default, so we want to use that, otherwise for successive
+            # new overlays, we want to ignore the traitlet and default back to "active" orange.
+            default_color = '#c75109' if len(self._overlays) else self.color
+            self._overlays[self.overlay_selected] = {'color': default_color}
             if self.preset_selected == 'From File...':
                 # don't carry over the imported file/region to the next selection
                 self._overlays[self.overlay_selected]['from_file'] = ''
