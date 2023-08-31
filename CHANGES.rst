@@ -91,6 +91,9 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Pinned Jupyter Notebook version to less than 7 to avoid buggy behavior due
+  to incompatibility. [#2415]
+
 3.6.3 (unreleased)
 ==================
 
