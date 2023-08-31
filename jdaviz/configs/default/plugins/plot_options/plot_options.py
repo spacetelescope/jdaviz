@@ -205,7 +205,6 @@ class PlotOptions(PluginTemplateMixin):
 
     stretch_hist_zoom_limits = Bool().tag(sync=True)
     stretch_hist_nbins = IntHandleEmpty(25).tag(sync=True)
-    stretch_hist_downsampled = List([0, 0]).tag(sync=True)
     stretch_histogram_widget = Unicode().tag(sync=True)
 
     stretch_curve_visible = Bool().tag(sync=True)
@@ -601,9 +600,9 @@ class PlotOptions(PluginTemplateMixin):
                     xstep = max(1, round(arr.shape[1] / 400))
                     ystep = max(1, round(arr.shape[0] / 400))
                     arr = arr[::ystep, ::xstep]
-                    self.stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
+                    stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
                 else:
-                    self.stretch_hist_downsampled = [size, size]  # not downsampled
+                    stretch_hist_downsampled = size
 
                 sub_data = arr.ravel()
 
@@ -619,10 +618,11 @@ class PlotOptions(PluginTemplateMixin):
                                 (y_data >= viewer.state.y_min) &
                                 (y_data <= viewer.state.y_max))
 
-                # downsampling not currently implemented for 2d spectrum
-                self.stretch_hist_downsampled = [0, 0]
-
                 sub_data = comp.data[inds].ravel()
+
+                # downsampling not currently implemented for 2d spectrum
+                stretch_hist_downsampled = len(sub_data)
+
         else:
             # include all data, regardless of zoom limits
             arr = comp.data
@@ -631,9 +631,9 @@ class PlotOptions(PluginTemplateMixin):
                 xstep = max(1, round(arr.shape[1] / 400))
                 ystep = max(1, round(arr.shape[0] / 400))
                 arr = arr[::ystep, ::xstep]
-                self.stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
+                stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
             else:
-                self.stretch_hist_downsampled = [size, size]  # not downsampled
+                stretch_hist_downsampled = size
 
             sub_data = arr.ravel()
 
@@ -658,6 +658,11 @@ class PlotOptions(PluginTemplateMixin):
             # in case only the sample has changed but its length has not,
             # we'll force the traitlet to trigger a change
             hist_mark.send_state('sample')
+        if isinstance(stretch_hist_downsampled, list):
+            title = f"{stretch_hist_downsampled[1]} of {stretch_hist_downsampled[0]} pixels"
+        else:
+            title = f"{stretch_hist_downsampled} pixels"
+        self.stretch_histogram.figure.title = title
 
     @observe('is_active', 'stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
              'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',

@@ -394,11 +394,6 @@
         <!-- NOTE: height defined here should match that in the custom CSS rules
              below for the bqplot class -->
       </v-row>
-      <v-row v-if="stretch_hist_downsampled[0] > stretch_hist_downsampled[1]">
-        <v-alert type='info'>
-          Histogram samples a subset of {{stretch_hist_downsampled[1]}} out of {{stretch_hist_downsampled[0]}} pixels.
-        </v-alert>
-      </v-row>
       <jupyter-widget :widget="stretch_histogram_widget"/>
       </div>
 
