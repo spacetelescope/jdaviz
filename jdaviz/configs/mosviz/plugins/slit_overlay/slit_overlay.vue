@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     description='Add a slit to the image viewer.'
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slit-overlay'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slit-overlay'"
     :popout_button="popout_button">
 
     <v-row>

@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     description='Extract a spectrum from a spectral cube.'
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :popout_button="popout_button"
     :disabled_msg="disabled_msg">
 

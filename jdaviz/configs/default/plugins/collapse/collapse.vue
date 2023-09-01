@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     description='Collapse a spectral cube along one axis.'
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'"
     :popout_button="popout_button">
 
     <plugin-dataset-select

@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     description='Create a 2D image from a data cube.'
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'"
     :popout_button="popout_button">
 
     <plugin-dataset-select

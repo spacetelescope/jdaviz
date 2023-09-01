@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     description='Show active data label, compass, and zoom box.'
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#compass'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#compass'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button">
