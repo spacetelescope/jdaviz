@@ -106,6 +106,7 @@ class Launcher(v.VuetifyTemplate):
     filepath = Unicode().tag(sync=True)
     compatible_configs = List().tag(sync=True)
     config_icons = Dict().tag(sync=True)
+    config_loaded = Bool(False).tag(sync=True)
     hint = Unicode().tag(sync=True)
     vdocs = Unicode("").tag(sync=True)  # App not available yet, so we need to recompute it here
     # File picker Traitlets
@@ -192,6 +193,14 @@ class Launcher(v.VuetifyTemplate):
             self.main.height = default_height
         self.main.color = 'transparent'
         self.main.children = [helper.app]
+        self.config_loaded = True
+
+    @property
+    def jdaviz_helper(self):
+        if not self.config_loaded:
+            raise ValueError("jdaviz instance has not yet been chosen/loaded")
+        # give access to the helper after it is selected
+        return self.main.children[0]
 
 
 def show_launcher(configs=ALL_JDAVIZ_CONFIGS, filepath='', height='450px'):
@@ -217,3 +226,4 @@ def show_launcher(configs=ALL_JDAVIZ_CONFIGS, filepath='', height='450px'):
     main.children = [Launcher(main, configs, filepath, height)]
 
     show_widget(main, loc='inline', title=None)
+    return main.children[0]
