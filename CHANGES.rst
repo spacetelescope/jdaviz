@@ -33,6 +33,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Plot options now includes the stretch histogram previously implemented for Imviz/Cubeviz. [#2407]
+
 Specviz
 ^^^^^^^
 
@@ -40,6 +42,8 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+- Plot options now includes the stretch histogram previously implemented for Imviz/Cubeviz. [#2407]
 
 API Changes
 -----------
