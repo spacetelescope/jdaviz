@@ -172,7 +172,8 @@ class Launcher(v.VuetifyTemplate):
             self.file_chooser_visible = False
             self.filepath = self._file_chooser.file_path
 
-    def vue_launch_config(self, config):
+    def vue_launch_config(self, event):
+        config = event.get('config')
         helper = _launch_config_with_data(config, self.loaded_data, show=False)
         if self.height != '100%':
             # We're in jupyter mode. Set to default height
