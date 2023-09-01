@@ -1,16 +1,21 @@
 import os
+import warnings
 
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.exceptions import AstropyUserWarning
 from astropy.wcs import NoConvergence
 from echo import delay_callback
 from glue.config import colormaps
-from regions import Regions
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
+                     PolygonPixelRegion, RectanglePixelRegion, Regions)
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.events import SnackbarMessage, MarkersChangedMessage
 from jdaviz.core.helpers import data_has_valid_wcs
+from jdaviz.core.marks import FootprintOverlay
+from jdaviz.core.region_translators import regions2roi
 
 __all__ = ['AstrowidgetsImageViewerMixin']
 
@@ -34,7 +39,7 @@ class AstrowidgetsImageViewerMixin:
         # Markers
         self._marker_regions = {}  # defaultdict + Regions combo does not work
         self._default_mark_tag_name = 'default-marker-name'
-        self.marker = {'color': 'red', 'alpha': 1.0}
+        self.marker = {'color': 'red', 'alpha': 1.0, 'fill': False}
 
     def save(self, filename):
         """Save out the current image view to given PNG filename.
@@ -357,7 +362,7 @@ class AstrowidgetsImageViewerMixin:
 
             {'color': 'red', 'alpha': 1.0}
             {'color': '#ff0000', 'alpha': 0.5}
-            {'color': (1, 0, 0), 'fill': False}
+            {'color': (1, 0, 0), 'fill': True}
 
         The valid properties for Glue markers are listed at
         https://docs.glueviz.org/en/stable/api/glue.core.visual.VisualAttributes.html
@@ -454,8 +459,6 @@ class AstrowidgetsImageViewerMixin:
             Invalid marker name.
 
         """
-        raise NotImplementedError  # FIXME
-
         if isinstance(regions, list):
             regions = Regions(regions)  # Delegate any further checks to Regions
         elif not isinstance(regions, Regions):
@@ -466,18 +469,67 @@ class AstrowidgetsImageViewerMixin:
 
         self._validate_marker_name(marker_name)
 
+        marker_color = self.marker.get("color", "red")
+        marker_alpha = self.marker.get("alpha", 1)
+        fill_opacity = 0.2 if self.marker.get("fill", False) else 0
+
+        # TODO: Consolidate with Footprints and Markers plugins?
         try:
-            # FIXME: Also add to Viz. Maybe copy stuff from Footprints here
+            # Since we have to render everything as polygon in Jdaviz,
+            # we need to track the original shapes separately for roundtripping.
             if marker_name in self._marker_regions:
                 # Should we prune duplicates? Would set() work?
                 self._marker_regions[marker_name].extend(regions.regions)
             else:
                 self._marker_regions[marker_name] = regions
+
+            # TODO: need to re-call this logic when the reference_data is changed...
+            wcs = self.state.reference_data.coords
+
+            # the following logic is adapted from
+            # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
+            new_marks = []
+            for reg in regions:
+                if hasattr(reg, "to_pixel"):  # Sky region
+                    reg = reg.to_pixel(wcs)
+
+                if isinstance(reg, PolygonPixelRegion):
+                    x_coords = reg.vertices.x
+                    y_coords = reg.vertices.y
+
+                # bqplot marker does not respect image pixel sizes, so need to render as polygon.
+                elif isinstance(reg, RectanglePixelRegion):
+                    reg = reg.to_polygon()
+                    x_coords = reg.vertices.x
+                    y_coords = reg.vertices.y
+                elif isinstance(reg, (CirclePixelRegion, EllipsePixelRegion,
+                                      CircleAnnulusPixelRegion)):
+                    # Astropy regions cannot convert these to polygons natively, so use glue.
+                    x_coords, y_coords = regions2roi(reg).to_polygon()
+
+                else:
+                    warnings.warn(
+                        f"Failed to mark this region, skipping: {reg}", AstropyUserWarning)
+                    continue
+
+                new_marks.append(FootprintOverlay(
+                    self,
+                    marker_name,
+                    x=x_coords,
+                    y=y_coords,
+                    colors=[marker_color],
+                    opacities=[marker_alpha],
+                    fill_opacities=[fill_opacity],
+                    visible=True))
+
+            self.figure.marks = self.figure.marks + new_marks
+
         except Exception as e:  # pragma: no cover
             self.session.hub.broadcast(SnackbarMessage(
                 f"Failed to add markers '{marker_name}': {repr(e)}",
                 color="warning", sender=self))
         else:
+            # FIXME: Do we still need this? Link should not matter anymore?
             self.session.hub.broadcast(MarkersChangedMessage(True, sender=self))
 
     def remove_markers(self, marker_name=None):
@@ -491,19 +543,23 @@ class AstrowidgetsImageViewerMixin:
             If not given, will delete markers added under default name.
 
         """
-        raise NotImplementedError  # FIXME
-
         if marker_name is None:
             marker_name = self._default_mark_tag_name
 
+        # TODO: Consolidate with Footprints and Markers plugins?
         try:
-            # FIXME: Also remove from Viz
             del self._marker_regions[marker_name]
+
+            # Remove any marks objects corresponding to this marker name.
+            self.figure.marks = [m for m in self.figure.marks
+                                 if getattr(m, 'overlay', None) != marker_name]
+
         except ValueError as e:  # pragma: no cover
             self.session.hub.broadcast(SnackbarMessage(
                 f"Failed to remove markers '{marker_name}': {repr(e)}",
                 color="warning", sender=self))
         else:
+            # FIXME: Do we still need this? Link should not matter anymore?
             self.session.hub.broadcast(MarkersChangedMessage(
                 len(self._marker_regions) > 0, sender=self))
 
