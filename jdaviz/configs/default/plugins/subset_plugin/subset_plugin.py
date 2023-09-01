@@ -7,8 +7,9 @@ import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
+from glue.core.exceptions import IncompatibleAttribute
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
-from glue.core.subset import RoiSubsetState, RangeSubsetState
+from glue.core.subset import SubsetState, RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -31,6 +32,44 @@ SUBSET_MODES = {
 }
 
 
+class MultiMaskSubsetState(SubsetState):
+    """
+    A subset state that can include a different mask for different datasets.
+    Adopted from https://github.com/glue-viz/glue/pull/2415
+
+    Parameters
+    ----------
+    masks : dict
+        A dictionary mapping data UUIDs to boolean arrays with the same
+        dimensions as the data arrays.
+    """
+
+    def __init__(self, masks=None):
+        super(MultiMaskSubsetState, self).__init__()
+        self._masks = masks
+
+    def to_mask(self, data, view=None):
+        if data.uuid in self._masks:
+            mask = self._masks[data.uuid]
+            if view is not None:
+                mask = mask[view]
+            return mask
+        else:
+            raise IncompatibleAttribute()
+
+    def copy(self):
+        return MultiMaskSubsetState(masks=self._masks)
+
+    def __gluestate__(self, context):
+        serialized = {key: context.do(value) for key, value in self._masks.items()}
+        return {'masks': serialized}
+
+    @classmethod
+    def __setgluestate__(cls, rec, context):
+        masks = {key: context.object(value) for key, value in rec['masks'].items()}
+        return cls(masks=masks)
+
+
 @tray_registry('g-subset-plugin', label="Subset Tools")
 class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     template_file = __file__, "subset_plugin.vue"
@@ -48,6 +87,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     is_centerable = Bool(False).tag(sync=True)
     can_simplify = Bool(False).tag(sync=True)
+    can_freeze = Bool(False).tag(sync=True)
 
     icon_replace = Unicode(read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_or = Unicode(read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
@@ -246,6 +286,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_states = []
 
         self._unpack_get_subsets_for_ui()
+
+    def vue_freeze_subset(self, *args):
+        sgs = {sg.label: sg for sg in self.app.data_collection.subset_groups}
+        sg = sgs.get(self.subset_selected)
+
+        masks = {}
+        for data in self.app.data_collection:
+            masks[data.uuid] = sg.subset_state.to_mask(data)
+
+        sg.subset_state = MultiMaskSubsetState(masks)
 
     def vue_simplify_subset(self, *args):
         if len(self.subset_states) < 2:
