@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     :description="config==='cubeviz' ? 'Smooth data cube spatially or spectrally with a Gaussian kernel.' : 'Smooth data with a Gaussian kernel.'"
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
     :popout_button="popout_button">
 
       <!-- for mosviz, the entries change on row change, so we want to always show the dropdown

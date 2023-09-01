@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     description='Tools for selecting and interacting with subsets.'
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
     :popout_button="popout_button">
 
     <v-row align=center>

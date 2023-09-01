@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin  
     description="Rotate viewer canvas to any orientation (note: this does not affect the underlying data)."
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#canvas-rotation'"
     :disabled_msg="isChromium() ? '' : 'Image rotation is not supported by your browser. Please see our docs for more information.'"
     :popout_button="popout_button">
     <plugin-viewer-select

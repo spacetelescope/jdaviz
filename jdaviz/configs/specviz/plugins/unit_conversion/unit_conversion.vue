@@ -2,7 +2,7 @@
   <!-- To re-enable plugin, use :disabled_msg="disabled_msg" -->
   <j-tray-plugin
     description='Convert the spectral flux density and spectral axis units.'
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">
 

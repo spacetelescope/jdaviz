@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     description='Re-link images by WCS or pixels.'
-    :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#link-control'"
     :popout_button="popout_button">
 
     <div style="display: grid"> <!-- overlay container -->
