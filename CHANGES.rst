@@ -109,6 +109,8 @@ Bug Fixes
 
 - Fixes tracebacks from plugins opened in popout windows. [#2411]
 
+- Fixes app not displaying properly in Notebook 7. [#2420]
+
 Cubeviz
 ^^^^^^^
 
