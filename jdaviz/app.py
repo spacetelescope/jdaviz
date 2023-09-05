@@ -1598,6 +1598,10 @@ class Application(VuetifyTemplate, HubListener):
         viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
                                                 if layer_info['data_label'] != data.label]  # noqa
 
+        viewer.remove_data(data)
+        viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
+                                                if layer_info['data_label'] != data.label]  # noqa
+
         remove_data_message = RemoveDataMessage(data, viewer,
                                                 viewer_id=viewer_id,
                                                 sender=self)
