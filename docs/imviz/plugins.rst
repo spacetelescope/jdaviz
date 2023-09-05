@@ -329,6 +329,13 @@ position angle, offsets, etc).
 To import a file, choose "From File..." from the presets dropdown and select a valid file (must
 be able to be parsed by `regions.Regions.read`).
 
+To import a regions file or object from the API::
+
+  fp = imviz.plugins['Footprints']
+  fp.open_in_tray()
+  fp.add_overlay('my imported overlay')  # or fp.rename_overlay to rename an existing entry
+  fp.import_region(region)
+
 
 
 .. _rotate-canvas:
