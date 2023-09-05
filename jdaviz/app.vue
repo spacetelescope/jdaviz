@@ -167,7 +167,8 @@ export default {
   methods: {
     checkNotebookContext() {
       this.notebook_context = document.getElementById("ipython-main-app")
-        || document.querySelector('.jp-LabShell');
+        || document.querySelector('.jp-LabShell')
+        || document.querySelector(".lm-Widget#main"); /* Notebook 7 */
       return this.notebook_context;
     },
     getReadTheDocsLink() {
