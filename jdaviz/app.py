@@ -1592,13 +1592,9 @@ class Application(VuetifyTemplate, HubListener):
 
         [data] = [x for x in self.data_collection if x.label == data_label]
 
-        viewer.remove_data(data)
-        viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
-                                                if layer_info['data_label'] != data.label]  # noqa
-        
-        # Set subset attributes to match remaining data.
+        # Set subset attributes to match a remaining data collection member.
         for l in viewer.layers:
-            if hasattr(l.layer, "subset_state"):
+            if hasattr(l.layer, "subset_state") and l.layer.data.label != data_label:
                 for att in ("att", "xatt", "yatt", "x_att", "y_att"):
                     if hasattr(l.layer.subset_state, att):
                         subset_att = getattr(l.layer.subset_state, att)
@@ -1608,6 +1604,10 @@ class Application(VuetifyTemplate, HubListener):
                             cid = [c for c in data_components if c.label == subset_att.label][0]
                             print(f"Didn't find in data components, setting to {cid}")
                             setattr(l.layer.subset_state, att, cid)
+
+        viewer.remove_data(data)
+        viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
+                                                if layer_info['data_label'] != data.label]  # noqa
 
         remove_data_message = RemoveDataMessage(data, viewer,
                                                 viewer_id=viewer_id,
