@@ -41,6 +41,8 @@ class UserApiWrapper:
             raise AttributeError("cannot set read-only item")
 
         exp_obj = getattr(self._obj, attr)
+        if hasattr(exp_obj, '__call__'):
+            raise AttributeError(f"{attr} is a callable, cannot set to a value.  See help({attr}) for input arguments.")  # noqa
         from jdaviz.core.template_mixin import (SelectPluginComponent,
                                                 UnitSelectPluginComponent,
                                                 PlotOptionsSyncState,
