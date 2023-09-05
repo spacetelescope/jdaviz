@@ -57,6 +57,9 @@ Plugins API
 .. automodapi:: jdaviz.configs.imviz.plugins.coords_info.coords_info
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.configs.imviz.plugins.footprints.footprints
+  :no-inheritance-diagram:
+
 .. automodapi:: jdaviz.configs.imviz.plugins.image_viewer_creator.image_viewer_creator
    :no-inheritance-diagram:
 
