@@ -76,7 +76,7 @@
         class="mx-3"
         color="#FFFFFF"
         style="height: 180px; width: 115px"
-        @click="launch_config(config)"
+        @click="launch_config({config: config})"
         :disabled="!compatible_configs.includes(config)">
             <div class="item" align="center">
                 <v-img

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from astropy.io.registry.base import IORegistryError
 from glue_jupyter.common.toolbar_vuetify import read_icon
 import ipyvuetify as v
 from traitlets import List, Unicode, Dict, Bool, observe
@@ -49,10 +50,11 @@ def open(filename, show=True, **kwargs):
         raise NotImplementedError(f"Multiple helpers provided: {compatible_helpers}."
                                   "Unsure which to launch")
     else:
-        return _launch_config_with_data(compatible_helpers[0], hdul, show, **kwargs)
+        return _launch_config_with_data(compatible_helpers[0], hdul, filepath=filename,
+                                        show=show, **kwargs)
 
 
-def _launch_config_with_data(config, data=None, show=True, **kwargs):
+def _launch_config_with_data(config, data=None, show=True, filepath=None, **kwargs):
     '''
     Launch jdaviz with a specific, known configuration and data
 
@@ -64,6 +66,8 @@ def _launch_config_with_data(config, data=None, show=True, **kwargs):
         A filepath or Jdaviz-compatible data object (such as Spectrum1D or CCDData)
     show : bool
         Determines whether to immediately show the application
+    filepath : str
+        Filepath to use as fallback if ``data`` fails to load.
 
     All other arguments are interpreted as load_data arguments for
     the autoidentified configuration class
@@ -82,7 +86,12 @@ def _launch_config_with_data(config, data=None, show=True, **kwargs):
 
     # Load data
     if data not in (None, ''):
-        viz_helper.load_data(data, **kwargs)
+        try:
+            viz_helper.load_data(data, **kwargs)
+        except IORegistryError:
+            if filepath is None:
+                raise
+            viz_helper.load_data(filepath, **kwargs)
 
     # Display app
     if show:
@@ -172,8 +181,10 @@ class Launcher(v.VuetifyTemplate):
             self.file_chooser_visible = False
             self.filepath = self._file_chooser.file_path
 
-    def vue_launch_config(self, config):
-        helper = _launch_config_with_data(config, self.loaded_data, show=False)
+    def vue_launch_config(self, event):
+        config = event.get('config')
+        helper = _launch_config_with_data(config, self.loaded_data,
+                                          filepath=self.filepath, show=False)
         if self.height != '100%':
             # We're in jupyter mode. Set to default height
             default_height = helper.app.state.settings['context']['notebook']['max_height']
