@@ -441,8 +441,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             # we need to cache these locally in order to support multiple files/regions between
             # different overlay entries all selecting From File...
             overlay = self._overlays.get(self.overlay_selected, {})
-            if 'regions' not in overlay and isinstance(self.preset.selected_obj, regions.Regions):
-                overlay['regions'] = self.preset.selected_obj
+            if ('regions' not in overlay
+                    and isinstance(self.preset.selected_obj, (regions.Region, regions.Regions))):
+                regs = self.preset.selected_obj
+                if not isinstance(regs, regions.Regions):
+                    # then this is a single region, but to be compatible with looping logic,
+                    # let's just put as a single entry in a list
+                    regs = [regs]
+                overlay['regions'] = regs
             regs = overlay.get('regions', [])
         elif self.has_pysiaf and self.preset_selected in preset_regions._instruments:
             regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
