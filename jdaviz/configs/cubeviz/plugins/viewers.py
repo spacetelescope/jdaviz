@@ -269,6 +269,8 @@ class CubevizProfileView(SpecvizProfileView):
         # NOTE: += or append won't pick up on change
         self.figure.marks = self.figure.marks + new_marks
 
+        self.state.reset_limits()
+
     @property
     def slice_indicator(self):
         for mark in self.figure.marks:
