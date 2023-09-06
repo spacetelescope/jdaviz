@@ -7,7 +7,7 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'SliceSelectSliceMessage',
            'SliceToolStateMessage',
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
-           'MarkersChangedMessage', 'CanvasRotationChangedMessage',
+           'CanvasRotationChangedMessage',
            'GlobalDisplayUnitChanged']
 
 
@@ -324,17 +324,6 @@ class ExitBatchLoadMessage(Message):
     '''Message generated when exiting the outermost batch_load context manager'''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
-class MarkersChangedMessage(Message):
-    '''Message generated when markers are added/removed from an image viewer'''
-    def __init__(self, has_markers, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._has_markers = has_markers
-
-    @property
-    def has_markers(self):
-        return self._has_markers
 
 
 class CanvasRotationChangedMessage(Message):

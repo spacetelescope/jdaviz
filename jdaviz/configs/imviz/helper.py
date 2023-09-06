@@ -387,13 +387,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     """(Re)link loaded data in Imviz with the desired link type.
     All existing links will be replaced.
 
-    .. note::
-
-        Any markers added in Imviz will need to be removed manually before changing linking type.
-        You can add back the markers using
-        :meth:`~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
-        for the relevant viewer(s).
-
     Parameters
     ----------
     app : `~jdaviz.app.Application`
@@ -450,11 +443,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme='pixels', wcs_u
     if link_type == app._link_type and wcs_use_affine == app._wcs_use_affine:
         data_already_linked = [link.data2 for link in app.data_collection.external_links]
     else:
-        for viewer in app._viewer_store.values():
-            if len(viewer._marktags):
-                raise ValueError(f"cannot change link_type (from '{app._link_type}' to "
-                                 f"'{link_type}') when markers are present. "
-                                 f" Clear markers with viewer.reset_markers() first")
         data_already_linked = []
 
     refdata, iref = get_reference_image_data(app)

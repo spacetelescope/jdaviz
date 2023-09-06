@@ -3,7 +3,7 @@ from traitlets import List, Unicode, Bool, observe
 from glue.core.message import DataCollectionAddMessage
 
 from jdaviz.configs.imviz.helper import link_image_data
-from jdaviz.core.events import LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage
+from jdaviz.core.events import LinkUpdatedMessage, ExitBatchLoadMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, SelectPluginComponent
 from jdaviz.core.user_api import PluginUserApi
@@ -15,13 +15,6 @@ __all__ = ['LinksControl']
 class LinksControl(PluginTemplateMixin):
     """
     See the :ref:`Links Control Plugin Documentation <imviz-link-control>` for more details.
-
-    .. note::
-       Changing linking after adding markers via
-       `~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers` is unsupported and
-       will raise an error requiring resetting the markers manually via
-       `~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
-       or clicking a button in the plugin first.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
@@ -38,7 +31,6 @@ class LinksControl(PluginTemplateMixin):
     wcs_use_fallback = Bool(True).tag(sync=True)
     wcs_use_affine = Bool(True).tag(sync=True)
 
-    need_clear_markers = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -57,9 +49,6 @@ class LinksControl(PluginTemplateMixin):
 
         self.hub.subscribe(self, ExitBatchLoadMessage,
                            handler=self._on_new_app_data)
-
-        self.hub.subscribe(self, MarkersChangedMessage,
-                           handler=self._on_markers_changed)
 
     @property
     def user_api(self):
@@ -83,19 +72,7 @@ class LinksControl(PluginTemplateMixin):
     def _on_new_app_data(self, msg):
         if self.app._jdaviz_helper._in_batch_load > 0:
             return
-        if isinstance(msg, DataCollectionAddMessage):
-            components = [str(comp) for comp in msg.data.main_components]
-            if "ra" in components or "Lon" in components:
-                # linking currently removes any markers, so we want to skip
-                # linking immediately after new markers are added
-                # (see imviz.helper.link_image_data).
-                # Eventually we'll probably want to support linking WITH markers,
-                # at which point this if-statement should be removed.
-                return
         self._link_image_data()
-
-    def _on_markers_changed(self, msg):
-        self.need_clear_markers = msg.has_markers
 
     @observe('link_type_selected', 'wcs_use_fallback', 'wcs_use_affine')
     def _update_link(self, msg={}):
@@ -115,12 +92,6 @@ class LinksControl(PluginTemplateMixin):
 
         self.linking_in_progress = True
 
-        if self.need_clear_markers:
-            setattr(self, msg.get('name'), msg.get('old'))
-            self.linking_in_progress = False
-            raise ValueError(f"cannot change linking with markers present (value reverted to "
-                             f"'{msg.get('old')}'), call viewer.reset_markers()")
-
         if self.link_type.selected == 'Pixels':
             # reset wcs_use_affine to be True
             self.wcs_use_affine = True
@@ -128,7 +99,3 @@ class LinksControl(PluginTemplateMixin):
         self._link_image_data()
 
         self.linking_in_progress = False
-
-    def vue_reset_markers(self, *args):
-        for viewer in self.app._viewer_store.values():
-            viewer.reset_markers()

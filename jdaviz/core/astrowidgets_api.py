@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.exceptions import AstropyUserWarning
+from astropy.utils.exceptions import AstropyUserWarning
 from astropy.wcs import NoConvergence
 from echo import delay_callback
 from glue.config import colormaps
@@ -12,7 +12,7 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
                      PolygonPixelRegion, RectanglePixelRegion, Regions)
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
-from jdaviz.core.events import SnackbarMessage, MarkersChangedMessage
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import regions2roi
@@ -415,12 +415,7 @@ class AstrowidgetsImageViewerMixin:
         -------
         regs : `regions.Regions`
             Regions object with all the desired regions.
-            If `None` is given, it may contain an empty list.
-
-        Raises
-        ------
-        KeyError
-            Given ``marker_name`` does not exist.
+            If no match, it returns an empty ``Regions``.
 
         """
         if marker_name is None:
@@ -428,6 +423,8 @@ class AstrowidgetsImageViewerMixin:
             # Should we prune duplicates? Would set() work?
             for val in self._marker_regions.values():
                 regs.extend(val.regions)
+        elif marker_name not in self._marker_regions:
+            regs = Regions([])
         else:
             regs = self._marker_regions[marker_name]
         return regs
@@ -438,7 +435,8 @@ class AstrowidgetsImageViewerMixin:
         .. note:: Marker appearance is controlled by region shape and ``self.marker``.
 
         .. note::
-           Once markers are added, they are static. To change markers,
+           Once markers are added, they are static w.r.t. reference image
+           even when the regions are sky regions. To change markers,
            remove and then re-add the modified regions manually.
 
         Parameters
@@ -473,64 +471,58 @@ class AstrowidgetsImageViewerMixin:
         marker_alpha = self.marker.get("alpha", 1)
         fill_opacity = 0.2 if self.marker.get("fill", False) else 0
 
-        # TODO: Consolidate with Footprints and Markers plugins?
-        try:
-            # Since we have to render everything as polygon in Jdaviz,
-            # we need to track the original shapes separately for roundtripping.
-            if marker_name in self._marker_regions:
-                # Should we prune duplicates? Would set() work?
-                self._marker_regions[marker_name].extend(regions.regions)
-            else:
-                self._marker_regions[marker_name] = regions
+        # TODO: Consolidate with Footprints and Markers plugins? But it is not easy...
+        #       Footprints plugin has pysiaf and GUI specific settings.
+        #       Markers plugin has spectrum viewer support that is out of scope here.
 
-            # TODO: need to re-call this logic when the reference_data is changed...
-            wcs = self.state.reference_data.coords
-
-            # the following logic is adapted from
-            # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
-            new_marks = []
-            for reg in regions:
-                if hasattr(reg, "to_pixel"):  # Sky region
-                    reg = reg.to_pixel(wcs)
-
-                if isinstance(reg, PolygonPixelRegion):
-                    x_coords = reg.vertices.x
-                    y_coords = reg.vertices.y
-
-                # bqplot marker does not respect image pixel sizes, so need to render as polygon.
-                elif isinstance(reg, RectanglePixelRegion):
-                    reg = reg.to_polygon()
-                    x_coords = reg.vertices.x
-                    y_coords = reg.vertices.y
-                elif isinstance(reg, (CirclePixelRegion, EllipsePixelRegion,
-                                      CircleAnnulusPixelRegion)):
-                    # Astropy regions cannot convert these to polygons natively, so use glue.
-                    x_coords, y_coords = regions2roi(reg).to_polygon()
-
-                else:
-                    warnings.warn(
-                        f"Failed to mark this region, skipping: {reg}", AstropyUserWarning)
-                    continue
-
-                new_marks.append(FootprintOverlay(
-                    self,
-                    marker_name,
-                    x=x_coords,
-                    y=y_coords,
-                    colors=[marker_color],
-                    opacities=[marker_alpha],
-                    fill_opacities=[fill_opacity],
-                    visible=True))
-
-            self.figure.marks = self.figure.marks + new_marks
-
-        except Exception as e:  # pragma: no cover
-            self.session.hub.broadcast(SnackbarMessage(
-                f"Failed to add markers '{marker_name}': {repr(e)}",
-                color="warning", sender=self))
+        # Since we have to render everything as polygon in Jdaviz,
+        # we need to track the original shapes separately for roundtripping.
+        if marker_name in self._marker_regions:
+            # Should we prune duplicates? Would set() work?
+            self._marker_regions[marker_name].extend(regions.regions)
         else:
-            # FIXME: Do we still need this? Link should not matter anymore?
-            self.session.hub.broadcast(MarkersChangedMessage(True, sender=self))
+            self._marker_regions[marker_name] = regions
+
+        # TODO: need to re-call this logic when the reference_data is changed...
+        wcs = self.state.reference_data.coords
+
+        # the following logic is adapted from
+        # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
+        new_marks = []
+        for reg in regions:
+            if hasattr(reg, "to_pixel"):  # Sky region
+                reg = reg.to_pixel(wcs)
+
+            if isinstance(reg, PolygonPixelRegion):
+                x_coords = reg.vertices.x
+                y_coords = reg.vertices.y
+
+            # bqplot marker does not respect image pixel sizes, so need to render as polygon.
+            elif isinstance(reg, RectanglePixelRegion):
+                reg = reg.to_polygon()
+                x_coords = reg.vertices.x
+                y_coords = reg.vertices.y
+            elif isinstance(reg, (CirclePixelRegion, EllipsePixelRegion,
+                                  CircleAnnulusPixelRegion)):
+                # Astropy regions cannot convert these to polygons natively, so use glue.
+                x_coords, y_coords = regions2roi(reg).to_polygon()
+
+            else:
+                warnings.warn(
+                    f"Failed to mark this region, skipping: {reg}", AstropyUserWarning)
+                continue
+
+            new_marks.append(FootprintOverlay(
+                self,
+                marker_name,
+                x=x_coords,
+                y=y_coords,
+                colors=[marker_color],
+                opacities=[marker_alpha],
+                fill_opacities=[fill_opacity],
+                visible=True))
+
+        self.figure.marks = self.figure.marks + new_marks
 
     def remove_markers(self, marker_name=None):
         """Remove some but not all of the markers by name used when
@@ -546,28 +538,23 @@ class AstrowidgetsImageViewerMixin:
         if marker_name is None:
             marker_name = self._default_mark_tag_name
 
+        if marker_name not in self._marker_regions:  # no-op
+            return
+
         # TODO: Consolidate with Footprints and Markers plugins?
-        try:
-            del self._marker_regions[marker_name]
 
-            # Remove any marks objects corresponding to this marker name.
-            self.figure.marks = [m for m in self.figure.marks
-                                 if getattr(m, 'overlay', None) != marker_name]
+        del self._marker_regions[marker_name]
 
-        except ValueError as e:  # pragma: no cover
-            self.session.hub.broadcast(SnackbarMessage(
-                f"Failed to remove markers '{marker_name}': {repr(e)}",
-                color="warning", sender=self))
-        else:
-            # FIXME: Do we still need this? Link should not matter anymore?
-            self.session.hub.broadcast(MarkersChangedMessage(
-                len(self._marker_regions) > 0, sender=self))
+        # Remove any marks objects corresponding to this marker name.
+        self.figure.marks = [m for m in self.figure.marks
+                             if getattr(m, 'overlay', None) != marker_name]
 
     def reset_markers(self):
         """Delete all markers."""
         # Grab the entire list of marker names before iterating
         # otherwise what we are iterating over changes.
-        for marker_name in self._marker_regions:
+        mkeys = list(self._marker_regions.keys())
+        for marker_name in mkeys:
             self.remove_markers(marker_name=marker_name)
 
 

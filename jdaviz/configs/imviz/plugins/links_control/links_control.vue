@@ -40,28 +40,6 @@
           </v-switch>
         </v-row>
       </div>
-      <div v-if="need_clear_markers"
-            class="text-center"
-            style="grid-area: 1/1; 
-                   z-index:2;
-                   margin-left: -24px;
-                   margin-right: -24px;
-                   padding-top: 60px;
-                   background-color: rgb(0 0 0 / 80%)">
-         <v-card color="transparent" elevation=0 >
-           <v-card-text width="100%">
-             <div class="white--text">
-               Markers must be cleared before re-linking
-             </div>
-           </v-card-text>
-
-           <v-card-actions>
-             <v-row justify="end">
-               <v-btn tile small color="accent" class="mr-4" @click="reset_markers" >Clear Markers</v-btn>
-             </v-row>
-           </v-card-actions>
-         </v-card>
-      </div>      
       <div v-if="linking_in_progress"
            class="text-center"
            style="grid-area: 1/1; 

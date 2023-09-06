@@ -10,6 +10,7 @@ from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
 from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
 from numpy.testing import assert_allclose
+from regions import PixCoord, CircleSkyRegion, CirclePixelRegion
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS
 
@@ -271,18 +272,19 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
             self.viewer.marker = {'alpha': '1'}
         with pytest.raises(ValueError, match='Invalid alpha'):
             self.viewer.marker = {'alpha': 42}
-        with pytest.raises(ValueError, match='Invalid marker size'):
+        with pytest.raises(KeyError, match='Invalid attribute'):
             self.viewer.marker = {'markersize': '1'}
         with pytest.raises(ValueError, match='Invalid fill'):
             self.viewer.marker = {'fill': '1'}
 
     def test_mvp_markers(self):
-        x_pix = (0, 0)
-        y_pix = (0, 1)
-        sky = self.wcs.pixel_to_world(x_pix, y_pix)
-        tbl = Table({'x': x_pix, 'y': y_pix, 'coord': sky})
+        reg_pix = CirclePixelRegion(PixCoord(0, 1), 3)
+        reg_sky = reg_pix.to_sky(self.wcs)
 
-        self.viewer.add_markers(tbl)
+        self.viewer.add_markers([reg_pix, reg_sky])
+
+        # FIXME: Need to update all the tests from here on!
+
         data = self.imviz.app.data_collection[2]
         assert data.label == 'default-marker-name'
         assert data.style.color in ('red', '#ff0000')
