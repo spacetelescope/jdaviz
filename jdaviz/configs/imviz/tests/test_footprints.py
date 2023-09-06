@@ -23,6 +23,9 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
     imviz_helper.load_data(ndd)
 
     plugin = imviz_helper.plugins['Footprints']
+    default_color = plugin.color
+    default_opacity = plugin.fill_opacity
+    plugin.color = '#333333'
     with plugin.as_active():
         assert plugin._obj.is_pixel_linked is True
         plugin._obj.vue_link_by_wcs()
@@ -35,9 +38,12 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
             viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
             assert len(viewer_marks) == len(_all_apertures.get(preset))
 
+        # regression test for user-set traitlets (specifically color) being reset
+        # when the plugin is opened
+        assert plugin.color == '#333333'
+        assert viewer_marks[0].colors == ['#333333']
+
         # change the color/opacity of the first/default overlay
-        default_color = plugin.color
-        default_opacity = plugin.fill_opacity
         plugin.color = '#ffffff'
         plugin.fill_opacity = 0.5
 
@@ -88,7 +94,13 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
         reg = plugin.overlay_regions
         plugin.import_region(reg)
         assert plugin.preset.selected == 'From File...'
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
         assert len(viewer_marks) == len(reg)
+        # test that importing a different region updates the marks and also that
+        # a single region is supported
+        plugin.import_region(reg[0])
+        viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+        assert len(viewer_marks) == 1
         # clearing the file should default to the PREVIOUS preset (last from the for-loop above)
         plugin._obj.vue_file_import_cancel()
         assert plugin.preset.selected == preset
@@ -109,8 +121,9 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
                                               height=3 * u.deg, width=2 * u.deg)
         plugin.import_region(valid_region_sky)
 
+        tmp_invalid_path = str(tmp_path / 'invalid_path.reg')
         with pytest.raises(ValueError):
-            plugin.import_region('./invalid_path.reg')
+            plugin.import_region(tmp_invalid_path)
         with pytest.raises(TypeError):
             plugin.import_region(5)
 

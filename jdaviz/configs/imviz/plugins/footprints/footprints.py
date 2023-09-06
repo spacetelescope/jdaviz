@@ -323,13 +323,23 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         if self.overlay_selected not in self._overlays:
             # create new entry with defaults (any defaults not provided here will be carried over
             # from the previous selection based on current traitlet values)
-            self._overlays[self.overlay_selected] = {'color': '#c75109'}
-            if self.preset_selected == 'From File...':
-                # don't carry over the imported file/region to the next selection
+
+            # if this is the first overlay, there is a chance the traitlet for color was already set
+            # to something other than the default, so we want to use that, otherwise for successive
+            # new overlays, we want to ignore the traitlet and default back to "active" orange.
+            default_color = '#c75109' if len(self._overlays) else self.color
+            self._overlays[self.overlay_selected] = {'color': default_color}
+
+            # similarly, if the user called any import APIs before opening the plugin, we want to
+            # respect that, but when creating successive overlays, any selection from file/region
+            # should be cleared for the next selection
+            if self.preset_selected == 'From File...' and len(self._overlays) > 1:
                 self._overlays[self.overlay_selected]['from_file'] = ''
                 self._overlays[self.overlay_selected]['preset'] = self.preset.choices[0]
+
+            # for the first overlay only, default the position to be centered on the current
+            # zoom limits of the first selected viewer
             if len(self._overlays) == 1 and len(self.viewer.selected):
-                # default to the center of the current zoom limits of the first selected viewer
                 self.center_on_viewer(self.viewer.selected[0])
 
         fp = self._overlays[self.overlay_selected]
@@ -377,11 +387,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         if self.overlay_selected not in self._overlays:
             # default dictionary has not been created yet
             return
-        if not self.is_active:
-            return
+        self._ensure_first_overlay()
         name = msg.get('name', '').split('_selected')[0]
         if len(name):
             self._overlays[self.overlay_selected][name] = msg.get('new')
+        if not self.is_active:
+            return
 
         # update existing mark (or add/remove from viewers)
         for viewer_id, viewer in self.app._viewer_store.items():
@@ -430,8 +441,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             # we need to cache these locally in order to support multiple files/regions between
             # different overlay entries all selecting From File...
             overlay = self._overlays.get(self.overlay_selected, {})
-            if 'regions' not in overlay and isinstance(self.preset.selected_obj, regions.Regions):
-                overlay['regions'] = self.preset.selected_obj
+            if ('regions' not in overlay
+                    and isinstance(self.preset.selected_obj, (regions.Region, regions.Regions))):
+                regs = self.preset.selected_obj
+                if not isinstance(regs, regions.Regions):
+                    # then this is a single region, but to be compatible with looping logic,
+                    # let's just put as a single entry in a list
+                    regs = [regs]
+                overlay['regions'] = regs
             regs = overlay.get('regions', [])
         elif self.has_pysiaf and self.preset_selected in preset_regions._instruments:
             regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
