@@ -329,7 +329,9 @@ position angle, offsets, etc).
 To import a file, choose "From File..." from the presets dropdown and select a valid file (must
 be able to be parsed by `regions.Regions.read`).
 
-To import a regions file or object from the API::
+To import a regions file or object from the API:
+
+.. code-block:: python
 
   fp = imviz.plugins['Footprints']
   fp.open_in_tray()

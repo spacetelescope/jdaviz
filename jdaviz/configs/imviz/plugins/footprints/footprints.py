@@ -32,11 +32,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * ``overlay`` (:class:`~jdaviz.core.template_mixin.EditableSelectPluginComponent`): the
         currently active overlay (all other traitlets control this overlay instance)
-    * :meth:``rename_overlay``
+    * :meth:`rename_overlay`
         rename any overlay
-    * :meth:``add_overlay``
+    * :meth:`add_overlay`
         add a new overlay instance (and select as active)
-    * :meth:``remove_overlay``
+    * :meth:`remove_overlay`
         remove any overlay
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
         viewer(s) to show the current overlay
@@ -48,8 +48,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         opacity of the filled region of the currently selected overlay
     * ``preset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
         selected overlay preset
-    * :meth:``import_region``
-    * :meth:``center_on_viewer``
+    * :meth:`import_region`
+    * :meth:`center_on_viewer`
     * ``ra``
         central right ascension for the footprint overlay
     * ``dec``
@@ -63,7 +63,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     * ``v3_offset``
         Additional V3 offset in telescope coordinates to apply to instrument center, as from a
         dither pattern.
-    * :meth:``overlay_regions``
+    * :meth:`overlay_regions`
     """
     template_file = __file__, "footprints.vue"
     uses_active_status = Bool(True).tag(sync=True)
