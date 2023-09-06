@@ -79,6 +79,9 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Circle tool to create circular Subset no longer result in an ellipse
+  under certain conditions. [#2332]
+
 Cubeviz
 ^^^^^^^
 
