@@ -12,7 +12,7 @@ from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetSt
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
-from traitlets import Any, List, Unicode, Bool, observe, Dict
+from traitlets import Any, List, Unicode, Bool, observe
 
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
