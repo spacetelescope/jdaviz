@@ -408,7 +408,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         def _do_recentering(subset, subset_state):
             try:
-                reg = _get_region_from_spatial_subset(self, self.subset_select.selected_subset_state)
+                reg = _get_region_from_spatial_subset(self, self.subset_select.selected_subset_state[subset]) # noqa
                 aperture = regions2aperture(reg)
                 data = self.dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])
@@ -422,7 +422,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     # so we need to convert back.
                     x, y = pixel_to_pixel(
                         data.coords,
-                        self.subset_select.selected_subset_state.xatt.parent.coords,
+                        self.subset_select.selected_subset_state[subset].xatt.parent.coords,
                         phot_aperstats.xcentroid,
                         phot_aperstats.ycentroid)
 
@@ -433,11 +433,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if not np.all(np.isfinite((x, y))):
                     raise ValueError(f'Invalid centroid ({x}, {y})')
             except Exception as err:
-                self.set_center(self.get_center(), update=False)
+                self.set_center(self.get_center(subset_state=subset_state), subset_name=subset,
+                                subset_state=subset_state, update=False)
                 self.hub.broadcast(SnackbarMessage(
                     f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
             else:
-                self.set_center((x, y), subset, subset_state, update=True)
+                self.set_center((x, y), subset_name=subset, subset_state=subset_state, update=True)
 
         dict_subset_to_state = self.subset_select.selected_subset_state
         if not self.multiselect:
@@ -447,7 +448,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if (sub != self.subset_select.default_text and
                         not isinstance(dict_subset_to_state[sub], CompositeSubsetState)):
                     _do_recentering(sub, dict_subset_to_state[sub])
-                elif isinstance(dict_subset_to_state[sub], CompositeSubsetState):
+                elif (sub != self.subset_select.default_text and
+                      isinstance(dict_subset_to_state[sub], CompositeSubsetState)):
                     self.hub.broadcast(SnackbarMessage(f"Unable to recenter "
                                                        f"composite subset {sub}",
                                                        color='error', sender=self))
