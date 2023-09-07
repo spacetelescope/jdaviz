@@ -6,11 +6,12 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
-from astropy.table import Table
 from astropy.utils.data import get_pkg_data_filename
+from astropy.utils.exceptions import AstropyUserWarning
 from astropy.visualization import AsinhStretch, LinearStretch, LogStretch, SqrtStretch
 from numpy.testing import assert_allclose
-from regions import PixCoord, CircleSkyRegion, CirclePixelRegion
+from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, PolygonPixelRegion,
+                     RectanglePixelRegion, TextPixelRegion)
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS, BaseImviz_WCS_WCS
 
@@ -281,49 +282,72 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
         reg_pix = CirclePixelRegion(PixCoord(0, 1), 3)
         reg_sky = reg_pix.to_sky(self.wcs)
 
-        self.viewer.add_markers([reg_pix, reg_sky])
+        # No markers yet but this should not crash.
+        for marker_name in (None, "foo"):
+            out_regs = self.viewer.get_markers(marker_name=marker_name)
+        assert out_regs.regions == []
 
-        # FIXME: Need to update all the tests from here on!
+        self.viewer.add_markers([reg_pix])
+        bqplot_marks = self.viewer._get_marks(self.viewer._default_mark_tag_name)
+        assert len(bqplot_marks) == 1
+        assert len(self.imviz.app.data_collection) == 2  # No new data added
+        assert self.viewer._default_mark_tag_name in self.viewer._marker_regions
+        assert bqplot_marks[0].visible
+        assert bqplot_marks[0].colors == ["red"]
+        assert bqplot_marks[0].opacities == [1]
+        assert bqplot_marks[0].fill_opacities == [0]
 
-        data = self.imviz.app.data_collection[2]
-        assert data.label == 'default-marker-name'
-        assert data.style.color in ('red', '#ff0000')
-        assert data.style.marker == 'o'
-        assert_allclose(data.style.markersize, 5)
-        assert_allclose(data.style.alpha, 1)
-        assert_allclose(data.get_component('x').data, x_pix)
-        assert_allclose(data.get_component('y').data, y_pix)
-        assert self.viewer.layers[2].layer.label == data.label
-        assert self.viewer.layers[2].state.fill is True
-
-        # Table with only sky coordinates but no use_skycoord=True
-        with pytest.raises(KeyError):
-            self.viewer.add_markers(tbl[('coord', )])
+        with pytest.raises(TypeError, match="Markers cannot accept"):
+            self.viewer.add_markers(self.wcs)
 
         # Cannot use reserved marker name
-        with pytest.raises(ValueError, match='not allowed'):
-            self.viewer.add_markers(tbl, use_skycoord=True, marker_name='all')
+        with pytest.raises(ValueError, match="not allowed"):
+            self.viewer.add_markers(reg_pix, marker_name="all")
 
-        self.viewer.marker = {'color': (0, 1, 0), 'alpha': 0.8, 'fill': False}
+        self.viewer.marker = {"color": "#00ff00", "alpha": 0.8, "fill": True}
+        self.viewer.add_markers(reg_sky, marker_name="my_sky")
+        bqplot_marks = self.viewer._get_marks("my_sky")
+        assert len(bqplot_marks) == 1
+        assert "my_sky" in self.viewer._marker_regions
+        assert bqplot_marks[0].visible
+        assert bqplot_marks[0].colors == ["#00ff00"]
+        assert bqplot_marks[0].opacities == [0.8]
+        assert bqplot_marks[0].fill_opacities == [0.2]
 
-        self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
-        data = self.imviz.app.data_collection[3]
-        assert data.label == 'my_sky'
-        assert data.style.color in ((0, 1, 0), '#00ff00')
-        assert data.style.marker == 'o'
-        assert_allclose(data.style.markersize, 3)  # Glue default
-        assert_allclose(data.style.alpha, 0.8)
-        assert_allclose(data.get_component('ra').data, sky.ra.deg)
-        assert_allclose(data.get_component('dec').data, sky.dec.deg)
-        assert self.viewer.layers[3].layer.label == data.label
-        assert self.viewer.layers[3].state.fill is False
+        # Regions roundtrip
+        out_regs_sky = self.viewer.get_markers(marker_name="my_sky")
+        assert len(out_regs_sky.regions) == 1 and out_regs_sky.regions[0] is reg_sky
+        out_regs_all = self.viewer.get_markers()
+        assert (len(out_regs_all.regions) == 2 and out_regs_all.regions[0] is reg_pix
+                and out_regs_all.regions[1] is reg_sky)
 
         # Make sure the other marker is not changed.
-        assert self.imviz.app.data_collection[2].style.color in ('red', '#ff0000')
-        assert self.viewer.layers[2].state.fill is True
+        bqplot_marks = self.viewer._get_marks(self.viewer._default_mark_tag_name)
+        assert bqplot_marks[0].colors == ["red"]
+        assert bqplot_marks[0].fill_opacities == [0]
 
-        # TODO: How to check imviz.app.data_collection.links is correct?
-        assert len(self.imviz.app.data_collection.links) == 14
+        # Append to existing marker name.
+        # API should not care if user mix stuff under the same name.
+        reg_pix_2 = PolygonPixelRegion(PixCoord([0, 0, 1, 1], [0, 1, 1, 0]))
+        reg_pix_3 = RectanglePixelRegion(PixCoord(3, 4), width=2, height=3)
+        reg_pix_invalid = TextPixelRegion(PixCoord(3, 4), text="Invalid")
+        self.viewer.marker = {"color": "blue", "alpha": 0.5, "fill": True}
+        with pytest.warns(AstropyUserWarning, match="Failed to mark this region, skipping"):
+            self.viewer.add_markers([reg_pix_2, reg_pix_3, reg_pix_invalid], marker_name="my_sky")
+        out_regs_mixed = self.viewer.get_markers(marker_name="my_sky")
+        assert (len(out_regs_sky.regions) == 3 and out_regs_mixed.regions[1] is reg_pix_2
+                and out_regs_mixed.regions[2] is reg_pix_3)
+        bqplot_marks = self.viewer._get_marks("my_sky")
+        assert len(bqplot_marks) == 3
+        assert bqplot_marks[0].visible
+        assert bqplot_marks[0].colors == ["#00ff00"]
+        assert bqplot_marks[0].opacities == [0.8]
+        assert bqplot_marks[0].fill_opacities == [0.2]
+        for mrk in bqplot_marks[1:]:
+            assert mrk.visible
+            assert mrk.colors == ["blue"]
+            assert mrk.opacities == [0.5]
+            assert mrk.fill_opacities == [0.2]
 
         # Just want to make sure nothing crashes. Zooming already testing elsewhere.
         # https://github.com/spacetelescope/jdaviz/pull/1971
@@ -331,25 +355,25 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
 
         # Remove markers with default name.
         self.viewer.remove_markers()
-        assert self.imviz.app.data_collection.labels == [
-            'has_wcs[SCI,1]', 'no_wcs[SCI,1]', 'my_sky']
+        assert list(self.viewer._marker_regions) == ["my_sky"]
 
         # Reset markers (runs remove_markers with marker_name set)
         self.viewer.reset_markers()
-        assert self.imviz.app.data_collection.labels == [
-            'has_wcs[SCI,1]', 'no_wcs[SCI,1]']
+        assert len(self.viewer._marker_regions) == 0
 
-        assert len(self.imviz.app.data_collection.links) == 10
+        # Removing invalid marker is silent no-op.
+        self.viewer.remove_markers(marker_name="does_not_exist")
 
         # NOTE: This changes the state of self.imviz for this test class!
 
+        # Remaining data has no WCS but sky region given.
         self.imviz.app.data_collection.remove(self.imviz.app.data_collection[0])
-        with pytest.raises(AttributeError, match='does not have a valid WCS'):
-            self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
+        with pytest.warns(AstropyUserWarning, match="Failed to mark this region, skipping"):
+            self.viewer.add_markers(reg_sky, marker_name="my_sky")
 
         self.imviz.app.data_collection.clear()
-        with pytest.raises(AttributeError, match='does not have a valid WCS'):
-            self.viewer.add_markers(tbl, use_skycoord=True, marker_name='my_sky')
+        with pytest.raises(ValueError, match="No reference data"):
+            self.viewer.add_markers(reg_sky, marker_name="my_sky")
 
 
 def test_markers_gwcs_lonlat(imviz_helper):
@@ -364,6 +388,10 @@ def test_markers_gwcs_lonlat(imviz_helper):
         'Pixel Axis 0 [y]', 'Pixel Axis 1 [x]', 'Lat', 'Lon', 'DATA']
 
     # If you run this interactively, should appear slightly off-center.
-    calib_cat = Table({'coord': [SkyCoord(80.6609, -69.4524, unit='deg')]})
-    imviz_helper.default_viewer.add_markers(calib_cat, use_skycoord=True, marker_name='my_sky')
-    assert imviz_helper.app.data_collection[1].label == 'my_sky'
+    calib_cat = CircleSkyRegion(SkyCoord(80.6609, -69.4524, unit='deg'), 0.1 * u.arcsec)
+    imviz_helper.default_viewer.add_markers(calib_cat, marker_name='my_sky')
+    bqplot_marks = imviz_helper.default_viewer._get_marks("my_sky")
+    assert bqplot_marks[0].visible
+    assert bqplot_marks[0].colors == ["red"]
+    assert bqplot_marks[0].opacities == [1]
+    assert bqplot_marks[0].fill_opacities == [0]

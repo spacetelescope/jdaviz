@@ -9,7 +9,7 @@ from astropy.wcs import NoConvergence
 from echo import delay_callback
 from glue.config import colormaps
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
-                     PolygonPixelRegion, RectanglePixelRegion, Regions)
+                     PolygonPixelRegion, RectanglePixelRegion, Region, Regions)
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.events import SnackbarMessage
@@ -402,6 +402,10 @@ class AstrowidgetsImageViewerMixin:
                 f"The marker name {marker_name} is not allowed. Any name is "
                 f"allowed except these: {', '.join(self.RESERVED_MARKER_SET_NAMES)}")
 
+    def _get_marks(self, marker_name):
+        return [mark for mark in self.figure.marks
+                if (isinstance(mark, FootprintOverlay) and (mark.overlay == marker_name))]
+
     def get_markers(self, marker_name=None):
         """Get the markers as regions.
 
@@ -441,7 +445,7 @@ class AstrowidgetsImageViewerMixin:
 
         Parameters
         ----------
-        regions : `regions.Regions` or a list of `regions.Region`
+        regions : `regions.Region`, `regions.Regions`, or a list of `regions.Region`
             Astropy regions to mark.
 
         marker_name : str, optional
@@ -454,12 +458,12 @@ class AstrowidgetsImageViewerMixin:
             Invalid regions.
 
         ValueError
-            Invalid marker name.
+            Invalid marker name or reference data.
 
         """
-        if isinstance(regions, list):
-            regions = Regions(regions)  # Delegate any further checks to Regions
-        elif not isinstance(regions, Regions):
+        if isinstance(regions, Region):
+            regions = [regions]
+        elif not isinstance(regions, (Regions, list, tuple)):
             raise TypeError(f"Markers cannot accept {regions}")
 
         if marker_name is None:
@@ -475,23 +479,23 @@ class AstrowidgetsImageViewerMixin:
         #       Footprints plugin has pysiaf and GUI specific settings.
         #       Markers plugin has spectrum viewer support that is out of scope here.
 
-        # Since we have to render everything as polygon in Jdaviz,
-        # we need to track the original shapes separately for roundtripping.
-        if marker_name in self._marker_regions:
-            # Should we prune duplicates? Would set() work?
-            self._marker_regions[marker_name].extend(regions.regions)
-        else:
-            self._marker_regions[marker_name] = regions
-
         # TODO: need to re-call this logic when the reference_data is changed...
+        if self.state.reference_data is None:
+            raise ValueError("No reference data in viewer.")
         wcs = self.state.reference_data.coords
 
         # the following logic is adapted from
         # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
         new_marks = []
-        for reg in regions:
-            if hasattr(reg, "to_pixel"):  # Sky region
-                reg = reg.to_pixel(wcs)
+        for in_reg in regions:
+            if hasattr(in_reg, "to_pixel"):  # Sky region
+                if wcs is None:
+                    warnings.warn(
+                        f"Failed to mark this region, skipping: {in_reg}", AstropyUserWarning)
+                    continue
+                reg = in_reg.to_pixel(wcs)
+            else:
+                reg = in_reg
 
             if isinstance(reg, PolygonPixelRegion):
                 x_coords = reg.vertices.x
@@ -509,7 +513,7 @@ class AstrowidgetsImageViewerMixin:
 
             else:
                 warnings.warn(
-                    f"Failed to mark this region, skipping: {reg}", AstropyUserWarning)
+                    f"Failed to mark this region, skipping: {in_reg}", AstropyUserWarning)
                 continue
 
             new_marks.append(FootprintOverlay(
@@ -521,6 +525,14 @@ class AstrowidgetsImageViewerMixin:
                 opacities=[marker_alpha],
                 fill_opacities=[fill_opacity],
                 visible=True))
+
+            # Since we have to render everything as polygon in Jdaviz,
+            # we need to track the original shapes separately for roundtripping.
+            if marker_name in self._marker_regions:
+                # Should we prune duplicates? Would set() work?
+                self._marker_regions[marker_name].append(in_reg)
+            else:
+                self._marker_regions[marker_name] = Regions([in_reg])
 
         self.figure.marks = self.figure.marks + new_marks
 

@@ -3,6 +3,7 @@ import numpy.ma as ma
 from astropy import units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
+from regions import CircleSkyRegion
 from traitlets import List, Unicode, Bool, Int
 
 from jdaviz.core.events import SnackbarMessage
@@ -76,6 +77,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         x_center = (viewer.state.x_min + viewer.state.x_max) * 0.5
         y_center = (viewer.state.y_min + viewer.state.y_max) * 0.5
         skycoord_center = viewer.state.reference_data.coords.pixel_to_world(x_center, y_center)
+
+        # TODO: Let user set this in UI.
+        skycoord_radius = 0.1 * u.arcsec
 
         # obtains the viewer's zoom limits based on the visible layer
         ny, nx = viewer.state.reference_data.shape
@@ -163,13 +167,14 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
                                                                                     y_coordinates)
 
-        # QTable stores all the filtered sky coordinate points to be marked
-        catalog_results = QTable({'coord': filtered_skycoord_table})
+        # regions stores all the filtered sky coordinate points to be marked
+        catalog_results = [CircleSkyRegion(coord, skycoord_radius)
+                           for coord in filtered_skycoord_table]
         self.number_of_results = len(catalog_results)
 
         # markers are added to the viewer based on the table
-        viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
-        viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
+        viewer.marker = {'color': 'red', 'alpha': 0.8, 'fill': False}
+        viewer.add_markers(catalog_results, marker_name=self._marker_name)
 
         return skycoord_table
 
@@ -196,7 +201,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         # gets the current viewer
         viewer = self.viewer.selected_obj
 
-        if not hide_only and self._marker_name in self.app.data_collection.labels:
+        if not hide_only and self._marker_name in viewer._marker_regions:
             # resetting values
             self.results_available = False
             self.number_of_results = 0
@@ -205,16 +210,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             viewer.remove_markers(marker_name=self._marker_name)
 
         elif self.results_available:
-            from jdaviz.configs.imviz.helper import layer_is_table_data
-
             # resetting values
             self.results_available = False
             self.number_of_results = 0
 
             # markers still there, just hidden
-            for lyr in viewer.layers:
-                if layer_is_table_data(lyr.layer) and lyr.layer.label == self._marker_name:
-                    lyr.visible = False
+            for lyr in viewer._get_marks(self._marker_name):
+                lyr.visible = False
 
     def vue_do_clear(self, *args, **kwargs):
         self.clear()

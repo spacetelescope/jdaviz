@@ -173,12 +173,25 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     out_tbl = catalogs_plugin._obj.search()
     assert len(out_tbl) == n_entries
     assert catalogs_plugin._obj.number_of_results == n_entries
-    assert len(imviz_helper.app.data_collection) == 2  # image + markers
+    # image + markers
+    bqplot_marks = imviz_helper.default_viewer._get_marks("catalog_results")
+    for mrk in bqplot_marks:
+        assert mrk.visible
+        assert mrk.colors == ["red"]
+        assert mrk.opacities == [0.8]
+        assert mrk.fill_opacities == [0]
 
     catalogs_plugin._obj.clear()
     assert not catalogs_plugin._obj.results_available
-    assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
+    # markers still there, just hidden
+    bqplot_marks = imviz_helper.default_viewer._get_marks("catalog_results")
+    for mrk in bqplot_marks:
+        assert not mrk.visible
+        assert mrk.colors == ["red"]
+        assert mrk.opacities == [0.8]
+        assert mrk.fill_opacities == [0]
 
     catalogs_plugin._obj.clear(hide_only=False)
     assert not catalogs_plugin._obj.results_available
-    assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
+    # markers gone for good
+    assert len(imviz_helper.default_viewer._get_marks("catalog_results")) == 0

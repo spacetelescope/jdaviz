@@ -67,6 +67,10 @@ Imviz
 - Fixed wrong angle translations between sky regions in ``regions`` and ``photutils``.
   They were previously off by 90 degrees. [#2154]
 
+- Astrowidgets markers API is overhauled to work with Astropy regions instead of table.
+  As a result, the presence of those markers no longer blocks data re-linking and
+  ``MarkersChangedMessage`` is removed. This is not to be confused with the Markers plugin. [#2410]
+
 Mosviz
 ^^^^^^
 

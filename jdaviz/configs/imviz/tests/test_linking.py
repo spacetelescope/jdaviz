@@ -1,5 +1,4 @@
 import pytest
-from astropy.table import Table
 from astropy.wcs import WCS
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import OffsetLink, WCSLink
@@ -118,15 +117,6 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
                                  PolygonPixelRegion(vertices=PixCoord(x=[1, 2, 2], y=[1, 1, 2])),
                                  PolygonPixelRegion(vertices=PixCoord(x=[2, 3, 3], y=[2, 2, 3]))])
 
-        # Add markers.
-        tbl = Table({'x': (0, 0), 'y': (0, 1)})
-        self.viewer.add_markers(tbl, marker_name='xy_markers')
-        assert 'xy_markers' in self.imviz.app.data_collection.labels
-
-        # Run linking again with the same options as before (otherwise would fail with an error
-        # since markers now exist)
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
-
         # Ensure display is still customized.
         assert self.viewer.state.layers[1].cmap.name == 'viridis'
         assert self.viewer.state.layers[1].stretch == 'sqrt'
@@ -138,11 +128,6 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert sorted(self.imviz.get_interactive_regions()) == ['Subset 1', 'Subset 2']
         assert 'MaskedSubset 1' in all_labels
         assert 'MaskedSubset 2' in all_labels
-
-        # Markers should still exist since the type has not changed
-        # Zoom and pan will reset in this case, so we do not check those.
-        assert 'xy_markers' in self.imviz.app.data_collection.labels
-        assert len(self.viewer._marktags) == 1
 
         # Pan/zoom.
         self.viewer.center_on((5, 5))
@@ -177,14 +162,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
                                              'World 22h30m04.8674s -20d49m59.9990s (ICRS)',
                                              '337.5202808000 -20.8333330600 (deg)')
 
-        # Changing link type will raise an error
-        with pytest.raises(ValueError, match="cannot change link_type"):
-            self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None, error_on_fail=True)
-
-        self.viewer.reset_markers()
         self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None, error_on_fail=True)
-        assert 'xy_markers' not in self.imviz.app.data_collection.labels
-        assert len(self.viewer._marktags) == 0
 
     def test_wcslink_fullblown(self):
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=False,
