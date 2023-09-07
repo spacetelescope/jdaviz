@@ -120,6 +120,8 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Fixes slit overlay angle in cutout viewer. [#2433]
+
 Specviz
 ^^^^^^^
 
