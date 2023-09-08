@@ -125,7 +125,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not hasattr(self, 'subset_select'):
             # during initial init, this can trigger before the component is initialized
             return
-
+        print(change['new'])
         if change['new'] != self.subset_select.default_text:
             self._get_subset_definition(change['new'])
         self.show_region_info = change['new'] != self.subset_select.default_text
@@ -422,7 +422,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 else:
                     x = phot_aperstats.xcentroid
                     y = phot_aperstats.ycentroid
-
                 if not np.all(np.isfinite((x, y))):
                     raise ValueError(f'Invalid centroid ({x}, {y})')
             except Exception as err:
@@ -512,9 +511,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             subset_state = self.subset_select.selected_subset_state
         elif self.multiselect and subset_name:
             subset_state = self.subset_select.selected_subset_state[subset_name]
-
         if isinstance(subset_state, RoiSubsetState):
             x, y = new_cen
+            # x and y are arrays so this converts them back to floats
+            x = float(x)
+            y = float(y)
             sbst_obj = subset_state.roi
             if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
                 sbst_obj.move_to(x, y)
