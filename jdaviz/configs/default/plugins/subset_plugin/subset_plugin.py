@@ -426,12 +426,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if not np.all(np.isfinite((x, y))):
                     raise ValueError(f'Invalid centroid ({x}, {y})')
             except Exception as err:
-                self.set_center(self.get_center(subset_state=subset_state), subset_name=subset,
-                                subset_state=subset_state, update=False)
+                self.set_center(self.get_center(subset_name=subset), subset_name=subset,
+                                update=False)
                 self.hub.broadcast(SnackbarMessage(
                     f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
             else:
-                self.set_center((x, y), subset_name=subset, subset_state=subset_state, update=True)
+                self.set_center((x, y), subset_name=subset, update=True)
 
         dict_subset_to_state = self.subset_select.selected_subset_state
         if not self.multiselect:
@@ -448,14 +448,14 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                                        f"composite subset {sub}",
                                                        color='error', sender=self))
 
-    def get_center(self, subset_state=None):
+    def get_center(self, subset_name=None):
         """Return the center of the Subset.
         This may or may not be the centroid obtain from data.
 
         Parameters
         ----------
-        subset_state : ``glue.core.subset`` object
-            The object that contains information on the subset's location and size.
+        subset_name : str
+            The name of the subset that is being updated.
 
         Returns
         -------
@@ -468,12 +468,18 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         # Composite region cannot be centered.
         if not self.is_centerable:  # no-op
             return
-        if not subset_state and not self.multiselect:
+
+        if self.multiselect and not subset_name:
+            raise ValueError("Please include subset_name in"
+                             " get_center call when in multiselect mode")
+        elif not self.multiselect:
             subset_state = self.subset_select.selected_subset_state
+        elif self.multiselect and subset_name:
+            subset_state = self.subset_select.selected_subset_state[subset_name]
 
         return subset_state.center()
 
-    def set_center(self, new_cen, subset_name=None, subset_state=None, update=False):
+    def set_center(self, new_cen, subset_name=None, update=False):
         """Set the desired center for the selected Subset, if applicable.
         If Subset is not centerable, nothing is done.
 
@@ -484,8 +490,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             depending on the Subset type.
         subset_name : str
             The name of the subset that is being updated.
-        subset_state : ``glue.core.subset`` object
-            The object that contains information on the subset's location and size.
         update : bool
             If `True`, the Subset is also moved to the new center.
             Otherwise, only the relevant editable fields are updated but the
@@ -500,10 +504,14 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         # Composite region cannot be centered, so just grab first element.
         if not self.is_centerable:  # no-op
             return
-        if not subset_name:
-            subset_name = self.subset_selected
-        if not subset_state:
+
+        if self.multiselect and not subset_name:
+            raise ValueError("Please include subset_name in"
+                             " set_center call when in multiselect mode")
+        elif not self.multiselect:
             subset_state = self.subset_select.selected_subset_state
+        elif self.multiselect and subset_name:
+            subset_state = self.subset_select.selected_subset_state[subset_name]
 
         if isinstance(subset_state, RoiSubsetState):
             x, y = new_cen
