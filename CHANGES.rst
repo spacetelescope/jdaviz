@@ -30,6 +30,8 @@ Imviz
 
 - The stretch histogram is now downsampled for large images for improved performance. [#2408]
 
+- Add multiselect support to the subset plugin for recentering only. [#2430]
+
 Mosviz
 ^^^^^^
 
