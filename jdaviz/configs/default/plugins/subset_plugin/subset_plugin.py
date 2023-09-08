@@ -115,12 +115,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                              self.subset_select._subset_to_dict(subset) for subset in
                              self.data_collection.subset_groups]
 
-    @observe('multiselect')
-    def _on_multiselect_change(self, change=None):
-        if not self.multiselect and isinstance(self.subset_selected, List):
-            self.subset_selected = self.subset_selected[0]
-        elif self.multiselect and isinstance(self.subset_selected, List):
-            self.is_centerable = True
+    # @observe('multiselect')
+    # def _on_multiselect_change(self, change=None):
+    #     if not self.multiselect and isinstance(self.subset_selected, List):
+    #         self.subset_selected = self.subset_selected[0]
+    #     elif self.multiselect and isinstance(self.subset_selected, List):
+    #         self.is_centerable = True
 
     @observe('subset_selected')
     def _sync_selected_from_ui(self, change):
@@ -408,7 +408,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         def _do_recentering(subset, subset_state):
             try:
-                reg = _get_region_from_spatial_subset(self, self.subset_select.selected_subset_state[subset]) # noqa
+                reg = _get_region_from_spatial_subset(self, subset_state) # noqa
                 aperture = regions2aperture(reg)
                 data = self.dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])
@@ -422,7 +422,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     # so we need to convert back.
                     x, y = pixel_to_pixel(
                         data.coords,
-                        self.subset_select.selected_subset_state[subset].xatt.parent.coords,
+                        subset_state.xatt.parent.coords,
                         phot_aperstats.xcentroid,
                         phot_aperstats.ycentroid)
 
@@ -442,11 +442,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         dict_subset_to_state = self.subset_select.selected_subset_state
         if not self.multiselect:
-            _do_recentering(self.subset_selected, dict_subset_to_state[self.subset_selected])
+            _do_recentering(self.subset_selected, dict_subset_to_state)
         else:
             for sub in self.subset_selected:
                 if (sub != self.subset_select.default_text and
                         not isinstance(dict_subset_to_state[sub], CompositeSubsetState)):
+                    self.is_centerable = True
                     _do_recentering(sub, dict_subset_to_state[sub])
                 elif (sub != self.subset_select.default_text and
                       isinstance(dict_subset_to_state[sub], CompositeSubsetState)):
@@ -474,8 +475,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         # Composite region cannot be centered.
         if not self.is_centerable:  # no-op
             return
-        if not subset_state:
-            subset_state = self.subset_select.selected_subset_state[self.subset_selected]
+        if not subset_state and not self.multiselect:
+            subset_state = self.subset_select.selected_subset_state
 
         return subset_state.center()
 
@@ -509,7 +510,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not subset_name:
             subset_name = self.subset_selected
         if not subset_state:
-            subset_state = self.subset_select.selected_subset_state[subset_name]
+            subset_state = self.subset_select.selected_subset_state
 
         if isinstance(subset_state, RoiSubsetState):
             x, y = new_cen

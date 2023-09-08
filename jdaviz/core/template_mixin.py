@@ -1491,7 +1491,9 @@ class SubsetSelect(SelectPluginComponent):
                               else self._subset_to_dict(subset)
                               for s in self.items]
 
-        if attribute == 'subset_state' and subset.label in self.selected:
+        if (attribute == 'subset_state' and
+            ((self.is_multiselect and subset.label in self.selected)
+             or (subset.label == self.selected))):
             # updated the currently selected subset
             self._clear_cache("selected_obj", "selected_item")
             self._update_has_subregions()
@@ -1499,6 +1501,7 @@ class SubsetSelect(SelectPluginComponent):
     def _update_has_subregions(self):
         if self.is_multiselect:
             self.selected_has_subregions = False
+            return
         if "selected_has_subregions" in self._plugin_traitlets.keys():
             if (
                 self.selected in self._manual_options or
@@ -1531,12 +1534,13 @@ class SubsetSelect(SelectPluginComponent):
             return subset_states
         subset_group = [s for s in self.app.data_collection.subset_groups if
                         s.label == self.selected][0]
-        return {self.selected: subset_group.subset_state}
+        return subset_group.subset_state
 
     @property
     def selected_subset_mask(self):
         if self.is_multiselect:
-            return None
+            raise NotImplementedError("Retrieving subset mask is not"
+                                      " supported in multiselect mode")
         get_data_kwargs = {'data_label': self.plugin.dataset.selected}
         if 'is_spectral' in self.filters:
             get_data_kwargs['spectral_subset'] = self.selected

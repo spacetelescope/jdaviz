@@ -8,7 +8,7 @@
       <div style="width: calc(100% - 32px)">
       </div>
       <div style="width: 32px">
-        <j-tooltip tipid='plugin-plot-options-multiselect-toggle'>
+        <j-tooltip tooltipcontent="Multiselect for recentering subsets">
           <v-btn
             icon
             style="opacity: 0.7"

@@ -169,7 +169,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         try:
             self._selected_subset = _get_region_from_spatial_subset(
-                self, self.subset.selected_subset_state[subset_selected])
+                self, self.subset.selected_subset_state)
             self._selected_subset.meta['label'] = subset_selected
 
             # Sky subset does not have area. Not worth it to calculate just for a warning.
@@ -207,7 +207,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             return
 
         try:
-            reg = _get_region_from_spatial_subset(self, self.bg_subset.selected_subset_state[bg_subset_selected]) # noqa
+            reg = _get_region_from_spatial_subset(self, self.bg_subset.selected_subset_state)
             self.background_value = self._calc_bg_subset_median(reg)
         except Exception as e:
             self.background_value = 0
