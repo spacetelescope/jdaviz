@@ -115,13 +115,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                              self.subset_select._subset_to_dict(subset) for subset in
                              self.data_collection.subset_groups]
 
-    # @observe('multiselect')
-    # def _on_multiselect_change(self, change=None):
-    #     if not self.multiselect and isinstance(self.subset_selected, List):
-    #         self.subset_selected = self.subset_selected[0]
-    #     elif self.multiselect and isinstance(self.subset_selected, List):
-    #         self.is_centerable = True
-
     @observe('subset_selected')
     def _sync_selected_from_ui(self, change):
         self.subset_definitions = []
