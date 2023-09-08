@@ -60,6 +60,7 @@ The centroid is calculated by :attr:`photutils.aperture.ApertureStats.centroid`,
 which is the center-of-mass of the data within the aperture.
 No background subtraction is performed. Click :guilabel:`Recenter`
 to change its parameters and move it to the calculated centroid.
+This may take multiple iterations to converge.
 
 .. note::
 
