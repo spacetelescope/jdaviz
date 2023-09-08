@@ -24,7 +24,7 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:pixelboxzoommatch', 'jdaviz:boxzoom',
                      'jdaviz:pixelpanzoommatch', 'jdaviz:panzoom'],
-                    ['bqplot:circle', 'bqplot:rectangle', 'bqplot:ellipse'],
+                    ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse'],
                     ['jdaviz:spectrumperspaxel'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]

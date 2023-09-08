@@ -125,7 +125,7 @@ def test_region_from_subset_3d(cubeviz_helper):
     # Circular Subset
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     # We set the active tool here to trigger a reset of the Subset state to "Create New"
-    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:circle']
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:truecircle']
     cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=3, yc=4, radius=2.4))
     assert subset_plugin.subset_selected == "Subset 2"
     assert subset_plugin.subset_types == ["CircularROI"]
