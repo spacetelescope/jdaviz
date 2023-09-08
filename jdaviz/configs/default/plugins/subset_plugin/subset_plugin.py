@@ -125,7 +125,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not hasattr(self, 'subset_select'):
             # during initial init, this can trigger before the component is initialized
             return
-        print(change['new'])
         if change['new'] != self.subset_select.default_text:
             self._get_subset_definition(change['new'])
         self.show_region_info = change['new'] != self.subset_select.default_text
