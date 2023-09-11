@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - main
-    - debug-standalone-build
     - 'v*'
     tags:
     - 'v*'
@@ -98,11 +97,11 @@ jobs:
 
     - name: Run jdaviz cmd in background
       if: ${{ matrix.os == 'macos' }}
-      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz > jdaviz_log.txt 2>&1 &
+      run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz&
 
     - name: Run jdaviz cmd in background
       if: ${{ matrix.os != 'macos' }}
-      run: ./standalone/dist/jdaviz/jdaviz-cli imviz > jdaviz_log.txt 2>&1 &
+      run: ./standalone/dist/jdaviz/jdaviz-cli imviz&
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
@@ -125,13 +124,6 @@ jobs:
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
-
-    - name: Upload test log
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-log-${{ matrix.os }}
-        path: jdaviz_log.txt
 
     - name: Upload jdaviz standalone (non-OSX)
       if: ${{ always() && (matrix.os != 'macos') }}
