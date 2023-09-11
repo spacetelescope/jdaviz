@@ -22,12 +22,12 @@ jobs:
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
-      uses: apple-actions/import-codesign-certs@v1
+      uses: apple-actions/import-codesign-certs@v2
       if: ${{ matrix.os == 'macos' }}
       with:
         p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
         p12-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -110,7 +110,7 @@ jobs:
       run: pip install pytest-playwright
 
     - name: Wait for Voila to get online
-      uses: ifaxity/wait-on-action@v1
+      uses: ifaxity/wait-on-action@628831cec646e6dacca502f34a6c6b46e131e51d  # v1.1.0
       with:
         resource: tcp:8866
         timeout: 60000
