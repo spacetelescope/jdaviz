@@ -1499,11 +1499,10 @@ class SubsetSelect(SelectPluginComponent):
             self._update_has_subregions()
 
     def _update_has_subregions(self):
-        if self.is_multiselect:
-            self.selected_has_subregions = False
-            return
         if "selected_has_subregions" in self._plugin_traitlets.keys():
-            if (
+            if self.is_multiselect:
+                self.selected_has_subregions = False
+            elif (
                 self.selected in self._manual_options or
                 not hasattr(self.selected_obj, 'subregions')
             ):
@@ -1560,7 +1559,7 @@ class SubsetSelect(SelectPluginComponent):
     def selected_min_max(self, spectrum1d):
         if self.is_multiselect:
             raise TypeError("This action cannot be done when multiselect is active")
-            return
+
         if self.selected_obj is None:
             return np.nanmin(spectrum1d.spectral_axis), np.nanmax(spectrum1d.spectral_axis)
         if self.selected_item.get('type') != 'spectral':
