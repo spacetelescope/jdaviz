@@ -328,7 +328,7 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
 
     # Make sure that certain things are not possible because we are
     # dealing with a composite spectral subset
-    subset_plugin.set_center(new_cen=99, update=True)   # This is no-op
+    subset_plugin.set_center(99, update=True)   # This is no-op
     assert subset_plugin.get_center() is None
 
     for key in ("orig", "value"):

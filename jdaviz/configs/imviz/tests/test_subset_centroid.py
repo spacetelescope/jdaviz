@@ -15,7 +15,7 @@ class TestImvizSpatialSubsetCentroid(BaseImviz_WCS_GWCS):
         # and nothing should change.
         for data_label in ('fits_wcs[DATA]', 'gwcs[DATA]', 'no_wcs'):
             plg._obj.dataset_selected = data_label
-            plg._obj.set_center(new_cen=(2, 2), update=True)  # Move the Subset back first.
+            plg._obj.set_center((2, 2), update=True)  # Move the Subset back first.
             plg._obj.vue_recenter_subset()
 
             # Calculate and move to centroid.
