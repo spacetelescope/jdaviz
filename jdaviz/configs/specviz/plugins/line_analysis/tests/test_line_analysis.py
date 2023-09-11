@@ -88,8 +88,8 @@ def test_user_api(specviz_helper, spectrum1d):
     la = specviz_helper.plugins['Line Analysis']
     la.keep_active = True
 
-    # spectral subset does not support multiselect
-    assert "multiselect" not in la.spectral_subset.__repr__()
+    # spectral subset now supports multiselect
+    assert "multiselect" in la.spectral_subset.__repr__()
     with pytest.raises(ValueError):
         la.spectral_subset.select_all()
     with pytest.raises(ValueError):

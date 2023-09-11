@@ -8,7 +8,7 @@ from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
-from glue.core.subset import RoiSubsetState, RangeSubsetState
+from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -17,6 +17,7 @@ from traitlets import Any, List, Unicode, Bool, observe
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
+from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['SubsetPlugin']
 
@@ -36,7 +37,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
-    subset_selected = Unicode("Create New").tag(sync=True)
+    subset_selected = Any().tag(sync=True)
+
     mode_selected = Unicode('add').tag(sync=True)
     show_region_info = Bool(True).tag(sync=True)
     subset_types = List([]).tag(sync=True)
@@ -46,6 +48,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     subplugins_opened = Any().tag(sync=True)
 
+    multiselect = Bool(False).tag(sync=True)
     is_centerable = Bool(False).tag(sync=True)
     can_simplify = Bool(False).tag(sync=True)
 
@@ -54,6 +57,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     icon_and = Unicode(read_icon(os.path.join(icon_path("glue_and", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_xor = Unicode(read_icon(os.path.join(icon_path("glue_xor", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_andnot = Unicode(read_icon(os.path.join(icon_path("glue_andnot", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
+
+    icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,12 +78,13 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_select = SubsetSelect(self,
                                           'subset_items',
                                           'subset_selected',
+                                          multiselect='multiselect',
                                           default_text="Create New")
         self.subset_states = []
         self.spectral_display_unit = None
 
     def _sync_selected_from_state(self, *args):
-        if not hasattr(self, 'subset_select'):
+        if not hasattr(self, 'subset_select') or self.multiselect:
             # during initial init, this can trigger before the component is initialized
             return
         if self.session.edit_subset_mode.edit_subset == []:
@@ -94,7 +101,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     def _on_subset_update(self, *args):
         self._sync_selected_from_state(*args)
-        if self.subset_selected == 'Create New':
+        if 'Create New' in self.subset_selected:
             return
         self._get_subset_definition(*args)
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
@@ -118,7 +125,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not hasattr(self, 'subset_select'):
             # during initial init, this can trigger before the component is initialized
             return
-
         if change['new'] != self.subset_select.default_text:
             self._get_subset_definition(change['new'])
         self.show_region_info = change['new'] != self.subset_select.default_text
@@ -131,7 +137,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         Convert what app.get_subsets returns into something the UI of this plugin
         can display.
         """
-        subset_information = self.app.get_subsets(self.subset_selected, simplify_spectral=False,
+        if self.multiselect:
+            self.is_centerable = True
+            return
+
+        subset_information = self.app.get_subsets(self.subset_selected,
+                                                  simplify_spectral=False,
                                                   use_display_units=True)
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
         if not subset_information:
@@ -248,6 +259,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self._unpack_get_subsets_for_ui()
 
     def vue_simplify_subset(self, *args):
+        if self.multiselect:
+            self.hub.broadcast(SnackbarMessage("Cannot simplify spectral subset "
+                                               "when multiselect is active", color='warning',
+                                               sender=self))
+            return
         if len(self.subset_states) < 2:
             self.hub.broadcast(SnackbarMessage("Cannot simplify spectral subset "
                                                "of length less than 2", color='warning',
@@ -265,6 +281,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self._get_subset_definition(self.subset_selected)
 
     def vue_update_subset(self, *args):
+        if self.multiselect:
+            self.hub.broadcast(SnackbarMessage("Cannot update subset "
+                                               "when multiselect is active", color='warning',
+                                               sender=self))
+            return
+
         status, reason = self._check_input()
         if not status:
             self.hub.broadcast(SnackbarMessage(reason, color='error', sender=self))
@@ -298,12 +320,27 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         setattr(sub_states, d_att["att"], d_val)
                     else:
                         setattr(sub_states.roi, d_att["att"], d_val)
+        self._push_update_to_ui()
+
+    def _push_update_to_ui(self, subset_name=None):
+        """
+        Forces the UI to update how it represents the subset.
+
+        Parameters
+        ----------
+        subset_name : str
+            The name of the subset that is being updated.
+
+        """
+        if not subset_name:
+            subset_name = self.subset_selected
         try:
             dc = self.data_collection
             subsets = dc.subset_groups
-            self.session.edit_subset_mode._combine_data(
-                subsets[[x.label for x in subsets].index(self.subset_selected)].subset_state,
-                override_mode=ReplaceMode)
+            subset_to_update = subsets[[x.label for x in subsets].index(subset_name)]
+            self.session.edit_subset_mode.edit_subset = [subset_to_update]
+            self.session.edit_subset_mode._combine_data(subset_to_update.subset_state,
+                                                        override_mode=ReplaceMode)
         except Exception as err:  # pragma: no cover
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to update Subset: {repr(err)}", color='error', sender=self))
@@ -361,41 +398,62 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         from photutils.aperture import ApertureStats
         from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 
-        try:
-            reg = _get_region_from_spatial_subset(self, self.subset_select.selected_subset_state)
-            aperture = regions2aperture(reg)
-            data = self.dataset.selected_dc_item
-            comp = data.get_component(data.main_components[0])
-            comp_data = comp.data
-            phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords)
+        def _do_recentering(subset, subset_state):
+            try:
+                reg = _get_region_from_spatial_subset(self, subset_state) # noqa
+                aperture = regions2aperture(reg)
+                data = self.dataset.selected_dc_item
+                comp = data.get_component(data.main_components[0])
+                comp_data = comp.data
+                phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords)
 
-            # Sky region from WCS linking, need to convert centroid back to pixels.
-            if hasattr(reg, "to_pixel"):
-                # Centroid was calculated in selected data.
-                # However, Subset is always defined w.r.t. its parent,
-                # so we need to convert back.
-                x, y = pixel_to_pixel(
-                    data.coords,
-                    self.subset_select.selected_subset_state.xatt.parent.coords,
-                    phot_aperstats.xcentroid,
-                    phot_aperstats.ycentroid)
+                # Sky region from WCS linking, need to convert centroid back to pixels.
+                if hasattr(reg, "to_pixel"):
+                    # Centroid was calculated in selected data.
+                    # However, Subset is always defined w.r.t. its parent,
+                    # so we need to convert back.
+                    x, y = pixel_to_pixel(
+                        data.coords,
+                        subset_state.xatt.parent.coords,
+                        phot_aperstats.xcentroid,
+                        phot_aperstats.ycentroid)
 
+                else:
+                    x = phot_aperstats.xcentroid
+                    y = phot_aperstats.ycentroid
+                if not np.all(np.isfinite((x, y))):
+                    raise ValueError(f'Invalid centroid ({x}, {y})')
+            except Exception as err:
+                self.set_center(self.get_center(subset_name=subset), subset_name=subset,
+                                update=False)
+                self.hub.broadcast(SnackbarMessage(
+                    f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
             else:
-                x = phot_aperstats.xcentroid
-                y = phot_aperstats.ycentroid
+                self.set_center((x, y), subset_name=subset, update=True)
 
-            if not np.all(np.isfinite((x, y))):
-                raise ValueError(f'Invalid centroid ({x}, {y})')
-        except Exception as err:
-            self.set_center(self.get_center(), update=False)
-            self.hub.broadcast(SnackbarMessage(
-                f"Failed to calculate centroid: {repr(err)}", color='error', sender=self))
+        dict_subset_to_state = self.subset_select.selected_subset_state
+        if not self.multiselect:
+            _do_recentering(self.subset_selected, dict_subset_to_state)
         else:
-            self.set_center((x, y), update=True)
+            for sub in self.subset_selected:
+                if (sub != self.subset_select.default_text and
+                        not isinstance(dict_subset_to_state[sub], CompositeSubsetState)):
+                    self.is_centerable = True
+                    _do_recentering(sub, dict_subset_to_state[sub])
+                elif (sub != self.subset_select.default_text and
+                      isinstance(dict_subset_to_state[sub], CompositeSubsetState)):
+                    self.hub.broadcast(SnackbarMessage(f"Unable to recenter "
+                                                       f"composite subset {sub}",
+                                                       color='error', sender=self))
 
-    def get_center(self):
+    def get_center(self, subset_name=None):
         """Return the center of the Subset.
         This may or may not be the centroid obtain from data.
+
+        Parameters
+        ----------
+        subset_name : str
+            The name of the subset that is being updated.
 
         Returns
         -------
@@ -409,10 +467,17 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not self.is_centerable:  # no-op
             return
 
-        subset_state = self.subset_select.selected_subset_state
+        if self.multiselect and not subset_name:
+            raise ValueError("Please include subset_name in"
+                             " get_center call when in multiselect mode")
+        elif not self.multiselect:
+            subset_state = self.subset_select.selected_subset_state
+        elif self.multiselect and subset_name:
+            subset_state = self.subset_select.selected_subset_state[subset_name]
+
         return subset_state.center()
 
-    def set_center(self, new_cen, update=False):
+    def set_center(self, new_cen, subset_name=None, update=False):
         """Set the desired center for the selected Subset, if applicable.
         If Subset is not centerable, nothing is done.
 
@@ -421,7 +486,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         new_cen : number or tuple of numbers
             The new center defined either as ``x`` or ``(x, y)``,
             depending on the Subset type.
-
+        subset_name : str
+            The name of the subset that is being updated.
         update : bool
             If `True`, the Subset is also moved to the new center.
             Otherwise, only the relevant editable fields are updated but the
@@ -437,36 +503,35 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not self.is_centerable:  # no-op
             return
 
-        subset_state = self.subset_select.selected_subset_state
-
+        if self.multiselect and not subset_name:
+            raise ValueError("Please include subset_name in"
+                             " set_center call when in multiselect mode")
+        elif not self.multiselect:
+            subset_state = self.subset_select.selected_subset_state
+        elif self.multiselect and subset_name:
+            subset_state = self.subset_select.selected_subset_state[subset_name]
         if isinstance(subset_state, RoiSubsetState):
             x, y = new_cen
+            # x and y are arrays so this converts them back to floats
+            x = float(x)
+            y = float(y)
             sbst_obj = subset_state.roi
             if isinstance(sbst_obj, (CircularROI, CircularAnnulusROI, EllipticalROI)):
-                self._set_value_in_subset_definition(0, "X Center", "value", x)
-                self._set_value_in_subset_definition(0, "Y Center", "value", y)
+                sbst_obj.move_to(x, y)
             elif isinstance(sbst_obj, RectangularROI):
-                cx, cy = sbst_obj.center()
-                dx = x - cx
-                dy = y - cy
-                self._set_value_in_subset_definition(0, "Xmin", "value", sbst_obj.xmin + dx)
-                self._set_value_in_subset_definition(0, "Xmax", "value", sbst_obj.xmax + dx)
-                self._set_value_in_subset_definition(0, "Ymin", "value", sbst_obj.ymin + dy)
-                self._set_value_in_subset_definition(0, "Ymax", "value", sbst_obj.ymax + dy)
+                sbst_obj.move_to(x, y)
             else:  # pragma: no cover
                 raise NotImplementedError(f'Recentering of {sbst_obj.__class__} is not supported')
 
         elif isinstance(subset_state, RangeSubsetState):
-            dx = new_cen - subset_state.center()
-            self._set_value_in_subset_definition(0, "Lower bound", "value", subset_state.lo + dx)
-            self._set_value_in_subset_definition(0, "Upper bound", "value", subset_state.hi + dx)
+            subset_state.move_to(new_cen)
 
         else:  # pragma: no cover
             raise NotImplementedError(
                 f'Getting center of {subset_state.__class__} is not supported')
 
         if update:
-            self.vue_update_subset()
+            self._push_update_to_ui(subset_name=subset_name)
         else:
             # Force UI to update on browser without changing the subset.
             tmp = self.subset_definitions

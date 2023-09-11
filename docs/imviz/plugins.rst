@@ -48,16 +48,19 @@ in the app-level toolbar. It might not show some static regions loaded
 via the API unless an interactive region is drawn after.
 
 If an existing subset is selected, the parameters of the subset will also be
-shown. Note that while parameters for compound regions (e.g., a subset with
-multiple disjoint regions) are displayed, the logical operations joining them
-(``OR``, ``AND``, etc.) are not shown.
+shown. Note that in addition to parameters for compound regions (e.g., a subset with
+multiple disjoint regions) being displayed, the logical operations joining them
+(``OR``, ``AND``, etc.) are shown as well for each region. This shows how all regions
+are added together to create the subset shown in the viewer.
 
-For a simple subset in Imviz only, you can choose to recenter it based
-on the selected Data. The centroid is calculated by
-:attr:`photutils.aperture.ApertureStats.centroid`, which is the
-center-of-mass of the data within the aperture.
+For a simple subset or group of subsets in Imviz only, you can choose to recenter based
+on the selected Data. To switch to multiselect mode, click the icon in the top right of
+the plugin and select multiple subsets from the drop-down menu.
+The centroid is calculated by :attr:`photutils.aperture.ApertureStats.centroid`,
+which is the center-of-mass of the data within the aperture.
 No background subtraction is performed. Click :guilabel:`Recenter`
 to change its parameters and move it to the calculated centroid.
+This may take multiple iterations to converge.
 
 .. note::
 

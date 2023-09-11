@@ -4,11 +4,28 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
     :popout_button="popout_button">
 
+    <v-row v-if="config === 'imviz'">
+      <div style="width: calc(100% - 32px)">
+      </div>
+      <div style="width: 32px">
+        <j-tooltip tooltipcontent="Multiselect for recentering subsets">
+          <v-btn
+            icon
+            style="opacity: 0.7"
+            @click="() => {multiselect = !multiselect}"
+          >
+            <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
+          </v-btn>
+        </j-tooltip>
+      </div>
+    </v-row>
+
     <v-row align=center>
       <v-col cols=10 justify="left">
         <plugin-subset-select 
           :items="subset_items"
           :selected.sync="subset_selected"
+          :multiselect="multiselect"
           :show_if_single_entry="true"
           label="Subset"
           hint="Select subset to edit."
@@ -95,7 +112,7 @@
       </v-row>
     </div>
 
-    <v-row justify="end">
+    <v-row v-if="!multiselect" justify="end">
       <j-tooltip v-if="can_simplify" tooltipcontent="Convert composite subset to use only add mode to connect subregions">
         <v-btn color="primary" text @click="simplify_subset">Simplify</v-btn>
       </j-tooltip>
