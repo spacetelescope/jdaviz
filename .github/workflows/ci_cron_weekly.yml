@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Extra CI')))
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python to build docs with sphinx
       uses: actions/setup-python@v4
       with:
@@ -41,7 +41,7 @@ jobs:
     if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Extra CI')))
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up python
@@ -61,7 +61,7 @@ jobs:
     if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Extra CI')))
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up python
