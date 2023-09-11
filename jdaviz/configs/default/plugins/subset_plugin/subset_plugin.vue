@@ -4,7 +4,7 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
     :popout_button="popout_button">
 
-    <v-row>
+    <v-row v-if="config === 'imviz'">
       <div style="width: calc(100% - 32px)">
       </div>
       <div style="width: 32px">
