@@ -385,3 +385,56 @@ def test_invalid_subset(specviz_helper, spectrum1d):
 
     plugin.dataset = 'left_spectrum'
     assert plugin._obj.spectral_subset_valid
+
+
+def test_all_nan_uncert(specviz_helper):
+
+    # test that if you have a fully finite data array, and a fully nan/inf
+    # uncert array, that it is set to None and the fit proceeds (rather than
+    # being filtered in the fitter, as would normally happen with nans)
+
+    uncertainty = StdDevUncertainty([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan] * u.Jy)
+    spec = Spectrum1D(flux=[1, 2, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
+    specviz_helper.load_data(spec)
+
+    plugin = specviz_helper.plugins['Model Fitting']
+    plugin.create_model_component('Linear1D')
+
+    with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
+        plugin.calculate_fit()
+
+    # check that slope and intercept are fit correctly
+    plugin._obj.component_models[0]['parameters'][0]['value'] == 1.0
+    plugin._obj.component_models[0]['parameters'][1]['value'] == 1.0
+
+    # and that this value is correctly set to false, even though there IS
+    # a mismatch, since its the entire array it will be reset
+    assert plugin._obj.non_finite_uncertainty_mismatch is False
+
+
+def test_all_nan_uncert_subset(specviz_helper):
+
+    # test that nans in uncertainty array are filtered from fit (contrary to
+    # what is tested in test_all_nan_uncert, when its not the entire array they
+    # SHOULD be filtered even when corresponding data values are finite), and that
+    # the `non_finite_uncertainty_mismatch` traitlet is True to trigger a warning
+    # message
+
+    uncertainty = StdDevUncertainty([1, 1, np.nan, np.nan, np.nan, np.nan] * u.Jy)
+    spec = Spectrum1D(flux=[2, 4, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
+    specviz_helper.load_data(spec)
+
+    plugin = specviz_helper.plugins['Model Fitting']
+    plugin.create_model_component('Linear1D')
+
+    with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
+        plugin.calculate_fit()
+
+    # check that slope and intercept are fit correctly to just the first 2
+    # data points
+    plugin._obj.component_models[0]['parameters'][0]['value'] == 2.0
+    plugin._obj.component_models[0]['parameters'][1]['value'] == 2.0
+
+    # # and that this value is correctly set to false, even though there IS
+    # # a mismatch, since its the entire array it will be reset
+    assert plugin._obj.non_finite_uncertainty_mismatch is True

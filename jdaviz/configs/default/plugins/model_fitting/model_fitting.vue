@@ -289,6 +289,12 @@
             </span>
           </v-row>
 
+          <v-row v-if="non_finite_uncertainty_mismatch">
+            <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                "Non-finite uncertainties exist in the selected data, these data points will be excluded from the fit."
+            </span>
+          </v-row>
+
         </div>
       </plugin-add-results>
 

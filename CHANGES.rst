@@ -60,6 +60,13 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Better handling of non-finite uncertainties in model fitting. The 'filter_non_finite' flag (for the
+  LevMarLSQFitter) now filters datapoints with non-finite weights. In Specviz, if a fully-finite spectrum
+  with non-finite uncertainties is loaded, the uncertainties will be dropped so every datapoint isn't
+  filtered. For other scenarios with non-finite uncertainties, there are appropriate warning messages
+  displayed to alert users that data points are being filtered because of non-finite uncertainties (when
+  flux is finite). [#2437]
+
 3.7.1 (unreleased)
 ==================
 
