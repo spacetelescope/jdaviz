@@ -1,8 +1,10 @@
 import os
+import warnings
 
 import asdf
 import numpy as np
 import pytest
+from asdf.exceptions import AsdfWarning
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.nddata import NDData
@@ -353,8 +355,11 @@ class TestMarkers(BaseImviz_WCS_NoWCS):
 def test_markers_gwcs_lonlat(imviz_helper):
     """GWCS uses Lon/Lat for ICRS."""
     gw_file = get_pkg_data_filename('data/miri_i2d_lonlat_gwcs.asdf')
-    with asdf.open(gw_file) as af:
-        gw = af.tree['wcs']
+    with warnings.catch_warnings():
+        # https://github.com/spacetelescope/jdaviz/issues/2446
+        warnings.filterwarnings("ignore", category=AsdfWarning)
+        with asdf.open(gw_file) as af:
+            gw = af.tree['wcs']
     ndd = NDData(np.ones((10, 10), dtype=np.float32), wcs=gw, unit='MJy/sr')
     imviz_helper.load_data(ndd, data_label='MIRI_i2d')
     assert imviz_helper.app.data_collection[0].label == 'MIRI_i2d[DATA]'
