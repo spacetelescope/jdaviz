@@ -4,6 +4,7 @@ settings:
     toolbar: true
     tray: true
     tab_headers: true
+  server_is_remote: false
   context:
     notebook:
       max_height: 600px

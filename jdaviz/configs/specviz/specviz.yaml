@@ -8,6 +8,7 @@ settings:
     tray: true
     tab_headers: false
   dense_toolbar: false
+  server_is_remote: false
   context:
     notebook:
       max_height: 600px

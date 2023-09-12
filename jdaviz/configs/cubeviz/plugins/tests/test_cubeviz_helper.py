@@ -6,6 +6,10 @@ from specutils import Spectrum1D
 
 from glue.core.roi import XRangeROI
 
+from jdaviz import Cubeviz
+from jdaviz.app import Application
+from jdaviz.core.config import get_configuration
+
 
 def test_nested_helper(cubeviz_helper):
     '''Ensures the Cubeviz helper is always returned, even after the Specviz helper is called'''
@@ -67,6 +71,16 @@ def test_valid_function(cubeviz_helper, spectrum1d_cube):
     assert cubeviz_helper.get_data(data_label="test[FLUX]").flux.ndim == 3
     # but calling through specviz automatically collapses
     assert cubeviz_helper.specviz.get_data(data_label="test[FLUX]").flux.ndim == 1
+
+
+def test_remote_server_disable_movie():
+    config = get_configuration('cubeviz')
+    config['settings']['server_is_remote'] = True
+
+    cubeviz_app = Application(config)
+    cubeviz_helper = Cubeviz(cubeviz_app)
+    ep = cubeviz_helper.plugins['Export Plot']
+    assert ep._obj.movie_enabled is False
 
 
 def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):

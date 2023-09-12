@@ -46,6 +46,12 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     # For Cubeviz movie.
     i_start = IntHandleEmpty(0).tag(sync=True)
     i_end = IntHandleEmpty(0).tag(sync=True)
+
+    # movie_enabled controls whether movie support is enabled via the UI.  This is a temporary
+    # measure to allow server-installations to disable support for saving movies but setting this
+    # traitlet until movie-support is refactored to be sent through the browser instead of saved
+    # server-side in python.
+    movie_enabled = Bool(True).tag(sync=True)
     movie_fps = FloatHandleEmpty(5.0).tag(sync=True)
     movie_filename = Any("mymovie.mp4").tag(sync=True)
     movie_msg = Unicode("").tag(sync=True)
@@ -68,6 +74,11 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             else:
                 # NOTE: HTML tags do not work here.
                 self.movie_msg = 'Please install opencv-python to use this feature.'
+
+        if self.app.state.settings.get('server_is_remote', False):
+            # when the server is remote, saving thet movie in python would save on the server, not
+            # on the user's machine, so movie support in cubeviz should be disabled
+            self.movie_enabled = False
 
     def _on_cubeviz_data_added(self, msg):
         # NOTE: This needs revising if we allow loading more than one cube.
@@ -233,6 +244,11 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         """
         if self.config != "cubeviz":
             raise NotImplementedError(f"save_movie is not available for config={self.config}")
+
+        if not self.movie_enabled:
+            # this should never be triggered since this is intended for UI-disabling and the
+            # UI section is hidden, but would prevent any JS-hacking
+            raise ValueError("save_movie is currently disabled")
 
         if not HAS_OPENCV:
             raise ImportError("Please install opencv-python to save cube as movie.")
