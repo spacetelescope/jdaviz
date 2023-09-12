@@ -75,6 +75,11 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
                 # NOTE: HTML tags do not work here.
                 self.movie_msg = 'Please install opencv-python to use this feature.'
 
+        if self.app.state.settings.get('server_is_remote', False):
+            # when the server is remote, saving thet movie in python would save on the server, not
+            # on the user's machine, so movie support in cubeviz should be disabled
+            self.movie_enabled = False
+
     def _on_cubeviz_data_added(self, msg):
         # NOTE: This needs revising if we allow loading more than one cube.
         if isinstance(msg.viewer, BqplotImageView):

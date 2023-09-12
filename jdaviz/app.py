@@ -194,6 +194,7 @@ class ApplicationState(State):
         },
         'viewer_labels': True,
         'dense_toolbar': True,
+        'server_is_remote': False,  # sets some defaults, should be set before loading the config
         'context': {
             'notebook': {
                 'max_height': '600px'
