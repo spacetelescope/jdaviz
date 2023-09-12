@@ -1,7 +1,9 @@
+import warnings
 from zipfile import ZipFile
 
 import pytest
 from numpy.testing import assert_allclose
+from asdf.exceptions import AsdfWarning
 from astropy.utils.data import download_file
 
 from jdaviz.utils import PRIHDR_KEY, COMMENTCARD_KEY
@@ -97,7 +99,10 @@ def test_nirspec_level2_parser(mosviz_helper, tmp_path):
     level3_path = tmp_path / 'jw02756001001_03103_00003_nrs1'
 
     data_dir = level3_path
-    mosviz_helper.load_data(directory=data_dir, instrument='nirspec')
+    with warnings.catch_warnings():
+        # https://github.com/spacetelescope/jdaviz/issues/2446
+        warnings.filterwarnings("ignore", category=AsdfWarning)
+        mosviz_helper.load_data(directory=data_dir, instrument='nirspec')
 
     assert len(mosviz_helper.app.data_collection) == 75
 
@@ -125,7 +130,10 @@ def test_niriss_parser(mosviz_helper, tmp_path):
     with ZipFile(fn, 'r') as sample_data_zip:
         sample_data_zip.extractall(tmp_path)
 
-    mosviz_helper.load_data(directory=tmp_path, instrument="niriss")
+    with warnings.catch_warnings():
+        # https://github.com/spacetelescope/jdaviz/issues/2446
+        warnings.filterwarnings("ignore", category=AsdfWarning)
+        mosviz_helper.load_data(directory=tmp_path, instrument="niriss")
     assert len(mosviz_helper.app.data_collection) == 10
 
     # The MOS Table should be first in the data collection
