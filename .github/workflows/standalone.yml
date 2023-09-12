@@ -7,11 +7,11 @@ on:
     - 'v*'
     tags:
     - 'v*'
+  workflow_dispatch:
 
 defaults:
   run:
     shell: bash {0}
-
 
 jobs:
   build_binary:
