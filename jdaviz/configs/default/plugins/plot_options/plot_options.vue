@@ -66,11 +66,11 @@
         <v-btn icon @click.stop="marker_visible_value = !marker_visible_value">
           <v-icon>mdi-eye{{ marker_visible_value ? '' : '-off' }}</v-icon>
         </v-btn>
-        Show Marker
+        Show Scatter Layer
       </span>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper :sync="line_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_visible')">
+    <glue-state-sync-wrapper v-if="!marker_visible_sync.in_subscribed_states" :sync="line_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_visible')">
       <span>
         <v-btn icon @click.stop="line_visible_value = !line_visible_value">
           <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
@@ -108,7 +108,16 @@
 
 
     <!-- PROFILE/LINE -->
-    <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && line_visible_value) || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
+    <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && ((!marker_visible_sync.in_subscribed_states && line_visible_value) || (marker_visible_sync.in_subscribed_states && marker_visible_value))) || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
+    <glue-state-sync-wrapper v-if="marker_visible_sync.in_subscribed_states && marker_visible_value" :sync="line_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_visible')">
+      <span>
+        <v-btn icon @click.stop="line_visible_value = !line_visible_value">
+          <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
+        </v-btn>
+        Show Line
+      </span>
+    </glue-state-sync-wrapper>
+
     <glue-state-sync-wrapper v-if="config === 'cubeviz'" :sync="collapse_func_sync" :multiselect="multiselect" @unmix-state="unmix_state('function')">
       <v-select
         :menu-props="{ left: true }"
@@ -121,7 +130,7 @@
       ></v-select>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="line_visible_value" :sync="line_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_color')">
+    <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_color')">
       <div>
         <v-subheader class="pl-0 slider-label" style="height: 12px">Line Color</v-subheader>
         <v-menu>
@@ -139,25 +148,25 @@
       </div>
     </glue-state-sync-wrapper>
     
-    <glue-state-sync-wrapper v-if="line_visible_value" :sync="line_width_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_width')">
+    <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_width_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_width')">
       <glue-float-field label="Line Width" :value.sync="line_width_value" />
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="line_visible_value" :sync="line_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_opacity')">
+    <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_opacity')">
       <div>
         <v-subheader class="pl-0 slider-label" style="height: 12px">Line Opacity</v-subheader>
         <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="line_opacity_value" hide-details class="no-hint" />
       </div>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="line_visible_value" :sync="line_as_steps_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_as_steps')">
+    <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_as_steps_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_as_steps')">
       <v-switch
         v-model="line_as_steps_value"
         label="Plot profile as steps"
         />
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="line_visible_value" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
+    <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
       <v-switch
         v-model="uncertainty_visible_value"
         label="Plot uncertainties"
@@ -165,7 +174,7 @@
     </glue-state-sync-wrapper>
 
     <!-- MARKER/SCATTER -->
-    <div v-if="marker_visible_sync.in_subscribed_states">
+    <div v-if="marker_visible_sync.in_subscribed_states  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)">
       <j-plugin-section-header>Marker</j-plugin-section-header>
       <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_fill_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_fill')">
         <v-switch

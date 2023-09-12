@@ -336,6 +336,7 @@ class PlotOptions(PluginTemplateMixin):
                                                         'uncertainty_visible_value', 'uncertainty_visible_sync')  # noqa
 
         # Scatter/marker options:
+        # NOTE: marker_visible hides the entire layer (including the line)
         self.marker_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'marker_visible_value', 'marker_visible_sync',
                                                    state_filter=is_scatter)
