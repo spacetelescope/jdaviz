@@ -100,7 +100,7 @@ class TestCenter(BaseImviz_WCS_WCS):
 
         # This is the second loaded data that is dithered by 1-pix.
         self.viewer.center_on((0, 0))
-        expected_position = [-6.5, 4.5, -5.5, 5.5]
+        expected_position = [-6.75, 4.25, -5.75, 5.25]
         rtol = 1e-4
         assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
                          self.viewer.state.y_min, self.viewer.state.y_max),

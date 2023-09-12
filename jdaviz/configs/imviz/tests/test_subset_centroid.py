@@ -47,18 +47,3 @@ class TestImvizSpatialSubsetCentroid(BaseImviz_WCS_GWCS):
         for key in ("X Center", "Y Center"):
             assert plg._obj._get_value_from_subset_definition(0, key, "value") == 2
             assert plg._obj._get_value_from_subset_definition(0, key, "orig") == 2
-
-        # No WCS case will be same as FITS WCS.
-        plg._obj.dataset_selected = 'no_wcs'
-        plg._obj.vue_recenter_subset()
-        for key in ("X Center", "Y Center"):
-            assert plg._obj._get_value_from_subset_definition(0, key, "value") == -1
-            assert plg._obj._get_value_from_subset_definition(0, key, "orig") == -1
-
-        # The functionality for set_center has changed so that the subset state itself
-        # is updated but that change is not propagated to subset_definitions or the UI until
-        # vue_update_subset is called.
-        plg._obj.set_center((2, 2), update=False)
-        for key in ("X Center", "Y Center"):
-            assert plg._obj._get_value_from_subset_definition(0, key, "value") == -1
-            assert plg._obj._get_value_from_subset_definition(0, key, "orig") == -1

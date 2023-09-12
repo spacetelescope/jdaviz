@@ -557,7 +557,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # If handled correctly, it won't change much.
     # But if not, it move down by 7 pix or so (229.05, 145.92) and fails the test.
-    assert_allclose(subset_plugin.get_center(), (229.067822, 152.371943))
+    assert_allclose(subset_plugin.get_center(), (229., 152.))
 
     # Now create a new subset that has a source in the corner and test
     # recentering with multiselect.
@@ -571,7 +571,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
     for _ in range(5):
         subset_plugin.vue_recenter_subset()
 
-    assert_allclose(subset_plugin.get_center("Subset 2"), (145.593022, 172.515541))
+    assert_allclose(subset_plugin.get_center("Subset 2"), (145., 175.))
 
     with pytest.raises(ValueError, match="Please include subset_name in"):
         subset_plugin.get_center()

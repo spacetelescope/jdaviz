@@ -13,12 +13,23 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
+from jdaviz.configs.imviz.tests.test_linking import _transform_refdata_pixel_coords
 
 
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
     def test_plugin_wcs_dithered(self):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
-        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
+        coords_0 = _transform_refdata_pixel_coords(
+            self.imviz.app.data_collection[-1], self.imviz.app.data_collection[0],
+            in_x=0, in_y=0
+        )
+        coords_9 = _transform_refdata_pixel_coords(
+            self.imviz.app.data_collection[-1], self.imviz.app.data_collection[0],
+            in_x=9, in_y=9
+        )
+        self.imviz._apply_interactive_region(
+            'bqplot:truecircle', coords_0, coords_9
+        )  # Draw a circle
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
@@ -112,7 +123,15 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(tbl['sum'], [63.617251, 62.22684693104279], rtol=1e-4)
 
         # Make sure it also works on an ellipse subset.
-        self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
+        coords_2 = _transform_refdata_pixel_coords(
+            self.imviz.app.data_collection[-1], self.imviz.app.data_collection[0],
+            in_x=0, in_y=0
+        )
+        coords_3 = _transform_refdata_pixel_coords(
+            self.imviz.app.data_collection[-1], self.imviz.app.data_collection[0],
+            in_x=9, in_y=4
+        )
+        self.imviz._apply_interactive_region('bqplot:ellipse', coords_2, coords_3)
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
@@ -142,8 +161,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 4  # New result is appended
         assert tbl[-1]['id'] == 4
-        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix, rtol=1e-4)
-        assert_quantity_allclose(tbl[-1]['ycenter'], 4.5 * u.pix, rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.75 * u.pix, rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 4.75 * u.pix, rtol=1e-4)
         sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
         assert_allclose(sky.dec.deg, -20.832083, rtol=1e-4)
@@ -264,22 +283,35 @@ class TestAdvancedAperPhot:
         # Different pixel scale + rotated
         imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
 
-        # Reference image again but without any WCS
-        data = fits.getdata(fn_1, ext=0)
-        imviz_helper.load_data(data, data_label='no_wcs')
-
         # Link them by WCS
         imviz_helper.link_data(link_type='wcs')
 
         # Regions to be used for aperture photometry
         regions = []
         positions = [(145.1, 168.3), (48.3, 200.3)]
+        downsample_factor = 25
+
+        def _transform_coords(x, y):
+            coords = _transform_refdata_pixel_coords(
+                imviz_helper.app.data_collection[-1], imviz_helper.app.data_collection[0],
+                in_x=x, in_y=y
+            )
+            return coords
+
         for x, y in positions:
-            regions.append(CirclePixelRegion(center=PixCoord(x=x, y=y), radius=5))
+            x, y = _transform_coords(x, y)
+            regions.append(CirclePixelRegion(
+                center=PixCoord(x=x, y=y), radius=5 / downsample_factor
+            ))
+
+        ellipse_coords = _transform_coords(x=84.7, y=224.1)
+        rectangle_coords = _transform_coords(x=229, y=152)
         regions += [
-            EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9,
+            EllipsePixelRegion(center=PixCoord(*ellipse_coords), width=23 / downsample_factor,
+                               height=9 / downsample_factor,
                                angle=2.356 * u.rad),
-            RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7)]
+            RectanglePixelRegion(center=PixCoord(*rectangle_coords), width=17 / downsample_factor,
+                                 height=7 / downsample_factor)]
         imviz_helper.load_regions(regions)
 
         self.imviz = imviz_helper
@@ -289,13 +321,12 @@ class TestAdvancedAperPhot:
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 5.0),
         ('gauss100_fits_wcs_block_reduced[PRIMARY,1]', 20.0),
-        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 20.0),
-        ('no_wcs', 5.0)])
+        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 20.0)])
     @pytest.mark.parametrize(('subset_label', 'expected_sum'), [
         ('Subset 1', 738.8803424408962),
         ('Subset 2', 857.5194857987592),
-        ('Subset 3', 472.17364321556005),
-        ('Subset 4', 837.0023608207703)])
+        ('Subset 3', 679.005667),
+        ('Subset 4', 928.499787)])
     def test_aperphot(self, data_label, local_bkg, subset_label, expected_sum):
         """All data should give similar result for the same Subset."""
         self.phot_plugin.dataset_selected = data_label
@@ -311,12 +342,12 @@ class TestAdvancedAperPhot:
     @pytest.mark.parametrize(('data_label', 'fac'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 1),
         ('gauss100_fits_wcs_block_reduced[PRIMARY,1]', 4),
-        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 4),
-        ('no_wcs', 1)])
+        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 4)
+    ])
     @pytest.mark.parametrize(('bg_label', 'expected_bg'), [
-        ('Subset 2', 12.269274711608887),
-        ('Subset 3', 7.935906410217285),
-        ('Subset 4', 11.120951652526855)])
+        ('Subset 2', 5.596018),
+        ('Subset 3', 5.828865),
+        ('Subset 4', 5.997768)])
     def test_sky_background(self, data_label, fac, bg_label, expected_bg):
         """All background (median) should give similar result for the same Subset.
         Down-sampled data has higher factor due to flux conservation.

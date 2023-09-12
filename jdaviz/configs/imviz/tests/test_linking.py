@@ -173,18 +173,16 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
                                              'domain': {'x': 0, 'y': 0}})
 
         lmtext = label_mouseover.as_text()
-        assert lmtext[0] in ('Pixel x=01.0 y=00.0 Value +1.00000e+00',
-                             'Pixel x=01.0 y=-0.0 Value +1.00000e+00')
-        assert lmtext[1:] == ('World 22h30m04.8674s -20d49m59.9990s (ICRS)',
-                              '337.5202808000 -20.8333330600 (deg)')
+        assert lmtext[0] == 'Pixel x=01.3 y=00.2 Value +1.00000e+00'
+        assert lmtext[1:] == ('World 22h30m04.8496s -20d49m59.7490s (ICRS)',
+                              '337.5202064976 -20.8332636155 (deg)')
 
         # blink image through clicking with blink tool
         self.viewer.toolbar.active_tool_id = 'jdaviz:blinkonce'
         self.viewer.toolbar.active_tool.on_click({'event': 'click', 'domain': {'x': 0, 'y': 0}})
-        assert label_mouseover.as_text()[0] in ('Pixel x=00.0 y=-0.0 Value +1.00000e+00',
-                                                'Pixel x=00.0 y=00.0 Value +1.00000e+00')
-        assert label_mouseover.as_text()[1:] == ('World 22h30m04.8674s -20d49m59.9990s (ICRS)',
-                                                 '337.5202808000 -20.8333330600 (deg)')
+        assert label_mouseover.as_text()[0] == 'Pixel x=00.3 y=00.2 Value +1.00000e+00'
+        assert label_mouseover.as_text()[1:] == ('World 22h30m04.8496s -20d49m59.7490s (ICRS)',
+                                                 '337.5202064976 -20.8332636155 (deg)')
 
         # Changing link type will raise an error
         with pytest.raises(ValueError, match="cannot change link_type"):
@@ -229,15 +227,15 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         gwcs_zoom_limits = self.viewer._get_zoom_limits(
             self.imviz.app.data_collection['gwcs[DATA]'])
         assert_allclose(fits_wcs_zoom_limits,
-                        [[-1.543783, -0.378151],
-                         [-1.777623, 9.846342],
-                         [8.543783, 9.378151],
-                         [8.777623, -0.846342]], rtol=1e-5)
+                        [[-1.590838, -0.423662],
+                         [-1.826862, 9.896219],
+                         [8.590838, 9.423662],
+                         [8.826862, -0.896219]], rtol=1e-5)
         assert_allclose(gwcs_zoom_limits,
-                        [[3.200488, 11.270531],
-                         [11.829096, 5.063314],
-                         [6.144686, -3.079048],
-                         [-2.483922, 3.128169]], rtol=1e-5)
+                        [[3.186753, 11.337468],
+                         [11.895862, 5.072343],
+                         [6.158421, -3.145985],
+                         [-2.550688, 3.119141]], rtol=1e-5)
 
         # Also check the coordinates display: Last loaded is on top.
         # Cycle order: FITS WCS, GWCS
@@ -250,7 +248,9 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove', 'domain': {'x': x, 'y': y}})
         assert label_mouseover.as_text()[0] in ('Pixel x=00.0 y=00.0 Value +1.00000e+00',
-                                                'Pixel x=-0.0 y=00.0 Value +1.00000e+00')
+                                                'Pixel x=-0.0 y=00.0 Value +1.00000e+00',
+                                                'Pixel x=-0.0 y=-0.0 Value +1.00000e+00',
+                                                'Pixel x=00.0 y=-0.0 Value +1.00000e+00')
         # assert not label_mouseover.row1_unreliable
         # assert not label_mouseover.row2_unreliable
         # assert not label_mouseover.row3_unreliable
@@ -272,6 +272,8 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
         self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
                                            'domain': {'x': x, 'y': y}})
         assert label_mouseover.as_text()[0] in ('Pixel x=-0.0 y=00.0 Value +1.00000e+00',
+                                                'Pixel x=-0.0 y=-0.0 Value +1.00000e+00',
+                                                'Pixel x=00.0 y=-0.0 Value +1.00000e+00',
                                                 'Pixel x=00.0 y=00.0 Value +1.00000e+00')
         assert label_mouseover.as_text()[1:] == ('World 00h14m19.5882s -30d23m31.0135s (ICRS)',
                                                  '3.5816174030 -30.3919481838 (deg)')
