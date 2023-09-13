@@ -19,6 +19,8 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark', 'FootprintOverlay']
 
+accent_color = "#c75d2c"
+
 
 class OffscreenLinesMarks(HubListener):
     def __init__(self, viewer):
@@ -578,15 +580,16 @@ class PluginLine(Lines, PluginMark, HubListener):
     def __init__(self, viewer, x=[], y=[], **kwargs):
         self.viewer = viewer
         # color is same blue as import button
-        kwargs.setdefault('colors', ["#007BA1"])
+        kwargs.setdefault('colors', [accent_color])
         super().__init__(x=x, y=y, scales=viewer.scales, **kwargs)
 
 
 class PluginScatter(Scatter, PluginMark, HubListener):
     def __init__(self, viewer, x=[], y=[], **kwargs):
         self.viewer = viewer
-        # color is same blue as import button
-        super().__init__(x=x, y=y, colors=["#007BA1"], scales=viewer.scales, **kwargs)
+        # default color is same blue as import button
+        kwargs.setdefault('colors', [accent_color])
+        super().__init__(x=x, y=y, scales=viewer.scales, **kwargs)
 
 
 class LineAnalysisContinuum(PluginLine):
@@ -653,7 +656,7 @@ class HistogramMark(Lines):
     def __init__(self, min_max_value, scales, **kwargs):
         # Vertical line in LinearScale
         y = [0, 1]
-        colors = ["#c75d2c"]
+        colors = [accent_color]
         line_style = "solid"
         super().__init__(x=min_max_value, y=y, scales=scales, colors=colors, line_style=line_style,
                          **kwargs)

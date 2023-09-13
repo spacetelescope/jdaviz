@@ -248,9 +248,18 @@ class ColorCycler:
     # default color cycle starts with the Glue default data color
     # followed by the matplotlib default color cycle
     default_dark_gray = settings._defaults['DATA_COLOR']
-    default_color_palette = (
-        [default_dark_gray] + plt.rcParams['axes.prop_cycle'].by_key()['color']
-    )
+    default_color_palette = [
+        '#595959',
+        '#1f77b4',
+        '#2ca02c',
+        '#d62728',
+        '#9467bd',
+        '#8c564b',
+        '#e377c2',
+        '#7f7f7f',
+        '#bcbd22',
+        '#17becf'
+    ]
 
     def __init__(self, counter=-1):
         self.counter = counter
