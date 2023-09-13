@@ -8,8 +8,9 @@
       :auto="label_auto"
       @update:auto="$emit('update:label_auto', $event)"
       :invalid_msg="label_invalid_msg"
-      :label="label_label ? label_label : 'Output Data Label'"
+      :label="show_api_hints && label_api_hint ? label_api_hint : label_label ? label_label : 'Output Data Label'"
       :hint="label_hint ? label_hint : 'Label for the resulting data item.'"
+      :class="show_api_hints ? 'api_hint' : null"
     ></plugin-auto-label>   
 
     <div v-if="add_to_viewer_items.length > 2">
@@ -77,6 +78,14 @@
           {{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
         </plugin-action-button>
       </j-tooltip>
+      <v-alert v-if="show_api_hints && action_api_hint"
+          color="orange"
+          dense
+          text
+          class="api_hint"
+      >
+          {{action_api_hint}}
+      </v-alert>
     </v-row>
   </div>
 </template>
@@ -89,8 +98,8 @@
 
 <script>
 module.exports = {
-  props: ['label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
-          'add_to_viewer_items', 'add_to_viewer_selected', 'auto_update_result', 'add_to_viewer_hint',
-          'action_disabled', 'action_spinner', 'action_label', 'action_tooltip']
+  props: ['label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint', 'label_api_hint',
+          'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'auto_update_result', 'add_to_viewer_hint',
+          'action_disabled', 'action_spinner', 'action_label', 'action_api_hint', 'action_tooltip', 'show_api_hints']
 };
 </script>

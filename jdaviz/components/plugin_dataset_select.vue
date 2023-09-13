@@ -7,13 +7,14 @@
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
-      :label="label ? label : 'Data'"
+      :label="show_api_hints && api_hint ? api_hint : (label ? label : 'Data')"
       :hint="hint ? hint : 'Select data.'"
       :rules="rules ? rules : []"
       :multiple="multiselect"
       :chips="multiselect"
       item-text="label"
       item-value="label"
+      :class="show_api_hint ? 'api_hint' : null"
       persistent-hint
     >
       <template slot="selection" slot-scope="data">
@@ -63,7 +64,13 @@
 </template>
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect'],
+  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect', 'api_hint', 'show_api_hint'],
+  methods: {
+    isWCSOnlyLayer(item) {
+      const wcsOnly = Object.keys(this.$props.viewer.wcs_only_layers).includes(item.name)
+      return wcsOnly
+    },
+  }
 };
 </script>
 
