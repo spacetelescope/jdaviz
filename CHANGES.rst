@@ -8,6 +8,8 @@ New Features
 
 - Subset Tools plugin now displays the parent data of a spatial (ROI) subset. [#2154]
 
+- Data color cycler and marker color updates for increased accessibility. [#2453]
+
 Cubeviz
 ^^^^^^^
 
