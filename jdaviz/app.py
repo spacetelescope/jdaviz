@@ -2052,10 +2052,18 @@ class Application(VuetifyTemplate, HubListener):
         # to be serializable, so we'll just send those that we need.
 
         def _expose_meta(key):
+            """
+            Whether to expose this metadata entry from the glue data object to the vue-frontend
+            via the data-item, based on the dictionary key.
+            """
             if key in ('Plugin', 'mosviz_row'):
+                # mosviz_row is used to hide entries from the spectrum1d/2d viewers if they
+                # do not correspond to the currently selected row
                 return True
             if key.lower().startswith(f'_{self.config}'):
                 # other internal metadata (like lcviz's '_LCVIZ_EPHEMERIS')
+                # _LCVIZ_EPHEMERIS is used in lcviz to only display data phased to a specific
+                # ephemeris in the appropriate viewer
                 return True
             return False
 

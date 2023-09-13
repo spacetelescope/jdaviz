@@ -174,8 +174,8 @@ module.exports = {
           if (!this.$props.viewer.reference.startsWith('flux-vs-phase:')) {
             return false
           }
-          var viewer_comp = this.$props.viewer.reference.split('flux-vs-phase:')[1]
-          return item.meta._LCVIZ_EPHEMERIS.ephemeris == viewer_comp && this.dataItemInViewer(item, returnExtraItems)
+          var viewer_ephem_comp = this.$props.viewer.reference.split('flux-vs-phase:')[1]
+          return item.meta._LCVIZ_EPHEMERIS.ephemeris == viewer_ephem_comp && this.dataItemInViewer(item, returnExtraItems)
         }
         return this.dataItemInViewer(item, returnExtraItems)
       }
