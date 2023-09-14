@@ -2021,8 +2021,7 @@ class Application(VuetifyTemplate, HubListener):
 
         self._clear_object_cache(msg.data.label)
 
-    @staticmethod
-    def _create_data_item(data):
+    def _create_data_item(self, data):
         ndims = len(data.shape)
         wcsaxes = data.meta.get('WCSAXES', None)
         if wcsaxes is None:
@@ -2048,15 +2047,33 @@ class Application(VuetifyTemplate, HubListener):
             typ = 'cube'
         else:
             typ = 'unknown'
+
         # we'll expose any information we need here.  For "meta", not all entries are guaranteed
         # to be serializable, so we'll just send those that we need.
+
+        def _expose_meta(key):
+            """
+            Whether to expose this metadata entry from the glue data object to the vue-frontend
+            via the data-item, based on the dictionary key.
+            """
+            if key in ('Plugin', 'mosviz_row'):
+                # mosviz_row is used to hide entries from the spectrum1d/2d viewers if they
+                # do not correspond to the currently selected row
+                return True
+            if key.lower().startswith(f'_{self.config}'):
+                # other internal metadata (like lcviz's '_LCVIZ_EPHEMERIS')
+                # _LCVIZ_EPHEMERIS is used in lcviz to only display data phased to a specific
+                # ephemeris in the appropriate viewer
+                return True
+            return False
+
         return {
             'id': str(uuid.uuid4()),
             'name': data.label,
             'locked': False,
             'ndims': data.ndim,
             'type': typ,
-            'meta': {k: v for k, v in data.meta.items() if k in ['Plugin', 'mosviz_row']},
+            'meta': {k: v for k, v in data.meta.items() if _expose_meta(k)},
             'children': []}
 
     @staticmethod

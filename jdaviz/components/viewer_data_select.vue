@@ -93,7 +93,7 @@
 <script>
 
 module.exports = {
-  props: ['data_items', 'viewer', 'layer_icons', 'app_settings', 'viewer_data_visibility', 'icons'],
+  props: ['data_items', 'viewer', 'layer_icons', 'app_settings', 'icons'],
   data: function () {
     var multi_select = true
     if (this.$props.viewer.config === 'cubeviz') {
@@ -168,6 +168,16 @@ module.exports = {
         } else if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
           return (item.ndims === 2 || item.type==='trace') && this.dataItemInViewer(item, returnExtraItems)
         }
+      } else if (this.$props.viewer.config === 'lcviz') {
+        // TODO: generalize itemIsVisible so downstream apps can provide their own customized filters
+        if (item.meta._LCVIZ_EPHEMERIS !== undefined) {
+          if (!this.$props.viewer.reference.startsWith('flux-vs-phase:')) {
+            return false
+          }
+          var viewer_ephem_comp = this.$props.viewer.reference.split('flux-vs-phase:')[1]
+          return item.meta._LCVIZ_EPHEMERIS.ephemeris == viewer_ephem_comp && this.dataItemInViewer(item, returnExtraItems)
+        }
+        return this.dataItemInViewer(item, returnExtraItems)
       }
       // for any situation not covered above, default to showing the entry
       return this.dataItemInViewer(item, returnExtraItems)
