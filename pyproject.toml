@@ -136,6 +136,7 @@ filterwarnings = [
     "ignore:zmq\\.eventloop\\.ioloop is deprecated in pyzmq:DeprecationWarning",
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
     "ignore:specutils uses the deprecated entry point asdf_extensions",
+    "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore::DeprecationWarning:glue",
     "ignore::DeprecationWarning:bqplot",
     "ignore::DeprecationWarning:bqplot_image_gl",
