@@ -31,11 +31,11 @@ ASTROPY_LT_5_2 = Version(astropy.__version__) < Version('5.2')
 @tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
 class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin, PlotMixin):
     template_file = __file__, "aper_phot_simple.vue"
-    subset_items = List([]).tag(sync=True)
-    subset_selected = Unicode("").tag(sync=True)
-    subset_area = Integer().tag(sync=True)
-    bg_subset_items = List().tag(sync=True)
-    bg_subset_selected = Unicode("").tag(sync=True)
+    aperture_items = List([]).tag(sync=True)
+    aperture_selected = Unicode("").tag(sync=True)
+    aperture_area = Integer().tag(sync=True)
+    background_items = List().tag(sync=True)
+    background_selected = Unicode("").tag(sync=True)
     background_value = Any(0).tag(sync=True)
     pixel_area = Any(0).tag(sync=True)
     counts_factor = Any(0).tag(sync=True)
@@ -53,20 +53,20 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.subset = SubsetSelect(self,
-                                   'subset_items',
-                                   'subset_selected',
-                                   dataset='dataset',
-                                   default_text=None,
-                                   filters=['is_spatial', 'is_not_composite', 'is_not_annulus'])
+        self.aperture = SubsetSelect(self,
+                                     'aperture_items',
+                                     'aperture_selected',
+                                     dataset='dataset',
+                                     default_text=None,
+                                     filters=['is_spatial', 'is_not_composite', 'is_not_annulus'])
 
-        self.bg_subset = SubsetSelect(self,
-                                      'bg_subset_items',
-                                      'bg_subset_selected',
-                                      dataset='dataset',
-                                      default_text='Manual',
-                                      manual_options=['Manual'],
-                                      filters=['is_spatial', 'is_not_composite'])
+        self.background = SubsetSelect(self,
+                                       'background_items',
+                                       'background_selected',
+                                       dataset='dataset',
+                                       default_text='Manual',
+                                       manual_options=['Manual'],
+                                       filters=['is_spatial', 'is_not_composite'])
 
         headers = ['xcenter', 'ycenter', 'sky_center',
                    'sum', 'sum_aper_area',
@@ -139,45 +139,45 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 color='error', sender=self))
 
         # auto-populate background, if applicable.
-        self._subset_selected_changed()
+        self._aperture_selected_changed()
 
     def _on_subset_update(self, msg):
-        if self.dataset_selected == '' or self.subset_selected == '':
+        if self.dataset_selected == '' or self.aperture_selected == '':
             return
 
         sbst = msg.subset
-        if sbst.label == self.subset_selected and sbst.data.label == self.dataset_selected:
-            self._subset_selected_changed()
-        elif sbst.label == self.bg_subset_selected and sbst.data.label == self.dataset_selected:
-            self._bg_subset_selected_changed()
+        if sbst.label == self.aperture_selected and sbst.data.label == self.dataset_selected:
+            self._aperture_selected_changed()
+        elif sbst.label == self.background_selected and sbst.data.label == self.dataset_selected:
+            self._background_selected_changed()
 
     def _on_link_update(self, msg):
-        if self.dataset_selected == '' or self.subset_selected == '':
+        if self.dataset_selected == '' or self.aperture_selected == '':
             return
 
         # Force background auto-calculation to update when linking has changed.
-        self._subset_selected_changed()
+        self._aperture_selected_changed()
 
-    @observe('subset_selected')
-    def _subset_selected_changed(self, event={}):
-        if self.dataset.selected_dc_item is None or self.subset_selected == '':
+    @observe('aperture_selected')
+    def _aperture_selected_changed(self, event={}):
+        if self.dataset.selected_dc_item is None or self.aperture_selected == '':
             return
 
         try:
             # Sky subset does not have area. Not worth it to calculate just for a warning.
-            if hasattr(self.subset.selected_spatial_region, 'area'):
-                self.subset_area = int(np.ceil(self.subset.selected_spatial_region.area))
+            if hasattr(self.aperture.selected_spatial_region, 'area'):
+                self.aperture_area = int(np.ceil(self.aperture.selected_spatial_region.area))
             else:
-                self.subset_area = 0
+                self.aperture_area = 0
 
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {self.subset_selected}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {self.aperture_selected}: {repr(e)}", color='error', sender=self))
 
         else:
-            self._bg_subset_selected_changed()
+            self._background_selected_changed()
 
-    def _calc_bg_subset_median(self, reg):
+    def _calc_background_median(self, reg):
         # Basically same way image stats are calculated in vue_do_aper_phot()
         # except here we only care about one stat for the background.
         data = self.dataset.selected_dc_item
@@ -190,29 +190,29 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         # photutils/background/_utils.py --> nanmedian()
         return np.nanmedian(img_stat)  # Naturally in data unit
 
-    @observe('bg_subset_selected')
-    def _bg_subset_selected_changed(self, event={}):
-        bg_subset_selected = event.get('new', self.bg_subset_selected)
-        if bg_subset_selected == 'Manual':
+    @observe('background_selected')
+    def _background_selected_changed(self, event={}):
+        background_selected = event.get('new', self.background_selected)
+        if background_selected == 'Manual':
             # we'll later access the user's self.background_value directly
             return
 
         try:
-            reg = _get_region_from_spatial_subset(self, self.bg_subset.selected_subset_state)
-            self.background_value = self._calc_bg_subset_median(reg)
+            reg = _get_region_from_spatial_subset(self, self.background.selected_subset_state)
+            self.background_value = self._calc_background_median(reg)
         except Exception as e:
             self.background_value = 0
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {bg_subset_selected}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {background_selected}: {repr(e)}", color='error', sender=self))
 
     def vue_do_aper_phot(self, *args, **kwargs):
-        if self.dataset_selected == '' or self.subset_selected == '':
+        if self.dataset_selected == '' or self.aperture_selected == '':
             self.hub.broadcast(SnackbarMessage(
                 "No data for aperture photometry", color='error', sender=self))
             return
 
         data = self.dataset.selected_dc_item
-        reg = self.subset.selected_spatial_region
+        reg = self.aperture.selected_spatial_region
 
         # Reset last fitted model
         fit_model = None
@@ -434,28 +434,28 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         passed as tuples or lists.  For example::
 
             unpack_batch_options(dataset=['image1', 'image2'],
-                                 subset=['Subset 1', 'Subset 2'],
-                                 bg_subset=['Subset 3'],
+                                 aperture=['Subset 1', 'Subset 2'],
+                                 background=['Subset 3'],
                                  flux_scaling=3
                                  )
 
         would result in::
 
-            [{'subset': 'Subset 1',
+            [{'aperture': 'Subset 1',
               'dataset': 'image1',
-              'bg_subset': 'Subset 3',
+              'background': 'Subset 3',
               'flux_scaling': 3},
-             {'subset': 'Subset 2',
+             {'aperture': 'Subset 2',
               'dataset': 'image1',
-              'bg_subset': 'Subset 3',
+              'background': 'Subset 3',
               'flux_scaling': 3},
-             {'subset': 'Subset 1',
+             {'aperture': 'Subset 1',
               'dataset': 'image2',
-              'bg_subset': 'Subset 3',
+              'background': 'Subset 3',
               'flux_scaling': 3},
-             {'subset': 'Subset 2',
+             {'aperture': 'Subset 2',
               'dataset': 'image2',
-              'bg_subset': 'Subset 3',
+              'background': 'Subset 3',
               'flux_scaling': 3}]
 
         Parameters
@@ -540,7 +540,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         # these traitlets are automatically set based on the values of other traitlets in the
         # plugin, and so we should apply any user-overrides LAST
         attrs_auto_update = ('counts_factor', 'pixel_area', 'flux_scaling',
-                             'subset_area', 'background_value')
+                             'aperture_area', 'background_value')
 
         failed_iters, exceptions = [], []
         for i, option in enumerate(options):

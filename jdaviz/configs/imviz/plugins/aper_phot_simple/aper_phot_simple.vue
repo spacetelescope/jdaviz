@@ -14,23 +14,23 @@
 
     <div v-if='dataset_selected'>
       <plugin-subset-select
-        :items="subset_items"
-        :selected.sync="subset_selected"
+        :items="aperture_items"
+        :selected.sync="aperture_selected"
         :show_if_single_entry="true"
         label="Aperture"
         hint="Select aperture region for photometry (cannot be an annulus or composite subset)."
       />
 
-      <div v-if="subset_selected">
+      <div v-if="aperture_selected">
         <plugin-subset-select
-          :items="bg_subset_items"
-          :selected.sync="bg_subset_selected"
+          :items="background_items"
+          :selected.sync="background_selected"
           :show_if_single_entry="true"
           label="Background"
           hint="Select subset region for background calculation (cannot be a composite subset)."
         />
 
-        <v-row v-if="subset_selected === bg_subset_selected">
+        <v-row v-if="aperture_selected === background_selected">
           <span class="v-messages v-messages__message text--secondary" style="color: red !important">
               Background and aperture cannot be set to the same subset
           </span>
@@ -42,7 +42,7 @@
             v-model.number="background_value"
             type="number"
             hint="Background to subtract, same unit as data"
-            :disabled="bg_subset_selected!='Manual'"
+            :disabled="background_selected!='Manual'"
             persistent-hint
           >
           </v-text-field>
@@ -93,9 +93,9 @@
           ></v-select>
         </v-row>
 
-        <v-row v-if="current_plot_type==='Radial Profile (Raw)' && subset_area > 5000">
+        <v-row v-if="current_plot_type==='Radial Profile (Raw)' && aperture_area > 5000">
           <span class="v-messages v-messages__message text--secondary">
-              <b>WARNING</b>: Computing and displaying raw profile of an aperture containing ~{{subset_area}} pixels may be slow or unresponsive.
+              <b>WARNING</b>: Computing and displaying raw profile of an aperture containing ~{{aperture_area}} pixels may be slow or unresponsive.
           </span>
         </v-row>
 
@@ -110,7 +110,7 @@
         </v-row>
 
         <v-row justify="end">
-          <v-btn color="primary" text @click="do_aper_phot" :disabled="subset_selected === bg_subset_selected">Calculate</v-btn>
+          <v-btn color="primary" text @click="do_aper_phot" :disabled="aperture_selected === background_selected">Calculate</v-btn>
         </v-row>
       </div>
     </div>

@@ -267,7 +267,7 @@ class TestParseImage:
         phot_plugin.data_selected = 'contents[DATA]'
         phot_plugin.subset_selected = 'Subset 1'
         assert_allclose(phot_plugin.background_value, 0)
-        phot_plugin.bg_subset_selected = 'Subset 2'
+        phot_plugin.background_selected = 'Subset 2'
         assert_allclose(phot_plugin.background_value, 0.1741226315498352)  # Subset 2 median
         # NOTE: jwst.datamodels.find_fits_keyword("PHOTMJSR")
         phot_plugin.counts_factor = (data.meta['photometry']['conversion_megajanskys'] /
