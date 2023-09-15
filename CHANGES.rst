@@ -104,6 +104,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Improved logic for handling active state of plugins. [#2386, #2450]
+
 - API framework for batch aperture photometry. [#2401]
 
 3.6.3 (unreleased)
