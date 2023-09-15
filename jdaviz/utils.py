@@ -3,7 +3,6 @@ import time
 import threading
 from collections import deque
 
-import matplotlib.pyplot as plt
 from astropy.io import fits
 from astropy.utils import minversion
 from ipyvue import watch
@@ -246,11 +245,22 @@ class ColorCycler:
     using the Glue default data color.
     """
     # default color cycle starts with the Glue default data color
-    # followed by the matplotlib default color cycle
+    # followed by the matplotlib default color cycle, except for the
+    # second color (orange) in the matplotlib cycle, which is too close
+    # to the jdaviz accent color (also orange).
     default_dark_gray = settings._defaults['DATA_COLOR']
-    default_color_palette = (
-        [default_dark_gray] + plt.rcParams['axes.prop_cycle'].by_key()['color']
-    )
+    default_color_palette = [
+        default_dark_gray,
+        '#1f77b4',
+        '#2ca02c',
+        '#d62728',
+        '#9467bd',
+        '#8c564b',
+        '#e377c2',
+        '#7f7f7f',
+        '#bcbd22',
+        '#17becf'
+    ]
 
     def __init__(self, counter=-1):
         self.counter = counter
