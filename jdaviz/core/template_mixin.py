@@ -31,6 +31,7 @@ from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage)
+from jdaviz.core.region_translators import _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.utils import get_subset_type
 
@@ -1388,7 +1389,7 @@ class SubsetSelect(SelectPluginComponent):
 
     """
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
-                 viewers=None, default_text=None, manual_options=[], filters=[],
+                 dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text'):
         """
         Parameters
@@ -1399,8 +1400,11 @@ class SubsetSelect(SelectPluginComponent):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
-        selected_has_subregions: str
+        selected_has_subregions : str
             the name of the selected_has_subregions traitlet defined in ``plugin``, optional
+        dataset : str
+            the name of the dataset traitlet defined in ``plugin``, to be used for accessing how
+            the subset is applied to the data (masks, etc), optional
         viewers : list
             the reference names or ids of the viewer to extract the subregion.  If not provided o
             None, will loop through all references.
@@ -1420,10 +1424,19 @@ class SubsetSelect(SelectPluginComponent):
                          multiselect=multiselect,
                          filters=filters,
                          selected_has_subregions=selected_has_subregions,
+                         dataset=dataset,
                          viewers=viewers,
                          default_text=default_text,
                          manual_options=manual_options,
                          default_mode=default_mode)
+
+        self._cached_properties += ["selected_subset_state",
+                                    "selected_spatial_region",
+                                    "selected_subset_mask"]
+        if dataset is not None:
+            # clear selected_subset_mask and selected_spatial_region on change to dataset
+            self.add_observe(self.dataset._plugin_traitlets['selected'],
+                             self._on_dataset_selected_changed)
 
         if selected_has_subregions is not None:
             self.selected_has_subregions = False
@@ -1440,6 +1453,9 @@ class SubsetSelect(SelectPluginComponent):
     def _selected_changed(self, event):
         super()._selected_changed(event)
         self._update_has_subregions()
+
+    def _on_dataset_selected_changed(self, event):
+        self._clear_cache('selected_subset_mask', 'selected_spatial_region')
 
     def _subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
@@ -1524,7 +1540,7 @@ class SubsetSelect(SelectPluginComponent):
             return None
         return self.app.get_subsets(self.selected)
 
-    @property
+    @cached_property
     def selected_subset_state(self):
         if self.is_multiselect:
             subset_states = {}
@@ -1539,12 +1555,14 @@ class SubsetSelect(SelectPluginComponent):
                         s.label == self.selected][0]
         return subset_group.subset_state
 
-    @property
+    @cached_property
     def selected_subset_mask(self):
         if self.is_multiselect:
             raise NotImplementedError("Retrieving subset mask is not"
                                       " supported in multiselect mode")
-        get_data_kwargs = {'data_label': self.plugin.dataset.selected}
+        if not self.dataset:
+            raise ValueError("Retrieving subset mask requires associated dataset")
+        get_data_kwargs = {'data_label': self.dataset.selected}
         if 'is_spectral' in self.filters:
             get_data_kwargs['spectral_subset'] = self.selected
         elif 'is_spatial' in self.filters:
@@ -1560,12 +1578,29 @@ class SubsetSelect(SelectPluginComponent):
 
         return subset.mask
 
-    def selected_min_max(self, spectrum1d):
+    @cached_property
+    def selected_spatial_region(self):
+        if not self.dataset:
+            raise ValueError("Retrieving subset mask requires associated dataset")
+        if self.selected_item.get('type') != 'spatial':
+            raise TypeError("This action is only supported on spatial-type subsets")
+        region = _get_region_from_spatial_subset(self.plugin,
+                                                 self.selected_subset_state,
+                                                 dataset=self.dataset.selected)
+        region.meta['label'] = self.selected
+        return region
+
+    def selected_min_max(self, dataset):
+        """
+        Get the min/max spectral range of ``dataset`` given the selected spectral subset
+        """
         if self.is_multiselect:
             raise TypeError("This action cannot be done when multiselect is active")
+        if not isinstance(dataset, Spectrum1D):
+            raise TypeError("spectrum1d")
 
         if self.selected_obj is None:
-            return np.nanmin(spectrum1d.spectral_axis), np.nanmax(spectrum1d.spectral_axis)
+            return np.nanmin(dataset.spectral_axis), np.nanmax(dataset.spectral_axis)
         if self.selected_item.get('type') != 'spectral':
             raise TypeError("This action is only supported on spectral-type subsets")
         else:
@@ -1607,6 +1642,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
                                             'spectral_subset_selected_has_subregions',
+                                            dataset='dataset',
                                             viewers=[spectrum_viewer],
                                             default_text='Entire Spectrum',
                                             filters=['is_spectral'])
@@ -1645,6 +1681,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            'spatial_subset_items',
                                            'spatial_subset_selected',
                                            'spatial_subset_selected_has_subregions',
+                                           dataset='dataset',
                                            default_text='Entire Cube',
                                            filters=['is_spatial'])
 

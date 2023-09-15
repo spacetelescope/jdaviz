@@ -46,15 +46,15 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Perform photometry on both images using same Subset.
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.subset_selected = 'Subset 1'
-        assert phot_plugin._selected_data is not None
+        assert phot_plugin.dataset.selected_dc_item is not None
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1
 
         phot_plugin.dataset_selected = 'has_wcs_2[SCI,1]'
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
-        assert phot_plugin._selected_data is not None
-        assert phot_plugin._selected_subset is not None
+        assert phot_plugin.dataset.selected_dc_item is not None
+        assert phot_plugin.subset.selected_spatial_region is not None
         assert phot_plugin.bg_subset.labels == ['Manual', 'Subset 1']
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)

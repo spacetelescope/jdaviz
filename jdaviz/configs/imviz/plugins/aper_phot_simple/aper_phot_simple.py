@@ -56,12 +56,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         self.subset = SubsetSelect(self,
                                    'subset_items',
                                    'subset_selected',
+                                   dataset='dataset',
                                    default_text=None,
                                    filters=['is_spatial', 'is_not_composite', 'is_not_annulus'])
 
         self.bg_subset = SubsetSelect(self,
                                       'bg_subset_items',
                                       'bg_subset_selected',
+                                      dataset='dataset',
                                       default_text='Manual',
                                       manual_options=['Manual'],
                                       filters=['is_spatial', 'is_not_composite'])
@@ -77,8 +79,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         self.table.headers_avail = headers
         self.table.headers_visible = headers
 
-        self._selected_data = None
-        self._selected_subset = None
         self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
         self._fitted_model_name = 'phot_radial_profile'
@@ -93,15 +93,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
         try:
-            self._selected_data = self.dataset.selected_dc_item
-            if self._selected_data is None:
+            if self.dataset.selected_dc_item is None:
                 return
             self.counts_factor = 0
             self.pixel_area = 0
             self.flux_scaling = 0
 
             # Extract telescope specific unit conversion factors, if applicable.
-            meta = self._selected_data.meta.copy()
+            meta = self.dataset.selected_dc_item.meta.copy()
             if PRIHDR_KEY in meta:
                 meta.update(meta[PRIHDR_KEY])
                 del meta[PRIHDR_KEY]
@@ -135,13 +134,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                     self.pixel_area = 0.04 * 0.04
 
         except Exception as e:
-            self._selected_data = None
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {self.dataset_selected}: {repr(e)}",
                 color='error', sender=self))
 
-        # Update self._selected_subset with the new self._selected_data
-        # and auto-populate background, if applicable.
+        # auto-populate background, if applicable.
         self._subset_selected_changed()
 
     def _on_subset_update(self, msg):
@@ -163,25 +160,19 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
     @observe('subset_selected')
     def _subset_selected_changed(self, event={}):
-        subset_selected = event.get('new', self.subset_selected)
-        if self._selected_data is None or subset_selected == '':
+        if self.dataset.selected_dc_item is None or self.subset_selected == '':
             return
 
         try:
-            self._selected_subset = _get_region_from_spatial_subset(
-                self, self.subset.selected_subset_state)
-            self._selected_subset.meta['label'] = subset_selected
-
             # Sky subset does not have area. Not worth it to calculate just for a warning.
-            if hasattr(self._selected_subset, 'area'):
-                self.subset_area = int(np.ceil(self._selected_subset.area))
+            if hasattr(self.subset.selected_spatial_region, 'area'):
+                self.subset_area = int(np.ceil(self.subset.selected_spatial_region.area))
             else:
                 self.subset_area = 0
 
         except Exception as e:
-            self._selected_subset = None
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {subset_selected}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {self.subset_selected}: {repr(e)}", color='error', sender=self))
 
         else:
             self._bg_subset_selected_changed()
@@ -189,7 +180,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     def _calc_bg_subset_median(self, reg):
         # Basically same way image stats are calculated in vue_do_aper_phot()
         # except here we only care about one stat for the background.
-        data = self._selected_data
+        data = self.dataset.selected_dc_item
         comp = data.get_component(data.main_components[0])
         if hasattr(reg, 'to_pixel'):
             reg = reg.to_pixel(data.coords)
@@ -215,13 +206,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 f"Failed to extract {bg_subset_selected}: {repr(e)}", color='error', sender=self))
 
     def vue_do_aper_phot(self, *args, **kwargs):
-        if self._selected_data is None or self._selected_subset is None:
+        if self.dataset_selected == '' or self.subset_selected == '':
             self.hub.broadcast(SnackbarMessage(
                 "No data for aperture photometry", color='error', sender=self))
             return
 
-        data = self._selected_data
-        reg = self._selected_subset
+        data = self.dataset.selected_dc_item
+        reg = self.subset.selected_spatial_region
 
         # Reset last fitted model
         fit_model = None
