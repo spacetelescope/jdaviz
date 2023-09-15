@@ -167,6 +167,53 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         phot_plugin.vue_do_aper_phot()
         assert phot_plugin.plot.figure.title == 'Curve of growth from aperture center'
 
+    def test_batch_unpack(self):
+        phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
+
+        # NOTE: these input values are not currently validated, so it does not matter that the
+        # datasets and subsets do not exist with these names (if that changes, this test will
+        # need to be udpated accordingly)
+        unpacked = phot_plugin.unpack_batch_options(dataset=['image1', 'image2'],
+                                                    subset=['Subset 1', 'Subset 2'],
+                                                    bg_subset=['Subset 3'],
+                                                    flux_scaling=3)
+        assert unpacked == [{'subset': 'Subset 1',
+                             'dataset': 'image1',
+                             'bg_subset': 'Subset 3',
+                             'flux_scaling': 3},
+                            {'subset': 'Subset 2',
+                             'dataset': 'image1',
+                             'bg_subset': 'Subset 3',
+                             'flux_scaling': 3},
+                            {'subset': 'Subset 1',
+                             'dataset': 'image2',
+                             'bg_subset': 'Subset 3',
+                             'flux_scaling': 3},
+                            {'subset': 'Subset 2',
+                             'dataset': 'image2',
+                             'bg_subset': 'Subset 3',
+                             'flux_scaling': 3}]
+
+    def test_batch_phot(self):
+        self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
+        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
+
+        phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        assert phot_plugin.dataset.choices == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
+        assert phot_plugin.subset.choices == ['Subset 1']
+
+        phot_plugin.batch_aper_phot([{'dataset': 'has_wcs_1[SCI,1]', 'subset': 'Subset 1'},
+                                     {'dataset': 'has_wcs_2[SCI,1]'}])
+
+        assert len(phot_plugin.table) == 2
+
+        with pytest.raises(RuntimeError):
+            phot_plugin.batch_aper_phot([{'dataset': 'has_wcs_1[SCI,1]', 'subset': 'DNE'},
+                                         {'dataset': 'has_wcs_2[SCI,1]', 'subset': 'Subset 1'}])
+
+        # second entry above should have been successful, resulting in one addition to the results
+        assert len(phot_plugin.table) == 3
+
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
     def test_plugin_no_wcs(self):

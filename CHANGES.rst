@@ -104,6 +104,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- API framework for batch aperture photometry. [#2401]
+
 3.6.3 (unreleased)
 ==================
 

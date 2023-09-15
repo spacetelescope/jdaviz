@@ -437,6 +437,158 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             self.result_available = True
             self.plot_available = True
 
+    def unpack_batch_options(self, **options):
+        """
+        Unpacks a dictionary of options for batch mode, including all combinations of any values
+        passed as tuples or lists.  For example::
+
+            unpack_batch_options(dataset=['image1', 'image2'],
+                                 subset=['Subset 1', 'Subset 2'],
+                                 bg_subset=['Subset 3'],
+                                 flux_scaling=3
+                                 )
+
+        would result in::
+
+            [{'subset': 'Subset 1',
+              'dataset': 'image1',
+              'bg_subset': 'Subset 3',
+              'flux_scaling': 3},
+             {'subset': 'Subset 2',
+              'dataset': 'image1',
+              'bg_subset': 'Subset 3',
+              'flux_scaling': 3},
+             {'subset': 'Subset 1',
+              'dataset': 'image2',
+              'bg_subset': 'Subset 3',
+              'flux_scaling': 3},
+             {'subset': 'Subset 2',
+              'dataset': 'image2',
+              'bg_subset': 'Subset 3',
+              'flux_scaling': 3}]
+
+        Parameters
+        ----------
+        options : dict
+            Dictionary of values to override from the values set in the plugin/traitlets.  Each
+            entry can either be a single value, or a list.  All combinations of those that contain
+            a list will be exposed
+
+        Returns
+        -------
+        options : list
+            List of all combinations of input parameters, which can then be used as input to
+            `batch_aper_phot`
+        """
+        if not isinstance(options, dict):
+            raise TypeError("options must be a dictionary")
+        # TODO: when enabling user API for this plugin, this should check that all inputs are
+        # exposed to self.user_api (rather than the internal self)
+        user_api = self  # .user_api
+        invalid_keys = [k for k in options.keys() if not hasattr(user_api, k)]
+        if len(invalid_keys):
+            raise ValueError(f"{invalid_keys} are not valid inputs for batch photometry")
+
+        def _is_single(v):
+            if isinstance(v, (list, tuple)):
+                if len(v) == 1:
+                    return True, v[0]
+                return False, v
+            return True, v
+
+        single_values, mult_values = {}, {}
+        for k, v in options.items():
+            is_single, this_value = _is_single(v)
+            if is_single:
+                single_values[k] = this_value
+            else:
+                mult_values[k] = this_value
+
+        def _unpack_dict_list(mult_values, single_values):
+            options_list = []
+            # loop over the first item in mult_values
+            # any remaining mult values will require recursion
+            this_attr, this_values = list(mult_values.items())[0]
+            remaining_mult_values = {k: v for j, (k, v) in enumerate(mult_values.items()) if j > 0}
+
+            for this_value in this_values:
+                if not len(remaining_mult_values):
+                    options_list += [{this_attr: this_value, **single_values}]
+                    continue
+                options_list += _unpack_dict_list(remaining_mult_values,
+                                                  {this_attr: this_value, **single_values})
+
+            return options_list
+
+        return _unpack_dict_list(mult_values, single_values)
+
+    def batch_aper_phot(self, options, full_exceptions=False):
+        """
+        Run aperture photometry over a list of options.  Values will be looped in order and any
+        unprovided options will remain at there previous values (either from a previous entry
+        in the list or from the plugin).  The plugin itself will update and will remain at the
+        final state from the last entry in the list.
+
+        To provide a list of values per-input, use `unpack_batch_options` to and pass that as input
+        here.
+
+        Parameters
+        ----------
+        options : list
+            Each entry will result in one computation of aperture photometry and should be
+            a dictionary of values to override from the values set in the plugin/traitlets.
+        full_exceptions : bool, optional
+            Whether to expose the full exception message for all failed iterations.
+        """
+        # input validation
+        if not isinstance(options, list):
+            raise TypeError("options must be a list of dictionaries")
+        if not np.all([isinstance(option, dict) for option in options]):
+            raise TypeError("options must be a list of dictionaries")
+
+        # these traitlets are automatically set based on the values of other traitlets in the
+        # plugin, and so we should apply any user-overrides LAST
+        attrs_auto_update = ('counts_factor', 'pixel_area', 'flux_scaling',
+                             'subset_area', 'background_value')
+
+        failed_iters, exceptions = [], []
+        for i, option in enumerate(options):
+            # NOTE: if we do not want the UI to update (and end up in the final state), then
+            # we would need to refactor the plugin so that all we can compute computed values
+            # from the selected dataset without necessarily observing and updating traitlets.
+            # We would still want to check any select component against the valid choices.
+            # We could then also skip creating/showing the plot and have a manual call to
+            # vue_do_aper_phot re-enable plotting
+
+            # order the dictionary so that items that might be automatically set based on other
+            # selections are applied LATER so that user-overrides can take place.
+            # NOTE: this could have non-obvious consequences if providing the override for
+            # one entry but not another.  Alternatively, we could reset all traitlets to the
+            # original state between each iteration of the for-loop
+            option_ordered = {k: v for k, v in option.items() if k not in attrs_auto_update}
+            option_ordered.update(**option)
+
+            try:
+                for attr, value in option.items():
+                    # TODO: when enabling user_api, skip this and call setattr directly
+                    # on self.user_api
+                    if hasattr(self, f'{attr}_selected'):
+                        attr = f'{attr}_selected'
+                    setattr(self, attr, value)
+                self.vue_do_aper_phot()
+            except Exception as e:
+                failed_iters.append(i)
+                if full_exceptions:
+                    exceptions.append(e)
+
+        if len(failed_iters):
+            err_msg = f"inputs {failed_iters} failed and were skipped."
+            if full_exceptions:
+                err_msg += f"  Exception messages: {exceptions}"
+            else:
+                err_msg += "  To see full exceptions, run individually or pass full_exceptions=True"  # noqa
+            raise RuntimeError(err_msg)
+
 
 # NOTE: These are hidden because the APIs are for internal use only
 # but we need them as a separate functions for unit testing.

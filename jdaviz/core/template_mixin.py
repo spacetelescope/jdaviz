@@ -2978,6 +2978,9 @@ class Table(PluginSubcomponent):
         # clean data to show in the UI
         self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
 
+    def __len__(self):
+        return len(self.items)
+
     def clear_table(self):
         """
         Clear all entries/markers from the current table.
