@@ -95,14 +95,14 @@
       </v-row>
 
       <v-row v-for="(item, index2) in region" class="row-no-outside-padding">
-        <v-text-field v-if="item.name === 'Parent'"
+        <v-text-field v-if="item.name === 'Parent' || item.name === 'Masked values'"
           :label="item.name"
           :value="item.value"
           style="padding-top: 0px; margin-top: 0px"
           :readonly="true"
-          hint="Subset was defined with respect to this reference data (read-only)"
+          :hint="item.name === 'Parent' ? 'Subset was defined with respect to this reference data (read-only)' : 'Number of elements included by mask'"
         ></v-text-field>
-        <v-text-field v-if="item.name !== 'Parent'"
+        <v-text-field v-if="item.name !== 'Parent' && item.name !== 'Masked values'"
           :label="item.name"
           v-model.number="item.value"
           type="number"
@@ -112,12 +112,12 @@
       </v-row>
     </div>
 
-    <v-row v-if="!multiselect" justify="end">
+      <v-row v-if="!multiselect" justify="end" no-gutters>
         <j-tooltip v-if="can_freeze" tooltipcontent="Freeze subset to a mask on the underlying data entries">
           <v-btn color="primary" text @click="freeze_subset">Freeze</v-btn>
         </j-tooltip>
-        <j-tooltip v-if="can_simplify" tooltipcontent="Convert composite subset to use only add mode to connect subregions">
-          <v-btn color="primary" text @click="simplify_subset">Simplify</v-btn>
+        <j-tooltip tooltipcontent="Convert composite subset to use only add mode to connect subregions">
+          <v-btn :disabled="!can_simplify" color="primary" text @click="simplify_subset">Simplify</v-btn>
         </j-tooltip>
         <v-btn color="primary" text @click="update_subset">Update</v-btn>
       </v-row>

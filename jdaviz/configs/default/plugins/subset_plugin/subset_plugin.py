@@ -7,9 +7,8 @@ import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode)
-from glue.core.exceptions import IncompatibleAttribute
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
-from glue.core.subset import SubsetState, RoiSubsetState, RangeSubsetState, CompositeSubsetState
+from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -19,6 +18,7 @@ from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.utils import MultiMaskSubsetState
 
 __all__ = ['SubsetPlugin']
 
@@ -31,44 +31,6 @@ SUBSET_MODES = {
     'RangeSubsetState': RangeSubsetState,
     'RoiSubsetState': RoiSubsetState
 }
-
-
-class MultiMaskSubsetState(SubsetState):
-    """
-    A subset state that can include a different mask for different datasets.
-    Adopted from https://github.com/glue-viz/glue/pull/2415
-
-    Parameters
-    ----------
-    masks : dict
-        A dictionary mapping data UUIDs to boolean arrays with the same
-        dimensions as the data arrays.
-    """
-
-    def __init__(self, masks=None):
-        super(MultiMaskSubsetState, self).__init__()
-        self._masks = masks
-
-    def to_mask(self, data, view=None):
-        if data.uuid in self._masks:
-            mask = self._masks[data.uuid]
-            if view is not None:
-                mask = mask[view]
-            return mask
-        else:
-            raise IncompatibleAttribute()
-
-    def copy(self):
-        return MultiMaskSubsetState(masks=self._masks)
-
-    def __gluestate__(self, context):
-        serialized = {key: context.do(value) for key, value in self._masks.items()}
-        return {'masks': serialized}
-
-    @classmethod
-    def __setgluestate__(cls, rec, context):
-        masks = {key: context.object(value) for key, value in rec['masks'].items()}
-        return cls(masks=masks)
 
 
 @tray_registry('g-subset-plugin', label="Subset Tools")
@@ -267,6 +229,13 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                          {"name": "Upper bound", "att": "hi", "value": hi.value,
                                           "orig": hi.value, "unit": str(hi.unit)}]
                 subset_type = "Range"
+
+            elif isinstance(subset_state, MultiMaskSubsetState):
+                total_masked = subset_state.total_masked_first_data()
+                subset_definition = [{"name": "Masked values", "att": "masked",
+                                      "value": total_masked,
+                                      "orig": total_masked}]
+                subset_type = "Mask"
             if len(subset_definition) > 0:
                 # Note: .append() does not work for List traitlet.
                 self.subset_definitions = self.subset_definitions + [subset_definition]
@@ -276,8 +245,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         simplifiable_states = set(['AndState', 'XorState', 'AndNotState'])
         # Check if the subset has more than one subregion, is a range subset type, and
-        # uses one of the states that can be simplified.
-        if (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
+        # uses one of the states that can be simplified. Mask subset types cannot be simplified
+        # so subsets contained that are skipped.
+        if 'Mask' in self.subset_types:
+            self.can_simplify = False
+        elif (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
                 and len(simplifiable_states - set(self.glue_state_types)) < 3):
             self.can_simplify = True
         elif (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
