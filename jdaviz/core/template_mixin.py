@@ -264,6 +264,11 @@ class PluginTemplateMixin(TemplateMixin):
         # _inactive_thread: thread checking for alive pings to control plugin_opened
         self._inactive_thread = None
         self._ping_timestamp = 0
+        # _ping_delay_ms should match value in setTimeout in tray_plugin.vue
+        # NOTE: could control with a traitlet, but then would need to pass through each
+        # <j-tray-plugin> component
+        self._ping_delay_ms = 200
+
         # _methods_skip_since_last_active: methods that should be skipped when is_active is next
         # set to True because no changes have been made.  This can be used to prevent queuing
         # of expensive method calls, especially when the browser throttles the ping resulting
@@ -300,16 +305,12 @@ class PluginTemplateMixin(TemplateMixin):
         self._inactive_thread.start()
 
     def _watch_active(self):
-        # expected_delay_ms should match value in setTimeout in tray_plugin.vue
-        # NOTE: could control with a traitlet, but then would need to pass through each
-        # <j-tray-plugin> component
-        expected_delay_ms = 200
         # plugin_ping (ms) set by setTimeout in tray_plugin.vue
         # time.time() is in s, so need to convert to ms
-        while time.time()*1000 - self._ping_timestamp < 2 * expected_delay_ms:
+        while time.time()*1000 - self._ping_timestamp < 2 * self._ping_delay_ms:
             # at least one plugin has sent an "alive" ping within twice of the expected
             # interval, wait a full (double) interval and then check again
-            time.sleep(2 * expected_delay_ms / 1000)
+            time.sleep(2 * self._ping_delay_ms / 1000)
 
         # "alive" ping has not been received within the expected time, consider all instances
         # of the plugin to be closed
