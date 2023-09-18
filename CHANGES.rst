@@ -141,6 +141,9 @@ New Features
 - Add support for ``MultiMaskSubsetState`` in ``viz.app.get_subsets()`` and in
   the Subset Plugin [#2462]
 
+- User can now remove data from the app completely after removing it from viewers. [#2409]
+
+
 Cubeviz
 ^^^^^^^
 
