@@ -184,20 +184,36 @@ class Imviz(ImageConfigHelper):
         # above instead of having to refind it
         applied_labels = []
         applied_visible = []
-        applied_is_wcs = []
+        layer_is_wcs_only = []
+        layer_has_wcs = []
         for data in self.app.data_collection:
             label = data.label
             if label not in prev_data_labels:
                 applied_labels.append(label)
                 applied_visible.append(True)
-                applied_is_wcs.append(data.meta.get(self.app._wcs_only_label, False))
+                layer_is_wcs_only.append(data.meta.get(self.app._wcs_only_label, False))
+                layer_has_wcs.append(hasattr(data.coords, 'pixel_to_world'))
 
         if show_in_viewer is True:
             show_in_viewer = f"{self.app.config}-0"
 
+        if show_in_viewer:
+            linked_by_wcs = self.app._link_type == 'wcs'
+            if linked_by_wcs:
+                for applied_label, visible, is_wcs_only, has_wcs in zip(
+                        applied_labels, applied_visible, layer_is_wcs_only, layer_has_wcs
+                ):
+                    if not is_wcs_only and linked_by_wcs and not has_wcs:
+                        self.app.hub.broadcast(SnackbarMessage(
+                            f"'{applied_label}' will be added to the data collection but not "
+                            f"the viewer '{show_in_viewer}', since data are linked by WCS, but "
+                            f"'{applied_label}' has no WCS.",
+                            color="warning", timeout=8000, sender=self)
+                        )
+
         if self._in_batch_load and show_in_viewer:
-            for applied_label, layer_is_wcs in zip(applied_labels, applied_is_wcs):
-                if not layer_is_wcs:
+            for applied_label, is_wcs_only in zip(applied_labels, layer_is_wcs_only):
+                if not is_wcs_only:
                     self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
 
         else:
@@ -209,8 +225,11 @@ class Imviz(ImageConfigHelper):
             # NOTE: If the batch_load context manager was used, it will
             # handle that logic instead.
             if show_in_viewer:
-                for applied_label, visible in zip(applied_labels, applied_visible):
-                    self.app.add_data_to_viewer(show_in_viewer, applied_label, visible=visible)
+                for applied_label, visible, has_wcs in zip(
+                        applied_labels, applied_visible, layer_has_wcs
+                ):
+                    if (has_wcs and linked_by_wcs) or not linked_by_wcs:
+                        self.app.add_data_to_viewer(show_in_viewer, applied_label, visible=visible)
 
     def link_data(self, **kwargs):
         """(Re)link loaded data in Imviz with the desired link type.
@@ -485,11 +504,11 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
                          f"got {wcs_fallback_scheme}")
     if link_type == 'wcs':
-        all_data_have_wcs = all([
+        at_least_one_data_have_wcs = len([
             hasattr(d, 'coords') and isinstance(d.coords, (BaseHighLevelWCS, GWCS))
             for d in app.data_collection
-        ])
-        if not all_data_have_wcs:
+        ]) > 1
+        if not at_least_one_data_have_wcs:
             if wcs_fallback_scheme is None:
                 if error_on_fail:
                     raise ValueError("link_type can only be 'wcs' when wcs_fallback_scheme "
@@ -580,7 +599,8 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         try:
             if link_type == 'pixels':
                 new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
-            else:  # 'wcs'
+            # otherwise if linking by WCS *and* this data entry has WCS:
+            elif hasattr(data.coords, 'pixel_to_world'):
                 wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
                 if wcs_use_affine:
                     try:

@@ -202,6 +202,30 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             self.wcs_use_affine = True
 
         self._link_image_data()
+
+        # load data into the viewer that are now compatible with the
+        # new link type, remove data from the viewer that are now
+        # incompatible:
+        wcs_linked = self.link_type.selected.lower() == 'wcs'
+        viewer_selected = self.app.get_viewer(self.viewer.selected)
+
+        data_in_viewer = self.app.get_viewer(viewer_selected.reference).data()
+
+        for data in self.app.data_collection:
+            is_wcs_only = data.meta.get(self.app._wcs_only_label, False)
+            has_wcs = hasattr(data.coords, 'pixel_to_world')
+            if not is_wcs_only:
+                if data not in data_in_viewer:
+                    # add data from viewer:
+                    if wcs_linked and has_wcs:
+                        self.app.add_data_to_viewer(viewer_selected.reference, data.label)
+                    elif not wcs_linked:
+                        self.app.add_data_to_viewer(viewer_selected.reference, data.label)
+
+                elif wcs_linked and not has_wcs:
+                    # data is in viewer but must be removed:
+                    self.app.remove_data_from_viewer(viewer_selected.reference, data.label)
+
         self.linking_in_progress = False
         self._update_layer_label_default()
 
