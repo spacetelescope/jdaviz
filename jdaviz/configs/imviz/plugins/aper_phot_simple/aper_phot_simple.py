@@ -47,8 +47,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     * ``background`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use to calculate the background.
     * ``background_value``:
-      Background to subtract, same unit as data.  Automatically computed if ``background`` is
-      set to a subset.
+      Background to subtract, same unit as data.  Automatically computed if ``background``
+      is set to a subset.
     * ``pixel_area``:
       Pixel area in arcsec squared, only used if sr in data unit.
     * ``counts_factor``:
@@ -238,23 +238,44 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {background_selected}: {repr(e)}", color='error', sender=self))
 
-    def calculate_photometry(self, **kwargs):
+    def calculate_photometry(self, dataset=None, aperture=None, background=None,
+                             background_value=None, pixel_area=None, counts_factor=None,
+                             flux_scaling=None):
         """
-        TODO: ADD API DOCSTRING
+        Calculate aperture photometry given the values set in the plugin or any overrides provided
+        as arguments here (which will temporarily override plugin values for this calculation only).
+
+        Parameters
+        ----------
+        * ``dataset`` : str, optional
+            Dataset to use for photometry.
+        * ``aperture`` : str, optional
+            Subset to use as the aperture.
+        * ``background`` : str, optional
+            Subset to use to calculate the background.
+        * ``background_value`` : float, optional
+            Background to subtract, same unit as data.  Automatically computed if ``background``
+            is set to a subset.
+        * ``pixel_area`` : float, optional
+            Pixel area in arcsec squared, only used if sr in data unit.
+        * ``counts_factor`` : float, optional
+            Factor to convert data unit to counts, in unit of flux/counts.
+        * ``flux_scaling`` : float, optional
+            Same unit as data, used in -2.5 * log(flux / flux_scaling).
         """
-
-        # TODO: validate entries in **kwargs
-        # TODO: background vs background_selected, etc, in kwargs
-
-        if 'dataset' in kwargs:
-            data = self.dataset._get_dc_item(kwargs.get('dataset'))
+        if dataset is not None:
+            if dataset not in self.dataset.choices:
+                raise ValueError(f"dataset must be one of {self.dataset.choices}")
+            data = self.dataset._get_dc_item(dataset)
         else:
             # we can use the pre-cached value
             data = self.dataset.selected_dc_item
 
-        if 'aperture' in kwargs or 'dataset' in kwargs:
-            reg = self.aperture._get_spatial_region(subset=kwargs.get('aperture', self.aperture_selected),  # noqa
-                                                    dataset=kwargs.get('dataset', self.datset_selected))  # noqa
+        if aperture is not None or dataset is not None:
+            if aperture not in self.aperture.choices:
+                raise ValueError(f"aperture must be one of {self.aperture.choices}")
+            reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected,  # noqa
+                                                    dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
         else:
             # use the pre-cached value
             reg = self.aperture.selected_spatial_region
@@ -267,12 +288,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         comp = data.get_component(data.main_components[0])
 
-        if 'background_value' in kwargs:
-            background_value = kwargs.get('background_value')
-        elif 'background' in kwargs or 'dataset' in kwargs:
-            background_value = self._calc_background_median(reg)
+        if background is not None and background not in self.background.choices:
+            raise ValueError(f"background must be one of {self.background.choices}")
+        if background_value is not None:
+            if ((background not in (None, 'Manual'))
+                    or (background is None and self.background_selected != 'Manual')):
+                raise ValueError("cannot provide background_value with background!='Manual'")
+        elif background is not None or dataset is not None:
+            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
+                                                       dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+            background_value = self._calc_background_median(bg_reg)
         else:
-            # we can use the traitlet value (either pre-calculated default or user overridden)
             background_value = self.background_value
         try:
             bg = float(background_value)
@@ -302,20 +328,20 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
             if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
                 try:
-                    pixarea = float(kwargs.get('pixel_area', self.pixel_area))
+                    pixarea = float(pixel_area if pixel_area is not None else self.pixel_area)
                 except ValueError:  # Clearer error message
                     raise ValueError('Missing or invalid pixel area')
                 if not np.allclose(pixarea, 0):
                     include_pixarea_fac = True
             if img_unit != u.count:
                 try:
-                    ctfac = float(kwargs.get('counts_factor', self.counts_factor))
+                    ctfac = float(counts_factor if counts_factor is not None else self.counts_factor)  # noqa
                 except ValueError:  # Clearer error message
                     raise ValueError('Missing or invalid counts conversion factor')
                 if not np.allclose(ctfac, 0):
                     include_counts_fac = True
             try:
-                flux_scale = float(kwargs.get('flux_scaling', self.flux_scaling))
+                flux_scale = float(flux_scaling if flux_scaling is not None else self.flux_scaling)
             except ValueError:  # Clearer error message
                 raise ValueError('Missing or invalid flux scaling')
             if not np.allclose(flux_scale, 0):
@@ -538,9 +564,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         """
         if not isinstance(options, dict):
             raise TypeError("options must be a dictionary")
-        # TODO: when enabling user API for this plugin, this should check that all inputs are
-        # exposed to self.user_api (rather than the internal self)
-        user_api = self  # .user_api
+        user_api = self.user_api
         invalid_keys = [k for k in options.keys() if not hasattr(user_api, k)]
         if len(invalid_keys):
             raise ValueError(f"{invalid_keys} are not valid inputs for batch photometry")
