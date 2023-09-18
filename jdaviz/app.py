@@ -366,8 +366,6 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_layers_changed)
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._on_layers_changed)
-        self.hub.subscribe(self, ChangeRefDataMessage,
-                           handler=self._on_refdata_changed)
 
     @property
     def hub(self):
@@ -498,12 +496,10 @@ class Application(VuetifyTemplate, HubListener):
                     layer_name: alpha_index(len(self.state.layer_icons) - n_wcs_layers)
                 }
 
-    def _on_refdata_changed(self, msg):
-        pass
-
     def _change_reference_data(self, new_refdata_label, viewer_id=None):
         """
-        Change reference data to Data with ``data_label``
+        Change reference data to Data with ``data_label``.
+        This does not work on data without WCS.
         """
         if self.config != 'imviz':
             # this method is only meant for Imviz for now
@@ -516,8 +512,8 @@ class Application(VuetifyTemplate, HubListener):
 
         old_refdata = viewer.state.reference_data
 
-        if new_refdata_label == old_refdata.label:
-            # if there's no refdata change, don't do anything:
+        if (new_refdata_label == old_refdata.label) or (old_refdata.coords is None):
+            # if there's no refdata change nor WCS, don't do anything:
             return
 
         # locate the central coordinate of old refdata in this viewer:
@@ -527,6 +523,8 @@ class Application(VuetifyTemplate, HubListener):
         fov_sky_init = viewer._get_fov(old_refdata)
 
         new_refdata = self.data_collection[new_refdata_label]
+        if new_refdata.coords is None:
+            return
 
         # make sure new refdata can be selected:
         refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
