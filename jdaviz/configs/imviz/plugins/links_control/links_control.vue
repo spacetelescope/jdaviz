@@ -12,6 +12,7 @@
           label="Link type"
           hint="Type of linking to be done."
           v-model="link_type_selected"
+          @change="delete_subsets($event)"
           persistent-hint
           row>
           <v-radio
@@ -21,6 +22,11 @@
             :value="item.label"
           ></v-radio>
         </v-radio-group>
+        <div v-if="need_clear_subsets">
+          <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
+              Existing subsets will be deleted on changing link type.
+          </v-alert>
+        </div>
         </v-row>
 
         <v-row>
@@ -172,5 +178,4 @@
 div[role=radiogroup] > legend {
   width: 100%;
 }
-
 </style>

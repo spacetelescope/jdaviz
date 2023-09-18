@@ -1,7 +1,9 @@
 import os
 from traitlets import List, Unicode, Bool, observe
 
-from glue.core.message import DataCollectionAddMessage
+from glue.core.message import (
+    DataCollectionAddMessage, SubsetCreateMessage, SubsetDeleteMessage
+)
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -59,6 +61,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
 
     need_clear_markers = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
+    need_clear_subsets = Bool(False).tag(sync=True)
 
     # rotation angle, counterclockwise [degrees]
     rotation_angle = FloatHandleEmpty(0).tag(sync=True)
@@ -114,6 +117,12 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
 
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
+
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=self._on_subset_change)
+
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=self._on_subset_change)
 
     @property
     def user_api(self):
@@ -173,6 +182,12 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         if self.linking_in_progress:
             return
 
+        if self.need_clear_subsets:
+            raise ValueError("Link type can only be changed after existing subsets "
+                             f"are deleted, but {len(self.app.data_collection.subset_groups)} "
+                             f"subset(s) still exist. To delete them, you can use "
+                             f"`imviz.plugins['Links Control'].delete_subsets()`.")
+
         self.linking_in_progress = True
 
         if self.need_clear_markers:
@@ -187,6 +202,17 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
 
         self._link_image_data()
         self.linking_in_progress = False
+
+    def _on_subset_change(self, msg):
+        self.need_clear_subsets = len(self.app.data_collection.subset_groups) > 0
+
+    def delete_subsets(self):
+        # subsets will be deleted on changing link type:
+        for subset_group in self.app.data_collection.subset_groups:
+            self.app.data_collection.remove_subset_group(subset_group)
+
+    def vue_delete_subsets(self, *args):
+        self.delete_subsets()
 
     def vue_reset_markers(self, *args):
         for viewer in self.app._viewer_store.values():

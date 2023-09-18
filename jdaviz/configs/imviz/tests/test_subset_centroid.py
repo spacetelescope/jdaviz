@@ -6,12 +6,12 @@ from jdaviz.configs.imviz.tests.test_linking import _transform_refdata_pixel_coo
 
 class TestImvizSpatialSubsetCentroid(BaseImviz_WCS_GWCS):
     def test_centroiding(self):
+        # FITS WCS and GWCS are rotated from each other.
+        self.imviz.link_data(link_type='wcs')
+
         reg = CirclePixelRegion(PixCoord(2, 2), 3)
 
         self.imviz.load_regions(reg)
-
-        # FITS WCS and GWCS are rotated from each other.
-        self.imviz.link_data(link_type='wcs')
 
         plg = self.imviz.plugins['Subset Tools']
         plg._obj.subset_selected = 'Subset 1'
