@@ -277,9 +277,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             # we can use the pre-cached value
             data = self.dataset.selected_dc_item
 
+        if aperture is not None and aperture not in self.aperture.choices:
+            raise ValueError(f"aperture must be one of {self.aperture.choices}")
         if aperture is not None or dataset is not None:
-            if aperture not in self.aperture.choices:
-                raise ValueError(f"aperture must be one of {self.aperture.choices}")
             reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected,  # noqa
                                                     dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
         else:
@@ -300,12 +300,15 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             if ((background not in (None, 'Manual'))
                     or (background is None and self.background_selected != 'Manual')):
                 raise ValueError("cannot provide background_value with background!='Manual'")
-        elif background is not None or dataset is not None:
+        elif background == 'Manual' or (background is None and self.background.selected == 'Manual'):
+            background_value = self.background_value
+        elif background is None and dataset is None:
+            # use the previously-computed value in the plugin
+            background_value = self.background_value
+        else:
             bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
                                                        dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
             background_value = self._calc_background_median(bg_reg)
-        else:
-            background_value = self.background_value
         try:
             bg = float(background_value)
         except ValueError:  # Clearer error message
@@ -614,10 +617,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
     def calculate_batch_photometry(self, options, full_exceptions=False):
         """
-        Run aperture photometry over a list of options.  Values will be looped in order and any
-        unprovided options will remain at there previous values (either from a previous entry
-        in the list or from the plugin).  The plugin itself will update and will remain at the
-        final state from the last entry in the list.
+        Run aperture photometry over a list of options.  Unprovided options will remain at their
+        values defined in the plugin.
 
         To provide a list of values per-input, use `unpack_batch_options` to and pass that as input
         here.
@@ -636,36 +637,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         if not np.all([isinstance(option, dict) for option in options]):
             raise TypeError("options must be a list of dictionaries")
 
-        # these traitlets are automatically set based on the values of other traitlets in the
-        # plugin, and so we should apply any user-overrides LAST
-        attrs_auto_update = ('counts_factor', 'pixel_area', 'flux_scaling',
-                             'aperture_area', 'background_value')
-
         failed_iters, exceptions = [], []
         for i, option in enumerate(options):
-            # NOTE: if we do not want the UI to update (and end up in the final state), then
-            # we would need to refactor the plugin so that all we can compute computed values
-            # from the selected dataset without necessarily observing and updating traitlets.
-            # We would still want to check any select component against the valid choices.
-            # We could then also skip creating/showing the plot and have a manual call to
-            # vue_do_aper_phot re-enable plotting
-
-            # order the dictionary so that items that might be automatically set based on other
-            # selections are applied LATER so that user-overrides can take place.
-            # NOTE: this could have non-obvious consequences if providing the override for
-            # one entry but not another.  Alternatively, we could reset all traitlets to the
-            # original state between each iteration of the for-loop
-            option_ordered = {k: v for k, v in option.items() if k not in attrs_auto_update}
-            option_ordered.update(**option)
-
+            # only update plots on the last iteration
+            update_plots = i == len(options)
             try:
-                for attr, value in option.items():
-                    # TODO: when enabling user_api, skip this and call setattr directly
-                    # on self.user_api
-                    if hasattr(self, f'{attr}_selected'):
-                        attr = f'{attr}_selected'
-                    setattr(self, attr, value)
-                self.vue_do_aper_phot()
+                self.calculate_photometry(add_to_table=True, update_plots=update_plots, **option)
             except Exception as e:
                 failed_iters.append(i)
                 if full_exceptions:

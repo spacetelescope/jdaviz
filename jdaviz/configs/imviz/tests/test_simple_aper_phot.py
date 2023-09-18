@@ -198,21 +198,22 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
         self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
 
-        phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        phot_plugin = self.imviz.plugins['Aperture Photometry']
         assert phot_plugin.dataset.choices == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
         assert phot_plugin.aperture.choices == ['Subset 1']
 
-        phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},  # noqa
-                                                {'dataset': 'has_wcs_2[SCI,1]'}])
+        phot_plugin.aperture = 'Subset 1'
+        phot_plugin._obj.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},  # noqa
+                                                     {'dataset': 'has_wcs_2[SCI,1]'}])
 
-        assert len(phot_plugin.table) == 2
+        assert len(phot_plugin._obj.table) == 2
 
         with pytest.raises(RuntimeError):
-            phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},  # noqa
-                                                    {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])  # noqa
+            phot_plugin._obj.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},  # noqa
+                                                         {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])  # noqa
 
         # second entry above should have been successful, resulting in one addition to the results
-        assert len(phot_plugin.table) == 3
+        assert len(phot_plugin._obj.table) == 3
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
