@@ -206,7 +206,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 self.aperture_area = 0
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {self.aperture_selected}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {self.aperture_selected}: {repr(e)}",
+                color='error', sender=self))
         else:
             self._background_selected_changed()
 
@@ -300,7 +301,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             if ((background not in (None, 'Manual'))
                     or (background is None and self.background_selected != 'Manual')):
                 raise ValueError("cannot provide background_value with background!='Manual'")
-        elif background == 'Manual' or (background is None and self.background.selected == 'Manual'):
+        elif (background == 'Manual'
+                or (background is None and self.background.selected == 'Manual')):
             background_value = self.background_value
         elif background is None and dataset is None:
             # use the previously-computed value in the plugin
