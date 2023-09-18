@@ -11,7 +11,7 @@ New Features
 - Data color cycler and marker color updates for increased accessibility. [#2453]
 
 - Add support for ``MultiMaskSubsetState`` in ``viz.app.get_subsets()`` and in
-  the Subset Plugin [#2463]
+  the Subset Plugin [#2462]
 
 Cubeviz
 ^^^^^^^
