@@ -267,7 +267,7 @@ class Imviz(ImageConfigHelper):
             Photometry results if available or `None` otherwise.
 
         """
-        return self.plugins['Imviz Simple Aperture Photometry']._obj.export_table()
+        return self.plugins['Aperture Photometry']._obj.export_table()
 
     def get_catalog_source_results(self):
         """Return table of sources given by querying from a catalog, if any.

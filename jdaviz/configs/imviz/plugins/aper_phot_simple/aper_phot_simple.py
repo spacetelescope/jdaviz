@@ -21,6 +21,7 @@ from jdaviz.core.region_translators import regions2aperture, _get_region_from_sp
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         SubsetSelect, TableMixin, PlotMixin)
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
@@ -28,8 +29,34 @@ __all__ = ['SimpleAperturePhotometry']
 ASTROPY_LT_5_2 = Version(astropy.__version__) < Version('5.2')
 
 
-@tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
+@tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")
 class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin, PlotMixin):
+    """
+    The Aperture Photometry plugin performs aperture photometry for drawn regions.
+    See the :ref:`Aperture Photometry Plugin Documentation <aper-phot-simple>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset to use for photometry.
+    * ``aperture`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Subset to use as the aperture.
+    * ``background`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Subset to use to calculate the background.
+    * ``background_value``:
+      Background to subtract, same unit as data.  Automatically computed if ``background`` is
+      set to a subset.
+    * ``pixel_area``:
+      Pixel area in arcsec squared, only used if sr in data unit.
+    * ``counts_factor``:
+      Factor to convert data unit to counts, in unit of flux/counts.
+    * ``flux_scaling``:
+      Same unit as data, used in -2.5 * log(flux / flux_scaling).
+    * :meth:`calculate_photometry`
+    """
     template_file = __file__, "aper_phot_simple.vue"
     aperture_items = List([]).tag(sync=True)
     aperture_selected = Unicode("").tag(sync=True)
@@ -89,6 +116,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('dataset', 'aperture', 'background', 'background_value',
+                                           'pixel_area', 'counts_factor', 'flux_scaling',
+                                           'calculate_photometry'))
 
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
@@ -421,6 +454,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         else:
             self.result_failed_msg = ''
 
+            # TODO: should this be added to the GUI when calling calculate_photometry from the API?
             # Parse results for GUI.
             tmp = []
             for key in phot_table.colnames:
@@ -544,7 +578,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         return _unpack_dict_list(mult_values, single_values)
 
-    def batch_aper_phot(self, options, full_exceptions=False):
+    def calculate_batch_photometry(self, options, full_exceptions=False):
         """
         Run aperture photometry over a list of options.  Values will be looped in order and any
         unprovided options will remain at there previous values (either from a previous entry

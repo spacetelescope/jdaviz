@@ -618,7 +618,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             raise ValueError("currently in multiselect mode")
 
         cycle = self.choices
-        curr_ind = cycle.index(self.selected)
+        if not len(cycle):
+            raise ValueError("no choices")
+        if self.selected == '':
+            curr_ind = -1
+        else:
+            curr_ind = cycle.index(self.selected)
         self.selected = cycle[(curr_ind + 1) % len(cycle)]
         return self.selected
 

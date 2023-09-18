@@ -202,14 +202,14 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin.dataset.choices == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
         assert phot_plugin.aperture.choices == ['Subset 1']
 
-        phot_plugin.batch_aper_phot([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},
-                                     {'dataset': 'has_wcs_2[SCI,1]'}])
+        phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},  # noqa
+                                                {'dataset': 'has_wcs_2[SCI,1]'}])
 
         assert len(phot_plugin.table) == 2
 
         with pytest.raises(RuntimeError):
-            phot_plugin.batch_aper_phot([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},
-                                         {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])
+            phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},  # noqa
+                                                    {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])  # noqa
 
         # second entry above should have been successful, resulting in one addition to the results
         assert len(phot_plugin.table) == 3
@@ -265,7 +265,7 @@ class TestAdvancedAperPhot:
 
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer
-        self.phot_plugin = imviz_helper.plugins["Imviz Simple Aperture Photometry"]._obj
+        self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]._obj
 
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 5.0),

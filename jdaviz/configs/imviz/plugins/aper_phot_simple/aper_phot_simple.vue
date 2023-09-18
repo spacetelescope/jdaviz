@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='Perform aperture photometry for a single region.'
+    description='Perform aperture photometry for drawn regions.'
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#simple-aperture-photometry'"
     :popout_button="popout_button">
 
