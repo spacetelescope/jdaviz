@@ -160,20 +160,20 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
     @observe('aperture_selected')
     def _aperture_selected_changed(self, event={}):
-        if self.dataset.selected_dc_item is None or self.aperture_selected == '':
+        if self.dataset.selected == '' or self.aperture_selected == '':
             return
 
+        # NOTE: aperture area is only used to determine if a warning should be shown in the UI
+        # and so does not need to be calculated within user API calls that don't act on traitlets
         try:
             # Sky subset does not have area. Not worth it to calculate just for a warning.
             if hasattr(self.aperture.selected_spatial_region, 'area'):
                 self.aperture_area = int(np.ceil(self.aperture.selected_spatial_region.area))
             else:
                 self.aperture_area = 0
-
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {self.aperture_selected}: {repr(e)}", color='error', sender=self))
-
         else:
             self._background_selected_changed()
 
@@ -205,183 +205,214 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {background_selected}: {repr(e)}", color='error', sender=self))
 
+    def calculate_photometry(self, **kwargs):
+        """
+        TODO: ADD API DOCSTRING
+        """
+
+        # TODO: validate entries in **kwargs
+        # TODO: background vs background_selected, etc, in kwargs
+
+        if 'dataset' in kwargs:
+            data = self.dataset._get_dc_item(kwargs.get('dataset'))
+        else:
+            # we can use the pre-cached value
+            data = self.dataset.selected_dc_item
+
+        if 'aperture' in kwargs or 'dataset' in kwargs:
+            reg = self.aperture._get_spatial_region(subset=kwargs.get('aperture', self.aperture_selected),  # noqa
+                                                    dataset=kwargs.get('dataset', self.datset_selected))  # noqa
+        else:
+            # use the pre-cached value
+            reg = self.aperture.selected_spatial_region
+
+        # Reset last fitted model
+        fit_model = None
+        # TODO: remove _fitted_model_name cache?
+        if self._fitted_model_name in self.app.fitted_models:
+            del self.app.fitted_models[self._fitted_model_name]
+
+        comp = data.get_component(data.main_components[0])
+
+        if 'background_value' in kwargs:
+            background_value = kwargs.get('background_value')
+        elif 'background' in kwargs or 'dataset' in kwargs:
+            background_value = self._calc_background_median(reg)
+        else:
+            # we can use the traitlet value (either pre-calculated default or user overridden)
+            background_value = self.background_value
+        try:
+            bg = float(background_value)
+        except ValueError:  # Clearer error message
+            raise ValueError('Missing or invalid background value')
+
+        if hasattr(reg, 'to_pixel'):
+            sky_center = reg.center
+            xcenter, ycenter = data.coords.world_to_pixel(sky_center)
+        else:
+            xcenter = reg.center.x
+            ycenter = reg.center.y
+            if data.coords is not None:
+                sky_center = data.coords.pixel_to_world(xcenter, ycenter)
+            else:
+                sky_center = None
+
+        aperture = regions2aperture(reg)
+        include_pixarea_fac = False
+        include_counts_fac = False
+        include_flux_scale = False
+        comp_data = comp.data
+        if comp.units:
+            img_unit = u.Unit(comp.units)
+            bg = bg * img_unit
+            comp_data = comp_data << img_unit
+
+            if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
+                try:
+                    pixarea = float(kwargs.get('pixel_area', self.pixel_area))
+                except ValueError:  # Clearer error message
+                    raise ValueError('Missing or invalid pixel area')
+                if not np.allclose(pixarea, 0):
+                    include_pixarea_fac = True
+            if img_unit != u.count:
+                try:
+                    ctfac = float(kwargs.get('counts_factor', self.counts_factor))
+                except ValueError:  # Clearer error message
+                    raise ValueError('Missing or invalid counts conversion factor')
+                if not np.allclose(ctfac, 0):
+                    include_counts_fac = True
+            try:
+                flux_scale = float(kwargs.get('flux_scaling', self.flux_scaling))
+            except ValueError:  # Clearer error message
+                raise ValueError('Missing or invalid flux scaling')
+            if not np.allclose(flux_scale, 0):
+                include_flux_scale = True
+        phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords, local_bkg=bg)
+        phot_table = phot_aperstats.to_table(columns=(
+            'id', 'sum', 'sum_aper_area',
+            'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
+            'biweight_location', 'biweight_midvariance', 'fwhm', 'semimajor_sigma',
+            'semiminor_sigma', 'orientation', 'eccentricity'))  # Some cols excluded, add back as needed.  # noqa
+        rawsum = phot_table['sum'][0]
+
+        if include_pixarea_fac:
+            pixarea = pixarea * (u.arcsec * u.arcsec / (u.pix * u.pix))
+            # NOTE: Sum already has npix value encoded, so we simply apply the npix unit here.
+            pixarea_fac = (u.pix * u.pix) * pixarea.to(u.sr / (u.pix * u.pix))
+            phot_table['sum'] = [rawsum * pixarea_fac]
+        else:
+            pixarea_fac = None
+
+        if include_counts_fac:
+            ctfac = ctfac * (rawsum.unit / u.count)
+            sum_ct = rawsum / ctfac
+            sum_ct_err = np.sqrt(sum_ct.value) * sum_ct.unit
+        else:
+            ctfac = None
+            sum_ct = None
+            sum_ct_err = None
+
+        if include_flux_scale:
+            flux_scale = flux_scale * phot_table['sum'][0].unit
+            sum_mag = -2.5 * np.log10(phot_table['sum'][0] / flux_scale) * u.mag
+        else:
+            flux_scale = None
+            sum_mag = None
+
+        # Extra info beyond photutils.
+        phot_table.add_columns(
+            [xcenter * u.pix, ycenter * u.pix, sky_center,
+             bg, pixarea_fac, sum_ct, sum_ct_err, ctfac, sum_mag, flux_scale, data.label,
+             reg.meta.get('label', ''), Time(datetime.now(tz=timezone.utc))],
+            names=['xcenter', 'ycenter', 'sky_center', 'background', 'pixarea_tot',
+                   'aperture_sum_counts', 'aperture_sum_counts_err', 'counts_fac',
+                   'aperture_sum_mag', 'flux_scaling',
+                   'data_label', 'subset_label', 'timestamp'],
+            indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
+
+        try:
+            phot_table['id'][0] = self.table._qtable['id'].max() + 1
+            self.table.add_item(phot_table)
+        except Exception:  # Discard incompatible QTable
+            self.table.clear_table()
+            phot_table['id'][0] = 1
+            self.table.add_item(phot_table)
+
+        # Plots.
+        line = self.plot.marks['line']
+        sc = self.plot.marks['scatter']
+        fit_line = self.plot.marks['fit_line']
+
+        if self.current_plot_type == "Curve of Growth":
+            self.plot.figure.title = 'Curve of growth from aperture center'
+            x_arr, sum_arr, x_label, y_label = _curve_of_growth(
+                comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
+                wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
+            line.x, line.y = x_arr, sum_arr
+            self.plot.clear_marks('scatter', 'fit_line')
+            self.plot.figure.axes[0].label = x_label
+            self.plot.figure.axes[1].label = y_label
+
+        else:  # Radial profile
+            self.plot.figure.axes[0].label = 'pix'
+            self.plot.figure.axes[1].label = comp.units or 'Value'
+
+            if self.current_plot_type == "Radial Profile":
+                self.plot.figure.title = 'Radial profile from aperture center'
+                x_data, y_data = _radial_profile(
+                    phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
+                    raw=False)
+                line.x, line.y = x_data, y_data
+                self.plot.clear_marks('scatter')
+
+            else:  # Radial Profile (Raw)
+                self.plot.figure.title = 'Raw radial profile from aperture center'
+                x_data, y_data = _radial_profile(
+                    phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
+                    raw=True)
+
+                sc.x, sc.y = x_data, y_data
+                self.plot.clear_marks('line')
+
+            # Fit Gaussian1D to radial profile data.
+            if self.fit_radial_profile:
+                fitter = LevMarLSQFitter()
+                y_max = y_data.max()
+                x_mean = x_data[np.where(y_data == y_max)].mean()
+                std = 0.5 * (phot_table['semimajor_sigma'][0] +
+                             phot_table['semiminor_sigma'][0])
+                if isinstance(std, u.Quantity):
+                    std = std.value
+                gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std,
+                                fixed={'amplitude': True},
+                                bounds={'amplitude': (y_max * 0.5, y_max)})
+                if ASTROPY_LT_5_2:
+                    fitter_kw = {}
+                else:
+                    fitter_kw = {'filter_non_finite': True}
+                with warnings.catch_warnings(record=True) as warns:
+                    fit_model = fitter(gs, x_data, y_data, **fitter_kw)
+                if len(warns) > 0:
+                    msg = os.linesep.join([str(w.message) for w in warns])
+                    self.hub.broadcast(SnackbarMessage(
+                        f"Radial profile fitting: {msg}", color='warning', sender=self))
+                y_fit = fit_model(x_data)
+                self.app.fitted_models[self._fitted_model_name] = fit_model
+                fit_line.x, fit_line.y = x_data, y_fit
+            else:
+                self.plot.clear_marks('fit_line')
+
+        return phot_table, fit_model
+
     def vue_do_aper_phot(self, *args, **kwargs):
         if self.dataset_selected == '' or self.aperture_selected == '':
             self.hub.broadcast(SnackbarMessage(
                 "No data for aperture photometry", color='error', sender=self))
             return
 
-        data = self.dataset.selected_dc_item
-        reg = self.aperture.selected_spatial_region
-
-        # Reset last fitted model
-        fit_model = None
-        if self._fitted_model_name in self.app.fitted_models:
-            del self.app.fitted_models[self._fitted_model_name]
-
         try:
-            comp = data.get_component(data.main_components[0])
-            try:
-                bg = float(self.background_value)
-            except ValueError:  # Clearer error message
-                raise ValueError('Missing or invalid background value')
-
-            if hasattr(reg, 'to_pixel'):
-                sky_center = reg.center
-                xcenter, ycenter = data.coords.world_to_pixel(sky_center)
-            else:
-                xcenter = reg.center.x
-                ycenter = reg.center.y
-                if data.coords is not None:
-                    sky_center = data.coords.pixel_to_world(xcenter, ycenter)
-                else:
-                    sky_center = None
-
-            aperture = regions2aperture(reg)
-            include_pixarea_fac = False
-            include_counts_fac = False
-            include_flux_scale = False
-            comp_data = comp.data
-            if comp.units:
-                img_unit = u.Unit(comp.units)
-                bg = bg * img_unit
-                comp_data = comp_data << img_unit
-
-                if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
-                    try:
-                        pixarea = float(self.pixel_area)
-                    except ValueError:  # Clearer error message
-                        raise ValueError('Missing or invalid pixel area')
-                    if not np.allclose(pixarea, 0):
-                        include_pixarea_fac = True
-                if img_unit != u.count:
-                    try:
-                        ctfac = float(self.counts_factor)
-                    except ValueError:  # Clearer error message
-                        raise ValueError('Missing or invalid counts conversion factor')
-                    if not np.allclose(ctfac, 0):
-                        include_counts_fac = True
-                try:
-                    flux_scale = float(self.flux_scaling)
-                except ValueError:  # Clearer error message
-                    raise ValueError('Missing or invalid flux scaling')
-                if not np.allclose(flux_scale, 0):
-                    include_flux_scale = True
-            phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords, local_bkg=bg)
-            phot_table = phot_aperstats.to_table(columns=(
-                'id', 'sum', 'sum_aper_area',
-                'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
-                'biweight_location', 'biweight_midvariance', 'fwhm', 'semimajor_sigma',
-                'semiminor_sigma', 'orientation', 'eccentricity'))  # Some cols excluded, add back as needed.  # noqa
-            rawsum = phot_table['sum'][0]
-
-            if include_pixarea_fac:
-                pixarea = pixarea * (u.arcsec * u.arcsec / (u.pix * u.pix))
-                # NOTE: Sum already has npix value encoded, so we simply apply the npix unit here.
-                pixarea_fac = (u.pix * u.pix) * pixarea.to(u.sr / (u.pix * u.pix))
-                phot_table['sum'] = [rawsum * pixarea_fac]
-            else:
-                pixarea_fac = None
-
-            if include_counts_fac:
-                ctfac = ctfac * (rawsum.unit / u.count)
-                sum_ct = rawsum / ctfac
-                sum_ct_err = np.sqrt(sum_ct.value) * sum_ct.unit
-            else:
-                ctfac = None
-                sum_ct = None
-                sum_ct_err = None
-
-            if include_flux_scale:
-                flux_scale = flux_scale * phot_table['sum'][0].unit
-                sum_mag = -2.5 * np.log10(phot_table['sum'][0] / flux_scale) * u.mag
-            else:
-                flux_scale = None
-                sum_mag = None
-
-            # Extra info beyond photutils.
-            phot_table.add_columns(
-                [xcenter * u.pix, ycenter * u.pix, sky_center,
-                 bg, pixarea_fac, sum_ct, sum_ct_err, ctfac, sum_mag, flux_scale, data.label,
-                 reg.meta.get('label', ''), Time(datetime.now(tz=timezone.utc))],
-                names=['xcenter', 'ycenter', 'sky_center', 'background', 'pixarea_tot',
-                       'aperture_sum_counts', 'aperture_sum_counts_err', 'counts_fac',
-                       'aperture_sum_mag', 'flux_scaling',
-                       'data_label', 'subset_label', 'timestamp'],
-                indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
-
-            try:
-                phot_table['id'][0] = self.table._qtable['id'].max() + 1
-                self.table.add_item(phot_table)
-            except Exception:  # Discard incompatible QTable
-                self.table.clear_table()
-                phot_table['id'][0] = 1
-                self.table.add_item(phot_table)
-
-            # Plots.
-            line = self.plot.marks['line']
-            sc = self.plot.marks['scatter']
-            fit_line = self.plot.marks['fit_line']
-
-            if self.current_plot_type == "Curve of Growth":
-                self.plot.figure.title = 'Curve of growth from aperture center'
-                x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-                    comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
-                    wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
-                line.x, line.y = x_arr, sum_arr
-                self.plot.clear_marks('scatter', 'fit_line')
-                self.plot.figure.axes[0].label = x_label
-                self.plot.figure.axes[1].label = y_label
-
-            else:  # Radial profile
-                self.plot.figure.axes[0].label = 'pix'
-                self.plot.figure.axes[1].label = comp.units or 'Value'
-
-                if self.current_plot_type == "Radial Profile":
-                    self.plot.figure.title = 'Radial profile from aperture center'
-                    x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
-                        raw=False)
-                    line.x, line.y = x_data, y_data
-                    self.plot.clear_marks('scatter')
-
-                else:  # Radial Profile (Raw)
-                    self.plot.figure.title = 'Raw radial profile from aperture center'
-                    x_data, y_data = _radial_profile(
-                        phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
-                        raw=True)
-
-                    sc.x, sc.y = x_data, y_data
-                    self.plot.clear_marks('line')
-
-                # Fit Gaussian1D to radial profile data.
-                if self.fit_radial_profile:
-                    fitter = LevMarLSQFitter()
-                    y_max = y_data.max()
-                    x_mean = x_data[np.where(y_data == y_max)].mean()
-                    std = 0.5 * (phot_table['semimajor_sigma'][0] +
-                                 phot_table['semiminor_sigma'][0])
-                    if isinstance(std, u.Quantity):
-                        std = std.value
-                    gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std,
-                                    fixed={'amplitude': True},
-                                    bounds={'amplitude': (y_max * 0.5, y_max)})
-                    if ASTROPY_LT_5_2:
-                        fitter_kw = {}
-                    else:
-                        fitter_kw = {'filter_non_finite': True}
-                    with warnings.catch_warnings(record=True) as warns:
-                        fit_model = fitter(gs, x_data, y_data, **fitter_kw)
-                    if len(warns) > 0:
-                        msg = os.linesep.join([str(w.message) for w in warns])
-                        self.hub.broadcast(SnackbarMessage(
-                            f"Radial profile fitting: {msg}", color='warning', sender=self))
-                    y_fit = fit_model(x_data)
-                    self.app.fitted_models[self._fitted_model_name] = fit_model
-                    fit_line.x, fit_line.y = x_data, y_fit
-                else:
-                    self.plot.clear_marks('fit_line')
-
+            # TODO: decide what we want this to actually return
+            phot_table, fit_model = self.calculate_photometry()
         except Exception as e:  # pragma: no cover
             self.plot.clear_all_marks()
             msg = f"Aperture photometry failed: {repr(e)}"

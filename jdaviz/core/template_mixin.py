@@ -1540,6 +1540,11 @@ class SubsetSelect(SelectPluginComponent):
             return None
         return self.app.get_subsets(self.selected)
 
+    def _get_subset_state(self, subset):
+        subset_group = [s for s in self.app.data_collection.subset_groups if
+                        s.label == subset][0]
+        return subset_group.subset_state
+
     @cached_property
     def selected_subset_state(self):
         if self.is_multiselect:
@@ -1551,9 +1556,7 @@ class SubsetSelect(SelectPluginComponent):
                                 s.label == select_subset][0]
                 subset_states[select_subset] = subset_group.subset_state
             return subset_states
-        subset_group = [s for s in self.app.data_collection.subset_groups if
-                        s.label == self.selected][0]
-        return subset_group.subset_state
+        return self._get_subset_state(self.selected)
 
     @cached_property
     def selected_subset_mask(self):
@@ -1578,17 +1581,25 @@ class SubsetSelect(SelectPluginComponent):
 
         return subset.mask
 
+    def _get_spatial_region(self, dataset, subset=None):
+        if subset is None:
+            subset = self.selected
+            subset_state = self.selected_subset_state
+        else:
+            subset_state = self._get_subset_state(subset)
+        region = _get_region_from_spatial_subset(self.plugin,
+                                                 subset_state,
+                                                 dataset=dataset)
+        region.meta['label'] = subset
+        return region
+
     @cached_property
     def selected_spatial_region(self):
         if not self.dataset:
             raise ValueError("Retrieving subset mask requires associated dataset")
         if self.selected_item.get('type') != 'spatial':
             raise TypeError("This action is only supported on spatial-type subsets")
-        region = _get_region_from_spatial_subset(self.plugin,
-                                                 self.selected_subset_state,
-                                                 dataset=self.dataset.selected)
-        region.meta['label'] = self.selected
-        return region
+        return self._get_spatial_region(dataset=self.dataset.selected)
 
     def selected_min_max(self, dataset):
         """
@@ -2095,12 +2106,15 @@ class DatasetSelect(SelectPluginComponent):
             return None
         return Spectrum1D
 
-    @cached_property
-    def selected_dc_item(self):
-        if self.selected not in self.labels:
+    def _get_dc_item(self, selected):
+        if selected not in self.labels:
             # _apply_default_selection will override shortly anyways
             return None
-        return next((x for x in self.app.data_collection if x.label == self.selected))
+        return next((x for x in self.app.data_collection if x.label == selected))
+
+    @cached_property
+    def selected_dc_item(self):
+        return self._get_dc_item(self.selected)
 
     def get_object(self, *args, **kwargs):
         if self.selected not in self.labels:
