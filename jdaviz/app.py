@@ -1587,16 +1587,66 @@ class Application(VuetifyTemplate, HubListener):
         data_label : str
             The Glue data label found in the ``DataCollection``.
         """
-        print(f"Removing {data_label} from viewer")
+        from astropy.wcs.utils import pixel_to_pixel
+        already_reparented = []
+
         viewer_item = self._get_viewer_item(viewer_reference)
         viewer_id = viewer_item['id']
         viewer = self.get_viewer_by_id(viewer_id)
 
         [data] = [x for x in self.data_collection if x.label == data_label]
 
-        viewer.remove_data(data)
-        viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
-                                                if layer_info['data_label'] != data.label]  # noqa
+        # Set subset attributes to match a remaining data collection member.
+        for lyr in viewer.layers:
+            if hasattr(lyr.layer, "subset_state") and lyr.layer.data.label != data_label:
+                if lyr.layer.label in already_reparented:
+                    continue
+                for att in ("att", "xatt", "yatt", "x_att", "y_att"):
+                    if hasattr(lyr.layer.subset_state, att):
+                        subset_att = getattr(lyr.layer.subset_state, att)
+                        data_components = lyr.layer.data.components
+                        if subset_att not in data_components:
+                            cid = [c for c in data_components if c.label == subset_att.label][0]
+                            setattr(lyr.layer.subset_state, att, cid)
+                # Translate bounds through WCS if needed
+                if (self.config == "imviz" and
+                        self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
+                    # Get the correct link to use for translation
+                    roi = lyr.layer.subset_state.roi
+
+                    if type(roi) in (CircularROI, CircularAnnulusROI, EllipticalROI):
+                        old_xc = roi.xc
+                        old_yc = roi.yc
+                        # Convert center
+                        x, y = pixel_to_pixel(data.coords, lyr.layer.data.coords, roi.xc, roi.yc)
+                        # Can't use set_center here because CircularAnnulusROI doesn't have it
+                        roi.xc = x
+                        roi.yc = y
+
+                        for att in ("radius", "inner_radius", "outer_radius",
+                                    "radius_x", "radius_y"):
+                            # Hacky way to get new radii with point on edge of circle
+                            # Do we need to worry about using x for the radius conversion for
+                            # radius_y if there is distortion?
+                            r = getattr(roi, att, None)
+                            if r is not None:
+                                dummy_x = old_xc + r
+                                x2, y2 = pixel_to_pixel(data.coords, lyr.layer.data.coords,
+                                                        dummy_x, old_yc)
+                                new_radius = x2 - x
+                                setattr(roi, att, new_radius)
+
+                    elif type(roi) is RectangularROI:
+                        x_min, y_min = pixel_to_pixel(data.coords, lyr.layer.data.coords,
+                                                      roi.xmin, roi.ymin)
+                        x_max, y_max = pixel_to_pixel(data.coords, lyr.layer.data.coords,
+                                                      roi.xmax, roi.ymax)
+                        roi.xmin = x_min
+                        roi.xmax = x_max
+                        roi.ymin = y_min
+                        roi.ymax = y_max
+
+                already_reparented.append(lyr.layer.label)
 
         viewer.remove_data(data)
         viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
