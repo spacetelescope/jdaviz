@@ -1563,18 +1563,18 @@ class SubsetSelect(SelectPluginComponent):
             return subset_states
         return self._get_subset_state(self.selected)
 
-    @cached_property
-    def selected_subset_mask(self):
-        if self.is_multiselect:
-            raise NotImplementedError("Retrieving subset mask is not"
-                                      " supported in multiselect mode")
-        if not self.dataset:
-            raise ValueError("Retrieving subset mask requires associated dataset")
-        get_data_kwargs = {'data_label': self.dataset.selected}
+    def _get_subset_mask(self, subset=None, dataset=None):
+        if subset is None:
+            subset = self.selected
+        if dataset is None:
+            if getattr(self.plugin, 'dataset', None) is None:
+                raise ValueError("Retrieving subset mask requires associated dataset")
+            dataset = self.plugin.dataset.selected
+        get_data_kwargs = {'data_label': dataset}
         if 'is_spectral' in self.filters:
-            get_data_kwargs['spectral_subset'] = self.selected
+            get_data_kwargs['spectral_subset'] = subset
         elif 'is_spatial' in self.filters:
-            get_data_kwargs['spatial_subset'] = self.selected
+            get_data_kwargs['spatial_subset'] = subset
 
         if self.app.config == 'cubeviz' and 'is_spectral' in self.filters:
             viewer_ref = getattr(self.plugin,
@@ -1583,8 +1583,15 @@ class SubsetSelect(SelectPluginComponent):
             get_data_kwargs['function'] = self.app.get_viewer(viewer_ref).state.function
 
         subset = self.app._jdaviz_helper.get_data(**get_data_kwargs)
-
         return subset.mask
+
+    @cached_property
+    def selected_subset_mask(self):
+        if self.is_multiselect:
+            raise NotImplementedError("Retrieving subset mask is not"
+                                      " supported in multiselect mode")
+
+        return self._get_subset_mask()
 
     def _get_spatial_region(self, dataset, subset=None):
         if subset is None:
@@ -1600,7 +1607,7 @@ class SubsetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_spatial_region(self):
-        if not self.dataset:
+        if not getattr(self, 'dataset', None):
             raise ValueError("Retrieving subset mask requires associated dataset")
         if self.selected_item.get('type') != 'spatial':
             raise TypeError("This action is only supported on spatial-type subsets")
@@ -1613,7 +1620,7 @@ class SubsetSelect(SelectPluginComponent):
         if self.is_multiselect:
             raise TypeError("This action cannot be done when multiselect is active")
         if not isinstance(dataset, Spectrum1D):
-            raise TypeError("spectrum1d")
+            raise TypeError("dataset must be a Spectrum1D object")
 
         if self.selected_obj is None:
             return np.nanmin(dataset.spectral_axis), np.nanmax(dataset.spectral_axis)
@@ -1658,7 +1665,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
                                             'spectral_subset_selected_has_subregions',
-                                            dataset='dataset',
+                                            dataset='dataset' if hasattr(self, 'dataset') else None,  # noqa
                                             viewers=[spectrum_viewer],
                                             default_text='Entire Spectrum',
                                             filters=['is_spectral'])
@@ -1697,7 +1704,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            'spatial_subset_items',
                                            'spatial_subset_selected',
                                            'spatial_subset_selected_has_subregions',
-                                           dataset='dataset',
+                                           dataset='dataset' if hasattr(self, 'dataset') else None,
                                            default_text='Entire Cube',
                                            filters=['is_spatial'])
 
@@ -1716,7 +1723,9 @@ class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
 
     @observe("dataset_selected", "spectral_subset_selected")
     def _check_dataset_spectral_subset_valid(self, event={}, return_ranges=False):
-
+        if not hasattr(self, 'dataset'):
+            # plugin not fully initialized
+            return
         if self.spectral_subset_selected == "Entire Spectrum":
             self.spectral_subset_valid = True
         else:

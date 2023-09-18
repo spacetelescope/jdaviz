@@ -575,7 +575,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         -------
         options : list
             List of all combinations of input parameters, which can then be used as input to
-            `batch_aper_phot`
+            `calculate_batch_photometry`.
         """
         if not isinstance(options, dict):
             raise TypeError("options must be a dictionary")
