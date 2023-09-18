@@ -55,7 +55,7 @@ from jdaviz.core.style_widget import StyleWidget
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import SnackbarQueue, alpha_index
+from jdaviz.utils import SnackbarQueue, alpha_index, MultiMaskSubsetState
 from ipypopout import PopoutButton
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS']
@@ -972,10 +972,15 @@ class Application(VuetifyTemplate, HubListener):
                 subset_region = self._get_range_subset_bounds(subset.subset_state,
                                                               simplify_spectral,
                                                               use_display_units)
+            elif isinstance(subset.subset_state, MultiMaskSubsetState):
+                subset_region = self._get_multi_mask_subset_definition(subset.subset_state)
             else:
-                # subset.subset_state can be an instance of MaskSubsetState
-                # or something else we do not know how to handle
-                all_subsets[label] = None
+                # subset.subset_state can be an instance of something else
+                # we do not know how to handle yet
+                all_subsets[label] = [{"name": subset.subset_state.__class__.__name__,
+                                       "glue_state": subset.subset_state.__class__.__name__,
+                                       "region": None,
+                                       "subset_state": subset.subset_state}]
                 continue
 
             # Is the subset spectral, spatial, temporal?
@@ -997,6 +1002,7 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     all_subsets[label] = subset_region
             elif not spectral_only and not spatial_only:
+                # General else statement if no type was specified
                 if object_only and not isinstance(subset_region, SpectralRegion):
                     all_subsets[label] = [reg['region'] for reg in subset_region]
                 else:
@@ -1068,6 +1074,12 @@ class Application(VuetifyTemplate, HubListener):
                      "subset_state": subset_state}]
         return spec_region
 
+    def _get_multi_mask_subset_definition(self, subset_state):
+        return [{"name": subset_state.__class__.__name__,
+                 "glue_state": subset_state.__class__.__name__,
+                 "region": subset_state.total_masked_first_data(),
+                 "subset_state": subset_state}]
+
     def _get_roi_subset_definition(self, subset_state):
         # TODO: Imviz: Return sky region if link type is WCS.
         roi_as_region = roi_subset_state_to_region(subset_state)
@@ -1087,6 +1099,15 @@ class Application(VuetifyTemplate, HubListener):
 
                 if isinstance(one, list) and "glue_state" in one[0]:
                     one[0]["glue_state"] = subset_state.__class__.__name__
+
+                if (isinstance(one, list)
+                        and isinstance(one[0]["subset_state"], MultiMaskSubsetState)
+                        and simplify_spectral):
+                    return two
+                elif (isinstance(two, list)
+                        and isinstance(two[0]["subset_state"], MultiMaskSubsetState)
+                        and simplify_spectral):
+                    return one
 
                 if isinstance(subset_state.state2, InvertState):
                     # This covers the REMOVE subset mode
@@ -1206,13 +1227,15 @@ class Application(VuetifyTemplate, HubListener):
                                             simplify_spectral, use_display_units)
         elif subset_state is not None:
             # This is the leaf node of the glue subset state tree where
-            # a subset_state is either ROI or Range.
+            # a subset_state is either ROI, Range, or MultiMask.
             if isinstance(subset_state, RoiSubsetState):
                 return self._get_roi_subset_definition(subset_state)
 
             elif isinstance(subset_state, RangeSubsetState):
                 return self._get_range_subset_bounds(subset_state,
                                                      simplify_spectral, use_display_units)
+            elif isinstance(subset_state, MultiMaskSubsetState):
+                return self._get_multi_mask_subset_definition(subset_state)
 
     def _get_display_unit(self, axis):
         if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa

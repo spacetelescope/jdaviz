@@ -2,12 +2,14 @@ import os
 import time
 import threading
 from collections import deque
+import numpy as np
 
 from astropy.io import fits
 from astropy.utils import minversion
 from ipyvue import watch
+from glue.core.exceptions import IncompatibleAttribute
 from glue.config import settings
-from glue.core.subset import RangeSubsetState, RoiSubsetState
+from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
 
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
@@ -305,3 +307,45 @@ def get_subset_type(subset):
         return 'spectral'
     else:
         return None
+
+
+class MultiMaskSubsetState(SubsetState):
+    """
+    A subset state that can include a different mask for different datasets.
+    Adopted from https://github.com/glue-viz/glue/pull/2415
+
+    Parameters
+    ----------
+    masks : dict
+        A dictionary mapping data UUIDs to boolean arrays with the same
+        dimensions as the data arrays.
+    """
+
+    def __init__(self, masks=None):
+        super(MultiMaskSubsetState, self).__init__()
+        self._masks = masks
+
+    def to_mask(self, data, view=None):
+        if data.uuid in self._masks:
+            mask = self._masks[data.uuid]
+            if view is not None:
+                mask = mask[view]
+            return mask
+        else:
+            raise IncompatibleAttribute()
+
+    def copy(self):
+        return MultiMaskSubsetState(masks=self._masks)
+
+    def __gluestate__(self, context):
+        serialized = {key: context.do(value) for key, value in self._masks.items()}
+        return {'masks': serialized}
+
+    def total_masked_first_data(self):
+        first_data = next(iter(self._masks))
+        return len(np.where(self._masks[first_data])[0])
+
+    @classmethod
+    def __setgluestate__(cls, rec, context):
+        masks = {key: context.object(value) for key, value in rec['masks'].items()}
+        return cls(masks=masks)

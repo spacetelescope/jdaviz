@@ -13,7 +13,7 @@ from numpy.testing import assert_allclose
 from specutils import SpectralRegion, Spectrum1D
 
 from jdaviz.core.marks import ShadowSpatialSpectral
-from jdaviz.utils import get_subset_type
+from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 
 
 def test_region_from_subset_2d(cubeviz_helper):
@@ -765,3 +765,51 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     reg = specviz2d_helper.app.get_subsets("Subset 1")
     assert reg[0].lower.value == 6400 and reg[0].upper.value == 7400
     assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
+
+
+def test_multi_mask_subset(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+
+    viewer.apply_roi(XRangeROI(6200, 6800))
+
+    plugin = specviz_helper.app.get_tray_item_from_name("g-subset-plugin")
+    plugin.can_freeze = True
+    plugin.vue_freeze_subset()
+
+    reg = specviz_helper.app.get_subsets()
+    assert reg["Subset 1"][0]["region"] == 3
+    assert isinstance(reg["Subset 1"][0]["subset_state"], MultiMaskSubsetState)
+
+    specviz_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(XRangeROI(7200, 7600))
+
+    # Simplify subset ignores Mask subsets
+    reg = specviz_helper.app.get_subsets()
+    assert (reg["Subset 1"].lower.value == 7200
+            and reg["Subset 1"].upper.value == 7600)
+
+    # If we set simplify to False, we see all subregions
+    reg = specviz_helper.app.get_subsets(simplify_spectral=False)
+    assert (reg["Subset 1"][1]["region"].lower.value == 7200
+            and reg["Subset 1"][1]["region"].upper.value == 7600)
+    assert reg["Subset 1"][0]["region"] == 3
+    assert plugin.can_simplify is False
+
+    # If we freeze again, all subregions become a Mask subset object
+    plugin.vue_freeze_subset()
+    reg = specviz_helper.app.get_subsets()
+    assert reg["Subset 1"][0]["region"] == 5
+
+    # When freezing an AndNot state, the number of mask values should decrease
+    specviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(XRangeROI(6600, 7200))
+
+    reg = specviz_helper.app.get_subsets(simplify_spectral=False)
+    assert (reg["Subset 1"][1]["region"].lower.value == 6600
+            and reg["Subset 1"][1]["region"].upper.value == 7200)
+    assert reg["Subset 1"][0]["region"] == 5
+
+    plugin.vue_freeze_subset()
+    reg = specviz_helper.app.get_subsets()
+    assert reg["Subset 1"][0]["region"] == 4

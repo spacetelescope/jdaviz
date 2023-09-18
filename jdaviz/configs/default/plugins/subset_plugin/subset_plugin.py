@@ -18,6 +18,7 @@ from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.utils import MultiMaskSubsetState
 
 __all__ = ['SubsetPlugin']
 
@@ -51,6 +52,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     multiselect = Bool(False).tag(sync=True)
     is_centerable = Bool(False).tag(sync=True)
     can_simplify = Bool(False).tag(sync=True)
+    can_freeze = Bool(False).tag(sync=True)
 
     icon_replace = Unicode(read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
     icon_or = Unicode(read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')).tag(sync=True)  # noqa
@@ -227,6 +229,13 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                          {"name": "Upper bound", "att": "hi", "value": hi.value,
                                           "orig": hi.value, "unit": str(hi.unit)}]
                 subset_type = "Range"
+
+            elif isinstance(subset_state, MultiMaskSubsetState):
+                total_masked = subset_state.total_masked_first_data()
+                subset_definition = [{"name": "Masked values", "att": "masked",
+                                      "value": total_masked,
+                                      "orig": total_masked}]
+                subset_type = "Mask"
             if len(subset_definition) > 0:
                 # Note: .append() does not work for List traitlet.
                 self.subset_definitions = self.subset_definitions + [subset_definition]
@@ -236,8 +245,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         simplifiable_states = set(['AndState', 'XorState', 'AndNotState'])
         # Check if the subset has more than one subregion, is a range subset type, and
-        # uses one of the states that can be simplified.
-        if (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
+        # uses one of the states that can be simplified. Mask subset types cannot be simplified
+        # so subsets contained that are skipped.
+        if 'Mask' in self.subset_types:
+            self.can_simplify = False
+        elif (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
                 and len(simplifiable_states - set(self.glue_state_types)) < 3):
             self.can_simplify = True
         elif (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
@@ -257,6 +269,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_states = []
 
         self._unpack_get_subsets_for_ui()
+
+    def vue_freeze_subset(self, *args):
+        sgs = {sg.label: sg for sg in self.app.data_collection.subset_groups}
+        sg = sgs.get(self.subset_selected)
+
+        masks = {}
+        for data in self.app.data_collection:
+            masks[data.uuid] = sg.subset_state.to_mask(data)
+
+        sg.subset_state = MultiMaskSubsetState(masks)
 
     def vue_simplify_subset(self, *args):
         if self.multiselect:
