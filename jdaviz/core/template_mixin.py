@@ -2482,7 +2482,7 @@ class DatasetSelect(SelectPluginComponent):
 
     def __init__(self, plugin, items, selected,
                  multiselect=None,
-                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers'],
+                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers', 'is_not_wcs_only'],
                  default_text=None, manual_options=[],
                  default_mode='first'):
         """
@@ -2638,6 +2638,9 @@ class DatasetSelect(SelectPluginComponent):
 
         def is_cube(data):
             return len(data.shape) == 3
+
+        def is_not_wcs_only(data):
+            return not data.meta.get(self.app._wcs_only_label, False)
 
         return super()._is_valid_item(data, locals())
 
