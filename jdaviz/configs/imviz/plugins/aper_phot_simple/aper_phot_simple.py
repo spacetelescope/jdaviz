@@ -240,7 +240,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
     def calculate_photometry(self, dataset=None, aperture=None, background=None,
                              background_value=None, pixel_area=None, counts_factor=None,
-                             flux_scaling=None):
+                             flux_scaling=None, add_to_table=True, update_plots=True):
         """
         Calculate aperture photometry given the values set in the plugin or any overrides provided
         as arguments here (which will temporarily override plugin values for this calculation only).
@@ -262,6 +262,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             Factor to convert data unit to counts, in unit of flux/counts.
         * ``flux_scaling`` : float, optional
             Same unit as data, used in -2.5 * log(flux / flux_scaling).
+        * ``add_to_table`` : bool, optional
+        * ``update_plots`` : bool, optional
+
+        Returns
+        -------
+        * table row, fit results
         """
         if dataset is not None:
             if dataset not in self.dataset.choices:
@@ -389,77 +395,120 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                    'data_label', 'subset_label', 'timestamp'],
             indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
 
-        try:
-            phot_table['id'][0] = self.table._qtable['id'].max() + 1
-            self.table.add_item(phot_table)
-        except Exception:  # Discard incompatible QTable
-            self.table.clear_table()
-            phot_table['id'][0] = 1
-            self.table.add_item(phot_table)
+        if add_to_table:
+            try:
+                phot_table['id'][0] = self.table._qtable['id'].max() + 1
+                self.table.add_item(phot_table)
+            except Exception:  # Discard incompatible QTable
+                self.table.clear_table()
+                phot_table['id'][0] = 1
+                self.table.add_item(phot_table)
 
         # Plots.
-        line = self.plot.marks['line']
-        sc = self.plot.marks['scatter']
-        fit_line = self.plot.marks['fit_line']
+        if update_plots:
+            line = self.plot.marks['line']
+            sc = self.plot.marks['scatter']
+            fit_line = self.plot.marks['fit_line']
 
-        if self.current_plot_type == "Curve of Growth":
-            self.plot.figure.title = 'Curve of growth from aperture center'
-            x_arr, sum_arr, x_label, y_label = _curve_of_growth(
-                comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
-                wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
-            line.x, line.y = x_arr, sum_arr
-            self.plot.clear_marks('scatter', 'fit_line')
-            self.plot.figure.axes[0].label = x_label
-            self.plot.figure.axes[1].label = y_label
+            if self.current_plot_type == "Curve of Growth":
+                self.plot.figure.title = 'Curve of growth from aperture center'
+                x_arr, sum_arr, x_label, y_label = _curve_of_growth(
+                    comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
+                    wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
+                line.x, line.y = x_arr, sum_arr
+                self.plot.clear_marks('scatter', 'fit_line')
+                self.plot.figure.axes[0].label = x_label
+                self.plot.figure.axes[1].label = y_label
 
-        else:  # Radial profile
-            self.plot.figure.axes[0].label = 'pix'
-            self.plot.figure.axes[1].label = comp.units or 'Value'
+            else:  # Radial profile
+                self.plot.figure.axes[0].label = 'pix'
+                self.plot.figure.axes[1].label = comp.units or 'Value'
 
-            if self.current_plot_type == "Radial Profile":
-                self.plot.figure.title = 'Radial profile from aperture center'
-                x_data, y_data = _radial_profile(
-                    phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
-                    raw=False)
-                line.x, line.y = x_data, y_data
-                self.plot.clear_marks('scatter')
+                if self.current_plot_type == "Radial Profile":
+                    self.plot.figure.title = 'Radial profile from aperture center'
+                    x_data, y_data = _radial_profile(
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
+                        raw=False)
+                    line.x, line.y = x_data, y_data
+                    self.plot.clear_marks('scatter')
 
-            else:  # Radial Profile (Raw)
-                self.plot.figure.title = 'Raw radial profile from aperture center'
-                x_data, y_data = _radial_profile(
-                    phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
-                    raw=True)
+                else:  # Radial Profile (Raw)
+                    self.plot.figure.title = 'Raw radial profile from aperture center'
+                    x_data, y_data = _radial_profile(
+                        phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
+                        raw=True)
 
-                sc.x, sc.y = x_data, y_data
-                self.plot.clear_marks('line')
+                    sc.x, sc.y = x_data, y_data
+                    self.plot.clear_marks('line')
 
-            # Fit Gaussian1D to radial profile data.
-            if self.fit_radial_profile:
-                fitter = LevMarLSQFitter()
-                y_max = y_data.max()
-                x_mean = x_data[np.where(y_data == y_max)].mean()
-                std = 0.5 * (phot_table['semimajor_sigma'][0] +
-                             phot_table['semiminor_sigma'][0])
-                if isinstance(std, u.Quantity):
-                    std = std.value
-                gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std,
-                                fixed={'amplitude': True},
-                                bounds={'amplitude': (y_max * 0.5, y_max)})
-                if ASTROPY_LT_5_2:
-                    fitter_kw = {}
+                # Fit Gaussian1D to radial profile data.
+                if self.fit_radial_profile:
+                    fitter = LevMarLSQFitter()
+                    y_max = y_data.max()
+                    x_mean = x_data[np.where(y_data == y_max)].mean()
+                    std = 0.5 * (phot_table['semimajor_sigma'][0] +
+                                 phot_table['semiminor_sigma'][0])
+                    if isinstance(std, u.Quantity):
+                        std = std.value
+                    gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std,
+                                    fixed={'amplitude': True},
+                                    bounds={'amplitude': (y_max * 0.5, y_max)})
+                    if ASTROPY_LT_5_2:
+                        fitter_kw = {}
+                    else:
+                        fitter_kw = {'filter_non_finite': True}
+                    with warnings.catch_warnings(record=True) as warns:
+                        fit_model = fitter(gs, x_data, y_data, **fitter_kw)
+                    if len(warns) > 0:
+                        msg = os.linesep.join([str(w.message) for w in warns])
+                        self.hub.broadcast(SnackbarMessage(
+                            f"Radial profile fitting: {msg}", color='warning', sender=self))
+                    y_fit = fit_model(x_data)
+                    self.app.fitted_models[self._fitted_model_name] = fit_model
+                    fit_line.x, fit_line.y = x_data, y_fit
                 else:
-                    fitter_kw = {'filter_non_finite': True}
-                with warnings.catch_warnings(record=True) as warns:
-                    fit_model = fitter(gs, x_data, y_data, **fitter_kw)
-                if len(warns) > 0:
-                    msg = os.linesep.join([str(w.message) for w in warns])
-                    self.hub.broadcast(SnackbarMessage(
-                        f"Radial profile fitting: {msg}", color='warning', sender=self))
-                y_fit = fit_model(x_data)
-                self.app.fitted_models[self._fitted_model_name] = fit_model
-                fit_line.x, fit_line.y = x_data, y_fit
+                    self.plot.clear_marks('fit_line')
+
+        # Parse results for GUI.
+        tmp = []
+        for key in phot_table.colnames:
+            if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
+                       'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
+                continue
+            x = phot_table[key][0]
+            if (isinstance(x, (int, float, u.Quantity)) and
+                    key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
+                                'aperture_sum_counts', 'aperture_sum_mag')):
+                tmp.append({'function': key, 'result': f'{x:.4e}'})
+            elif key == 'sky_center' and x is not None:
+                tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
+                tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f} deg'})
+            elif key in ('xcenter', 'ycenter', 'sum_aper_area'):
+                tmp.append({'function': key, 'result': f'{x:.1f}'})
+            elif key == 'aperture_sum_counts' and x is not None:
+                tmp.append({'function': key, 'result':
+                            f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
+            elif key == 'aperture_sum_mag' and x is not None:
+                tmp.append({'function': key, 'result': f'{x:.3f}'})
             else:
-                self.plot.clear_marks('fit_line')
+                tmp.append({'function': key, 'result': str(x)})
+
+        if update_plots:
+            # Also display fit results
+            fit_tmp = []
+            if fit_model is not None and isinstance(fit_model, Gaussian1D):
+                for param in ('mean', 'fwhm', 'amplitude'):
+                    p_val = getattr(fit_model, param)
+                    if isinstance(p_val, Parameter):
+                        p_val = p_val.value
+                    fit_tmp.append({'function': param, 'result': f'{p_val:.4e}'})
+
+        self.results = tmp
+        self.result_available = True
+
+        if update_plots:
+            self.fit_results = fit_tmp
+            self.plot_available = True
 
         return phot_table, fit_model
 
@@ -471,7 +520,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         try:
             # TODO: decide what we want this to actually return
-            phot_table, fit_model = self.calculate_photometry()
+            phot_table, fit_model = self.calculate_photometry(add_to_table=True, update_plots=True)
         except Exception as e:  # pragma: no cover
             self.plot.clear_all_marks()
             msg = f"Aperture photometry failed: {repr(e)}"
@@ -479,45 +528,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             self.result_failed_msg = msg
         else:
             self.result_failed_msg = ''
-
-            # TODO: should this be added to the GUI when calling calculate_photometry from the API?
-            # Parse results for GUI.
-            tmp = []
-            for key in phot_table.colnames:
-                if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
-                           'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
-                    continue
-                x = phot_table[key][0]
-                if (isinstance(x, (int, float, u.Quantity)) and
-                        key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
-                                    'aperture_sum_counts', 'aperture_sum_mag')):
-                    tmp.append({'function': key, 'result': f'{x:.4e}'})
-                elif key == 'sky_center' and x is not None:
-                    tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
-                    tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f} deg'})
-                elif key in ('xcenter', 'ycenter', 'sum_aper_area'):
-                    tmp.append({'function': key, 'result': f'{x:.1f}'})
-                elif key == 'aperture_sum_counts' and x is not None:
-                    tmp.append({'function': key, 'result':
-                                f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
-                elif key == 'aperture_sum_mag' and x is not None:
-                    tmp.append({'function': key, 'result': f'{x:.3f}'})
-                else:
-                    tmp.append({'function': key, 'result': str(x)})
-
-            # Also display fit results
-            fit_tmp = []
-            if fit_model is not None and isinstance(fit_model, Gaussian1D):
-                for param in ('mean', 'fwhm', 'amplitude'):
-                    p_val = getattr(fit_model, param)
-                    if isinstance(p_val, Parameter):
-                        p_val = p_val.value
-                    fit_tmp.append({'function': param, 'result': f'{p_val:.4e}'})
-
-            self.results = tmp
-            self.fit_results = fit_tmp
-            self.result_available = True
-            self.plot_available = True
 
     def unpack_batch_options(self, **options):
         """
