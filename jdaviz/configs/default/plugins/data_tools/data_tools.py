@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Optional
-from jdaviz.core.events import LoadDataMessage
 from traitlets import Unicode, Bool
 import os
 from jdaviz.core.registries import tool_registry
@@ -46,8 +45,11 @@ class DataTools(TemplateMixin):
                                   on_file_open=on_file_open,
                                   on_path_select=on_path_select,
                                   can_select=True,
+                                  filter=validate_file,
                                   )
         self._file_upload, rc = react.render(element)
+
+        self.components = {'g-file-import': self._file_upload}
 
     def _on_file_path_changed(self, event):
         if self._file_upload.file_path is None:
@@ -74,20 +76,31 @@ class DataTools(TemplateMixin):
 
     def _load(self, path: Path):
         try:
-            load_data_message = LoadDataMessage(str(path), sender=self)
-            self.hub.broadcast(load_data_message)
-        except Exception:
-            self.error_message = "An error occurred when loading the file"
+            self.app._jdaviz_helper.load_data(str(path))
+        except Exception as e:
+            self.error_message = (
+                "The following error occurred "
+                f"when loading the file:\n{repr(e)}"
+            )
         else:
             self.dialog = False
-
-            if self.config == 'imviz':
-                # Do this like what Imviz does at the end of loading sequence from helper.
-                from jdaviz.configs.imviz.helper import link_image_data
-                link_image_data(self._app, link_type='pixels', error_on_fail=False)
 
     def vue_load_file(self, *args, **kwargs):
         self._load(Path(self.file))
 
     def vue_load_directory(self, *args, **kwargs):
         self._load(Path(self.directory))
+
+
+def validate_file(path):
+    is_file = os.path.isfile(str(path))
+    is_valid_file = str(path).lower().endswith((
+        'fit',
+        'fits',
+        'asdf',
+        'jpg',
+        'jpeg',
+        'png'
+    ))
+
+    return is_valid_file or not is_file
