@@ -2099,6 +2099,9 @@ class Application(VuetifyTemplate, HubListener):
                             range_state.hi = (range_state.hi*cur_unit).to(new_unit).value
 
                     already_reparented.append(lyr.layer.label)
+                    # Force subset plugin to update bounds and such
+                    subset_message = SubsetUpdateMessage(sender=lyr.layer)
+                    self.hub.broadcast(subset_message)
 
         self.data_collection.remove(self.data_collection[event['item_name']])
 
