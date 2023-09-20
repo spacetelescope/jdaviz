@@ -29,6 +29,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         assert_allclose(subset2.subset_state.roi.ymin, 0)
 
         self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_1[SCI,1]")
+        self.imviz.app.vue_data_item_remove({"item_name": "has_wcs_1[SCI,1]"})
 
         # Check that the reparenting and coordinate recalculations happened
         assert subset1.subset_state.xatt.parent.label == "has_wcs_2[SCI,1]"
