@@ -2056,7 +2056,6 @@ class Application(VuetifyTemplate, HubListener):
                             self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
                         # Get the correct link to use for translation
                         roi = lyr.layer.subset_state.roi
-
                         if type(roi) in (CircularROI, CircularAnnulusROI,
                                          EllipticalROI, TrueCircularROI):
                             old_xc = roi.xc
@@ -2090,6 +2089,14 @@ class Application(VuetifyTemplate, HubListener):
                             roi.xmax = x_max
                             roi.ymin = y_min
                             roi.ymax = y_max
+
+                    elif type(lyr.layer.subset_state) is RangeSubsetState:
+                        range_state = lyr.layer.subset_state
+                        cur_unit = data.coords.spectral_axis.unit
+                        new_unit = lyr.layer.data.coords.spectral_axis.unit
+                        if cur_unit is not new_unit:
+                            range_state.lo = (range_state.lo*cur_unit).to(new_unit).value
+                            range_state.hi = (range_state.hi*cur_unit).to(new_unit).value
 
                     already_reparented.append(lyr.layer.label)
 
