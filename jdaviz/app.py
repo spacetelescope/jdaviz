@@ -41,6 +41,7 @@ from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
+from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from ipyvuetify import VuetifyTemplate
 
@@ -469,6 +470,9 @@ class Application(VuetifyTemplate, HubListener):
         if layer_name not in self.state.layer_icons:
             self.state.layer_icons = {**self.state.layer_icons,
                                       layer_name: alpha_index(len(self.state.layer_icons))}
+
+        # Clean up any bad layers (hopefully a temporary fix)
+        self._clear_nan_marks()
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -2019,6 +2023,22 @@ class Application(VuetifyTemplate, HubListener):
             # keys are (data_label, statistic) tuples
             self._get_object_cache = {k: v for k, v in self._get_object_cache.items()
                                       if k[0] != data_label}
+
+    def _clear_nan_marks(self):
+        for viewer_id in self._viewer_store.keys():
+            viewer = self.get_viewer(viewer_id)
+            if not isinstance(viewer, BqplotImageView) or not hasattr(viewer.figure, "marks"):
+                continue
+            new_marks = []
+            for m in viewer.figure.marks:
+                if hasattr(m, "image"):
+                    if m.image is None or not np.all(np.isnan(m.image)):
+                        new_marks.append(m)
+                else:
+                    new_marks.append(m)
+
+            if len(new_marks) != len(viewer.figure.marks):
+                viewer.figure.marks = new_marks
 
     def _on_data_deleted(self, msg):
         """
