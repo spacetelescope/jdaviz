@@ -312,7 +312,7 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
 #. Check `Zenodo page for Jdaviz <https://doi.org/10.5281/zenodo.5513927>`_.
    It should have picked up the GitHub Release automatically.
 
-#. The release is basically done, but now you have to set it up for the
+#. The release is basically done, but now you have to set up the main branch for the
    *next* release cycle. Checkout the ``main`` branch and update ``CHANGES.rst``
    using your admin power. If you do not have sufficient access to do that,
    you will have to update it via a pull request from your fork. Make sure the
@@ -344,7 +344,16 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
      Specviz2d
      ^^^^^^^^^
 
+
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
+
+#. Finally, you will need to set up the vX.Y.x branch for the next (potential)
+   bugfix release. To do this (either through a direct commit using admin power,
+   or via pull request to vX.Y.x), add a new bugfix section to the top of the
+   change log. For example, if the bugfix release you just made was 3.6.2,
+   add a 3.6.3 (unreleased) section (see step 7, but no need for a feature
+   release section). Commit these changes with a message along the lines of
+   "Back to development, vX.Y.x".
 
 #. Follow procedures for :ref:`release-milestones`.
 
