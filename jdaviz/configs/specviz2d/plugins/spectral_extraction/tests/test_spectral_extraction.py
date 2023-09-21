@@ -64,7 +64,7 @@ def test_plugin(specviz2d_helper):
     assert isinstance(trace, tracing.ArrayTrace)
 
     # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
-    assert len(sp2dv.figure.marks) == 14
+    assert len(sp2dv.figure.marks) == 15
 
     # interact with background section, check marks
     pext.trace_trace_selected = 'New Trace'
