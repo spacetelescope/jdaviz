@@ -73,7 +73,7 @@ def test_valid_function(cubeviz_helper, spectrum1d_cube):
     assert cubeviz_helper.specviz.get_data(data_label="test[FLUX]").flux.ndim == 1
 
 
-def test_remote_server_disable_movie():
+def test_remote_server_disable_save_serverside():
     config = get_configuration('cubeviz')
     config['settings']['server_is_remote'] = True
 
@@ -81,6 +81,9 @@ def test_remote_server_disable_movie():
     cubeviz_helper = Cubeviz(cubeviz_app)
     ep = cubeviz_helper.plugins['Export Plot']
     assert ep._obj.movie_enabled is False
+
+    mm = cubeviz_helper.plugins['Moment Maps']
+    assert mm._obj.export_enabled is False
 
 
 def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
