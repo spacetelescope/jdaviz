@@ -49,11 +49,11 @@
       @click:action="calculate_moment"
     ></plugin-add-results>
     
-    <j-plugin-section-header>Results</j-plugin-section-header>
+    <j-plugin-section-header v-if="export_enabled">Results</j-plugin-section-header>
 
     <div style="display: grid; position: relative"> <!-- overlay container -->
       <div style="grid-area: 1/1">
-        <div v-if="moment_available">
+        <div v-if="moment_available && export_enabled">
           <v-row>
               <v-text-field
               v-model="filename"
@@ -77,7 +77,7 @@
       <v-overlay
         absolute
         opacity=1.0
-        :value="overwrite_warn"
+        :value="overwrite_warn && export_enabled"
         :zIndex=3
         style="grid-area: 1/1; 
                margin-left: -24px;

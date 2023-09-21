@@ -50,6 +50,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     moment_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
 
+    # export_enabled controls whether saving the moment map to a file is enabled via the UI.  This
+    # is a temporary measure to allow server-installations to disable saving server-side until
+    # saving client-side is supported
+    export_enabled = Bool(True).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -57,6 +62,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
+
+        if self.app.state.settings.get('server_is_remote', False):
+            # when the server is remote, saving the file in python would save on the server, not
+            # on the user's machine, so export support in cubeviz should be disabled
+            self.export_enabled = False
 
     @property
     def _default_image_viewer_reference_name(self):
@@ -138,6 +148,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     def _write_moment_to_fits(self, overwrite=False, *args):
         if self.moment is None or not self.filename:  # pragma: no cover
             return
+        if not self.export_enabled:
+            # this should never be triggered since this is intended for UI-disabling and the
+            # UI section is hidden, but would prevent any JS-hacking
+            raise ValueError("Writing out moment map to file is currently disabled")
 
         # Make sure file does not end up in weird places in standalone mode.
         path = os.path.dirname(self.filename)
