@@ -12,6 +12,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Enable user API for aperture photometry. [#2465]
+
 Mosviz
 ^^^^^^
 
