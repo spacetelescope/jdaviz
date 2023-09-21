@@ -151,7 +151,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if not self.export_enabled:
             # this should never be triggered since this is intended for UI-disabling and the
             # UI section is hidden, but would prevent any JS-hacking
-            raise ValueError("_write_moment_to_fits is currently disabled")
+            raise ValueError("Writing out moment map to file is currently disabled")
 
         # Make sure file does not end up in weird places in standalone mode.
         path = os.path.dirname(self.filename)
