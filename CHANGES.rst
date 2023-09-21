@@ -90,8 +90,8 @@ Bug Fixes
   under certain conditions. [#2332]
 
 - Fixes turning off multiselect mode for a dropdown when no selections are currently made. 
-Previously this resulted in a traceback, but now applies the default selection for 
-single-select mode. [#2404]
+  Previously this resulted in a traceback, but now applies the default selection for 
+  single-select mode. [#2404]
 
 - Fixes tracebacks from plugins opened in popout windows. [#2411]
 
