@@ -1,4 +1,4 @@
-3.7 (unreleased)
+3.7 (2023-09-21)
 ================
 
 New Features
@@ -89,37 +89,9 @@ Bug Fixes
 - Circle tool to create a circular Subset no longer results in an ellipse
   under certain conditions. [#2332]
 
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
-Other Changes and Additions
----------------------------
-
-- Improved logic for handling active state of plugins. [#2386, #2450]
-
-- API framework for batch aperture photometry. [#2401]
-
-3.6.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
 - Fixes turning off multiselect mode for a dropdown when no selections are currently made. 
-  Previously this resulted in a traceback, but now applies the default selection for 
-  single-select mode. [#2404]
+Previously this resulted in a traceback, but now applies the default selection for 
+single-select mode. [#2404]
 
 - Fixes tracebacks from plugins opened in popout windows. [#2411]
 
@@ -141,6 +113,14 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+- Improved logic for handling active state of plugins. [#2386, #2450]
+
+- API framework for batch aperture photometry. [#2401]
+
 
 3.6.2 (2023-08-25)
 ==================
