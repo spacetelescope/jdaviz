@@ -70,6 +70,12 @@ You can do a release from your fork directly without a clean code check-out.
    and update the release date from ``unreleased`` to current date in the ``yyyy-mm-dd`` format.
    Remove any empty subsections.
 
+   NOTE: You may encounter the case where there is a populated bugfix section
+   below the current feature release section, but this bugfix release is being skipped
+   in favor of a major release. If this happens, you will need to move those entries
+   to the appropriate location(s) in the newest 'released' section, and remove that
+   bugfix section since that release is being skipped.
+
 #. Update the ``CITATION.cff`` file's ``date-released`` and ``version`` fields.
    If there are new contributors to the project, add them in the ``authors``
    section.
