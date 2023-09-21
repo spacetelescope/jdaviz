@@ -350,7 +350,6 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
      Specviz2d
      ^^^^^^^^^
 
-
 #. Commit your changes of the, uh, change log with a message, "Back to development: A.B.dev"
 
 #. Finally, you will need to set up the vX.Y.x branch for the next (potential)
