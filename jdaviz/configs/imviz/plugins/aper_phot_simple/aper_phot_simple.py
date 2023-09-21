@@ -1,6 +1,6 @@
 import os
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 
 import astropy
 import numpy as np
@@ -312,7 +312,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             phot_table.add_columns(
                 [xcenter * u.pix, ycenter * u.pix, sky_center,
                  bg, pixarea_fac, sum_ct, sum_ct_err, ctfac, sum_mag, flux_scale, data.label,
-                 reg.meta.get('label', ''), Time(datetime.utcnow())],
+                 reg.meta.get('label', ''), Time(datetime.now(tz=timezone.utc))],
                 names=['xcenter', 'ycenter', 'sky_center', 'background', 'pixarea_tot',
                        'aperture_sum_counts', 'aperture_sum_counts_err', 'counts_fac',
                        'aperture_sum_mag', 'flux_scaling',
