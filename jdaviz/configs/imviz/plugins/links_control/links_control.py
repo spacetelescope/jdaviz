@@ -130,7 +130,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             self,
             expose=(
                 'link_type', 'wcs_use_affine', 'viewer',
-                'layer', 'rotation_angle', 'east_left'
+                'layer', 'rotation_angle', 'east_left', 'delete_subsets'
             )
         )
 
@@ -186,7 +186,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             raise ValueError("Link type can only be changed after existing subsets "
                              f"are deleted, but {len(self.app.data_collection.subset_groups)} "
                              f"subset(s) still exist. To delete them, you can use "
-                             f"`imviz.plugins['Links Control'].delete_subsets()`.")
+                             f"`delete_subsets()` from the plugin API.")
 
         self.linking_in_progress = True
 
