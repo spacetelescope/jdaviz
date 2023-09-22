@@ -472,7 +472,7 @@ class Application(VuetifyTemplate, HubListener):
                                       layer_name: alpha_index(len(self.state.layer_icons))}
 
         # Clean up any bad layers (hopefully a temporary fix)
-        self._clear_nan_marks()
+        # self._clear_nan_marks()
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """

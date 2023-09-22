@@ -134,6 +134,20 @@ class JdavizViewerMixin:
         viewer_item = self.jdaviz_app._viewer_item_by_id(self.reference_id)
         viewer_item['visible_layers'] = visible_layers
 
+    def _clear_nan_marks(self):
+        if not isinstance(self, BqplotImageView) or not hasattr(self.figure, "marks"):
+            return
+        new_marks = []
+        for m in self.figure.marks:
+            if hasattr(m, "image"):
+                if m.image is None or not np.all(np.isnan(m.image)):
+                    new_marks.append(m)
+            else:
+                new_marks.append(m)
+
+        if len(new_marks) != len(self.figure.marks):
+            self.figure.marks = new_marks
+
     def _on_layers_update(self, layers=None):
         if self.__class__.__name__ == 'MosvizTableViewer':
             # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
@@ -178,6 +192,8 @@ class JdavizViewerMixin:
                     self._expected_subset_layers.remove(layer.layer.label)
                 self._expected_subset_layer_default(layer)
 
+        self._clear_nan_marks()
+
     def _on_subset_create(self, msg):
         if self.__class__.__name__ == 'MosvizTableViewer':
             # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
@@ -190,6 +206,8 @@ class JdavizViewerMixin:
         # layers are added
         if msg.subset.label not in self._expected_subset_layers and msg.subset.label:
             self._expected_subset_layers.append(msg.subset.label)
+
+        self._clear_nan_marks()
 
     @property
     def active_image_layer(self):
