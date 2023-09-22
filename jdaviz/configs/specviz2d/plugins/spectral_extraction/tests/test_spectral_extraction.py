@@ -63,6 +63,8 @@ def test_plugin(specviz2d_helper):
     trace = pext.export_trace(add_data=True)  # overwrite
     assert isinstance(trace, tracing.ArrayTrace)
 
+    # TODO: Investigate extra hidden mark from glue-jupyter, see
+    # https://github.com/spacetelescope/jdaviz/pull/2478#issuecomment-1731864411
     # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
     assert len(sp2dv.figure.marks) == 15
 
