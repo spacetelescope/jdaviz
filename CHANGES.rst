@@ -79,6 +79,8 @@ Other Changes and Additions
 
 - Add swatches to color picker. [#2494]
 
+- Plot options now includes better support for scatter viewers, including toggling line visibility. [#2449]
+
 3.7.1 (unreleased)
 ==================
 
