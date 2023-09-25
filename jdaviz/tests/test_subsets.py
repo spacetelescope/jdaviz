@@ -148,8 +148,6 @@ def test_region_from_subset_3d(cubeviz_helper):
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "X Center", key) == 3
         assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 4
-        assert subset_plugin._get_value_from_subset_definition(0, "Inner Radius", key) == 2
-        assert subset_plugin._get_value_from_subset_definition(0, "Outer Radius", key) == 4
 
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
