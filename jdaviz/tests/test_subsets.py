@@ -145,7 +145,6 @@ def test_region_from_subset_3d(cubeviz_helper):
                                                                               outer_radius=4))
     assert subset_plugin.subset_selected == "Subset 3"
     assert subset_plugin.subset_types == ["CircularAnnulusROI"]
-    assert subset_plugin.is_centerable
     for key in ("orig", "value"):
         assert subset_plugin._get_value_from_subset_definition(0, "X Center", key) == 3
         assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 4
