@@ -135,6 +135,22 @@ def test_region_from_subset_3d(cubeviz_helper):
         assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 4
         assert subset_plugin._get_value_from_subset_definition(0, "Radius", key) == 2.4
 
+    # Circular Annulus Subset
+    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
+    # We set the active tool here to trigger a reset of the Subset state to "Create New"
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:circannulus']
+    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularAnnulusROI(xc=5,
+                                                                              yc=6,
+                                                                              inner_radius=2,
+                                                                              outer_radius=4))
+    assert subset_plugin.subset_selected == "Subset 3"
+    assert subset_plugin.subset_types == ["CircularAnnulusROI"]
+    for key in ("orig", "value"):
+        assert subset_plugin._get_value_from_subset_definition(0, "X Center", key) == 5
+        assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 6
+        assert subset_plugin._get_value_from_subset_definition(0, "Inner radius", key) == 2
+        assert subset_plugin._get_value_from_subset_definition(0, "Outer radius", key) == 4
+
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)

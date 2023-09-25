@@ -7,6 +7,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Add circular annulus subset to toolbar. [#2438]
+
 Imviz
 ^^^^^
 
