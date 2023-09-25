@@ -151,6 +151,7 @@ def test_region_from_subset_3d(cubeviz_helper):
         assert subset_plugin._get_value_from_subset_definition(0, "Inner radius", key) == 2
         assert subset_plugin._get_value_from_subset_definition(0, "Outer radius", key) == 4
 
+
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
