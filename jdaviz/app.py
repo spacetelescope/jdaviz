@@ -1655,11 +1655,11 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item['name'] = new_reference
 
         # optionally update the viewer IDs:
-        if update_id and viewer_item['id'] == old_reference:
-            # update the id as well
+        if update_id:
             old_id = viewer_item['id']
             viewer_item['id'] = new_reference
             self._viewer_store[new_reference] = self._viewer_store.pop(old_id)
+            self._viewer_store[new_reference]._reference_id = new_reference
             self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
 
         # update the viewer name attributes on the helper:
