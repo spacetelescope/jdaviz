@@ -1894,89 +1894,94 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item = self._viewer_item_by_id(ref_or_id)
         return viewer_item
 
-    def _reparent_subsets(self, data):
+    def _reparent_subsets(self, old_parent, new_parent=None):
         '''
         Re-parent subsets that belong to the specified data
 
         Parameters
         ----------
-        data : glue.core.Data, str
+        old_parent : glue.core.Data, str
             The item from the data collection off of which to move the subset definitions.
+
+        new_parent : glue.core.Data, str
+            The item from the data collection to make the new parent. If None, the first
+            item in the data collection that doesn't match ``old_parent`` will be chosen.
         '''
         from astropy.wcs.utils import pixel_to_pixel
-        already_reparented = []
 
-        if isinstance(data, str):
-            data = self.data_collection(data)
-        data_label = data.label
+        if isinstance(old_parent, str):
+            old_parent = self.data_collection(old_parent)
+
+        if isinstance(new_parent, str):
+            new_parent = self.data_collection(new_parent)
+        elif new_parent is None:
+            for data in self.data_collection:
+                if data is not old_parent:
+                    new_parent = data
+                    break
 
         # Set subset attributes to match a remaining data collection member.
-        for viewer_id in self._viewer_store.keys():
-            print(f"Re-parenting subsets in viewer {viewer_id}")
-            viewer = self.get_viewer(viewer_id)
-            for lyr in viewer.layers:
-                if hasattr(lyr.layer, "subset_state") and lyr.layer.data.label != data_label:
-                    if lyr.layer.label in already_reparented:
-                        continue
-                    for att in ("att", "xatt", "yatt", "x_att", "y_att"):
-                        if hasattr(lyr.layer.subset_state, att):
-                            subset_att = getattr(lyr.layer.subset_state, att)
-                            data_components = lyr.layer.data.components
-                            if subset_att not in data_components:
-                                cid = [c for c in data_components if
-                                       c.label == subset_att.label][0]
-                                setattr(lyr.layer.subset_state, att, cid)
+        for subset_group in self.data_collection.subset_groups:
+            # Flag to skip this
+            if subset_group.subset_state.attributes[0].parent is old_parent:
+                for att in ("att", "xatt", "yatt", "x_att", "y_att"):
+                    if hasattr(subset_group.subset_state, att):
+                        subset_att = getattr(subset_group.subset_state, att)
+                        data_components = new_parent.components
+                        if subset_att not in data_components:
+                            cid = [c for c in data_components if c.label == subset_att.label][0]
+                            setattr(subset_group.subset_state, att, cid)
 
-                    # Translate bounds through WCS if needed
-                    if (self.config == "imviz" and
-                            self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
-                        # Get the correct link to use for translation
-                        roi = lyr.layer.subset_state.roi
-                        if type(roi) in (CircularROI, CircularAnnulusROI,
-                                         EllipticalROI, TrueCircularROI):
-                            old_xc = roi.xc
-                            old_yc = roi.yc
-                            # Convert center
-                            x, y = pixel_to_pixel(data.coords, lyr.layer.data.coords,
-                                                  roi.xc, roi.yc)
-                            # Can't use set_center here because CircularAnnulusROI doesn't have it
-                            roi.xc = x
-                            roi.yc = y
+                # Translate bounds through WCS if needed
+                if (self.config == "imviz" and
+                        self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
+                    # Get the correct link to use for translation
+                    roi = subset_group.subset_state.roi
+                    if type(roi) in (CircularROI, CircularAnnulusROI,
+                                     EllipticalROI, TrueCircularROI):
+                        old_xc = roi.xc
+                        old_yc = roi.yc
+                        # Convert center
+                        x, y = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                              roi.xc, roi.yc)
+                        # Can't use set_center here because CircularAnnulusROI doesn't have it
+                        roi.xc = x
+                        roi.yc = y
 
-                            for att in ("radius", "inner_radius", "outer_radius",
-                                        "radius_x", "radius_y"):
-                                # Hacky way to get new radii with point on edge of circle
-                                # Do we need to worry about using x for the radius conversion for
-                                # radius_y if there is distortion?
-                                r = getattr(roi, att, None)
-                                if r is not None:
-                                    dummy_x = old_xc + r
-                                    x2, y2 = pixel_to_pixel(data.coords, lyr.layer.data.coords,
-                                                            dummy_x, old_yc)
-                                    new_radius = x2 - x
-                                    setattr(roi, att, new_radius)
+                        for att in ("radius", "inner_radius", "outer_radius",
+                                    "radius_x", "radius_y"):
+                            # Hacky way to get new radii with point on edge of circle
+                            # Do we need to worry about using x for the radius conversion for
+                            # radius_y if there is distortion?
+                            r = getattr(roi, att, None)
+                            if r is not None:
+                                dummy_x = old_xc + r
+                                x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                        dummy_x, old_yc)
+                                new_radius = np.abs(x2 - x)
+                                setattr(roi, att, new_radius)
 
-                        elif type(roi) is RectangularROI:
-                            x_min, y_min = pixel_to_pixel(data.coords, lyr.layer.data.coords,
-                                                          roi.xmin, roi.ymin)
-                            x_max, y_max = pixel_to_pixel(data.coords, lyr.layer.data.coords,
-                                                          roi.xmax, roi.ymax)
-                            roi.xmin = x_min
-                            roi.xmax = x_max
-                            roi.ymin = y_min
-                            roi.ymax = y_max
+                    elif type(roi) is RectangularROI:
+                        x_min, y_min = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                      roi.xmin, roi.ymin)
+                        x_max, y_max = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                      roi.xmax, roi.ymax)
+                        roi.xmin = x_min
+                        roi.xmax = x_max
+                        roi.ymin = y_min
+                        roi.ymax = y_max
 
-                    elif type(lyr.layer.subset_state) is RangeSubsetState:
-                        range_state = lyr.layer.subset_state
-                        cur_unit = data.coords.spectral_axis.unit
-                        new_unit = lyr.layer.data.coords.spectral_axis.unit
-                        if cur_unit is not new_unit:
-                            range_state.lo = (range_state.lo*cur_unit).to(new_unit).value
-                            range_state.hi = (range_state.hi*cur_unit).to(new_unit).value
+                elif type(subset_group.subset_state) is RangeSubsetState:
+                    range_state = subset_group.subset_state
+                    cur_unit = old_parent.coords.spectral_axis.unit
+                    new_unit = new_parent.coords.spectral_axis.unit
+                    if cur_unit is not new_unit:
+                        range_state.lo = (range_state.lo*cur_unit).to(new_unit).value
+                        range_state.hi = (range_state.hi*cur_unit).to(new_unit).value
 
-                    already_reparented.append(lyr.layer.label)
-                    # Force subset plugin to update bounds and such
-                    subset_message = SubsetUpdateMessage(sender=lyr.layer)
+                # Force subset plugin to update bounds and such
+                for subset in subset_group.subsets:
+                    subset_message = SubsetUpdateMessage(sender=subset)
                     self.hub.broadcast(subset_message)
 
     def vue_destroy_viewer_item(self, cid):

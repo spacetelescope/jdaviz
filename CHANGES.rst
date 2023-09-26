@@ -9,6 +9,8 @@ New Features
 
 - Histogram plot in Plot Options now includes tool to set stretch vmin and vmax. [#2513]
 
+- User can now remove data from the app completely after removing it from viewers. [#2409]
+
 Cubeviz
 ^^^^^^^
 
@@ -140,9 +142,6 @@ New Features
 
 - Add support for ``MultiMaskSubsetState`` in ``viz.app.get_subsets()`` and in
   the Subset Plugin [#2462]
-
-- User can now remove data from the app completely after removing it from viewers. [#2409]
-
 
 Cubeviz
 ^^^^^^^
@@ -474,9 +473,6 @@ New Features
 - Allow Subset Plugin to edit composite subsets. [#2182]
 
 - Support for Scatter plots/markers in plot options. [#2193]
-
-- Allow user-loaded data to be removed from the app (in specviz and imviz)
-  so long as it is not the only user-loaded data [#2211]
 
 Cubeviz
 ^^^^^^^
