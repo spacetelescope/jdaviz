@@ -130,7 +130,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         return PluginUserApi(self, expose=('multiselect', 'dataset', 'aperture',
                                            'background', 'background_value',
                                            'pixel_area', 'counts_factor', 'flux_scaling',
-                                           'calculate_photometry'))
+                                           'unpack_batch_options', 'calculate_photometry'))
 
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
@@ -581,10 +581,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         Parameters
         ----------
-        options : dict
+        options : dict, optional
             Dictionary of values to override from the values set in the plugin/traitlets.  Each
             entry can either be a single value, or a list.  All combinations of those that contain
-            a list will be exposed
+            a list will be exposed.  If not provided and the plugin is in multiselect mode
+            (``multiselect = True``), then the current values set in the plugin will be used.
 
         Returns
         -------
@@ -594,6 +595,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         """
         if not isinstance(options, dict):
             raise TypeError("options must be a dictionary")
+        if not options:
+            if not self.multiselect:
+                raise ValueError("must either provide a dictionary or set plugin to multiselect mode")  # noqa
+            options = {'dataset': self.dataset.selected, 'aperture': self.aperture.selected}
+
         user_api = self.user_api
         invalid_keys = [k for k in options.keys() if not hasattr(user_api, k)]
         if len(invalid_keys):
