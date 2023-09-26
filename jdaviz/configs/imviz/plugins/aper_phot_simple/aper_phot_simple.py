@@ -10,6 +10,7 @@ from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
 from astropy.time import Time
 from glue.core.message import SubsetUpdateMessage
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from ipywidgets import widget_serialization
 from packaging.version import Version
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
@@ -21,6 +22,7 @@ from jdaviz.core.region_translators import regions2aperture, _get_region_from_sp
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         SubsetSelect, TableMixin, PlotMixin)
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import PRIHDR_KEY
 
@@ -58,8 +60,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     * :meth:`calculate_photometry`
     """
     template_file = __file__, "aper_phot_simple.vue"
+    multiselect = Bool(False).tag(sync=True)
+
     aperture_items = List([]).tag(sync=True)
-    aperture_selected = Unicode("").tag(sync=True)
+    aperture_selected = Any('').tag(sync=True)
     aperture_area = Integer().tag(sync=True)
     background_items = List().tag(sync=True)
     background_selected = Unicode("").tag(sync=True)
@@ -77,12 +81,16 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     fit_radial_profile = Bool(False).tag(sync=True)
     fit_results = List().tag(sync=True)
 
+    icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.aperture = SubsetSelect(self,
                                      'aperture_items',
                                      'aperture_selected',
+                                     multiselect='multiselect',
                                      dataset='dataset',
                                      default_text=None,
                                      filters=['is_spatial', 'is_not_composite', 'is_not_annulus'])
@@ -119,7 +127,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('dataset', 'aperture', 'background', 'background_value',
+        return PluginUserApi(self, expose=('multiselect', 'dataset', 'aperture',
+                                           'background', 'background_value',
                                            'pixel_area', 'counts_factor', 'flux_scaling',
                                            'calculate_photometry'))
 
@@ -175,7 +184,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         self._aperture_selected_changed()
 
     def _on_subset_update(self, msg):
-        if self.dataset_selected == '' or self.aperture_selected == '':
+        if not self.dataset_selected or not self.aperture_selected:
+            return
+        if self.multiselect:
+            # TODO: anything need to be hidden in the UI/API?
             return
 
         sbst = msg.subset
@@ -185,15 +197,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             self._background_selected_changed()
 
     def _on_link_update(self, msg):
-        if self.dataset_selected == '' or self.aperture_selected == '':
+        if not self.dataset_selected or not self.aperture_selected:
             return
 
         # Force background auto-calculation to update when linking has changed.
         self._aperture_selected_changed()
 
-    @observe('aperture_selected')
+    @observe('aperture_selected', 'multiselect')
     def _aperture_selected_changed(self, event={}):
-        if self.dataset.selected == '' or self.aperture_selected == '':
+        if not self.dataset_selected or not self.aperture_selected:
+            return
+        if self.multiselect:
+            # TODO: anything need to be hidden in the UI/API?
             return
 
         # NOTE: aperture area is only used to determine if a warning should be shown in the UI

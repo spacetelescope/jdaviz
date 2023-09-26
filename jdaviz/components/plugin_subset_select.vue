@@ -80,9 +80,9 @@ module.exports = {
 </script>
 
 <style>
-.v-select__selections {
-  flex-wrap: nowrap !important;
-}
+  .v-select__selections {
+    flex-wrap: nowrap !important;
+  }
   .single-line {
       white-space: nowrap;
       overflow: hidden;

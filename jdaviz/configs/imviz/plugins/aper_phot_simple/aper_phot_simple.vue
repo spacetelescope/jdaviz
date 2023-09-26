@@ -4,24 +4,42 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#simple-aperture-photometry'"
     :popout_button="popout_button">
 
+    <v-row>
+      <div style="width: calc(100% - 32px)">
+      </div>
+      <div style="width: 32px">
+        <j-tooltip tooltipcontent="Toggle batch mode">
+          <v-btn
+            icon
+            style="opacity: 0.7"
+            @click="() => {multiselect = !multiselect}"
+          >
+            <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
+          </v-btn>
+        </j-tooltip>
+      </div>
+    </v-row>
+
     <plugin-dataset-select
       :items="dataset_items"
       :selected.sync="dataset_selected"
+      :multiselect="multiselect"
       :show_if_single_entry="false"
       label="Data"
       hint="Select the data for photometry."
     />
 
-    <div v-if='dataset_selected'>
+    <div v-if='dataset_selected.length > 0'>
       <plugin-subset-select
         :items="aperture_items"
         :selected.sync="aperture_selected"
+        :multiselect="multiselect"
         :show_if_single_entry="true"
         label="Aperture"
         hint="Select aperture region for photometry (cannot be an annulus or composite subset)."
       />
 
-      <div v-if="aperture_selected">
+      <div v-if="aperture_selected.length > 0">
         <plugin-subset-select
           :items="background_items"
           :selected.sync="background_selected"
@@ -30,7 +48,7 @@
           hint="Select subset region for background calculation (cannot be a composite subset)."
         />
 
-        <v-row v-if="aperture_selected === background_selected">
+        <v-row v-if="(multiselect && aperture_selected.includes(background_selected)) || aperture_selected === background_selected">
           <span class="v-messages v-messages__message text--secondary" style="color: red !important">
               Background and aperture cannot be set to the same subset
           </span>

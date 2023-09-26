@@ -1405,6 +1405,8 @@ class SubsetSelect(SelectPluginComponent):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
+        multiselect : str
+            the name of the traitlet defining whether the dropdown should accept multiple selections
         selected_has_subregions : str
             the name of the selected_has_subregions traitlet defined in ``plugin``, optional
         dataset : str
@@ -1656,7 +1658,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     """
     spectral_subset_items = List().tag(sync=True)
-    spectral_subset_selected = Unicode().tag(sync=True)
+    spectral_subset_selected = Any().tag(sync=True)
     spectral_subset_selected_has_subregions = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -1696,7 +1698,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     """
     spatial_subset_items = List().tag(sync=True)
-    spatial_subset_selected = Unicode().tag(sync=True)
+    spatial_subset_selected = Any().tag(sync=True)
     spatial_subset_selected_has_subregions = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -2056,6 +2058,7 @@ class DatasetSelect(SelectPluginComponent):
 
     """
     def __init__(self, plugin, items, selected,
+                 multiselect=None,
                  filters=['not_from_plugin_model_fitting', 'layer_in_viewers'],
                  default_text=None, manual_options=[],
                  default_mode='first'):
@@ -2068,6 +2071,8 @@ class DatasetSelect(SelectPluginComponent):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
+        multiselect : str
+            the name of the traitlet defining whether the dropdown should accept multiple selections
         filters : list
             list of strings (for built-in filters) or callables to filter to only valid options.
         default_text : str or None
@@ -2078,7 +2083,8 @@ class DatasetSelect(SelectPluginComponent):
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
         """
-        super().__init__(plugin, items=items, selected=selected, filters=filters,
+        super().__init__(plugin, items=items, selected=selected,
+                         multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
         self._cached_properties += ["selected_dc_item"]
@@ -2129,6 +2135,8 @@ class DatasetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_dc_item(self):
+        if self.is_multiselect:
+            raise NotImplementedError("selected_dc_item not supported in multiselect mode")
         return self._get_dc_item(self.selected)
 
     def get_object(self, *args, **kwargs):
@@ -2252,12 +2260,13 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
 
     """
     dataset_items = List().tag(sync=True)
-    dataset_selected = Unicode().tag(sync=True)
+    dataset_selected = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # NOTE: cannot be named self.data or will conflict with existing self.data traitlet!
-        self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected')
+        self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected',
+                                     multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
 
 class AutoTextField(BasePluginComponent):
