@@ -1520,7 +1520,8 @@ class SubsetSelect(SelectPluginComponent):
             ((self.is_multiselect and subset.label in self.selected)
              or (subset.label == self.selected))):
             # updated the currently selected subset
-            self._clear_cache("selected_obj", "selected_item")
+            self._clear_cache("selected_obj", "selected_item", "selected_subset_state",
+                              "selected_subset_mask", "selected_subset", "selected_spatial_region")
             self._update_has_subregions()
 
     def _update_has_subregions(self):
