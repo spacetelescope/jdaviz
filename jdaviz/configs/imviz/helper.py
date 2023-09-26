@@ -528,8 +528,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     # if linking via WCS, add WCS-only reference data layer:
     insert_base_wcs_layer = (
         link_type == 'wcs' and
-        base_wcs_layer_label not in [d.label for d in app.data_collection] and
-        not refdata.meta.get(app._wcs_only_label, False)
+        base_wcs_layer_label not in [d.label for d in app.data_collection]
     )
 
     if insert_base_wcs_layer:
@@ -548,6 +547,16 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
             )
 
         refdata, iref = get_reference_image_data(app)
+
+    if link_type == 'pixels' and old_link_type == 'wcs':
+        # if changing from WCS to pixel linking, set bottom image data
+        # layer as reference data in all viewers:
+        refdata = get_bottom_layer(app._jdaviz_helper.default_viewer)
+
+        for viewer_id in app.get_viewer_ids():
+            app._change_reference_data(
+                refdata.label, viewer_id=viewer_id
+            )
 
     links_list = []
     ids0 = refdata.pixel_component_ids

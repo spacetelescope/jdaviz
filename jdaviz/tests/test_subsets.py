@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from glue.core import Data

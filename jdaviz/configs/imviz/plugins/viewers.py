@@ -210,7 +210,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         image, which can be inaccurate if given image is dithered and
         they are linked by WCS.
         """
-        if data_has_valid_wcs(image) and self.get_link_type(image.label) == 'wcs':
+        if self.state.reference_data.meta.get('_WCS_ONLY', False):
             # Convert X,Y from reference data to the one we are actually seeing.
             x = image.coords.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
                 (self.state.x_min, self.state.x_min, self.state.x_max, self.state.x_max),

@@ -523,8 +523,6 @@ class Application(VuetifyTemplate, HubListener):
         fov_sky_init = viewer._get_fov(old_refdata)
 
         new_refdata = self.data_collection[new_refdata_label]
-        if new_refdata.coords is None:
-            return
 
         # make sure new refdata can be selected:
         refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
@@ -547,7 +545,10 @@ class Application(VuetifyTemplate, HubListener):
             old=old_refdata,
             sender=self))
 
-        if all('_WCS_ONLY' in refdata.meta for refdata in [old_refdata, new_refdata]):
+        if (
+            all('_WCS_ONLY' in refdata.meta for refdata in [old_refdata, new_refdata]) and
+            viewer.shape is not None
+        ):
             # adjust zoom to account for new refdata if both the
             # old and new refdata are WCS-only layers
             # (which also ensures zoom_level is already determined):

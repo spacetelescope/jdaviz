@@ -139,6 +139,8 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         self.linking_in_progress = True
         self.wcs_use_fallback = msg.wcs_use_fallback
         self.wcs_use_affine = msg.wcs_use_affine
+        self.layer.only_wcs_layers = self.link_type_selected == 'WCS'
+        self.layer._on_layers_changed()
 
     def _link_image_data(self):
         link_image_data(
@@ -197,11 +199,11 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
                              f"'{msg.get('old')}'), call viewer.reset_markers()")
 
         if self.link_type.selected == 'Pixels':
-            # reset wcs_use_affine to be True
             self.wcs_use_affine = True
 
         self._link_image_data()
         self.linking_in_progress = False
+        self._update_layer_label_default()
 
     def _on_subset_change(self, msg):
         self.need_clear_subsets = len(self.app.data_collection.subset_groups) > 0
@@ -231,7 +233,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         if self.rotation_angle is not None:
             if (
                 (isinstance(self.rotation_angle, str) and len(self.rotation_angle)) or
-                isinstance(self.rotation_angle, float)
+                isinstance(self.rotation_angle, (int, float))
             ):
                 return float(self.rotation_angle) * u.deg
         return 0 * u.deg
@@ -252,20 +254,29 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             target_wcs_east_left=self.east_left,
             target_wcs_north_up=True,
         )
+        self._update_layer_label_default()
+
+        # save the following data label since relinking will rename it:
+        wcs_only_layer_label = self.orientation_layer_label.value
+
         self.app._jdaviz_helper.load_data(
-            ndd, data_label=self.new_layer_label
+            ndd, data_label=self.orientation_layer_label.value
         )
         if self.relink:
             # this will trigger linking by wcs if not already selected:
             self.link_type_selected = 'WCS'
+            self._update_link()
+
+        # changing link type has changed the traitlet, so we correct it:
+        self.orientation_layer_label.value = wcs_only_layer_label
 
         # add orientation layer to all viewers:
-        self._add_data_to_all_viewers(self.new_layer_label)
+        self._add_data_to_all_viewers(self.orientation_layer_label.value)
 
         if self.set_on_create:
             # set orientation (reference data layer) to be the new option:
             self.app._change_reference_data(
-                self.new_layer_label, viewer_id=self.viewer.selected
+                self.orientation_layer_label.value, viewer_id=self.viewer.selected
             )
 
     def _add_data_to_all_viewers(self, data_label):
@@ -293,6 +304,9 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             )
 
     def _on_refdata_change(self, msg={}):
+        self.layer.only_wcs_layers = msg.data.meta.get('_WCS_ONLY', False)
+        self.layer._on_layers_changed()
+
         # don't select until viewer is available:
         if hasattr(self, 'viewer'):
             ref_data = self.ref_data
@@ -354,7 +368,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             self.rotation_angle = degn
             self.east_left = True
             self.set_on_create = set_on_create
-            self.new_layer_label_default = label
+            self.new_layer_label = label
             self.vue_create_new_orientation_from_data()
         elif set_on_create:
             self.layer.selected = label
@@ -369,7 +383,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             self.rotation_angle = 180 - degn
             self.east_left = False
             self.set_on_create = set_on_create
-            self.new_layer_label_default = label
+            self.new_layer_label = label
             self.vue_create_new_orientation_from_data()
         elif set_on_create:
             self.layer.selected = label
