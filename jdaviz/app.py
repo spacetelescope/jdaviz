@@ -2120,6 +2120,8 @@ class Application(VuetifyTemplate, HubListener):
         data = self.data_collection[data_label]
         self._reparent_subsets(data)
 
+        # Imviz has some extra logic below that can be skipped after data removal if we're not
+        # removing the reference data, so we check that here.
         if self.config == "imviz":
             imviz_refdata = False
             ref_data, iref = self._jdaviz_helper.get_ref_data()
@@ -2128,6 +2130,8 @@ class Application(VuetifyTemplate, HubListener):
 
         self.data_collection.remove(self.data_collection[data_label])
 
+        # If there are two or more datasets left we need to link them back together after removing
+        # the reference data (which would leave 0 external_links).
         if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
             if self.config == "imviz" and imviz_refdata:
                 link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
