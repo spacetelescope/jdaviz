@@ -1,7 +1,6 @@
 # Tests automatic config detection against our example notebook data
 
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 from astroquery.mast import Observations
@@ -28,22 +27,20 @@ AUTOCONFIG_EXAMPLES = (
 @pytest.mark.remote_data
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('uris', AUTOCONFIG_EXAMPLES)
-def test_autoconfig(uris):
-    # Setup temporary directory
-    with TemporaryDirectory(ignore_cleanup_errors=True) as tempdir:
-        uri = uris[0]
-        helper_class = uris[1]
+def test_autoconfig(uris, tmp_path):
+    uri = uris[0]
+    helper_class = uris[1]
 
-        if uri.startswith("mast:"):
-            download_path = str(Path(tempdir) / Path(uri).name)
-            Observations.download_file(uri, local_path=download_path)
-        elif uri.startswith("http"):
-            download_path = download_file(uri, cache=True, timeout=100)
+    if uri.startswith("mast:"):
+        download_path = str(tmp_path / Path(uri).name)
+        Observations.download_file(uri, local_path=download_path)
+    elif uri.startswith("http"):
+        download_path = download_file(uri, cache=True, timeout=100)
 
-        viz_helper = jdaviz_open(download_path, show=False)
+    viz_helper = jdaviz_open(download_path, show=False)
 
-        assert isinstance(viz_helper, helper_class)
-        assert len(viz_helper.app.data_collection) > 0
+    assert isinstance(viz_helper, helper_class)
+    assert len(viz_helper.app.data_collection) > 0
 
 
 @pytest.mark.remote_data
