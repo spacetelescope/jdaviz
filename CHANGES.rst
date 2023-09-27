@@ -72,6 +72,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed moment map losing WCS when being written out to FITS file. [#2431]
+
 Imviz
 ^^^^^
 

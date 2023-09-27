@@ -1,18 +1,22 @@
 import os
+import warnings
+from pathlib import Path
 
 import pytest
 from astropy.io import fits
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
+from astroquery.mast import Observations
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
 
 
-@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     dc = cubeviz_helper.app.data_collection
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
+        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
 
     # Since we are not really displaying, need this to trigger GUI stuff.
@@ -95,7 +99,6 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
                                          "204.9998877673 27.0001000000 (deg)")
 
 
-@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
     ''' Test writing a moment map out to a FITS file on disk '''
 
@@ -105,7 +108,9 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
     existing_sentinel_text = "This is a simulated, existing file on disk"
     test_file.write_text(existing_sentinel_text)
 
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
+        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     plugin = cubeviz_helper.plugins['Moment Maps']
     moment = plugin.calculate_moment()
 
@@ -135,3 +140,24 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
     plugin._obj.filename = "fake_path/test_file.fits"
     with pytest.raises(ValueError, match="Invalid path"):
         plugin._obj.vue_save_as_fits()
+
+
+@pytest.mark.remote_data
+def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
+    uri = "mast:jwst/product/jw02732-o003_t002_nirspec_prism-clear_s3d.fits"
+    download_path = str(tmp_path / Path(uri).name)
+    Observations.download_file(uri, local_path=download_path)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        cubeviz_helper.load_data(download_path)
+    plugin = cubeviz_helper.plugins['Moment Maps']
+    plugin.calculate_moment()
+    assert isinstance(plugin._obj.moment.wcs, WCS)
+
+    # Because cube axes order is re-arranged by specutils on load, this gets confusing.
+    # There is a swapaxes within Moment Map WCS calculation.
+    sky_moment = plugin._obj.moment.wcs.pixel_to_world(50, 30)
+    sky_cube = cubeviz_helper.app.data_collection[0].meta["_orig_spec"].wcs.celestial.pixel_to_world(30, 50)  # noqa: E501
+    assert_allclose((sky_moment.ra.deg, sky_moment.dec.deg),
+                    (sky_cube.ra.deg, sky_cube.dec.deg))
