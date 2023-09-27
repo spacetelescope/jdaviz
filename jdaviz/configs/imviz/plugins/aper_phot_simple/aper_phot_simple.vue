@@ -56,7 +56,7 @@
 
         <v-row v-if="multiselect && background_selected !== 'Manual'">
           <span class="v-messages v-messages__message text--secondary">
-            <b>Batch mode:</b> background value will be automatically computed for each selected data entry separately
+            <b>Batch mode:</b> background value will be automatically computed for each selected data entry separately and exposed in the output table.
           </span>
         </v-row>
         <v-row v-else>
@@ -71,7 +71,20 @@
           </v-text-field>
         </v-row>
 
-        <v-row>
+        <v-row v-if="multiselect">
+          <v-switch
+            v-model="pixel_area_multi_auto"
+            label="Auto pixel area"
+            hint="Calculate automatically for each input dataset."
+            persistent-hint
+          />
+        </v-row>
+        <v-row v-if="multiselect && pixel_area_multi_auto">
+          <span class="v-messages v-messages__message text--secondary">
+            <b>Batch mode:</b> pixel area will be automatically computed for each selected data entry separately and exposed in the output table.
+          </span>
+        </v-row>
+        <v-row v-else>
           <v-text-field
             label="Pixel area"
             v-model.number="pixel_area"
@@ -82,7 +95,20 @@
           </v-text-field>
         </v-row>
 
-        <v-row>
+        <v-row v-if="multiselect">
+          <v-switch
+            v-model="counts_factor_multi_auto"
+            label="Auto counts conversion factor"
+            hint="Calculate automatically for each input dataset."
+            persistent-hint
+          />
+        </v-row>
+        <v-row v-if="multiselect && counts_factor_multi_auto">
+          <span class="v-messages v-messages__message text--secondary">
+            <b>Batch mode:</b> counts conversion factor will be automatically computed for each selected data entry separately and exposed in the output table.
+          </span>
+        </v-row>
+        <v-row v-else>
           <v-text-field
             label="Counts conversion factor"
             v-model.number="counts_factor"
@@ -93,7 +119,20 @@
           </v-text-field>
         </v-row>
 
-        <v-row>
+        <v-row v-if="multiselect">
+          <v-switch
+            v-model="flux_scaling_multi_auto"
+            label="Auto flux scaling"
+            hint="Calculate automatically for each input dataset."
+            persistent-hint
+          />
+        </v-row>
+        <v-row v-if="multiselect && flux_scaling_multi_auto">
+          <span class="v-messages v-messages__message text--secondary">
+            <b>Batch mode:</b> flux scaling will be automatically computed for each selected data entry separately and exposed in the output table.
+          </span>
+        </v-row>
+        <v-row v-else>
           <v-text-field
             label="Flux scaling"
             v-model.number="flux_scaling"

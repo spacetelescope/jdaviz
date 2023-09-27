@@ -17,6 +17,7 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
                                 RectangularAperture)
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
@@ -70,9 +71,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     background_items = List().tag(sync=True)
     background_selected = Unicode("").tag(sync=True)
     background_value = Any(0).tag(sync=True)
-    pixel_area = Any(0).tag(sync=True)
-    counts_factor = Any(0).tag(sync=True)
-    flux_scaling = Any(0).tag(sync=True)
+    pixel_area_multi_auto = Bool(True).tag(sync=True)
+    pixel_area = FloatHandleEmpty(0).tag(sync=True)
+    counts_factor_multi_auto = Bool(True).tag(sync=True)
+    counts_factor = FloatHandleEmpty(0).tag(sync=True)
+    flux_scaling_multi_auto = Bool(True).tag(sync=True)
+    flux_scaling = FloatHandleEmpty(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     result_failed_msg = Unicode("").tag(sync=True)
     results = List().tag(sync=True)
@@ -135,51 +139,64 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                                            'calculate_photometry',
                                            'unpack_batch_options', 'calculate_batch_photometry'))
 
+    def _get_defaults_from_metadata(self, dataset=None):
+        defaults = {}
+        if dataset is None:
+            meta = self.dataset.selected_dc_item.meta.copy()
+        else:
+            meta = self.dataset._get_dc_item(dataset).meta.copy()
+
+        # Extract telescope specific unit conversion factors, if applicable.
+        if PRIHDR_KEY in meta:
+            meta.update(meta[PRIHDR_KEY])
+            del meta[PRIHDR_KEY]
+        if 'telescope' in meta:
+            telescope = meta['telescope']
+        else:
+            telescope = meta.get('TELESCOP', '')
+        if telescope == 'JWST':
+            if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
+                defaults['pixel_area'] = meta['photometry']['pixelarea_arcsecsq']
+                if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
+                    # Hardcode the flux conversion factor from MJy to ABmag
+                    defaults['flux_scaling'] = 0.003631
+        elif telescope == 'HST':
+            # TODO: Add more HST support, as needed.
+            # HST pixel scales are from instrument handbooks.
+            # This is really not used because HST data does not have sr in unit.
+            # This is only for completeness.
+            # For counts conversion, PHOTFLAM is used to convert "counts" to flux manually,
+            # which is the opposite of JWST, so we just do not do it here.
+            instrument = meta.get('INSTRUME', '').lower()
+            detector = meta.get('DETECTOR', '').lower()
+            if instrument == 'acs':
+                if detector == 'wfc':
+                    defaults['pixel_area'] = 0.05 * 0.05
+                elif detector == 'hrc':  # pragma: no cover
+                    defaults['pixel_area'] = 0.028 * 0.025
+                elif detector == 'sbc':  # pragma: no cover
+                    defaults['pixel_area'] = 0.034 * 0.03
+            elif instrument == 'wfc3' and detector == 'uvis':  # pragma: no cover
+                defaults['pixel_area'] = 0.04 * 0.04
+
+        return defaults
+
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
-        # TODO: this needs to support multiselect/batch mode
-        if self.multiselect:
+        if not hasattr(self, 'dataset'):
+            # plugin not fully initialized
             return
-        try:
-            if self.dataset.selected_dc_item is None:
-                return
-            self.counts_factor = 0
-            self.pixel_area = 0
-            self.flux_scaling = 0
+        if self.dataset.selected_dc_item is None:
+            return
+        if self.multiselect:
+            # defaults are applied within the loop if the auto-switches are enabled
+            return
 
-            # Extract telescope specific unit conversion factors, if applicable.
-            meta = self.dataset.selected_dc_item.meta.copy()
-            if PRIHDR_KEY in meta:
-                meta.update(meta[PRIHDR_KEY])
-                del meta[PRIHDR_KEY]
-            if 'telescope' in meta:
-                telescope = meta['telescope']
-            else:
-                telescope = meta.get('TELESCOP', '')
-            if telescope == 'JWST':
-                if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
-                    self.pixel_area = meta['photometry']['pixelarea_arcsecsq']
-                    if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
-                        # Hardcode the flux conversion factor from MJy to ABmag
-                        self.flux_scaling = 0.003631
-            elif telescope == 'HST':
-                # TODO: Add more HST support, as needed.
-                # HST pixel scales are from instrument handbooks.
-                # This is really not used because HST data does not have sr in unit.
-                # This is only for completeness.
-                # For counts conversion, PHOTFLAM is used to convert "counts" to flux manually,
-                # which is the opposite of JWST, so we just do not do it here.
-                instrument = meta.get('INSTRUME', '').lower()
-                detector = meta.get('DETECTOR', '').lower()
-                if instrument == 'acs':
-                    if detector == 'wfc':
-                        self.pixel_area = 0.05 * 0.05
-                    elif detector == 'hrc':  # pragma: no cover
-                        self.pixel_area = 0.028 * 0.025
-                    elif detector == 'sbc':  # pragma: no cover
-                        self.pixel_area = 0.034 * 0.03
-                elif instrument == 'wfc3' and detector == 'uvis':  # pragma: no cover
-                    self.pixel_area = 0.04 * 0.04
+        try:
+            defaults = self._get_defaults_from_metadata()
+            self.counts_factor = defaults.get('counts_factor', 0)
+            self.pixel_area = defaults.get('pixel_area', 0)
+            self.flux_scaling = defaults.get('flux_scaling', 0)
 
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
@@ -697,6 +714,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         for i, option in enumerate(options):
             # only update plots on the last iteration
             this_update_plots = i == len(options) and update_plots
+            defaults = self._get_defaults_from_metadata(option.get('dataset',
+                                                                   self.dataset.selected))
+            if self.counts_factor_multi_auto:
+                option.setdefault('counts_factor', defaults.get('counts_factor', 0))
+            if self.pixel_area_multi_auto:
+                option.setdefault('pixel_area', defaults.get('pixel_area', 0))
+            if self.flux_scaling_multi_auto:
+                option.setdefault('flux_scaling', defaults.get('flux_scaling', 0))
             try:
                 self.calculate_photometry(add_to_table=add_to_table,
                                           update_plots=this_update_plots,
