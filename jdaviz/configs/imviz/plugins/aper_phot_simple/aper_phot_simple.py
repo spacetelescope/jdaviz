@@ -664,6 +664,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 mult_values[k] = this_value
 
         def _unpack_dict_list(mult_values, single_values):
+            if not len(mult_values):
+                return [single_values]
             options_list = []
             # loop over the first item in mult_values
             # any remaining mult values will require recursion
