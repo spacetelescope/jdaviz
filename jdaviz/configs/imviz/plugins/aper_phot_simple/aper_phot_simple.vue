@@ -54,7 +54,12 @@
           </span>
         </v-row>
 
-        <v-row>
+        <v-row v-if="multiselect && background_selected !== 'Manual'">
+          <span class="v-messages v-messages__message text--secondary">
+            <b>Batch mode:</b> background value will be automatically computed for each selected data entry separately
+          </span>
+        </v-row>
+        <v-row v-else>
           <v-text-field
             label="Background value"
             v-model.number="background_value"
