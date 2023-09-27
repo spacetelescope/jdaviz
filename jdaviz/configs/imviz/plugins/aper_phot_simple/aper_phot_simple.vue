@@ -143,7 +143,7 @@
           </v-text-field>
         </v-row>
 
-        <v-row>
+        <v-row v-if="!multiselect">
           <v-select
             :menu-props="{ left: true }"
             attach
@@ -155,13 +155,13 @@
           ></v-select>
         </v-row>
 
-        <v-row v-if="current_plot_type==='Radial Profile (Raw)' && aperture_area > 5000">
+        <v-row v-if="!multiselect && current_plot_type==='Radial Profile (Raw)' && aperture_area > 5000">
           <span class="v-messages v-messages__message text--secondary">
               <b>WARNING</b>: Computing and displaying raw profile of an aperture containing ~{{aperture_area}} pixels may be slow or unresponsive.
           </span>
         </v-row>
 
-        <v-row v-if="current_plot_type.indexOf('Radial Profile') != -1">
+        <v-row v-if="!multiselect && current_plot_type.indexOf('Radial Profile') != -1">
 
           <v-switch
             label="Fit Gaussian"
@@ -183,11 +183,11 @@
       </span>
     </v-row>
 
-    <v-row v-if="plot_available">
+    <v-row v-if="!multiselect && plot_available">
       <jupyter-widget :widget="plot_widget"/> 
     </v-row>
 
-    <div v-if="plot_available && fit_radial_profile && current_plot_type != 'Curve of Growth'">
+    <div v-if="!multiselect && plot_available && fit_radial_profile && current_plot_type != 'Curve of Growth'">
       <j-plugin-section-header>Gaussian Fit Results</j-plugin-section-header>
       <v-row no-gutters>
         <v-col cols=6><U>Result</U></v-col>
@@ -204,7 +204,7 @@
       </v-row>
     </div>
 
-    <div v-if="result_available">
+    <div v-if="!multiselect && result_available">
       <j-plugin-section-header>Photometry Results</j-plugin-section-header>
 
       <v-row no-gutters>
@@ -220,7 +220,9 @@
         </v-col>
         <v-col cols=6>{{ item.result }}</v-col>
       </v-row>
+    </div>
 
+    <div v-if="result_available">
       <j-plugin-section-header>Results History</j-plugin-section-header>
       <jupyter-widget :widget="table_widget"></jupyter-widget> 
     </div>

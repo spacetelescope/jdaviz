@@ -578,6 +578,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         try:
             if self.multiselect:
+                # even though plots aren't show in the UI when in multiselect mode,
+                # we'll create the last entry so if multiselect is disabled, the last
+                # iteration will show and not result in confusing behavior
                 self.calculate_batch_photometry(add_to_table=True, update_plots=True)
             else:
                 self.calculate_photometry(add_to_table=True, update_plots=True)
