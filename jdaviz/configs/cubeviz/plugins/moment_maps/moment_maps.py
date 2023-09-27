@@ -5,7 +5,7 @@ from astropy import units as u
 from astropy.nddata import CCDData
 
 from traitlets import Unicode, Bool, observe
-from specutils import Spectrum1D, manipulation, analysis
+from specutils import manipulation, analysis
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.events import SnackbarMessage
@@ -101,7 +101,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             Whether to add the resulting data object to the app according to ``add_results``.
         """
         # Retrieve the data cube and slice out desired region, if specified
-        cube = self.dataset.get_object(cls=Spectrum1D, statistic=None)
+        if "_orig_spec" in self.dataset.selected_obj.meta:
+            cube = self.dataset.selected_obj.meta["_orig_spec"]
+        else:
+            cube = self.dataset.selected_obj
+
         spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
 
