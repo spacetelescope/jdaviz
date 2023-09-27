@@ -4,6 +4,7 @@ import numpy as np
 from astropy import table
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty, VarianceUncertainty, InverseVariance
+from echo import delay_callback
 from glue.core import BaseData
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue.core.subset import Subset
@@ -14,7 +15,7 @@ from glue.core.exceptions import IncompatibleAttribute
 from matplotlib.colors import cnames
 from specutils import Spectrum1D
 
-from jdaviz.core.events import SpectralMarksChangedMessage, LineIdentifyMessage
+from jdaviz.core.events import SpectralMarksChangedMessage, LineIdentifyMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
@@ -362,10 +363,27 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         result : bool
             `True` if successful, `False` otherwise.
         """
+        y_units = data.get_component("flux").units
+
         # If this is the first loaded data, set things up for unit conversion.
         if len(self.layers) == 0:
             reset_plot_axes = True
         else:
+            # Check if the new data flux unit is actually compatible since flux not linked
+            data_flux_unit = u.Unit(y_units)
+            viewer_flux_unit = u.Unit(self.state.y_display_unit)
+            wav = 1 * u.Unit(self.state.x_display_unit)
+            try:
+                (1 * data_flux_unit).to(viewer_flux_unit, u.spectral_density(wav))  # Error if incompatible  # noqa: E501
+            except Exception as err:
+                # Raising exception here introduces a dirty state that messes up next load_data
+                # but not raising exception also causes weird behavior unless we remove the data
+                # completely.
+                self.session.hub.broadcast(SnackbarMessage(
+                    f"Failed to load {data.label}, so removed it: {repr(err)}",
+                    sender=self, color='error'))
+                self.jdaviz_app.data_collection.remove(data)
+                return False
             reset_plot_axes = False
 
         # The base class handles the plotting of the main
@@ -374,9 +392,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         if reset_plot_axes:
             x_units = data.get_component(self.state.x_att.label).units
-            y_units = data.get_component("flux").units
-            self.state.x_display_unit = x_units if len(x_units) else None
-            self.state.y_display_unit = y_units if len(y_units) else None
+            with delay_callback(self.state, "x_display_unit", "y_display_unit"):
+                self.state.x_display_unit = x_units if len(x_units) else None
+                self.state.y_display_unit = y_units if len(y_units) else None
             self.set_plot_axes()
 
         self._plot_uncertainties()
@@ -541,22 +559,23 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         else:
             spectral_axis_unit_type = str(x_unit.physical_type).title()
 
-        self.figure.axes[0].label = f"{spectral_axis_unit_type} [{self.state.x_display_unit}]"
-        self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
+        with self.figure.hold_sync():
+            self.figure.axes[0].label = f"{spectral_axis_unit_type} [{self.state.x_display_unit}]"
+            self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
 
-        # Make it so axis labels are not covering tick numbers.
-        self.figure.fig_margin["left"] = 95
-        self.figure.fig_margin["bottom"] = 60
-        self.figure.send_state('fig_margin')  # Force update
-        self.figure.axes[0].label_offset = "40"
-        self.figure.axes[1].label_offset = "-70"
-        # NOTE: with tick_style changed below, the default responsive ticks in bqplot result
-        # in overlapping tick labels.  For now we'll hardcode at 8, but this could be removed
-        # (default to None) if/when bqplot auto ticks react to styling options.
-        self.figure.axes[1].num_ticks = 8
+            # Make it so axis labels are not covering tick numbers.
+            self.figure.fig_margin["left"] = 95
+            self.figure.fig_margin["bottom"] = 60
+            self.figure.send_state('fig_margin')  # Force update
+            self.figure.axes[0].label_offset = "40"
+            self.figure.axes[1].label_offset = "-70"
+            # NOTE: with tick_style changed below, the default responsive ticks in bqplot result
+            # in overlapping tick labels.  For now we'll hardcode at 8, but this could be removed
+            # (default to None) if/when bqplot auto ticks react to styling options.
+            self.figure.axes[1].num_ticks = 8
 
-        # Set Y-axis to scientific notation
-        self.figure.axes[1].tick_format = '0.1e'
+            # Set Y-axis to scientific notation
+            self.figure.axes[1].tick_format = '0.1e'
 
-        for i in (0, 1):
-            self.figure.axes[i].tick_style = {'font-size': 15, 'font-weight': 600}
+            for i in (0, 1):
+                self.figure.axes[i].tick_style = {'font-size': 15, 'font-weight': 600}

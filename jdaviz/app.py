@@ -1930,9 +1930,14 @@ class Application(VuetifyTemplate, HubListener):
                     f"No data item found with label '{data_label}'. Label must be one "
                     "of:\n\t" + "\n\t".join(dc_labels))
 
-            [data] = [x for x in self.data_collection if x.label == data_label]
+            data = self.data_collection[data_label]
 
             viewer.add_data(data, percentile=95, color=viewer.color_cycler())
+
+            # Specviz removes the data from collection in viewer.py if flux unit incompatible.
+            if data_label not in self.data_collection.labels:
+                return
+
             viewer.set_plot_axes()
 
             add_data_message = AddDataMessage(data, viewer,
