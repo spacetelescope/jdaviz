@@ -58,6 +58,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     * ``flux_scaling``:
       Same unit as data, used in -2.5 * log(flux / flux_scaling).
     * :meth:`calculate_photometry`
+    * :meth:`unpack_batch_options`
+    * :meth:`calculate_batch_photometry`
     """
     template_file = __file__, "aper_phot_simple.vue"
     multiselect = Bool(False).tag(sync=True)
@@ -130,7 +132,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         return PluginUserApi(self, expose=('multiselect', 'dataset', 'aperture',
                                            'background', 'background_value',
                                            'pixel_area', 'counts_factor', 'flux_scaling',
-                                           'unpack_batch_options', 'calculate_photometry'))
+                                           'calculate_photometry',
+                                           'unpack_batch_options', 'calculate_batch_photometry'))
 
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
@@ -285,6 +288,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         -------
         * table row, fit results
         """
+        if self.multiselect and (dataset is None or aperture is None):
+            raise ValueError("for batch mode, use calculate_batch_photometry")
+
         if dataset is not None:
             if dataset not in self.dataset.choices:
                 raise ValueError(f"dataset must be one of {self.dataset.choices}")
@@ -539,8 +545,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             return
 
         try:
-            # TODO: decide what we want this to actually return
-            phot_table, fit_model = self.calculate_photometry(add_to_table=True, update_plots=True)
+            if self.multiselect:
+                self.calculate_batch_photometry(add_to_table=True, update_plots=True)
+            else:
+                self.calculate_photometry(add_to_table=True, update_plots=True)
         except Exception as e:  # pragma: no cover
             self.plot.clear_all_marks()
             msg = f"Aperture photometry failed: {repr(e)}"
@@ -638,7 +646,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         return _unpack_dict_list(mult_values, single_values)
 
-    def calculate_batch_photometry(self, options, full_exceptions=False):
+    def calculate_batch_photometry(self, options=[], add_to_table=True, update_plots=True,
+                                   full_exceptions=False):
         """
         Run aperture photometry over a list of options.  Unprovided options will remain at their
         values defined in the plugin.
@@ -651,6 +660,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         options : list
             Each entry will result in one computation of aperture photometry and should be
             a dictionary of values to override from the values set in the plugin/traitlets.
+        add_to_table : bool
+            Whether to add results to the plugin table.
+        update_plots : bool
+            Whether to update the plugin plots for the last iteration.
         full_exceptions : bool, optional
             Whether to expose the full exception message for all failed iterations.
         """
@@ -659,13 +672,20 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             raise TypeError("options must be a list of dictionaries")
         if not np.all([isinstance(option, dict) for option in options]):
             raise TypeError("options must be a list of dictionaries")
+        if not len(options):
+            if not self.multiselect:
+                raise ValueError("must either provide manual options or put the plugin in multiselect mode")  # noqa
+            # unpack the batch options as provided in the app
+            options = self.unpack_batch_options()
 
         failed_iters, exceptions = [], []
         for i, option in enumerate(options):
             # only update plots on the last iteration
-            update_plots = i == len(options)
+            this_update_plots = i == len(options) and update_plots
             try:
-                self.calculate_photometry(add_to_table=True, update_plots=update_plots, **option)
+                self.calculate_photometry(add_to_table=add_to_table,
+                                          update_plots=this_update_plots,
+                                          **option)
             except Exception as e:
                 failed_iters.append(i)
                 if full_exceptions:
