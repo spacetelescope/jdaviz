@@ -1,3 +1,27 @@
+3.7.1 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Fixed bug which did not update all references to a viewer's ID when
+  updating a viewer's reference name. [#2479]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
 3.7 (2023-09-21)
 ================
 
