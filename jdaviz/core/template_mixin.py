@@ -1,4 +1,5 @@
 from astropy.coordinates.sky_coordinate import SkyCoord
+from astropy.nddata.ccddata import CCDData
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import astropy.units as u
@@ -1612,8 +1613,15 @@ class SubsetSelect(SelectPluginComponent):
     def selected_spatial_region(self):
         if not getattr(self, 'dataset', None):
             raise ValueError("Retrieving subset mask requires associated dataset")
-        if self.selected_item.get('type') != 'spatial':
+        if self.multiselect and self.dataset.multiselect:
+            # technically this could work if either has length of one, but would require extra
+            # logic
+            raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")
+        items = self.selected_item if self.multiselect else [self.selected_items]
+        if np.any([item.get('type') != 'spatial' for item in items]:
             raise TypeError("This action is only supported on spatial-type subsets")
+        if self.multiselect:
+            return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
         return self._get_spatial_region(dataset=self.dataset.selected)
 
     def selected_min_max(self, dataset):
@@ -2122,7 +2130,7 @@ class DatasetSelect(SelectPluginComponent):
     @property
     def default_data_cls(self):
         if self.app.config == 'imviz':
-            return None
+            return CCDData
         if 'is_trace' in self.filters:
             return None
         return Spectrum1D
@@ -2136,10 +2144,13 @@ class DatasetSelect(SelectPluginComponent):
     @cached_property
     def selected_dc_item(self):
         if self.is_multiselect:
-            raise NotImplementedError("selected_dc_item not supported in multiselect mode")
+            return [self._get_dc_item(selected) for selected in self.selected]
         return self._get_dc_item(self.selected)
 
     def get_object(self, *args, **kwargs):
+        if self.is_multiselect:
+            return [dc_item.get_object(*args, **kwargs) for dc_item in self.selected_dc_item]
+
         if self.selected not in self.labels:
             # _apply_default_selection will override shortly anyways
             return None
@@ -2147,12 +2158,13 @@ class DatasetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_obj(self):
-        if self.selected not in self.labels:
-            # _apply_default_selection will override shortly anyways
-            return None
-        match = self.app._jdaviz_helper.get_data(data_label=self.selected)
-        if match is not None:
-            return match
+        if not self.multiselect:
+            if self.selected not in self.labels:
+                # _apply_default_selection will override shortly anyways
+                return None
+            match = self.app._jdaviz_helper.get_data(data_label=self.selected)
+            if match is not None:
+                return match
         # handle the case of empty Application with no viewer, we'll just pull directly
         # from the data collection
         return self.get_object(cls=self.default_data_cls)
