@@ -154,3 +154,10 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
     plugin = cubeviz_helper.plugins['Moment Maps']
     plugin.calculate_moment()
     assert isinstance(plugin._obj.moment.wcs, WCS)
+
+    # Because cube axes order is re-arranged by specutils on load, this gets confusing.
+    # There is a swapaxes within Moment Map WCS calculation.
+    sky_moment = plugin._obj.moment.wcs.pixel_to_world(50, 30)
+    sky_cube = cubeviz_helper.app.data_collection[0].meta["_orig_spec"].wcs.celestial.pixel_to_world(30, 50)  # noqa: E501
+    assert_allclose((sky_moment.ra.deg, sky_moment.dec.deg),
+                    (sky_cube.ra.deg, sky_cube.dec.deg))
