@@ -750,7 +750,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def _multiselect_changed(self, event):
         self._clear_cache()
         if self.is_multiselect:
-            self.selected = [self.selected]
+            self.selected = [self.selected] if self.selected != '' else []
         elif isinstance(self.selected, list) and len(self.selected):
             self.selected = self.selected[0]
         else:
