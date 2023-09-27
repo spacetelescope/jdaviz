@@ -1617,8 +1617,8 @@ class SubsetSelect(SelectPluginComponent):
             # technically this could work if either has length of one, but would require extra
             # logic
             raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")
-        items = self.selected_item if self.multiselect else [self.selected_items]
-        if np.any([item.get('type') != 'spatial' for item in items]:
+        items = self.selected_item if self.multiselect else [self.selected_item]
+        if np.any([item.get('type') != 'spatial' for item in items]):
             raise TypeError("This action is only supported on spatial-type subsets")
         if self.multiselect:
             return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa

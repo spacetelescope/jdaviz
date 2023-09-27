@@ -137,6 +137,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
+        # TODO: this needs to support multiselect/batch mode
+        if self.multiselect:
+            return
         try:
             if self.dataset.selected_dc_item is None:
                 return
@@ -190,7 +193,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         if not self.dataset_selected or not self.aperture_selected:
             return
         if self.multiselect:
-            # TODO: anything need to be hidden in the UI/API?
+            self._backgound_selected_changed()
             return
 
         sbst = msg.subset
@@ -211,7 +214,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         if not self.dataset_selected or not self.aperture_selected:
             return
         if self.multiselect:
-            # TODO: anything need to be hidden in the UI/API?
+            self._background_selected_changed()
             return
 
         # NOTE: aperture area is only used to determine if a warning should be shown in the UI
@@ -232,7 +235,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     def _calc_background_median(self, reg):
         # Basically same way image stats are calculated in vue_do_aper_phot()
         # except here we only care about one stat for the background.
-        data = self.dataset.selected_dc_item
+        if self.multiselect:
+            if len(self.dataset.selected) == 1:
+                data = self.dataset.selected_dc_item[0]
+            else:
+                raise ValueError("cannot calculate background median in multiselect")
+        else:
+            data = self.dataset.selected_dc_item
         comp = data.get_component(data.main_components[0])
         if hasattr(reg, 'to_pixel'):
             reg = reg.to_pixel(data.coords)
@@ -247,6 +256,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         background_selected = event.get('new', self.background_selected)
         if background_selected == 'Manual':
             # we'll later access the user's self.background_value directly
+            return
+
+        if self.multiselect and len(self.dataset.selected) != 1:
+            # background_value will be recomputed within batch mode anyways and will
+            # be replaced in the UI with a message
+            self.background_value = -1
             return
 
         try:
