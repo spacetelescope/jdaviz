@@ -45,6 +45,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'DatasetSpectralSubsetValidMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
+           'NonFiniteUncertaintyMismatchMixin',
            'DatasetSelect', 'DatasetSelectMixin',
            'FileImportSelectPluginComponent', 'HasFileImportSelect',
            'Table', 'TableMixin',
@@ -1662,6 +1663,7 @@ class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
 
     @observe("dataset_selected", "spectral_subset_selected")
     def _check_dataset_spectral_subset_valid(self, event={}, return_ranges=False):
+
         if self.spectral_subset_selected == "Entire Spectrum":
             self.spectral_subset_valid = True
         else:
@@ -1675,6 +1677,72 @@ class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
                     (subset_min.value, subset_max.value))
         else:
             return self.spectral_subset_valid
+
+
+class NonFiniteUncertaintyMismatchMixin(VuetifyTemplate, HubListener):
+    """Adds a traitlet that identifies if there are any finite data values
+    that correspond to a non-finite uncertainty at that index.
+
+    In model fitting, the presence of finite, fittable data with corresponding
+    non-finite uncertainties can cause issues. Finite data values will be
+    filtered out in this case which may be undesirable. This traitlet when
+    True triggers a warning in the model fitting plugin (in Specviz only,
+    currently) if there are any finite values with non-finite uncertainties.
+
+    Note that if a the uncertainty array is FULLY non-finite and the data is
+    FULLY finite, uncertainties will be set to None (in the Specviz parser),
+    so this traitlet will be False in that case (and therefore no warning
+    message displayed in the plugin).
+    """
+
+    non_finite_uncertainty_mismatch = Bool(False).tag(sync=True)
+
+    # every time a data/subset selection is changed, check the data selection and
+    # its uncertainties to see if there are any finite data elements with
+    # uncertainties. Warn in plugin if this occurs.
+
+    @observe("dataset_selected", "spectral_subset_selected")
+    def _check_non_finite_uncertainty_mismatch(self, event={}):
+
+        if not hasattr(self, 'dataset') or self.dataset_selected == '':
+            # during initial init, this can trigger before the component is initialized
+            return
+
+        if not hasattr(self, '_get_1d_spectrum'):
+            # only model_fitting has _get_1d_spectrum(), but this method is here
+            # instead of there  because it may eventually be used by other plugins.
+            # if that happens, move _get_1d_spectrum() somewhere more general
+            raise NotImplementedError("_get_1d_spectrum() must be available in "
+                                      "plugin to use NonFiniteUncertaintyMismatchMixin")
+
+        spec = self._get_1d_spectrum()
+
+        if spec.uncertainty is None:
+            self.non_finite_uncertainty_mismatch = False
+            return
+
+        if self.spectral_subset_selected == "Entire Spectrum":
+            flux = spec.flux
+            uncert = spec.uncertainty
+        else:
+            # get selected subset
+            spec = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
+            flux = spec.flux[~spec.mask]
+            uncert = spec.uncertainty[~spec.mask]
+
+        uncert = uncert.array
+
+        if not np.any(uncert):
+            self.non_finite_uncertainty_mismatch = False
+            return
+
+        flux = flux.value
+
+        mismatch = np.any(np.logical_and(~np.isfinite(uncert), np.isfinite(flux)))
+
+        # np.any returns numpy bool type, which traitlets doesn't like
+        # so cast to boolean
+        self.non_finite_uncertainty_mismatch = bool(mismatch)
 
 
 class ViewerSelect(SelectPluginComponent):

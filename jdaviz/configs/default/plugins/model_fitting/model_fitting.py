@@ -16,6 +16,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SubsetSelect,
                                         DatasetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
+                                        NonFiniteUncertaintyMismatchMixin,
                                         AutoTextField,
                                         AddResultsMixin,
                                         TableMixin)
@@ -40,6 +41,7 @@ class _EmptyParam:
 @tray_registry('g-model-fitting', label="Model Fitting", viewer_requirements='spectrum')
 class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    SpectralSubsetSelectMixin, DatasetSpectralSubsetValidMixin,
+                   NonFiniteUncertaintyMismatchMixin,
                    AddResultsMixin, TableMixin):
     """
     See the :ref:`Model Fitting Plugin Documentation <specviz-model-fitting>` for more details.
@@ -312,7 +314,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     def _get_1d_spectrum(self):
         # retrieves the 1d spectrum (accounting for spatial subset for cubeviz, if necessary)
-        return self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected) # noqa
+        return self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected)  # noqa
 
     @observe("dataset_selected", "spatial_subset_selected")
     def _dataset_selected_changed(self, event=None):
@@ -781,6 +783,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         fitted spectrum/cube
         residuals (if ``residuals_calculate`` is set to ``True``)
         """
+
         if not self.spectral_subset_valid:
             valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
             raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa

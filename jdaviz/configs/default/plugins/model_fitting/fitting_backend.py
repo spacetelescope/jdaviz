@@ -75,7 +75,7 @@ def fit_model_to_spectrum(spectrum, component_list, expression,
         return _fit_1D(initial_model, spectrum, run_fitter, window=window)
 
 
-def _fit_1D(initial_model, spectrum, run_fitter, window=None):
+def _fit_1D(initial_model, spectrum, run_fitter, filter_non_finite=True, window=None):
     """
     Fits an astropy CompoundModel to a Spectrum1D instance.
 
@@ -104,7 +104,8 @@ def _fit_1D(initial_model, spectrum, run_fitter, window=None):
             weights = 'unc'
         else:
             weights = None
-        output_model = fit_lines(spectrum, initial_model, weights=weights, window=window)
+        output_model = fit_lines(spectrum, initial_model, weights=weights,
+                                 filter_non_finite=filter_non_finite, window=window)
         output_values = output_model(spectrum.spectral_axis)
     else:
         # Return without fitting.
