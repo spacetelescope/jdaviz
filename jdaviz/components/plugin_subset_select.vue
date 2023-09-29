@@ -17,8 +17,8 @@
       persistent-hint
     >
       <template slot="selection" slot-scope="data">
-        <div class="single-line">
-          <v-chip v-if="multiselect" style="width: calc(100% - 20px)">
+        <div class="single-line" style="width: 100%">
+          <v-chip v-if="multiselect" style="width: calc(100% - 10px)">
             <span>
               <v-icon v-if="data.item.color" left :color="data.item.color">
                 {{ data.item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
@@ -79,9 +79,11 @@ module.exports = {
 };
 </script>
 
-<style>
+<style scoped>
   .v-select__selections {
     flex-wrap: nowrap !important;
+    display: block !important;
+    margin-bottom: -32px;
   }
   .single-line {
       white-space: nowrap;
