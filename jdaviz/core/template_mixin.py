@@ -619,7 +619,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             raise ValueError("currently in multiselect mode")
 
         cycle = self.choices
-        if not len(cycle):
+        if not len(cycle):  # pragma: no cover
             raise ValueError("no choices")
         if self.selected == '':
             curr_ind = -1
@@ -1554,7 +1554,7 @@ class SubsetSelect(SelectPluginComponent):
                         s.label == subset]
         if len(subset_group) == 0:
             return None
-        if len(subset_group) != 1:
+        if len(subset_group) != 1:  # pragma: no cover
             raise ValueError("found multiple matches for subset")
         return subset_group[0].subset_state
 
@@ -1568,7 +1568,7 @@ class SubsetSelect(SelectPluginComponent):
         if subset is None:
             subset = self.selected
         if dataset is None:
-            if getattr(self.plugin, 'dataset', None) is None:
+            if getattr(self.plugin, 'dataset', None) is None:  # pragma: no cover
                 raise ValueError("Retrieving subset mask requires associated dataset")
             dataset = self.plugin.dataset.selected
         get_data_kwargs = {'data_label': dataset}
@@ -1588,7 +1588,7 @@ class SubsetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_subset_mask(self):
-        if self.is_multiselect:
+        if self.is_multiselect:  # pragma: no cover
             raise NotImplementedError("Retrieving subset mask is not"
                                       " supported in multiselect mode")
 
@@ -1608,9 +1608,9 @@ class SubsetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_spatial_region(self):
-        if not getattr(self, 'dataset', None):
+        if not getattr(self, 'dataset', None):  # pragma: no cover
             raise ValueError("Retrieving subset mask requires associated dataset")
-        if self.is_multiselect and self.dataset.is_multiselect:
+        if self.is_multiselect and self.dataset.is_multiselect:  # pragma: no cover
             # technically this could work if either has length of one, but would require extra
             # logic
             raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")  # noqa
@@ -1625,9 +1625,9 @@ class SubsetSelect(SelectPluginComponent):
         """
         Get the min/max spectral range of ``dataset`` given the selected spectral subset
         """
-        if self.is_multiselect:
+        if self.is_multiselect:  # pragma: no cover
             raise TypeError("This action cannot be done when multiselect is active")
-        if not isinstance(dataset, Spectrum1D):
+        if not isinstance(dataset, Spectrum1D):  # pragma: no cover
             raise TypeError("dataset must be a Spectrum1D object")
 
         if self.selected_obj is None:

@@ -215,6 +215,19 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # second entry above should have been successful, resulting in one addition to the results
         assert len(phot_plugin._obj.table) == 3
 
+        # now run through the UI directly
+        phot_plugin.multiselect = True
+        phot_plugin.dataset.select_all()
+        phot_plugin.aperture.select_none()
+        assert len(phot_plugin.unpack_batch_options()) == 0
+        phot_plugin._obj.vue_do_aper_phot()
+
+        assert len(phot_plugin._obj.table) == 3
+        phot_plugin.aperture.select_all()
+        assert len(phot_plugin.unpack_batch_options()) == 2
+        phot_plugin._obj.vue_do_aper_phot()
+        assert len(phot_plugin._obj.table) == 5
+
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
     def test_plugin_no_wcs(self):

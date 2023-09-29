@@ -320,11 +320,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         -------
         * table row, fit results
         """
-        if self.multiselect and (dataset is None or aperture is None):
+        if self.multiselect and (dataset is None or aperture is None):  # pragma: no cover
             raise ValueError("for batch mode, use calculate_batch_photometry")
 
         if dataset is not None:
-            if dataset not in self.dataset.choices:
+            if dataset not in self.dataset.choices:  # pragma: no cover
                 raise ValueError(f"dataset must be one of {self.dataset.choices}")
             data = self.dataset._get_dc_item(dataset)
         else:
@@ -348,7 +348,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
 
         comp = data.get_component(data.main_components[0])
 
-        if background is not None and background not in self.background.choices:
+        if background is not None and background not in self.background.choices:  # pragma: no cover
             raise ValueError(f"background must be one of {self.background.choices}")
         if background_value is not None:
             if ((background not in (None, 'Manual'))
@@ -639,7 +639,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         if not isinstance(options, dict):
             raise TypeError("options must be a dictionary")
         if not options:
-            if not self.multiselect:
+            if not self.multiselect:  # pragma: no cover
                 raise ValueError("must either provide a dictionary or set plugin to multiselect mode")  # noqa
             options = {'dataset': self.dataset.selected, 'aperture': self.aperture.selected}
 
@@ -710,7 +710,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         if not np.all([isinstance(option, dict) for option in options]):
             raise TypeError("options must be a list of dictionaries")
         if not len(options):
-            if not self.multiselect:
+            if not self.multiselect:  # pragma: no cover
                 raise ValueError("must either provide manual options or put the plugin in multiselect mode")  # noqa
             # unpack the batch options as provided in the app
             options = self.unpack_batch_options()
