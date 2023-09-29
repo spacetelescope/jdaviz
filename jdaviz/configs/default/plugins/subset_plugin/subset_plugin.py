@@ -49,7 +49,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     subplugins_opened = Any().tag(sync=True)
 
-    multiselect = Bool(False).tag(sync=True)
+    multiselect = Bool(False).tag(sync=True)  # multiselect only for subset
     is_centerable = Bool(False).tag(sync=True)
     can_simplify = Bool(False).tag(sync=True)
     can_freeze = Bool(False).tag(sync=True)

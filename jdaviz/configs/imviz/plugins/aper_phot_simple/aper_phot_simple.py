@@ -21,7 +21,7 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
+from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
                                         SubsetSelect, TableMixin, PlotMixin)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
@@ -33,7 +33,7 @@ ASTROPY_LT_5_2 = Version(astropy.__version__) < Version('5.2')
 
 
 @tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")
-class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin, PlotMixin):
+class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, TableMixin, PlotMixin):
     """
     The Aperture Photometry plugin performs aperture photometry for drawn regions.
     See the :ref:`Aperture Photometry Plugin Documentation <aper-phot-simple>` for more details.

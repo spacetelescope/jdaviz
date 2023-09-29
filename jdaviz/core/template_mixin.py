@@ -48,7 +48,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'NonFiniteUncertaintyMismatchMixin',
-           'DatasetSelect', 'DatasetSelectMixin',
+           'DatasetSelect', 'DatasetSelectMixin', 'DatasetMultiSelectMixin',
            'FileImportSelectPluginComponent', 'HasFileImportSelect',
            'Table', 'TableMixin',
            'Plot', 'PlotMixin',
@@ -2269,13 +2269,48 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
 
     """
     dataset_items = List().tag(sync=True)
-    dataset_selected = Any().tag(sync=True)
+    dataset_selected = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # NOTE: cannot be named self.data or will conflict with existing self.data traitlet!
         self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected',
-                                     multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
+                                     multiselect=None)
+
+
+class DatasetMultiSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the DatasetSelect component as a mixin in the base plugin with togglable multiselect.  
+    This automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``DatasetMultiSelectMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.dataset``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-dataset-select
+        :items="dataset_items"
+        :selected.sync="dataset_selected"
+        :multiselect="multiselect"
+        label="Data"
+        hint="Select data."
+      />
+
+    """
+    dataset_items = List().tag(sync=True)
+    dataset_selected = Any().tag(sync=True)
+    multiselect = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # NOTE: cannot be named self.data or will conflict with existing self.data traitlet!
+        self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected',
+                                     multiselect='multiselect')  # noqa
 
 
 class AutoTextField(BasePluginComponent):
