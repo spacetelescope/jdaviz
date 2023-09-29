@@ -1935,7 +1935,7 @@ class Application(VuetifyTemplate, HubListener):
             viewer.add_data(data, percentile=95, color=viewer.color_cycler())
 
             # Specviz removes the data from collection in viewer.py if flux unit incompatible.
-            if data_label not in self.data_collection.labels:
+            if data_label not in self.data_collection:
                 return
 
             viewer.set_plot_axes()

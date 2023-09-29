@@ -5,13 +5,14 @@ from astropy import table
 from astropy import units as u
 from astropy.nddata import StdDevUncertainty, VarianceUncertainty, InverseVariance
 from echo import delay_callback
+from glue.config import data_translator
 from glue.core import BaseData
-from glue_astronomy.spectral_coordinates import SpectralCoordinates
+from glue.core.exceptions import IncompatibleAttribute
+from glue.core.units import UnitConverter
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
-from glue.config import data_translator
+from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.bqplot.profile import BqplotProfileView
-from glue.core.exceptions import IncompatibleAttribute
 from matplotlib.colors import cnames
 from specutils import Spectrum1D
 
@@ -25,6 +26,7 @@ from jdaviz.utils import get_subset_type
 
 __all__ = ['SpecvizProfileView']
 
+uc = UnitConverter()
 
 uncertainty_str_to_cls_mapping = {
     "std": StdDevUncertainty,
@@ -363,18 +365,14 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         result : bool
             `True` if successful, `False` otherwise.
         """
-        y_units = data.get_component("flux").units
-
         # If this is the first loaded data, set things up for unit conversion.
         if len(self.layers) == 0:
             reset_plot_axes = True
         else:
-            # Check if the new data flux unit is actually compatible since flux not linked
-            data_flux_unit = u.Unit(y_units)
-            viewer_flux_unit = u.Unit(self.state.y_display_unit)
-            wav = 1 * u.Unit(self.state.x_display_unit)
+            # Check if the new data flux unit is actually compatible since flux not linked.
             try:
-                (1 * data_flux_unit).to(viewer_flux_unit, u.spectral_density(wav))  # Error if incompatible  # noqa: E501
+                uc.to_unit(data, data.find_component_id("flux"), [1, 1],
+                           u.Unit(self.state.y_display_unit))  # Error if incompatible
             except Exception as err:
                 # Raising exception here introduces a dirty state that messes up next load_data
                 # but not raising exception also causes weird behavior unless we remove the data
@@ -392,6 +390,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         if reset_plot_axes:
             x_units = data.get_component(self.state.x_att.label).units
+            y_units = data.get_component("flux").units
             with delay_callback(self.state, "x_display_unit", "y_display_unit"):
                 self.state.x_display_unit = x_units if len(x_units) else None
                 self.state.y_display_unit = y_units if len(y_units) else None
