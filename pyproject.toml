@@ -137,6 +137,7 @@ filterwarnings = [
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
     "ignore:specutils uses the deprecated entry point asdf_extensions",
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
+    "ignore:datetime\\.datetime\\.utcfromtimestamp:DeprecationWarning",  # asdf + dateutil<=2.8.2 + Python 3.12
     "ignore::DeprecationWarning:glue",
     "ignore::DeprecationWarning:bqplot",
     "ignore::DeprecationWarning:bqplot_image_gl",

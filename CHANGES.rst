@@ -93,6 +93,11 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+Other Changes and Additions
+---------------------------
+
+- Compatibility with Python 3.12. [#2473]
+
 3.7 (2023-09-21)
 ================
 
