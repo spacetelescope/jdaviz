@@ -453,20 +453,29 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             else:
                 self.set_center((x, y), subset_name=subset, update=True)
 
-        dict_subset_to_state = self.subset_select.selected_subset_state
         if not self.multiselect:
-            _do_recentering(self.subset_selected, dict_subset_to_state)
+            _do_recentering(self.subset_selected, self.subset_select.selected_subset_state)
         else:
-            for sub in self.subset_selected:
+            for sub, subset_state in zip(self.subset_selected,
+                                         self.subset_select.selected_subset_state):
                 if (sub != self.subset_select.default_text and
-                        not isinstance(dict_subset_to_state[sub], CompositeSubsetState)):
+                        not isinstance(subset_state, CompositeSubsetState)):
                     self.is_centerable = True
-                    _do_recentering(sub, dict_subset_to_state[sub])
+                    _do_recentering(sub, subset_state)
                 elif (sub != self.subset_select.default_text and
-                      isinstance(dict_subset_to_state[sub], CompositeSubsetState)):
+                      isinstance(subset_state, CompositeSubsetState)):
                     self.hub.broadcast(SnackbarMessage(f"Unable to recenter "
                                                        f"composite subset {sub}",
                                                        color='error', sender=self))
+
+    def _get_subset_state(self, subset_name=None):
+        if self.multiselect and not subset_name:
+            raise ValueError("Please include subset_name in when in multiselect mode")
+
+        if subset_name is not None:
+            return self.subset_select._get_subset_state(subset_name)
+        # guaranteed to only return a single entry because of check above
+        return self.subset_select.selected_subset_state
 
     def get_center(self, subset_name=None):
         """Return the center of the Subset.
@@ -489,14 +498,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not self.is_centerable:  # no-op
             return
 
-        if self.multiselect and not subset_name:
-            raise ValueError("Please include subset_name in"
-                             " get_center call when in multiselect mode")
-        elif not self.multiselect:
-            subset_state = self.subset_select.selected_subset_state
-        elif self.multiselect and subset_name:
-            subset_state = self.subset_select.selected_subset_state[subset_name]
-
+        subset_state = self._get_subset_state(subset_name)
         return subset_state.center()
 
     def set_center(self, new_cen, subset_name=None, update=False):
@@ -525,13 +527,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if not self.is_centerable:  # no-op
             return
 
-        if self.multiselect and not subset_name:
-            raise ValueError("Please include subset_name in"
-                             " set_center call when in multiselect mode")
-        elif not self.multiselect:
-            subset_state = self.subset_select.selected_subset_state
-        elif self.multiselect and subset_name:
-            subset_state = self.subset_select.selected_subset_state[subset_name]
+        subset_state = self._get_subset_state(subset_name)
+
         if isinstance(subset_state, RoiSubsetState):
             x, y = new_cen
             # x and y are arrays so this converts them back to floats

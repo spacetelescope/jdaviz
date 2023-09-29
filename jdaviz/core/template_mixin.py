@@ -1295,7 +1295,7 @@ class LayerSelect(SelectPluginComponent):
                    if layer.layer.label in selected]
                   for viewer in viewers]
 
-        if not self.multiselect and len(layers) == 1:
+        if not self.is_multiselect and len(layers) == 1:
             return layers[0]
         else:
             return layers
@@ -1551,20 +1551,17 @@ class SubsetSelect(SelectPluginComponent):
 
     def _get_subset_state(self, subset):
         subset_group = [s for s in self.app.data_collection.subset_groups if
-                        s.label == subset][0]
-        return subset_group.subset_state
+                        s.label == subset]
+        if len(subset_group) == 0:
+            return None
+        if len(subset_group) != 1:
+            raise ValueError("found multiple matches for subset")
+        return subset_group[0].subset_state
 
     @cached_property
     def selected_subset_state(self):
         if self.is_multiselect:
-            subset_states = {}
-            for select_subset in self.selected:
-                if select_subset == self.default_text:
-                    continue
-                subset_group = [s for s in self.app.data_collection.subset_groups if
-                                s.label == select_subset][0]
-                subset_states[select_subset] = subset_group.subset_state
-            return subset_states
+            return [self._get_subset_state(subset) for subset in self.selected]
         return self._get_subset_state(self.selected)
 
     def _get_subset_mask(self, subset=None, dataset=None):
@@ -1613,14 +1610,14 @@ class SubsetSelect(SelectPluginComponent):
     def selected_spatial_region(self):
         if not getattr(self, 'dataset', None):
             raise ValueError("Retrieving subset mask requires associated dataset")
-        if self.multiselect and self.dataset.multiselect:
+        if self.is_multiselect and self.dataset.is_multiselect:
             # technically this could work if either has length of one, but would require extra
             # logic
             raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")
-        items = self.selected_item if self.multiselect else [self.selected_item]
+        items = self.selected_item if self.is_multiselect else [self.selected_item]
         if np.any([item.get('type') != 'spatial' for item in items]):
             raise TypeError("This action is only supported on spatial-type subsets")
-        if self.multiselect:
+        if self.is_multiselect:
             return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
         return self._get_spatial_region(dataset=self.dataset.selected)
 
@@ -2158,7 +2155,7 @@ class DatasetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_obj(self):
-        if not self.multiselect:
+        if not self.is_multiselect:
             if self.selected not in self.labels:
                 # _apply_default_selection will override shortly anyways
                 return None
