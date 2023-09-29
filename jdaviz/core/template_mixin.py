@@ -1613,7 +1613,7 @@ class SubsetSelect(SelectPluginComponent):
         if self.is_multiselect and self.dataset.is_multiselect:
             # technically this could work if either has length of one, but would require extra
             # logic
-            raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")
+            raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")  # noqa
         items = self.selected_item if self.is_multiselect else [self.selected_item]
         if np.any([item.get('type') != 'spatial' for item in items]):
             raise TypeError("This action is only supported on spatial-type subsets")
@@ -2280,7 +2280,7 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
 
 class DatasetMultiSelectMixin(VuetifyTemplate, HubListener):
     """
-    Applies the DatasetSelect component as a mixin in the base plugin with togglable multiselect.  
+    Applies the DatasetSelect component as a mixin in the base plugin with togglable multiselect.
     This automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
     component instead.
