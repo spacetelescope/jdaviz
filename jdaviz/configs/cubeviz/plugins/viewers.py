@@ -141,6 +141,7 @@ class CubevizProfileView(SpecvizProfileView):
                 if (isinstance(layer.layer, GroupedSubset) and
                         get_subset_type(layer.layer.subset_state) == 'spatial'):
                     self._expected_subset_layer_default(layer)
+        self.set_plot_axes()
 
     def _is_spatial_subset(self, layer):
         subset_state = getattr(layer.layer, 'subset_state', None)
@@ -268,6 +269,8 @@ class CubevizProfileView(SpecvizProfileView):
             return
         # NOTE: += or append won't pick up on change
         self.figure.marks = self.figure.marks + new_marks
+
+        self.state.reset_limits()
 
     @property
     def slice_indicator(self):

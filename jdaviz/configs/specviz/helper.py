@@ -344,7 +344,10 @@ class Specviz(ConfigHelper, LineListMixin):
         if self.app.config == 'cubeviz':
             # then this is a specviz instance inside cubeviz and we want to default to the
             # viewer's collapse function
-            default_sp_viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+            default_sp_viewer = self.app.get_viewer(
+                # use the viewer reference name of the Cubeviz spectrum viewer:
+                self.app._jdaviz_helper._default_spectrum_viewer_reference_name
+            )
             if function is True or function is None:
                 function = getattr(default_sp_viewer.state, 'function', None)
 
