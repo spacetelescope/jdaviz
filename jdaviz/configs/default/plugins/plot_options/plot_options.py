@@ -265,10 +265,20 @@ class PlotOptions(PluginTemplateMixin):
 
     show_viewer_labels = Bool(True).tag(sync=True)
 
+    swatches_palette = List().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')  # noqa
+
+        self.swatches_palette = [
+            ['#FF0000', '#AA0000', '#550000'],
+            ['#FFFF00', '#AAAA00', '#555500'],
+            ['#00FF00', '#00AA00', '#005500'],
+            ['#00FFFF', '#00AAAA', '#005555'],
+            ['#0000FF', '#0000AA', '#000055']
+          ]
 
         def is_profile(state):
             return isinstance(state, (ProfileViewerState, ProfileLayerState))

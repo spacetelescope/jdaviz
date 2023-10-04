@@ -444,7 +444,10 @@
             </template>
             <div @click.stop="" style="text-align: end; background-color: white">
                 <v-color-picker :value="image_color_value"
-                                @update:color="throttledSetValue('image_color_value', $event.hexa)"></v-color-picker>
+                                :swatches="swatches_palette"
+                                show-swatches
+                                @update:color="throttledSetValue('image_color_value', $event.hexa)"
+                                ></v-color-picker>
             </div>
           </v-menu>
         </div>
