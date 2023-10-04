@@ -21,6 +21,10 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Spectrum that has incompatible flux unit with what is already loaded
+  will no longer be loaded as ghost spectrum. It will now be rejected
+  with an error message on the snackbar. [#2485]
+
 Specviz2d
 ^^^^^^^^^
 

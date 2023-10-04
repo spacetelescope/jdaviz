@@ -443,3 +443,18 @@ def test_spectra_partial_overlap(specviz_helper):
                                          'Wave 7.02222e+03 Angstrom (2 pix)',
                                          'Flux 6.00000e+01 nJy')
     assert label_mouseover.icon == 'b'
+
+
+def test_spectra_incompatible_flux(specviz_helper):
+    """https://github.com/spacetelescope/jdaviz/issues/2459"""
+    wav = [1.1, 1.2, 1.3] * u.um
+    sp1 = Spectrum1D(flux=[1, 1.1, 1] * (u.MJy / u.sr), spectral_axis=wav)
+    sp2 = Spectrum1D(flux=[1, 1, 1.1] * (u.MJy), spectral_axis=wav)
+    flux3 = ([1, 1.1, 1] * u.MJy).to(u.erg / u.s / u.cm / u.cm / u.AA, u.spectral_density(wav))
+    sp3 = Spectrum1D(flux=flux3, spectral_axis=wav)
+
+    specviz_helper.load_data(sp2, data_label="2")  # OK
+    specviz_helper.load_data(sp1, data_label="1")  # Not OK
+    specviz_helper.load_data(sp3, data_label="3")  # OK
+
+    assert specviz_helper.app.data_collection.labels == ["2", "3"]
