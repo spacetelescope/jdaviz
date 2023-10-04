@@ -60,7 +60,8 @@ JWST NIRSpec (levels 2 and 3)
 
 The NIRSpec parser expects a directory with either level 2 files:
 
-* ``*_cal.fits`` : Single file containing level 2 2D spectra for all objects.
+* ``*_i2d.fits`` : Cutout images (see below).
+* ``*_s2d.fits`` : Single file containing level 2 2D spectra for all objects.
 * ``*_x1d.fits`` : Single file containing level 2 1D spectra for all objects.
 
 or level 3 files:
