@@ -67,7 +67,7 @@ jobs:
           # won't break this job at the PR stage.
           - name: Python 3.12 with latest dev versions of key dependencies, and remote data
             os: ubuntu-latest
-            python: '3.12-dev'
+            python: '3.12'
             toxenv: py312-test-devdeps
             toxposargs: --remote-data --run-slow
             allow_failure: true
