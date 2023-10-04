@@ -3254,9 +3254,15 @@ class Plot(PluginSubcomponent):
 
     figure = Any().tag(sync=True, **widget_serialization)
 
-    def __init__(self, plugin, *args, **kwargs):
+    def __init__(self, plugin, app=None, *args, **kwargs):
         super().__init__(plugin, 'Plot', *args, **kwargs)
-        self.figure = bqplot.Figure()
+        if app is None:
+            from glue_jupyter import jglue
+            app = jglue()
+
+        self._app = app
+        self.viewer = app.new_data_viewer('scatter', show=False)
+        self.figure = self.viewer.figure
         self._marks = {}
 
         self.figure.axes = [bqplot.Axis(scale=bqplot.LinearScale(), label='x'),
@@ -3266,7 +3272,9 @@ class Plot(PluginSubcomponent):
         self.figure.title_style = {'font-size': '12px'}
         self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
 
-        plugin.bqplot_figs_resize += [self.figure]
+    @property
+    def app(self):
+        return self._app
 
     @property
     def marks(self):
