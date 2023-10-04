@@ -360,7 +360,12 @@ a:active {
   text-decoration: none;
 }
 
-.jdaviz-nested-toolbar {
+.invert, .invert-if-dark.theme--dark {
+    filter: invert(1) saturate(1) brightness(100);
+    color: white;
+}
+
+.jdaviz-nested-toolbar, .plugin-nested-toolbar {
   /* height of nested toolbar to match viewer toolbar height */
   height: 42px;
   margin-right: 4px;
@@ -371,12 +376,7 @@ a:active {
   filter: invert(1) saturate(1) brightness(100);
 }
 
-.invert, .invert-if-dark.theme--dark {
-    filter: invert(1) saturate(1) brightness(100);
-    color: white;
-}
-
-.jdaviz-nested-toolbar .v-btn {
+.jdaviz-nested-toolbar .v-btn, .plugin-nested-toolbar .v-btn {
   height: 42px !important;
   border: none !important;
   min-width: 42px !important;
@@ -392,6 +392,11 @@ a:active {
 .jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus, .v-toolbar .active, .jdaviz-viewer-toolbar .active {
   /* active color (orange) */
   background-color: #c75109 !important;
+}
+
+.plugin-nested-toolbar .v-btn--active, .plugin-nested-toolbar .v-btn:focus {
+  /* semi-transparent active color (orange) */
+  background-color: #c7510996 !important;
 }
 
 .v-divider.theme--dark {

@@ -3253,6 +3253,12 @@ class Plot(PluginSubcomponent):
     template_file = __file__, "../components/plugin_plot.vue"
 
     figure = Any().tag(sync=True, **widget_serialization)
+    toolbar = Any().tag(sync=True, **widget_serialization)
+    tools_nested = [
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
+                ]
 
     def __init__(self, plugin, app=None, *args, **kwargs):
         super().__init__(plugin, 'Plot', *args, **kwargs)
@@ -3271,6 +3277,9 @@ class Plot(PluginSubcomponent):
 
         self.figure.title_style = {'font-size': '12px'}
         self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+
+        from jdaviz.components.toolbar_nested import NestedJupyterToolbar
+        self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, [])
 
     @property
     def app(self):
