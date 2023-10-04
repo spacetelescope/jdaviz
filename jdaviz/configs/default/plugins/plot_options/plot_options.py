@@ -274,10 +274,10 @@ class PlotOptions(PluginTemplateMixin):
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
-            ['#FFFF00', '#AAAA00', '#555500'],
-            ['#00FF00', '#00AA00', '#005500'],
-            ['#00FFFF', '#00AAAA', '#005555'],
-            ['#0000FF', '#0000AA', '#000055']
+            ['#FFD300', '#AAAA00', '#555500'],
+            ['#4CFF00', '#00AA00', '#005500'],
+            ['#00FF8E', '#00AAAA', '#005555'],
+            ['#0089FF', '#5200FF', '#000055']
           ]
 
         def is_profile(state):
