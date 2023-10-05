@@ -403,8 +403,13 @@ class PlotOptions(PluginTemplateMixin):
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
 
-        self.stretch_histogram = Plot(self)
-        self.stretch_histogram.add_bins('histogram', color='gray')
+        self.stretch_histogram = Plot(self, viewer_type='histogram')
+        # NOTE: this is a current workaround so the histogram viewer doesn't crash when replacing
+        # data
+        self.stretch_histogram._add_data('ref', x=[0])
+        self.stretch_histogram.layers['ref'].state.visible = False
+        self.stretch_histogram._add_data('histogram', x=[0])
+
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
         self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
         self.stretch_histogram.figure.axes[0].label = 'pixel value'
@@ -606,16 +611,6 @@ class PlotOptions(PluginTemplateMixin):
                 y_max = y_limits.max()
 
                 arr = comp.data[y_min:y_max, x_min:x_max]
-
-                size = arr.shape[0] * arr.shape[1]
-                if size > 400**2:
-                    xstep = max(1, round(arr.shape[1] / 400))
-                    ystep = max(1, round(arr.shape[0] / 400))
-                    arr = arr[::ystep, ::xstep]
-                    stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
-                else:
-                    stretch_hist_downsampled = size
-
                 sub_data = arr.ravel()
 
             else:
@@ -635,49 +630,35 @@ class PlotOptions(PluginTemplateMixin):
 
                 sub_data = comp.data[inds].ravel()
 
-                # downsampling not currently implemented for 2d spectrum
-                stretch_hist_downsampled = len(sub_data)
-
         else:
             # include all data, regardless of zoom limits
             arr = comp.data
-            size = arr.shape[0] * arr.shape[1]
-            if size > 400**2:
-                xstep = max(1, round(arr.shape[1] / 400))
-                ystep = max(1, round(arr.shape[0] / 400))
-                arr = arr[::ystep, ::xstep]
-                stretch_hist_downsampled = [size, arr.shape[0] * arr.shape[1]]
-            else:
-                stretch_hist_downsampled = size
-
             sub_data = arr.ravel()
 
         # filter out nans (or else bqplot will fail)
         if np.any(np.isnan(sub_data)):
             sub_data = sub_data[~np.isnan(sub_data)]
 
-        hist_mark = self.stretch_histogram.marks['histogram']
-        with hist_mark.hold_sync():
-            hist_mark.sample = sub_data
+        # TODO: fix home button zoom for histogram
+        self.stretch_histogram._update_data('histogram', x=sub_data)
+
+        if len(sub_data) > 0:
             interval = PercentileInterval(95)
-            if len(sub_data) > 0:
-                hist_lims = interval.get_limits(sub_data)
-                hist_mark.min, hist_mark.max = hist_lims
-                # set the stepsize for vmin/vmax to be approximately 1% of the range of the
-                # histogram (within the percentile interval), rounded to 1-2 significant digits
-                # to avoid random step sizes.  This logic is somewhat arbitrary and can be safely
-                # modified or eventually exposed to the user if that would be useful.
-                stretch_vstep = (hist_lims[1] - hist_lims[0]) / 100.
-                self.stretch_vstep = np.round(stretch_vstep, decimals=-int(np.log10(stretch_vstep))+1)  # noqa
-            hist_mark.bins = self.stretch_hist_nbins
-            # in case only the sample has changed but its length has not,
-            # we'll force the traitlet to trigger a change
-            hist_mark.send_state('sample')
-        if isinstance(stretch_hist_downsampled, list):
-            title = f"{stretch_hist_downsampled[1]} of {stretch_hist_downsampled[0]} pixels"
-        else:
-            title = f"{stretch_hist_downsampled} pixels"
-        self.stretch_histogram.figure.title = title
+            hist_lims = interval.get_limits(sub_data)
+            # set the stepsize for vmin/vmax to be approximately 1% of the range of the
+            # histogram (within the percentile interval), rounded to 1-2 significant digits
+            # to avoid random step sizes.  This logic is somewhat arbitrary and can be safely
+            # modified or eventually exposed to the user if that would be useful.
+            stretch_vstep = (hist_lims[1] - hist_lims[0]) / 100.
+            self.stretch_vstep = np.round(stretch_vstep, decimals=-int(np.log10(stretch_vstep))+1)  # noqa
+
+            self.stretch_histogram.viewer.state.hist_x_min = hist_lims[0]
+            self.stretch_histogram.viewer.state.hist_x_max = hist_lims[1]
+
+        self.stretch_histogram.figure.title = f"{len(sub_data)} pixels"
+
+        # update the n_bins since this may be a new layer
+        self._histogram_nbins_changed()
 
     @observe('is_active', 'stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
              'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',
@@ -739,13 +720,7 @@ class PlotOptions(PluginTemplateMixin):
                     opacities=[0.5],
                 )
 
-            # reorder marks so histogram is on top:
-            figure_marks = self.stretch_histogram.figure.marks
-            for i, fig_mark in enumerate(figure_marks):
-                if isinstance(fig_mark, bqplot.Bins):
-                    hist_mark = figure_marks.pop(i)
-                    break
-            self.stretch_histogram.figure.marks = figure_marks + [hist_mark]
+            self.stretch_histogram._refresh_marks()
 
     @observe('stretch_vmin_value')
     def _stretch_vmin_changed(self, msg=None):
@@ -756,10 +731,15 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram.marks['vmax'].x = [self.stretch_vmax_value, self.stretch_vmax_value]
 
     @observe("stretch_hist_nbins")
-    def _histogram_nbins_changed(self, msg):
-        if self.stretch_histogram is None or msg['new'] == '' or msg['new'] < 1:
+    def _histogram_nbins_changed(self, msg={}):
+        if self.stretch_histogram is None:
             return
-        self.stretch_histogram.marks['histogram'].bins = self.stretch_hist_nbins
+        if self.stretch_hist_nbins == '' or self.stretch_hist_nbins < 1:
+            return
+        self.stretch_histogram.viewer.state.hist_n_bin = self.stretch_hist_nbins
+        # for some reason, this resets the internal marks, so we need to ensure the manual
+        # marks are still plotted
+        self.stretch_histogram._refresh_marks()
 
     def set_histogram_x_limits(self, x_min=None, x_max=None):
         # NOTE: leaving this out of user API until API is finalized with interactive setting

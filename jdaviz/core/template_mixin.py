@@ -3276,6 +3276,11 @@ class Plot(PluginSubcomponent):
 
         self._app = app
         self.viewer = app.new_data_viewer(viewer_type, show=False)
+        self._viewer_type = viewer_type
+        if viewer_type == 'histogram':
+            self._viewer_components = ('x',)
+        else:
+            self._viewer_components = ('x', 'y')
         self.figure = self.viewer.figure
         self._marks = {}
 
@@ -3293,34 +3298,46 @@ class Plot(PluginSubcomponent):
     def layers(self):
         return {layer.layer.label: layer for layer in self.viewer.layers}
 
+    def _check_valid_components(self, **kwargs):
+        for k in kwargs.keys():
+            if k not in self._viewer_components:
+                raise ValueError(f"{k} is not one of {self._viewer_components}")
+
     def _remove_data(self, label):
         dc_entry = self.app.data_collection[label]
         self.viewer.remove_data(dc_entry)
         self.app.data_collection.remove(dc_entry)
 
-    def _update_data(self, label, x=None, y=None):
+    def _update_data(self, label, **kwargs):
+        self._check_valid_components(**kwargs)
         if label not in self.app.data_collection:
-            self._add_data(label, x=x, y=y)
+            self._add_data(label, **kwargs)
             return
         data = self.app.data_collection[label]
+
         # if not provided, fallback on existing data
-        if x is None:
-            x = data['x']
-        if y is None:
-            y = data['y']
-        if len(x) == len(data['x']) and len(y) == len(data['y']):
+        length_mismatch = False
+        for component in self._viewer_components:
+            kwargs.setdefault(component, data[component])
+            if len(kwargs[component]) != len(data[component]):
+                length_mismatch = True
+
+        if not length_mismatch:
             # then we can update the existing entry
+            # print(f"*** {label}._update_data via update_components")
             components = {c.label: c for c in data.components}
-            data.update_components({components['x']: x, components['y']: y})
+            data.update_components({components[comp]: kwargs[comp]
+                                    for comp in self._viewer_components})
         else:
             # then we need to replace the existing entry, restoring any existing styles,
             # if they exist
+            # print(f"*** {label}._update_data via replacement")
             if label in self.layers.keys():
                 style_state = self.layers[label].state.as_dict()
             else:
                 style_state = {}
             self._remove_data(label)
-            self._add_data(label, x=x, y=y)
+            self._add_data(label, **kwargs)
             self.update_style(label, **style_state)
 
     def update_style(self, label, **kwargs):
@@ -3351,9 +3368,10 @@ class Plot(PluginSubcomponent):
                     continue
                 setattr(lyr.state, k, v)
 
-    def _add_data(self, label, x=[0], y=[0]):
+    def _add_data(self, label, **kwargs):
+        self._check_valid_components(**kwargs)
         from glue.core import Data
-        data = Data(x=x, y=y, label=label)
+        data = Data(label=label, **kwargs)
         dc = self.app.data_collection
         dc.append(data)
         dc_entry = dc[label]
@@ -3362,10 +3380,16 @@ class Plot(PluginSubcomponent):
             # we can assume the same units/components since this only accepts x and y
             from glue.core.link_helpers import LinkSame
             ref_data = dc[0]
-            links = [LinkSame(dc_entry.components[1], ref_data.components[1]),
-                     LinkSame(dc_entry.components[2], ref_data.components[2])]
+            links = [LinkSame(dc_entry.components[i], ref_data.components[i])
+                     for i in range(1, len(ref_data.components))]
             dc.add_link(links)
         self.viewer.add_data(dc_entry)
+
+    def _refresh_marks(self):
+        # ensure all marks are drawn
+        other_marks = list(self.marks.values())
+        layer_marks = [m for m in self.figure.marks if m not in other_marks]
+        self.figure.marks = layer_marks + other_marks
 
     @property
     def marks(self):

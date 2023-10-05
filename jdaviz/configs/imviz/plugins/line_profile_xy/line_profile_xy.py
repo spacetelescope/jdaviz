@@ -110,12 +110,12 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             y_label = 'Value'
 
         self.plot_across_x.figure.title = f'X={x}'
-        self.plot_across_x._update_data('line', range(comp.data.shape[0]), comp.data[:, x])
+        self.plot_across_x._update_data('line', x=range(comp.data.shape[0]), y=comp.data[:, x])
         self.plot_across_x.update_style('line', line_visible=True, markers_visible=False, color='gray')
         self.plot_across_x.figure.axes[1].label = y_label
 
         self.plot_across_y.figure.title = f'Y={y}'
-        self.plot_across_y._update_data('line', range(comp.data.shape[1]), comp.data[y, :])
+        self.plot_across_y._update_data('line', x=range(comp.data.shape[1]), y=comp.data[y, :])
         self.plot_across_y.update_style('line', line_visible=True, markers_visible=False, color='gray')
         self.plot_across_y.figure.axes[1].label = y_label
 
