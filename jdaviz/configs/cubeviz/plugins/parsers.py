@@ -130,6 +130,14 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
 
+def _get_celestial_wcs(wcs):
+    """ If `wcs` has a celestial component return that, otherwise return None """
+    if hasattr(wcs, 'celestial'):
+        return wcs.celestial
+    else:
+        return None
+
+
 def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=None,
                                         hdulist=None, uncertainty=None, mask=None):
     """Upstream issue of WCS not using the correct units for data must be fixed here.
@@ -232,6 +240,11 @@ def _parse_hdulist(app, hdulist, file_name=None,
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
         sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+
+        # store original WCS in metadata. this is a hacky workaround for converting subsets
+        # to sky regions, where the parent data of the subset might have dropped spatial WCS info
+        metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
+
         app.add_data(sc, data_label)
         if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
             app.data_collection[-1].get_component("flux").units = flux_unit
@@ -278,6 +291,11 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     wcs = WCS(hdulist['SCI'].header, hdulist)  # Everything uses SCI WCS
 
     metadata = standardize_metadata(hdu.header)
+
+    # store original WCS in metadata. this is a hacky workaround for converting subsets
+    # to sky regions, where the parent data of the subset might have dropped spatial WCS info
+    metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
+
     if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
@@ -324,6 +342,10 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
     if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
+    # store original WCS in metadata. this is a hacky workaround for converting subsets
+    # to sky regions, where the parent data of the subset might have dropped spatial WCS info
+    metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
+
     data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
 
     app.add_data(data, data_label)
@@ -364,8 +386,17 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             warnings.filterwarnings(
                 'ignore', message='Input WCS indicates that the spectral axis is not last',
                 category=UserWarning)
+            meta = standardize_metadata(file_obj.meta)
+
+            # store original WCS in metadata. this is a hacky workaround for
+            # converting subsets to sky regions, where the parent data of the
+            # subset might have dropped spatial WCS info
+            meta['_orig_spatial_wcs'] = None
+            if hasattr(file_obj, 'wcs'):
+                meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs)
+
             s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs,
-                             meta=standardize_metadata(file_obj.meta))
+                             meta=standardize_metadata(meta))
 
         cur_data_label = app.return_data_label(data_label, attr.upper())
         app.add_data(s1d, cur_data_label)
@@ -379,8 +410,17 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
 
 
 def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_name=None):
+
+    # Here 'file_obj' is a Spectrum1D
+
     if data_label is None:
         data_label = app.return_data_label(file_obj)
+
+    # store original WCS in metadata. this is a hacky workaround for converting subsets
+    # to sky regions, where the parent data of the subset might have dropped spatial WCS info
+    file_obj.meta['_orig_spatial_wcs'] = None
+    if hasattr(file_obj, 'wcs'):
+        file_obj.meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs)
 
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
@@ -404,7 +444,9 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
 
     if not hasattr(flux, 'unit'):
         flux = flux << u.count
-    s3d = Spectrum1D(flux=flux)
+
+    meta = standardize_metadata({'_orig_spatial_wcs': None})
+    s3d = Spectrum1D(flux=flux, meta=meta)
     app.add_data(s3d, data_label)
 
     if data_type == 'flux':
@@ -427,7 +469,9 @@ def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None,
 
     flux = imageio.v3.imread(file_obj, mode='P')  # All frames as gray scale
     flux = np.rot90(np.moveaxis(flux, 0, 2), k=-1, axes=(0, 1))
-    s3d = Spectrum1D(flux=flux * u.count, meta={'filename': file_name})
+
+    meta = {'filename': file_name, '_orig_spatial_wcs': None}
+    s3d = Spectrum1D(flux=flux * u.count, meta=standardize_metadata(meta))
 
     app.add_data(s3d, data_label)
     app.add_data_to_viewer(flux_viewer_reference_name, data_label)

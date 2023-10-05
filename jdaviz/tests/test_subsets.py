@@ -7,10 +7,11 @@ from glue.core import Data
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset_group import GroupedSubset
 from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode, NewMode
-from regions import (PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion,
-                     CircleAnnulusPixelRegion)
+from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, RectanglePixelRegion,
+                     EllipsePixelRegion, CircleAnnulusPixelRegion)
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion, Spectrum1D
+from astropy.nddata import NDData
 
 from jdaviz.core.marks import ShadowSpatialSpectral
 from jdaviz.utils import get_subset_type, MultiMaskSubsetState
@@ -376,7 +377,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(RectangularROI(25, 30, 25, 30))
@@ -384,7 +385,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=27.5, y=27.5),
                                       width=5, height=5, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
     viewer.apply_roi(EllipticalROI(xc=30, yc=30, radius_x=3, radius_y=6))
@@ -392,7 +393,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
                                   width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'OrState', 'region': ellipse1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
     viewer.apply_roi(RectangularROI(20, 25, 20, 25))
@@ -400,14 +401,14 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     rectangle2 = RectanglePixelRegion(center=PixCoord(x=22.5, y=22.5),
                                       width=5, height=5, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndState', 'region': rectangle2,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(CircularROI(xc=21, yc=24, radius=1))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle2 = CirclePixelRegion(center=PixCoord(x=21, y=24), radius=1)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'AndNotState', 'region': circle2,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.subset_selected == "Subset 1"
@@ -428,7 +429,7 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(RectangularROI(25, 30, 25, 30))
@@ -436,7 +437,7 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=27.5, y=27.5),
                                       width=5, height=5, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(EllipticalROI(xc=30, yc=30, radius_x=3, radius_y=6))
@@ -444,7 +445,7 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
                                   width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     regions_list = cubeviz_helper.app.get_subsets("Subset 1", object_only=True)
     assert len(regions_list) == 3
@@ -494,7 +495,7 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     reg = imviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(RectangularROI(xmin=2, xmax=4, ymin=2, ymax=4))
@@ -502,7 +503,7 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=3, y=3),
                                       width=2, height=2, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
     viewer.apply_roi(EllipticalROI(xc=3, yc=3, radius_x=3, radius_y=6))
@@ -510,14 +511,14 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
                                   width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     imviz_helper.app.session.edit_subset_mode.mode = OrMode
     viewer.apply_roi(CircularAnnulusROI(xc=5, yc=5, inner_radius=2.5, outer_radius=5))
     reg = imviz_helper.app.get_subsets("Subset 1")
     ann1 = CircleAnnulusPixelRegion(center=PixCoord(x=5, y=5), inner_radius=2.5, outer_radius=5)
     assert reg[-1] == {'name': 'CircularAnnulusROI', 'glue_state': 'OrState', 'region': ann1,
-                       'subset_state': reg[-1]['subset_state']}
+                       'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
     subset_plugin = imviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.subset_selected == "Subset 1"
@@ -857,3 +858,93 @@ def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
     dc.remove_subset_group(dc.subset_groups[0])
 
     assert flux_viewer.toolbar.active_tool is None
+
+
+class TestRegionsFromSubsets:
+    """Tests for obtaining Sky Regions from subsets."""
+
+    def test_get_regions_from_subsets_cubeviz(self, cubeviz_helper, spectral_cube_wcs):
+
+        """ Basic tests for retrieving Sky Regions from spatial subsets in Cubeviz.
+        """
+        data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+        cubeviz_helper.load_data(data)
+
+        # basic test, a single circular region
+        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(25, 25, 10))
+        subsets = cubeviz_helper.app.get_subsets(include_sky_region=True)
+        sky_region = subsets['Subset 1'][0]['sky_region']
+        assert isinstance(sky_region, CircleSkyRegion)
+        assert_allclose(sky_region.center.ra.deg, 24.40786313)
+        assert_allclose(sky_region.center.dec.deg, 22.45185308)
+        assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
+
+        # and that it is None when not specified
+        subsets = cubeviz_helper.app.get_subsets()
+        assert subsets['Subset 1'][0]['sky_region'] is None
+
+        # now test a composite subset, each component should have a sky region
+        cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
+        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(30, 30, 10))
+
+        subsets = cubeviz_helper.app.get_subsets(include_sky_region=True)
+        assert len(subsets['Subset 1']) == 2
+        sky_region_0 = subsets['Subset 1'][0]['sky_region']
+        sky_region_1 = subsets['Subset 1'][1]['sky_region']
+        assert_allclose(sky_region_0.center.ra.deg, 24.40786313)
+        assert_allclose(sky_region_0.center.dec.deg, 22.45185308)
+        assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
+        assert_allclose(sky_region_1.center.ra.deg, 28.41569583)
+        assert_allclose(sky_region_1.center.dec.deg, 25.44814949)
+        assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
+
+        # and that they are both None when not specified
+        subsets = cubeviz_helper.app.get_subsets()
+        assert subsets['Subset 1'][0]['sky_region'] is None
+        assert subsets['Subset 1'][1]['sky_region'] is None
+
+    def test_get_regions_from_subsets_imviz(self, imviz_helper, spectral_cube_wcs):
+
+        """ Basic tests for retrieving Sky Regions from subsets in Imviz.
+        """
+
+        wcs = spectral_cube_wcs.celestial
+        data = NDData(np.ones((128, 128)) * u.nJy, wcs=wcs)
+        imviz_helper.load_data(data)
+
+        # basic test, a single circular region
+        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(25, 25, 10))
+        subsets = imviz_helper.app.get_subsets(include_sky_region=True)
+        sky_region = subsets['Subset 1'][0]['sky_region']
+        assert isinstance(sky_region, CircleSkyRegion)
+        assert_allclose(sky_region.center.ra.deg, 24.40786313)
+        assert_allclose(sky_region.center.dec.deg, 22.45185308)
+        assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
+
+        # now test a composite subset, each component should have a sky region
+        imviz_helper.app.session.edit_subset_mode.mode = AndMode
+        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(30, 30, 10))
+
+        subsets = imviz_helper.app.get_subsets(include_sky_region=True)
+        assert len(subsets['Subset 1']) == 2
+        sky_region_0 = subsets['Subset 1'][0]['sky_region']
+        sky_region_1 = subsets['Subset 1'][1]['sky_region']
+        assert_allclose(sky_region_0.center.ra.deg, 24.40786313)
+        assert_allclose(sky_region_0.center.dec.deg, 22.45185308)
+        assert_allclose(sky_region_0.radius.arcsec, 28001.08106569353)
+        assert_allclose(sky_region_1.center.ra.deg, 28.41569583)
+        assert_allclose(sky_region_1.center.dec.deg, 25.44814949)
+        assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
+
+    def test_no_wcs_sky_regions(self, imviz_helper):
+
+        """ Make sure that if sky regions are requested and there is no WCS,
+            that it returns None with no error.
+        """
+
+        data = NDData(np.ones((128, 128)) * u.nJy)
+        imviz_helper.load_data(data)
+
+        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(25, 25, 10))
+        subsets = imviz_helper.app.get_subsets(include_sky_region=True)
+        assert subsets['Subset 1'][0]['sky_region'] is None
