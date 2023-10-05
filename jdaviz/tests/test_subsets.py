@@ -253,6 +253,8 @@ def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
     dc.remove_subset_group(dc.subset_groups[1])
 
     assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 0  # noqa
+    # Check that the subset selection tool was not deactivated by deleting inactive subset
+    assert spectrum_viewer.toolbar.active_tool_id == "bqplot:xrange"
 
     spectrum_viewer.session.edit_subset_mode._mode = NewMode
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
@@ -829,3 +831,29 @@ def test_multi_mask_subset(specviz_helper, spectrum1d):
     plugin.vue_freeze_subset()
     reg = specviz_helper.app.get_subsets()
     assert reg["Subset 1"][0]["region"] == 4
+
+
+def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
+    """
+    Test that the toolbar selections get reset when the subset being actively edited gets deleted.
+    """
+    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    cubeviz_helper.load_data(data, data_label="Test Flux")
+    dc = cubeviz_helper.app.data_collection
+
+    spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
+    spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
+    spectrum_viewer.apply_roi(XRangeROI(5, 15.5))
+
+    dc.remove_subset_group(dc.subset_groups[0])
+
+    assert spectrum_viewer.toolbar.active_tool_id == "jdaviz:selectslice"
+
+    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
+    # We set the active tool here to trigger a reset of the Subset state to "Create New"
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
+    flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
+
+    dc.remove_subset_group(dc.subset_groups[0])
+
+    assert flux_viewer.toolbar.active_tool is None
