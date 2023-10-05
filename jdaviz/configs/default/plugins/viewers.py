@@ -191,6 +191,23 @@ class JdavizViewerMixin:
         if msg.subset.label not in self._expected_subset_layers and msg.subset.label:
             self._expected_subset_layers.append(msg.subset.label)
 
+    def _on_subset_delete(self, msg):
+        if self.__class__.__name__ == 'MosvizTableViewer':
+            # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
+            # logic there
+            return
+
+        subset_tools = ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
+                        'bqplot:circannulus', 'bqplot:xrange']
+
+        if not len(self.session.edit_subset_mode.edit_subset):
+            if self.toolbar.active_tool_id in subset_tools:
+                if (hasattr(self.toolbar, "default_tool_priority") and
+                        len(self.toolbar.default_tool_priority)):
+                    self.toolbar.active_tool_id = self.toolbar.default_tool_priority[0]
+                else:
+                    self.toolbar.active_tool = None
+
     @property
     def active_image_layer(self):
         """Active image layer in the viewer, if available."""
