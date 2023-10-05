@@ -25,12 +25,10 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         self.plot_across_x = Plot(self)
-        self.plot_across_x.add_line('line', color='gray')
         self.plot_across_x.figure.axes[0].label = 'Y (pix)'
         self.plot_across_x_widget = 'IPY_MODEL_'+self.plot_across_x.model_id
 
         self.plot_across_y = Plot(self)
-        self.plot_across_y.add_line('line', color='gray')
         self.plot_across_y.figure.axes[0].label = 'X (pix)'
         self.plot_across_y_widget = 'IPY_MODEL_'+self.plot_across_y.model_id
 
@@ -105,14 +103,6 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             self.reset_results()
             return
 
-        xy_limits = viewer._get_zoom_limits(data)
-        x_limits = xy_limits[:, 0]
-        y_limits = xy_limits[:, 1]
-        x_min = x_limits.min()
-        x_max = x_limits.max()
-        y_min = y_limits.min()
-        y_max = y_limits.max()
-
         comp = data.get_component(data.main_components[0])
         if comp.units:
             y_label = comp.units
@@ -120,29 +110,13 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             y_label = 'Value'
 
         self.plot_across_x.figure.title = f'X={x}'
-        line_x = self.plot_across_x.marks['line']
-        line_x.x, line_x.y = range(comp.data.shape[0]), comp.data[:, x]
-        line_x.scales['x'].min, line_x.scales['x'].max = y_min, y_max
+        self.plot_across_x._update_data('line', range(comp.data.shape[0]), comp.data[:, x])
+        self.plot_across_x.update_style('line', line_visible=True, markers_visible=False, color='gray')
         self.plot_across_x.figure.axes[1].label = y_label
 
-        y_min = max(int(y_min), 0)
-        y_max = min(int(y_max), ny)
-        zoomed_data_x = comp.data[y_min:y_max, x]
-        if zoomed_data_x.size > 0:
-            line_x.scales['y'].min = zoomed_data_x.min() * 0.95
-            line_x.scales['y'].max = zoomed_data_x.max() * 1.05
-
         self.plot_across_y.figure.title = f'Y={y}'
-        line_y = self.plot_across_y.marks['line']
-        line_y.x, line_y.y = range(comp.data.shape[1]), comp.data[y, :]
-        line_y.scales['x'].min, line_y.scales['x'].max = x_min, x_max
+        self.plot_across_y._update_data('line', range(comp.data.shape[1]), comp.data[y, :])
+        self.plot_across_y.update_style('line', line_visible=True, markers_visible=False, color='gray')
         self.plot_across_y.figure.axes[1].label = y_label
-
-        x_min = max(int(x_min), 0)
-        x_max = min(int(x_max), nx)
-        zoomed_data_y = comp.data[y, x_min:x_max]
-        if zoomed_data_y.size > 0:
-            line_y.scales['y'].min = zoomed_data_y.min() * 0.95
-            line_y.scales['y'].max = zoomed_data_y.max() * 1.05
 
         self.plot_available = True

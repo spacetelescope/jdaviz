@@ -3237,6 +3237,14 @@ class TableMixin(VuetifyTemplate, HubListener):
         return self.table.export_table()
 
 
+from glue_jupyter.bqplot.histogram import BqplotHistogramView
+#from glue_jupyter.registries import viewer_registry
+
+#@viewer_registry('histogram')
+#class RegisteredHistogramViewer(BqplotHistogramView):
+#    pass
+
+
 class Plot(PluginSubcomponent):
     """
     Plot subcomponent.  For most cases where a plugin only requires a single plot, use the mixin
@@ -3260,23 +3268,19 @@ class Plot(PluginSubcomponent):
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
                 ]
 
-    def __init__(self, plugin, app=None, *args, **kwargs):
+    def __init__(self, plugin, viewer_type='scatter', app=None, *args, **kwargs):
         super().__init__(plugin, 'Plot', *args, **kwargs)
         if app is None:
             from glue_jupyter import jglue
             app = jglue()
 
         self._app = app
-        self.viewer = app.new_data_viewer('scatter', show=False)
+        self.viewer = app.new_data_viewer(viewer_type, show=False)
         self.figure = self.viewer.figure
         self._marks = {}
 
-        self.figure.axes = [bqplot.Axis(scale=bqplot.LinearScale(), label='x'),
-                            bqplot.Axis(scale=bqplot.LinearScale(),
-                                        orientation='vertical', label='y')]
-
         self.figure.title_style = {'font-size': '12px'}
-        self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+        self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 60, 'right': 10}
 
         from jdaviz.components.toolbar_nested import NestedJupyterToolbar
         self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, [])
@@ -3284,6 +3288,84 @@ class Plot(PluginSubcomponent):
     @property
     def app(self):
         return self._app
+
+    @property
+    def layers(self):
+        return {layer.layer.label: layer for layer in self.viewer.layers}
+
+    def _remove_data(self, label):
+        dc_entry = self.app.data_collection[label]
+        self.viewer.remove_data(dc_entry)
+        self.app.data_collection.remove(dc_entry)
+
+    def _update_data(self, label, x=None, y=None):
+        if label not in self.app.data_collection:
+            self._add_data(label, x=x, y=y)
+            return
+        data = self.app.data_collection[label]
+        # if not provided, fallback on existing data
+        if x is None:
+            x = data['x']
+        if y is None:
+            y = data['y']
+        if len(x) == len(data['x']) and len(y) == len(data['y']):
+            # then we can update the existing entry
+            components = {c.label: c for c in data.components}
+            data.update_components({components['x']: x, components['y']: y})
+        else:
+            # then we need to replace the existing entry, restoring any existing styles,
+            # if they exist
+            if label in self.layers.keys():
+                style_state = self.layers[label].state.as_dict()
+            else:
+                style_state = {}
+            self._remove_data(label)
+            self._add_data(label, x=x, y=y)
+            self.update_style(label, **style_state)
+
+    def update_style(self, label, **kwargs):
+        kwargs.setdefault('visible', True)
+        if label not in self.layers.keys():
+            if not kwargs['visible']:
+                # then we were only trying to hide anyways
+                # (note: this ignores any other passed styles)
+                return
+        dc_entry = self.app.data_collection[label]
+        if kwargs['visible']:
+            if label not in self.layers.keys():
+                self.viewer.add_data(dc_entry)
+        else:
+            # remove from viewer, leave in app (note: this will clear style options)
+            # NOTE: if we want to keep styles, we could skip this and only toggle visibilities,
+            # but then the zooming logic will need to be updated to account for visibility
+            # states and the if not kwargs['visible'] check above to return should ensure no
+            # style options are passed
+            self.viewer.remove_data(dc_entry)
+            return
+
+        lyr = self.layers[label]
+        from echo import delay_callback
+        with delay_callback(lyr.state, *list(kwargs.keys())):
+            for k, v in kwargs.items():
+                if k == 'layer' or k.endswith('_att'):
+                    continue
+                setattr(lyr.state, k, v)
+
+    def _add_data(self, label, x=[0], y=[0]):
+        from glue.core import Data
+        data = Data(x=x, y=y, label=label)
+        dc = self.app.data_collection
+        dc.append(data)
+        dc_entry = dc[label]
+
+        if len(dc) > 1:
+            # we can assume the same units/components since this only accepts x and y
+            from glue.core.link_helpers import LinkSame
+            ref_data = dc[0]
+            links = [LinkSame(dc_entry.components[1], ref_data.components[1]),
+                     LinkSame(dc_entry.components[2], ref_data.components[2])]
+            dc.add_link(links)
+        self.viewer.add_data(dc_entry)
 
     @property
     def marks(self):
@@ -3332,21 +3414,17 @@ class Plot(PluginSubcomponent):
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
 
-    def set_xlims(self, x_min=None, x_max=None):
-        ax = self.figure.axes[0]
-        if x_min is None:
-            x_min = ax.scale.min
-        if x_max is None:
-            x_max = ax.scale.max
-        ax.scale.min, ax.scale.max = x_min, x_max
-
-    def set_ylims(self, y_min=None, y_max=None):
-        ax = self.figure.axes[1]
-        if y_min is None:
-            y_min = ax.scale.min
-        if y_max is None:
-            y_max = ax.scale.max
-        ax.scale.min, ax.scale.max = y_min, y_max
+    def set_lims(self, x_min=None, x_max=None, y_min=None, y_max=None):
+        from echo import delay_callback
+        with delay_callback(self.viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            if x_min is not None:
+                self.viewer.state.x_min = x_min
+            if x_max is not None:
+                self.viewer.state.x_max = x_max
+            if y_min is not None:
+                self.viewer.state.x_min = y_min
+            if y_max is not None:
+                self.viewer.state.x_max = y_max
 
 
 class PlotMixin(VuetifyTemplate, HubListener):
