@@ -278,7 +278,7 @@ class PlotOptions(PluginTemplateMixin):
             ['#4CFF00', '#00AA00', '#005500'],
             ['#00FF8E', '#00AAAA', '#005555'],
             ['#0089FF', '#5200FF', '#000055']
-          ]
+        ]
 
         def is_profile(state):
             return isinstance(state, (ProfileViewerState, ProfileLayerState))
