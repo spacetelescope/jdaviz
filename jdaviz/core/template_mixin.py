@@ -10,17 +10,22 @@ import os
 import threading
 import time
 
+from echo import delay_callback
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
 from glue.config import colormaps
-from glue.core import HubListener
+from glue.core import Data, HubListener
+from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
                                SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
+from glue_jupyter import jglue
+from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
@@ -29,6 +34,7 @@ from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
 
 from jdaviz import __version__
+from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage)
@@ -60,6 +66,10 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
 SPATIAL_DEFAULT_TEXT = "Entire Cube"
 GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att')
 
+if 'histogram' not in viewer_registry.members.keys():
+    @viewer_registry('histogram')
+    class RegisteredHistogramViewer(BqplotHistogramView):
+        pass
 
 def show_widget(widget, loc, title):  # pragma: no cover
     from IPython import get_ipython
@@ -3237,14 +3247,6 @@ class TableMixin(VuetifyTemplate, HubListener):
         return self.table.export_table()
 
 
-from glue_jupyter.bqplot.histogram import BqplotHistogramView
-#from glue_jupyter.registries import viewer_registry
-
-#@viewer_registry('histogram')
-#class RegisteredHistogramViewer(BqplotHistogramView):
-#    pass
-
-
 class Plot(PluginSubcomponent):
     """
     Plot subcomponent.  For most cases where a plugin only requires a single plot, use the mixin
@@ -3271,7 +3273,6 @@ class Plot(PluginSubcomponent):
     def __init__(self, plugin, viewer_type='scatter', app=None, *args, **kwargs):
         super().__init__(plugin, 'Plot', *args, **kwargs)
         if app is None:
-            from glue_jupyter import jglue
             app = jglue()
 
         self._app = app
@@ -3287,7 +3288,6 @@ class Plot(PluginSubcomponent):
         self.figure.title_style = {'font-size': '12px'}
         self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 60, 'right': 10}
 
-        from jdaviz.components.toolbar_nested import NestedJupyterToolbar
         self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, [])
 
     @property
@@ -3361,7 +3361,6 @@ class Plot(PluginSubcomponent):
             return
 
         lyr = self.layers[label]
-        from echo import delay_callback
         with delay_callback(lyr.state, *list(kwargs.keys())):
             for k, v in kwargs.items():
                 if k == 'layer' or k.endswith('_att'):
@@ -3370,7 +3369,6 @@ class Plot(PluginSubcomponent):
 
     def _add_data(self, label, **kwargs):
         self._check_valid_components(**kwargs)
-        from glue.core import Data
         data = Data(label=label, **kwargs)
         dc = self.app.data_collection
         dc.append(data)
@@ -3378,7 +3376,6 @@ class Plot(PluginSubcomponent):
 
         if len(dc) > 1:
             # we can assume the same units/components since this only accepts x and y
-            from glue.core.link_helpers import LinkSame
             ref_data = dc[0]
             links = [LinkSame(dc_entry.components[i], ref_data.components[i])
                      for i in range(1, len(ref_data.components))]
@@ -3439,7 +3436,6 @@ class Plot(PluginSubcomponent):
                               **kwargs)
 
     def set_lims(self, x_min=None, x_max=None, y_min=None, y_max=None):
-        from echo import delay_callback
         with delay_callback(self.viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
             if x_min is not None:
                 self.viewer.state.x_min = x_min
