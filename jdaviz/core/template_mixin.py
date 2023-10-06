@@ -1,5 +1,5 @@
 from astropy.coordinates.sky_coordinate import SkyCoord
-from astropy.nddata.ccddata import CCDData
+from astropy.nddata import NDData
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import astropy.units as u
@@ -2127,7 +2127,7 @@ class DatasetSelect(SelectPluginComponent):
     @property
     def default_data_cls(self):
         if self.app.config == 'imviz':
-            return CCDData
+            return NDData
         if 'is_trace' in self.filters:
             return None
         return Spectrum1D
