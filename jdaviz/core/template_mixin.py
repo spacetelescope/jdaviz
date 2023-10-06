@@ -71,6 +71,7 @@ if 'histogram' not in viewer_registry.members.keys():
     class RegisteredHistogramViewer(BqplotHistogramView):
         pass
 
+
 def show_widget(widget, loc, title):  # pragma: no cover
     from IPython import get_ipython
     from IPython.display import display
@@ -3442,9 +3443,9 @@ class Plot(PluginSubcomponent):
             if x_max is not None:
                 self.viewer.state.x_max = x_max
             if y_min is not None:
-                self.viewer.state.x_min = y_min
+                self.viewer.state.y_min = y_min
             if y_max is not None:
-                self.viewer.state.x_max = y_max
+                self.viewer.state.y_max = y_max
 
 
 class PlotMixin(VuetifyTemplate, HubListener):

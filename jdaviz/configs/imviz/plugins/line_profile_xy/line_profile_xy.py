@@ -36,6 +36,7 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
 
     def reset_results(self):
         self.plot_available = False
+        self.plot_across_x.update_style('line', visible=False)
         self.plot_across_x.clear_all_marks()
         self.plot_across_y.clear_all_marks()
 
@@ -111,12 +112,14 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
 
         self.plot_across_x.figure.title = f'X={x}'
         self.plot_across_x._update_data('line', x=range(comp.data.shape[0]), y=comp.data[:, x])
-        self.plot_across_x.update_style('line', line_visible=True, markers_visible=False, color='gray')
+        self.plot_across_x.update_style('line', line_visible=True,
+                                        markers_visible=False, color='gray')
         self.plot_across_x.figure.axes[1].label = y_label
 
         self.plot_across_y.figure.title = f'Y={y}'
         self.plot_across_y._update_data('line', x=range(comp.data.shape[1]), y=comp.data[y, :])
-        self.plot_across_y.update_style('line', line_visible=True, markers_visible=False, color='gray')
+        self.plot_across_y.update_style('line', line_visible=True,
+                                        markers_visible=False, color='gray')
         self.plot_across_y.figure.axes[1].label = y_label
 
         self.plot_available = True

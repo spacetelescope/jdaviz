@@ -7,7 +7,6 @@ from astropy.visualization import (
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.core.subset_group import GroupedSubset
-import bqplot
 from glue.config import stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
@@ -741,13 +740,10 @@ class PlotOptions(PluginTemplateMixin):
         # marks are still plotted
         self.stretch_histogram._refresh_marks()
 
-    def set_histogram_x_limits(self, x_min=None, x_max=None):
+    def set_histogram_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         # NOTE: leaving this out of user API until API is finalized with interactive setting
-        self.stretch_histogram.set_xlims(x_min, x_max)
-
-    def set_histogram_y_limits(self, y_min, y_max):
-        # NOTE: leaving this out of user API until API is finalized with interactive setting
-        self.stretch_histogram.set_ylims(y_min, y_max)
+        self.stretch_histogram.set_lims(x_min=x_min, x_max=x_max,
+                                        y_min=y_min, y_max=y_max)
 
     def _viewer_is_image_viewer(self):
         # Import here to prevent circular import (and not at the top of the method so the import

@@ -72,25 +72,29 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
 
     assert po.stretch_histogram is not None
 
-    hist_mark = po.stretch_histogram.marks['histogram']
-    flux_cube_sample = hist_mark.sample
+    hist_lyr = po.stretch_histogram.layers['histogram']
+    flux_cube_sample = hist_lyr.layer.data['x']
 
     # changing viewer should change results
     po.viewer.selected = 'uncert-viewer'
-    assert not allclose(hist_mark.sample, flux_cube_sample)
+    assert not allclose(hist_lyr.layer.data['x'], flux_cube_sample)
 
     po.viewer.selected = 'flux-viewer'
-    assert_allclose(hist_mark.sample, flux_cube_sample)
+    assert_allclose(hist_lyr.layer.data['x'], flux_cube_sample)
 
     # change viewer limits
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     fv.state.x_max = 0.5 * fv.state.x_max
     # viewer limits should not be affected by default
-    assert_allclose(hist_mark.sample, flux_cube_sample)
+    # (re-retrieve layer - it should not have changed)
+    hist_lyr = po.stretch_histogram.layers['histogram']
+    assert_allclose(hist_lyr.layer.data['x'], flux_cube_sample)
 
     # set to listen to viewer limits, the length of the samples will change
+    # (in this case the layer itself has been replaced)
     po.stretch_hist_zoom_limits = True
-    assert len(hist_mark.sample) != len(flux_cube_sample)
+    hist_lyr = po.stretch_histogram.layers['histogram']
+    assert len(hist_lyr.layer.data['x']) != len(flux_cube_sample)
 
     po.stretch_vmin.value = 0.5
     po.stretch_vmax.value = 1
@@ -98,20 +102,17 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert po.stretch_histogram.marks['vmin'].x[0] == po.stretch_vmin.value
     assert po.stretch_histogram.marks['vmax'].x[0] == po.stretch_vmax.value
 
-    assert hist_mark.bins == 25
+    assert po.stretch_histogram.viewer.state.hist_n_bin == 25
     po.stretch_hist_nbins = 20
-    assert hist_mark.bins == 20
+    assert po.stretch_histogram.viewer.state.hist_n_bin == 20
 
-    po.set_histogram_x_limits(x_min=0.25, x_max=2)
-    assert po.stretch_histogram.figure.axes[0].scale.min == 0.25
-    assert po.stretch_histogram.figure.axes[0].scale.max == 2
+    po.set_histogram_limits(x_min=0.25, x_max=2)
+    assert po.stretch_histogram.viewer.state.x_min == 0.25
+    assert po.stretch_histogram.viewer.state.x_max == 2
 
-    po.set_histogram_y_limits(y_min=1, y_max=2)
-    assert po.stretch_histogram.figure.axes[1].scale.min == 1
-    assert po.stretch_histogram.figure.axes[1].scale.max == 2
-
-    po.stretch_vmin.value = hist_mark.min - 1
-    po.stretch_vmax.value = hist_mark.max + 1
+    po.set_histogram_limits(y_min=1, y_max=2)
+    assert po.stretch_histogram.viewer.state.y_min == 1
+    assert po.stretch_histogram.viewer.state.y_max == 2
 
     assert po.stretch_histogram.marks['vmin'].x[0] == po.stretch_vmin.value
     assert po.stretch_histogram.marks['vmax'].x[0] == po.stretch_vmax.value
