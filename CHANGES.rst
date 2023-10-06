@@ -14,8 +14,6 @@ Imviz
 
 - Aperture photometry (previously "Imviz Simple Aperture Photometry") now supports batch mode. [#2465]
 
-- Enable user API for aperture photometry. [#2465]
-
 Mosviz
 ^^^^^^
 

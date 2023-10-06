@@ -168,7 +168,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin.plot.figure.title == 'Curve of growth from aperture center'
 
     def test_batch_unpack(self):
-        phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        # TODO: remove ._obj when API is made public
+        phot_plugin = self.imviz.plugins['Aperture Photometry']._obj
 
         # NOTE: these input values are not currently validated, so it does not matter that the
         # datasets and subsets do not exist with these names (if that changes, this test will
@@ -198,35 +199,36 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
         self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
 
-        phot_plugin = self.imviz.plugins['Aperture Photometry']
+        # TODO: remove ._obj when API is made public
+        phot_plugin = self.imviz.plugins['Aperture Photometry']._obj
         assert phot_plugin.dataset.choices == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
         assert phot_plugin.aperture.choices == ['Subset 1']
 
-        phot_plugin.aperture = 'Subset 1'
-        phot_plugin._obj.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},  # noqa
-                                                     {'dataset': 'has_wcs_2[SCI,1]'}])
+        phot_plugin.aperture.selected = 'Subset 1'
+        phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},  # noqa
+                                                {'dataset': 'has_wcs_2[SCI,1]'}])
 
-        assert len(phot_plugin._obj.table) == 2
+        assert len(phot_plugin.table) == 2
 
         with pytest.raises(RuntimeError):
-            phot_plugin._obj.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},  # noqa
-                                                         {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])  # noqa
+            phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},  # noqa
+                                                    {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])  # noqa
 
         # second entry above should have been successful, resulting in one addition to the results
-        assert len(phot_plugin._obj.table) == 3
+        assert len(phot_plugin.table) == 3
 
         # now run through the UI directly
         phot_plugin.multiselect = True
         phot_plugin.dataset.select_all()
         phot_plugin.aperture.select_none()
         assert len(phot_plugin.unpack_batch_options()) == 0
-        phot_plugin._obj.vue_do_aper_phot()
+        phot_plugin.vue_do_aper_phot()
 
-        assert len(phot_plugin._obj.table) == 3
+        assert len(phot_plugin.table) == 3
         phot_plugin.aperture.select_all()
         assert len(phot_plugin.unpack_batch_options()) == 2
-        phot_plugin._obj.vue_do_aper_phot()
-        assert len(phot_plugin._obj.table) == 5
+        phot_plugin.vue_do_aper_phot()
+        assert len(phot_plugin.table) == 5
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):

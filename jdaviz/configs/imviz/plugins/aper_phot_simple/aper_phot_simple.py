@@ -24,7 +24,6 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
                                         SubsetSelect, TableMixin, PlotMixin)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
@@ -131,13 +130,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
 
-    @property
-    def user_api(self):
-        return PluginUserApi(self, expose=('multiselect', 'dataset', 'aperture',
-                                           'background', 'background_value',
-                                           'pixel_area', 'counts_factor', 'flux_scaling',
-                                           'calculate_photometry',
-                                           'unpack_batch_options', 'calculate_batch_photometry'))
+# TODO: expose public API once finalized
+#    @property
+#    def user_api(self):
+#        return PluginUserApi(self, expose=('multiselect', 'dataset', 'aperture',
+#                                           'background', 'background_value',
+#                                           'pixel_area', 'counts_factor', 'flux_scaling',
+#                                           'calculate_photometry',
+#                                           'unpack_batch_options', 'calculate_batch_photometry'))
 
     def _get_defaults_from_metadata(self, dataset=None):
         defaults = {}
@@ -643,7 +643,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                 raise ValueError("must either provide a dictionary or set plugin to multiselect mode")  # noqa
             options = {'dataset': self.dataset.selected, 'aperture': self.aperture.selected}
 
-        user_api = self.user_api
+        # TODO: use self.user_api once API is made public
+        user_api = self  # .user_api
         invalid_keys = [k for k in options.keys() if not hasattr(user_api, k)]
         if len(invalid_keys):
             raise ValueError(f"{invalid_keys} are not valid inputs for batch photometry")
