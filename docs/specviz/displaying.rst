@@ -203,9 +203,9 @@ Layer
 -----
 
 The top section of the :guilabel:`Layer` tab contains options to change the color
-of the spectrum (click the |icon-color-square| icon to see a color change menu),
-change visibility of the spectrum (|icon-eye| icon), and a dropdown box to select
-which layer will have its settings changed.
+of the spectrum (click the |icon-color-square| icon to see a color change menu
+and a default color palette), change visibility of the spectrum (|icon-eye| icon),
+and a dropdown box to select which layer will have its settings changed.
 
 Line Width
 ----------

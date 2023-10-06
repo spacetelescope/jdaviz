@@ -67,6 +67,8 @@ Other Changes and Additions
   displayed to alert users that data points are being filtered because of non-finite uncertainties (when
   flux is finite). [#2437]
 
+- Add swatches to color picker. [#2494]
+
 3.7.1 (unreleased)
 ==================
 
