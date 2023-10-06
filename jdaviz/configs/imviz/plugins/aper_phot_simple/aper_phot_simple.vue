@@ -75,16 +75,11 @@
           <v-switch
             v-model="pixel_area_multi_auto"
             label="Auto pixel area"
-            hint="Calculate automatically for each input dataset."
+            :hint="pixel_area_multi_auto ? 'Pixel area will be automatically computed for each selected data entry separately and exposed in the output table.' : 'Pixel area will be held fixed at the value below for each iteration.'"
             persistent-hint
           />
         </v-row>
-        <v-row v-if="multiselect && pixel_area_multi_auto">
-          <span class="v-messages v-messages__message text--secondary">
-            <b>Batch mode:</b> pixel area will be automatically computed for each selected data entry separately and exposed in the output table.
-          </span>
-        </v-row>
-        <v-row v-else>
+        <v-row v-if="!multiselect || !pixel_area_multi_auto">
           <v-text-field
             label="Pixel area"
             v-model.number="pixel_area"
@@ -110,16 +105,11 @@
           <v-switch
             v-model="flux_scaling_multi_auto"
             label="Auto flux scaling"
-            hint="Calculate automatically for each input dataset."
+            :hint="flux_scaling_multi_auto ? 'Flux scaling will be automatically computed for each selected data entry separately and exposed in the output table.' : 'Flux scaling will be held fixed at the value below for each iteration.'"
             persistent-hint
           />
         </v-row>
-        <v-row v-if="multiselect && flux_scaling_multi_auto">
-          <span class="v-messages v-messages__message text--secondary">
-            <b>Batch mode:</b> flux scaling will be automatically computed for each selected data entry separately and exposed in the output table.
-          </span>
-        </v-row>
-        <v-row v-else>
+        <v-row v-if="!multiselect || !flux_scaling_multi_auto">
           <v-text-field
             label="Flux scaling"
             v-model.number="flux_scaling"
