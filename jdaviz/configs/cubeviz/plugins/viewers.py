@@ -178,6 +178,7 @@ class CubevizProfileView(SpecvizProfileView):
         # delete any ShadowSpatialSpectral mark for which either of the spectral or spatial marks
         # no longer exists by matching the uuid of the msg subset to the uuid of the subsets
         # in ShadowSpatialSpectral
+        super()._on_subset_delete(msg)
         self.figure.marks = [m for m in self.figure.marks
                              if not (isinstance(m, ShadowSpatialSpectral)
                                      and msg.subset.uuid in [m.spatial_uuid, m.spectral_uuid])]
