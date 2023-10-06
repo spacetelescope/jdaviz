@@ -192,6 +192,12 @@ class JdavizViewerMixin:
             self._expected_subset_layers.append(msg.subset.label)
 
     def _on_subset_delete(self, msg):
+        """
+        This is needed to remove the "ghost" subset left over when the subset tool is active,
+        and the active subset is deleted. https://github.com/spacetelescope/jdaviz/issues/2499
+        is open to revert/update this if it ends up being addressed upstream in
+        https://github.com/glue-viz/glue-jupyter/issues/401.
+        """
         if self.__class__.__name__ == 'MosvizTableViewer':
             # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
             # logic there
