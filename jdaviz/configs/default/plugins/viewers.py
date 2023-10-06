@@ -179,7 +179,8 @@ class JdavizViewerMixin:
                 self._expected_subset_layer_default(layer)
 
     def _on_subset_create(self, msg):
-        if self.__class__.__name__ == 'MosvizTableViewer':
+        from jdaviz.configs.mosviz.viewers import MosvizTableViewer
+        if isinstance(self, MosvizTableViewer):
             # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
             # logic there
             return
@@ -198,7 +199,8 @@ class JdavizViewerMixin:
         is open to revert/update this if it ends up being addressed upstream in
         https://github.com/glue-viz/glue-jupyter/issues/401.
         """
-        if self.__class__.__name__ == 'MosvizTableViewer':
+        from jdaviz.configs.mosviz.viewers import MosvizTableViewer
+        if isinstance(self, MosvizTableViewer):
             # MosvizTableViewer uses this as a mixin, but we do not need any of this layer
             # logic there
             return
