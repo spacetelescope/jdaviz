@@ -95,20 +95,7 @@
           </v-text-field>
         </v-row>
 
-        <v-row v-if="multiselect">
-          <v-switch
-            v-model="counts_factor_multi_auto"
-            label="Auto counts conversion factor"
-            hint="Calculate automatically for each input dataset."
-            persistent-hint
-          />
-        </v-row>
-        <v-row v-if="multiselect && counts_factor_multi_auto">
-          <span class="v-messages v-messages__message text--secondary">
-            <b>Batch mode:</b> counts conversion factor will be automatically computed for each selected data entry separately and exposed in the output table.
-          </span>
-        </v-row>
-        <v-row v-else>
+        <v-row>
           <v-text-field
             label="Counts conversion factor"
             v-model.number="counts_factor"

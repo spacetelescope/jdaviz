@@ -72,7 +72,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
     background_value = Any(0).tag(sync=True)
     pixel_area_multi_auto = Bool(True).tag(sync=True)
     pixel_area = FloatHandleEmpty(0).tag(sync=True)
-    counts_factor_multi_auto = Bool(True).tag(sync=True)
     counts_factor = FloatHandleEmpty(0).tag(sync=True)
     flux_scaling_multi_auto = Bool(True).tag(sync=True)
     flux_scaling = FloatHandleEmpty(0).tag(sync=True)
@@ -194,7 +193,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
 
         try:
             defaults = self._get_defaults_from_metadata()
-            self.counts_factor = defaults.get('counts_factor', 0)
+            self.counts_factor = 0
             self.pixel_area = defaults.get('pixel_area', 0)
             self.flux_scaling = defaults.get('flux_scaling', 0)
 
@@ -722,8 +721,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
             this_update_plots = i == len(options) and update_plots
             defaults = self._get_defaults_from_metadata(option.get('dataset',
                                                                    self.dataset.selected))
-            if self.counts_factor_multi_auto:
-                option.setdefault('counts_factor', defaults.get('counts_factor', 0))
             if self.pixel_area_multi_auto:
                 option.setdefault('pixel_area', defaults.get('pixel_area', 0))
             if self.flux_scaling_multi_auto:
