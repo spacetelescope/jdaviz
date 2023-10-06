@@ -98,6 +98,8 @@ Other Changes and Additions
 
 - Compatibility with Python 3.12. [#2473]
 
+- Add swatches to color picker. [#2494]
+
 3.7 (2023-09-21)
 ================
 
