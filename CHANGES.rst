@@ -7,6 +7,9 @@ Bug Fixes
 - Fixed bug which did not update all references to a viewer's ID when
   updating a viewer's reference name. [#2479]
 
+- Deleting a subset while actively editing it now deselects the subset tool,
+  preventing the appearance of "ghost" subsets. [#2497]
+
 Cubeviz
 ^^^^^^^
 
