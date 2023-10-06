@@ -298,27 +298,27 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
 
         Parameters
         ----------
-        * ``dataset`` : str, optional
+        dataset : str, optional
             Dataset to use for photometry.
-        * ``aperture`` : str, optional
+        aperture : str, optional
             Subset to use as the aperture.
-        * ``background`` : str, optional
+        background : str, optional
             Subset to use to calculate the background.
-        * ``background_value`` : float, optional
+        background_value : float, optional
             Background to subtract, same unit as data.  Automatically computed if ``background``
             is set to a subset.
-        * ``pixel_area`` : float, optional
+        pixel_area : float, optional
             Pixel area in arcsec squared, only used if sr in data unit.
-        * ``counts_factor`` : float, optional
+        counts_factor : float, optional
             Factor to convert data unit to counts, in unit of flux/counts.
-        * ``flux_scaling`` : float, optional
+        flux_scaling : float, optional
             Same unit as data, used in -2.5 * log(flux / flux_scaling).
-        * ``add_to_table`` : bool, optional
-        * ``update_plots`` : bool, optional
+        add_to_table : bool, optional
+        update_plots : bool, optional
 
         Returns
         -------
-        * table row, fit results
+        table row, fit results
         """
         if self.multiselect and (dataset is None or aperture is None):  # pragma: no cover
             raise ValueError("for batch mode, use calculate_batch_photometry")
