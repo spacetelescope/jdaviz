@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Plots in plugins now include basic zoom/pan tools. [#2498]
+
 Cubeviz
 ^^^^^^^
 
