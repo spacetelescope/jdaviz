@@ -65,6 +65,8 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.default_tool_priority = default_tool_priority
         self._handle_default_tool()
 
+        # toolbars in the main app viewers need to respond to the data-collection, etc,
+        # but those in plugins do not
         if hasattr(self.viewer, 'hub'):
             for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
                         SpectralMarksChangedMessage):

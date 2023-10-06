@@ -638,7 +638,6 @@ class PlotOptions(PluginTemplateMixin):
         if np.any(np.isnan(sub_data)):
             sub_data = sub_data[~np.isnan(sub_data)]
 
-        # TODO: fix home button zoom for histogram
         self.stretch_histogram._update_data('histogram', x=sub_data)
 
         if len(sub_data) > 0:

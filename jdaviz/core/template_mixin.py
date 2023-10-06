@@ -66,6 +66,9 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
 SPATIAL_DEFAULT_TEXT = "Entire Cube"
 GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att')
 
+# this histogram viewer (along with other viewers) are not in the glue viewer-registry by default
+# but may be added in the future.  If it is not in the registry, we'll add it now.  If/once the
+# min-pin of glue-jupyter includes this in the registry, we can safely remove this block.
 if 'histogram' not in viewer_registry.members.keys():
     @viewer_registry('histogram')
     class RegisteredHistogramViewer(BqplotHistogramView):
@@ -3325,14 +3328,12 @@ class Plot(PluginSubcomponent):
 
         if not length_mismatch:
             # then we can update the existing entry
-            # print(f"*** {label}._update_data via update_components")
             components = {c.label: c for c in data.components}
             data.update_components({components[comp]: kwargs[comp]
                                     for comp in self._viewer_components})
         else:
             # then we need to replace the existing entry, restoring any existing styles,
             # if they exist
-            # print(f"*** {label}._update_data via replacement")
             if label in self.layers.keys():
                 style_state = self.layers[label].state.as_dict()
             else:
@@ -3385,6 +3386,9 @@ class Plot(PluginSubcomponent):
 
     def _refresh_marks(self):
         # ensure all marks are drawn
+        # NOTE: this seems to only be necessary for histogram viewers and may be an upstream bug
+        # if that is fixed upstream, we should test to see if we can safely remove this method
+        # and all calls to it
         other_marks = list(self.marks.values())
         layer_marks = [m for m in self.figure.marks if m not in other_marks]
         self.figure.marks = layer_marks + other_marks
