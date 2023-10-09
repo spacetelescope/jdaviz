@@ -404,10 +404,10 @@ class PlotOptions(PluginTemplateMixin):
 
         self.stretch_histogram = Plot(self, viewer_type='histogram')
         # NOTE: this is a current workaround so the histogram viewer doesn't crash when replacing
-        # data
-        self.stretch_histogram._add_data('ref', x=[0])
+        # data.  Note also that passing x=[0] fails on SOME machines, so we'll pass [0, 1] instead
+        self.stretch_histogram._add_data('ref', x=[0, 1])
         self.stretch_histogram.layers['ref'].state.visible = False
-        self.stretch_histogram._add_data('histogram', x=[0])
+        self.stretch_histogram._add_data('histogram', x=[0, 1])
 
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
         self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')

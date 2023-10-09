@@ -3303,9 +3303,13 @@ class Plot(PluginSubcomponent):
         return {layer.layer.label: layer for layer in self.viewer.layers}
 
     def _check_valid_components(self, **kwargs):
-        for k in kwargs.keys():
+        for k, v in kwargs.items():
             if k not in self._viewer_components:
                 raise ValueError(f"{k} is not one of {self._viewer_components}")
+            if self._viewer_type == 'histogram' and len(v) <= 1:
+                # temporary guardrails for segfault
+                # https://github.com/astrofrog/fast-histogram/issues/60
+                raise ValueError("histogram requires data entries with length > 1")
 
     def _remove_data(self, label):
         dc_entry = self.app.data_collection[label]
