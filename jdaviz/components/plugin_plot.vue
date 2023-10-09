@@ -8,18 +8,14 @@
       </div>
     </v-row>
 
-
-
     <v-row style="margin: -16px 0px 8px 0px !important">
       <jupyter-widget :widget="figure" style="height: 100%; width: 100%" />
     </v-row>
-
   </div>
 </template>
 
 <script>
 </script>
-
 
 <style scoped>
   .only-show-in-tray {
@@ -37,5 +33,4 @@
     width: 100%;
     height: 480px;
   }
-
 </style>
