@@ -2120,6 +2120,13 @@ class Application(VuetifyTemplate, HubListener):
         self._reparent_subsets(data)
 
         self.data_collection.remove(self.data_collection[event['item_name']])
+        if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
+            if self.config == "imviz":
+                link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
+                self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
+            else:
+                for i in range(1, len(self.data_collection)):
+                    self._link_new_data(data_to_be_linked=i)
 
     def vue_close_snackbar_message(self, event):
         """
