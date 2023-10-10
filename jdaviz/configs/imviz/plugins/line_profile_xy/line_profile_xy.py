@@ -25,11 +25,13 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         self.plot_across_x = Plot(self)
-        self.plot_across_x.figure.axes[0].label = 'Y (pix)'
+        self.plot_across_x.viewer.axis_x.num_ticks = 5
+        self.plot_across_x.viewer.axis_y.tick_format = '0.2e'
         self.plot_across_x_widget = 'IPY_MODEL_'+self.plot_across_x.model_id
 
         self.plot_across_y = Plot(self)
-        self.plot_across_y.figure.axes[0].label = 'X (pix)'
+        self.plot_across_y.viewer.axis_x.num_ticks = 5
+        self.plot_across_y.viewer.axis_y.tick_format = '0.2e'
         self.plot_across_y_widget = 'IPY_MODEL_'+self.plot_across_y.model_id
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
@@ -114,14 +116,16 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         self.plot_across_x._update_data('line', x=range(comp.data.shape[0]), y=comp.data[:, x],
                                         reset_lims=True)
         self.plot_across_x.update_style('line', line_visible=True,
-                                        markers_visible=False, color='gray')
-        self.plot_across_x.figure.axes[1].label = y_label
+                                        markers_visible=False, color='gray', size=10)
+        self.plot_across_x.viewer.axis_x.label = 'Y (pix)'
+        self.plot_across_x.viewer.axis_y.label = y_label
 
         self.plot_across_y.figure.title = f'Y={y}'
         self.plot_across_y._update_data('line', x=range(comp.data.shape[1]), y=comp.data[y, :],
                                         reset_lims=True)
         self.plot_across_y.update_style('line', line_visible=True,
-                                        markers_visible=False, color='gray')
-        self.plot_across_y.figure.axes[1].label = y_label
+                                        markers_visible=False, color='gray', size=10)
+        self.plot_across_y.viewer.axis_x.label = 'X (pix)'
+        self.plot_across_y.viewer.axis_y.label = y_label
 
         self.plot_available = True

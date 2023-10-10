@@ -105,6 +105,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         self.current_plot_type = self.plot_types[0]
         self._fitted_model_name = 'phot_radial_profile'
 
+        self.plot.viewer.axis_y.tick_format = '0.2e'
+
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
 
@@ -481,7 +483,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                     comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
                     wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
                 self.plot._update_data('profile', x=x_arr, y=sum_arr, reset_lims=True)
-                self.plot.update_style('profile', color='gray', size=32)
+                self.plot.update_style('profile', line_visible=True, color='gray', size=32)
                 self.plot.update_style('fit', visible=False)
                 self.plot.figure.axes[0].label = x_label
                 self.plot.figure.axes[1].label = y_label
@@ -496,7 +498,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=False)
                     self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
-                    self.plot.update_style('profile', color='gray', size=32)
+                    self.plot.update_style('profile', line_visible=True, color='gray', size=32)
 
                 else:  # Radial Profile (Raw)
                     self.plot.figure.title = 'Raw radial profile from aperture center'
@@ -505,7 +507,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                         raw=True)
 
                     self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
-                    self.plot.update_style('profile', color='gray', size=1)
+                    self.plot.update_style('profile', line_visible=False, color='gray', size=10)
 
                 # Fit Gaussian1D to radial profile data.
                 if self.fit_radial_profile:
