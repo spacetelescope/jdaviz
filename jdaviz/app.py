@@ -2124,6 +2124,12 @@ class Application(VuetifyTemplate, HubListener):
             if self.config == "imviz":
                 link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
                 self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
+                # Hack to restore responsiveness to imviz layers
+                for viewer_ref in self.get_viewer_reference_names():
+                    viewer = self.get_viewer(viewer_ref)
+                    loaded_layers = [layer.layer.label for layer in viewer.layers]
+                    self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
+                    self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
             else:
                 for i in range(1, len(self.data_collection)):
                     self._link_new_data(data_to_be_linked=i)
