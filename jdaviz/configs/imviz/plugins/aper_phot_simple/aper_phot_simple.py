@@ -480,7 +480,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
                     comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
                     wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
-                self.plot._update_data('profile', x=x_arr, y=sum_arr)
+                self.plot._update_data('profile', x=x_arr, y=sum_arr, reset_lims=True)
                 self.plot.update_style('profile', color='gray', size=32)
                 self.plot.update_style('fit', visible=False)
                 self.plot.figure.axes[0].label = x_label
@@ -495,7 +495,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=False)
-                    self.plot._update_data('profile', x=x_data, y=y_data)
+                    self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
                     self.plot.update_style('profile', color='gray', size=32)
 
                 else:  # Radial Profile (Raw)
@@ -504,7 +504,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=True)
 
-                    self.plot._update_data('profile', x=x_data, y=y_data)
+                    self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
                     self.plot.update_style('profile', color='gray', size=1)
 
                 # Fit Gaussian1D to radial profile data.
@@ -531,7 +531,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                             f"Radial profile fitting: {msg}", color='warning', sender=self))
                     y_fit = fit_model(x_data)
                     self.app.fitted_models[self._fitted_model_name] = fit_model
-                    self.plot._update_data('fit', x=x_data, y=y_fit)
+                    self.plot._update_data('fit', x=x_data, y=y_fit, reset_lims=True)
                     self.plot.update_style('fit', color='magenta',
                                            markers_visible=False, line_visible=True)
                 else:

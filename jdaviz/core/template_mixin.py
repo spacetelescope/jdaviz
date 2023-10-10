@@ -3316,7 +3316,7 @@ class Plot(PluginSubcomponent):
         self.viewer.remove_data(dc_entry)
         self.app.data_collection.remove(dc_entry)
 
-    def _update_data(self, label, **kwargs):
+    def _update_data(self, label, reset_lims=False, **kwargs):
         self._check_valid_components(**kwargs)
         if label not in self.app.data_collection:
             self._add_data(label, **kwargs)
@@ -3345,6 +3345,8 @@ class Plot(PluginSubcomponent):
             self._remove_data(label)
             self._add_data(label, **kwargs)
             self.update_style(label, **style_state)
+        if reset_lims:
+            self.viewer.state.reset_limits()
 
     def update_style(self, label, **kwargs):
         kwargs.setdefault('visible', True)
