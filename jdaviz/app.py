@@ -2120,6 +2120,7 @@ class Application(VuetifyTemplate, HubListener):
         self._reparent_subsets(data)
 
         self.data_collection.remove(self.data_collection[event['item_name']])
+
         if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
             if self.config == "imviz":
                 link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
@@ -2127,7 +2128,8 @@ class Application(VuetifyTemplate, HubListener):
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():
                     viewer = self.get_viewer(viewer_ref)
-                    loaded_layers = [layer.layer.label for layer in viewer.layers]
+                    loaded_layers = [layer.layer.label for layer in viewer.layers if
+                                     "Subset" not in layer.layer.label]
                     self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
                     self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
             else:
