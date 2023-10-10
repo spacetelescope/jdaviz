@@ -74,6 +74,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
     pixel_area = FloatHandleEmpty(0).tag(sync=True)
     counts_factor = FloatHandleEmpty(0).tag(sync=True)
     flux_scaling_multi_auto = Bool(True).tag(sync=True)
+    flux_scaling_warning = Unicode("").tag(sync=True)
     flux_scaling = FloatHandleEmpty(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     result_failed_msg = Unicode("").tag(sync=True)
@@ -180,6 +181,27 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
 
         return defaults
 
+    @observe('flux_scaling_multi_auto')
+    def _multiselect_flux_scaling_warning(self, event={}):
+        if not self.flux_scaling_multi_auto:
+            self.flux_scaling_warning = ''
+            return
+        no_flux_scaling = [dataset for dataset in self.dataset.selected
+                           if 'flux_scaling' not in self._get_defaults_from_metadata(dataset)]
+        if len(no_flux_scaling):
+            self.flux_scaling_warning = ('Could not determine flux scaling for '
+                                         f'{", ".join(no_flux_scaling)}.  Those entries will '
+                                         'default to zero.  Turn off auto-mode to provide '
+                                         'flux-scaling manually.')
+        else:
+            self.flux_scaling_warning = ''
+
+    @observe('flux_scaling')
+    def _singleselect_flux_scaling_warning(self, event={}):
+        if not self.multiselect:
+            # disable warning once user changes value
+            self.flux_scaling_warning = ''
+
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
         if not hasattr(self, 'dataset'):
@@ -188,7 +210,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         if self.dataset.selected_dc_item is None:
             return
         if self.multiselect:
-            # defaults are applied within the loop if the auto-switches are enabled
+            # defaults are applied within the loop if the auto-switches are enabled,
+            # but we still need to update the flux-scaling warning
+            self._multiselect_flux_scaling_warning()
             return
 
         try:
@@ -196,6 +220,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
             self.counts_factor = 0
             self.pixel_area = defaults.get('pixel_area', 0)
             self.flux_scaling = defaults.get('flux_scaling', 0)
+            if 'flux_scaling' in defaults:
+                self.flux_scaling_warning = ''
+            else:
+                self.flux_scaling_warning = ('Could not determine flux scaling for '
+                                             f'{self.dataset.selected}, defaulting to zero.')
 
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(

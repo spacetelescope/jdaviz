@@ -119,6 +119,11 @@
           >
           </v-text-field>
         </v-row>
+        <v-row v-if="flux_scaling_warning.length > 0">
+          <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+            {{flux_scaling_warning}}
+          </span>
+        </v-row>
 
         <v-row v-if="!multiselect">
           <v-select
