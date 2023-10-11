@@ -22,8 +22,8 @@
       </j-tooltip>
     </div>
 
-    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 6px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
-      <j-layer-viewer-icon span_style="margin-left: 4px; margin-right: 2px" :icon="icon" color="#000000DE"></j-layer-viewer-icon>      
+    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
+      <j-layer-viewer-icon span_style="margin-left: 4px; margin-right: 4px" :icon="icon" color="#000000DE"></j-layer-viewer-icon>
       <div class="text-ellipsis-middle" style="font-weight: 500">
         <span>
           {{itemNamePrefix}}
@@ -34,7 +34,7 @@
       </div>
     </j-tooltip>
 
-    <div v-if="isSelected && isUnloadable" style="right: 2px">
+    <div v-if="isSelected && isUnloadable" style="padding-left: 2px; right: 2px">
       <j-tooltip tipid='viewer-data-disable'>
         <v-btn
           icon
@@ -46,7 +46,7 @@
       </j-tooltip>
     </div>
 
-    <div v-if="isDeletable" style="right: 2px">
+    <div v-if="isDeletable" style="padding-left: 2px; right: 2px">
       <j-tooltip tipid='viewer-data-delete'>
         <v-btn
           icon
