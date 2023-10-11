@@ -10,6 +10,9 @@ Bug Fixes
 - Deleting a subset while actively editing it now deselects the subset tool,
   preventing the appearance of "ghost" subsets. [#2497]
 
+- Fixes a bug in plot options where switching from multi to single-select mode
+  failed to properly update the selection. [#2505]
+
 Cubeviz
 ^^^^^^^
 
