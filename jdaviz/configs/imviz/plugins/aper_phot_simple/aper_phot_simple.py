@@ -258,6 +258,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
     def _aperture_selected_changed(self, event={}):
         if not self.dataset_selected or not self.aperture_selected:
             return
+        if self.multiselect is not isinstance(self.aperture_selected, list):
+            # then multiselect is in the process of changing but the traitlet for aperture_selected
+            # has not been updated internally yet
+            return
         if self.multiselect:
             self._background_selected_changed()
             return

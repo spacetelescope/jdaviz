@@ -1539,15 +1539,20 @@ class SubsetSelect(SelectPluginComponent):
             else:
                 self.selected_has_subregions = len(self.selected_obj.subregions) > 1
 
-    @cached_property
-    def selected_obj(self):
+    def _get_selected_obj(self, selected):
         if (
-            self.selected in self.manual_options or
-            self.selected not in self.labels or
-            self.selected is None
+            selected in self.manual_options or
+            selected not in self.labels or
+            selected is None
         ):
             return None
-        return self.app.get_subsets(self.selected)
+        return self.app.get_subsets(selected)
+
+    @cached_property
+    def selected_obj(self):
+        if self.is_multiselect:
+            return [self._get_selected_obj(subset) for subset in self.selected]
+        return self._get_selected_obj(self.selected)
 
     def _get_subset_state(self, subset):
         subset_group = [s for s in self.app.data_collection.subset_groups if
@@ -1614,8 +1619,10 @@ class SubsetSelect(SelectPluginComponent):
             # technically this could work if either has length of one, but would require extra
             # logic
             raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")  # noqa
-        items = self.selected_item if self.is_multiselect else [self.selected_item]
-        if np.any([item.get('type') != 'spatial' for item in items]):
+        types = self.selected_item.get('type')
+        if not isinstance(types, list):
+            types = [types]
+        if np.any([type != 'spatial' for type in types]):
             raise TypeError("This action is only supported on spatial-type subsets")
         if self.is_multiselect:
             return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
