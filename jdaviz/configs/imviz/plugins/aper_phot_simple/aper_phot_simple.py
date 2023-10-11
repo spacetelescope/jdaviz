@@ -238,7 +238,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         if not self.dataset_selected or not self.aperture_selected:
             return
         if self.multiselect:
-            self._backgound_selected_changed()
+            self._background_selected_changed()
             return
 
         sbst = msg.subset
