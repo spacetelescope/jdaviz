@@ -25,13 +25,15 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         self.plot_across_x = Plot(self)
-        self.plot_across_x.viewer.axis_x.num_ticks = 5
-        self.plot_across_x.viewer.axis_y.tick_format = '0.2e'
-        self.plot_across_x_widget = 'IPY_MODEL_'+self.plot_across_x.model_id
-
         self.plot_across_y = Plot(self)
-        self.plot_across_y.viewer.axis_x.num_ticks = 5
-        self.plot_across_y.viewer.axis_y.tick_format = '0.2e'
+        for plot in (self.plot_across_x, self.plot_across_y):
+            # override default styling
+            plot.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 65, 'right': 15}
+            plot.viewer.axis_x.num_ticks = 5
+            plot.viewer.axis_y.tick_format = '0.2e'
+            plot.viewer.axis_y.label_offset = '55px'
+
+        self.plot_across_x_widget = 'IPY_MODEL_'+self.plot_across_x.model_id
         self.plot_across_y_widget = 'IPY_MODEL_'+self.plot_across_y.model_id
 
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
