@@ -2118,8 +2118,6 @@ class Application(VuetifyTemplate, HubListener):
     def vue_data_item_remove(self, event):
 
         data_label = event['item_name']
-
-        print(f"Item remove called by event: {event}")
         data = self.data_collection[data_label]
         self._reparent_subsets(data)
 
@@ -2133,7 +2131,6 @@ class Application(VuetifyTemplate, HubListener):
 
         if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
             if self.config == "imviz" and imviz_refdata:
-                print("Reference data deleted, relinking")
                 link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
                 self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
                 # Hack to restore responsiveness to imviz layers
@@ -2141,10 +2138,8 @@ class Application(VuetifyTemplate, HubListener):
                     viewer = self.get_viewer(viewer_ref)
                     loaded_layers = [layer.layer.label for layer in viewer.layers if
                                      "Subset" not in layer.layer.label]
-                    viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
-                                                            if layer_info['data_label'] != data_label]  # noqa
-                    #self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
-                    #self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
+                    self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
+                    self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
             else:
                 for i in range(1, len(self.data_collection)):
                     self._link_new_data(data_to_be_linked=i)

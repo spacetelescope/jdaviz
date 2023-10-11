@@ -20,10 +20,26 @@ Selecting a Data Set
 
 Data can be selected and de-selected in each viewer's data menu, opened by clicking the
 |icon-viewer-data-select| button in the top left of the viewer. Here, you can click a
-checkbox next to the listed data to make the data visible (checked) or invisible (unchecked).
-The datasets available in each viewer are filtered
+checkbox to the left of the listed data to make the data visible (checked) or invisible
+(unchecked). The datasets available in each viewer are filtered
 to include only compatible data, so you may not see all loaded data in the menu for
 every viewer. For example, 1D spectra will not be available in the image viewers.
+
+In addition to selecting and de-selecting data to toggle its visibility in the viewer, you
+can also remove the data from the viewer completely by clicking the X to the right of the
+data label. Any data that is still loaded in Imviz but has been removed from the viewer
+is listed in a separate section that is hidden by default but can can be expanded by clicking
+on the section header:
+
+.. image:: img/imviz_removed_data.png
+
+This section can be hidden by clicking the section header again. Additionally, datasets listed
+in the "not in viewer" section can be deleted from Imviz completely by clicking the trashcan
+button to the right of the data label.
+
+.. warning::
+    Deleting the first image that was loaded into Imviz may be slow, as deleting this image
+    requires Imviz to re-link any remaining data together and redefine any existing subsets.
 
 .. _imviz_cursor_info:
 
