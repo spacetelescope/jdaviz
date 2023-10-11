@@ -303,6 +303,8 @@ class Imviz(ImageConfigHelper):
         """
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset, cls=cls)
 
+    def get_ref_data(self):
+        return get_reference_image_data(self.app)
 
 def split_filename_with_fits_ext(filename):
     """Split a ``filename[ext]`` input into filename and FITS extension.

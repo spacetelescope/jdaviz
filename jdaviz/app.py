@@ -2023,6 +2023,7 @@ class Application(VuetifyTemplate, HubListener):
         Callback for selection events in the front-end data list when clicking to unload an entry
         from the viewer.
         """
+        print("Unloading data")
         data_label = self._get_data_item_by_id(event['item_id'])['name']
         self.remove_data_from_viewer(event['id'], data_label)
 
@@ -2116,13 +2117,23 @@ class Application(VuetifyTemplate, HubListener):
 
     def vue_data_item_remove(self, event):
 
-        data = self.data_collection[event['item_name']]
+        data_label = event['item_name']
+
+        print(f"Item remove called by event: {event}")
+        data = self.data_collection[data_label]
         self._reparent_subsets(data)
 
-        self.data_collection.remove(self.data_collection[event['item_name']])
+        if self.config == "imviz":
+            imviz_refdata = False
+            ref_data, iref = self._jdaviz_helper.get_ref_data()
+            if data is ref_data:
+                imviz_refdata = True
+
+        self.data_collection.remove(self.data_collection[data_label])
 
         if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
-            if self.config == "imviz":
+            if self.config == "imviz" and imviz_refdata:
+                print("Reference data deleted, relinking")
                 link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
                 self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
                 # Hack to restore responsiveness to imviz layers
@@ -2130,8 +2141,10 @@ class Application(VuetifyTemplate, HubListener):
                     viewer = self.get_viewer(viewer_ref)
                     loaded_layers = [layer.layer.label for layer in viewer.layers if
                                      "Subset" not in layer.layer.label]
-                    self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
-                    self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
+                    viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
+                                                            if layer_info['data_label'] != data_label]  # noqa
+                    #self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
+                    #self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
             else:
                 for i in range(1, len(self.data_collection)):
                     self._link_new_data(data_to_be_linked=i)
