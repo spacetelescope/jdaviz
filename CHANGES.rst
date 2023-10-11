@@ -4,7 +4,8 @@
 New Features
 ------------
 
-- Plots in plugins now include basic zoom/pan tools. [#2498]
+- Plots in plugins now include basic zoom/pan tools for Plot Options,
+  Imviz Line Profiles, and Imviz's aperture photometry. [#2498]
 
 Cubeviz
 ^^^^^^^
