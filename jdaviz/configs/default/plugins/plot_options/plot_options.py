@@ -571,7 +571,9 @@ class PlotOptions(PluginTemplateMixin):
             for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                 vs.add_callback(attr, self._update_stretch_histogram)
         if isinstance(msg, dict) and msg.get('name') == 'viewer_selected':
-            viewer_label_old = msg.get('old')[0] if self.multiselect else msg.get('old')
+            viewer_label_old = msg.get('old')
+            if isinstance(viewer_label_old, list):
+                viewer_label_old = viewer_label_old[0]
             if len(viewer_label_old):
                 vs_old = self.app.get_viewer(viewer_label_old).state
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
