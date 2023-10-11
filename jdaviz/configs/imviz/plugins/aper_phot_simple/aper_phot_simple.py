@@ -42,24 +42,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
-    * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
-      Dataset to use for photometry.
-    * ``aperture`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
-      Subset to use as the aperture.
-    * ``background`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
-      Subset to use to calculate the background.
-    * ``background_value``:
-      Background to subtract, same unit as data.  Automatically computed if ``background``
-      is set to a subset.
-    * ``pixel_area``:
-      Pixel area in arcsec squared, only used if sr in data unit.
-    * ``counts_factor``:
-      Factor to convert data unit to counts, in unit of flux/counts.
-    * ``flux_scaling``:
-      Same unit as data, used in -2.5 * log(flux / flux_scaling).
-    * :meth:`calculate_photometry`
-    * :meth:`unpack_batch_options`
-    * :meth:`calculate_batch_photometry`
     """
     template_file = __file__, "aper_phot_simple.vue"
     multiselect = Bool(False).tag(sync=True)
