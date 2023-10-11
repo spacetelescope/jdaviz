@@ -281,16 +281,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         else:
             self._background_selected_changed()
 
-    def _calc_background_median(self, reg):
+    def _calc_background_median(self, reg, data=None):
         # Basically same way image stats are calculated in vue_do_aper_phot()
         # except here we only care about one stat for the background.
-        if self.multiselect:
-            if len(self.dataset.selected) == 1:
-                data = self.dataset.selected_dc_item[0]
+        if data is None:
+            if self.multiselect:
+                if len(self.dataset.selected) == 1:
+                    data = self.dataset.selected_dc_item[0]
+                else:
+                    raise ValueError("cannot calculate background median in multiselect")
             else:
-                raise ValueError("cannot calculate background median in multiselect")
-        else:
-            data = self.dataset.selected_dc_item
+                data = self.dataset.selected_dc_item
         comp = data.get_component(data.main_components[0])
         if hasattr(reg, 'to_pixel'):
             reg = reg.to_pixel(data.coords)
@@ -307,7 +308,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
             # we'll later access the user's self.background_value directly
             return
 
-        if self.multiselect and len(self.dataset.selected) != 1:
+        if self.multiselect:
             # background_value will be recomputed within batch mode anyways and will
             # be replaced in the UI with a message
             self.background_value = -1
@@ -395,7 +396,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         else:
             bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
                                                        dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
-            background_value = self._calc_background_median(bg_reg)
+            background_value = self._calc_background_median(bg_reg, data=data)
         try:
             bg = float(background_value)
         except ValueError:  # Clearer error message
