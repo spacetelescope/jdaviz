@@ -9,8 +9,8 @@ from traitlets import List, Unicode, Dict, Bool, observe
 from jdaviz import configs as jdaviz_configs
 from jdaviz import __version__
 from jdaviz.cli import DEFAULT_VERBOSITY, DEFAULT_HISTORY_VERBOSITY, ALL_JDAVIZ_CONFIGS
-from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.data_formats import identify_helper
+from jdaviz.core.registries import tool_registry
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.template_mixin import show_widget
 
@@ -138,14 +138,25 @@ class Launcher(v.VuetifyTemplate):
         }
 
         start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
-        self._file_chooser = FileChooser(start_path)
-        self.components = {'g-file-import': self._file_chooser}
+        self.components = {'g-file-import': self._file_chooser_components}
         self.loaded_data = None
         self.hint = STATUS_HINTS['idle']
 
         self.filepath = filepath
 
         super().__init__(*args, **kwargs)
+
+    @property
+    def _file_chooser(self):
+        if 'g-data-tools' in self.app._application_handler._tools:
+            return self.app._application_handler._tools['g-data-tools']
+        return None
+
+    @property
+    def _file_chooser_components(self):
+        if self._file_chooser is not None:
+            return self._file_chooser.components
+        return None
 
     @observe('filepath')
     def _filepath_changed(self, *args):

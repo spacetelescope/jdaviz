@@ -125,6 +125,13 @@ New Features
 - Add support for ``MultiMaskSubsetState`` in ``viz.app.get_subsets()`` and in
   the Subset Plugin [#2462]
 
+Other Changes and Additions
+---------------------------
+
+- File browser changed to Solara's file browser. We now use double click to import a file
+  and single click to select a file or directory. [#1376]
+
+
 Cubeviz
 ^^^^^^^
 

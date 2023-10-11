@@ -1,10 +1,11 @@
-import os
-
+from pathlib import Path
+from typing import Optional
 from traitlets import Unicode, Bool
-
-from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
+import os
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
+import solara as sol
+import react_ipywidgets as react
 
 __all__ = ['DataTools']
 
@@ -13,19 +14,42 @@ __all__ = ['DataTools']
 class DataTools(TemplateMixin):
     template_file = __file__, "data_tools.vue"
     dialog = Bool(False).tag(sync=True)
-    valid_path = Bool(True).tag(sync=True)
     error_message = Unicode().tag(sync=True)
+    directory = Unicode(None, allow_none=True).tag(sync=True)
+    file = Unicode(None, allow_none=True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         start_path = os.environ.get('JDAVIZ_START_DIR', os.path.curdir)
+        start_path = str(Path(start_path).resolve())
 
-        self._file_upload = FileChooser(start_path)
+        def on_directory_change(directory: Path):
+            self.directory = str(directory)
+
+        def on_file_open(file: Path):
+            self._load(file)
+
+        def on_path_select(path: Optional[Path]):
+            if path is None:
+                self.directory = None
+                self.file = None
+            else:
+                if path.is_dir():
+                    self.directory = str(path)
+                else:
+                    self.file = str(path)
+
+        element = sol.FileBrowser(start_path,
+                                  on_directory_change=on_directory_change,
+                                  on_file_open=on_file_open,
+                                  on_path_select=on_path_select,
+                                  can_select=True,
+                                  filter=validate_file,
+                                  )
+        self._file_upload, rc = react.render(element)
 
         self.components = {'g-file-import': self._file_upload}
-
-        self._file_upload.observe(self._on_file_path_changed, names='file_path')
 
     def _on_file_path_changed(self, event):
         if self._file_upload.file_path is None:
@@ -47,3 +71,36 @@ class DataTools(TemplateMixin):
                 self.error_message = f"An error occurred when loading the file: {repr(err)}"
             else:
                 self.dialog = False
+
+        self.components = {'g-file-import': self._file_upload}
+
+    def _load(self, path: Path):
+        try:
+            self.app._jdaviz_helper.load_data(str(path))
+        except Exception as e:
+            self.error_message = (
+                "The following error occurred "
+                f"when loading the file:\n{repr(e)}"
+            )
+        else:
+            self.dialog = False
+
+    def vue_load_file(self, *args, **kwargs):
+        self._load(Path(self.file))
+
+    def vue_load_directory(self, *args, **kwargs):
+        self._load(Path(self.directory))
+
+
+def validate_file(path):
+    is_file = os.path.isfile(str(path))
+    is_valid_file = str(path).lower().endswith((
+        'fit',
+        'fits',
+        'asdf',
+        'jpg',
+        'jpeg',
+        'png'
+    ))
+
+    return is_valid_file or not is_file
