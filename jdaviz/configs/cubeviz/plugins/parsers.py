@@ -392,8 +392,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             if hasattr(file_obj, 'wcs'):
                 meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs)
 
-            s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs,
-                             meta=standardize_metadata(meta))
+            s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=meta)
 
         cur_data_label = app.return_data_label(data_label, attr.upper())
         app.add_data(s1d, cur_data_label)
