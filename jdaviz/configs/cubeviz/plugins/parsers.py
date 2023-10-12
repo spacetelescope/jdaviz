@@ -415,7 +415,7 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
 
     # store original WCS in metadata. this is a hacky workaround for converting subsets
     # to sky regions, where the parent data of the subset might have dropped spatial WCS info
-    file_obj.meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs) if hasattr(file_obj, 'wcs') else None
+    file_obj.meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs) if hasattr(file_obj, 'wcs') else None  # noqa: E501
 
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
