@@ -293,7 +293,7 @@ the second image as data in the data dropdown tab, and select both images. To vi
 of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
 set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
 the second image will appear superimposed on the first image. In the second figure below, we
-show the contours of an image generated using the Collapse plugin plotted over leftmost cube
+show the contours of an image generated using the Collapse plugin plotted over the leftmost cube
 viewer.  If you overplot them on a cube, the contours will remain unchanged as you scrub through
 the cube.
 
@@ -355,7 +355,7 @@ can be accessed with ``plot_options.stretch_function.choices``:
 
 
 A histogram is displayed showing the distribution of pixel values, with
-vertical lines representing the ``stretch_vmin`` and ``stretch_vmin``
+vertical lines representing the ``stretch_vmin`` and ``stretch_vmax``
 values. A stretch "curve" can be plotted under the histogram to represent
 how pixel values are mapped to the colorbar. This feature can be toggled
 on from the API with:
@@ -411,7 +411,7 @@ To set the percentile for all the images at once:
 Colormap
 --------
 
-The spectrum of colors used to visualize data can be changed using this drop down.
+The spectrum of colors used to visualize data can be changed using this drop-down.
 
 From the API
 ^^^^^^^^^^^^
