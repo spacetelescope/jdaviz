@@ -541,7 +541,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                                            markers_visible=False, line_visible=True)
                 else:
                     self.plot.update_style('fit', visible=False)
- 
+
         # Parse results for GUI.
         tmp = []
         for key in phot_table.colnames:
