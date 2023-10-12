@@ -12,6 +12,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Aperture photometry (previously "Imviz Simple Aperture Photometry") now supports batch mode. [#2465]
+
 Mosviz
 ^^^^^^
 

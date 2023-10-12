@@ -10,17 +10,20 @@ from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
 from astropy.time import Time
 from glue.core.message import SubsetUpdateMessage
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from ipywidgets import widget_serialization
 from packaging.version import Version
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture)
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
+from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
                                         SubsetSelect, TableMixin, PlotMixin)
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
@@ -28,18 +31,33 @@ __all__ = ['SimpleAperturePhotometry']
 ASTROPY_LT_5_2 = Version(astropy.__version__) < Version('5.2')
 
 
-@tray_registry('imviz-aper-phot-simple', label="Imviz Simple Aperture Photometry")
-class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMixin, PlotMixin):
+@tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")
+class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, TableMixin, PlotMixin):
+    """
+    The Aperture Photometry plugin performs aperture photometry for drawn regions.
+    See the :ref:`Aperture Photometry Plugin Documentation <aper-phot-simple>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    """
     template_file = __file__, "aper_phot_simple.vue"
-    subset_items = List([]).tag(sync=True)
-    subset_selected = Unicode("").tag(sync=True)
-    subset_area = Integer().tag(sync=True)
-    bg_subset_items = List().tag(sync=True)
-    bg_subset_selected = Unicode("").tag(sync=True)
+    multiselect = Bool(False).tag(sync=True)
+
+    aperture_items = List([]).tag(sync=True)
+    aperture_selected = Any('').tag(sync=True)
+    aperture_area = Integer().tag(sync=True)
+    background_items = List().tag(sync=True)
+    background_selected = Unicode("").tag(sync=True)
     background_value = Any(0).tag(sync=True)
-    pixel_area = Any(0).tag(sync=True)
-    counts_factor = Any(0).tag(sync=True)
-    flux_scaling = Any(0).tag(sync=True)
+    pixel_area_multi_auto = Bool(True).tag(sync=True)
+    pixel_area = FloatHandleEmpty(0).tag(sync=True)
+    counts_factor = FloatHandleEmpty(0).tag(sync=True)
+    flux_scaling_multi_auto = Bool(True).tag(sync=True)
+    flux_scaling_warning = Unicode("").tag(sync=True)
+    flux_scaling = FloatHandleEmpty(0).tag(sync=True)
     result_available = Bool(False).tag(sync=True)
     result_failed_msg = Unicode("").tag(sync=True)
     results = List().tag(sync=True)
@@ -50,21 +68,27 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
     fit_radial_profile = Bool(False).tag(sync=True)
     fit_results = List().tag(sync=True)
 
+    icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.subset = SubsetSelect(self,
-                                   'subset_items',
-                                   'subset_selected',
-                                   default_text=None,
-                                   filters=['is_spatial', 'is_not_composite', 'is_not_annulus'])
+        self.aperture = SubsetSelect(self,
+                                     'aperture_items',
+                                     'aperture_selected',
+                                     multiselect='multiselect',
+                                     dataset='dataset',
+                                     default_text=None,
+                                     filters=['is_spatial', 'is_not_composite', 'is_not_annulus'])
 
-        self.bg_subset = SubsetSelect(self,
-                                      'bg_subset_items',
-                                      'bg_subset_selected',
-                                      default_text='Manual',
-                                      manual_options=['Manual'],
-                                      filters=['is_spatial', 'is_not_composite'])
+        self.background = SubsetSelect(self,
+                                       'background_items',
+                                       'background_selected',
+                                       dataset='dataset',
+                                       default_text='Manual',
+                                       manual_options=['Manual'],
+                                       filters=['is_spatial', 'is_not_composite'])
 
         headers = ['xcenter', 'ycenter', 'sky_center',
                    'sum', 'sum_aper_area',
@@ -77,8 +101,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         self.table.headers_avail = headers
         self.table.headers_visible = headers
 
-        self._selected_data = None
-        self._selected_subset = None
         self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
         self._fitted_model_name = 'phot_radial_profile'
@@ -90,106 +112,168 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
 
+# TODO: expose public API once finalized
+#    @property
+#    def user_api(self):
+#        return PluginUserApi(self, expose=('multiselect', 'dataset', 'aperture',
+#                                           'background', 'background_value',
+#                                           'pixel_area', 'counts_factor', 'flux_scaling',
+#                                           'calculate_photometry',
+#                                           'unpack_batch_options', 'calculate_batch_photometry'))
+
+    def _get_defaults_from_metadata(self, dataset=None):
+        defaults = {}
+        if dataset is None:
+            meta = self.dataset.selected_dc_item.meta.copy()
+        else:
+            meta = self.dataset._get_dc_item(dataset).meta.copy()
+
+        # Extract telescope specific unit conversion factors, if applicable.
+        if PRIHDR_KEY in meta:
+            meta.update(meta[PRIHDR_KEY])
+            del meta[PRIHDR_KEY]
+        if 'telescope' in meta:
+            telescope = meta['telescope']
+        else:
+            telescope = meta.get('TELESCOP', '')
+        if telescope == 'JWST':
+            if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
+                defaults['pixel_area'] = meta['photometry']['pixelarea_arcsecsq']
+                if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
+                    # Hardcode the flux conversion factor from MJy to ABmag
+                    defaults['flux_scaling'] = 0.003631
+        elif telescope == 'HST':
+            # TODO: Add more HST support, as needed.
+            # HST pixel scales are from instrument handbooks.
+            # This is really not used because HST data does not have sr in unit.
+            # This is only for completeness.
+            # For counts conversion, PHOTFLAM is used to convert "counts" to flux manually,
+            # which is the opposite of JWST, so we just do not do it here.
+            instrument = meta.get('INSTRUME', '').lower()
+            detector = meta.get('DETECTOR', '').lower()
+            if instrument == 'acs':
+                if detector == 'wfc':
+                    defaults['pixel_area'] = 0.05 * 0.05
+                elif detector == 'hrc':  # pragma: no cover
+                    defaults['pixel_area'] = 0.028 * 0.025
+                elif detector == 'sbc':  # pragma: no cover
+                    defaults['pixel_area'] = 0.034 * 0.03
+            elif instrument == 'wfc3' and detector == 'uvis':  # pragma: no cover
+                defaults['pixel_area'] = 0.04 * 0.04
+
+        return defaults
+
+    @observe('flux_scaling_multi_auto')
+    def _multiselect_flux_scaling_warning(self, event={}):
+        if not self.flux_scaling_multi_auto:
+            self.flux_scaling_warning = ''
+            return
+        no_flux_scaling = [dataset for dataset in self.dataset.selected
+                           if 'flux_scaling' not in self._get_defaults_from_metadata(dataset)]
+        if len(no_flux_scaling):
+            self.flux_scaling_warning = ('Could not determine flux scaling for '
+                                         f'{", ".join(no_flux_scaling)}.  Those entries will '
+                                         'default to zero.  Turn off auto-mode to provide '
+                                         'flux-scaling manually.')
+        else:
+            self.flux_scaling_warning = ''
+
+    @observe('flux_scaling')
+    def _singleselect_flux_scaling_warning(self, event={}):
+        if not self.multiselect:
+            # disable warning once user changes value
+            self.flux_scaling_warning = ''
+
     @observe('dataset_selected')
     def _dataset_selected_changed(self, event={}):
-        try:
-            self._selected_data = self.dataset.selected_dc_item
-            if self._selected_data is None:
-                return
-            self.counts_factor = 0
-            self.pixel_area = 0
-            self.flux_scaling = 0
+        if not hasattr(self, 'dataset'):
+            # plugin not fully initialized
+            return
+        if self.dataset.selected_dc_item is None:
+            return
+        if self.multiselect:
+            # defaults are applied within the loop if the auto-switches are enabled,
+            # but we still need to update the flux-scaling warning
+            self._multiselect_flux_scaling_warning()
+            return
 
-            # Extract telescope specific unit conversion factors, if applicable.
-            meta = self._selected_data.meta.copy()
-            if PRIHDR_KEY in meta:
-                meta.update(meta[PRIHDR_KEY])
-                del meta[PRIHDR_KEY]
-            if 'telescope' in meta:
-                telescope = meta['telescope']
+        try:
+            defaults = self._get_defaults_from_metadata()
+            self.counts_factor = 0
+            self.pixel_area = defaults.get('pixel_area', 0)
+            self.flux_scaling = defaults.get('flux_scaling', 0)
+            if 'flux_scaling' in defaults:
+                self.flux_scaling_warning = ''
             else:
-                telescope = meta.get('TELESCOP', '')
-            if telescope == 'JWST':
-                if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
-                    self.pixel_area = meta['photometry']['pixelarea_arcsecsq']
-                    if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
-                        # Hardcode the flux conversion factor from MJy to ABmag
-                        self.flux_scaling = 0.003631
-            elif telescope == 'HST':
-                # TODO: Add more HST support, as needed.
-                # HST pixel scales are from instrument handbooks.
-                # This is really not used because HST data does not have sr in unit.
-                # This is only for completeness.
-                # For counts conversion, PHOTFLAM is used to convert "counts" to flux manually,
-                # which is the opposite of JWST, so we just do not do it here.
-                instrument = meta.get('INSTRUME', '').lower()
-                detector = meta.get('DETECTOR', '').lower()
-                if instrument == 'acs':
-                    if detector == 'wfc':
-                        self.pixel_area = 0.05 * 0.05
-                    elif detector == 'hrc':  # pragma: no cover
-                        self.pixel_area = 0.028 * 0.025
-                    elif detector == 'sbc':  # pragma: no cover
-                        self.pixel_area = 0.034 * 0.03
-                elif instrument == 'wfc3' and detector == 'uvis':  # pragma: no cover
-                    self.pixel_area = 0.04 * 0.04
+                self.flux_scaling_warning = ('Could not determine flux scaling for '
+                                             f'{self.dataset.selected}, defaulting to zero.')
 
         except Exception as e:
-            self._selected_data = None
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {self.dataset_selected}: {repr(e)}",
                 color='error', sender=self))
 
-        # Update self._selected_subset with the new self._selected_data
-        # and auto-populate background, if applicable.
-        self._subset_selected_changed()
+        # auto-populate background, if applicable.
+        self._aperture_selected_changed()
 
     def _on_subset_update(self, msg):
-        if self.dataset_selected == '' or self.subset_selected == '':
+        if not self.dataset_selected or not self.aperture_selected:
+            return
+        if self.multiselect:
+            self._background_selected_changed()
             return
 
         sbst = msg.subset
-        if sbst.label == self.subset_selected and sbst.data.label == self.dataset_selected:
-            self._subset_selected_changed()
-        elif sbst.label == self.bg_subset_selected and sbst.data.label == self.dataset_selected:
-            self._bg_subset_selected_changed()
+        if sbst.label == self.aperture_selected and sbst.data.label == self.dataset_selected:
+            self._aperture_selected_changed()
+        elif sbst.label == self.background_selected and sbst.data.label == self.dataset_selected:
+            self._background_selected_changed()
 
     def _on_link_update(self, msg):
-        if self.dataset_selected == '' or self.subset_selected == '':
+        if not self.dataset_selected or not self.aperture_selected:
             return
 
         # Force background auto-calculation to update when linking has changed.
-        self._subset_selected_changed()
+        self._aperture_selected_changed()
 
-    @observe('subset_selected')
-    def _subset_selected_changed(self, event={}):
-        subset_selected = event.get('new', self.subset_selected)
-        if self._selected_data is None or subset_selected == '':
+    @observe('aperture_selected', 'multiselect')
+    def _aperture_selected_changed(self, event={}):
+        if not self.dataset_selected or not self.aperture_selected:
+            return
+        if self.multiselect is not isinstance(self.aperture_selected, list):
+            # then multiselect is in the process of changing but the traitlet for aperture_selected
+            # has not been updated internally yet
+            return
+        if self.multiselect:
+            self._background_selected_changed()
             return
 
+        # NOTE: aperture area is only used to determine if a warning should be shown in the UI
+        # and so does not need to be calculated within user API calls that don't act on traitlets
         try:
-            self._selected_subset = _get_region_from_spatial_subset(
-                self, self.subset.selected_subset_state)
-            self._selected_subset.meta['label'] = subset_selected
-
             # Sky subset does not have area. Not worth it to calculate just for a warning.
-            if hasattr(self._selected_subset, 'area'):
-                self.subset_area = int(np.ceil(self._selected_subset.area))
+            if hasattr(self.aperture.selected_spatial_region, 'area'):
+                self.aperture_area = int(np.ceil(self.aperture.selected_spatial_region.area))
             else:
-                self.subset_area = 0
-
+                self.aperture_area = 0
         except Exception as e:
-            self._selected_subset = None
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {subset_selected}: {repr(e)}", color='error', sender=self))
-
+                f"Failed to extract {self.aperture_selected}: {repr(e)}",
+                color='error', sender=self))
         else:
-            self._bg_subset_selected_changed()
+            self._background_selected_changed()
 
-    def _calc_bg_subset_median(self, reg):
+    def _calc_background_median(self, reg, data=None):
         # Basically same way image stats are calculated in vue_do_aper_phot()
         # except here we only care about one stat for the background.
-        data = self._selected_data
+        if data is None:
+            if self.multiselect:
+                if len(self.dataset.selected) == 1:
+                    data = self.dataset.selected_dc_item[0]
+                else:
+                    raise ValueError("cannot calculate background median in multiselect")
+            else:
+                data = self.dataset.selected_dc_item
         comp = data.get_component(data.main_components[0])
         if hasattr(reg, 'to_pixel'):
             reg = reg.to_pixel(data.coords)
@@ -199,126 +283,192 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         # photutils/background/_utils.py --> nanmedian()
         return np.nanmedian(img_stat)  # Naturally in data unit
 
-    @observe('bg_subset_selected')
-    def _bg_subset_selected_changed(self, event={}):
-        bg_subset_selected = event.get('new', self.bg_subset_selected)
-        if bg_subset_selected == 'Manual':
+    @observe('background_selected')
+    def _background_selected_changed(self, event={}):
+        background_selected = event.get('new', self.background_selected)
+        if background_selected == 'Manual':
             # we'll later access the user's self.background_value directly
             return
 
+        if self.multiselect:
+            # background_value will be recomputed within batch mode anyways and will
+            # be replaced in the UI with a message
+            self.background_value = -1
+            return
+
         try:
-            reg = _get_region_from_spatial_subset(self, self.bg_subset.selected_subset_state)
-            self.background_value = self._calc_bg_subset_median(reg)
+            reg = _get_region_from_spatial_subset(self, self.background.selected_subset_state)
+            self.background_value = self._calc_background_median(reg)
         except Exception as e:
             self.background_value = 0
             self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {bg_subset_selected}: {repr(e)}", color='error', sender=self))
+                f"Failed to extract {background_selected}: {repr(e)}", color='error', sender=self))
 
-    def vue_do_aper_phot(self, *args, **kwargs):
-        if self._selected_data is None or self._selected_subset is None:
-            self.hub.broadcast(SnackbarMessage(
-                "No data for aperture photometry", color='error', sender=self))
-            return
+    def calculate_photometry(self, dataset=None, aperture=None, background=None,
+                             background_value=None, pixel_area=None, counts_factor=None,
+                             flux_scaling=None, add_to_table=True, update_plots=True):
+        """
+        Calculate aperture photometry given the values set in the plugin or any overrides provided
+        as arguments here (which will temporarily override plugin values for this calculation only).
 
-        data = self._selected_data
-        reg = self._selected_subset
+        Parameters
+        ----------
+        dataset : str, optional
+            Dataset to use for photometry.
+        aperture : str, optional
+            Subset to use as the aperture.
+        background : str, optional
+            Subset to use to calculate the background.
+        background_value : float, optional
+            Background to subtract, same unit as data.  Automatically computed if ``background``
+            is set to a subset.
+        pixel_area : float, optional
+            Pixel area in arcsec squared, only used if sr in data unit.
+        counts_factor : float, optional
+            Factor to convert data unit to counts, in unit of flux/counts.
+        flux_scaling : float, optional
+            Same unit as data, used in -2.5 * log(flux / flux_scaling).
+        add_to_table : bool, optional
+        update_plots : bool, optional
+
+        Returns
+        -------
+        table row, fit results
+        """
+        if self.multiselect and (dataset is None or aperture is None):  # pragma: no cover
+            raise ValueError("for batch mode, use calculate_batch_photometry")
+
+        if dataset is not None:
+            if dataset not in self.dataset.choices:  # pragma: no cover
+                raise ValueError(f"dataset must be one of {self.dataset.choices}")
+            data = self.dataset._get_dc_item(dataset)
+        else:
+            # we can use the pre-cached value
+            data = self.dataset.selected_dc_item
+
+        if aperture is not None and aperture not in self.aperture.choices:
+            raise ValueError(f"aperture must be one of {self.aperture.choices}")
+        if aperture is not None or dataset is not None:
+            reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected,  # noqa
+                                                    dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+        else:
+            # use the pre-cached value
+            reg = self.aperture.selected_spatial_region
 
         # Reset last fitted model
         fit_model = None
+        # TODO: remove _fitted_model_name cache?
         if self._fitted_model_name in self.app.fitted_models:
             del self.app.fitted_models[self._fitted_model_name]
 
+        comp = data.get_component(data.main_components[0])
+
+        if background is not None and background not in self.background.choices:  # pragma: no cover
+            raise ValueError(f"background must be one of {self.background.choices}")
+        if background_value is not None:
+            if ((background not in (None, 'Manual'))
+                    or (background is None and self.background_selected != 'Manual')):
+                raise ValueError("cannot provide background_value with background!='Manual'")
+        elif (background == 'Manual'
+                or (background is None and self.background.selected == 'Manual')):
+            background_value = self.background_value
+        elif background is None and dataset is None:
+            # use the previously-computed value in the plugin
+            background_value = self.background_value
+        else:
+            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
+                                                       dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+            background_value = self._calc_background_median(bg_reg, data=data)
         try:
-            comp = data.get_component(data.main_components[0])
-            try:
-                bg = float(self.background_value)
-            except ValueError:  # Clearer error message
-                raise ValueError('Missing or invalid background value')
+            bg = float(background_value)
+        except ValueError:  # Clearer error message
+            raise ValueError('Missing or invalid background value')
 
-            if hasattr(reg, 'to_pixel'):
-                sky_center = reg.center
-                xcenter, ycenter = data.coords.world_to_pixel(sky_center)
+        if hasattr(reg, 'to_pixel'):
+            sky_center = reg.center
+            xcenter, ycenter = data.coords.world_to_pixel(sky_center)
+        else:
+            xcenter = reg.center.x
+            ycenter = reg.center.y
+            if data.coords is not None:
+                sky_center = data.coords.pixel_to_world(xcenter, ycenter)
             else:
-                xcenter = reg.center.x
-                ycenter = reg.center.y
-                if data.coords is not None:
-                    sky_center = data.coords.pixel_to_world(xcenter, ycenter)
-                else:
-                    sky_center = None
+                sky_center = None
 
-            aperture = regions2aperture(reg)
-            include_pixarea_fac = False
-            include_counts_fac = False
-            include_flux_scale = False
-            comp_data = comp.data
-            if comp.units:
-                img_unit = u.Unit(comp.units)
-                bg = bg * img_unit
-                comp_data = comp_data << img_unit
+        aperture = regions2aperture(reg)
+        include_pixarea_fac = False
+        include_counts_fac = False
+        include_flux_scale = False
+        comp_data = comp.data
+        if comp.units:
+            img_unit = u.Unit(comp.units)
+            bg = bg * img_unit
+            comp_data = comp_data << img_unit
 
-                if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
-                    try:
-                        pixarea = float(self.pixel_area)
-                    except ValueError:  # Clearer error message
-                        raise ValueError('Missing or invalid pixel area')
-                    if not np.allclose(pixarea, 0):
-                        include_pixarea_fac = True
-                if img_unit != u.count:
-                    try:
-                        ctfac = float(self.counts_factor)
-                    except ValueError:  # Clearer error message
-                        raise ValueError('Missing or invalid counts conversion factor')
-                    if not np.allclose(ctfac, 0):
-                        include_counts_fac = True
+            if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
                 try:
-                    flux_scale = float(self.flux_scaling)
+                    pixarea = float(pixel_area if pixel_area is not None else self.pixel_area)
                 except ValueError:  # Clearer error message
-                    raise ValueError('Missing or invalid flux scaling')
-                if not np.allclose(flux_scale, 0):
-                    include_flux_scale = True
-            phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords, local_bkg=bg)
-            phot_table = phot_aperstats.to_table(columns=(
-                'id', 'sum', 'sum_aper_area',
-                'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
-                'biweight_location', 'biweight_midvariance', 'fwhm', 'semimajor_sigma',
-                'semiminor_sigma', 'orientation', 'eccentricity'))  # Some cols excluded, add back as needed.  # noqa
-            rawsum = phot_table['sum'][0]
+                    raise ValueError('Missing or invalid pixel area')
+                if not np.allclose(pixarea, 0):
+                    include_pixarea_fac = True
+            if img_unit != u.count:
+                try:
+                    ctfac = float(counts_factor if counts_factor is not None else self.counts_factor)  # noqa
+                except ValueError:  # Clearer error message
+                    raise ValueError('Missing or invalid counts conversion factor')
+                if not np.allclose(ctfac, 0):
+                    include_counts_fac = True
+            try:
+                flux_scale = float(flux_scaling if flux_scaling is not None else self.flux_scaling)
+            except ValueError:  # Clearer error message
+                raise ValueError('Missing or invalid flux scaling')
+            if not np.allclose(flux_scale, 0):
+                include_flux_scale = True
+        phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords, local_bkg=bg)
+        phot_table = phot_aperstats.to_table(columns=(
+            'id', 'sum', 'sum_aper_area',
+            'min', 'max', 'mean', 'median', 'mode', 'std', 'mad_std', 'var',
+            'biweight_location', 'biweight_midvariance', 'fwhm', 'semimajor_sigma',
+            'semiminor_sigma', 'orientation', 'eccentricity'))  # Some cols excluded, add back as needed.  # noqa
+        rawsum = phot_table['sum'][0]
 
-            if include_pixarea_fac:
-                pixarea = pixarea * (u.arcsec * u.arcsec / (u.pix * u.pix))
-                # NOTE: Sum already has npix value encoded, so we simply apply the npix unit here.
-                pixarea_fac = (u.pix * u.pix) * pixarea.to(u.sr / (u.pix * u.pix))
-                phot_table['sum'] = [rawsum * pixarea_fac]
-            else:
-                pixarea_fac = None
+        if include_pixarea_fac:
+            pixarea = pixarea * (u.arcsec * u.arcsec / (u.pix * u.pix))
+            # NOTE: Sum already has npix value encoded, so we simply apply the npix unit here.
+            pixarea_fac = (u.pix * u.pix) * pixarea.to(u.sr / (u.pix * u.pix))
+            phot_table['sum'] = [rawsum * pixarea_fac]
+        else:
+            pixarea_fac = None
 
-            if include_counts_fac:
-                ctfac = ctfac * (rawsum.unit / u.count)
-                sum_ct = rawsum / ctfac
-                sum_ct_err = np.sqrt(sum_ct.value) * sum_ct.unit
-            else:
-                ctfac = None
-                sum_ct = None
-                sum_ct_err = None
+        if include_counts_fac:
+            ctfac = ctfac * (rawsum.unit / u.count)
+            sum_ct = rawsum / ctfac
+            sum_ct_err = np.sqrt(sum_ct.value) * sum_ct.unit
+        else:
+            ctfac = None
+            sum_ct = None
+            sum_ct_err = None
 
-            if include_flux_scale:
-                flux_scale = flux_scale * phot_table['sum'][0].unit
-                sum_mag = -2.5 * np.log10(phot_table['sum'][0] / flux_scale) * u.mag
-            else:
-                flux_scale = None
-                sum_mag = None
+        if include_flux_scale:
+            flux_scale = flux_scale * phot_table['sum'][0].unit
+            sum_mag = -2.5 * np.log10(phot_table['sum'][0] / flux_scale) * u.mag
+        else:
+            flux_scale = None
+            sum_mag = None
 
-            # Extra info beyond photutils.
-            phot_table.add_columns(
-                [xcenter * u.pix, ycenter * u.pix, sky_center,
-                 bg, pixarea_fac, sum_ct, sum_ct_err, ctfac, sum_mag, flux_scale, data.label,
-                 reg.meta.get('label', ''), Time(datetime.now(tz=timezone.utc))],
-                names=['xcenter', 'ycenter', 'sky_center', 'background', 'pixarea_tot',
-                       'aperture_sum_counts', 'aperture_sum_counts_err', 'counts_fac',
-                       'aperture_sum_mag', 'flux_scaling',
-                       'data_label', 'subset_label', 'timestamp'],
-                indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
+        # Extra info beyond photutils.
+        phot_table.add_columns(
+            [xcenter * u.pix, ycenter * u.pix, sky_center,
+             bg, pixarea_fac, sum_ct, sum_ct_err, ctfac, sum_mag, flux_scale, data.label,
+             reg.meta.get('label', ''), Time(datetime.now(tz=timezone.utc))],
+            names=['xcenter', 'ycenter', 'sky_center', 'background', 'pixarea_tot',
+                   'aperture_sum_counts', 'aperture_sum_counts_err', 'counts_fac',
+                   'aperture_sum_mag', 'flux_scaling',
+                   'data_label', 'subset_label', 'timestamp'],
+            indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
 
+        if add_to_table:
             try:
                 phot_table['id'][0] = self.table._qtable['id'].max() + 1
                 self.table.add_item(phot_table)
@@ -327,7 +477,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 phot_table['id'][0] = 1
                 self.table.add_item(phot_table)
 
-            # Plots.
+        # Plots.
+        if update_plots:
             line = self.plot.marks['line']
             sc = self.plot.marks['scatter']
             fit_line = self.plot.marks['fit_line']
@@ -391,38 +542,31 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 else:
                     self.plot.clear_marks('fit_line')
 
-        except Exception as e:  # pragma: no cover
-            self.plot.clear_all_marks()
-            msg = f"Aperture photometry failed: {repr(e)}"
-            self.hub.broadcast(SnackbarMessage(msg, color='error', sender=self))
-            self.result_failed_msg = msg
-        else:
-            self.result_failed_msg = ''
+        # Parse results for GUI.
+        tmp = []
+        for key in phot_table.colnames:
+            if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
+                       'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
+                continue
+            x = phot_table[key][0]
+            if (isinstance(x, (int, float, u.Quantity)) and
+                    key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
+                                'aperture_sum_counts', 'aperture_sum_mag')):
+                tmp.append({'function': key, 'result': f'{x:.4e}'})
+            elif key == 'sky_center' and x is not None:
+                tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
+                tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f} deg'})
+            elif key in ('xcenter', 'ycenter', 'sum_aper_area'):
+                tmp.append({'function': key, 'result': f'{x:.1f}'})
+            elif key == 'aperture_sum_counts' and x is not None:
+                tmp.append({'function': key, 'result':
+                            f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
+            elif key == 'aperture_sum_mag' and x is not None:
+                tmp.append({'function': key, 'result': f'{x:.3f}'})
+            else:
+                tmp.append({'function': key, 'result': str(x)})
 
-            # Parse results for GUI.
-            tmp = []
-            for key in phot_table.colnames:
-                if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
-                           'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
-                    continue
-                x = phot_table[key][0]
-                if (isinstance(x, (int, float, u.Quantity)) and
-                        key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
-                                    'aperture_sum_counts', 'aperture_sum_mag')):
-                    tmp.append({'function': key, 'result': f'{x:.4e}'})
-                elif key == 'sky_center' and x is not None:
-                    tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
-                    tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f} deg'})
-                elif key in ('xcenter', 'ycenter', 'sum_aper_area'):
-                    tmp.append({'function': key, 'result': f'{x:.1f}'})
-                elif key == 'aperture_sum_counts' and x is not None:
-                    tmp.append({'function': key, 'result':
-                                f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
-                elif key == 'aperture_sum_mag' and x is not None:
-                    tmp.append({'function': key, 'result': f'{x:.3f}'})
-                else:
-                    tmp.append({'function': key, 'result': str(x)})
-
+        if update_plots:
             # Also display fit results
             fit_tmp = []
             if fit_model is not None and isinstance(fit_model, Gaussian1D):
@@ -432,10 +576,36 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                         p_val = p_val.value
                     fit_tmp.append({'function': param, 'result': f'{p_val:.4e}'})
 
-            self.results = tmp
+        self.results = tmp
+        self.result_available = True
+
+        if update_plots:
             self.fit_results = fit_tmp
-            self.result_available = True
             self.plot_available = True
+
+        return phot_table, fit_model
+
+    def vue_do_aper_phot(self, *args, **kwargs):
+        if self.dataset_selected == '' or self.aperture_selected == '':
+            self.hub.broadcast(SnackbarMessage(
+                "No data for aperture photometry", color='error', sender=self))
+            return
+
+        try:
+            if self.multiselect:
+                # even though plots aren't show in the UI when in multiselect mode,
+                # we'll create the last entry so if multiselect is disabled, the last
+                # iteration will show and not result in confusing behavior
+                self.calculate_batch_photometry(add_to_table=True, update_plots=True)
+            else:
+                self.calculate_photometry(add_to_table=True, update_plots=True)
+        except Exception as e:  # pragma: no cover
+            self.plot.clear_all_marks()
+            msg = f"Aperture photometry failed: {repr(e)}"
+            self.hub.broadcast(SnackbarMessage(msg, color='error', sender=self))
+            self.result_failed_msg = msg
+        else:
+            self.result_failed_msg = ''
 
     def unpack_batch_options(self, **options):
         """
@@ -443,47 +613,52 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         passed as tuples or lists.  For example::
 
             unpack_batch_options(dataset=['image1', 'image2'],
-                                 subset=['Subset 1', 'Subset 2'],
-                                 bg_subset=['Subset 3'],
+                                 aperture=['Subset 1', 'Subset 2'],
+                                 background=['Subset 3'],
                                  flux_scaling=3
                                  )
 
         would result in::
 
-            [{'subset': 'Subset 1',
+            [{'aperture': 'Subset 1',
               'dataset': 'image1',
-              'bg_subset': 'Subset 3',
+              'background': 'Subset 3',
               'flux_scaling': 3},
-             {'subset': 'Subset 2',
+             {'aperture': 'Subset 2',
               'dataset': 'image1',
-              'bg_subset': 'Subset 3',
+              'background': 'Subset 3',
               'flux_scaling': 3},
-             {'subset': 'Subset 1',
+             {'aperture': 'Subset 1',
               'dataset': 'image2',
-              'bg_subset': 'Subset 3',
+              'background': 'Subset 3',
               'flux_scaling': 3},
-             {'subset': 'Subset 2',
+             {'aperture': 'Subset 2',
               'dataset': 'image2',
-              'bg_subset': 'Subset 3',
+              'background': 'Subset 3',
               'flux_scaling': 3}]
 
         Parameters
         ----------
-        options : dict
+        options : dict, optional
             Dictionary of values to override from the values set in the plugin/traitlets.  Each
             entry can either be a single value, or a list.  All combinations of those that contain
-            a list will be exposed
+            a list will be exposed.  If not provided and the plugin is in multiselect mode
+            (``multiselect = True``), then the current values set in the plugin will be used.
 
         Returns
         -------
         options : list
             List of all combinations of input parameters, which can then be used as input to
-            `batch_aper_phot`
+            `calculate_batch_photometry`.
         """
         if not isinstance(options, dict):
             raise TypeError("options must be a dictionary")
-        # TODO: when enabling user API for this plugin, this should check that all inputs are
-        # exposed to self.user_api (rather than the internal self)
+        if not options:
+            if not self.multiselect:  # pragma: no cover
+                raise ValueError("must either provide a dictionary or set plugin to multiselect mode")  # noqa
+            options = {'dataset': self.dataset.selected, 'aperture': self.aperture.selected}
+
+        # TODO: use self.user_api once API is made public
         user_api = self  # .user_api
         invalid_keys = [k for k in options.keys() if not hasattr(user_api, k)]
         if len(invalid_keys):
@@ -505,6 +680,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
                 mult_values[k] = this_value
 
         def _unpack_dict_list(mult_values, single_values):
+            if not len(mult_values):
+                return [single_values]
             options_list = []
             # loop over the first item in mult_values
             # any remaining mult values will require recursion
@@ -522,12 +699,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
 
         return _unpack_dict_list(mult_values, single_values)
 
-    def batch_aper_phot(self, options, full_exceptions=False):
+    def calculate_batch_photometry(self, options=[], add_to_table=True, update_plots=True,
+                                   full_exceptions=False):
         """
-        Run aperture photometry over a list of options.  Values will be looped in order and any
-        unprovided options will remain at there previous values (either from a previous entry
-        in the list or from the plugin).  The plugin itself will update and will remain at the
-        final state from the last entry in the list.
+        Run aperture photometry over a list of options.  Unprovided options will remain at their
+        values defined in the plugin.
 
         To provide a list of values per-input, use `unpack_batch_options` to and pass that as input
         here.
@@ -537,6 +713,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
         options : list
             Each entry will result in one computation of aperture photometry and should be
             a dictionary of values to override from the values set in the plugin/traitlets.
+        add_to_table : bool
+            Whether to add results to the plugin table.
+        update_plots : bool
+            Whether to update the plugin plots for the last iteration.
         full_exceptions : bool, optional
             Whether to expose the full exception message for all failed iterations.
         """
@@ -545,37 +725,26 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetSelectMixin, TableMix
             raise TypeError("options must be a list of dictionaries")
         if not np.all([isinstance(option, dict) for option in options]):
             raise TypeError("options must be a list of dictionaries")
-
-        # these traitlets are automatically set based on the values of other traitlets in the
-        # plugin, and so we should apply any user-overrides LAST
-        attrs_auto_update = ('counts_factor', 'pixel_area', 'flux_scaling',
-                             'subset_area', 'background_value')
+        if not len(options):
+            if not self.multiselect:  # pragma: no cover
+                raise ValueError("must either provide manual options or put the plugin in multiselect mode")  # noqa
+            # unpack the batch options as provided in the app
+            options = self.unpack_batch_options()
 
         failed_iters, exceptions = [], []
         for i, option in enumerate(options):
-            # NOTE: if we do not want the UI to update (and end up in the final state), then
-            # we would need to refactor the plugin so that all we can compute computed values
-            # from the selected dataset without necessarily observing and updating traitlets.
-            # We would still want to check any select component against the valid choices.
-            # We could then also skip creating/showing the plot and have a manual call to
-            # vue_do_aper_phot re-enable plotting
-
-            # order the dictionary so that items that might be automatically set based on other
-            # selections are applied LATER so that user-overrides can take place.
-            # NOTE: this could have non-obvious consequences if providing the override for
-            # one entry but not another.  Alternatively, we could reset all traitlets to the
-            # original state between each iteration of the for-loop
-            option_ordered = {k: v for k, v in option.items() if k not in attrs_auto_update}
-            option_ordered.update(**option)
-
+            # only update plots on the last iteration
+            this_update_plots = i == len(options) and update_plots
+            defaults = self._get_defaults_from_metadata(option.get('dataset',
+                                                                   self.dataset.selected))
+            if self.pixel_area_multi_auto:
+                option.setdefault('pixel_area', defaults.get('pixel_area', 0))
+            if self.flux_scaling_multi_auto:
+                option.setdefault('flux_scaling', defaults.get('flux_scaling', 0))
             try:
-                for attr, value in option.items():
-                    # TODO: when enabling user_api, skip this and call setattr directly
-                    # on self.user_api
-                    if hasattr(self, f'{attr}_selected'):
-                        attr = f'{attr}_selected'
-                    setattr(self, attr, value)
-                self.vue_do_aper_phot()
+                self.calculate_photometry(add_to_table=add_to_table,
+                                          update_plots=this_update_plots,
+                                          **option)
             except Exception as e:
                 failed_iters.append(i)
                 if full_exceptions:

@@ -54,6 +54,10 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
 
     @observe("dataset_selected")
     def show_metadata(self, event):
+        if not hasattr(self, 'dataset'):  # pragma: no cover
+            # plugin not fully initialized
+            return
+
         data = self.dataset.selected_dc_item
         if (data is None or not hasattr(data, 'meta') or not isinstance(data.meta, dict)
                 or len(data.meta) < 1):

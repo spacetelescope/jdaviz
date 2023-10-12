@@ -20,7 +20,7 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
 __all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
 
 
-def _get_region_from_spatial_subset(plugin_obj, subset_state):
+def _get_region_from_spatial_subset(plugin_obj, subset_state, dataset=None):
     """Convert the given ``glue`` ROI subset state to ``regions`` shape.
 
     .. note:: This is for internal use only in Imviz plugins.
@@ -36,6 +36,9 @@ def _get_region_from_spatial_subset(plugin_obj, subset_state):
 
     subset_state : obj
         ROI subset state to translate.
+
+    dataset : string, optional
+        Name of the dataset.  If not provided, will look for ``plugin_obj.dataset_selected``.
 
     Returns
     -------
@@ -53,9 +56,12 @@ def _get_region_from_spatial_subset(plugin_obj, subset_state):
     # Subset is defined against its parent. This is not necessarily
     # the current viewer reference data, which can be changed.
 
+    if dataset is None:
+        dataset = plugin_obj.dataset_selected
+
     # See https://github.com/spacetelescope/jdaviz/issues/2230
     link_type = plugin_obj.app._jdaviz_helper.get_link_type(
-        subset_state.xatt.parent.label, plugin_obj.dataset_selected)
+        subset_state.xatt.parent.label, dataset)
 
     return roi_subset_state_to_region(subset_state, to_sky=(link_type == 'wcs'))
 

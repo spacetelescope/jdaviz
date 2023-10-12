@@ -1,4 +1,5 @@
 from astropy.coordinates.sky_coordinate import SkyCoord
+from astropy.nddata import NDData
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import astropy.units as u
@@ -31,6 +32,7 @@ from jdaviz import __version__
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage)
+from jdaviz.core.region_translators import _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.utils import get_subset_type
 
@@ -46,7 +48,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'NonFiniteUncertaintyMismatchMixin',
-           'DatasetSelect', 'DatasetSelectMixin',
+           'DatasetSelect', 'DatasetSelectMixin', 'DatasetMultiSelectMixin',
            'FileImportSelectPluginComponent', 'HasFileImportSelect',
            'Table', 'TableMixin',
            'Plot', 'PlotMixin',
@@ -617,7 +619,12 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             raise ValueError("currently in multiselect mode")
 
         cycle = self.choices
-        curr_ind = cycle.index(self.selected)
+        if not len(cycle):  # pragma: no cover
+            raise ValueError("no choices")
+        if self.selected == '':
+            curr_ind = -1
+        else:
+            curr_ind = cycle.index(self.selected)
         self.selected = cycle[(curr_ind + 1) % len(cycle)]
         return self.selected
 
@@ -744,7 +751,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def _multiselect_changed(self, event):
         self._clear_cache()
         if self.is_multiselect:
-            self.selected = [self.selected]
+            self.selected = [self.selected] if self.selected != '' else []
         elif isinstance(self.selected, list) and len(self.selected):
             self.selected = self.selected[0]
         else:
@@ -1288,7 +1295,7 @@ class LayerSelect(SelectPluginComponent):
                    if layer.layer.label in selected]
                   for viewer in viewers]
 
-        if not self.multiselect and len(layers) == 1:
+        if not self.is_multiselect and len(layers) == 1:
             return layers[0]
         else:
             return layers
@@ -1388,7 +1395,7 @@ class SubsetSelect(SelectPluginComponent):
 
     """
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
-                 viewers=None, default_text=None, manual_options=[], filters=[],
+                 dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text'):
         """
         Parameters
@@ -1399,8 +1406,13 @@ class SubsetSelect(SelectPluginComponent):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
-        selected_has_subregions: str
+        multiselect : str
+            the name of the traitlet defining whether the dropdown should accept multiple selections
+        selected_has_subregions : str
             the name of the selected_has_subregions traitlet defined in ``plugin``, optional
+        dataset : str
+            the name of the dataset traitlet defined in ``plugin``, to be used for accessing how
+            the subset is applied to the data (masks, etc), optional
         viewers : list
             the reference names or ids of the viewer to extract the subregion.  If not provided o
             None, will loop through all references.
@@ -1420,10 +1432,19 @@ class SubsetSelect(SelectPluginComponent):
                          multiselect=multiselect,
                          filters=filters,
                          selected_has_subregions=selected_has_subregions,
+                         dataset=dataset,
                          viewers=viewers,
                          default_text=default_text,
                          manual_options=manual_options,
                          default_mode=default_mode)
+
+        self._cached_properties += ["selected_subset_state",
+                                    "selected_spatial_region",
+                                    "selected_subset_mask"]
+        if dataset is not None:
+            # clear selected_subset_mask and selected_spatial_region on change to dataset
+            self.add_observe(self.dataset._plugin_traitlets['selected'],
+                             self._on_dataset_selected_changed)
 
         if selected_has_subregions is not None:
             self.selected_has_subregions = False
@@ -1440,6 +1461,9 @@ class SubsetSelect(SelectPluginComponent):
     def _selected_changed(self, event):
         super()._selected_changed(event)
         self._update_has_subregions()
+
+    def _on_dataset_selected_changed(self, event):
+        self._clear_cache('selected_subset_mask', 'selected_spatial_region')
 
     def _subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
@@ -1499,7 +1523,8 @@ class SubsetSelect(SelectPluginComponent):
             ((self.is_multiselect and subset.label in self.selected)
              or (subset.label == self.selected))):
             # updated the currently selected subset
-            self._clear_cache("selected_obj", "selected_item")
+            self._clear_cache("selected_obj", "selected_item", "selected_subset_state",
+                              "selected_subset_mask", "selected_subset", "selected_spatial_region")
             self._update_has_subregions()
 
     def _update_has_subregions(self):
@@ -1514,41 +1539,48 @@ class SubsetSelect(SelectPluginComponent):
             else:
                 self.selected_has_subregions = len(self.selected_obj.subregions) > 1
 
-    @cached_property
-    def selected_obj(self):
+    def _get_selected_obj(self, selected):
         if (
-            self.selected in self.manual_options or
-            self.selected not in self.labels or
-            self.selected is None
+            selected in self.manual_options or
+            selected not in self.labels or
+            selected is None
         ):
             return None
-        return self.app.get_subsets(self.selected)
+        return self.app.get_subsets(selected)
 
-    @property
+    @cached_property
+    def selected_obj(self):
+        if self.is_multiselect:
+            return [self._get_selected_obj(subset) for subset in self.selected]
+        return self._get_selected_obj(self.selected)
+
+    def _get_subset_state(self, subset):
+        subset_group = [s for s in self.app.data_collection.subset_groups if
+                        s.label == subset]
+        if len(subset_group) == 0:
+            return None
+        if len(subset_group) != 1:  # pragma: no cover
+            raise ValueError("found multiple matches for subset")
+        return subset_group[0].subset_state
+
+    @cached_property
     def selected_subset_state(self):
         if self.is_multiselect:
-            subset_states = {}
-            for select_subset in self.selected:
-                if select_subset == self.default_text:
-                    continue
-                subset_group = [s for s in self.app.data_collection.subset_groups if
-                                s.label == select_subset][0]
-                subset_states[select_subset] = subset_group.subset_state
-            return subset_states
-        subset_group = [s for s in self.app.data_collection.subset_groups if
-                        s.label == self.selected][0]
-        return subset_group.subset_state
+            return [self._get_subset_state(subset) for subset in self.selected]
+        return self._get_subset_state(self.selected)
 
-    @property
-    def selected_subset_mask(self):
-        if self.is_multiselect:
-            raise NotImplementedError("Retrieving subset mask is not"
-                                      " supported in multiselect mode")
-        get_data_kwargs = {'data_label': self.plugin.dataset.selected}
+    def _get_subset_mask(self, subset=None, dataset=None):
+        if subset is None:
+            subset = self.selected
+        if dataset is None:
+            if getattr(self.plugin, 'dataset', None) is None:  # pragma: no cover
+                raise ValueError("Retrieving subset mask requires associated dataset")
+            dataset = self.plugin.dataset.selected
+        get_data_kwargs = {'data_label': dataset}
         if 'is_spectral' in self.filters:
-            get_data_kwargs['spectral_subset'] = self.selected
+            get_data_kwargs['spectral_subset'] = subset
         elif 'is_spatial' in self.filters:
-            get_data_kwargs['spatial_subset'] = self.selected
+            get_data_kwargs['spatial_subset'] = subset
 
         if self.app.config == 'cubeviz' and 'is_spectral' in self.filters:
             viewer_ref = getattr(self.plugin,
@@ -1557,15 +1589,56 @@ class SubsetSelect(SelectPluginComponent):
             get_data_kwargs['function'] = self.app.get_viewer(viewer_ref).state.function
 
         subset = self.app._jdaviz_helper.get_data(**get_data_kwargs)
-
         return subset.mask
 
-    def selected_min_max(self, spectrum1d):
+    @cached_property
+    def selected_subset_mask(self):
+        if self.is_multiselect:  # pragma: no cover
+            raise NotImplementedError("Retrieving subset mask is not"
+                                      " supported in multiselect mode")
+
+        return self._get_subset_mask()
+
+    def _get_spatial_region(self, dataset, subset=None):
+        if subset is None:
+            subset = self.selected
+            subset_state = self.selected_subset_state
+        else:
+            subset_state = self._get_subset_state(subset)
+        region = _get_region_from_spatial_subset(self.plugin,
+                                                 subset_state,
+                                                 dataset=dataset)
+        region.meta['label'] = subset
+        return region
+
+    @cached_property
+    def selected_spatial_region(self):
+        if not getattr(self, 'dataset', None):  # pragma: no cover
+            raise ValueError("Retrieving subset mask requires associated dataset")
+        if self.is_multiselect and self.dataset.is_multiselect:  # pragma: no cover
+            # technically this could work if either has length of one, but would require extra
+            # logic
+            raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")  # noqa
+        types = self.selected_item.get('type')
+        if not isinstance(types, list):
+            types = [types]
+        if np.any([type != 'spatial' for type in types]):
+            raise TypeError("This action is only supported on spatial-type subsets")
         if self.is_multiselect:
+            return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
+        return self._get_spatial_region(dataset=self.dataset.selected)
+
+    def selected_min_max(self, dataset):
+        """
+        Get the min/max spectral range of ``dataset`` given the selected spectral subset
+        """
+        if self.is_multiselect:  # pragma: no cover
             raise TypeError("This action cannot be done when multiselect is active")
+        if not isinstance(dataset, Spectrum1D):  # pragma: no cover
+            raise TypeError("dataset must be a Spectrum1D object")
 
         if self.selected_obj is None:
-            return np.nanmin(spectrum1d.spectral_axis), np.nanmax(spectrum1d.spectral_axis)
+            return np.nanmin(dataset.spectral_axis), np.nanmax(dataset.spectral_axis)
         if self.selected_item.get('type') != 'spectral':
             raise TypeError("This action is only supported on spectral-type subsets")
         else:
@@ -1597,7 +1670,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     """
     spectral_subset_items = List().tag(sync=True)
-    spectral_subset_selected = Unicode().tag(sync=True)
+    spectral_subset_selected = Any().tag(sync=True)
     spectral_subset_selected_has_subregions = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -1607,6 +1680,7 @@ class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
                                             'spectral_subset_items',
                                             'spectral_subset_selected',
                                             'spectral_subset_selected_has_subregions',
+                                            dataset='dataset' if hasattr(self, 'dataset') else None,  # noqa
                                             viewers=[spectrum_viewer],
                                             default_text='Entire Spectrum',
                                             filters=['is_spectral'])
@@ -1636,7 +1710,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     """
     spatial_subset_items = List().tag(sync=True)
-    spatial_subset_selected = Unicode().tag(sync=True)
+    spatial_subset_selected = Any().tag(sync=True)
     spatial_subset_selected_has_subregions = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -1645,6 +1719,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            'spatial_subset_items',
                                            'spatial_subset_selected',
                                            'spatial_subset_selected_has_subregions',
+                                           dataset='dataset' if hasattr(self, 'dataset') else None,
                                            default_text='Entire Cube',
                                            filters=['is_spatial'])
 
@@ -1663,7 +1738,9 @@ class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
 
     @observe("dataset_selected", "spectral_subset_selected")
     def _check_dataset_spectral_subset_valid(self, event={}, return_ranges=False):
-
+        if not hasattr(self, 'dataset'):
+            # plugin not fully initialized
+            return
         if self.spectral_subset_selected == "Entire Spectrum":
             self.spectral_subset_valid = True
         else:
@@ -1993,6 +2070,7 @@ class DatasetSelect(SelectPluginComponent):
 
     """
     def __init__(self, plugin, items, selected,
+                 multiselect=None,
                  filters=['not_from_plugin_model_fitting', 'layer_in_viewers'],
                  default_text=None, manual_options=[],
                  default_mode='first'):
@@ -2005,6 +2083,8 @@ class DatasetSelect(SelectPluginComponent):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
+        multiselect : str
+            the name of the traitlet defining whether the dropdown should accept multiple selections
         filters : list
             list of strings (for built-in filters) or callables to filter to only valid options.
         default_text : str or None
@@ -2015,7 +2095,8 @@ class DatasetSelect(SelectPluginComponent):
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
         """
-        super().__init__(plugin, items=items, selected=selected, filters=filters,
+        super().__init__(plugin, items=items, selected=selected,
+                         multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
         self._cached_properties += ["selected_dc_item"]
@@ -2053,19 +2134,27 @@ class DatasetSelect(SelectPluginComponent):
     @property
     def default_data_cls(self):
         if self.app.config == 'imviz':
-            return None
+            return NDData
         if 'is_trace' in self.filters:
             return None
         return Spectrum1D
 
-    @cached_property
-    def selected_dc_item(self):
-        if self.selected not in self.labels:
+    def _get_dc_item(self, selected):
+        if selected not in self.labels:
             # _apply_default_selection will override shortly anyways
             return None
-        return next((x for x in self.app.data_collection if x.label == self.selected))
+        return next((x for x in self.app.data_collection if x.label == selected))
+
+    @cached_property
+    def selected_dc_item(self):
+        if self.is_multiselect:
+            return [self._get_dc_item(selected) for selected in self.selected]
+        return self._get_dc_item(self.selected)
 
     def get_object(self, *args, **kwargs):
+        if self.is_multiselect:
+            return [dc_item.get_object(*args, **kwargs) for dc_item in self.selected_dc_item]
+
         if self.selected not in self.labels:
             # _apply_default_selection will override shortly anyways
             return None
@@ -2073,12 +2162,13 @@ class DatasetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_obj(self):
-        if self.selected not in self.labels:
-            # _apply_default_selection will override shortly anyways
-            return None
-        match = self.app._jdaviz_helper.get_data(data_label=self.selected)
-        if match is not None:
-            return match
+        if not self.is_multiselect:
+            if self.selected not in self.labels:
+                # _apply_default_selection will override shortly anyways
+                return None
+            match = self.app._jdaviz_helper.get_data(data_label=self.selected)
+            if match is not None:
+                return match
         # handle the case of empty Application with no viewer, we'll just pull directly
         # from the data collection
         return self.get_object(cls=self.default_data_cls)
@@ -2191,7 +2281,43 @@ class DatasetSelectMixin(VuetifyTemplate, HubListener):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # NOTE: cannot be named self.data or will conflict with existing self.data traitlet!
-        self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected')
+        self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected',
+                                     multiselect=None)
+
+
+class DatasetMultiSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the DatasetSelect component as a mixin in the base plugin with togglable multiselect.
+    This automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``DatasetMultiSelectMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.dataset``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-dataset-select
+        :items="dataset_items"
+        :selected.sync="dataset_selected"
+        :multiselect="multiselect"
+        label="Data"
+        hint="Select data."
+      />
+
+    """
+    dataset_items = List().tag(sync=True)
+    dataset_selected = Any().tag(sync=True)
+    multiselect = Bool(False).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # NOTE: cannot be named self.data or will conflict with existing self.data traitlet!
+        self.dataset = DatasetSelect(self, 'dataset_items', 'dataset_selected',
+                                     multiselect='multiselect')  # noqa
 
 
 class AutoTextField(BasePluginComponent):

@@ -31,31 +31,31 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             phot_plugin.dataset_selected = 'no_such_data'
         with pytest.raises(ValueError):
             # will raise an error and revert to first entry
-            phot_plugin.subset_selected = 'no_such_subset'
-        assert phot_plugin.subset_selected == ''
-        phot_plugin.subset_selected = phot_plugin.subset.labels[0]
+            phot_plugin.aperture_selected = 'no_such_subset'
+        assert phot_plugin.aperture_selected == ''
+        phot_plugin.aperture_selected = phot_plugin.aperture.labels[0]
         assert_allclose(phot_plugin.background_value, 0)
 
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
-        phot_plugin.subset_selected = phot_plugin.subset.labels[0]
+        phot_plugin.aperture_selected = phot_plugin.aperture.labels[0]
         with pytest.raises(ValueError):
-            phot_plugin.bg_subset_selected = 'no_such_subset'
-        assert phot_plugin.bg_subset_selected == 'Manual'
+            phot_plugin.background_selected = 'no_such_subset'
+        assert phot_plugin.background_selected == 'Manual'
         assert_allclose(phot_plugin.background_value, 0)
 
         # Perform photometry on both images using same Subset.
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
-        phot_plugin.subset_selected = 'Subset 1'
-        assert phot_plugin._selected_data is not None
+        phot_plugin.aperture_selected = 'Subset 1'
+        assert phot_plugin.dataset.selected_dc_item is not None
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1
 
         phot_plugin.dataset_selected = 'has_wcs_2[SCI,1]'
         phot_plugin.current_plot_type = 'Radial Profile (Raw)'
-        assert phot_plugin._selected_data is not None
-        assert phot_plugin._selected_subset is not None
-        assert phot_plugin.bg_subset.labels == ['Manual', 'Subset 1']
+        assert phot_plugin.dataset.selected_dc_item is not None
+        assert phot_plugin.aperture.selected_spatial_region is not None
+        assert phot_plugin.background.labels == ['Manual', 'Subset 1']
         assert_allclose(phot_plugin.background_value, 0)
         assert_allclose(phot_plugin.counts_factor, 0)
         assert_allclose(phot_plugin.pixel_area, 0)
@@ -114,7 +114,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Make sure it also works on an ellipse subset.
         self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
-        phot_plugin.subset_selected = 'Subset 2'
+        phot_plugin.aperture_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
@@ -135,8 +135,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # We also subtract off background from itself here.
         self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
-        phot_plugin.subset_selected = 'Subset 3'
-        phot_plugin.bg_subset_selected = 'Subset 3'
+        phot_plugin.aperture_selected = 'Subset 3'
+        phot_plugin.background_selected = 'Subset 3'
         assert_allclose(phot_plugin.background_value, 1)
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
@@ -154,9 +154,9 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert tbl[-1]['subset_label'] == 'Subset 3'
 
         # Make sure background auto-updates.
-        phot_plugin.bg_subset_selected = 'Manual'
+        phot_plugin.background_selected = 'Manual'
         assert_allclose(phot_plugin.background_value, 1)  # Keeps last value
-        phot_plugin.bg_subset_selected = 'Subset 1'
+        phot_plugin.background_selected = 'Subset 1'
         assert_allclose(phot_plugin.background_value, 1)
         self.imviz.load_data(np.ones((10, 10)) + 1, data_label='twos')
         phot_plugin.dataset_selected = 'twos'
@@ -168,51 +168,67 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert phot_plugin.plot.figure.title == 'Curve of growth from aperture center'
 
     def test_batch_unpack(self):
-        phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        # TODO: remove ._obj when API is made public
+        phot_plugin = self.imviz.plugins['Aperture Photometry']._obj
 
         # NOTE: these input values are not currently validated, so it does not matter that the
         # datasets and subsets do not exist with these names (if that changes, this test will
         # need to be udpated accordingly)
         unpacked = phot_plugin.unpack_batch_options(dataset=['image1', 'image2'],
-                                                    subset=['Subset 1', 'Subset 2'],
-                                                    bg_subset=['Subset 3'],
+                                                    aperture=['Subset 1', 'Subset 2'],
+                                                    background=['Subset 3'],
                                                     flux_scaling=3)
-        assert unpacked == [{'subset': 'Subset 1',
+        assert unpacked == [{'aperture': 'Subset 1',
                              'dataset': 'image1',
-                             'bg_subset': 'Subset 3',
+                             'background': 'Subset 3',
                              'flux_scaling': 3},
-                            {'subset': 'Subset 2',
+                            {'aperture': 'Subset 2',
                              'dataset': 'image1',
-                             'bg_subset': 'Subset 3',
+                             'background': 'Subset 3',
                              'flux_scaling': 3},
-                            {'subset': 'Subset 1',
+                            {'aperture': 'Subset 1',
                              'dataset': 'image2',
-                             'bg_subset': 'Subset 3',
+                             'background': 'Subset 3',
                              'flux_scaling': 3},
-                            {'subset': 'Subset 2',
+                            {'aperture': 'Subset 2',
                              'dataset': 'image2',
-                             'bg_subset': 'Subset 3',
+                             'background': 'Subset 3',
                              'flux_scaling': 3}]
 
     def test_batch_phot(self):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
         self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
 
-        phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        # TODO: remove ._obj when API is made public
+        phot_plugin = self.imviz.plugins['Aperture Photometry']._obj
         assert phot_plugin.dataset.choices == ['has_wcs_1[SCI,1]', 'has_wcs_2[SCI,1]']
-        assert phot_plugin.subset.choices == ['Subset 1']
+        assert phot_plugin.aperture.choices == ['Subset 1']
 
-        phot_plugin.batch_aper_phot([{'dataset': 'has_wcs_1[SCI,1]', 'subset': 'Subset 1'},
-                                     {'dataset': 'has_wcs_2[SCI,1]'}])
+        phot_plugin.aperture.selected = 'Subset 1'
+        phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'Subset 1'},  # noqa
+                                                {'dataset': 'has_wcs_2[SCI,1]'}])
 
         assert len(phot_plugin.table) == 2
 
         with pytest.raises(RuntimeError):
-            phot_plugin.batch_aper_phot([{'dataset': 'has_wcs_1[SCI,1]', 'subset': 'DNE'},
-                                         {'dataset': 'has_wcs_2[SCI,1]', 'subset': 'Subset 1'}])
+            phot_plugin.calculate_batch_photometry([{'dataset': 'has_wcs_1[SCI,1]', 'aperture': 'DNE'},  # noqa
+                                                    {'dataset': 'has_wcs_2[SCI,1]', 'aperture': 'Subset 1'}])  # noqa
 
         # second entry above should have been successful, resulting in one addition to the results
         assert len(phot_plugin.table) == 3
+
+        # now run through the UI directly
+        phot_plugin.multiselect = True
+        phot_plugin.dataset.select_all()
+        phot_plugin.aperture.select_none()
+        assert len(phot_plugin.unpack_batch_options()) == 0
+        phot_plugin.vue_do_aper_phot()
+
+        assert len(phot_plugin.table) == 3
+        phot_plugin.aperture.select_all()
+        assert len(phot_plugin.unpack_batch_options()) == 2
+        phot_plugin.vue_do_aper_phot()
+        assert len(phot_plugin.table) == 5
 
 
 class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
@@ -222,7 +238,7 @@ class TestSimpleAperPhot_NoWCS(BaseImviz_WCS_NoWCS):
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
         phot_plugin.dataset_selected = 'has_wcs[SCI,1]'
-        phot_plugin.subset_selected = 'Subset 1'
+        phot_plugin.aperture_selected = 'Subset 1'
         phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 1
@@ -265,7 +281,7 @@ class TestAdvancedAperPhot:
 
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer
-        self.phot_plugin = imviz_helper.plugins["Imviz Simple Aperture Photometry"]._obj
+        self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]._obj
 
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 5.0),
@@ -280,8 +296,8 @@ class TestAdvancedAperPhot:
     def test_aperphot(self, data_label, local_bkg, subset_label, expected_sum):
         """All data should give similar result for the same Subset."""
         self.phot_plugin.dataset_selected = data_label
-        self.phot_plugin.subset_selected = subset_label
-        self.phot_plugin.bg_subset_selected = 'Manual'
+        self.phot_plugin.aperture_selected = subset_label
+        self.phot_plugin.background_selected = 'Manual'
         self.phot_plugin.background_value = local_bkg
         self.phot_plugin.vue_do_aper_phot()
         tbl = self.imviz.get_aperture_photometry_results()
@@ -303,8 +319,8 @@ class TestAdvancedAperPhot:
         Down-sampled data has higher factor due to flux conservation.
         """
         self.phot_plugin.dataset_selected = data_label
-        self.phot_plugin.subset_selected = "Subset 1"  # Does not matter
-        self.phot_plugin.bg_subset_selected = bg_label
+        self.phot_plugin.aperture_selected = "Subset 1"  # Does not matter
+        self.phot_plugin.background_selected = bg_label
 
         # Imperfect down-sampling and abusing apertures, so 10% is good enough.
         assert_allclose(float(self.phot_plugin.background_value), expected_bg * fac, rtol=0.1)
@@ -331,8 +347,8 @@ def test_annulus_background(imviz_helper):
         PixCoord(x=150, y=25), inner_radius=7, outer_radius=17)
     imviz_helper.load_regions([annulus_1])
 
-    phot_plugin.subset_selected = 'Subset 1'
-    phot_plugin.bg_subset_selected = 'Subset 2'
+    phot_plugin.aperture_selected = 'Subset 1'
+    phot_plugin.background_selected = 'Subset 2'
 
     # Check annulus for ones
     assert_allclose(phot_plugin.background_value, 1)
@@ -351,25 +367,25 @@ def test_annulus_background(imviz_helper):
     imviz_helper.load_regions([annulus_2])
 
     # Subset 4 (annulus) should be available for the background but not the aperture
-    assert 'Subset 4' not in phot_plugin.subset.choices
-    assert 'Subset 4' in phot_plugin.bg_subset.choices
+    assert 'Subset 4' not in phot_plugin.aperture.choices
+    assert 'Subset 4' in phot_plugin.background.choices
 
-    phot_plugin.subset_selected = 'Subset 3'
-    phot_plugin.bg_subset_selected = 'Subset 4'
+    phot_plugin.aperture_selected = 'Subset 3'
+    phot_plugin.background_selected = 'Subset 4'
 
     # Check new annulus for four_gaussians
     assert_allclose(phot_plugin.background_value, 5.13918435824334)  # Changed
 
     # Switch to manual, should not change
-    phot_plugin.bg_subset_selected = 'Manual'
+    phot_plugin.background_selected = 'Manual'
     assert_allclose(phot_plugin.background_value, 5.13918435824334)
 
     # Switch to Subset, should change a lot because this is not background area
-    phot_plugin.bg_subset_selected = 'Subset 1'
+    phot_plugin.background_selected = 'Subset 1'
     assert_allclose(phot_plugin.background_value, 44.72559981461203)
 
     # Switch back to annulus, should be same as before in same mode
-    phot_plugin.bg_subset_selected = 'Subset 4'
+    phot_plugin.background_selected = 'Subset 4'
     assert_allclose(phot_plugin.background_value, 5.13918435824334)
 
     # Edit the annulus and make sure background updates

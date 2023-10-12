@@ -161,8 +161,8 @@ This plugin only considers pixel locations, not sky coordinates.
 
 .. _aper-phot-simple:
 
-Simple Aperture Photometry
-==========================
+Aperture Photometry
+===================
 
 .. warning::
 

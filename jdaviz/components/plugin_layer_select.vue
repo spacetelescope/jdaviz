@@ -18,7 +18,7 @@
     >
     <template slot="selection" slot-scope="data">
       <div class="single-line" style="width: 100%">
-        <v-chip v-if="multiselect" style="width: calc(100% - 20px)">
+        <v-chip v-if="multiselect" style="width: calc(100% - 10px)">
           <span>
             <j-layer-viewer-icon :icon="data.item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
             {{ data.item.label }}
