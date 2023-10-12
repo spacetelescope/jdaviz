@@ -12,6 +12,8 @@ Cubeviz
 
 - Add circular annulus subset to toolbar. [#2438]
 
+- Expose sky regions in get_subsets. If 'include_sky_region' is True, a sky Region will be returned (in addition to a pixel Region) for spatial subsets with parent data that was a WCS. [#2496]
+
 Imviz
 ^^^^^
 
