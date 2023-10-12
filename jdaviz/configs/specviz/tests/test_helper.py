@@ -458,3 +458,24 @@ def test_spectra_incompatible_flux(specviz_helper):
     specviz_helper.load_data(sp3, data_label="3")  # OK
 
     assert specviz_helper.app.data_collection.labels == ["2", "3"]
+
+
+def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
+    specviz_helper.load_data(spectrum1d, 'my_spec_AA')
+    specviz_helper.load_data(spectrum1d_nm, 'my_spec_nm')
+
+    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
+
+    assert len(specviz_helper.app.data_collection.subset_groups) == 1
+    subset1 = specviz_helper.app.data_collection.subset_groups[0]
+    assert subset1.subset_state.att.parent.label == "my_spec_AA"
+    assert subset1.subset_state.lo == 6200
+    assert subset1.subset_state.hi == 7000
+
+    specviz_helper.app.remove_data_from_viewer("spectrum-viewer", "my_spec_AA")
+    specviz_helper.app.vue_data_item_remove({"item_name": "my_spec_AA"})
+
+    # Check that the reparenting and coordinate recalculations happened
+    assert subset1.subset_state.att.parent.label == "my_spec_nm"
+    np.testing.assert_allclose(subset1.subset_state.lo, 620)
+    np.testing.assert_allclose(subset1.subset_state.hi, 700)

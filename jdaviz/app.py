@@ -2023,7 +2023,6 @@ class Application(VuetifyTemplate, HubListener):
         Callback for selection events in the front-end data list when clicking to unload an entry
         from the viewer.
         """
-        print("Unloading data")
         data_label = self._get_data_item_by_id(event['item_id'])['name']
         self.remove_data_from_viewer(event['id'], data_label)
 

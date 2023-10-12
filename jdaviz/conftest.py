@@ -155,6 +155,15 @@ def spectrum1d():
 
 
 @pytest.fixture
+def spectrum1d_nm():
+    spec_axis = np.linspace(600, 800, SPECTRUM_SIZE) * u.nm
+    flux = (np.random.randn(len(spec_axis.value)) +
+            10*np.exp(-0.001*(spec_axis.value-6563)**2) +
+            spec_axis.value/500) * u.Jy
+    return Spectrum1D(spectral_axis=spec_axis, flux=flux)
+
+
+@pytest.fixture
 def spectrum_collection(spectrum1d):
     sc = [spectrum1d] * 5
 
