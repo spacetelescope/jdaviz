@@ -143,7 +143,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
 
     if target_wave_unit is None and hdulist is not None:
         found_target = False
-        for ext in ('SCI', 'FLUX', 'PRIMARY'):  # In priority order
+        for ext in ('SCI', 'FLUX', 'PRIMARY', 'DATA'):  # In priority order
             if found_target:
                 break
             if ext not in hdulist:
@@ -153,7 +153,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
             for cunit_num in (3, 1):
                 cunit_key = f"CUNIT{cunit_num}"
                 ctype_key = f"CTYPE{cunit_num}"
-                if cunit_key in hdr and 'WAVE' in hdr[ctype_key]:
+                if cunit_key in hdr and 'WAV' in hdr[ctype_key]:
                     target_wave_unit = u.Unit(hdr[cunit_key])
                     found_target = True
                     break

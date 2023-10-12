@@ -18,6 +18,8 @@ Cubeviz
 
 - Fixed moment map losing WCS when being written out to FITS file. [#2431]
 
+- Fixed parsing for VLT MUSE data cube so spectral axis unit is correctly converted. [#2504]
+
 Imviz
 ^^^^^
 
