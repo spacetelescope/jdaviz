@@ -908,7 +908,10 @@ class TestRegionsFromSubsets:
         """ Basic tests for retrieving Sky Regions from subsets in Imviz.
         """
 
+        # using cube WCS instead of 2d imaging wcs for consistancy with
+        # cubeviz test. accessing just the spatial part of this.
         wcs = spectral_cube_wcs.celestial
+
         data = NDData(np.ones((128, 128)) * u.nJy, wcs=wcs)
         imviz_helper.load_data(data)
 
@@ -942,7 +945,7 @@ class TestRegionsFromSubsets:
             that it returns None with no error.
         """
 
-        data = NDData(np.ones((128, 128)) * u.nJy)
+        data = NDData(np.ones((40, 40)) * u.nJy)
         imviz_helper.load_data(data)
 
         imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(25, 25, 10))

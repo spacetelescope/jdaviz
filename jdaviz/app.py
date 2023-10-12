@@ -942,11 +942,11 @@ class Application(VuetifyTemplate, HubListener):
             leave out the region class name and glue_state.
         simplify_spectral : bool
             Return a composite spectral subset collapsed to a simplified
-            SpectralRegion.roi_subset_state_to_region
-        use_display_units: bool, optional
+            SpectralRegion.
+        use_display_units : bool, optional
             Whether to convert to the display units defined in the
             :ref:`Unit Conversion <unit-conversion>` plugin.
-        include_sky_region: bool
+        include_sky_region : bool
             If True, for spatial subsets that have a WCS associated with their
             parent data, return a sky region in addition to pixel region. If
             subset is composite, a sky region for each constituent subset will
@@ -1111,7 +1111,7 @@ class Application(VuetifyTemplate, HubListener):
         if to_sky:
             if self.config == 'cubeviz':
                 parent_data = subset_state.attributes[0].parent
-                wcs = parent_data.meta["_orig_spatial_wcs"]
+                wcs = parent_data.meta.get("_orig_spatial_wcs", None)
             else:
                 wcs = subset_state.xatt.parent.coords  # imviz, try getting WCS from subset data
 

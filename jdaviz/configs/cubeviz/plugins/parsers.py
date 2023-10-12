@@ -132,10 +132,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
 
 def _get_celestial_wcs(wcs):
     """ If `wcs` has a celestial component return that, otherwise return None """
-    if hasattr(wcs, 'celestial'):
-        return wcs.celestial
-    else:
-        return None
+    return wcs.celestial if hasattr(wcs, 'celestial') else None
 
 
 def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=None,
@@ -418,9 +415,7 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
 
     # store original WCS in metadata. this is a hacky workaround for converting subsets
     # to sky regions, where the parent data of the subset might have dropped spatial WCS info
-    file_obj.meta['_orig_spatial_wcs'] = None
-    if hasattr(file_obj, 'wcs'):
-        file_obj.meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs)
+    file_obj.meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs) if hasattr(file_obj, 'wcs') else None
 
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
