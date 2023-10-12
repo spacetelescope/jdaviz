@@ -922,10 +922,12 @@ class Application(VuetifyTemplate, HubListener):
         return regions
 
     def get_subsets(self, subset_name=None, spectral_only=False,
-                    spatial_only=False, object_only=False, simplify_spectral=True,
-                    use_display_units=False):
+                    spatial_only=False, object_only=False,
+                    simplify_spectral=True, use_display_units=False,
+                    include_sky_region=False):
         """
-        Returns all branches of glue subset tree in the form that subset plugin can recognize.
+        Returns all branches of glue subset tree in the form that subset plugin
+        can recognize.
 
         Parameters
         ----------
@@ -939,16 +941,23 @@ class Application(VuetifyTemplate, HubListener):
             Return only object relevant information and
             leave out the region class name and glue_state.
         simplify_spectral : bool
-            Return a composite spectral subset collapsed to a simplified SpectralRegion.
-        use_display_units: bool, optional
+            Return a composite spectral subset collapsed to a simplified
+            SpectralRegion.
+        use_display_units : bool, optional
             Whether to convert to the display units defined in the
             :ref:`Unit Conversion <unit-conversion>` plugin.
+        include_sky_region : bool
+            If True, for spatial subsets that have a WCS associated with their
+            parent data, return a sky region in addition to pixel region. If
+            subset is composite, a sky region for each constituent subset will
+            be returned.
 
         Returns
         -------
         data : dict
-            A dict with keys representing the subset name and values as astropy regions
-            objects.
+            Returns a nested dictionary with, for each subset, 'name', 'glue_state',
+            'region', 'sky_region' (set to None if not applicable), and 'subset_state'.
+            If subset is composite, each constituant subset will be included individually.
         """
 
         dc = self.data_collection
@@ -957,29 +966,37 @@ class Application(VuetifyTemplate, HubListener):
         all_subsets = {}
 
         for subset in subsets:
+
             label = subset.label
+
             if isinstance(subset.subset_state, CompositeSubsetState):
                 # Region composed of multiple ROI or Range subset
                 # objects that must be traversed
                 subset_region = self.get_sub_regions(subset.subset_state,
-                                                     simplify_spectral, use_display_units)
+                                                     simplify_spectral, use_display_units,
+                                                     get_sky_regions=include_sky_region)
+
             elif isinstance(subset.subset_state, RoiSubsetState):
-                # 3D regions represented as a dict including an
-                # AstropyRegion object if possible
-                subset_region = self._get_roi_subset_definition(subset.subset_state)
+
+                subset_region = self._get_roi_subset_definition(subset.subset_state,
+                                                                to_sky=include_sky_region)
+
             elif isinstance(subset.subset_state, RangeSubsetState):
                 # 2D regions represented as SpectralRegion objects
                 subset_region = self._get_range_subset_bounds(subset.subset_state,
                                                               simplify_spectral,
                                                               use_display_units)
+
             elif isinstance(subset.subset_state, MultiMaskSubsetState):
                 subset_region = self._get_multi_mask_subset_definition(subset.subset_state)
+
             else:
                 # subset.subset_state can be an instance of something else
                 # we do not know how to handle yet
                 all_subsets[label] = [{"name": subset.subset_state.__class__.__name__,
                                        "glue_state": subset.subset_state.__class__.__name__,
                                        "region": None,
+                                       "sky_region": None,
                                        "subset_state": subset.subset_state}]
                 continue
 
@@ -1014,6 +1031,8 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     all_subsets[label] = subset_region
 
+        # can this be done at the top to avoid traversing all subsets if only
+        # one is requested?
         all_subset_names = [subset.label for subset in dc.subset_groups]
         if subset_name and subset_name in all_subset_names:
             return all_subsets[subset_name]
@@ -1071,31 +1090,54 @@ class Application(VuetifyTemplate, HubListener):
             return [{"name": subset_state.__class__.__name__,
                      "glue_state": subset_state.__class__.__name__,
                      "region": spec_region,
+                     "sky_region": None,  # not implemented for spectral, include for consistancy
                      "subset_state": subset_state}]
         return spec_region
 
     def _get_multi_mask_subset_definition(self, subset_state):
+
         return [{"name": subset_state.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
                  "region": subset_state.total_masked_first_data(),
+                 "sky_region": None,
                  "subset_state": subset_state}]
 
-    def _get_roi_subset_definition(self, subset_state):
-        # TODO: Imviz: Return sky region if link type is WCS.
+    def _get_roi_subset_definition(self, subset_state, to_sky=False):
+
+        # pixel region
         roi_as_region = roi_subset_state_to_region(subset_state)
+
+        wcs = None
+        if to_sky:
+            if self.config == 'cubeviz':
+                parent_data = subset_state.attributes[0].parent
+                wcs = parent_data.meta.get("_orig_spatial_wcs", None)
+            else:
+                wcs = subset_state.xatt.parent.coords  # imviz, try getting WCS from subset data
+
+        # if no spatial wcs on subset, we have to skip computing sky region for this subset
+        # but want to do so without raising an error (since many subsets could be requested)
+        roi_as_sky_region = None
+        if wcs is not None:
+            roi_as_sky_region = roi_as_region.to_sky(wcs)
+
         return [{"name": subset_state.roi.__class__.__name__,
                  "glue_state": subset_state.__class__.__name__,
                  "region": roi_as_region,
+                 "sky_region": roi_as_sky_region,
                  "subset_state": subset_state}]
 
-    def get_sub_regions(self, subset_state, simplify_spectral=True, use_display_units=False):
+    def get_sub_regions(self, subset_state, simplify_spectral=True,
+                        use_display_units=False, get_sky_regions=False):
 
         if isinstance(subset_state, CompositeSubsetState):
             if subset_state and hasattr(subset_state, "state2") and subset_state.state2:
                 one = self.get_sub_regions(subset_state.state1,
-                                           simplify_spectral, use_display_units)
+                                           simplify_spectral, use_display_units,
+                                           get_sky_regions=get_sky_regions)
                 two = self.get_sub_regions(subset_state.state2,
-                                           simplify_spectral, use_display_units)
+                                           simplify_spectral, use_display_units,
+                                           get_sky_regions=get_sky_regions)
 
                 if isinstance(one, list) and "glue_state" in one[0]:
                     one[0]["glue_state"] = subset_state.__class__.__name__
@@ -1229,7 +1271,7 @@ class Application(VuetifyTemplate, HubListener):
             # This is the leaf node of the glue subset state tree where
             # a subset_state is either ROI, Range, or MultiMask.
             if isinstance(subset_state, RoiSubsetState):
-                return self._get_roi_subset_definition(subset_state)
+                return self._get_roi_subset_definition(subset_state, to_sky=get_sky_regions)
 
             elif isinstance(subset_state, RangeSubsetState):
                 return self._get_range_subset_bounds(subset_state,
