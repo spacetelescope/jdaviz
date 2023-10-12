@@ -105,9 +105,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
         self.current_plot_type = self.plot_types[0]
         self._fitted_model_name = 'phot_radial_profile'
 
-        self.plot.add_line('line', color='gray', marker_size=32)
-        self.plot.add_scatter('scatter', color='gray', default_size=1)
-        self.plot.add_line('fit_line', color='magenta', line_style='dashed')
+        # override default plot styling
+        self.plot.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 65, 'right': 15}
+        self.plot.viewer.axis_y.tick_format = '0.2e'
+        self.plot.viewer.axis_y.label_offset = '55px'
 
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
@@ -479,17 +480,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
 
         # Plots.
         if update_plots:
-            line = self.plot.marks['line']
-            sc = self.plot.marks['scatter']
-            fit_line = self.plot.marks['fit_line']
-
             if self.current_plot_type == "Curve of Growth":
                 self.plot.figure.title = 'Curve of growth from aperture center'
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
                     comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
                     wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
-                line.x, line.y = x_arr, sum_arr
-                self.plot.clear_marks('scatter', 'fit_line')
+                self.plot._update_data('profile', x=x_arr, y=sum_arr, reset_lims=True)
+                self.plot.update_style('profile', line_visible=True, color='gray', size=32)
+                self.plot.update_style('fit', visible=False)
                 self.plot.figure.axes[0].label = x_label
                 self.plot.figure.axes[1].label = y_label
 
@@ -502,8 +500,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=False)
-                    line.x, line.y = x_data, y_data
-                    self.plot.clear_marks('scatter')
+                    self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
+                    self.plot.update_style('profile', line_visible=True, color='gray', size=32)
 
                 else:  # Radial Profile (Raw)
                     self.plot.figure.title = 'Raw radial profile from aperture center'
@@ -511,8 +509,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=True)
 
-                    sc.x, sc.y = x_data, y_data
-                    self.plot.clear_marks('line')
+                    self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
+                    self.plot.update_style('profile', line_visible=False, color='gray', size=10)
 
                 # Fit Gaussian1D to radial profile data.
                 if self.fit_radial_profile:
@@ -538,9 +536,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                             f"Radial profile fitting: {msg}", color='warning', sender=self))
                     y_fit = fit_model(x_data)
                     self.app.fitted_models[self._fitted_model_name] = fit_model
-                    fit_line.x, fit_line.y = x_data, y_fit
+                    self.plot._update_data('fit', x=x_data, y=y_fit, reset_lims=True)
+                    self.plot.update_style('fit', color='magenta',
+                                           markers_visible=False, line_visible=True)
                 else:
-                    self.plot.clear_marks('fit_line')
+                    self.plot.update_style('fit', visible=False)
 
         # Parse results for GUI.
         tmp = []
@@ -565,6 +565,30 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                 tmp.append({'function': key, 'result': f'{x:.3f}'})
             else:
                 tmp.append({'function': key, 'result': str(x)})
+
+            # Parse results for GUI.
+            tmp = []
+            for key in phot_table.colnames:
+                if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
+                           'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
+                    continue
+                x = phot_table[key][0]
+                if (isinstance(x, (int, float, u.Quantity)) and
+                        key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
+                                    'aperture_sum_counts', 'aperture_sum_mag')):
+                    tmp.append({'function': key, 'result': f'{x:.4e}'})
+                elif key == 'sky_center' and x is not None:
+                    tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
+                    tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f} deg'})
+                elif key in ('xcenter', 'ycenter', 'sum_aper_area'):
+                    tmp.append({'function': key, 'result': f'{x:.1f}'})
+                elif key == 'aperture_sum_counts' and x is not None:
+                    tmp.append({'function': key, 'result':
+                                f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
+                elif key == 'aperture_sum_mag' and x is not None:
+                    tmp.append({'function': key, 'result': f'{x:.3f}'})
+                else:
+                    tmp.append({'function': key, 'result': str(x)})
 
         if update_plots:
             # Also display fit results

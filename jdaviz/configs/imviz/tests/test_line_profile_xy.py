@@ -16,8 +16,7 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         assert lp_plugin.viewer_selected == 'imviz-0'
 
         # Plot attempt with null X/Y should not crash but also no-op.
-        assert len(lp_plugin.plot_across_x.marks['line'].x) == 0
-        assert len(lp_plugin.plot_across_y.marks['line'].x) == 0
+        assert 'line' not in lp_plugin.plot_across_x.layers
         lp_plugin.vue_draw_plot()
         assert not lp_plugin.plot_available
 
@@ -27,8 +26,8 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
                                         'domain': {'x': 5.1, 'y': 5}})
         assert_allclose(lp_plugin.selected_x, 5.1)
         assert_allclose(lp_plugin.selected_y, 5)
-        assert len(lp_plugin.plot_across_x.marks['line'].x) > 0
-        assert len(lp_plugin.plot_across_y.marks['line'].x) > 0
+        assert len(lp_plugin.plot_across_x.layers['line'].layer.data['x']) > 0
+        assert len(lp_plugin.plot_across_y.layers['line'].layer.data['x']) > 0
         assert lp_plugin.plot_available
 
         # Add data with unit
@@ -46,23 +45,24 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         assert lp_plugin.viewer_selected == 'imviz-1'
         assert_allclose(lp_plugin.selected_x, 5.1)
         assert_allclose(lp_plugin.selected_y, 5)
-        assert len(lp_plugin.plot_across_x.marks['line'].x) > 0
-        assert len(lp_plugin.plot_across_y.marks['line'].x) > 0
+        assert lp_plugin.plot_across_x.layers['line'].visible
+        assert len(lp_plugin.plot_across_x.layers['line'].layer.data['x']) > 0
+        assert len(lp_plugin.plot_across_y.layers['line'].layer.data['x']) > 0
         assert lp_plugin.plot_available
 
         # Wrong input resets plots without error.
         lp_plugin.selected_x = -1
         lp_plugin.vue_draw_plot()
-        assert len(lp_plugin.plot_across_x.marks['line'].x) == 0
-        assert len(lp_plugin.plot_across_y.marks['line'].x) == 0
+        assert 'line' not in lp_plugin.plot_across_x.layers
         assert not lp_plugin.plot_available
 
         # Mimic manual GUI inputs.
         lp_plugin.selected_x = '1.1'
         lp_plugin.selected_y = '9'
         lp_plugin.viewer_selected = 'imviz-0'
-        assert len(lp_plugin.plot_across_x.marks['line'].x) > 0
-        assert len(lp_plugin.plot_across_y.marks['line'].x) > 0
+        assert lp_plugin.plot_across_x.layers['line'].visible
+        assert len(lp_plugin.plot_across_x.layers['line'].layer.data['x']) > 0
+        assert len(lp_plugin.plot_across_y.layers['line'].layer.data['x']) > 0
         assert lp_plugin.plot_available
 
         # Nothing should update on "l" when plugin closed.

@@ -4,8 +4,8 @@
         <v-tooltip v-for="[id, {tooltip, img, menu_ind, has_suboptions, primary, visible}] of Object.entries(tools_data)" v-if="primary && visible" bottom>
             <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon :value="id" style="min-width: 40px !important" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
-                    <img :src="img" width="20px" @click.ctrl.stop=""/>
-                    <v-icon small v-if="has_suboptions" class="suboptions-carrot" @click.ctrl.stop="">mdi-menu-down</v-icon>
+                    <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
+                    <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click.ctrl.stop="">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
             <span>{{ tooltip }}{{has_suboptions ? " [right-click for alt. tools]" : ""}}</span>
@@ -81,7 +81,7 @@
   }
 </script>
 
-<style>
+<style scoped>
 .suboptions-carrot {
   transform: rotate(-45deg);
   bottom: 0px;

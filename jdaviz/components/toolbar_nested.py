@@ -65,10 +65,13 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.default_tool_priority = default_tool_priority
         self._handle_default_tool()
 
-        for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
-                    SpectralMarksChangedMessage):
-            self.viewer.hub.subscribe(self, msg,
-                                      handler=lambda _: self._update_tool_visibilities())
+        # toolbars in the main app viewers need to respond to the data-collection, etc,
+        # but those in plugins do not
+        if hasattr(self.viewer, 'hub'):
+            for msg in (AddDataMessage, RemoveDataMessage, ViewerAddedMessage, ViewerRemovedMessage,
+                        SpectralMarksChangedMessage):
+                self.viewer.hub.subscribe(self, msg,
+                                          handler=lambda _: self._update_tool_visibilities())
 
     def _is_visible(self, tool_id):
         # tools can optionally implement self.is_visible(). If not NotImplementedError

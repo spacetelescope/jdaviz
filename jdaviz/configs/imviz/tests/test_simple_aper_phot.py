@@ -64,7 +64,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 2
         assert phot_plugin.plot_available
-        assert len(phot_plugin.plot.marks['scatter'].x) > 0
+        assert len(phot_plugin.plot.layers['profile'].layer.data['x']) > 0
 
         # Check photometry results.
         assert tbl.colnames == [

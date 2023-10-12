@@ -10,17 +10,22 @@ import os
 import threading
 import time
 
+from echo import delay_callback
 from functools import cached_property
 from ipyvuetify import VuetifyTemplate
 from glue.config import colormaps
-from glue.core import HubListener
+from glue.core import Data, HubListener
+from glue.core.link_helpers import LinkSame
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
                                SubsetCreateMessage,
                                SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
+from glue_jupyter import jglue
+from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
@@ -29,6 +34,7 @@ from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
 
 from jdaviz import __version__
+from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage)
@@ -59,6 +65,14 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
 
 SPATIAL_DEFAULT_TEXT = "Entire Cube"
 GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att')
+
+# this histogram viewer (along with other viewers) are not in the glue viewer-registry by default
+# but may be added in the future.  If it is not in the registry, we'll add it now.  If/once the
+# min-pin of glue-jupyter includes this in the registry, we can safely remove this block.
+if 'histogram' not in viewer_registry.members.keys():
+    @viewer_registry('histogram')
+    class RegisteredHistogramViewer(BqplotHistogramView):
+        pass
 
 
 def show_widget(widget, loc, title):  # pragma: no cover
@@ -3253,20 +3267,137 @@ class Plot(PluginSubcomponent):
     template_file = __file__, "../components/plugin_plot.vue"
 
     figure = Any().tag(sync=True, **widget_serialization)
+    toolbar = Any().tag(sync=True, **widget_serialization)
+    tools_nested = [
+                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
+                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
+                ]
 
-    def __init__(self, plugin, *args, **kwargs):
+    def __init__(self, plugin, viewer_type='scatter', app=None, *args, **kwargs):
         super().__init__(plugin, 'Plot', *args, **kwargs)
-        self.figure = bqplot.Figure()
+        if app is None:
+            app = jglue()
+
+        self._app = app
+        self.viewer = app.new_data_viewer(viewer_type, show=False)
+        self._viewer_type = viewer_type
+        if viewer_type == 'histogram':
+            self._viewer_components = ('x',)
+        else:
+            self._viewer_components = ('x', 'y')
+        self.figure = self.viewer.figure
         self._marks = {}
 
-        self.figure.axes = [bqplot.Axis(scale=bqplot.LinearScale(), label='x'),
-                            bqplot.Axis(scale=bqplot.LinearScale(),
-                                        orientation='vertical', label='y')]
-
         self.figure.title_style = {'font-size': '12px'}
-        self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 40, 'right': 10}
+        self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 60, 'right': 10}
 
-        plugin.bqplot_figs_resize += [self.figure]
+        self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, [])
+
+    @property
+    def app(self):
+        return self._app
+
+    @property
+    def layers(self):
+        return {layer.layer.label: layer for layer in self.viewer.layers}
+
+    def _check_valid_components(self, **kwargs):
+        for k, v in kwargs.items():
+            if k not in self._viewer_components:
+                raise ValueError(f"{k} is not one of {self._viewer_components}")
+            if self._viewer_type == 'histogram' and len(v) <= 1:
+                # temporary guardrails for segfault
+                # https://github.com/astrofrog/fast-histogram/issues/60
+                raise ValueError("histogram requires data entries with length > 1")
+
+    def _remove_data(self, label):
+        dc_entry = self.app.data_collection[label]
+        self.viewer.remove_data(dc_entry)
+        self.app.data_collection.remove(dc_entry)
+
+    def _update_data(self, label, reset_lims=False, **kwargs):
+        self._check_valid_components(**kwargs)
+        if label not in self.app.data_collection:
+            self._add_data(label, **kwargs)
+            return
+        data = self.app.data_collection[label]
+
+        # if not provided, fallback on existing data
+        length_mismatch = False
+        for component in self._viewer_components:
+            kwargs.setdefault(component, data[component])
+            if len(kwargs[component]) != len(data[component]):
+                length_mismatch = True
+
+        if not length_mismatch:
+            # then we can update the existing entry
+            components = {c.label: c for c in data.components}
+            data.update_components({components[comp]: kwargs[comp]
+                                    for comp in self._viewer_components})
+        else:
+            # then we need to replace the existing entry, restoring any existing styles,
+            # if they exist
+            if label in self.layers.keys():
+                style_state = self.layers[label].state.as_dict()
+            else:
+                style_state = {}
+            self._remove_data(label)
+            self._add_data(label, **kwargs)
+            self.update_style(label, **style_state)
+        if reset_lims:
+            self.viewer.state.reset_limits()
+
+    def update_style(self, label, **kwargs):
+        kwargs.setdefault('visible', True)
+        if label not in self.layers.keys():
+            if not kwargs['visible']:
+                # then we were only trying to hide anyways
+                # (note: this ignores any other passed styles)
+                return
+        dc_entry = self.app.data_collection[label]
+        if kwargs['visible']:
+            if label not in self.layers.keys():
+                self.viewer.add_data(dc_entry)
+        else:
+            # remove from viewer, leave in app (note: this will clear style options)
+            # NOTE: if we want to keep styles, we could skip this and only toggle visibilities,
+            # but then the zooming logic will need to be updated to account for visibility
+            # states and the if not kwargs['visible'] check above to return should ensure no
+            # style options are passed
+            self.viewer.remove_data(dc_entry)
+            return
+
+        lyr = self.layers[label]
+        with delay_callback(lyr.state, *list(kwargs.keys())):
+            for k, v in kwargs.items():
+                if k == 'layer' or k.endswith('_att'):
+                    continue
+                setattr(lyr.state, k, v)
+
+    def _add_data(self, label, **kwargs):
+        self._check_valid_components(**kwargs)
+        data = Data(label=label, **kwargs)
+        dc = self.app.data_collection
+        dc.append(data)
+        dc_entry = dc[label]
+
+        if len(dc) > 1:
+            # we can assume the same units/components since this only accepts x and y
+            ref_data = dc[0]
+            links = [LinkSame(dc_entry.components[i], ref_data.components[i])
+                     for i in range(1, len(ref_data.components))]
+            dc.add_link(links)
+        self.viewer.add_data(dc_entry)
+
+    def _refresh_marks(self):
+        # ensure all marks are drawn
+        # NOTE: this seems to only be necessary for histogram viewers and may be an upstream bug
+        # if that is fixed upstream, we should test to see if we can safely remove this method
+        # and all calls to it
+        other_marks = list(self.marks.values())
+        layer_marks = [m for m in self.figure.marks if m not in other_marks]
+        self.figure.marks = layer_marks + other_marks
 
     @property
     def marks(self):
@@ -3315,21 +3446,16 @@ class Plot(PluginSubcomponent):
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
 
-    def set_xlims(self, x_min=None, x_max=None):
-        ax = self.figure.axes[0]
-        if x_min is None:
-            x_min = ax.scale.min
-        if x_max is None:
-            x_max = ax.scale.max
-        ax.scale.min, ax.scale.max = x_min, x_max
-
-    def set_ylims(self, y_min=None, y_max=None):
-        ax = self.figure.axes[1]
-        if y_min is None:
-            y_min = ax.scale.min
-        if y_max is None:
-            y_max = ax.scale.max
-        ax.scale.min, ax.scale.max = y_min, y_max
+    def set_lims(self, x_min=None, x_max=None, y_min=None, y_max=None):
+        with delay_callback(self.viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            if x_min is not None:
+                self.viewer.state.x_min = x_min
+            if x_max is not None:
+                self.viewer.state.x_max = x_max
+            if y_min is not None:
+                self.viewer.state.y_min = y_min
+            if y_max is not None:
+                self.viewer.state.y_max = y_max
 
 
 class PlotMixin(VuetifyTemplate, HubListener):
