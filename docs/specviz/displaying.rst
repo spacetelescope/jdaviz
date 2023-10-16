@@ -38,9 +38,8 @@ checkbox next to the listed data to make the data visible (checked) or invisible
 In addition to toggling the visibility of a data layer, the data can be unloaded from a viewer
 by clicking the ``X`` button on the right.  Data unloaded from the viewer will also be excluded
 as options from dataset dropdown menus in the various plugins.  Unloaded data will be available
-to re-load into the viewer (by clicking the ``+`` icon) or remove permanently (by clicking the
-trashcan icon) from the app from an expandable section in the
-data menu:
+to re-load into the viewer (by clicking the ``+`` icon) or remove permanently from the app (by
+clicking the trashcan icon) from an expandable section in the data menu:
 
 .. image:: img/specviz_remove_data.png
 

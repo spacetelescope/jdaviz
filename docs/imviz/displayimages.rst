@@ -26,16 +26,16 @@ to include only compatible data, so you may not see all loaded data in the menu 
 every viewer. For example, 1D spectra will not be available in the image viewers.
 
 In addition to selecting and de-selecting data to toggle its visibility in the viewer, you
-can also remove the data from the viewer completely by clicking the X to the right of the
-data label. Any data that is still loaded in Imviz but has been removed from the viewer
+can also unload the data from the viewer completely by clicking the ``X`` to the right of the
+data label. Any data that still exists in Imviz but has been unloaded from the viewer
 is listed in a separate section that is hidden by default but can can be expanded by clicking
 on the section header:
 
 .. image:: img/imviz_removed_data.png
 
-This section can be hidden by clicking the section header again. Additionally, datasets listed
-in the "not in viewer" section can be deleted from Imviz completely by clicking the trashcan
-button to the right of the data label.
+This section can be hidden by clicking the section header again. Unloaded data will be available
+to re-load into the viewer (by clicking the ``+`` icon) or remove permanently from the app (by
+clicking the trashcan icon).
 
 .. warning::
     Deleting the first image that was loaded into Imviz may be slow, as deleting this image
