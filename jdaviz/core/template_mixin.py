@@ -1,18 +1,20 @@
+import os
+import threading
+import time
+from contextlib import contextmanager
+from functools import cached_property
+
+import bqplot
+import numpy as np
+from astropy import units as u
 from astropy.coordinates.sky_coordinate import SkyCoord
 from astropy.nddata import NDData
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
-import astropy.units as u
-import bqplot
-from contextlib import contextmanager
-import numpy as np
-import os
-import threading
-import time
-
 from echo import delay_callback
-from functools import cached_property
+from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
+from ipywidgets import widget_serialization
 from glue.config import colormaps
 from glue.core import Data, HubListener
 from glue.core.link_helpers import LinkSame
@@ -29,9 +31,6 @@ from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
-
-from ipywidgets import widget_serialization
-from ipypopout import PopoutButton
 
 from jdaviz import __version__
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
@@ -3284,13 +3283,15 @@ class Plot(PluginSubcomponent):
         self._viewer_type = viewer_type
         if viewer_type == 'histogram':
             self._viewer_components = ('x',)
+            axis_c = bqplot.ColorAxis(scale=bqplot.ColorScale())
+            self.viewer.figure.axes.append(axis_c)
         else:
             self._viewer_components = ('x', 'y')
         self.figure = self.viewer.figure
         self._marks = {}
 
         self.figure.title_style = {'font-size': '12px'}
-        self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 60, 'right': 10}
+        self.figure.fig_margin = {'top': 60, 'bottom': 100, 'left': 60, 'right': 10}
 
         self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, [])
 

@@ -1,6 +1,7 @@
 import os
-import numpy as np
 
+import bqplot
+import numpy as np
 from astropy.visualization import (
     ManualInterval, ContrastBiasStretch, PercentileInterval
 )
@@ -639,6 +640,12 @@ class PlotOptions(PluginTemplateMixin):
             sub_data = sub_data[~np.isnan(sub_data)]
 
         self.stretch_histogram._update_data('histogram', x=sub_data)
+        self.stretch_histogram.figure.axes[2] = bqplot.ColorAxis(scale=bqplot.ColorScale(
+            scheme="Greys", #self.image_colormap_value, # FIXME: How to map from glue to Colorbrewer?
+            reverse=True,
+            scale_type=self.stretch_function_value,  # FIXME: bqscales only knows "linear"
+            min=self.stretch_vmin_value,
+            max=self.stretch_vmax_value))
 
         if len(sub_data) > 0:
             interval = PercentileInterval(95)
