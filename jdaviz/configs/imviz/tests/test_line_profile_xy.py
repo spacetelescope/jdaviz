@@ -57,8 +57,8 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         assert not lp_plugin.plot_available
 
         # Mimic manual GUI inputs.
-        lp_plugin.selected_x = '1.1'
-        lp_plugin.selected_y = '9'
+        lp_plugin.selected_x = 1.1
+        lp_plugin.selected_y = 9
         lp_plugin.viewer_selected = 'imviz-0'
         assert lp_plugin.plot_across_x.layers['line'].visible
         assert len(lp_plugin.plot_across_x.layers['line'].layer.data['x']) > 0
@@ -70,5 +70,5 @@ class TestLineProfileXY(BaseImviz_WCS_NoWCS):
         lp_plugin._on_viewer_key_event(self.viewer,
                                        {'event': 'keydown', 'key': 'l',
                                         'domain': {'x': 5.1, 'y': 5}})
-        lp_plugin.selected_x = '1.1'
-        lp_plugin.selected_y = '9'
+        lp_plugin.selected_x = 1.1
+        lp_plugin.selected_y = 9

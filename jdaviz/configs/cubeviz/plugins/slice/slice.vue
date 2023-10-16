@@ -46,7 +46,7 @@
     <v-row class="row-no-outside-padding row-min-bottom-padding">
       <v-col>
         <v-text-field
-          v-model="slice"
+          v-model.number="slice"
           class="mt-0 pt-0"
           type="number"
           label="Slice"

@@ -75,7 +75,7 @@
     <v-row class="row-no-outside-padding">
       <v-col>
         <v-text-field
-          v-model="rs_rv"
+          v-model.number="rs_rv"
           @input='setRVFloat'
           @blur="unpause_tables"
           :step="rs_rv_step"
@@ -301,7 +301,7 @@
                     <v-col cols=6 style="padding-top: 0px">
                       <v-subheader class="pl-0 slider-label" style="height: 16px"><b>Observed</b/></v-subheader>
                       <v-text-field
-                        v-model="line.obs"
+                        v-model.number="line.obs"
                         @input="(e) => change_line_obs({list_name: item, line_ind: line_ind, obs_new: parseFloat(e), avoid_feedback: true})"
                         @blur="unpause_tables"
                         step="0.1"
