@@ -20,24 +20,7 @@ class _ImvizMatchedZoomMixin(_MatchedZoomMixin):
 
     def _is_matched_viewer(self, viewer):
         # only match zooms in viewers that share reference data
-        return (
-            isinstance(viewer, BqplotImageView) and
-            viewer.state.reference_data == self.viewer.state.reference_data
-        )
-
-    def _post_activate(self):
-        # NOTE: For Imviz only.
-        # Set the reference data in other viewers to be the same as the current viewer.
-        # If adding the data to the viewer, make sure it is not actually shown since the
-        # user didn't request it.
-        for viewer in self._iter_matched_viewers(include_self=False):
-            if self.viewer.state.reference_data not in viewer.state.layers_data:
-                viewer.add_data(self.viewer.state.reference_data)
-                for layer in viewer.state.layers:
-                    if layer.layer is self.viewer.state.reference_data:
-                        layer.visible = False
-                        break
-            viewer.state.reference_data = self.viewer.state.reference_data
+        return isinstance(viewer, BqplotImageView)
 
 
 @viewer_tool

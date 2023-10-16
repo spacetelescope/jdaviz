@@ -211,10 +211,12 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         they are linked by WCS.
         """
         if self.state.reference_data.meta.get('_WCS_ONLY', False):
-            # Convert X,Y from reference data to the one we are actually seeing.
-            x = image.coords.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
+            corner_world_coords = self.state.reference_data.coords.pixel_to_world(
                 (self.state.x_min, self.state.x_min, self.state.x_max, self.state.x_max),
-                (self.state.y_min, self.state.y_max, self.state.y_max, self.state.y_min)))
+                (self.state.y_min, self.state.y_max, self.state.y_max, self.state.y_min)
+            )
+            # Convert X,Y from reference data to the one we are actually seeing.
+            x = image.coords.world_to_pixel(corner_world_coords)
             zoom_limits = np.array(list(zip(x[0], x[1])))
         else:
             zoom_limits = np.array(((self.state.x_min, self.state.y_min),

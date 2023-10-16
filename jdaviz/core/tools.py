@@ -58,9 +58,6 @@ class _MatchedZoomMixin:
     def _map_limits(self, from_viewer, to_viewer, limits={}):
         return limits
 
-    def _post_activate(self):
-        return
-
     @property
     def match_keys(self):
         keys = []
@@ -80,8 +77,6 @@ class _MatchedZoomMixin:
         for k in self.match_keys:
             self.viewer.state.add_callback(k, self.on_limits_change)
 
-        self._post_activate()
-
         # Trigger a sync so the initial limits match
         self.on_limits_change()
 
@@ -94,12 +89,32 @@ class _MatchedZoomMixin:
     def on_limits_change(self, *args):
         # from_lims: limits in the viewer belonging to the tool
         from_lims = {k: getattr(self.viewer.state, k) for k in self.match_keys}
+        orig_refdata = self.viewer.state.reference_data
 
         for viewer in self._iter_matched_viewers(include_self=False):
             # orig_lims: limits in this "matched" viewer
             # to_lims: proposed new limits for this "matched" viewer
             orig_lims = {k: getattr(viewer.state, k) for k in self.match_keys}
             to_lims = self._map_limits(self.viewer, viewer, from_lims)
+
+            to_refdata = viewer.state.reference_data
+
+            if orig_refdata != to_refdata and hasattr(self.viewer, '_get_fov'):
+                # if the viewers have different reference data,
+                # rescale the zoom and center allowing for different
+                # viewer rotations:
+                orig_fov_sky = self.viewer._get_fov(orig_refdata)
+                to_fov_sky = viewer._get_fov(orig_refdata)
+                sky_cen = self.viewer._get_center_skycoord(orig_refdata)
+
+                viewer.zoom(
+                    float(to_fov_sky / orig_fov_sky)
+                )
+                viewer.center_on(sky_cen)
+                continue
+
+            # if the viewers have the same reference data,
+            # make their limits match as usual:
             with delay_callback(viewer.state, *self.match_keys):
                 for ax in self.match_axes:
                     # to avoid recursion we'll only update the state if there is a change
