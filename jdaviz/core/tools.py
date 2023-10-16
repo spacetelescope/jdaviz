@@ -356,12 +356,9 @@ class StretchBounds(CheckableTool):
         self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
-        print(data)
         if data["altKey"]:
-            print(self.viewer._plugin.stretch_vmax_value)
             self.viewer._plugin.stretch_vmax_value = data['domain']['x']
         else:
-            print(self.viewer._plugin.stretch_vmin_value)
             self.viewer._plugin.stretch_vmin_value = data['domain']['x']
 
 

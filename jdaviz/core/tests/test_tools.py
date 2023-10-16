@@ -1,3 +1,4 @@
+import numpy as np
 from numpy.testing import assert_allclose
 
 
@@ -41,3 +42,29 @@ def test_rangezoom(specviz_helper, spectrum1d):
     t.interact.selected = [14, 15]
     t.on_update_zoom()
     assert_allclose(_get_lims(sv), [6500, 7000, 14, 15])
+
+
+def test_stretch_bounds(imviz_helper):
+    imviz_helper.load_data(np.ones((2, 2)))
+
+    plot_options = imviz_helper.plugins['Plot Options']._obj
+    print(plot_options.stretch_vmin_value)
+    print(plot_options.stretch_vmax_value)
+    stretch_tool = plot_options.stretch_histogram.toolbar.tools["jdaviz:stretch_bounds"]
+    plot_options.stretch_histogram.toolbar.active_tool = stretch_tool
+
+    min_msg = {'event': 'click', 'pixel': {'x': 40, 'y': 322},
+               'domain': {'x': 0.1, 'y': 342},
+               'button': 0, 'altKey': False, 'ctrlKey': False, 'metaKey': False}
+
+    max_msg = {'event': 'click', 'pixel': {'x': 40, 'y': 322},
+               'domain': {'x': 1.3, 'y': 342},
+               'button': 0, 'altKey': True, 'ctrlKey': False, 'metaKey': False}
+
+    stretch_tool.on_mouse_event(min_msg)
+    stretch_tool.on_mouse_event(max_msg)
+
+    assert plot_options.stretch_vmin_value == 0.1
+    assert plot_options.stretch_vmax_value == 1.3
+
+    plot_options.stretch_histogram.toolbar.active_tool = None
