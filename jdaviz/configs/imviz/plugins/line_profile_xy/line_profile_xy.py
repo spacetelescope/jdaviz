@@ -1,6 +1,7 @@
-from traitlets import Any, Bool, Unicode, observe
+from traitlets import Bool, Unicode, observe
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, Plot,
@@ -15,8 +16,8 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
     uses_active_status = Bool(True).tag(sync=True)
 
     plot_available = Bool(False).tag(sync=True)
-    selected_x = Any('').tag(sync=True)
-    selected_y = Any('').tag(sync=True)
+    selected_x = FloatHandleEmpty('').tag(sync=True)
+    selected_y = FloatHandleEmpty('').tag(sync=True)
 
     plot_across_x_widget = Unicode().tag(sync=True)
     plot_across_y_widget = Unicode().tag(sync=True)
@@ -98,9 +99,8 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         i = get_top_layer_index(viewer)
         data = viewer.state.layers[i].layer
 
-        # Can be str if passed in from Vue.js
-        x = int(round(float(self.selected_x)))
-        y = int(round(float(self.selected_y)))
+        x = int(round(self.selected_x))
+        y = int(round(self.selected_y))
 
         nx = data.shape[1]
         ny = data.shape[0]
