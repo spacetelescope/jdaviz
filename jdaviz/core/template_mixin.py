@@ -3280,7 +3280,9 @@ class Plot(PluginSubcomponent):
             app = jglue()
 
         self._app = app
+        self._plugin = plugin
         self.viewer = app.new_data_viewer(viewer_type, show=False)
+        self.viewer._plugin = plugin
         self._viewer_type = viewer_type
         if viewer_type == 'histogram':
             self._viewer_components = ('x',)

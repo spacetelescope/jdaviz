@@ -14,6 +14,7 @@ from glue.viewers.image.state import ImageSubsetLayerState
 from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
+from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
                                         PlotOptionsSyncState, Plot,
@@ -403,6 +404,11 @@ class PlotOptions(PluginTemplateMixin):
                                                  state_filter=is_image)
 
         self.stretch_histogram = Plot(self, viewer_type='histogram')
+        # Add the stretch bounds tool to the default Plot viewer.
+        self.stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
+        self.stretch_histogram.toolbar = NestedJupyterToolbar(self.stretch_histogram.viewer,
+                                                              self.stretch_histogram.tools_nested,
+                                                              [])
         # NOTE: this is a current workaround so the histogram viewer doesn't crash when replacing
         # data.  Note also that passing x=[0] fails on SOME machines, so we'll pass [0, 1] instead
         self.stretch_histogram._add_data('ref', x=[0, 1])
