@@ -4,6 +4,7 @@ import numpy as np
 from astropy.visualization import (
     ManualInterval, ContrastBiasStretch, PercentileInterval
 )
+from echo import delay_callback
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.core.subset_group import GroupedSubset
@@ -474,11 +475,12 @@ class PlotOptions(PluginTemplateMixin):
 
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
         self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
-        self.stretch_histogram.figure.axes[0].label = 'pixel value'
-        self.stretch_histogram.figure.axes[0].num_ticks = 3
-        self.stretch_histogram.figure.axes[0].tick_format = '0.1e'
-        self.stretch_histogram.figure.axes[1].label = 'density'
-        self.stretch_histogram.figure.axes[1].num_ticks = 2
+        with self.stretch_histogram.figure.hold_sync():
+            self.stretch_histogram.figure.axes[0].label = 'pixel value'
+            self.stretch_histogram.figure.axes[0].num_ticks = 3
+            self.stretch_histogram.figure.axes[0].tick_format = '0.1e'
+            self.stretch_histogram.figure.axes[1].label = 'density'
+            self.stretch_histogram.figure.axes[1].num_ticks = 2
         self.stretch_histogram_widget = f'IPY_MODEL_{self.stretch_histogram.model_id}'
 
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
@@ -713,8 +715,9 @@ class PlotOptions(PluginTemplateMixin):
             stretch_vstep = (hist_lims[1] - hist_lims[0]) / 100.
             self.stretch_vstep = np.round(stretch_vstep, decimals=-int(np.log10(stretch_vstep))+1)  # noqa
 
-            self.stretch_histogram.viewer.state.hist_x_min = hist_lims[0]
-            self.stretch_histogram.viewer.state.hist_x_max = hist_lims[1]
+            with delay_callback(self.stretch_histogram.viewer.state, 'hist_x_min', 'hist_x_max'):
+                self.stretch_histogram.viewer.state.hist_x_min = hist_lims[0]
+                self.stretch_histogram.viewer.state.hist_x_max = hist_lims[1]
 
         self.stretch_histogram.figure.title = f"{len(sub_data)} pixels"
 
