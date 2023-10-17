@@ -1939,14 +1939,12 @@ class Application(VuetifyTemplate, HubListener):
                     roi = subset_group.subset_state.roi
                     if type(roi) in (CircularROI, CircularAnnulusROI,
                                      EllipticalROI, TrueCircularROI):
-                        old_xc = roi.xc
-                        old_yc = roi.yc
+                        old_xc, old_yc = subset_group.subset_state.center()
                         # Convert center
                         x, y = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                               roi.xc, roi.yc)
                         # Can't use set_center here because CircularAnnulusROI doesn't have it
-                        roi.xc = x
-                        roi.yc = y
+                        subset_group.subset_state.move_to(x, y)
 
                         for att in ("radius", "inner_radius", "outer_radius",
                                     "radius_x", "radius_y"):
@@ -1976,8 +1974,8 @@ class Application(VuetifyTemplate, HubListener):
                     cur_unit = old_parent.coords.spectral_axis.unit
                     new_unit = new_parent.coords.spectral_axis.unit
                     if cur_unit is not new_unit:
-                        range_state.lo = (range_state.lo*cur_unit).to(new_unit).value
-                        range_state.hi = (range_state.hi*cur_unit).to(new_unit).value
+                        range_state.lo, range_state.hi = cur_unit.to(new_unit, [range_state.lo,
+                                                                                range_state.hi])
 
                 # Force subset plugin to update bounds and such
                 for subset in subset_group.subsets:
