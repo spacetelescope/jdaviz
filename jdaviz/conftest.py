@@ -328,6 +328,7 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['ipyvuetify'] = 'ipyvuetify'
     PYTEST_HEADER_MODULES['ipysplitpanes'] = 'ipysplitpanes'
     PYTEST_HEADER_MODULES['ipygoldenlayout'] = 'ipygoldenlayout'
+    PYTEST_HEADER_MODULES['ipypopout'] = 'ipypopout'
     PYTEST_HEADER_MODULES['voila'] = 'voila'
     PYTEST_HEADER_MODULES['vispy'] = 'vispy'
     PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
