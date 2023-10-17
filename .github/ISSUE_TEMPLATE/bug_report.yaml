@@ -91,6 +91,7 @@ body:
         import ipyvuetify; print("ipyvuetify", ipyvuetify.__version__)
         import ipysplitpanes; print("ipysplitpanes", ipysplitpanes.__version__)
         import ipygoldenlayout; print("ipygoldenlayout", ipygoldenlayout.__version__)
+        import ipypopout; print("ipypopout", ipypopout.__version__)
         import jinja2; print("Jinja2", jinja2.__version__)
         import voila; print("voila", voila.__version__)
         import vispy; print("vispy", vispy.__version__)
