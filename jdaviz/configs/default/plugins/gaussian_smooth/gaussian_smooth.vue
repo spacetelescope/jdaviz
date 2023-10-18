@@ -29,7 +29,6 @@
       <v-row>
         <v-text-field
           ref="stddev"
-          type="number"
           label="Standard deviation"
           v-model.number="stddev"
           type="number"

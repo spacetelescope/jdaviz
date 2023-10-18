@@ -7,7 +7,7 @@ import astropy.units as u
 from astropy.units import UnitsWarning
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
-from traitlets import Bool, Float, observe, Any, Int
+from traitlets import Bool, observe, Any, Int
 from specutils.spectra.spectrum1d import Spectrum1D
 
 from jdaviz.core.events import (AddDataMessage, SliceToolStateMessage,
@@ -43,8 +43,8 @@ class Slice(PluginTemplateMixin):
     slice = Any(0).tag(sync=True)
     wavelength = Any(-1).tag(sync=True)
     wavelength_unit = Any("").tag(sync=True)
-    min_value = Float(0).tag(sync=True)
-    max_value = Float(100).tag(sync=True)
+    min_value = Int(0).tag(sync=True)
+    max_value = Int(100).tag(sync=True)
     wait = Int(200).tag(sync=True)
 
     show_indicator = Bool(True).tag(sync=True)

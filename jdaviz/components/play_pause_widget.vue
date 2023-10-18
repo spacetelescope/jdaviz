@@ -7,7 +7,7 @@
     </j-tooltip>
     <j-tooltip tipid='table-play-pause-delay'>
       <v-text-field
-        v-model="delaySeconds"
+        v-model.number="delaySeconds"
         type="number"
         min="1"
         max="60"

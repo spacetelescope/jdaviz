@@ -220,7 +220,6 @@
       <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_size_vmin')">
         <v-text-field
           ref="marker_size_vmin"
-          type="number"
           label="vmin"
           v-model.number="marker_size_vmin_value"
           type="number"
@@ -231,7 +230,6 @@
       <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_size_vmax')">
         <v-text-field
           ref="marker_size_vmax"
-          type="number"
           label="vmax"
           v-model.number="marker_size_vmax_value"
           type="number"
@@ -294,7 +292,6 @@
       <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_colormap_vmin')">
         <v-text-field
           ref="marker_colormap_vmin"
-          type="number"
           label="vmin"
           v-model.number="marker_colormap_vmin_value"
           type="number"
@@ -305,7 +302,6 @@
       <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_colormap_vmax')">
         <v-text-field
           ref="marker_colormap_vmax"
-          type="number"
           label="vmax"
           v-model.number="marker_colormap_vmax_value"
           type="number"
@@ -343,7 +339,6 @@
     <glue-state-sync-wrapper :sync="stretch_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmin')">
       <v-text-field
         ref="stretch_vmin"
-        type="number"
         label="Stretch VMin"
         v-model.number="stretch_vmin_value"
         type="number"
@@ -354,7 +349,6 @@
     <glue-state-sync-wrapper :sync="stretch_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmax')">
       <v-text-field
         ref="stretch_vmax"
-        type="number"
         label="Stretch VMax"
         v-model.number="stretch_vmax_value"
         type="number"
@@ -366,9 +360,9 @@
       <v-row>
         <v-text-field
             ref="stretch_hist_nbins"
-            type="number"
             label="Number of Bins"
             v-model.number="stretch_hist_nbins"
+            type="number"
             hint="The amount of bins used in the histogram."
             persistent-hint
             :rules="[() => stretch_hist_nbins !== '' || 'This field is required',

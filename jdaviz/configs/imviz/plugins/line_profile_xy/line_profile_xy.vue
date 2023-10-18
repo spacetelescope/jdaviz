@@ -17,7 +17,7 @@
 
     <v-row>
       <v-text-field
-        v-model='selected_x'
+        v-model.number='selected_x'
         type="number"
         label="X"
         hint="Value of X"
@@ -26,7 +26,7 @@
 
     <v-row>
       <v-text-field
-        v-model='selected_y'
+        v-model.number='selected_y'
         type="number"
         label="Y"
         hint="Value of Y"

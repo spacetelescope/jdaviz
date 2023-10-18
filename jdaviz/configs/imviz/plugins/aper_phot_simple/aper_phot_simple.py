@@ -51,7 +51,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
     aperture_area = Integer().tag(sync=True)
     background_items = List().tag(sync=True)
     background_selected = Unicode("").tag(sync=True)
-    background_value = Any(0).tag(sync=True)
+    background_value = FloatHandleEmpty(0).tag(sync=True)
     pixel_area_multi_auto = Bool(True).tag(sync=True)
     pixel_area = FloatHandleEmpty(0).tag(sync=True)
     counts_factor = FloatHandleEmpty(0).tag(sync=True)
