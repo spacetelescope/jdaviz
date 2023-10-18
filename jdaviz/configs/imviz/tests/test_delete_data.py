@@ -1,5 +1,5 @@
 import numpy as np
-from astropy.io import fits
+from astropy.nddata import NDData
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion
 
@@ -13,19 +13,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         arr = np.ones((10, 10))
 
         # First data with WCS, same as the one in BaseImviz_WCS_NoWCS.
-        hdu3 = fits.ImageHDU(arr, name='SCI')
-        hdu3.header.update({'CTYPE1': 'RA---TAN',
-                            'CUNIT1': 'deg',
-                            'CDELT1': -0.0002777777778,
-                            'CRPIX1': 1,
-                            'CRVAL1': 337.5202808,
-                            'NAXIS1': 10,
-                            'CTYPE2': 'DEC--TAN',
-                            'CUNIT2': 'deg',
-                            'CDELT2': 0.0002777777778,
-                            'CRPIX2': 1,
-                            'CRVAL2': -20.833333059999998,
-                            'NAXIS2': 10})
+        hdu3 = NDData(arr, wcs=self.wcs_1)
         self.imviz.load_data(hdu3, data_label='has_wcs_3')
 
         self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)

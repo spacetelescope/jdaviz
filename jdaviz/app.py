@@ -1943,7 +1943,6 @@ class Application(VuetifyTemplate, HubListener):
                         # Convert center
                         x, y = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                               roi.xc, roi.yc)
-                        # Can't use set_center here because CircularAnnulusROI doesn't have it
                         subset_group.subset_state.move_to(x, y)
 
                         for att in ("radius", "inner_radius", "outer_radius",
