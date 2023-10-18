@@ -38,6 +38,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         assert_allclose(subset2.subset_state.roi.xmax, 2)
         assert_allclose(subset2.subset_state.roi.ymax, 2)
 
+        # We have to remove the data from the viewer before deleting the data from the app.
         self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_1[SCI,1]")
         self.imviz.app.vue_data_item_remove({"item_name": "has_wcs_1[SCI,1]"})
 

@@ -1920,66 +1920,72 @@ class Application(VuetifyTemplate, HubListener):
                     new_parent = data
                     break
 
-        # Set subset attributes to match a remaining data collection member.
-        for subset_group in self.data_collection.subset_groups:
-            # Flag to skip this
-            if subset_group.subset_state.attributes[0].parent is old_parent:
-                for att in ("att", "xatt", "yatt", "x_att", "y_att"):
-                    if hasattr(subset_group.subset_state, att):
-                        subset_att = getattr(subset_group.subset_state, att)
-                        data_components = new_parent.components
-                        if subset_att not in data_components:
-                            cid = [c for c in data_components if c.label == subset_att.label][0]
-                            setattr(subset_group.subset_state, att, cid)
+        # Set subset attributes to match a remaining data collection member, using get_subsets to
+        # get components of composite subsets.
+        for key, subset_list in self.get_subsets(simplify_spectral=False).items():
+            # Get the subset group entry for later. Unfortunately can't just index on label.
+            [subset_group] = [sg for sg in self.data_collection.subset_groups if sg.label == key]
 
-                # Translate bounds through WCS if needed
-                if (self.config == "imviz" and
-                        self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
-                    # Get the correct link to use for translation
-                    roi = subset_group.subset_state.roi
-                    if type(roi) in (CircularROI, CircularAnnulusROI,
-                                     EllipticalROI, TrueCircularROI):
-                        old_xc, old_yc = subset_group.subset_state.center()
-                        # Convert center
-                        x, y = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                              roi.xc, roi.yc)
-                        subset_group.subset_state.move_to(x, y)
+            for subset in subset_list:
+                subset_state = subset['subset_state']
+                # Only reparent if needed
+                if subset_state.attributes[0].parent is old_parent:
+                    for att in ("att", "xatt", "yatt", "x_att", "y_att"):
+                        if hasattr(subset_state, att):
+                            subset_att = getattr(subset_state, att)
+                            data_components = new_parent.components
+                            if subset_att not in data_components:
+                                cid = [c for c in data_components if c.label == subset_att.label][0]
+                                setattr(subset_state, att, cid)
 
-                        for att in ("radius", "inner_radius", "outer_radius",
-                                    "radius_x", "radius_y"):
-                            # Hacky way to get new radii with point on edge of circle
-                            # Do we need to worry about using x for the radius conversion for
-                            # radius_y if there is distortion?
-                            r = getattr(roi, att, None)
-                            if r is not None:
-                                dummy_x = old_xc + r
-                                x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                        dummy_x, old_yc)
-                                new_radius = np.abs(x2 - x)
-                                setattr(roi, att, new_radius)
+                    # Translate bounds through WCS if needed
+                    if (self.config == "imviz" and
+                            self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
+                        # Get the correct link to use for translation
+                        roi = subset_state.roi
+                        if type(roi) in (CircularROI, CircularAnnulusROI,
+                                         EllipticalROI, TrueCircularROI):
+                            old_xc, old_yc = subset_state.center()
+                            # Convert center
+                            x, y = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                  roi.xc, roi.yc)
+                            subset_state.move_to(x, y)
 
-                    elif type(roi) is RectangularROI:
-                        x_min, y_min = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                      roi.xmin, roi.ymin)
-                        x_max, y_max = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                      roi.xmax, roi.ymax)
-                        roi.xmin = x_min
-                        roi.xmax = x_max
-                        roi.ymin = y_min
-                        roi.ymax = y_max
+                            for att in ("radius", "inner_radius", "outer_radius",
+                                        "radius_x", "radius_y"):
+                                # Hacky way to get new radii with point on edge of circle
+                                # Do we need to worry about using x for the radius conversion for
+                                # radius_y if there is distortion?
+                                r = getattr(roi, att, None)
+                                if r is not None:
+                                    dummy_x = old_xc + r
+                                    x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                            dummy_x, old_yc)
+                                    new_radius = np.abs(x2 - x)
+                                    setattr(roi, att, new_radius)
 
-                elif type(subset_group.subset_state) is RangeSubsetState:
-                    range_state = subset_group.subset_state
-                    cur_unit = old_parent.coords.spectral_axis.unit
-                    new_unit = new_parent.coords.spectral_axis.unit
-                    if cur_unit is not new_unit:
-                        range_state.lo, range_state.hi = cur_unit.to(new_unit, [range_state.lo,
-                                                                                range_state.hi])
+                        elif type(roi) is RectangularROI:
+                            x_min, y_min = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                          roi.xmin, roi.ymin)
+                            x_max, y_max = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                          roi.xmax, roi.ymax)
+                            roi.xmin = x_min
+                            roi.xmax = x_max
+                            roi.ymin = y_min
+                            roi.ymax = y_max
 
-                # Force subset plugin to update bounds and such
-                for subset in subset_group.subsets:
-                    subset_message = SubsetUpdateMessage(sender=subset)
-                    self.hub.broadcast(subset_message)
+                    elif type(subset_group.subset_state) is RangeSubsetState:
+                        range_state = subset_group.subset_state
+                        cur_unit = old_parent.coords.spectral_axis.unit
+                        new_unit = new_parent.coords.spectral_axis.unit
+                        if cur_unit is not new_unit:
+                            range_state.lo, range_state.hi = cur_unit.to(new_unit, [range_state.lo,
+                                                                                    range_state.hi])
+
+            # Force subset plugin to update bounds and such
+            for subset in subset_group.subsets:
+                subset_message = SubsetUpdateMessage(sender=subset)
+                self.hub.broadcast(subset_message)
 
     def vue_destroy_viewer_item(self, cid):
         """
