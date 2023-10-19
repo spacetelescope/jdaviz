@@ -358,7 +358,7 @@ class StretchBounds(CheckableTool):
         self.viewer.remove_event_callback(self.on_mouse_event)
 
     def on_mouse_event(self, data):
-        if (time.time() - self._time_last) <= 0.2:
+        if (time.time() - self._time_last) <= 0.05:
             # throttle to 200ms
             return
 
@@ -370,6 +370,8 @@ class StretchBounds(CheckableTool):
                                        abs(current_bounds[1] - event_x)])
 
         setattr(self.viewer._plugin, att_names[closest_bound_ind], event_x)
+
+        self._time_last = time.time()
 
 
 class _BaseSidebarShortcut(Tool):
