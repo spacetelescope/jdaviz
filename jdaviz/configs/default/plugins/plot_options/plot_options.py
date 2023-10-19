@@ -716,14 +716,12 @@ class PlotOptions(PluginTemplateMixin):
                     mark.y = []
 
             if not mark_exists:
-                active_tool_id = self.stretch_histogram.toolbar.active_tool_id
-                line_color = '#c75d2c' if active_tool_id == "jdaviz:stretch_bounds" else "#007BA1"
                 self.stretch_histogram.add_line(
                     mark_label,
                     x=curve_x,
                     y=curve_y,
                     ynorm=True,
-                    color=line_color,
+                    color='#c75d2c',
                     opacities=[0.5],
                 )
 
