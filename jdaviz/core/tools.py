@@ -371,6 +371,7 @@ class StretchBounds(CheckableTool):
 
         setattr(self.viewer._plugin, att_names[closest_bound_ind], event_x)
 
+
 class _BaseSidebarShortcut(Tool):
     plugin_name = None  # define in subclass
     viewer_attr = 'viewer'
