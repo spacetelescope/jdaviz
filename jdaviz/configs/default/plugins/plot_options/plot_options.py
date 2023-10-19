@@ -762,6 +762,7 @@ class PlotOptions(PluginTemplateMixin):
             contrast_bias = ContrastBiasStretch(self.image_contrast_value, self.image_bias_value)
             stretch = stretches.members[self.stretch_function_value]
 
+            # NOTE: Index 0 in marks is assumed to be the bin centers.
             x = self.stretch_histogram.figure.marks[0].x
             y = np.ones_like(x)
 
