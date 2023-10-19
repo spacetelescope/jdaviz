@@ -408,7 +408,8 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
         self.stretch_histogram.toolbar = NestedJupyterToolbar(self.stretch_histogram.viewer,
                                                               self.stretch_histogram.tools_nested,
-                                                              [])
+                                                              ["jdaviz:stretch_bounds"])
+
         # NOTE: this is a current workaround so the histogram viewer doesn't crash when replacing
         # data.  Note also that passing x=[0] fails on SOME machines, so we'll pass [0, 1] instead
         self.stretch_histogram._add_data('ref', x=[0, 1])
@@ -715,12 +716,14 @@ class PlotOptions(PluginTemplateMixin):
                     mark.y = []
 
             if not mark_exists:
+                active_tool_id = self.stretch_histogram.toolbar.active_tool_id
+                line_color = '#c75d2c' if active_tool_id == "jdaviz:stretch_bounds" else "#007BA1"
                 self.stretch_histogram.add_line(
                     mark_label,
                     x=curve_x,
                     y=curve_y,
                     ynorm=True,
-                    color='#c75d2c',
+                    color=line_color,
                     opacities=[0.5],
                 )
 

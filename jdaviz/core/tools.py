@@ -15,6 +15,7 @@ from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               BqplotSelectionTool,
                                               INTERACT_COLOR)
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
+from bqplot.marks import Lines
 
 from jdaviz.core.events import LineIdentifyMessage, SpectralMarksChangedMessage
 from jdaviz.core.marks import SpectralLine
@@ -353,9 +354,15 @@ class StretchBounds(CheckableTool):
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['dragmove', 'click'])
+        for mark in self.viewer.figure.marks:
+            if isinstance(mark, Lines):
+                mark.colors = ["#c75d2c"]
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
+        for mark in self.viewer.figure.marks:
+            if isinstance(mark, Lines):
+                mark.colors = ["#007BA1"]
 
     def on_mouse_event(self, data):
         if (time.time() - self._time_last) <= 0.05:
