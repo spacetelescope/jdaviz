@@ -16,7 +16,6 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
-GLUE_JUPYTER_LT_0_18 = not minversion("glue_jupyter", "0.18.dev")
 
 # For Metadata Viewer plugin internal use only.
 PRIHDR_KEY = '_primary_header'

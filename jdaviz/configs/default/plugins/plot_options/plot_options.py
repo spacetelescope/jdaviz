@@ -11,6 +11,7 @@ from glue.config import stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState
+from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -21,12 +22,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
-from jdaviz.utils import GLUE_JUPYTER_LT_0_18
-
-if GLUE_JUPYTER_LT_0_18:
-    from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerState
-else:
-    from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 
 __all__ = ['PlotOptions']
 
