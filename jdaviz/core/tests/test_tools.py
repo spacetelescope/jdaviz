@@ -48,8 +48,6 @@ def test_stretch_bounds(imviz_helper):
     imviz_helper.load_data(np.ones((2, 2)))
 
     plot_options = imviz_helper.plugins['Plot Options']._obj
-    print(plot_options.stretch_vmin_value)
-    print(plot_options.stretch_vmax_value)
     stretch_tool = plot_options.stretch_histogram.toolbar.tools["jdaviz:stretch_bounds"]
     plot_options.stretch_histogram.toolbar.active_tool = stretch_tool
 
