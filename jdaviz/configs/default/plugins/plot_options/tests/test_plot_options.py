@@ -76,6 +76,7 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
     po.plugin_opened = True
 
     assert po.stretch_histogram is not None
+    assert "colorbar" in po.stretch_histogram._marks
 
     hist_lyr = po.stretch_histogram.layers['histogram']
     flux_cube_sample = hist_lyr.layer.data['x']

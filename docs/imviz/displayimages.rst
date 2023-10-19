@@ -372,7 +372,7 @@ can be accessed with ``plot_options.stretch_function.choices``:
 
 A histogram is displayed showing the distribution of pixel values, with
 vertical lines representing the ``stretch_vmin`` and ``stretch_vmax``
-values. A stretch "curve" can be plotted under the histogram to represent
+values, and a colorbar on top. A stretch "curve" can be plotted under the histogram to represent
 how pixel values are mapped to the colorbar. This feature can be toggled
 on from the API with:
 
