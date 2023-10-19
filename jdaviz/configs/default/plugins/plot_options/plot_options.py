@@ -476,8 +476,8 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram._add_data('histogram', x=[0, 1])
 
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
-        self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
-        self.stretch_histogram.add_scatter('colorbar', x=[0, 0], y=[0, 1], marker='square', stroke_width=33)  # noqa: E501
+        self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm='vmin', color='#c75d2c')
+        self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
         with self.stretch_histogram.figure.hold_sync():
             self.stretch_histogram.figure.axes[0].label = 'pixel value'
             self.stretch_histogram.figure.axes[0].num_ticks = 3
@@ -763,7 +763,7 @@ class PlotOptions(PluginTemplateMixin):
             stretch = stretches.members[self.stretch_function_value]
 
             x = self.stretch_histogram.figure.marks[0].x
-            y = np.full(x.shape, self.stretch_histogram.figure.axes[1].scale.max)
+            y = np.ones_like(x)
 
             # Copied from the __call__ internals of glue/viewers/image/composite_array.py
             data = interval(x)

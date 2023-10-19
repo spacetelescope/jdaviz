@@ -3420,6 +3420,16 @@ class Plot(PluginSubcomponent):
         self.clear_marks(*self.marks.keys())
 
     def _add_mark(self, cls, label, xnorm=False, ynorm=False, **kwargs):
+        """
+        Parameters
+        ----------
+        xnorm : bool or str
+            If True, axes will be normalized.  If a string of an existing mark, this mark will
+            share that same x-axis scale.
+        ynorm : bool or str
+            If True, axes will be normalized.  If a string of an existing mark, this mark will
+            share that same y-axis scale.
+        """
         if label in self._marks:
             raise ValueError(f"mark with label '{label}' already exists")
         mark = cls(scales={'x': bqplot.LinearScale() if xnorm else self.figure.axes[0].scale,
