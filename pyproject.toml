@@ -148,6 +148,9 @@ filterwarnings = [
     "ignore::DeprecationWarning:dask",
     "ignore::FutureWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
+    # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
+    # and https://github.com/scipy/scipy/pull/19275
+    "ignore:.*numpy\\.core.*:DeprecationWarning",
 ]
 
 [tool.coverage.run]
