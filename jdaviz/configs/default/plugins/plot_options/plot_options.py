@@ -821,7 +821,7 @@ class PlotOptions(PluginTemplateMixin):
         for layer in self.layer.selected_obj:
             if isinstance(layer.layer, GroupedSubset):
                 # don't update histogram for subsets:
-                return
+                continue
 
             # clear old mark, if it exists:
             mark_label = f'{mark_label_prefix}{layer.label}'
