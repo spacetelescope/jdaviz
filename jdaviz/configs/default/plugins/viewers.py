@@ -1,5 +1,6 @@
 import numpy as np
 
+from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
@@ -7,12 +8,7 @@ from glue_jupyter.table import TableViewer
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.registries import viewer_registry
-from jdaviz.utils import ColorCycler, get_subset_type, GLUE_JUPYTER_LT_0_18
-
-if GLUE_JUPYTER_LT_0_18:
-    from glue_jupyter.bqplot.scatter.layer_artist import BqplotScatterLayerState
-else:
-    from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
+from jdaviz.utils import ColorCycler, get_subset_type
 
 __all__ = ['JdavizViewerMixin']
 
