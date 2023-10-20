@@ -30,12 +30,12 @@ __all__ = ['PlotOptions']
 class SplineStretch:
 
     def __init__(self):
-        self.x = np.array([0, 0.1, 0.2, 0.7, 1])
-        self.y = np.array([0, 0.05, 0.3, 0.9, 1])
         self.k = 3
         self.bc_type = None
         self.t = None
-        self._update_spline()
+        self.update_knots(x=np.array([0, 0.1, 0.2, 0.7, 1]),
+                                        y=np.array([0, 0.05, 0.3, 0.9, 1]))
+
 
     def __call__(self, values, out=None, clip=False):
         return self.spline(values)
