@@ -24,8 +24,48 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 
-__all__ = ['PlotOptions']
+from scipy.interpolate import make_interp_spline
 
+__all__ = ['PlotOptions']
+class SplineStretch:
+    def __init__(self):
+        self.x = np.array([0, 0.1, 0.2, 0.7, 1])
+        self.y = np.array([0, 0.05, 0.3, 0.9, 1])
+        self.k = 3
+        self.bc_type = None
+        self.t = None
+        self._update_spline()
+
+    def __call__(self, values, out=None, clip=False):
+        return self.spline(values)
+
+    def update_knots(self, x, y):
+        # Validation
+        if len(x) != len(y):
+            raise ValueError("x and y must be the same length.")
+
+        # set x and y
+        self.x = x
+        self.y = y
+        self._update_spline()
+
+    def _update_spline(self):
+        self.spline = make_interp_spline(
+            self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
+        )
+
+    def set_boundaries(self, vmin, vmax):
+        if len(self.x) > 0:
+            self.x = np.linspace(vmin, vmax, len(self.x))
+            # self.x[0] = vmin
+            # self.x[-1] = vmax
+        else:
+            self.x = [vmin, vmax]
+            self.y = [0, 1]
+        print(f"min, max: {self.x}, {self.y}")
+
+
+stretches.add("spline", SplineStretch(), display="Spline Stretch")
 
 @tray_registry('g-plot-options', label="Plot Options")
 class PlotOptions(PluginTemplateMixin):
@@ -686,12 +726,22 @@ class PlotOptions(PluginTemplateMixin):
             mark_label = f'{mark_label_prefix}{layer.label}'
             mark_exists = mark_label in self.stretch_histogram.marks
 
+            knot_label = f"{knots_label_prefix}{layer.label}"
+            knot_exists = knot_label in self.stretch_histogram.marks
+
             # create the new/updated mark following the colormapping
             # procedure in glue's CompositeArray:
             interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
             contrast_bias = ContrastBiasStretch(layer.state.contrast, layer.state.bias)
             stretch = stretches.members[layer.state.stretch]
             layer_cmap = layer.state.cmap
+
+            if isinstance(stretch, SplineStretch):
+                stretch.set_boundaries(self.stretch_vmin_value, self.stretch_vmax_value)
+                knot_x = stretch.x
+                knot_y = stretch.y
+            else:
+                knot_x, knot_y = [], []
 
             # create a photoshop style "curve" for the stretch function
             curve_x = np.linspace(self.stretch_vmin.value, self.stretch_vmax.value, 50)
@@ -718,6 +768,15 @@ class PlotOptions(PluginTemplateMixin):
                     ynorm=True,
                     color="#007BA1",  # "inactive" blue
                     opacities=[0.5],
+                )
+            
+            if not mark_exists:
+                self.stretch_histogram.add_scatter(
+                    label=knot_label, 
+                    x=knot_x, 
+                    y=knot_y, 
+                    ynorm=True, 
+                    color="#0a6774"
                 )
 
             self.stretch_histogram._refresh_marks()
