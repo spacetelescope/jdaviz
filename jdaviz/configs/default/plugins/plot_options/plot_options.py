@@ -721,7 +721,7 @@ class PlotOptions(PluginTemplateMixin):
                     x=curve_x,
                     y=curve_y,
                     ynorm=True,
-                    color='#c75d2c',
+                    color="#007BA1",  # "inactive" blue
                     opacities=[0.5],
                 )
 
