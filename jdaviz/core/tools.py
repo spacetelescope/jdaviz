@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 from echo import delay_callback
@@ -336,6 +337,47 @@ class SelectLine(CheckableTool, HubListener):
 
     def is_visible(self):
         return len([m for m in self.viewer.figure.marks if isinstance(m, SpectralLine)]) > 0
+
+
+@viewer_tool
+class StretchBounds(CheckableTool):
+    icon = os.path.join(ICON_DIR, 'line_select.svg')
+    tool_id = 'jdaviz:stretch_bounds'
+    action_text = 'Set Stretch VMin and VMax'
+    tool_tip = 'Set closest stretch bound (VMin/VMax) with click or click+drag'
+
+    def __init__(self, viewer, **kwargs):
+        self._time_last = 0
+        super().__init__(viewer, **kwargs)
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_event,
+                                       events=['dragmove', 'click'])
+        for mark in self.viewer.figure.marks:
+            if np.any([x in mark.labels for x in ('vmin', 'vmax')]):
+                mark.colors = ["#c75d2c"]
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_event)
+        for mark in self.viewer.figure.marks:
+            if np.any([x in mark.labels for x in ('vmin', 'vmax')]):
+                mark.colors = ["#007BA1"]
+
+    def on_mouse_event(self, data):
+        if (time.time() - self._time_last) <= 0.05:
+            # throttle to 200ms
+            return
+
+        event_x = data['domain']['x']
+        current_bounds = [self.viewer._plugin.stretch_vmin_value,
+                          self.viewer._plugin.stretch_vmax_value,]
+        att_names = ["stretch_vmin_value", "stretch_vmax_value"]
+        closest_bound_ind = np.argmin([abs(current_bounds[0] - event_x),
+                                       abs(current_bounds[1] - event_x)])
+
+        setattr(self.viewer._plugin, att_names[closest_bound_ind], event_x)
+
+        self._time_last = time.time()
 
 
 class _BaseSidebarShortcut(Tool):

@@ -3280,7 +3280,9 @@ class Plot(PluginSubcomponent):
             app = jglue()
 
         self._app = app
+        self._plugin = plugin
         self.viewer = app.new_data_viewer(viewer_type, show=False)
+        self.viewer._plugin = plugin
         self._viewer_type = viewer_type
         if viewer_type == 'histogram':
             self._viewer_components = ('x',)
@@ -3422,6 +3424,7 @@ class Plot(PluginSubcomponent):
             raise ValueError(f"mark with label '{label}' already exists")
         mark = cls(scales={'x': bqplot.LinearScale() if xnorm else self.figure.axes[0].scale,
                            'y': bqplot.LinearScale() if ynorm else self.figure.axes[1].scale},
+                   labels=[label],
                    **kwargs)
         self.figure.marks = self.figure.marks + [mark]
         self._marks[label] = mark
