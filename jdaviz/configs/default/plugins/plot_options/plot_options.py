@@ -57,7 +57,8 @@ class SplineStretch:
         )
 
 
-stretches.add("spline", SplineStretch(), display="Spline Stretch")
+stretches.add("spline", SplineStretch(), display="Spline")
+
 
 @tray_registry('g-plot-options', label="Plot Options")
 class PlotOptions(PluginTemplateMixin):
