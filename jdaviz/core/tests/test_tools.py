@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from numpy.testing import assert_allclose
 
@@ -57,9 +59,10 @@ def test_stretch_bounds(imviz_helper):
 
     max_msg = {'event': 'click', 'pixel': {'x': 40, 'y': 322},
                'domain': {'x': 1.3, 'y': 342},
-               'button': 0, 'altKey': True, 'ctrlKey': False, 'metaKey': False}
+               'button': 0, 'altKey': False, 'ctrlKey': False, 'metaKey': False}
 
     stretch_tool.on_mouse_event(min_msg)
+    time.sleep(0.3)
     stretch_tool.on_mouse_event(max_msg)
 
     assert plot_options.stretch_vmin_value == 0.1
