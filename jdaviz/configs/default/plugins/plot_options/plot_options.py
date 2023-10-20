@@ -57,6 +57,7 @@ class SplineStretch:
     def set_boundaries(self, vmin, vmax):
         if len(self.x) > 0:
             self.x = np.linspace(vmin, vmax, len(self.x))
+            self.y = np.linspace(0,1,len(self.x))
             # self.x[0] = vmin
             # self.x[-1] = vmax
         else:
@@ -706,6 +707,7 @@ class PlotOptions(PluginTemplateMixin):
     @skip_if_no_updates_since_last_active()
     def _update_stretch_curve(self, msg=None):
         mark_label_prefix = "stretch_curve: "
+        knots_label_prefix = "stretch_knots"
 
         if not self._viewer_is_image_viewer() or not hasattr(self, 'stretch_histogram'):
             # don't update histogram if selected viewer is not an image viewer,
