@@ -45,7 +45,6 @@ class SplineStretch:
         # Validation
         if len(x) != len(y):
             raise ValueError("x and y must be the same length.")
-
         # set x and y
         self.x = x
         self.y = y
@@ -699,7 +698,7 @@ class PlotOptions(PluginTemplateMixin):
     @skip_if_no_updates_since_last_active()
     def _update_stretch_curve(self, msg=None):
         mark_label_prefix = "stretch_curve: "
-        knots_label_prefix = "stretch_knots"
+        knots_label_prefix = "stretch_knots: "
 
         if not self._viewer_is_image_viewer() or not hasattr(self, 'stretch_histogram'):
             # don't update histogram if selected viewer is not an image viewer,
@@ -771,6 +770,9 @@ class PlotOptions(PluginTemplateMixin):
                     ynorm=True, 
                     color="#0a6774"
                 )
+            else: 
+                self.stretch_histogram.marks[knot_label].x = knot_x 
+                self.stretch_histogram.marks[knot_label].y = knot_y 
 
             self.stretch_histogram._refresh_marks()
 
