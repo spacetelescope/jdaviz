@@ -28,6 +28,7 @@ from scipy.interpolate import make_interp_spline
 
 __all__ = ['PlotOptions']
 class SplineStretch:
+
     def __init__(self):
         self.x = np.array([0, 0.1, 0.2, 0.7, 1])
         self.y = np.array([0, 0.05, 0.3, 0.9, 1])
@@ -39,6 +40,7 @@ class SplineStretch:
     def __call__(self, values, out=None, clip=False):
         return self.spline(values)
 
+
     def update_knots(self, x, y):
         # Validation
         if len(x) != len(y):
@@ -49,21 +51,11 @@ class SplineStretch:
         self.y = y
         self._update_spline()
 
+
     def _update_spline(self):
         self.spline = make_interp_spline(
             self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
         )
-
-    def set_boundaries(self, vmin, vmax):
-        if len(self.x) > 0:
-            self.x = np.linspace(vmin, vmax, len(self.x))
-            self.y = np.linspace(0,1,len(self.x))
-            # self.x[0] = vmin
-            # self.x[-1] = vmax
-        else:
-            self.x = [vmin, vmax]
-            self.y = [0, 1]
-        print(f"min, max: {self.x}, {self.y}")
 
 
 stretches.add("spline", SplineStretch(), display="Spline Stretch")
@@ -717,7 +709,7 @@ class PlotOptions(PluginTemplateMixin):
         if not self.stretch_curve_visible:
             # clear marks if curve is not visible:
             for existing_mark_label, mark in self.stretch_histogram.marks.items():
-                if existing_mark_label.startswith(mark_label_prefix):
+                if existing_mark_label.startswith(mark_label_prefix) or existing_mark_label.startswith(knots_label_prefix):
                     # clear this mark
                     mark.x = []
                     mark.y = []
@@ -739,8 +731,7 @@ class PlotOptions(PluginTemplateMixin):
             layer_cmap = layer.state.cmap
 
             if isinstance(stretch, SplineStretch):
-                stretch.set_boundaries(self.stretch_vmin_value, self.stretch_vmax_value)
-                knot_x = stretch.x
+                knot_x = self.stretch_vmin_value + stretch.x * ( self.stretch_vmax_value - self.stretch_vmin_value)
                 knot_y = stretch.y
             else:
                 knot_x, knot_y = [], []
