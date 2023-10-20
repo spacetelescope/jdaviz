@@ -2123,6 +2123,10 @@ class Application(VuetifyTemplate, HubListener):
         data = self.data_collection[data_label]
         self._reparent_subsets(data)
 
+        # Make sure the data isn't loaded in any viewers
+        for viewer_id in self._viewer_store:
+            self.remove_data_from_viewer(viewer_id, data_label)
+
         # Imviz has some extra logic below that can be skipped after data removal if we're not
         # removing the reference data, so we check that here.
         if self.config == "imviz":
@@ -2144,8 +2148,9 @@ class Application(VuetifyTemplate, HubListener):
                     viewer = self.get_viewer(viewer_ref)
                     loaded_layers = [layer.layer.label for layer in viewer.layers if
                                      "Subset" not in layer.layer.label]
-                    self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
-                    self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
+                    if len(loaded_layers):
+                        self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
+                        self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
             else:
                 for i in range(1, len(self.data_collection)):
                     self._link_new_data(data_to_be_linked=i)
