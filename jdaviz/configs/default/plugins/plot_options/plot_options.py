@@ -27,36 +27,48 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty
 from scipy.interpolate import make_interp_spline
 
 __all__ = ['PlotOptions']
+
 class SplineStretch:
+    """
+    A class to represent spline stretches.
+    
+    Attributes:
+        k (int): Degree of the smoothing spline.
+        bc_type (str or None): Boundary condition type.
+        t (array-like or None): Array of knot positions.
+        x (array-like): The x-coordinates of the data points.
+        y (array-like): The y-coordinates of the data points.
+        spline (object): Interpolating spline.
+    """
 
     def __init__(self):
+        """
+        Initializes the SplineStretch class with default knot values.
+        """
         self.k = 3
         self.bc_type = None
         self.t = None
-        self.update_knots(x=np.array([0, 0.1, 0.2, 0.7, 1]),
-                                        y=np.array([0, 0.05, 0.3, 0.9, 1]))
-
+        self.update_knots(
+            x=np.array([0, 0.1, 0.2, 0.7, 1]),
+            y=np.array([0, 0.05, 0.3, 0.9, 1])
+        )
 
     def __call__(self, values, out=None, clip=False):
         return self.spline(values)
 
-
     def update_knots(self, x, y):
-        # Validation
         if len(x) != len(y):
             raise ValueError("x and y must be the same length.")
-        # set x and y
         self.x = x
         self.y = y
         self._update_spline()
-
 
     def _update_spline(self):
         self.spline = make_interp_spline(
             self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
         )
-
-
+        
+# Example usage (assuming `stretches` is a previously defined dictionary or similar object):
 stretches.add("spline", SplineStretch(), display="Spline")
 
 
