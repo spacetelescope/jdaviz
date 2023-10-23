@@ -198,12 +198,12 @@ def test_stretch_spline(imviz_helper):
     knots_y = scatter_obj.y
 
     # Expected knots based on initial stretch settings
-    expected_x = np.array([10., 19., 28., 73., 100.])
-    expected_y = np.array([0., 0.05, 0.3, 0.9, 1.])
+    expected_x = [10., 19., 28., 73., 100.]
+    expected_y = [0., 0.05, 0.3, 0.9, 1.]
 
     # Validate if the generated knots match the expected knots
-    assert np.array_equal(knots_x, expected_x)
-    assert np.array_equal(knots_y, expected_y)
+    np.testing.assert_allclose(knots_x, expected_x)
+    np.testing.assert_allclose(knots_y, expected_y)
 
     # Update the stretch options to new values and verify the knots update correctly
     with po.as_active():
@@ -215,12 +215,12 @@ def test_stretch_spline(imviz_helper):
     knots_x = scatter_obj.x
 
     # Expected knots based on updated stretch settings
-    expected_x = np.array([10., 17., 24., 59., 80.])
-    expected_y = np.array([0., 0.05, 0.3, 0.9, 1.])
+    expected_x = [10., 17., 24., 59., 80.]
+    expected_y = [0., 0.05, 0.3, 0.9, 1.]
 
     # Validate if the generated knots for updated settings match the expected values
-    assert np.array_equal(knots_x, expected_x)
-    assert np.array_equal(knots_y, expected_y)
+    np.testing.assert_allclose(knots_x, expected_x)
+    np.testing.assert_allclose(knots_y, expected_y)
 
     # Disable the stretch curve and ensure no knots or stretches are visible
     with po.as_active():

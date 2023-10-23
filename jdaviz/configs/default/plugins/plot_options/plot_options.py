@@ -43,9 +43,6 @@ class SplineStretch:
     """
 
     def __init__(self):
-        """
-        Initializes the SplineStretch class with default knot values.
-        """
         self.k = 3
         self.bc_type = None
         self.t = None
