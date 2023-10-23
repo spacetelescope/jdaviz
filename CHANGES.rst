@@ -9,6 +9,8 @@ New Features
 
 - Histogram plot in Plot Options now includes tool to set stretch vmin and vmax. [#2513]
 
+- The Plot Options plugin now include a 'spline' stretch feature. [#2525]
+  
 Cubeviz
 ^^^^^^^
 
