@@ -186,10 +186,11 @@ def test_stretch_spline(imviz_helper):
     po = imviz_helper.plugins['Plot Options']
 
     # Configure initial stretch options and select "Spline" function
-    po.stretch_vmin.value = 10
-    po.stretch_vmax.value = 100
-    po.stretch_curve_visible = True
-    po.stretch_function = "Spline"
+    with po.as_active():
+        po.stretch_vmin.value = 10
+        po.stretch_vmax.value = 100
+        po.stretch_curve_visible = True
+        po.stretch_function = "Spline"
 
     # Retrieve knots data from the generated histogram
     scatter_obj = po._obj.stretch_histogram.marks["stretch_knots: NDData[DATA] (DATA)"]
@@ -205,10 +206,11 @@ def test_stretch_spline(imviz_helper):
     assert np.array_equal(knots_y, expected_y)
 
     # Update the stretch options to new values and verify the knots update correctly
-    po.stretch_vmin.value = 10
-    po.stretch_vmax.value = 80
-    po.stretch_curve_visible = True
-    po.stretch_function = "Spline"
+    with po.as_active():
+        po.stretch_vmin.value = 10
+        po.stretch_vmax.value = 80
+        po.stretch_curve_visible = True
+        po.stretch_function = "Spline"
 
     knots_x = scatter_obj.x
 
@@ -221,7 +223,8 @@ def test_stretch_spline(imviz_helper):
     assert np.array_equal(knots_y, expected_y)
 
     # Disable the stretch curve and ensure no knots or stretches are visible
-    po.stretch_curve_visible = False
+    with po.as_active():
+        po.stretch_curve_visible = False
     stretch_curve = po._obj.stretch_histogram.marks['stretch_curve: NDData[DATA] (DATA)']
     assert len(stretch_curve.y) == 0
     assert len(stretch_curve.x) == 0
