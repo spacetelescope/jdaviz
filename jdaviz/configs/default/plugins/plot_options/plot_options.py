@@ -72,7 +72,7 @@ class SplineStretch:
         )
 
 
-# Example usage (assuming `stretches` is a previously defined dictionary or similar object):
+# Add the spline stretch to the glue stretch registry
 stretches.add("spline", SplineStretch(), display="Spline")
 
 
