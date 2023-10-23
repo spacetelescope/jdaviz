@@ -139,11 +139,14 @@ def spectrum1d_cube_wcs():
     return wcs
 
 
-@pytest.fixture
-def spectrum1d():
+def _create_spectrum1d_with_spectral_unit(spectralunit=u.AA):
     np.random.seed(42)
 
+    # We make this first so we don't have to worry about inputting different bounds
     spec_axis = np.linspace(6000, 8000, SPECTRUM_SIZE) * u.AA
+    if spectralunit != u.AA:
+        spec_axis = spec_axis.to(spectralunit)
+
     flux = (np.random.randn(len(spec_axis.value)) +
             10*np.exp(-0.001*(spec_axis.value-6563)**2) +
             spec_axis.value/500) * u.Jy
@@ -152,6 +155,16 @@ def spectrum1d():
     meta = dict(header=dict(FILENAME="jdaviz-test-file.fits"))
 
     return Spectrum1D(spectral_axis=spec_axis, flux=flux, uncertainty=uncertainty, meta=meta)
+
+
+@pytest.fixture
+def spectrum1d():
+    return _create_spectrum1d_with_spectral_unit()
+
+
+@pytest.fixture
+def spectrum1d_nm():
+    return _create_spectrum1d_with_spectral_unit(u.nm)
 
 
 @pytest.fixture

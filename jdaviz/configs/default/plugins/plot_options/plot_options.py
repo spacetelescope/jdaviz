@@ -361,10 +361,9 @@ class PlotOptions(PluginTemplateMixin):
             return 'visible'
 
         # Profile/line viewer/layer options:
-        # TODO: once lines are supported in ScatterViewer, update state_filter to supports_line
         self.line_visible = PlotOptionsSyncState(self, self.viewer, self.layer, state_attr_for_line_visible,  # noqa
                                                  'line_visible_value', 'line_visible_sync',
-                                                 state_filter=is_profile)
+                                                 state_filter=supports_line)
         self.collapse_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'function',
                                                       'collapse_func_value', 'collapse_func_sync')
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
@@ -382,6 +381,7 @@ class PlotOptions(PluginTemplateMixin):
                                                         'uncertainty_visible_value', 'uncertainty_visible_sync')  # noqa
 
         # Scatter/marker options:
+        # NOTE: marker_visible hides the entire layer (including the line)
         self.marker_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'marker_visible_value', 'marker_visible_sync',
                                                    state_filter=is_scatter)

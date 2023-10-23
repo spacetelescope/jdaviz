@@ -11,6 +11,8 @@ New Features
 
 - The Plot Options plugin now include a 'spline' stretch feature. [#2525]
   
+- User can now remove data from the app completely after removing it from viewers. [#2409]
+
 Cubeviz
 ^^^^^^^
 
@@ -82,6 +84,8 @@ Other Changes and Additions
   flux is finite). [#2437]
 
 - Add swatches to color picker. [#2494]
+
+- Plot options now includes better support for scatter viewers, including toggling line visibility. [#2449]
 
 3.7.1 (unreleased)
 ==================

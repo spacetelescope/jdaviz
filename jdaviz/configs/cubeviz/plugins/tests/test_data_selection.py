@@ -31,6 +31,7 @@ def test_data_selection(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert len(fv.layers) == 2
     assert len([layer for layer in fv.layers if layer.visible]) == 2
 
-    app.vue_data_item_remove({'item_name': app.state.data_items[1]['name']})
+    app.vue_data_item_remove({'item_name': app.state.data_items[1]['name'],
+                              'viewer_id': 'cubeviz-0'})
 
     assert len(fv.layers) == 1
