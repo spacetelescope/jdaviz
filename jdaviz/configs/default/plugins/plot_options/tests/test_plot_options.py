@@ -1,6 +1,8 @@
 import pytest
 from numpy import allclose
 from numpy.testing import assert_allclose
+from photutils.datasets import make_4gaussians_image
+from astropy.nddata import NDData
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -172,3 +174,53 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
     # toggle contour (which has a spinner implemented)
     po.contour_visible = True
     assert po._obj.contour_spinner is False
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_stretch_spline(imviz_helper):
+    # Load the test data into imviz
+    imviz_helper.load_data(image_1)
+    po = imviz.plugins['Plot Options']
+
+    # Configure initial stretch options and select "Spline" function
+    po.stretch_vmin.value = 10
+    po.stretch_vmax.value = 100
+    po.stretch_curve_visible = True
+    po.stretch_function = "Spline"
+
+    # Retrieve knots data from the generated histogram
+    scatter_obj = po._obj.stretch_histogram.marks["stretch_knots: NDData[DATA] (DATA)"]
+    knots_x = scatter_obj.x
+    knots_y = scatter_obj.y
+
+    # Expected knots based on initial stretch settings
+    expected_x = np.array([10., 19., 28., 73., 100.])
+    expected_y = np.array([0., 0.05, 0.3, 0.9, 1.])
+
+    # Validate if the generated knots match the expected knots
+    assert np.array_equal(knots_x, expected_x)
+    assert np.array_equal(knots_y, expected_y)
+
+    # Update the stretch options to new values and verify the knots update correctly
+    po.stretch_vmin.value = 10
+    po.stretch_vmax.value = 80
+    po.stretch_curve_visible = True
+    po.stretch_function = "Spline"
+
+    knots_x = scatter_obj.x
+
+    # Expected knots based on updated stretch settings
+    expected_x = np.array([10., 17., 24., 59., 80.])
+    expected_y = np.array([0., 0.05, 0.3, 0.9, 1.])
+
+    # Validate if the generated knots for updated settings match the expected values
+    assert np.array_equal(knots_x, expected_x)
+    assert np.array_equal(knots_y, expected_y)
+
+    # Disable the stretch curve and ensure no knots or stretches are visible
+    po.stretch_curve_visible = False
+    stretch_curve = po._obj.stretch_histogram.marks['stretch_curve: NDData[DATA] (DATA)']
+    assert len(stretch_curve.y) == 0
+    assert len(stretch_curve.x) == 0
+    assert len(scatter_obj.x) == 0
+    assert len(scatter_obj.x) == 0
