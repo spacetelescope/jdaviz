@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 from numpy import allclose
 from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
@@ -178,9 +179,10 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
 
 @pytest.mark.filterwarnings('ignore')
 def test_stretch_spline(imviz_helper):
+    image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
     # Load the test data into imviz
     imviz_helper.load_data(image_1)
-    po = imviz.plugins['Plot Options']
+    po = imviz_helper.plugins['Plot Options']
 
     # Configure initial stretch options and select "Spline" function
     po.stretch_vmin.value = 10

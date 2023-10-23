@@ -28,10 +28,11 @@ from scipy.interpolate import make_interp_spline
 
 __all__ = ['PlotOptions']
 
+
 class SplineStretch:
     """
     A class to represent spline stretches.
-    
+
     Attributes:
         k (int): Degree of the smoothing spline.
         bc_type (str or None): Boundary condition type.
@@ -67,7 +68,8 @@ class SplineStretch:
         self.spline = make_interp_spline(
             self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
         )
-        
+
+
 # Example usage (assuming `stretches` is a previously defined dictionary or similar object):
 stretches.add("spline", SplineStretch(), display="Spline")
 
@@ -721,7 +723,8 @@ class PlotOptions(PluginTemplateMixin):
         if not self.stretch_curve_visible:
             # clear marks if curve is not visible:
             for existing_mark_label, mark in self.stretch_histogram.marks.items():
-                if existing_mark_label.startswith(mark_label_prefix) or existing_mark_label.startswith(knots_label_prefix):
+                if (existing_mark_label.startswith(mark_label_prefix) or 
+                    existing_mark_label.startswith(knots_label_prefix)):
                     # clear this mark
                     mark.x = []
                     mark.y = []
@@ -733,8 +736,6 @@ class PlotOptions(PluginTemplateMixin):
             mark_exists = mark_label in self.stretch_histogram.marks
 
             knot_label = f"{knots_label_prefix}{layer.label}"
-            knot_exists = knot_label in self.stretch_histogram.marks
-
             # create the new/updated mark following the colormapping
             # procedure in glue's CompositeArray:
             interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
@@ -743,7 +744,8 @@ class PlotOptions(PluginTemplateMixin):
             layer_cmap = layer.state.cmap
 
             if isinstance(stretch, SplineStretch):
-                knot_x = self.stretch_vmin_value + stretch.x * ( self.stretch_vmax_value - self.stretch_vmin_value)
+                knot_x = (self.stretch_vmin_value + 
+                          stretch.x * (self.stretch_vmax_value - self.stretch_vmin_value))
                 knot_y = stretch.y
             else:
                 knot_x, knot_y = [], []
@@ -774,18 +776,18 @@ class PlotOptions(PluginTemplateMixin):
                     color="#007BA1",  # "inactive" blue
                     opacities=[0.5],
                 )
-            
+
             if not mark_exists:
                 self.stretch_histogram.add_scatter(
-                    label=knot_label, 
-                    x=knot_x, 
-                    y=knot_y, 
-                    ynorm=True, 
+                    label=knot_label,
+                    x=knot_x,
+                    y=knot_y,
+                    ynorm=True,
                     color="#0a6774"
                 )
-            else: 
+            else:
                 self.stretch_histogram.marks[knot_label].x = knot_x 
-                self.stretch_histogram.marks[knot_label].y = knot_y 
+                self.stretch_histogram.marks[knot_label].y = knot_y
 
             self.stretch_histogram._refresh_marks()
 
