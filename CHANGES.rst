@@ -9,6 +9,8 @@ New Features
 
 - Histogram plot in Plot Options now includes tool to set stretch vmin and vmax. [#2513]
 
+- User can now remove data from the app completely after removing it from viewers. [#2409]
+
 Cubeviz
 ^^^^^^^
 

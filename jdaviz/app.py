@@ -35,11 +35,13 @@ from glue.core.message import (DataCollectionAddMessage,
 from glue.core.state_objects import State
 from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
                               CompositeSubsetState, InvertState)
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.units import unit_converter
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
+from glue_jupyter.bqplot.common.tools import TrueCircularROI
 from glue_jupyter.state_traitlets_helpers import GlueState
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from ipyvuetify import VuetifyTemplate
@@ -1594,6 +1596,7 @@ class Application(VuetifyTemplate, HubListener):
         viewer.remove_data(data)
         viewer._layers_with_defaults_applied = [layer_info for layer_info in viewer._layers_with_defaults_applied  # noqa
                                                 if layer_info['data_label'] != data.label]  # noqa
+
         remove_data_message = RemoveDataMessage(data, viewer,
                                                 viewer_id=viewer_id,
                                                 sender=self)
@@ -1891,6 +1894,99 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item = self._viewer_item_by_id(ref_or_id)
         return viewer_item
 
+    def _reparent_subsets(self, old_parent, new_parent=None):
+        '''
+        Re-parent subsets that belong to the specified data
+
+        Parameters
+        ----------
+        old_parent : glue.core.Data, str
+            The item from the data collection off of which to move the subset definitions.
+
+        new_parent : glue.core.Data, str
+            The item from the data collection to make the new parent. If None, the first
+            item in the data collection that doesn't match ``old_parent`` will be chosen.
+        '''
+        from astropy.wcs.utils import pixel_to_pixel
+
+        if isinstance(old_parent, str):
+            old_parent = self.data_collection(old_parent)
+
+        if isinstance(new_parent, str):
+            new_parent = self.data_collection(new_parent)
+        elif new_parent is None:
+            for data in self.data_collection:
+                if data is not old_parent:
+                    new_parent = data
+                    break
+
+        # Set subset attributes to match a remaining data collection member, using get_subsets to
+        # get components of composite subsets.
+        for key, subset_list in self.get_subsets(simplify_spectral=False).items():
+            # Get the subset group entry for later. Unfortunately can't just index on label.
+            [subset_group] = [sg for sg in self.data_collection.subset_groups if sg.label == key]
+
+            for subset in subset_list:
+                subset_state = subset['subset_state']
+                # Only reparent if needed
+                if subset_state.attributes[0].parent is old_parent:
+                    for att in ("att", "xatt", "yatt", "x_att", "y_att"):
+                        if hasattr(subset_state, att):
+                            subset_att = getattr(subset_state, att)
+                            data_components = new_parent.components
+                            if subset_att not in data_components:
+                                cid = [c for c in data_components if c.label == subset_att.label][0]
+                                setattr(subset_state, att, cid)
+
+                    # Translate bounds through WCS if needed
+                    if (self.config == "imviz" and
+                            self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
+                        # Get the correct link to use for translation
+                        roi = subset_state.roi
+                        if type(roi) in (CircularROI, CircularAnnulusROI,
+                                         EllipticalROI, TrueCircularROI):
+                            old_xc, old_yc = subset_state.center()
+                            # Convert center
+                            x, y = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                  roi.xc, roi.yc)
+                            subset_state.move_to(x, y)
+
+                            for att in ("radius", "inner_radius", "outer_radius",
+                                        "radius_x", "radius_y"):
+                                # Hacky way to get new radii with point on edge of circle
+                                # Do we need to worry about using x for the radius conversion for
+                                # radius_y if there is distortion?
+                                r = getattr(roi, att, None)
+                                if r is not None:
+                                    dummy_x = old_xc + r
+                                    x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                            dummy_x, old_yc)
+                                    new_radius = np.abs(x2 - x)
+                                    setattr(roi, att, new_radius)
+
+                        elif type(roi) is RectangularROI:
+                            x_min, y_min = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                          roi.xmin, roi.ymin)
+                            x_max, y_max = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                          roi.xmax, roi.ymax)
+                            roi.xmin = x_min
+                            roi.xmax = x_max
+                            roi.ymin = y_min
+                            roi.ymax = y_max
+
+                    elif type(subset_group.subset_state) is RangeSubsetState:
+                        range_state = subset_group.subset_state
+                        cur_unit = old_parent.coords.spectral_axis.unit
+                        new_unit = new_parent.coords.spectral_axis.unit
+                        if cur_unit is not new_unit:
+                            range_state.lo, range_state.hi = cur_unit.to(new_unit, [range_state.lo,
+                                                                                    range_state.hi])
+
+            # Force subset plugin to update bounds and such
+            for subset in subset_group.subsets:
+                subset_message = SubsetUpdateMessage(sender=subset)
+                self.hub.broadcast(subset_message)
+
     def vue_destroy_viewer_item(self, cid):
         """
         Callback for when viewer area tabs are destroyed. Finds the viewer item
@@ -2022,7 +2118,42 @@ class Application(VuetifyTemplate, HubListener):
                 viewer.on_limits_change()  # Trigger compass redraw
 
     def vue_data_item_remove(self, event):
-        self.data_collection.remove(self.data_collection[event['item_name']])
+
+        data_label = event['item_name']
+        data = self.data_collection[data_label]
+        self._reparent_subsets(data)
+
+        # Make sure the data isn't loaded in any viewers
+        for viewer_id in self._viewer_store:
+            self.remove_data_from_viewer(viewer_id, data_label)
+
+        # Imviz has some extra logic below that can be skipped after data removal if we're not
+        # removing the reference data, so we check that here.
+        if self.config == "imviz":
+            imviz_refdata = False
+            ref_data, iref = self._jdaviz_helper.get_ref_data()
+            if data is ref_data:
+                imviz_refdata = True
+
+        self.data_collection.remove(self.data_collection[data_label])
+
+        # If there are two or more datasets left we need to link them back together after removing
+        # the reference data (which would leave 0 external_links).
+        if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
+            if self.config == "imviz" and imviz_refdata:
+                link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
+                self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
+                # Hack to restore responsiveness to imviz layers
+                for viewer_ref in self.get_viewer_reference_names():
+                    viewer = self.get_viewer(viewer_ref)
+                    loaded_layers = [layer.layer.label for layer in viewer.layers if
+                                     "Subset" not in layer.layer.label]
+                    if len(loaded_layers):
+                        self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
+                        self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
+            else:
+                for i in range(1, len(self.data_collection)):
+                    self._link_new_data(data_to_be_linked=i)
 
     def vue_close_snackbar_message(self, event):
         """

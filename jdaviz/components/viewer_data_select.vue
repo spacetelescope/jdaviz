@@ -17,7 +17,7 @@
         </v-btn>
       </template>
   
-      <v-list style="max-height: 500px; width: 460px; padding-top: 0px" class="overflow-y-auto">
+      <v-list style="max-height: 500px; width: 465px; padding-top: 0px" class="overflow-y-auto">
         <v-row key="title" style="padding-left: 25px; margin-right: 0px; background-color: #E3F2FD">
             <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
               {{viewerTitleCase}}
@@ -50,6 +50,7 @@
             :icon="layer_icons[item.name]"
             :viewer="viewer"
             :multi_select="multi_select"
+            :n_data_entries="nDataEntries"
             @data-item-visibility="$emit('data-item-visibility', $event)"
             @data-item-unload="$emit('data-item-unload', $event)"
             @data-item-remove="$emit('data-item-remove', $event)"
@@ -79,6 +80,7 @@
               :icon="layer_icons[item.name]"
               :viewer="viewer"
               :multi_select="multi_select"
+              :n_data_entries="nDataEntries"
               @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
             ></j-viewer-data-select-item>
@@ -225,6 +227,10 @@ module.exports = {
     },
     extraDataItems() {
       return this.$props.data_items.filter((item) => this.itemIsVisible(item, true))
+    },
+    nDataEntries() {
+      // return number of data entries in the entire plugin that were NOT created by a plugin
+      return this.$props.data_items.filter((item) => item.meta.Plugin === undefined).length
     },
   }
 };
