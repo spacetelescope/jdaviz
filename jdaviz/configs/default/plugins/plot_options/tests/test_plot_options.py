@@ -4,6 +4,7 @@ from numpy import allclose
 from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
 from astropy.nddata import NDData
+from astropy import units as u
 
 
 @pytest.mark.filterwarnings('ignore')

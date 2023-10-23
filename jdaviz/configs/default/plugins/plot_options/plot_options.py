@@ -55,6 +55,8 @@ class SplineStretch:
         )
 
     def __call__(self, values, out=None, clip=False):
+        # TODO: Review the 'out' and 'clip' parameters once glue upstream is updated.
+        # Depending on their implementation, this method may need adjustment.
         return self.spline(values)
 
     def update_knots(self, x, y):
@@ -723,8 +725,8 @@ class PlotOptions(PluginTemplateMixin):
         if not self.stretch_curve_visible:
             # clear marks if curve is not visible:
             for existing_mark_label, mark in self.stretch_histogram.marks.items():
-                if (existing_mark_label.startswith(mark_label_prefix) or 
-                    existing_mark_label.startswith(knots_label_prefix)):
+                if (existing_mark_label.startswith(mark_label_prefix) or
+                        existing_mark_label.startswith(knots_label_prefix)):
                     # clear this mark
                     mark.x = []
                     mark.y = []
@@ -744,7 +746,7 @@ class PlotOptions(PluginTemplateMixin):
             layer_cmap = layer.state.cmap
 
             if isinstance(stretch, SplineStretch):
-                knot_x = (self.stretch_vmin_value + 
+                knot_x = (self.stretch_vmin_value +
                           stretch.x * (self.stretch_vmax_value - self.stretch_vmin_value))
                 knot_y = stretch.y
             else:
@@ -786,7 +788,7 @@ class PlotOptions(PluginTemplateMixin):
                     color="#0a6774"
                 )
             else:
-                self.stretch_histogram.marks[knot_label].x = knot_x 
+                self.stretch_histogram.marks[knot_label].x = knot_x
                 self.stretch_histogram.marks[knot_label].y = knot_y
 
             self.stretch_histogram._refresh_marks()
