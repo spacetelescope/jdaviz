@@ -179,7 +179,6 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
     assert po._obj.contour_spinner is False
 
 
-@pytest.mark.filterwarnings('ignore')
 def test_stretch_spline(imviz_helper):
     image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
     # Load the test data into imviz
