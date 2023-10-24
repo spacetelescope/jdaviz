@@ -369,3 +369,6 @@ Export Plot
 ===========
 
 This plugin allows exporting the plot in a given viewer to a PNG or SVG file.
+
+In Imviz, there is also an option to export to RGB FITS cube, with three slices,
+each representing the red, green, and blue channel.

@@ -17,7 +17,7 @@
          text
          color="primary"
          @click="() => save_figure('png')"
-         :disabled="movie_recording"
+         :disabled="movie_recording || rgbfits_saving"
         >
          Export to PNG
         </v-btn>
@@ -27,7 +27,7 @@
          text
          color="primary"
          @click="() => save_figure('svg')"
-         :disabled="movie_recording"
+         :disabled="movie_recording || rgbfits_saving"
         >
          Export to SVG
         </v-btn>
@@ -124,6 +124,47 @@
                     </v-btn>
                   </template>
                   <span>Start movie recording</span>
+                </v-tooltip>
+              </v-row>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-row>
+
+      <v-row v-if="config==='imviz' && movie_enabled">
+        <v-expansion-panels accordion>
+          <v-expansion-panel>
+            <v-expansion-panel-header v-slot="{ open }">
+              <span style="padding: 6px">Export to RGB FITS</span>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-row class="row-no-outside-padding row-min-bottom-padding">
+                <v-col>
+                  <v-text-field
+                    v-model="rgbfits_filename"
+                    class="mt-0 pt-0"
+                    :rules="[() => rgbfits_filename!=='' || 'Must provide filename.']"
+                    label="Filename"
+                    hint="RGB FITS filename"
+                     persistent-hint
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row justify='end'>
+                <v-tooltip top>
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-btn
+                     text
+                     color="primary"
+                     @click="() => save_rgbfits()"
+                     v-bind="attrs"
+                     v-on="on"
+                     :disabled="rgbfits_saving"
+                    >
+                     Export to RGB FITS
+                    </v-btn>
+                  </template>
+                  <span>Save image to RGB FITS cube</span>
                 </v-tooltip>
               </v-row>
             </v-expansion-panel-content>

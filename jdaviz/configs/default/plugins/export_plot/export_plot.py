@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from astropy.io import fits
 from glue_jupyter.bqplot.image import BqplotImageView
 from traitlets import Any, Bool, Unicode
 
@@ -40,6 +41,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     * `i_end` (Cubeviz only)
     * `movie_fps` (Cubeviz only)
     * `movie_filename` (Cubeviz only)
+    * :meth:`save_rgbfits` (Imviz only)
+    * `rgbfits_filename` (Imviz only)
     """
     template_file = __file__, "export_plot.vue"
 
@@ -58,11 +61,18 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
     movie_recording = Bool(False).tag(sync=True)
     movie_interrupt = Bool(False).tag(sync=True)
 
+    # RGB FITS
+    rgbfits_filename = Any("myrgb.fits").tag(sync=True)
+    rgbfits_saving = Bool(False).tag(sync=True)
+
     @property
     def user_api(self):
         if self.config == "cubeviz":
             return PluginUserApi(self, expose=('viewer', 'save_figure', 'save_movie', 'i_start',
                                                'i_end', 'movie_fps', 'movie_filename'))
+        elif self.config == "imviz":
+            return PluginUserApi(self, expose=('viewer', 'save_figure', 'save_rgbfits',
+                                               'rgbfits_filename'))
         return PluginUserApi(self, expose=('viewer', 'save_figure'))
 
     def __init__(self, *args, **kwargs):
@@ -312,7 +322,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
     def vue_save_movie(self, filetype):  # pragma: no cover
         """
-        Callback for save movie events in the front end viewer toolbars. Uses
+        Callback for save movie events in the front-end viewer toolbars. Uses
         the bqplot.Figure save methods.
         """
         try:
@@ -333,3 +343,73 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         self.hub.broadcast(SnackbarMessage(
             f"Movie recording interrupted by user, {self.movie_filename} will be deleted.",
             sender=self, color="warning"))
+
+    def save_rgbfits(self):
+        """Save viewer display out as RGB FITS.
+        This is analogous to save PNG/JPG, except it is FITS cube.
+        If another FITS file with the same name already exists, it will be silently replaced.
+
+        Output RGB FITS will have one primary extension and 3 images extensions.
+        Each image extension is for red, green, and blue channels, respectively.
+
+        """
+        if self.config != "imviz":
+            raise NotImplementedError(f"save_rgbfits is not available for config={self.config}")
+
+        if not self.movie_enabled:
+            # this should never be triggered since this is intended for UI-disabling and the
+            # UI section is hidden, but would prevent any JS-hacking
+            raise ValueError("save_rgbfits is currently disabled")
+
+        viewer = self.viewer.selected_obj
+        if not isinstance(viewer, BqplotImageView):  # No profile viewer  # pragma: no cover
+            raise TypeError(f"RGB FITS for {viewer.__class__.__name__} is not supported.")
+        if viewer.shape is None:
+            raise ValueError("Selected viewer has no display shape.")
+
+        if not self.rgbfits_filename:
+            raise ValueError("Invalid filename.")
+
+        filename = Path(self.rgbfits_filename).expanduser()
+
+        # Make sure file does not end up in weird places in standalone mode.
+        path = filename.parent
+        if path and not path.exists():
+            raise ValueError(f"Invalid path={path}")
+        elif (not path or str(path).startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
+            filename = os.environ["JDAVIZ_START_DIR"] / filename
+
+        filename = str(filename.resolve())
+
+        # This gives you all the pixels but does not reflect display
+        # when images are dithered but aligned by WCS.
+        # It is quite impossible to generate a good WCS for arbitrary mosaic, so no WCS written out.
+        # Goes with this docstring text:
+        # """Apply the same viewer settings for the entire image and save it out as RGB FITS.
+        # Please make sure you have sufficient memory for this operation."""
+        # rgb = viewer._composite()[:, :, :3]  # (ny, nx, n_layers) in float64, RGB only, no A
+
+        # This is downsampled composite array that matches viewer exactly.
+        # Because it is downsampled and mosaicked, no WCS is written out.
+        rgb = viewer._composite_image.image[:, :, :3]  # (ny, nx, n_layers) in float32, RGB only, no A  # noqa: E501
+
+        # Save as RGB cube as defined in https://ds9.si.edu/doc/ref/file.html#FITSRGB
+        hdu = fits.PrimaryHDU(rgb)
+        hdu.writeto(filename, overwrite=True)
+
+        return filename
+
+    def vue_save_rgbfits(self, event={}):  # pragma: no cover
+        """Callback for save RGB FITS events in the front-end viewer toolbars."""
+        try:
+            self.rgbfits_saving = True
+            filename = self.save_rgbfits()
+        except Exception as err:  # pragma: no cover
+            self.hub.broadcast(SnackbarMessage(
+                f"Error saving {self.rgbfits_filename}: {err!r}", sender=self, color="error"))
+        else:
+            # Let the user know where we saved the file.
+            self.hub.broadcast(SnackbarMessage(
+                f"RGB FITS saved to {filename}", sender=self, color="success"))
+        finally:
+            self.rgbfits_saving = False
