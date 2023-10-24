@@ -34,13 +34,26 @@ class SplineStretch:
     A class to represent spline stretches.
 
     Attributes:
-        k (int): Degree of the smoothing spline.
-        bc_type (str or None): Boundary condition type.
-        t (array-like or None): Array of knot positions.
-        x (array-like): The x-coordinates of the data points.
-        y (array-like): The y-coordinates of the data points.
-        spline (object): Interpolating spline.
+    ----------
+    k : int
+        Degree of the smoothing spline. Default is 3.
+    bc_type : str or None
+        Boundary condition type. Default is None.
+    t : array-like or None
+        Array of knot positions. Default is None.
+    x : array-like
+        The x-coordinates of the data points.
+    y : array-like
+        The y-coordinates of the data points.
+    spline : object
+        Interpolating spline.
+
+    Raises:
+    ------
+    ValueError
+        If `x` and `y` have different lengths.
     """
+
 
     def __init__(self):
         self.k = 3
@@ -52,8 +65,8 @@ class SplineStretch:
         )
 
     def __call__(self, values, out=None, clip=False):
-        # TODO: Review the 'out' and 'clip' parameters once glue upstream is updated.
-        # Depending on their implementation, this method may need adjustment.
+        # For our uses, we can ignore `out` and `clip`, but those would need
+        # to be implemented before contributing this class upstream.
         return self.spline(values)
 
     def update_knots(self, x, y):
@@ -61,16 +74,14 @@ class SplineStretch:
             raise ValueError("x and y must be the same length.")
         self.x = x
         self.y = y
-        self._update_spline()
-
-    def _update_spline(self):
         self.spline = make_interp_spline(
             self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
         )
 
 
-# Add the spline stretch to the glue stretch registry
-stretches.add("spline", SplineStretch(), display="Spline")
+# Add the spline stretch to the glue stretch registry if not registered
+if "spline" not in stretches:
+    stretches.add("spline", SplineStretch(), display="Spline")
 
 
 @tray_registry('g-plot-options', label="Plot Options")

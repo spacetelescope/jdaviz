@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
 from astropy.nddata import NDData
 from astropy import units as u
+from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStretch
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -230,3 +231,10 @@ def test_stretch_spline(imviz_helper):
     assert len(stretch_curve.x) == 0
     assert len(scatter_obj.x) == 0
     assert len(scatter_obj.x) == 0
+
+
+def test_update_knots_mismatched_length():
+    stretch = SplineStretch()
+    with pytest.raises(ValueError):
+        stretch.update_knots(x=[0, 0.1, 0.2], y=[0, 0.05])
+
