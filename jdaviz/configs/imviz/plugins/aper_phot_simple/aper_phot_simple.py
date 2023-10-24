@@ -478,6 +478,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
                 phot_table['id'][0] = 1
                 self.table.add_item(phot_table)
 
+            # User wants 'sum' as scientific notation.
+            self.table._qtable['sum'].info.format = '.6e'
+
         # Plots.
         if update_plots:
             if self.current_plot_type == "Curve of Growth":
