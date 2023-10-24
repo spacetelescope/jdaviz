@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pytest
 from astropy.io import fits
@@ -151,6 +152,10 @@ class TestExportPlotImvizRGBFITS(BaseImviz_WCS_GWCS):
             assert arr.shape == (100, 100, 3)  # ny, nx, RGB
 
         # Silent overwrite.
+        # NOTE: This is not tested on Windows because it throws WinError 32.
+        if sys.platform.startswith("win"):
+            return
+
         self.viewer.shape = (50, 50)
         self.viewer.state._set_axes_aspect_ratio(1)
         self.viewer.zoom_level = "fit"
