@@ -706,7 +706,14 @@ class PlotOptions(PluginTemplateMixin):
         if np.any(np.isnan(sub_data)):
             sub_data = sub_data[~np.isnan(sub_data)]
 
+        # To avoid issues when updating the histogram data, which may or may not
+        # result in a change of the ComponentID for the x-axis, we temporarily
+        # change the x_att to the dummy 'ref' dataset then change it back to
+        # the latest ComponentID after.
+
+        self.stretch_histogram.viewer.state.x_att = self.stretch_histogram.app.data_collection['ref'].id['x']
         self.stretch_histogram._update_data('histogram', x=sub_data)
+        self.stretch_histogram.viewer.state.x_att = self.stretch_histogram.app.data_collection['histogram'].id['x']
 
         if len(sub_data) > 0:
             interval = PercentileInterval(95)
