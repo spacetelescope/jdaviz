@@ -711,9 +711,9 @@ class PlotOptions(PluginTemplateMixin):
         # change the x_att to the dummy 'ref' dataset then change it back to
         # the latest ComponentID after.
 
-        self.stretch_histogram.viewer.state.x_att = self.stretch_histogram.app.data_collection['ref'].id['x']
+        self.stretch_histogram.viewer.state.x_att = self.stretch_histogram.app.data_collection['ref'].id['x']  # noqa: E501
         self.stretch_histogram._update_data('histogram', x=sub_data)
-        self.stretch_histogram.viewer.state.x_att = self.stretch_histogram.app.data_collection['histogram'].id['x']
+        self.stretch_histogram.viewer.state.x_att = self.stretch_histogram.app.data_collection['histogram'].id['x']  # noqa: E501
 
         if len(sub_data) > 0:
             interval = PercentileInterval(95)
