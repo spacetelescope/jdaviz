@@ -237,4 +237,3 @@ def test_update_knots_mismatched_length():
     stretch = SplineStretch()
     with pytest.raises(ValueError):
         stretch.update_knots(x=[0, 0.1, 0.2], y=[0, 0.05])
-

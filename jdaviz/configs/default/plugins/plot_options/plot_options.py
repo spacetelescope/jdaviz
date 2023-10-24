@@ -54,7 +54,6 @@ class SplineStretch:
         If `x` and `y` have different lengths.
     """
 
-
     def __init__(self):
         self.k = 3
         self.bc_type = None
