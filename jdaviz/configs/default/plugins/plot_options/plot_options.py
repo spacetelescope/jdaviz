@@ -33,7 +33,7 @@ class SplineStretch:
     """
     A class to represent spline stretches.
 
-    Attributes:
+    Attributes
     ----------
     k : int
         Degree of the smoothing spline. Default is 3.
@@ -48,7 +48,7 @@ class SplineStretch:
     spline : object
         Interpolating spline.
 
-    Raises:
+    Raises
     ------
     ValueError
         If `x` and `y` have different lengths.
