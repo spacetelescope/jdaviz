@@ -1,6 +1,11 @@
 import pytest
+import numpy as np
 from numpy import allclose
 from numpy.testing import assert_allclose
+from photutils.datasets import make_4gaussians_image
+from astropy.nddata import NDData
+from astropy import units as u
+from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStretch
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -172,3 +177,62 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
     # toggle contour (which has a spinner implemented)
     po.contour_visible = True
     assert po._obj.contour_spinner is False
+
+
+def test_stretch_spline(imviz_helper):
+    image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
+    # Load the test data into imviz
+    imviz_helper.load_data(image_1)
+    po = imviz_helper.plugins['Plot Options']
+
+    # Configure initial stretch options and select "Spline" function
+    with po.as_active():
+        po.stretch_vmin.value = 10
+        po.stretch_vmax.value = 100
+        po.stretch_curve_visible = True
+        po.stretch_function = "Spline"
+
+    # Retrieve knots data from the generated histogram
+    scatter_obj = po._obj.stretch_histogram.marks["stretch_knots: NDData[DATA] (DATA)"]
+    knots_x = scatter_obj.x
+    knots_y = scatter_obj.y
+
+    # Expected knots based on initial stretch settings
+    expected_x = [10., 19., 28., 73., 100.]
+    expected_y = [0., 0.05, 0.3, 0.9, 1.]
+
+    # Validate if the generated knots match the expected knots
+    np.testing.assert_allclose(knots_x, expected_x)
+    np.testing.assert_allclose(knots_y, expected_y)
+
+    # Update the stretch options to new values and verify the knots update correctly
+    with po.as_active():
+        po.stretch_vmin.value = 10
+        po.stretch_vmax.value = 80
+        po.stretch_curve_visible = True
+        po.stretch_function = "Spline"
+
+    knots_x = scatter_obj.x
+
+    # Expected knots based on updated stretch settings
+    expected_x = [10., 17., 24., 59., 80.]
+    expected_y = [0., 0.05, 0.3, 0.9, 1.]
+
+    # Validate if the generated knots for updated settings match the expected values
+    np.testing.assert_allclose(knots_x, expected_x)
+    np.testing.assert_allclose(knots_y, expected_y)
+
+    # Disable the stretch curve and ensure no knots or stretches are visible
+    with po.as_active():
+        po.stretch_curve_visible = False
+    stretch_curve = po._obj.stretch_histogram.marks['stretch_curve: NDData[DATA] (DATA)']
+    assert len(stretch_curve.y) == 0
+    assert len(stretch_curve.x) == 0
+    assert len(scatter_obj.x) == 0
+    assert len(scatter_obj.x) == 0
+
+
+def test_update_knots_mismatched_length():
+    stretch = SplineStretch()
+    with pytest.raises(ValueError):
+        stretch.update_knots(x=[0, 0.1, 0.2], y=[0, 0.05])

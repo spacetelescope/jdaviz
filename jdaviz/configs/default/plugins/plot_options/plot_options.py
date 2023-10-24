@@ -24,7 +24,68 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 
+from scipy.interpolate import make_interp_spline
+
 __all__ = ['PlotOptions']
+
+
+class SplineStretch:
+    """
+    A class to represent spline stretches.
+
+    Attributes
+    ----------
+    k : int
+        Degree of the smoothing spline. Default is 3.
+    bc_type : str or None
+        Boundary condition type. Default is None.
+    t : array-like or None
+        Array of knot positions. Default is None.
+    x : array-like
+        The x-coordinates of the data points.
+    y : array-like
+        The y-coordinates of the data points.
+    spline : object
+        Interpolating spline.
+
+    Raises
+    ------
+    ValueError
+        If `x` and `y` have different lengths.
+    """
+
+    def __init__(self):
+        # Cubic Spline (degree 3) for its balance and between accuracy & smoothness.
+        # May revisit when knots become editable.
+        self.k = 3
+        self.bc_type = None
+        self.t = None
+
+        # Default x, y values(0-1) range chosen for a typical initial spline shape.
+        # Can be modified if required.
+        self.update_knots(
+            x=np.array([0, 0.1, 0.2, 0.7, 1]),
+            y=np.array([0, 0.05, 0.3, 0.9, 1])
+        )
+
+    def __call__(self, values, out=None, clip=False):
+        # For our uses, we can ignore `out` and `clip`, but those would need
+        # to be implemented before contributing this class upstream.
+        return self.spline(values)
+
+    def update_knots(self, x, y):
+        if len(x) != len(y):
+            raise ValueError("x and y must be the same length.")
+        self.x = x
+        self.y = y
+        self.spline = make_interp_spline(
+            self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
+        )
+
+
+# Add the spline stretch to the glue stretch registry if not registered
+if "spline" not in stretches:
+    stretches.add("spline", SplineStretch(), display="Spline")
 
 
 @tray_registry('g-plot-options', label="Plot Options")
@@ -666,6 +727,7 @@ class PlotOptions(PluginTemplateMixin):
     @skip_if_no_updates_since_last_active()
     def _update_stretch_curve(self, msg=None):
         mark_label_prefix = "stretch_curve: "
+        knots_label_prefix = "stretch_knots: "
 
         if not self._viewer_is_image_viewer() or not hasattr(self, 'stretch_histogram'):
             # don't update histogram if selected viewer is not an image viewer,
@@ -675,7 +737,8 @@ class PlotOptions(PluginTemplateMixin):
         if not self.stretch_curve_visible:
             # clear marks if curve is not visible:
             for existing_mark_label, mark in self.stretch_histogram.marks.items():
-                if existing_mark_label.startswith(mark_label_prefix):
+                if (existing_mark_label.startswith(mark_label_prefix) or
+                        existing_mark_label.startswith(knots_label_prefix)):
                     # clear this mark
                     mark.x = []
                     mark.y = []
@@ -686,12 +749,20 @@ class PlotOptions(PluginTemplateMixin):
             mark_label = f'{mark_label_prefix}{layer.label}'
             mark_exists = mark_label in self.stretch_histogram.marks
 
+            knot_label = f"{knots_label_prefix}{layer.label}"
             # create the new/updated mark following the colormapping
             # procedure in glue's CompositeArray:
             interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
             contrast_bias = ContrastBiasStretch(layer.state.contrast, layer.state.bias)
             stretch = stretches.members[layer.state.stretch]
             layer_cmap = layer.state.cmap
+
+            if isinstance(stretch, SplineStretch):
+                knot_x = (self.stretch_vmin_value +
+                          stretch.x * (self.stretch_vmax_value - self.stretch_vmin_value))
+                knot_y = stretch.y
+            else:
+                knot_x, knot_y = [], []
 
             # create a photoshop style "curve" for the stretch function
             curve_x = np.linspace(self.stretch_vmin.value, self.stretch_vmax.value, 50)
@@ -719,6 +790,18 @@ class PlotOptions(PluginTemplateMixin):
                     color="#007BA1",  # "inactive" blue
                     opacities=[0.5],
                 )
+
+            if not mark_exists:
+                self.stretch_histogram.add_scatter(
+                    label=knot_label,
+                    x=knot_x,
+                    y=knot_y,
+                    ynorm=True,
+                    color="#0a6774"
+                )
+            else:
+                self.stretch_histogram.marks[knot_label].x = knot_x
+                self.stretch_histogram.marks[knot_label].y = knot_y
 
             self.stretch_histogram._refresh_marks()
 
