@@ -3432,8 +3432,16 @@ class Plot(PluginSubcomponent):
         """
         if label in self._marks:
             raise ValueError(f"mark with label '{label}' already exists")
-        mark = cls(scales={'x': bqplot.LinearScale() if xnorm else self.figure.axes[0].scale,
-                           'y': bqplot.LinearScale() if ynorm else self.figure.axes[1].scale},
+        scales = {}
+        for dim, norm in zip(('x', 'y'), (xnorm, ynorm)):
+            if isinstance(norm, str) and norm in self._marks.keys():
+                # point to an existing marks scales
+                scales[dim] = self._marks[norm].scales[dim]
+            elif norm:
+                scales[dim] = bqplot.LinearScale()
+            else:
+                scales[dim] = self.figure.axes[0].scale
+        mark = cls(scales=scales,
                    labels=[label],
                    **kwargs)
         self.figure.marks = self.figure.marks + [mark]
