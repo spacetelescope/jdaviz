@@ -11,7 +11,7 @@ New Features
 
 - The Plot Options plugin now include a 'spline' stretch feature. [#2525]
   
-- User can now remove data from the app completely after removing it from viewers. [#2409]
+- User can now remove data from the app completely after removing it from viewers. [#2409, #2531]
 
 Cubeviz
 ^^^^^^^
