@@ -345,7 +345,8 @@
       ></v-select>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper :sync="stretch_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmin')">
+    <!-- for multiselect, show vmin/max here, otherwise they'll be in the "more stretch options" expandable section -->
+    <glue-state-sync-wrapper v-if="multiselect" :sync="stretch_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmin')">
       <v-text-field
         ref="stretch_vmin"
         label="Stretch VMin"
@@ -355,7 +356,7 @@
       ></v-text-field>
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper :sync="stretch_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmax')">
+    <glue-state-sync-wrapper v-if="multiselect" :sync="stretch_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmax')">
       <v-text-field
         ref="stretch_vmax"
         label="Stretch VMax"
@@ -365,40 +366,65 @@
       ></v-text-field>
     </glue-state-sync-wrapper>
 
-    <div v-if="stretch_function_sync.in_subscribed_states">
-      <v-row>
-        <v-text-field
-            ref="stretch_hist_nbins"
-            label="Number of Bins"
-            v-model.number="stretch_hist_nbins"
-            type="number"
-            hint="The amount of bins used in the histogram."
-            persistent-hint
-            :rules="[() => stretch_hist_nbins !== '' || 'This field is required',
-                     () => stretch_hist_nbins > 0 || 'Number of Bins must be greater than zero']"
-        ></v-text-field>
-      </v-row>
-      <v-row>
-        <!-- z-index to ensure on top of the jupyter widget with negative margin-top -->
-        <v-switch
-          v-model="stretch_hist_zoom_limits"
-          class="hide-input"
-          label="Limit histogram to current zoom limits"
-          style="z-index: 1"
-        ></v-switch>
-      </v-row>
-      <v-row>
-        <v-switch
-          v-model="stretch_curve_visible"
-          class="hide-input"
-          label="Show stretch function curve"
-          style="z-index: 1"
-        ></v-switch>
-        <!-- NOTE: height defined here should match that in the custom CSS rules
-             below for the bqplot class -->
-      </v-row>
+    <div v-if="stretch_function_sync.in_subscribed_states && !multiselect">
       <jupyter-widget :widget="stretch_histogram_widget"/>
-      </div>
+      <v-row>
+        <v-expansion-panels accordion>
+          <v-expansion-panel>
+            <v-expansion-panel-header v-slot="{ open }">
+              <span style="padding: 6px">More Stretch Options</span>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-row>
+                <v-text-field
+                    ref="stretch_hist_nbins"
+                    label="Number of Bins"
+                    v-model.number="stretch_hist_nbins"
+                    type="number"
+                    hint="The amount of bins used in the histogram."
+                    persistent-hint
+                    :rules="[() => stretch_hist_nbins !== '' || 'This field is required',
+                             () => stretch_hist_nbins > 0 || 'Number of Bins must be greater than zero']"
+                ></v-text-field>
+              </v-row>
+              <v-row>
+                <v-switch
+                  v-model="stretch_hist_zoom_limits"
+                  class="hide-input"
+                  label="Limit histogram to current zoom limits"
+                ></v-switch>
+              </v-row>
+              <v-row>
+                <v-switch
+                  v-model="stretch_curve_visible"
+                  class="hide-input"
+                  label="Show stretch function curve"
+                ></v-switch>
+              </v-row>
+              <glue-state-sync-wrapper :sync="stretch_vmin_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmin')">
+                <v-text-field
+                  ref="stretch_vmin"
+                  label="Stretch VMin"
+                  v-model.number="stretch_vmin_value"
+                  type="number"
+                  :step="stretch_vstep"
+                ></v-text-field>
+              </glue-state-sync-wrapper>
+              <glue-state-sync-wrapper :sync="stretch_vmax_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_vmax')">
+                <v-text-field
+                  ref="stretch_vmax"
+                  label="Stretch VMax"
+                  v-model.number="stretch_vmax_value"
+                  type="number"
+                  :step="stretch_vstep"
+                ></v-text-field>
+              </glue-state-sync-wrapper>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-row>
+
+    </div>
 
     <!-- IMAGE:IMAGE -->
     <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
