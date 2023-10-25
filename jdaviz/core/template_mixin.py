@@ -3406,15 +3406,16 @@ class Plot(PluginSubcomponent):
         return self._marks
 
     def clear_marks(self, *mark_labels):
-        for mark_label, mark in self.marks.items():
-            if mark_label in mark_labels:
-                if isinstance(mark, bqplot.Bins):
-                    # NOTE: cannot completely empty samples
-                    # may want to also set mark.visible=False manually if clearing
-                    # (but this will still at least clear any internal arrays)
-                    mark.samples = [0]
-                else:
-                    mark.x, mark.y = [], []
+        with self.hold_sync():
+            for mark_label, mark in self.marks.items():
+                if mark_label in mark_labels:
+                    if isinstance(mark, bqplot.Bins):
+                        # NOTE: cannot completely empty samples
+                        # may want to also set mark.visible=False manually if clearing
+                        # (but this will still at least clear any internal arrays)
+                        mark.samples = [0]
+                    else:
+                        mark.x, mark.y = [], []
 
     def clear_all_marks(self):
         self.clear_marks(*self.marks.keys())

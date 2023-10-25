@@ -477,6 +477,19 @@ class PlotOptions(PluginTemplateMixin):
 
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
         self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm='vmin', color='#c75d2c')
+        self.stretch_histogram.add_line(
+            label='stretch_curve',
+            x=[], y=[],
+            ynorm='vmin',
+            color="#007BA1",  # "inactive" blue
+            opacities=[0.5],
+        )
+        self.stretch_histogram.add_scatter(
+            label='stretch_knots',
+            x=[], y=[],
+            ynorm='vmin',
+            color="#007BA1",  # "inactive" blue
+        )
         self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
         with self.stretch_histogram.figure.hold_sync():
             self.stretch_histogram.figure.axes[0].label = 'pixel value'
@@ -727,22 +740,25 @@ class PlotOptions(PluginTemplateMixin):
         # update the n_bins since this may be a new layer
         self._histogram_nbins_changed()
 
-    @observe('is_active', 'image_color_mode_value', 'image_color_value', 'image_colormap_value',
+    @observe('is_active', 'layer_selected',
+             'image_color_mode_value', 'image_color_value', 'image_colormap_value',
              'image_contrast_value', 'image_bias_value',
+             'stretch_hist_nbins',
+             'stretch_curve_visible',
              'stretch_function_value', 'stretch_vmin_value', 'stretch_vmax_value',
-             'stretch_hist_nbins', 'stretch_hist_zoom_limits')
+             )
     @skip_if_no_updates_since_last_active()
-    def _update_stretch_histogram_colorbar(self, msg={}):
-        """Renders a colorbar on top of the histogram."""
+    def _update_stretch_curve(self, msg=None):
         if not self._viewer_is_image_viewer() or not hasattr(self, 'stretch_histogram'):
             # don't update histogram if selected viewer is not an image viewer,
             # or the stretch histogram hasn't been initialized:
             return
 
+        # TODO: make sure entire histogram is hidden in multiselect
+        # TODO: look at what is in msg and don't updating things that don't need updating
+
         if self.multiselect:
-            with self.stretch_histogram.hold_sync():
-                self.stretch_histogram._marks["colorbar"].x = []
-                self.stretch_histogram._marks["colorbar"].y = []
+            self.stretch_histogram.clear_marks('stretch_curve', 'stretch_knots', 'colorbar')
             return
 
         if len(self.layer.selected_obj):
@@ -753,95 +769,65 @@ class PlotOptions(PluginTemplateMixin):
 
         if isinstance(layer.layer, GroupedSubset):
             # don't update histogram for subsets:
+            self.stretch_histogram.clear_marks('stretch_curve', 'stretch_knots', 'colorbar')
             return
 
-        # Cannot use layer.state because it can be out-of-sync
-        with self.stretch_histogram.hold_sync():
-            color_mode = self.image_color_mode_value
-            interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
-            contrast_bias = ContrastBiasStretch(self.image_contrast_value, self.image_bias_value)
-            stretch = stretches.members[self.stretch_function_value]
+        # create the new/updated stretch curve following the colormapping
+        # procedure in glue's CompositeArray:
+        interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
+        contrast_bias = ContrastBiasStretch(self.image_contrast_value, self.image_bias_value)
+        stretch = stretches.members[self.stretch_function_value]
+        layer_cmap = layer.state.cmap
 
-            # NOTE: Index 0 in marks is assumed to be the bin centers.
-            x = self.stretch_histogram.figure.marks[0].x
-            y = np.ones_like(x)
+        # show the colorbar
+        color_mode = self.image_color_mode_value
 
-            # Copied from the __call__ internals of glue/viewers/image/composite_array.py
-            data = interval(x)
-            data = contrast_bias(data, out=data)
-            data = stretch(data, out=data)
+        # NOTE: Index 0 in marks is assumed to be the bin centers.
+        x = self.stretch_histogram.figure.marks[0].x
+        y = np.ones_like(x)
 
-            if color_mode == 'Colormaps':
-                cmap = colormaps[self.image_colormap.text]
-                if hasattr(cmap, "get_bad"):
-                    bad_color = cmap.get_bad().tolist()[:3]
-                    layer_cmap = cmap.with_extremes(bad=bad_color + [self.image_opacity_value])
-                else:
-                    layer_cmap = cmap
+        # Copied from the __call__ internals of glue/viewers/image/composite_array.py
+        data = interval(x)
+        data = contrast_bias(data, out=data)
+        data = stretch(data, out=data)
 
-                # Compute colormapped image
-                plane = layer_cmap(data)
-
-            else:  # Monochromatic
-                # Get color
-                color = COLOR_CONVERTER.to_rgba_array(self.image_color_value)[0]
-                plane = data[:, np.newaxis] * color
-                plane[:, 3] = 1
-
-            plane = np.clip(plane, 0, 1, out=plane)
-            ipycolors = [matplotlib.colors.rgb2hex(p, keep_alpha=False) for p in plane]
-
-            self.stretch_histogram._marks["colorbar"].x = x
-            self.stretch_histogram._marks["colorbar"].y = y
-            self.stretch_histogram._marks["colorbar"].colors = ipycolors
-
-    @observe('is_active', 'stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
-             'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',
-             'stretch_curve_visible')
-    @skip_if_no_updates_since_last_active()
-    def _update_stretch_curve(self, msg=None):
-        mark_label_prefix = "stretch_curve: "
-        knots_label_prefix = "stretch_knots: "
-
-        if not self._viewer_is_image_viewer() or not hasattr(self, 'stretch_histogram'):
-            # don't update histogram if selected viewer is not an image viewer,
-            # or the stretch histogram hasn't been initialized:
-            return
-
-        if not self.stretch_curve_visible:
-            # clear marks if curve is not visible:
-            for existing_mark_label, mark in self.stretch_histogram.marks.items():
-                if (existing_mark_label.startswith(mark_label_prefix) or
-                        existing_mark_label.startswith(knots_label_prefix)):
-                    # clear this mark
-                    mark.x = []
-                    mark.y = []
-            return
-
-        for layer in self.layer.selected_obj:
-            if isinstance(layer.layer, GroupedSubset):
-                # don't update histogram for subsets:
-                continue
-
-            # clear old mark, if it exists:
-            mark_label = f'{mark_label_prefix}{layer.label}'
-            mark_exists = mark_label in self.stretch_histogram.marks
-
-            knot_label = f"{knots_label_prefix}{layer.label}"
-            # create the new/updated mark following the colormapping
-            # procedure in glue's CompositeArray:
-            interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
-            contrast_bias = ContrastBiasStretch(layer.state.contrast, layer.state.bias)
-            stretch = stretches.members[layer.state.stretch]
-            layer_cmap = layer.state.cmap
-
-            if isinstance(stretch, SplineStretch):
-                knot_x = (self.stretch_vmin_value +
-                          stretch.x * (self.stretch_vmax_value - self.stretch_vmin_value))
-                knot_y = stretch.y
+        if color_mode == 'Colormaps':
+            cmap = colormaps[self.image_colormap.text]
+            if hasattr(cmap, "get_bad"):
+                bad_color = cmap.get_bad().tolist()[:3]
+                layer_cmap = cmap.with_extremes(bad=bad_color + [self.image_opacity_value])
             else:
-                knot_x, knot_y = [], []
+                layer_cmap = cmap
 
+            # Compute colormapped image
+            plane = layer_cmap(data)
+
+        else:  # Monochromatic
+            # Get color
+            color = COLOR_CONVERTER.to_rgba_array(self.image_color_value)[0]
+            plane = data[:, np.newaxis] * color
+            plane[:, 3] = 1
+
+        plane = np.clip(plane, 0, 1, out=plane)
+        ipycolors = [matplotlib.colors.rgb2hex(p, keep_alpha=False) for p in plane]
+
+        colorbar_mark = self.stretch_histogram.marks['colorbar']
+        colorbar_mark.x = x
+        colorbar_mark.y = y
+        # TODO: fix all white on load...
+        colorbar_mark.colors = ipycolors
+
+        # show "knot" locations if the stretch_function is a spline
+        if isinstance(stretch, SplineStretch) and self.stretch_curve_visible:
+            knot_mark = self.stretch_histogram.marks['stretch_knots']
+            knot_mark.x = self.stretch_vmin_value + stretch.x * ( self.stretch_vmax_value - self.stretch_vmin_value)
+            # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
+            # (may need to revisit this when supporting dragging)
+            knot_mark.y = 0.9 * stretch.y
+        else:
+            self.stretch_histogram.clear_marks('stretch_knots')
+
+        if self.stretch_curve_visible:
             # create a photoshop style "curve" for the stretch function
             curve_x = np.linspace(self.stretch_vmin.value, self.stretch_vmax.value, 50)
             curve_y = interval(curve_x, clip=False)
@@ -849,39 +835,15 @@ class PlotOptions(PluginTemplateMixin):
             curve_y = stretch(curve_y, out=curve_y, clip=False)
             curve_y = layer_cmap(curve_y)[:, 0]
 
-            for existing_mark_label, mark in self.stretch_histogram.marks.items():
-                if mark_label == existing_mark_label:
-                    # update this mark
-                    mark.x = curve_x
-                    mark.y = curve_y
-                elif existing_mark_label.startswith(mark_label_prefix):
-                    # clear this mark
-                    mark.x = []
-                    mark.y = []
+            curve_mark = self.stretch_histogram.marks['stretch_curve']
+            curve_mark.x = curve_x
+            # scale to 0.9 so always falls below colorbar (same as for stretch_knots)
+            # (may need to revisit this when supporting dragging)
+            curve_mark.y = 0.9 * curve_y
+        else:
+            self.stretch_histogram.clear_marks('stretch_curve')
 
-            if not mark_exists:
-                self.stretch_histogram.add_line(
-                    mark_label,
-                    x=curve_x,
-                    y=curve_y,
-                    ynorm=True,
-                    color="#007BA1",  # "inactive" blue
-                    opacities=[0.5],
-                )
-
-            if not mark_exists:
-                self.stretch_histogram.add_scatter(
-                    label=knot_label,
-                    x=knot_x,
-                    y=knot_y,
-                    ynorm=True,
-                    color="#0a6774"
-                )
-            else:
-                self.stretch_histogram.marks[knot_label].x = knot_x
-                self.stretch_histogram.marks[knot_label].y = knot_y
-
-            self.stretch_histogram._refresh_marks()
+        self.stretch_histogram._refresh_marks()
 
     @observe('stretch_vmin_value')
     def _stretch_vmin_changed(self, msg=None):
