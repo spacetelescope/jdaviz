@@ -11,6 +11,17 @@
         </v-btn>
       </j-tooltip>
     </div>
+    <div v-else>
+      <j-tooltip tipid="viewer-data-enable">
+        <v-btn
+          icon
+          color="default"
+          @click="selectClicked">
+            <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </j-tooltip>
+    </div>
+
     <j-tooltip
       :tooltipcontent=dataMenuTooltip
       span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
@@ -134,11 +145,7 @@ module.exports = {
         } else if (this.$props.viewer.reference === 'mask-viewer') {
           return ['MASK', 'DQ'].indexOf(extension) !== -1
         } else if (this.$props.viewer.reference === 'spectrum-viewer') {
-<<<<<<< HEAD
-          return ['SCI', 'FLUX'].indexOf(extension) !== -1
-=======
           return this.$props.item.name.indexOf('[FLUX]') === -1
->>>>>>> 0e855fcd (add data menu orientation options, handle linking changes)
         }
       } else if (this.$props.viewer.config === 'specviz2d') {
         if (this.$props.viewer.reference === 'spectrum-2d-viewer') {

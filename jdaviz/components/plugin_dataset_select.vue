@@ -63,7 +63,7 @@
 </template>
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry'],
+  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect'],
   methods: {
     isWCSOnlyLayer(item) {
       const wcsOnly = Object.keys(this.$props.viewer.wcs_only_layers).includes(item.name)
