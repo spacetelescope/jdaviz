@@ -127,26 +127,12 @@ text_file_format = "rst"
 addopts = "--doctest-rst --import-mode=append"
 filterwarnings = [
     "error",
-    "ignore:numpy\\.ufunc size changed:RuntimeWarning",
     "ignore:numpy\\.ndarray size changed:RuntimeWarning",
-    "ignore:distutils Version classes are deprecated:DeprecationWarning",
     "ignore:Passing unrecognized arguments to super:DeprecationWarning",
     "ignore:.*With traitlets 4\\.1, metadata should be set using the \\.tag\\(\\) method:DeprecationWarning",
-    "ignore:Widget.* is deprecated:DeprecationWarning",
-    "ignore:zmq\\.eventloop\\.ioloop is deprecated in pyzmq:DeprecationWarning",
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
-    "ignore:specutils uses the deprecated entry point asdf_extensions",
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
-    "ignore:datetime\\.datetime\\.utcfromtimestamp:DeprecationWarning",  # asdf + dateutil<=2.8.2 + Python 3.12
     "ignore::DeprecationWarning:glue",
-    "ignore::DeprecationWarning:bqplot",
-    "ignore::DeprecationWarning:bqplot_image_gl",
-    "ignore::DeprecationWarning:bqscales",
-    "ignore::DeprecationWarning:traittypes",
-    "ignore::DeprecationWarning:voila",
-    "ignore::DeprecationWarning:asteval",
-    "ignore::DeprecationWarning:dask",
-    "ignore::FutureWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
     # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
     # and https://github.com/scipy/scipy/pull/19275
