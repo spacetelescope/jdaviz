@@ -1,4 +1,4 @@
-3.7.1 (unreleased)
+3.7.1 (2023-10-25)
 ==================
 
 Bug Fixes
@@ -23,21 +23,12 @@ Cubeviz
 - Updated glue-core pin to fix the green layer that would appear if 2D data was added to
   image viewers while spectral subsets were defined. [#2527]
 
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 - Spectrum that has incompatible flux unit with what is already loaded
   will no longer be loaded as ghost spectrum. It will now be rejected
   with an error message on the snackbar. [#2485]
-
-Specviz2d
-^^^^^^^^^
 
 Other Changes and Additions
 ---------------------------
