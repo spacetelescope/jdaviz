@@ -1910,10 +1910,10 @@ class Application(VuetifyTemplate, HubListener):
         from astropy.wcs.utils import pixel_to_pixel
 
         if isinstance(old_parent, str):
-            old_parent = self.data_collection(old_parent)
+            old_parent = self.data_collection[old_parent]
 
         if isinstance(new_parent, str):
-            new_parent = self.data_collection(new_parent)
+            new_parent = self.data_collection[new_parent]
         elif new_parent is None:
             for data in self.data_collection:
                 if data is not old_parent:

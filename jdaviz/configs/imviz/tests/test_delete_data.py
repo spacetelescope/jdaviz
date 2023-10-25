@@ -8,6 +8,13 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
 class TestDeleteData(BaseImviz_WCS_WCS):
 
+    def test_reparent_str(self):
+        for subset in self.imviz.app.data_collection.subset_groups:
+            self.imviz.app._reparent_subsets(
+                subset.subset_state.xatt.parent.label,
+                "has_wcs_1[SCI,1]"
+            )
+
     def test_delete_with_subset_wcs(self):
         # Add a third dataset to test relinking
         arr = np.ones((10, 10))
