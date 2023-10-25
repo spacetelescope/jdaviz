@@ -13,6 +13,8 @@ New Features
 
 - User can now remove data from the app completely after removing it from viewers. [#2409, #2531]
 
+- Colorbar now shown on top of the histogram in Plot Options for image viewers. [#2517]
+
 Cubeviz
 ^^^^^^^
 

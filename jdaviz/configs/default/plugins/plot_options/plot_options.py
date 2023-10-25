@@ -1,17 +1,20 @@
 import os
+import matplotlib
 import numpy as np
 
 from astropy.visualization import (
     ManualInterval, ContrastBiasStretch, PercentileInterval
 )
+from echo import delay_callback
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.core.subset_group import GroupedSubset
-from glue.config import stretches
+from glue.config import colormaps, stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
+from glue.viewers.image.composite_array import COLOR_CONVERTER
 from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -473,12 +476,14 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram._add_data('histogram', x=[0, 1])
 
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
-        self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
-        self.stretch_histogram.figure.axes[0].label = 'pixel value'
-        self.stretch_histogram.figure.axes[0].num_ticks = 3
-        self.stretch_histogram.figure.axes[0].tick_format = '0.1e'
-        self.stretch_histogram.figure.axes[1].label = 'density'
-        self.stretch_histogram.figure.axes[1].num_ticks = 2
+        self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm='vmin', color='#c75d2c')
+        self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
+        with self.stretch_histogram.figure.hold_sync():
+            self.stretch_histogram.figure.axes[0].label = 'pixel value'
+            self.stretch_histogram.figure.axes[0].num_ticks = 3
+            self.stretch_histogram.figure.axes[0].tick_format = '0.1e'
+            self.stretch_histogram.figure.axes[1].label = 'density'
+            self.stretch_histogram.figure.axes[1].num_ticks = 2
         self.stretch_histogram_widget = f'IPY_MODEL_{self.stretch_histogram.model_id}'
 
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
@@ -713,13 +718,82 @@ class PlotOptions(PluginTemplateMixin):
             stretch_vstep = (hist_lims[1] - hist_lims[0]) / 100.
             self.stretch_vstep = np.round(stretch_vstep, decimals=-int(np.log10(stretch_vstep))+1)  # noqa
 
-            self.stretch_histogram.viewer.state.hist_x_min = hist_lims[0]
-            self.stretch_histogram.viewer.state.hist_x_max = hist_lims[1]
+            with delay_callback(self.stretch_histogram.viewer.state, 'hist_x_min', 'hist_x_max'):
+                self.stretch_histogram.viewer.state.hist_x_min = hist_lims[0]
+                self.stretch_histogram.viewer.state.hist_x_max = hist_lims[1]
 
         self.stretch_histogram.figure.title = f"{len(sub_data)} pixels"
 
         # update the n_bins since this may be a new layer
         self._histogram_nbins_changed()
+
+    @observe('is_active', 'image_color_mode_value', 'image_color_value', 'image_colormap_value',
+             'image_contrast_value', 'image_bias_value',
+             'stretch_function_value', 'stretch_vmin_value', 'stretch_vmax_value',
+             'stretch_hist_nbins', 'stretch_hist_zoom_limits')
+    @skip_if_no_updates_since_last_active()
+    def _update_stretch_histogram_colorbar(self, msg={}):
+        """Renders a colorbar on top of the histogram."""
+        if not self._viewer_is_image_viewer() or not hasattr(self, 'stretch_histogram'):
+            # don't update histogram if selected viewer is not an image viewer,
+            # or the stretch histogram hasn't been initialized:
+            return
+
+        if self.multiselect:
+            with self.stretch_histogram.hold_sync():
+                self.stretch_histogram._marks["colorbar"].x = []
+                self.stretch_histogram._marks["colorbar"].y = []
+            return
+
+        if len(self.layer.selected_obj):
+            layer = self.layer.selected_obj[0]
+        else:
+            # skip further updates if no data are available:
+            return
+
+        if isinstance(layer.layer, GroupedSubset):
+            # don't update histogram for subsets:
+            return
+
+        # Cannot use layer.state because it can be out-of-sync
+        with self.stretch_histogram.hold_sync():
+            color_mode = self.image_color_mode_value
+            interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
+            contrast_bias = ContrastBiasStretch(self.image_contrast_value, self.image_bias_value)
+            stretch = stretches.members[self.stretch_function_value]
+
+            # NOTE: Index 0 in marks is assumed to be the bin centers.
+            x = self.stretch_histogram.figure.marks[0].x
+            y = np.ones_like(x)
+
+            # Copied from the __call__ internals of glue/viewers/image/composite_array.py
+            data = interval(x)
+            data = contrast_bias(data, out=data)
+            data = stretch(data, out=data)
+
+            if color_mode == 'Colormaps':
+                cmap = colormaps[self.image_colormap.text]
+                if hasattr(cmap, "get_bad"):
+                    bad_color = cmap.get_bad().tolist()[:3]
+                    layer_cmap = cmap.with_extremes(bad=bad_color + [self.image_opacity_value])
+                else:
+                    layer_cmap = cmap
+
+                # Compute colormapped image
+                plane = layer_cmap(data)
+
+            else:  # Monochromatic
+                # Get color
+                color = COLOR_CONVERTER.to_rgba_array(self.image_color_value)[0]
+                plane = data[:, np.newaxis] * color
+                plane[:, 3] = 1
+
+            plane = np.clip(plane, 0, 1, out=plane)
+            ipycolors = [matplotlib.colors.rgb2hex(p, keep_alpha=False) for p in plane]
+
+            self.stretch_histogram._marks["colorbar"].x = x
+            self.stretch_histogram._marks["colorbar"].y = y
+            self.stretch_histogram._marks["colorbar"].colors = ipycolors
 
     @observe('is_active', 'stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
              'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',
@@ -745,6 +819,10 @@ class PlotOptions(PluginTemplateMixin):
             return
 
         for layer in self.layer.selected_obj:
+            if isinstance(layer.layer, GroupedSubset):
+                # don't update histogram for subsets:
+                continue
+
             # clear old mark, if it exists:
             mark_label = f'{mark_label_prefix}{layer.label}'
             mark_exists = mark_label in self.stretch_histogram.marks

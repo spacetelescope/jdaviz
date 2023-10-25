@@ -1,10 +1,9 @@
 import pytest
-import numpy as np
-from numpy import allclose
+from astropy import units as u
+from astropy.nddata import NDData
 from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
-from astropy.nddata import NDData
-from astropy import units as u
+
 from jdaviz.configs.default.plugins.plot_options.plot_options import SplineStretch
 
 
@@ -77,12 +76,24 @@ def test_stretch_histogram(cubeviz_helper, spectrum1d_cube_with_uncerts):
 
     assert po.stretch_histogram is not None
 
+    # check the colorbar
+    cb = po.stretch_histogram._marks["colorbar"]
+    assert_allclose(cb.x, po.stretch_histogram.figure.marks[0].x)
+    assert_allclose(cb.y, 1)
+    assert cb.colors == [  # Gray scale, linear
+        '#050505', '#0f0f0f', '#191919', '#232323', '#2e2e2e',
+        '#383838', '#424242', '#4c4c4c', '#575757', '#616161',
+        '#6b6b6b', '#757575', '#808080', '#8a8a8a', '#949494',
+        '#9e9e9e', '#a8a8a8', '#b3b3b3', '#bdbdbd', '#c7c7c7',
+        '#d1d1d1', '#dcdcdc', '#e6e6e6', '#f0f0f0', '#fafafa']
+
     hist_lyr = po.stretch_histogram.layers['histogram']
     flux_cube_sample = hist_lyr.layer.data['x']
 
     # changing viewer should change results
     po.viewer.selected = 'uncert-viewer'
-    assert not allclose(hist_lyr.layer.data['x'], flux_cube_sample)
+    with pytest.raises(AssertionError):
+        assert_allclose(hist_lyr.layer.data['x'], flux_cube_sample)
 
     po.viewer.selected = 'flux-viewer'
     assert_allclose(hist_lyr.layer.data['x'], flux_cube_sample)
@@ -202,8 +213,8 @@ def test_stretch_spline(imviz_helper):
     expected_y = [0., 0.05, 0.3, 0.9, 1.]
 
     # Validate if the generated knots match the expected knots
-    np.testing.assert_allclose(knots_x, expected_x)
-    np.testing.assert_allclose(knots_y, expected_y)
+    assert_allclose(knots_x, expected_x)
+    assert_allclose(knots_y, expected_y)
 
     # Update the stretch options to new values and verify the knots update correctly
     with po.as_active():
@@ -219,8 +230,8 @@ def test_stretch_spline(imviz_helper):
     expected_y = [0., 0.05, 0.3, 0.9, 1.]
 
     # Validate if the generated knots for updated settings match the expected values
-    np.testing.assert_allclose(knots_x, expected_x)
-    np.testing.assert_allclose(knots_y, expected_y)
+    assert_allclose(knots_x, expected_x)
+    assert_allclose(knots_y, expected_y)
 
     # Disable the stretch curve and ensure no knots or stretches are visible
     with po.as_active():
