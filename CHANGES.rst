@@ -10,7 +10,7 @@ New Features
 - Histogram plot in Plot Options now includes tool to set stretch vmin and vmax. [#2513]
 
 - The Plot Options plugin now include a 'spline' stretch feature. [#2525]
-  
+
 - User can now remove data from the app completely after removing it from viewers. [#2409, #2531]
 
 Cubeviz
@@ -24,7 +24,6 @@ Imviz
 ^^^^^
 
 - Aperture photometry (previously "Imviz Simple Aperture Photometry") now supports batch mode. [#2465]
-
 
 - Expose sky regions in get_subsets. If 'include_sky_region' is True, a sky Region will be returned (in addition to a pixel Region) for spatial subsets with parent data that was a WCS. [#2496]
 
@@ -87,7 +86,28 @@ Other Changes and Additions
 
 - Plot options now includes better support for scatter viewers, including toggling line visibility. [#2449]
 
-3.7.1 (unreleased)
+3.7.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.7.1 (2023-10-25)
 ==================
 
 Bug Fixes
@@ -108,6 +128,9 @@ Cubeviz
 - Fixed moment map losing WCS when being written out to FITS file. [#2431]
 
 - Fixed parsing for VLT MUSE data cube so spectral axis unit is correctly converted. [#2504]
+
+- Updated glue-core pin to fix the green layer that would appear if 2D data was added to
+  image viewers while spectral subsets were defined. [#2527]
 
 Imviz
 ^^^^^
@@ -221,8 +244,8 @@ Bug Fixes
 - Circle tool to create a circular Subset no longer results in an ellipse
   under certain conditions. [#2332]
 
-- Fixes turning off multiselect mode for a dropdown when no selections are currently made. 
-  Previously this resulted in a traceback, but now applies the default selection for 
+- Fixes turning off multiselect mode for a dropdown when no selections are currently made.
+  Previously this resulted in a traceback, but now applies the default selection for
   single-select mode. [#2404]
 
 - Fixes tracebacks from plugins opened in popout windows. [#2411]
@@ -410,7 +433,7 @@ Bug Fixes
 
 - Fixed ``cls`` input being ignored in ``viz.get_data()``. [#2242]
 
-- Line analysis plugin's ``show_continuum_marks`` is deprecated, use ``plugin.as_active()`` 
+- Line analysis plugin's ``show_continuum_marks`` is deprecated, use ``plugin.as_active()``
   instead. [#2295]
 
 Cubeviz
@@ -648,7 +671,7 @@ Bug Fixes
 * Fixed linking issue preventing smoothed spectrum from showing in Specviz2D. [#2023]
 
 * Fixed redshift slider enabling/disabling when calling ``load_line_list``, ``plot_spectral_line``,
-  ``plot_spectral_lines``, or ``erase_spectral_lines``. [#2055] 
+  ``plot_spectral_lines``, or ``erase_spectral_lines``. [#2055]
 
 * Fixed detecting correct type of composite subsets in subset dropdowns in plugins. [#2058]
 
@@ -798,7 +821,7 @@ Imviz
 
 - Subset Tools plugin now allows recentering of editable spatial subset. [#1823]
 
-- Links control plugin shows a confirmation overlay to clear markers when changing linking type. 
+- Links control plugin shows a confirmation overlay to clear markers when changing linking type.
   [#1838]
 
 Mosviz
