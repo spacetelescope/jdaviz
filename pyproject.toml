@@ -135,6 +135,7 @@ filterwarnings = [
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore:datetime\\.datetime\\.utcfromtimestamp:DeprecationWarning",  # asdf + dateutil<=2.8.2 + Python 3.12
     "ignore::DeprecationWarning:glue",
+    "ignore::DeprecationWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
     # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
     # and https://github.com/scipy/scipy/pull/19275
