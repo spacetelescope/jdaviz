@@ -58,7 +58,23 @@
           ></j-viewer-data-select-item>
         </v-row>
 
-        <div v-if="extraDataItems.length" style="margin-bottom: -8px;">
+        <div v-if="linkedByWcs()">
+          <j-plugin-section-header style="margin-top: 0px">Orientation</j-plugin-section-header>
+          <v-row v-for="item in wcsOnlyItems" :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
+            <j-viewer-data-select-item
+              :item="item"
+              :icon="layer_icons[item.name]"
+              :viewer="viewer"
+              :multi_select="multi_select"
+              :linked_by_wcs="linkedByWcs()"
+              @data-item-visibility="$emit('data-item-visibility', $event)"
+              @data-item-remove="$emit('data-item-remove', $event)"
+              @change-reference-data="$emit('change-reference-data', $event)"
+            ></j-viewer-data-select-item>
+          </v-row>
+        </div>
+
+        <div v-if="extraDataItems.length > 0" style="margin-bottom: -8px;">
           <v-row key="extra-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
             <span 
               @click="toggleShowExtraItems"
@@ -75,8 +91,7 @@
             </span>
           </v-row>
 
-          <v-row v-if="showExtraItems" v-for="item in extraDataItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
-            <div v-if="linkedByWcs()">
+          <v-row v-if="showExtraItems" v-for="item in extraDataItems" :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
             <j-viewer-data-select-item
               :item="item"
               :icon="layer_icons[item.name]"
@@ -88,38 +103,8 @@
               @data-item-remove="$emit('data-item-remove', $event)"
               @change-reference-data="$emit('change-reference-data', $event)"
             ></j-viewer-data-select-item>
-            </div>
           </v-row>
         </div>
-
-        <div v-if="linkedByWcs()" style="margin-bottom: -8px;">
-          <v-row key="wcs-only-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD">
-            <span
-              @click="toggleShowWcsOnlyItems"
-              class='text--primary'
-              style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; cursor: pointer"
-            >
-              <v-icon class='invert-if-dark'>{{showWcsOnlyItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
-              <span>
-                {{showWcsOnlyItems ? 'hide orientation options' : 'show orientation options'}}
-              </span>
-            </span>
-          </v-row>
-
-          <v-row v-if="showWcsOnlyItems" v-for="item in wcsOnlyItems"  :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
-            <j-viewer-data-select-item
-              :item="item"
-              :icon="layer_icons[item.name]"
-              :viewer="viewer"
-              :multi_select="multi_select"
-              :linked_by_wcs="linkedByWcs()"
-              @data-item-visibility="$emit('data-item-visibility', $event)"
-              @data-item-remove="$emit('data-item-remove', $event)"
-              @change-reference-data="$emit('change-reference-data', $event)"
-            ></j-viewer-data-select-item>
-          </v-row>
-        </div>
-
       </v-list>
     </v-menu>
   </j-tooltip>
@@ -150,7 +135,6 @@ module.exports = {
       showExtraItems: Object.keys(this.$props.viewer.selected_data_items).length == 0,
       valueTrunc: this.value,
       uncertTrunc: this.uncertainty,
-      showWcsOnlyItems: false
     }
   },
   methods: {
@@ -243,10 +227,6 @@ module.exports = {
           }
         }
       }
-    },
-    toggleShowWcsOnlyItems() {
-      // toggle the visibility of the WCS-only items in the menu
-      this.showWcsOnlyItems = !this.showWcsOnlyItems
     },
     isRefData() {
       return this.$props.item.viewer.reference_data_label === this.$props.item.name
