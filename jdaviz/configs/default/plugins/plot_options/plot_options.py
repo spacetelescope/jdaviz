@@ -469,10 +469,6 @@ class PlotOptions(PluginTemplateMixin):
                                                               self.stretch_histogram.tools_nested,
                                                               ["jdaviz:stretch_bounds"])
 
-        # NOTE: this is a current workaround so the histogram viewer doesn't crash when replacing
-        # data.  Note also that passing x=[0] fails on SOME machines, so we'll pass [0, 1] instead
-        self.stretch_histogram._add_data('ref', x=[0, 1])
-        self.stretch_histogram.layers['ref'].state.visible = False
         self.stretch_histogram._add_data('histogram', x=[0, 1])
 
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
@@ -706,14 +702,7 @@ class PlotOptions(PluginTemplateMixin):
         if np.any(np.isnan(sub_data)):
             sub_data = sub_data[~np.isnan(sub_data)]
 
-        # To avoid issues when updating the histogram data, which may or may not
-        # result in a change of the ComponentID for the x-axis, we temporarily
-        # change the x_att to the dummy 'ref' dataset then change it back to
-        # the latest ComponentID after.
-
-        self.stretch_histogram.viewer.state.x_att = self.stretch_histogram.app.data_collection['ref'].id['x']  # noqa: E501
         self.stretch_histogram._update_data('histogram', x=sub_data)
-        self.stretch_histogram.viewer.state.x_att = self.stretch_histogram.app.data_collection['histogram'].id['x']  # noqa: E501
 
         if len(sub_data) > 0:
             interval = PercentileInterval(95)
