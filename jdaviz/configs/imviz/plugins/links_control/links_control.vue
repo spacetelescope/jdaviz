@@ -13,6 +13,7 @@
           hint="Type of linking to be done."
           v-model="link_type_selected"
           @change="delete_subsets($event)"
+          :disabled="!wcs_available"
           persistent-hint
           row>
           <v-radio
@@ -22,6 +23,11 @@
             :value="item.label"
           ></v-radio>
         </v-radio-group>
+        <div v-if="!wcs_available">
+          <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
+              Please add at least two data with valid WCS to link by WCS
+          </v-alert>
+        </div>
         <div v-if="need_clear_subsets">
           <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
               Existing subsets will be deleted on changing link type.

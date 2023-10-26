@@ -58,6 +58,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     link_type_selected = Unicode().tag(sync=True)
     wcs_use_fallback = Bool(True).tag(sync=True)
     wcs_use_affine = Bool(True).tag(sync=True)
+    wcs_available = Bool(False).tag(sync=True)
 
     need_clear_markers = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
@@ -151,6 +152,13 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             error_on_fail=False,
             update_plugin=False)
 
+    def _check_if_many_data_with_wcs(self):
+        num_data_with_wcs = 0
+        for data in self.app.data_collection:
+            num_data_with_wcs += 1 if hasattr(data.coords, 'pixel_to_world') else 0
+
+        self.wcs_available = num_data_with_wcs > 1
+
     def _on_new_app_data(self, msg):
         if self.app._jdaviz_helper._in_batch_load > 0:
             return
@@ -164,6 +172,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
                 # at which point this if-statement should be removed.
                 return
         self._link_image_data()
+        self._check_if_many_data_with_wcs()
 
     def _on_markers_changed(self, msg):
         self.need_clear_markers = msg.has_markers
