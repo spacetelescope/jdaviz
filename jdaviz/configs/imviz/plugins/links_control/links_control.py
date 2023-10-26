@@ -155,9 +155,14 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     def _check_if_many_data_with_wcs(self):
         num_data_with_wcs = 0
         for data in self.app.data_collection:
-            num_data_with_wcs += 1 if hasattr(data.coords, 'pixel_to_world') else 0
+            if hasattr(data.coords, 'pixel_to_world'):
+                if num_data_with_wcs:
+                    self.wcs_available = True
+                    break
+                num_data_with_wcs += 1
+        else:
+            self.wcs_available = False
 
-        self.wcs_available = num_data_with_wcs > 1
 
     def _on_new_app_data(self, msg):
         if self.app._jdaviz_helper._in_batch_load > 0:
