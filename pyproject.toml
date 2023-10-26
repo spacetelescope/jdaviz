@@ -127,11 +127,13 @@ text_file_format = "rst"
 addopts = "--doctest-rst --import-mode=append"
 filterwarnings = [
     "error",
+    "ignore:numpy\\.ufunc size changed:RuntimeWarning",
     "ignore:numpy\\.ndarray size changed:RuntimeWarning",
     "ignore:Passing unrecognized arguments to super:DeprecationWarning",
     "ignore:.*With traitlets 4\\.1, metadata should be set using the \\.tag\\(\\) method:DeprecationWarning",
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
+    "ignore:datetime\\.datetime\\.utcfromtimestamp:DeprecationWarning",  # asdf + dateutil<=2.8.2 + Python 3.12
     "ignore::DeprecationWarning:glue",
     "ignore:::specutils.spectra.spectrum1d",
     # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
