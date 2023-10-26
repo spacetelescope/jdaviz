@@ -1,23 +1,17 @@
 <template>
   <span v-if="icon !== undefined">
-    <v-badge
-      dot
-      style="margin-right: 4px;"
-      color="accent"
-      :value="isRefData()">
     <v-icon v-if="String(icon).startsWith('mdi-')" size="16">
       {{icon}}
     </v-icon>
     <span v-else :class="prevent_invert_if_dark ? 'layer-viewer-icon' : 'invert-if-dark layer-viewer-icon'" :style="span_style+'; color: '+color+'; '+borderStyle">
       {{String(icon).toUpperCase()}}
     </span>
-  </v-badge>
   </span>
 </template>
 
 <script>
 module.exports = {
-  props: ['span_style', 'color', 'icon', 'linewidth', 'linestyle', 'prevent_invert_if_dark', 'is_ref_data', 'linked_by_wcs'],
+  props: ['span_style', 'color', 'icon', 'linewidth', 'linestyle', 'prevent_invert_if_dark'],
   computed: {
     borderStyle() {
       if (this.$props.linewidth > 0) { 
@@ -25,15 +19,6 @@ module.exports = {
       }
       return ''
     },
-  },
-  methods: {
-    isRefData() {
-      if (!this.$props.linked_by_wcs || this.$props.is_ref_data === undefined) {
-        return false
-      } else {
-        return this.$props.is_ref_data
-      }
-    }
   }
 };
 </script>

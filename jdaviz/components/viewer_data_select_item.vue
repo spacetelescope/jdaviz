@@ -29,7 +29,14 @@
       :style="dataMenuTooltip !== null ? 'cursor: pointer;' : 'cursor: default;'"
       @click="selectRefData"
     >
-      <j-layer-viewer-icon span_style="margin-left: 4px;" :icon="icon" color="#000000DE" :is_ref_data="isRefData()" :linked_by_wcs="linkedByWcs()"></j-layer-viewer-icon>
+      <v-badge
+        dot
+        style="margin-right: 0px;"
+        color="accent"
+        :value="isRefData()"
+      >
+        <j-layer-viewer-icon span_style="margin-left: 4px;" :icon="icon" color="#000000DE"></j-layer-viewer-icon>
+      </v-badge>
       <div class="text-ellipsis-middle" style="font-weight: 500;">
         <span>
           {{itemNamePrefix}}
