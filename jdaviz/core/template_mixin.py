@@ -67,8 +67,9 @@ SPATIAL_DEFAULT_TEXT = "Entire Cube"
 GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att')
 
 # this histogram viewer (along with other viewers) are not in the glue viewer-registry by default
-# but may be added in the future.  If it is not in the registry, we'll add it now.  If/once the
-# min-pin of glue-jupyter includes this in the registry, we can safely remove this block.
+# but may be added in the future.  If it is not in the registry, we'll add it now.
+# Once glue-jupyter with https://github.com/glue-viz/glue-jupyter/pull/402 is pinned,
+# we can safely remove this block.
 if 'histogram' not in viewer_registry.members.keys():
     @viewer_registry('histogram')
     class RegisteredHistogramViewer(BqplotHistogramView):
