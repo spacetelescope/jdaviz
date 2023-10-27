@@ -46,7 +46,7 @@
           <v-expansion-panel-header >
             <span style="padding: 6px">Recenter</span>
           </v-expansion-panel-header>
-          <v-expansion-panel-content>
+          <v-expansion-panel-content class="plugin-expansion-panel-content">
             <plugin-dataset-select
              :items="dataset_items"
              :selected.sync="dataset_selected"

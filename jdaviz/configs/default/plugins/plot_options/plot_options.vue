@@ -12,7 +12,7 @@
           <v-expansion-panel-header v-slot="{ open }">
             <span style="padding: 6px">Settings</span>
           </v-expansion-panel-header>
-          <v-expansion-panel-content>
+          <v-expansion-panel-content class="plugin-expansion-panel-content">
             <v-row>
               <v-switch
                 v-model="show_viewer_labels"
@@ -374,7 +374,7 @@
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">More Stretch Options</span>
             </v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-content class="plugin-expansion-panel-content">
               <v-row>
                 <v-text-field
                     ref="stretch_hist_nbins"

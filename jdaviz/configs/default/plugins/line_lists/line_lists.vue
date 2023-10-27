@@ -150,7 +150,7 @@
 
             </v-row>
           </v-expansion-panel-header>
-          <v-expansion-panel-content style="padding-left: 0px">
+          <v-expansion-panel-content class="plugin-expansion-panel-content">
 
             <div v-if="item == 'Custom'" style="padding-top: 16px">
               <v-row class="row-min-bottom-padding" style="display: block">

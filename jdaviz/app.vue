@@ -248,6 +248,12 @@ div.output_wrapper {
   padding: 0px;
 }
 
+.plugin-expansion-panel-content .row {
+  /* override -12px margins */
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
 .glue__subset-select {
   display: flex;
   align-items: center;
