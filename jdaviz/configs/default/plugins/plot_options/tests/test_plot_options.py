@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 from astropy import units as u
 from astropy.nddata import NDData
@@ -204,15 +205,16 @@ def test_stretch_spline(imviz_helper):
         po.stretch_function = "Spline"
 
     # Retrieve knots data from the generated histogram
-    scatter_obj = po._obj.stretch_histogram.marks["stretch_knots: NDData[DATA] (DATA)"]
+    scatter_obj = po._obj.stretch_histogram.marks["stretch_knots"]
     knots_x = scatter_obj.x
     knots_y = scatter_obj.y
 
     # Expected knots based on initial stretch settings
     expected_x = [10., 19., 28., 73., 100.]
-    expected_y = [0., 0.05, 0.3, 0.9, 1.]
+    expected_y = np.array([0., 0.05, 0.3, 0.9, 1.]) * 0.9  # rescaled to 0.9
 
     # Validate if the generated knots match the expected knots
+    assert scatter_obj.visible
     assert_allclose(knots_x, expected_x)
     assert_allclose(knots_y, expected_y)
 
@@ -220,23 +222,24 @@ def test_stretch_spline(imviz_helper):
     with po.as_active():
         po.stretch_vmin.value = 10
         po.stretch_vmax.value = 80
-        po.stretch_curve_visible = True
         po.stretch_function = "Spline"
 
     knots_x = scatter_obj.x
+    knots_y = scatter_obj.y
 
     # Expected knots based on updated stretch settings
     expected_x = [10., 17., 24., 59., 80.]
-    expected_y = [0., 0.05, 0.3, 0.9, 1.]
+    expected_y = np.array([0., 0.05, 0.3, 0.9, 1.]) * 0.9  # rescaled to 0.9
 
     # Validate if the generated knots for updated settings match the expected values
+    assert scatter_obj.visible
     assert_allclose(knots_x, expected_x)
     assert_allclose(knots_y, expected_y)
 
     # Disable the stretch curve and ensure no knots or stretches are visible
     with po.as_active():
         po.stretch_curve_visible = False
-    stretch_curve = po._obj.stretch_histogram.marks['stretch_curve: NDData[DATA] (DATA)']
+    stretch_curve = po._obj.stretch_histogram.marks['stretch_curve']
     assert len(stretch_curve.y) == 0
     assert len(stretch_curve.x) == 0
     assert len(scatter_obj.x) == 0

@@ -67,8 +67,9 @@ SPATIAL_DEFAULT_TEXT = "Entire Cube"
 GLUE_STATES_WITH_HELPERS = ('size_att', 'cmap_att')
 
 # this histogram viewer (along with other viewers) are not in the glue viewer-registry by default
-# but may be added in the future.  If it is not in the registry, we'll add it now.  If/once the
-# min-pin of glue-jupyter includes this in the registry, we can safely remove this block.
+# but may be added in the future.  If it is not in the registry, we'll add it now.
+# Once glue-jupyter with https://github.com/glue-viz/glue-jupyter/pull/402 is pinned,
+# we can safely remove this block.
 if 'histogram' not in viewer_registry.members.keys():
     @viewer_registry('histogram')
     class RegisteredHistogramViewer(BqplotHistogramView):
@@ -3410,15 +3411,16 @@ class Plot(PluginSubcomponent):
         return self._marks
 
     def clear_marks(self, *mark_labels):
-        for mark_label, mark in self.marks.items():
-            if mark_label in mark_labels:
-                if isinstance(mark, bqplot.Bins):
-                    # NOTE: cannot completely empty samples
-                    # may want to also set mark.visible=False manually if clearing
-                    # (but this will still at least clear any internal arrays)
-                    mark.samples = [0]
-                else:
-                    mark.x, mark.y = [], []
+        with self.hold_sync():
+            for mark_label, mark in self.marks.items():
+                if mark_label in mark_labels:
+                    if isinstance(mark, bqplot.Bins):
+                        # NOTE: cannot completely empty samples
+                        # may want to also set mark.visible=False manually if clearing
+                        # (but this will still at least clear any internal arrays)
+                        mark.samples = [0]
+                    else:
+                        mark.x, mark.y = [], []
 
     def clear_all_marks(self):
         self.clear_marks(*self.marks.keys())
