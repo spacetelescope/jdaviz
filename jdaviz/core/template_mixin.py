@@ -3134,16 +3134,20 @@ class Table(PluginSubcomponent):
                 if column in ('slice', 'index'):
                     # stored in astropy table as a float so we can also store nans,
                     # but should display in the UI without any decimals
-                    return int(item)
-                elif column in ('pixel'):
-                    return f"{item:0.03f}"
+                    return f"{item:.0f}"
+                elif column in ('pixel', ):
+                    return f"{item:0.3f}"
+                elif column in ('xcenter', 'ycenter'):
+                    return f"{item:0.1f}"
+                elif column in ('sum', ):
+                    return f"{item:.3e}"
                 else:
-                    return f"{item:0.05f}"
+                    return f"{item:0.5f}"
 
             if isinstance(item, SkyCoord):
                 return item.to_string('hmsdms', precision=4)
             if isinstance(item, u.Quantity) and not np.isnan(item):
-                return (float_precision(column, item.value) * item.unit).to_string()
+                return f"{float_precision(column, item.value)} {item.unit.to_string()}"
 
             if hasattr(item, 'to_string'):
                 return item.to_string()
