@@ -812,7 +812,6 @@ class PlotOptions(PluginTemplateMixin):
         colorbar_mark = self.stretch_histogram.marks['colorbar']
         colorbar_mark.x = x
         colorbar_mark.y = y
-        # TODO: fix all white on load...
         colorbar_mark.colors = ipycolors
 
         # show "knot" locations if the stretch_function is a spline
