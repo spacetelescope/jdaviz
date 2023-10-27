@@ -739,9 +739,10 @@ class PlotOptions(PluginTemplateMixin):
 
         # update the n_bins since this may be a new layer
         self._histogram_nbins_changed()
+        # update the curve/colorbar
+        self._update_stretch_curve(msg)
 
-    @observe('is_active', 'layer_selected',
-             'image_color_mode_value', 'image_color_value', 'image_colormap_value',
+    @observe('image_color_mode_value', 'image_color_value', 'image_colormap_value',
              'image_contrast_value', 'image_bias_value',
              'stretch_hist_nbins',
              'stretch_curve_visible',
@@ -753,9 +754,6 @@ class PlotOptions(PluginTemplateMixin):
             # don't update histogram if selected viewer is not an image viewer,
             # or the stretch histogram hasn't been initialized:
             return
-
-        # TODO: make sure entire histogram is hidden in multiselect
-        # TODO: look at what is in msg and don't updating things that don't need updating
 
         if self.multiselect:
             self.stretch_histogram.clear_marks('stretch_curve', 'stretch_knots', 'colorbar')
