@@ -266,7 +266,7 @@ class PlotOptions(PluginTemplateMixin):
     stretch_hist_nbins = IntHandleEmpty(25).tag(sync=True)
     stretch_histogram_widget = Unicode().tag(sync=True)
 
-    stretch_curve_visible = Bool().tag(sync=True)
+    stretch_curve_visible = Bool(True).tag(sync=True)
 
     subset_visible_value = Bool().tag(sync=True)
     subset_visible_sync = Dict().tag(sync=True)
