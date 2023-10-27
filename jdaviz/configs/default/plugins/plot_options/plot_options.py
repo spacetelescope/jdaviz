@@ -772,7 +772,7 @@ class PlotOptions(PluginTemplateMixin):
 
         # create the new/updated stretch curve following the colormapping
         # procedure in glue's CompositeArray:
-        interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
+        interval = ManualInterval(self.stretch_vmin_value, self.stretch_vmax_value)
         contrast_bias = ContrastBiasStretch(self.image_contrast_value, self.image_bias_value)
         stretch = stretches.members[self.stretch_function_value]
         layer_cmap = layer.state.cmap
@@ -818,7 +818,8 @@ class PlotOptions(PluginTemplateMixin):
         # show "knot" locations if the stretch_function is a spline
         if isinstance(stretch, SplineStretch) and self.stretch_curve_visible:
             knot_mark = self.stretch_histogram.marks['stretch_knots']
-            knot_mark.x = self.stretch_vmin_value + stretch.x * ( self.stretch_vmax_value - self.stretch_vmin_value)
+            knot_mark.x = (self.stretch_vmin_value +
+                           stretch.x * (self.stretch_vmax_value - self.stretch_vmin_value))
             # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
             # (may need to revisit this when supporting dragging)
             knot_mark.y = 0.9 * stretch.y
