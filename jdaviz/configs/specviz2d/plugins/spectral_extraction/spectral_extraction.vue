@@ -13,7 +13,7 @@
           <v-expansion-panel-header v-slot="{ open }">
             <span style="padding: 6px">Settings</span>
           </v-expansion-panel-header>
-          <v-expansion-panel-content>
+          <v-expansion-panel-content class="plugin-expansion-panel-content">
             <v-row>
               <v-switch
                 v-model="interactive_extract"
@@ -167,7 +167,7 @@
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export Trace</span>
             </v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-content class="plugin-expansion-panel-content">
               <plugin-add-results
                 :label.sync="trace_results_label"
                 :label_default="trace_results_label_default"
@@ -281,7 +281,7 @@
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export Background Image</span>
             </v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-content class="plugin-expansion-panel-content">
               <plugin-add-results
                 :label.sync="bg_results_label"
                 :label_default="bg_results_label_default"
@@ -305,7 +305,7 @@
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export Background Spectrum</span>
             </v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-content class="plugin-expansion-panel-content">
               <plugin-add-results
                 :label.sync="bg_spec_results_label"
                 :label_default="bg_spec_results_label_default"
@@ -329,7 +329,7 @@
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export Background-Subtracted Image</span>
             </v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-content class="plugin-expansion-panel-content">
               <plugin-add-results
                 :label.sync="bg_sub_results_label"
                 :label_default="bg_sub_results_label_default"

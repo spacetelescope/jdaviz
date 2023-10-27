@@ -127,7 +127,7 @@
                 </v-col>
               </v-row>
             </v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-content class="plugin-expansion-panel-content">
               <v-row v-if="!item.compat_display_units">
                 <v-alert :type="componentInEquation(item.id) ? 'error' : 'warning'">
                   <b>{{ item.id }}</b> is inconsistent with the current display units so cannot be used in the model equation.

@@ -39,7 +39,7 @@
             <v-expansion-panel-header v-slot="{ open }">
               <span style="padding: 6px">Export to Video</span>
             </v-expansion-panel-header>
-            <v-expansion-panel-content>
+            <v-expansion-panel-content class="plugin-expansion-panel-content">
               <v-row v-if="movie_msg!==''">
                 <span class="v-messages v-messages__message text--secondary" style="color: red !important">
                     {{ movie_msg }}
