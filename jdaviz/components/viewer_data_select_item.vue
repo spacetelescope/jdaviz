@@ -76,7 +76,7 @@
     </div>
 
     <div v-if="isDeletable" style="padding-left: 2px; right: 2px">
-      <j-tooltip tipid='viewer-data-delete'>
+      <j-tooltip :tipid="is_wcs_only ? 'viewer-wcs-delete' : 'viewer-data-delete'">
         <v-btn
           icon
           @click="$emit('data-item-remove', {item_name: item.name, viewer_id: viewer.id})"

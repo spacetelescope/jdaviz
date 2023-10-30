@@ -59,7 +59,7 @@
 
         <div v-if="linkedByWcs()">
           <j-plugin-section-header style="margin-top: 0px">Orientation</j-plugin-section-header>
-          <v-row v-for="item in wcsOnlyItems" :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
+          <v-row v-for="item in wcsOnlyItems" :key="item.id" style="padding-left: 25px; margin-right: -8px; margin-top: 4px; margin-bottom: 4px">
             <j-viewer-data-select-item
               :item="item"
               :icon="layer_icons[item.name]"

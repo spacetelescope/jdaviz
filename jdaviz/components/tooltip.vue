@@ -66,6 +66,7 @@ const tooltips = {
   'viewer-data-radio': 'Switch visibility to layers associated with this data entry',
   'viewer-data-enable': 'Load data entry into this viewer',
   'viewer-data-disable': 'Disable data within this viewer (will be hidden and unavailable from plugins until re-enabled)',
+  'viewer-wcs-delete': 'Remove orientation option across entire app',
   'viewer-data-delete': 'Remove data entry across entire app (might affect existing subsets)',
   'viewer-data-nowcs': 'Data does not have WCS, cannot add unless link type changed to pixel',
 
