@@ -1,6 +1,23 @@
 <template>
   <div style="display: contents">
-    <div v-if="isSelected">
+    <div v-if="is_wcs_only">
+      <j-tooltip
+        :tooltipcontent="isRefData() ? 'Current viewer orientation' : 'Set as viewer orientation'"
+        span_style="width: 36px"
+      >
+        <span @click="selectRefData">
+          <v-badge
+            dot
+            style="margin-right: 0px; margin-left: 8px; margin-top: 6px"
+            color="accent"
+            :value="isRefData()"
+          >
+            <j-layer-viewer-icon :icon="icon" icon_size="20" color="#000000DE"></j-layer-viewer-icon>
+          </v-badge>
+        </span>
+      </j-tooltip>
+    </div>
+    <div v-else-if="isSelected">
       <j-tooltip :tipid="multi_select ? 'viewer-data-select' : 'viewer-data-radio'">
         <v-btn 
           icon
@@ -22,21 +39,10 @@
       </j-tooltip>
     </div>
 
-    <j-tooltip
-      :tooltipcontent=dataMenuTooltip
-      span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
-    <span
-      :style="dataMenuTooltip !== null ? 'cursor: pointer;' : 'cursor: default;'"
-      @click="selectRefData"
-    >
-      <v-badge
-        dot
-        style="margin-right: 0px;"
-        color="accent"
-        :value="isRefData()"
-      >
-        <j-layer-viewer-icon span_style="margin-left: 4px;" :icon="icon" color="#000000DE"></j-layer-viewer-icon>
-      </v-badge>
+    <j-tooltip :tooltipcontent="is_wcs_only ? '' : 'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
+      <j-layer-viewer-icon v-if="!is_wcs_only" span_style="margin-left: 4px;" :icon="icon" color="#000000DE"></j-layer-viewer-icon>
+      <span v-else style="padding-right: 24px"></span>
+
       <div class="text-ellipsis-middle" style="font-weight: 500;">
         <span>
           {{itemNamePrefix}}
@@ -45,7 +51,6 @@
           {{itemNameExtension}}
         </span>
       </div>
-      </span>
     </j-tooltip>
 
     <div v-if="isSelected && isUnloadable" style="padding-left: 2px; right: 2px">
@@ -74,7 +79,7 @@
 <script>
 
 module.exports = {
-  props: ['item', 'icon', 'multi_select', 'viewer', 'n_data_entries'],
+  props: ['item', 'icon', 'multi_select', 'viewer', 'n_data_entries', 'is_wcs_only'],
   methods: {
     selectClicked() {
       prevVisibleState = this.visibleState
@@ -90,7 +95,7 @@ module.exports = {
       })
     },
     selectRefData() {
-      if (this.linkedByWcs() && !this.isRefData() && this.isWCSOnly()) {
+      if (this.linkedByWcs() && !this.isRefData() && this.is_wcs_only) {
         this.$emit('change-reference-data', {
           id: this.$props.viewer.id,
           item_id: this.$props.item.id
@@ -102,9 +107,6 @@ module.exports = {
     },
     linkedByWcs() {
       return this.$props.viewer.linked_by_wcs
-    },
-    isWCSOnly() {
-      return this.$props.item.type === 'wcs-only'
     }
   },
   computed: {
@@ -183,15 +185,6 @@ module.exports = {
         return 'black'
       } else {
         return 'gray'
-      }
-    },
-    dataMenuTooltip() {
-      if (this.linkedByWcs() && this.$props.viewer.config === 'imviz' && this.isRefData()) {
-        return 'Current viewer orientation'
-      } else if (this.linkedByWcs() && this.$props.viewer.config === 'imviz' && this.$props.item.type === 'wcs-only') {
-        return 'Set viewer orientation'
-      } else {
-        return null
       }
     }
   }

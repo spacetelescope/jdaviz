@@ -1,6 +1,6 @@
 <template>
   <span v-if="icon !== undefined">
-    <v-icon v-if="String(icon).startsWith('mdi-')" size="16">
+    <v-icon v-if="String(icon).startsWith('mdi-')" :size="icon_size || 16">
       {{icon}}
     </v-icon>
     <span v-else :class="prevent_invert_if_dark ? 'layer-viewer-icon' : 'invert-if-dark layer-viewer-icon'" :style="span_style+'; color: '+color+'; '+borderStyle">
@@ -11,7 +11,7 @@
 
 <script>
 module.exports = {
-  props: ['span_style', 'color', 'icon', 'linewidth', 'linestyle', 'prevent_invert_if_dark'],
+  props: ['span_style', 'color', 'icon', 'icon_size', 'linewidth', 'linestyle', 'prevent_invert_if_dark'],
   computed: {
     borderStyle() {
       if (this.$props.linewidth > 0) { 

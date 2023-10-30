@@ -49,12 +49,11 @@
             :icon="layer_icons[item.name]"
             :viewer="viewer"
             :multi_select="multi_select"
+            :is_wcs_only="false"
             :n_data_entries="nDataEntries"
-            :linked_by_wcs="linkedByWcs()"
             @data-item-visibility="$emit('data-item-visibility', $event)"
             @data-item-unload="$emit('data-item-unload', $event)"
             @data-item-remove="$emit('data-item-remove', $event)"
-            @change-reference-data="$emit('change-reference-data', $event)"
           ></j-viewer-data-select-item>
         </v-row>
 
@@ -66,8 +65,7 @@
               :icon="layer_icons[item.name]"
               :viewer="viewer"
               :multi_select="multi_select"
-              :linked_by_wcs="linkedByWcs()"
-              @data-item-visibility="$emit('data-item-visibility', $event)"
+              :is_wcs_only="true"
               @data-item-remove="$emit('data-item-remove', $event)"
               @change-reference-data="$emit('change-reference-data', $event)"
             ></j-viewer-data-select-item>
@@ -97,11 +95,10 @@
               :icon="layer_icons[item.name]"
               :viewer="viewer"
               :multi_select="multi_select"
+              :is_wcs_only="false"
               :n_data_entries="nDataEntries"
-              :linked_by_wcs="linkedByWcs()"
               @data-item-visibility="$emit('data-item-visibility', $event)"
               @data-item-remove="$emit('data-item-remove', $event)"
-              @change-reference-data="$emit('change-reference-data', $event)"
             ></j-viewer-data-select-item>
           </v-row>
         </div>
