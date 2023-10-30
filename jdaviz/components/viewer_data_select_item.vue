@@ -28,13 +28,23 @@
         </v-btn>
       </j-tooltip>
     </div>
-    <div v-else>
+    <div v-else-if="item.has_wcs">
       <j-tooltip tipid="viewer-data-enable">
         <v-btn
           icon
           color="default"
           @click="selectClicked">
             <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </j-tooltip>
+    </div>
+    <div v-else>
+      <j-tooltip tipid="viewer-data-nowcs">
+        <v-btn
+          icon
+          color="default"
+          disabled>
+          <v-icon>mdi-plus</v-icon>
         </v-btn>
       </j-tooltip>
     </div>

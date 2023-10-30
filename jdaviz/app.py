@@ -2146,6 +2146,7 @@ class Application(VuetifyTemplate, HubListener):
             'locked': False,
             'ndims': data.ndim,
             'type': typ,
+            'has_wcs': wcsaxes is not None,
             'meta': {k: v for k, v in data.meta.items() if _expose_meta(k)},
             'children': []}
 
