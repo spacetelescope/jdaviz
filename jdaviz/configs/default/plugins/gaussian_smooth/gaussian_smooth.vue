@@ -2,6 +2,7 @@
   <j-tray-plugin
     :description="docs_description || 'Smooth data with a Gaussian kernel.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
+    :show_api_hints.sync="show_api_hints"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 

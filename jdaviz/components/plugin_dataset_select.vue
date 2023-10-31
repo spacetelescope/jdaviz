@@ -14,7 +14,7 @@
       :chips="multiselect"
       item-text="label"
       item-value="label"
-      :class="show_api_hint ? 'api_hint' : null"
+      :class="show_api_hints ? 'api_hint' : null"
       persistent-hint
     >
       <template slot="selection" slot-scope="data">

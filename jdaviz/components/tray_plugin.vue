@@ -1,8 +1,13 @@
 <template>
   <v-container class="tray-plugin" style="padding-left: 24px; padding-right: 24px; padding-top: 12px">
     <v-row>
-      <div style="width: calc(100% - 32px)">
+      <div style="width: calc(100% - 64px)">
         <j-docs-link :link="link">{{ description }}</j-docs-link>
+      </div>
+      <div style="width: 32px">
+        <v-btn icon @click="() => {$emit('update:show_api_hints', !show_api_hints)}">
+          <v-icon>mdi-code-tags</v-icon>
+        </v-btn>
       </div>
       <div style="width: 32px">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
@@ -29,7 +34,7 @@
 
 <script>
 module.exports = {
-  props: ['irrelevant_msg', 'disabled_msg', 'description', 'link', 'popout_button',
+  props: ['irrelevant_msg', 'disabled_msg', 'description', 'show_api_hints', 'link', 'popout_button',
           'uses_active_status', 'keep_active', 'scroll_to'],
   methods: {
     isDisabled() {
