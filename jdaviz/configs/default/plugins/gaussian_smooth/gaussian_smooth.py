@@ -157,6 +157,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
             The smoothed spectrum or data cube
         """
         plugin_state = self.user_api.to_dict()
+        plugin_script = self.user_api.to_script(as_string=False)
 
         if self.mode_selected == 'Spatial':
             if self.config != 'cubeviz':
@@ -175,7 +176,9 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         if '_jdaviz_history' not in results.meta.keys():
             results.meta['_jdaviz_history'] = []
+            results.meta['_jdaviz_script'] = []
         results.meta['_jdaviz_history'] += [plugin_state]
+        results.meta['_jdaviz_script'] += plugin_script + ['plg.smooth()']
 
         if add_data:
             # add data to the collection/viewer

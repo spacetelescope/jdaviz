@@ -93,6 +93,8 @@ class UserApiWrapper:
 
     def to_dict(self):
         def _value(item):
+            if include_hidden and hasattr(item, '_hidden_to_dict'):
+                return _value(item._hidden_to_dict())
             if hasattr(item, 'to_dict'):
                 return _value(item.to_dict())
             if hasattr(item, 'selected'):
