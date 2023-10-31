@@ -156,6 +156,8 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         spec : `~specutils.Spectrum1D`
             The smoothed spectrum or data cube
         """
+        plugin_state = self.user_api.to_dict()
+
         if self.mode_selected == 'Spatial':
             if self.config != 'cubeviz':
                 raise NotImplementedError("spatial smoothing only supported for Cubeviz")
@@ -170,6 +172,10 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         else:
             results = self.spectral_smooth()
+
+        if '_jdaviz_history' not in results.meta.keys():
+            results.meta['_jdaviz_history'] = []
+        results.meta['_jdaviz_history'] += [plugin_state]
 
         if add_data:
             # add data to the collection/viewer
