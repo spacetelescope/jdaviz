@@ -474,6 +474,8 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
         self.stretch_histogram.add_line('vmax', x=[0, 0], y=[0, 1], ynorm='vmin', color='#c75d2c')
         self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
+        self.stretch_histogram.viewer.state.update_bins_on_reset_limits = False
+        self.stretch_histogram.viewer.state.x_limits_percentile = 95
         with self.stretch_histogram.figure.hold_sync():
             self.stretch_histogram.figure.axes[0].label = 'pixel value'
             self.stretch_histogram.figure.axes[0].num_ticks = 3
