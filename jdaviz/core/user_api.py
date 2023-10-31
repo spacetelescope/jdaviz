@@ -140,6 +140,24 @@ class PluginUserApi(UserApiWrapper):
             super().__setattr__('_deprecation_msg', None)
         return f'<{self._obj._registry_label} API>'
 
+    def to_script(self, as_string=True):
+        def _value_as_str(v):
+            if isinstance(v, str):
+                return f"'{v}'"
+            return v
+        script = [f"plg = {self._obj.app.config}.plugins['{self._obj._registry_label}']"]
+        for k, v in self.to_dict().items():
+            if hasattr(getattr(self, k), "to_script"):
+                script += getattr(self, k).to_script(as_string=False)
+            elif isinstance(v, dict):
+                # TODO: make recursive
+                script += [f"plg.{k}.{kk} = {_value_as_str(vv)}" for kk, vv in v.items()]
+            else:
+                script += [f"plg.{k} = {_value_as_str(v)}"]
+        if as_string:
+            return "\n".join(script)
+        return script
+
 
 class ViewerUserApi(UserApiWrapper):
     """
