@@ -58,7 +58,8 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     link_type_selected = Unicode().tag(sync=True)
     wcs_use_fallback = Bool(True).tag(sync=True)
     wcs_use_affine = Bool(True).tag(sync=True)
-    wcs_available = Bool(False).tag(sync=True)
+    wcs_linking_available = Bool(False).tag(sync=True)
+
 
     need_clear_markers = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
@@ -157,11 +158,11 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         for data in self.app.data_collection:
             if hasattr(data.coords, 'pixel_to_world'):
                 if num_data_with_wcs:
-                    self.wcs_available = True
+                    self.wcs_linking_available = True
                     break
                 num_data_with_wcs += 1
         else:
-            self.wcs_available = False
+            self.wcs_linking_available = False
 
 
     def _on_new_app_data(self, msg):

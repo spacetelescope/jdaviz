@@ -7,7 +7,7 @@
 
     <div style="display: grid"> <!-- overlay container -->
       <div style="grid-area: 1/1">
-        <div v-if="!wcs_available">
+        <div v-if="!wcs_linking_available">
           <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
               Please add at least two data with valid WCS to link by WCS
           </v-alert>
@@ -18,7 +18,7 @@
           hint="Type of linking to be done."
           v-model="link_type_selected"
           @change="delete_subsets($event)"
-          :disabled="!wcs_available"
+          :disabled="!wcs_linking_available"
           persistent-hint
           row>
           <v-radio
