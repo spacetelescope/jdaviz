@@ -16,7 +16,8 @@ from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
 from jdaviz.core.events import (
-    LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage, ChangeRefDataMessage
+    LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage, ChangeRefDataMessage,
+    SnackbarMessage
 )
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
@@ -225,16 +226,12 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             is_wcs_only = data.meta.get(self.app._wcs_only_label, False)
             has_wcs = hasattr(data.coords, 'pixel_to_world')
             if not is_wcs_only:
-                if data not in data_in_viewer:
-                    # add data from viewer:
-                    if wcs_linked and has_wcs:
-                        self.app.add_data_to_viewer(viewer_selected.reference, data.label)
-                    elif not wcs_linked:
-                        self.app.add_data_to_viewer(viewer_selected.reference, data.label)
-
-                elif wcs_linked and not has_wcs:
+                if data in data_in_viewer and wcs_linked and not has_wcs:
                     # data is in viewer but must be removed:
                     self.app.remove_data_from_viewer(viewer_selected.reference, data.label)
+                    self.hub.broadcast(SnackbarMessage(
+                        f"Data '{data.label}' does not have a valid WCS - removing from viewer.",
+                        sender=self, color="warning"))
 
         self.linking_in_progress = False
         self._update_layer_label_default()
