@@ -1,3 +1,5 @@
+from datetime import datetime
+import json
 import os
 import pathlib
 import re
@@ -2569,6 +2571,48 @@ class Application(VuetifyTemplate, HubListener):
         """ Resets the application state """
         self.state = ApplicationState()
         self._application_handler._tools = {}
+
+    def save_state(self, output_file=None):
+        """
+        Saves the application's glue-related state (viewers, layers, subsets, etc)
+        to a json file
+
+        Parameters
+        ----------
+        output_file: str, optional
+            File in which to save the output json. Defaults to a timestamped-filename.
+        """
+
+        if output_file is None:
+            output_file = f"glue-state-{datetime.now().strftime("%Y%m%d-%H:%M:%S")}.json"
+
+        output_json = {"viewers": {}, "subsets": {}}
+
+        # Get states for viewers+layers, not including subset layers.
+        for viewer_id, viewer in self._viewer_store.items():
+            viewer_dict = viewer.state.as_dict()
+            _ = viewer_dict.pop('layers')
+            for key in viewer_dict:
+                if hasattr(viewer_dict[key], "label"):
+                    viewer_dict[key] = viewer_dict[key].label
+
+            output_json['viewers'][viewer_id] = {"state": viewer_dict,
+                                                 "layers": {}}
+
+            for layer in viewer.layers:
+                layer_dict = layer.state.as_dict()
+                # Need to remove the Data from the state dict, since we can't json-serialize it.
+                for key in layer_dict:
+                    if hasattr(layer_dict[key], "label"):
+                        layer_dict[key] = layer_dict[key].label
+                    elif hasattr(layer_dict[key], "name"):
+                        layer_dict[key] = layer_dict[key].name
+                output_json['viewers'][viewer_id]["layers"][layer.label] = layer_dict
+
+        print(json.dumps(output_json, indent=2))
+
+        with open(output_file, "w") as f:
+            json.dump(output_json, f)
 
     def get_configuration(self, path=None, section=None):
         """Returns a copy of the application configuration.
