@@ -181,7 +181,7 @@ module.exports = {
       isMosviz = this.$props.viewer.config === 'mosviz'
       isCubeviz = this.$props.viewer.config === 'cubeviz'
       isPluginData = !(this.$props.item.meta.Plugin === undefined)
-      return notSelected && (isPluginData || (!isLastDataset && !isMosviz && !isCubeviz))
+      return notSelected && (isPluginData || (!isLastDataset && !isMosviz && !isCubeviz)) && (this.$props.item.name !== 'Default orientation')
     },
     selectTipId() {
       if (this.multi_select) {
