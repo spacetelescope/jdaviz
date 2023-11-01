@@ -6,6 +6,7 @@ from jdaviz.app import Application
 from jdaviz.core.config import get_configuration
 from jdaviz.configs.imviz.helper import Imviz
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
 
 @pytest.mark.parametrize(
@@ -94,3 +95,17 @@ def test_mastviz_config():
 
     assert im.app.get_viewer_ids() == ['mastviz-0']
     assert im.app.data_collection[0].shape == (2, 2)
+
+
+class TestDeleteData(BaseImviz_WCS_NoWCS):
+
+    def test_plot_options_after_destroy(self):
+        self.imviz.create_image_viewer(viewer_name="imviz-1")
+        self.imviz.app.add_data_to_viewer('imviz-1', 'no_wcs[SCI,1]')
+
+        po = self.imviz.plugins['Plot Options']
+        po.open_in_tray()
+        po.viewer = "imviz-1"
+        po.stretch_function = "Square Root"
+        self.imviz.destroy_viewer("imviz-1")
+        assert len(po.layer.choices) == 2

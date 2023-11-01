@@ -564,7 +564,8 @@ class PlotOptions(PluginTemplateMixin):
             viewer_label_old = msg.get('old')
             if isinstance(viewer_label_old, list):
                 viewer_label_old = viewer_label_old[0]
-            if len(viewer_label_old):
+            # If the previously selected viewer was deleted, we don't need to do this.
+            if viewer_label_old in self.app._viewer_store:
                 vs_old = self.app.get_viewer(viewer_label_old).state
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                     vs_old.remove_callback(attr, self._update_stretch_histogram)

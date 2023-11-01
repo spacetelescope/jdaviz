@@ -12,6 +12,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Plot options layer selection no longer gets stuck in some cases when deleting
+  the currently selected viewer. [#2541]
+
 Mosviz
 ^^^^^^
 
