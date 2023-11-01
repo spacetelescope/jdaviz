@@ -42,6 +42,8 @@
       </div>
     </v-row>
 
+    <!-- VIEWER OPTIONS -->
+    <j-plugin-section-header>Viewer options</j-plugin-section-header>
     <plugin-viewer-select
       :items="viewer_items"
       :selected.sync="viewer_selected"
@@ -51,6 +53,38 @@
       :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
+    <div v-if="image_visible_sync.in_subscribed_states && image_visible_value">
+      <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color_mode')">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="image_color_mode_sync.choices"
+          v-model="image_color_mode_value"
+          label="Color Mode"
+          hint="Whether each layer gets a single color or colormap"
+          persistent-hint
+          dense
+        ></v-select>
+      </glue-state-sync-wrapper>
+    </div>
+
+    <!-- GENERAL:AXES -->
+    <glue-state-sync-wrapper v-if="config !== 'imviz'":sync="axes_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('axes_visible')">
+      <v-switch
+        v-model="axes_visible_value"
+        label="Show Axes"
+        />
+    </glue-state-sync-wrapper>
+
+    <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
+      <v-switch
+        v-model="uncertainty_visible_value"
+        label="Plot uncertainties"
+        />
+    </glue-state-sync-wrapper>
+
+    <!-- LAYER OPTIONS -->
+    <j-plugin-section-header>Layer options</j-plugin-section-header>
     <plugin-layer-select
       :items="layer_items"
       :selected.sync="layer_selected"
@@ -163,13 +197,6 @@
       <v-switch
         v-model="line_as_steps_value"
         label="Plot profile as steps"
-        />
-    </glue-state-sync-wrapper>
-
-    <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
-      <v-switch
-        v-model="uncertainty_visible_value"
-        label="Plot uncertainties"
         />
     </glue-state-sync-wrapper>
 
@@ -319,8 +346,72 @@
       </glue-state-sync-wrapper>
     </div>
 
-
     <!-- IMAGE -->
+    <!-- IMAGE:IMAGE -->
+    <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
+    <glue-state-sync-wrapper :sync="image_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_visible')">
+      <span>
+        <v-btn icon @click.stop="image_visible_value = !image_visible_value">
+          <v-icon>mdi-eye{{ image_visible_value ? '' : '-off' }}</v-icon>
+        </v-btn>
+        Show Image
+      </span>
+    </glue-state-sync-wrapper>
+
+    <div v-if="image_visible_sync.in_subscribed_states && image_visible_value">
+      <glue-state-sync-wrapper v-if="image_color_mode_value === 'Colormaps'" :sync="image_colormap_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_colormap')">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items="image_colormap_sync.choices"
+          v-model="image_colormap_value"
+          label="Colormap"
+          dense
+        ></v-select>
+      </glue-state-sync-wrapper>
+      <glue-state-sync-wrapper v-else :sync="image_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Image Color</v-subheader>
+          <v-menu>
+            <template v-slot:activator="{ on }">
+                <span class="color-menu"
+                      :style="`background:${image_color_value}; cursor: pointer`"
+                      @click.stop="on.click"
+                >&nbsp;</span>
+            </template>
+            <div @click.stop="" style="text-align: end; background-color: white">
+                <v-color-picker :value="image_color_value"
+                                :swatches="swatches_palette"
+                                show-swatches
+                                @update:color="throttledSetValue('image_color_value', $event.hexa)"
+                                ></v-color-picker>
+            </div>
+          </v-menu>
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper :sync="image_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_opacity')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Opacity</v-subheader>
+          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_opacity_value" hide-details class="no-hint" />
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper :sync="image_contrast_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_contrast')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Contrast</v-subheader>
+          <glue-throttled-slider wait="300" max="4" step="0.01" :value.sync="image_contrast_value" hide-details />
+        </div>
+      </glue-state-sync-wrapper>
+
+      <glue-state-sync-wrapper :sync="image_bias_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_bias')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px" style="height: 12px">Bias</v-subheader>
+          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_bias_value" hide-details />
+        </div>
+      </glue-state-sync-wrapper>
+    </div>
+
     <!-- IMAGE:STRETCH -->
     <j-plugin-section-header v-if="stretch_function_sync.in_subscribed_states">Stretch</j-plugin-section-header>
     <glue-state-sync-wrapper :sync="stretch_function_sync" :multiselect="multiselect" @unmix-state="unmix_state('stretch_function')">
@@ -426,84 +517,6 @@
 
     </div>
 
-    <!-- IMAGE:IMAGE -->
-    <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
-    <glue-state-sync-wrapper :sync="image_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_visible')">
-      <span>
-        <v-btn icon @click.stop="image_visible_value = !image_visible_value">
-          <v-icon>mdi-eye{{ image_visible_value ? '' : '-off' }}</v-icon>
-        </v-btn>
-        Show Image
-      </span>
-    </glue-state-sync-wrapper>
-
-    <div v-if="image_visible_sync.in_subscribed_states && image_visible_value">
-      <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color_mode')">
-        <v-select
-          attach
-          :menu-props="{ left: true }"
-          :items="image_color_mode_sync.choices"
-          v-model="image_color_mode_value"
-          label="Color Mode"
-          hint="Whether each layer gets a single color or colormap"
-          persistent-hint
-          dense
-        ></v-select>
-      </glue-state-sync-wrapper>
-
-      <glue-state-sync-wrapper v-if="image_color_mode_value === 'Colormaps'" :sync="image_colormap_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_colormap')">
-        <v-select
-          attach
-          :menu-props="{ left: true }"
-          :items="image_colormap_sync.choices"
-          v-model="image_colormap_value"
-          label="Colormap"
-          dense
-        ></v-select>
-      </glue-state-sync-wrapper>
-      <glue-state-sync-wrapper v-else :sync="image_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px">Image Color</v-subheader>
-          <v-menu>
-            <template v-slot:activator="{ on }">
-                <span class="color-menu"
-                      :style="`background:${image_color_value}; cursor: pointer`"
-                      @click.stop="on.click"
-                >&nbsp;</span>
-            </template>
-            <div @click.stop="" style="text-align: end; background-color: white">
-                <v-color-picker :value="image_color_value"
-                                :swatches="swatches_palette"
-                                show-swatches
-                                @update:color="throttledSetValue('image_color_value', $event.hexa)"
-                                ></v-color-picker>
-            </div>
-          </v-menu>
-        </div>
-      </glue-state-sync-wrapper>
-
-      <glue-state-sync-wrapper :sync="image_opacity_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_opacity')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px">Opacity</v-subheader>
-          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_opacity_value" hide-details class="no-hint" />
-        </div>
-      </glue-state-sync-wrapper>
-
-      <glue-state-sync-wrapper :sync="image_contrast_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_contrast')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px">Contrast</v-subheader>
-          <glue-throttled-slider wait="300" max="4" step="0.01" :value.sync="image_contrast_value" hide-details />
-        </div>
-      </glue-state-sync-wrapper>
-
-      <glue-state-sync-wrapper :sync="image_bias_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_bias')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px" style="height: 12px">Bias</v-subheader>
-          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_bias_value" hide-details />
-        </div>
-      </glue-state-sync-wrapper>
-    </div>
-
     <!-- IMAGE:CONTOUR -->
     <j-plugin-section-header v-if="contour_visible_sync.in_subscribed_states">Contours</j-plugin-section-header>
     <div style="display: grid"> <!-- overlay container -->
@@ -581,14 +594,6 @@
         ></v-progress-circular>
       </div>
     </div>
-    <!-- GENERAL:AXES -->
-    <j-plugin-section-header v-if="axes_visible_sync.in_subscribed_states && config !== 'imviz'">Axes</j-plugin-section-header>
-    <glue-state-sync-wrapper v-if="config !== 'imviz'":sync="axes_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('axes_visible')">
-      <v-switch
-        v-model="axes_visible_value"
-        label="Show Axes"
-        />
-    </glue-state-sync-wrapper>
 
   </j-tray-plugin>
 </template>
