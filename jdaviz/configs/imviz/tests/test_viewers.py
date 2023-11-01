@@ -53,6 +53,24 @@ def test_destroy_viewer_invalid(imviz_helper):
     assert imviz_helper.app.get_viewer_ids() == ['imviz-0']
 
 
+def test_plot_options_after_destroy(imviz_helper):
+    np.random.seed(42)
+    arr = np.random.sample((10, 10))
+    imviz_helper.load_data(arr, data_label='array_1')
+    arr = np.random.sample((10, 10))*5
+    imviz_helper.load_data(arr, data_label='array_2')
+
+    imviz_helper.create_image_viewer(viewer_name="imviz-1")
+    imviz_helper.app.add_data_to_viewer('imviz-1', 'array_2')
+
+    po = imviz_helper.plugins['Plot Options']
+    po.open_in_tray()
+    po.viewer = "imviz-1"
+    po.stretch_function = "Square Root"
+    imviz_helper.destroy_viewer("imviz-1")
+    assert len(po.layer.choices) == 2
+
+
 def test_destroy_viewer_with_subset(imviz_helper):
     """Regression test for https://github.com/spacetelescope/jdaviz/issues/1614"""
     arr = np.ones((10, 10))
