@@ -15,6 +15,8 @@ New Features
 
 - Colorbar now shown on top of the histogram in Plot Options for image viewers. [#2517]
 
+- Reorder viewer and layer settings in Plot Options. [#2543]
+
 Cubeviz
 ^^^^^^^
 
