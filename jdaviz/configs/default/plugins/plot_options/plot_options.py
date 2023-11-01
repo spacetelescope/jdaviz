@@ -69,19 +69,26 @@ class SplineStretch:
         # Can be modified if required.
         self._x = np.array([0, 0.1, 0.2, 0.7, 1])
         self._y = np.array([0, 0.05, 0.3, 0.9, 1])
-        self.update_knots(self._x, self._y)
+        self.update_knots(self._x,self._y)
 
     @property
-    def knots(self):
-        return (self._x, self._y)
+    def x(self):
+        return self._x
+    
+    @x.setter
+    def x(self, value):
+        if not np.array_equal(self._x, value):
+            self._x = value
+            self.update_knots(self._x, self._y)
+    
+    # @property
+    # def knots(self):
+    #     return (self.x, self.y)
 
-    @knots.setter
-    def knots(self, value):
-        x, y = value
-        if len(x) != len(y):
-            # Silently return
-            return
-        self.update_knots(x, y)
+    # @knots.setter
+    # def knots(self, value):
+    #     x, y = value
+    #     self.update_knots(x, y)
 
     def __call__(self, values, out=None, clip=False):
         # For our uses, we can ignore `out` and `clip`, but those would need
@@ -94,6 +101,8 @@ class SplineStretch:
         self.spline = make_interp_spline(
             self._x, self._y, k=self.k, t=self.t, bc_type=self.bc_type
         )
+        print("x: ", x)
+        print("y: ", y)
 
 
 # Add the spline stretch to the glue stretch registry if not registered
@@ -869,6 +878,13 @@ class PlotOptions(PluginTemplateMixin):
 
         # get the stretch object
         stretch = layer.state.stretch_object
+
+        # get the stretch object 
+        viewer = self.viewer
+        vid = viewer.ids[0]
+        v = self.viewer.app.get_viewer(vid)
+        stretch = v.state.layers[0].stretch_object
+
         layer_cmap = layer.state.cmap
 
         # show the colorbar
@@ -915,7 +931,9 @@ class PlotOptions(PluginTemplateMixin):
                            np.asarray(stretch._x) * (self.stretch_vmax_value - self.stretch_vmin_value))
             # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
             # (may need to revisit this when supporting dragging)
-            knot_mark.y = 0.9 * np.asarray(stretch._y)
+            knot_mark.y = 0.9 * stretch.y
+            print(" knot_mark.x", knot_mark.x)
+            print(" knot_mark.y", knot_mark.y)
         else:
             self.stretch_histogram.clear_marks('stretch_knots')
 
