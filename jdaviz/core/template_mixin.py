@@ -479,6 +479,7 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin):
     handled within the component, support for caching and clearing caches on properties,
     and common properties for accessing the app, etc.
     """
+
     def __init__(self, plugin, **kwargs):
         self._plugin_traitlets = {k: v for k, v in kwargs.items() if v is not None}
         self._plugin = plugin
@@ -890,6 +891,7 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
           <g-file-import id="file-uploader"></g-file-import>
       </plugin-file-import>
     """
+
     def __init__(self, plugin, **kwargs):
         self._cached_obj = {}
 
@@ -1044,6 +1046,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         hint="Select an item to modify."
       </plugin-editable-select>
     """
+
     def __init__(self, *args, **kwargs):
         """
         Parameters
@@ -1240,6 +1243,7 @@ class LayerSelect(SelectPluginComponent):
         hint="Select layer."
       />
     """
+
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
                  default_text=None, manual_options=[],
@@ -1551,6 +1555,7 @@ class SubsetSelect(SelectPluginComponent):
       />
 
     """
+
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text'):
@@ -2031,6 +2036,7 @@ class ViewerSelect(SelectPluginComponent):
       />
 
     """
+
     def __init__(self, plugin, items, selected,
                  multiselect=None,
                  default_text=None, manual_options=[], default_mode='first'):
@@ -2139,7 +2145,7 @@ class ViewerSelect(SelectPluginComponent):
         was_empty = len(self.items) == 0
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
-                                     for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])] # noqa
+                                     for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])]  # noqa
         self._apply_default_selection(skip_if_current_valid=not was_empty)
 
 
@@ -2226,6 +2232,7 @@ class DatasetSelect(SelectPluginComponent):
       />
 
     """
+
     def __init__(self, plugin, items, selected,
                  multiselect=None,
                  filters=['not_from_plugin_model_fitting', 'layer_in_viewers'],
@@ -2357,7 +2364,7 @@ class DatasetSelect(SelectPluginComponent):
                 # then this is a bar Application object, so ignore this filter
                 return True
             for viewer in self.viewers:
-                if data.label in [l.layer.label for l in viewer.layers]: # noqa E741
+                if data.label in [l.layer.label for l in viewer.layers]:  # noqa E741
                     return True
             return False
 
@@ -2511,6 +2518,7 @@ class AutoTextField(BasePluginComponent):
       ></plugin-auto-label>
 
     """
+
     def __init__(self, plugin, value, default, auto,
                  invalid_msg):
         super().__init__(plugin, value=value,
@@ -2626,6 +2634,7 @@ class AddResults(BasePluginComponent):
       ></plugin-add-results>
 
     """
+
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
                  add_to_viewer_items, add_to_viewer_selected,
@@ -2855,6 +2864,7 @@ class PlotOptionsSyncState(BasePluginComponent):
     * :attr:`linked_states`
     * :meth:`unmix_state`
     """
+
     def __init__(self, plugin, viewer_select, layer_select, glue_name,
                  value, sync, spinner=None, state_filter=None):
         super().__init__(plugin, value=value, sync=sync)
@@ -3065,11 +3075,17 @@ class PlotOptionsSyncState(BasePluginComponent):
         self.sync = {**self.sync,
                      'in_subscribed_states': in_subscribed_states,
                      'icons': icons,
-                     'mixed': len(np.unique(current_glue_values, axis=0)) > 1}
+                     'mixed': self.is_mixed(current_glue_values)}
 
         if len(current_glue_values):
             # sync the initial value of the widget, avoiding recursion
             self._on_glue_value_changed(current_glue_values[0])
+
+    def is_mixed(self, glue_values):
+        if len(glue_values) and isinstance(glue_values[0], dict):
+            # Revisit this for later
+            return True
+        return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):
         if len(self.linked_states) <= 1:
@@ -3078,7 +3094,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             current_glue_values = []
             for state in self.linked_states:
                 current_glue_values.append(self._get_glue_value(state))
-                mixed = len(np.unique(current_glue_values, axis=0)) > 1
+            mixed = self.is_mixed(current_glue_values)
         self.sync = {**self.sync,
                      'mixed': mixed}
 
