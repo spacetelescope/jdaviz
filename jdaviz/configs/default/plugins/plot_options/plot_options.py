@@ -69,18 +69,28 @@ class SplineStretch:
         # Can be modified if required.
         self._x = np.array([0, 0.1, 0.2, 0.7, 1])
         self._y = np.array([0, 0.05, 0.3, 0.9, 1])
-        self.update_knots(self._x,self._y)
+        self.update_knots(self._x, self._y)
 
     @property
     def x(self):
         return self._x
-    
+
     @x.setter
     def x(self, value):
         if not np.array_equal(self._x, value):
             self._x = value
             self.update_knots(self._x, self._y)
-    
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        if not np.array_equal(self._y, value):
+            self._y = value
+            self.update_knots(self._x, self._y)
+
     # @property
     # def knots(self):
     #     return (self.x, self.y)
@@ -96,15 +106,13 @@ class SplineStretch:
         return self.spline(values)
 
     def update_knots(self, x, y):
-        if len(x) != len(y):
-            raise ValueError("x and y must be the same length.")
         self.x = x
         self.y = y
+        if len(x) != len(y):
+            return
         self.spline = make_interp_spline(
             self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
         )
-        print("x: ", x)
-        print("y: ", y)
 
 
 # Add the spline stretch to the glue stretch registry if not registered
@@ -283,6 +291,9 @@ class PlotOptions(PluginTemplateMixin):
 
     stretch_vmax_value = Float().tag(sync=True)
     stretch_vmax_sync = Dict().tag(sync=True)
+
+    stretch_params_value = Dict().tag(sync=True)
+    stretch_params_sync = Dict().tag(sync=True)
 
     stretch_hist_zoom_limits = Bool().tag(sync=True)
     stretch_hist_nbins = IntHandleEmpty(25).tag(sync=True)
@@ -486,6 +497,9 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
+        self.stretch_params = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch_parameters',
+                                                   'stretch_params_value', 'stretch_params_sync',
+                                                   state_filter=is_image)
 
         self.stretch_histogram = Plot(self, viewer_type='histogram')
         # Add the stretch bounds tool to the default Plot viewer.
@@ -872,7 +886,7 @@ class PlotOptions(PluginTemplateMixin):
         else:
             stretch = stretches.members[self.stretch_function_value]()
 
-        # get the stretch object 
+        # get the stretch object
         viewer = self.viewer
         vid = viewer.ids[0]
         v = self.viewer.app.get_viewer(vid)
@@ -921,10 +935,10 @@ class PlotOptions(PluginTemplateMixin):
         if isinstance(stretch, SplineStretch) and self.stretch_curve_visible:
             knot_mark = self.stretch_histogram.marks['stretch_knots']
             knot_mark.x = (self.stretch_vmin_value +
-                           stretch.x * (self.stretch_vmax_value - self.stretch_vmin_value))
+                           np.asarray(stretch.x) * (self.stretch_vmax_value - self.stretch_vmin_value))
             # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
             # (may need to revisit this when supporting dragging)
-            knot_mark.y = 0.9 * stretch.y
+            knot_mark.y = 0.9 * np.asarray(stretch.y)
             print(" knot_mark.x", knot_mark.x)
             print(" knot_mark.y", knot_mark.y)
         else:
