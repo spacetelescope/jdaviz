@@ -827,11 +827,10 @@ class PlotOptions(PluginTemplateMixin):
 
         if self.stretch_curve_visible:
             # create a photoshop style "curve" for the stretch function
-            curve_x = np.linspace(self.stretch_vmin.value, self.stretch_vmax.value, 50)
-            curve_y = interval(curve_x, clip=False)
-            curve_y = contrast_bias(curve_y, out=curve_y, clip=False)
-            curve_y = stretch(curve_y, out=curve_y, clip=False)
-            curve_y = layer_cmap(curve_y)[:, 0]
+            curve_x = np.linspace(self.stretch_vmin_value, self.stretch_vmax_value, 50)
+            curve_y = interval(curve_x)
+            curve_y = contrast_bias(curve_y)
+            curve_y = stretch(curve_y)
 
             curve_mark = self.stretch_histogram.marks['stretch_curve']
             curve_mark.x = curve_x
