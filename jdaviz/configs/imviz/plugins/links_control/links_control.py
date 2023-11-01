@@ -157,6 +157,8 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         num_data_with_wcs = 0
         for data in self.app.data_collection:
             if hasattr(data.coords, 'pixel_to_world'):
+                # If there already was data with wcs and now another is found,
+                # we can say that wcs linking is available.
                 if num_data_with_wcs:
                     self.wcs_linking_available = True
                     break
