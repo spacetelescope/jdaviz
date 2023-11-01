@@ -671,7 +671,7 @@ class PlotOptions(PluginTemplateMixin):
 
     @observe('is_active', 'stretch_vmin_value', 'stretch_vmax_value', 'layer_selected',
              'stretch_hist_nbins', 'image_contrast_value', 'image_bias_value',
-             'stretch_curve_visible')
+             'image_colormap_value', 'stretch_curve_visible')
     @skip_if_no_updates_since_last_active()
     def _update_stretch_curve(self, msg=None):
         mark_label_prefix = "stretch_curve: "
@@ -697,17 +697,15 @@ class PlotOptions(PluginTemplateMixin):
 
             # create the new/updated mark following the colormapping
             # procedure in glue's CompositeArray:
-            interval = ManualInterval(self.stretch_vmin.value, self.stretch_vmax.value)
+            interval = ManualInterval(self.stretch_vmin_value, self.stretch_vmax_value)
             contrast_bias = ContrastBiasStretch(layer.state.contrast, layer.state.bias)
             stretch = stretches.members[layer.state.stretch]
-            layer_cmap = layer.state.cmap
 
             # create a photoshop style "curve" for the stretch function
-            curve_x = np.linspace(self.stretch_vmin.value, self.stretch_vmax.value, 50)
-            curve_y = interval(curve_x, clip=False)
-            curve_y = contrast_bias(curve_y, out=curve_y, clip=False)
-            curve_y = stretch(curve_y, out=curve_y, clip=False)
-            curve_y = layer_cmap(curve_y)[:, 0]
+            curve_x = np.linspace(self.stretch_vmin_value, self.stretch_vmax_value, 50)
+            curve_y = interval(curve_x)
+            curve_y = contrast_bias(curve_y)
+            curve_y = stretch(curve_y)
 
             for existing_mark_label, mark in self.stretch_histogram.marks.items():
                 if mark_label == existing_mark_label:
