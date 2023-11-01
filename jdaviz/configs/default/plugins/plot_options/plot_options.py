@@ -61,7 +61,7 @@ class SplineStretch:
     def __init__(self):
         # Cubic Spline (degree 3) for its balance and between accuracy & smoothness.
         # May revisit when knots become editable.
-        self.k = 3
+        # self.k = 3
         self.bc_type = None
         self.t = None
 
@@ -71,34 +71,34 @@ class SplineStretch:
         self._y = np.array([0, 0.05, 0.3, 0.9, 1])
         self.update_knots(self._x, self._y)
 
-    @property
-    def x(self):
-        return self._x
+    # @property
+    # def x(self):
+    #     return self._x
 
-    @x.setter
-    def x(self, value):
-        if not np.array_equal(self._x, value):
-            self._x = value
-            self.update_knots(self._x, self._y)
-
-    @property
-    def y(self):
-        return self._y
-
-    @y.setter
-    def y(self, value):
-        if not np.array_equal(self._y, value):
-            self._y = value
-            self.update_knots(self._x, self._y)
+    # @x.setter
+    # def x(self, value):
+    #     if not np.array_equal(self._x, value):
+    #         self._x = value
+    #         self.update_knots(self._x, self._y)
 
     # @property
-    # def knots(self):
-    #     return (self.x, self.y)
+    # def y(self):
+    #     return self._y
 
-    # @knots.setter
-    # def knots(self, value):
-    #     x, y = value
-    #     self.update_knots(x, y)
+    # @y.setter
+    # def y(self, value):
+    #     if not np.array_equal(self._y, value):
+    #         self._y = value
+    #         self.update_knots(self._x, self._y)
+
+    @property
+    def knots(self):
+        return (self.x, self.y)
+
+    @knots.setter
+    def knots(self, value):
+        x, y = value
+        self.update_knots(x, y)
 
     def __call__(self, values, out=None, clip=False):
         # For our uses, we can ignore `out` and `clip`, but those would need
@@ -106,12 +106,12 @@ class SplineStretch:
         return self.spline(values)
 
     def update_knots(self, x, y):
+        # Dynamically determine degree based on the number of data points
+        k = min(3, len(self._x) - 1)  # 3 for cubic, but adapt if fewer points
         self.x = x
         self.y = y
-        if len(x) != len(y):
-            return
         self.spline = make_interp_spline(
-            self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
+            self.x, self.y, k=k, t=self.t, bc_type=self.bc_type
         )
 
 
