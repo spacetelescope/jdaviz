@@ -6,7 +6,7 @@ from jdaviz.app import Application
 from jdaviz.core.config import get_configuration
 from jdaviz.configs.imviz.helper import Imviz
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
 
 @pytest.mark.parametrize(
@@ -101,7 +101,7 @@ class TestDeleteData(BaseImviz_WCS_NoWCS):
 
     def test_plot_options_after_destroy(self):
         self.imviz.create_image_viewer(viewer_name="imviz-1")
-        self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_2[SCI,1]')
+        self.imviz.app.add_data_to_viewer('imviz-1', 'no_wcs[SCI,1]')
 
         po = self.imviz.plugins['Plot Options']
         po.open_in_tray()
