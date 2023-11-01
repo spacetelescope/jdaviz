@@ -2612,7 +2612,7 @@ class Application(VuetifyTemplate, HubListener):
         print(json.dumps(output_json, indent=2))
 
         with open(output_file, "w") as f:
-            json.dump(output_json, f)
+            json.dump(output_json, f, indent=2)
 
     def get_configuration(self, path=None, section=None):
         """Returns a copy of the application configuration.
