@@ -93,11 +93,14 @@ class SplineStretch:
 
     @property
     def knots(self):
-        return (self.x, self.y)
+        return (self._x, self._y)
 
     @knots.setter
     def knots(self, value):
         x, y = value
+        if len(x) != len(y):
+            # Silently return
+            return
         self.update_knots(x, y)
 
     def __call__(self, values, out=None, clip=False):
