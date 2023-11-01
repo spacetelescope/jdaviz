@@ -703,11 +703,10 @@ class PlotOptions(PluginTemplateMixin):
             layer_cmap = layer.state.cmap
 
             # create a photoshop style "curve" for the stretch function
-            curve_x = np.linspace(self.stretch_vmin.value, self.stretch_vmax.value, 50)
-            curve_y = interval(curve_x, clip=False)
-            curve_y = contrast_bias(curve_y, out=curve_y, clip=False)
-            curve_y = stretch(curve_y, out=curve_y, clip=False)
-            curve_y = layer_cmap(curve_y)[:, 0]
+            curve_x = np.linspace(self.stretch_vmin_value, self.stretch_vmax_value, 50)
+            curve_y = interval(curve_x)
+            curve_y = contrast_bias(curve_y)
+            curve_y = stretch(curve_y)
 
             for existing_mark_label, mark in self.stretch_histogram.marks.items():
                 if mark_label == existing_mark_label:

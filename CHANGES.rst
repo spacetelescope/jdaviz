@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fix Plot Options stretch histogram's curve for non-gray colormaps. [#2537]
+
 Cubeviz
 ^^^^^^^
 
