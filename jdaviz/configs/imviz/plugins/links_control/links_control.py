@@ -153,19 +153,12 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
             error_on_fail=False,
             update_plugin=False)
 
-    def _check_if_many_data_with_wcs(self):
-        num_data_with_wcs = 0
+    def _check_if_data_with_wcs_exists(self):
         for data in self.app.data_collection:
             if hasattr(data.coords, 'pixel_to_world'):
-                # If there already was data with wcs and now another is found,
-                # we can say that wcs linking is available.
-                if num_data_with_wcs:
-                    self.wcs_linking_available = True
-                    break
-                num_data_with_wcs += 1
-        else:
-            self.wcs_linking_available = False
-
+                self.wcs_linking_available = True
+                break
+        self.wcs_linking_available = False
 
     def _on_new_app_data(self, msg):
         if self.app._jdaviz_helper._in_batch_load > 0:
@@ -180,7 +173,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
                 # at which point this if-statement should be removed.
                 return
         self._link_image_data()
-        self._check_if_many_data_with_wcs()
+        self._check_if_data_with_wcs_exists()
 
     def _on_markers_changed(self, msg):
         self.need_clear_markers = msg.has_markers
