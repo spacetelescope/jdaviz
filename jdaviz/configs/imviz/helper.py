@@ -646,13 +646,23 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
 
     app._link_type = link_type
     app._wcs_use_affine = wcs_use_affine
-    # TODO: this all needs to be generalized to work on multiple viewers
-    # (including determining refdata)
-    viewer_ref = app._jdaviz_helper.default_viewer.reference
-    viewer_item = app._get_viewer_item(viewer_ref)
 
-    viewer_item['reference_data_label'] = refdata.label
-    viewer_item['linked_by_wcs'] = link_type == 'wcs'
+    for viewer in app._viewer_store.values():
+        wcs_linked = link_type == 'wcs'
+        # viewer-state needs to know link type for reset_limits behavior
+        viewer.state.linked_by_wcs = wcs_linked
+        # also need to store a copy in the viewer item for the data dropdown to access
+        viewer_item = app._get_viewer_item(viewer.reference)
+
+        viewer_item['reference_data_label'] = refdata.label
+        viewer_item['linked_by_wcs'] = wcs_linked
+
+        if insert_base_wcs_layer:
+            viewer_item['reference_data_label'] = refdata.label
+
+        # if changing from one link type to another, reset the limits:
+        if link_type != old_link_type:
+            viewer.state.reset_limits()
 
     if link_plugin is not None:
         # Only broadcast after success.
@@ -661,22 +671,5 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                                              wcs_use_affine,
                                              sender=app))
 
-        if insert_base_wcs_layer:
-            # update all viewer items with reference data:
-            for viewer_id in app.get_viewer_ids():
-                viewer_item = app._get_viewer_item(viewer_id)
-                viewer_item['reference_data_label'] = refdata.label
-
         # reset the progress spinner
         link_plugin.linking_in_progress = False
-
-    for viewer in app._viewer_store.values():
-        wcs_linked = link_type == 'wcs'
-        # viewer-state needs to know link type for reset_limits behavior
-        viewer.state.linked_by_wcs = wcs_linked
-        # also need to store a copy in the viewer item for the data dropdown to access
-        viewer_item['linked_by_wcs'] = wcs_linked
-
-        # if changing from one link type to another, reset the limits:
-        if link_type != old_link_type:
-            viewer.state.reset_limits()
