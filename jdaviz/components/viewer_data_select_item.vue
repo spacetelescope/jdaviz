@@ -28,7 +28,7 @@
         </v-btn>
       </j-tooltip>
     </div>
-    <div v-else-if="item.has_wcs">
+    <div v-else-if="!linkedByWcs() || item.has_wcs">
       <j-tooltip tipid="viewer-data-enable">
         <v-btn
           icon
