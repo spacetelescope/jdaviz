@@ -3076,15 +3076,17 @@ class PlotOptionsSyncState(BasePluginComponent):
                      'in_subscribed_states': in_subscribed_states,
                      'icons': icons,
                      'mixed': self.is_mixed(current_glue_values)}
-
         if len(current_glue_values):
             # sync the initial value of the widget, avoiding recursion
             self._on_glue_value_changed(current_glue_values[0])
 
     def is_mixed(self, glue_values):
         if len(glue_values) and isinstance(glue_values[0], dict):
-            # Revisit this for later
-            return True
+            # If we want to expose dictionary inputs in the plot options UI, 
+            # this will need to be updated to check if any of the dictionaries 
+            # in the list are not exact matches
+            mixed = None
+            return
         return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):
