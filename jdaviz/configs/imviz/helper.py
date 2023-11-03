@@ -507,7 +507,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         at_least_one_data_have_wcs = len([
             hasattr(d, 'coords') and isinstance(d.coords, (BaseHighLevelWCS, GWCS))
             for d in app.data_collection
-        ]) > 1
+        ]) > 0
         if not at_least_one_data_have_wcs:
             if wcs_fallback_scheme is None:
                 if error_on_fail:

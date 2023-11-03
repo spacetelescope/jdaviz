@@ -9,7 +9,7 @@
       <div style="grid-area: 1/1">
         <div v-if="!wcs_linking_available">
           <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
-              Please add at least two data with valid WCS to link by WCS
+              Please add at least one data with valid WCS to link by WCS
           </v-alert>
         </div>
         <v-row>
