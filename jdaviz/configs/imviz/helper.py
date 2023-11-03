@@ -658,9 +658,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         viewer_item['reference_data_label'] = refdata.label
         viewer_item['linked_by_wcs'] = wcs_linked
 
-        if insert_base_wcs_layer:
-            viewer_item['reference_data_label'] = refdata.label
-
         # if changing from one link type to another, reset the limits:
         if link_type != old_link_type:
             viewer.state.reset_limits()
