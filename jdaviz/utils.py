@@ -6,6 +6,7 @@ import numpy as np
 
 from astropy.io import fits
 from astropy.utils import minversion
+from astropy.wcs.wcsapi import BaseHighLevelWCS
 from ipyvue import watch
 from glue.core.exceptions import IncompatibleAttribute
 from glue.config import settings
@@ -214,6 +215,14 @@ def alpha_index(index):
     else:
         # aa-zz (26-701), then overflow strings like '{a'
         return chr(97 + index//26 - 1) + chr(97 + index % 26)
+
+
+def data_has_valid_wcs(data, ndim=None):
+    """Check if given glue Data has WCS that is compatible with APE 14."""
+    status = hasattr(data, 'coords') and isinstance(data.coords, BaseHighLevelWCS)
+    if ndim is not None:
+        status = status and data.coords.world_n_dim == ndim
+    return status
 
 
 def standardize_metadata(metadata):

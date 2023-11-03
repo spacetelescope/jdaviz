@@ -12,7 +12,6 @@ from astropy import units as u
 from astropy.nddata import NDData
 from astropy.io import fits
 from astropy.time import Time
-from astropy.wcs.wcsapi import BaseHighLevelWCS
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -55,7 +54,7 @@ from jdaviz.core.style_widget import StyleWidget
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import SnackbarQueue, alpha_index, MultiMaskSubsetState
+from jdaviz.utils import SnackbarQueue, alpha_index, data_has_valid_wcs, MultiMaskSubsetState
 from ipypopout import PopoutButton
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS']
@@ -558,11 +557,8 @@ class Application(VuetifyTemplate, HubListener):
             )
 
         # only re-center the viewer if all data layers have WCS:
-        data_has_wcs = [
-            hasattr(d, 'coords') and isinstance(d.coords, BaseHighLevelWCS)
-            for d in viewer.data()
-        ]
-        if all(data_has_wcs):
+        has_wcs_per_data = [data_has_valid_wcs(d) for d in viewer.data()]
+        if all(has_wcs_per_data):
             # re-center the viewer on previous location.
             viewer.center_on(sky_cen)
 
@@ -2146,7 +2142,7 @@ class Application(VuetifyTemplate, HubListener):
             'locked': False,
             'ndims': data.ndim,
             'type': typ,
-            'has_wcs': wcsaxes is not None,
+            'has_wcs': data_has_valid_wcs(data),
             'meta': {k: v for k, v in data.meta.items() if _expose_meta(k)},
             'children': []}
 

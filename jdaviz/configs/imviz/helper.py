@@ -16,6 +16,7 @@ from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.configs.imviz.wcs_utils import (
     _get_rotated_nddata_from_label, get_compass_info
 )
+from jdaviz.utils import data_has_valid_wcs
 
 __all__ = ['Imviz', 'link_image_data']
 
@@ -192,7 +193,7 @@ class Imviz(ImageConfigHelper):
                 applied_labels.append(label)
                 applied_visible.append(True)
                 layer_is_wcs_only.append(data.meta.get(self.app._wcs_only_label, False))
-                layer_has_wcs.append(hasattr(data.coords, 'pixel_to_world'))
+                layer_has_wcs.append(data_has_valid_wcs(data))
 
         if show_in_viewer is True:
             show_in_viewer = f"{self.app.config}-0"

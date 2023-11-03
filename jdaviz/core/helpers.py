@@ -13,7 +13,6 @@ from inspect import isclass
 
 import numpy as np
 import astropy.units as u
-from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.nddata import CCDData, StdDevUncertainty
 from regions.core.core import Region
 from glue.core import HubListener
@@ -28,6 +27,7 @@ from specutils import Spectrum1D, SpectralRegion
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
 from jdaviz.core.template_mixin import show_widget
+from jdaviz.utils import data_has_valid_wcs
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper']
 
@@ -922,14 +922,6 @@ class ImageConfigHelper(ConfigHelper):
         """Delete all regions."""
         for subset_grp in self.app.data_collection.subset_groups:  # should be a copy
             self.app.data_collection.remove_subset_group(subset_grp)
-
-
-def data_has_valid_wcs(data, ndim=None):
-    """Check if given glue Data has WCS that is compatible with APE 14."""
-    status = hasattr(data, 'coords') and isinstance(data.coords, BaseHighLevelWCS)
-    if ndim is not None:
-        status = status and data.coords.world_n_dim == ndim
-    return status
 
 
 def _next_subset_num(label_prefix, subset_groups):
