@@ -157,7 +157,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         for data in self.app.data_collection:
             if hasattr(data.coords, 'pixel_to_world'):
                 self.wcs_linking_available = True
-                break
+                return
         self.wcs_linking_available = False
 
     def _on_new_app_data(self, msg):
