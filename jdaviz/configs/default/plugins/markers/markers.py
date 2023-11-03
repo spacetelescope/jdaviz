@@ -1,7 +1,8 @@
 import numpy as np
+from astropy import units as u
 from traitlets import Bool, observe
 
-from jdaviz.core.events import ViewerAddedMessage
+from jdaviz.core.events import ViewerAddedMessage, ChangeRefDataMessage
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -54,7 +55,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             headers = ['pixel', 'pixel:unreliable',
                        'world', 'world:unreliable',
                        'value', 'value:unit', 'value:unreliable',
-                       'viewer']
+                       'viewer', 'link_type', 'reference_data']
 
         elif self.config == 'specviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
@@ -80,6 +81,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
+        # account for image rotation due to a change in reference data
+        self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
+
     def _create_viewer_callbacks(self, viewer):
         if not self.is_active:
             return
@@ -89,6 +93,17 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+
+    def _on_refdata_change(self, msg):
+        viewer_mark = self._get_mark(msg.viewer)
+        # we act from the previous state instead of the original since the original WCS may have
+        # been deleted.  If this causes a buildup in errors, we could first try to access the
+        # original or cache its WCS in the table so we always have access.
+        prev_x, prev_y = viewer_mark.x, viewer_mark.y
+        prev_wcs = msg.old.coords
+        new_wcs = msg.data.coords
+        new_x, new_y = new_wcs.world_to_pixel(prev_wcs.pixel_to_world(prev_x*u.pix, prev_y*u.pix))
+        viewer_mark.x, viewer_mark.y = new_x, new_y
 
     def _get_mark(self, viewer):
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, MarkersMark)]
