@@ -61,7 +61,6 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     wcs_use_affine = Bool(True).tag(sync=True)
     wcs_linking_available = Bool(False).tag(sync=True)
 
-
     need_clear_markers = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
     need_clear_subsets = Bool(False).tag(sync=True)
