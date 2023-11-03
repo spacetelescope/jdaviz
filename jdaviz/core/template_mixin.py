@@ -1255,10 +1255,12 @@ class LayerSelect(SelectPluginComponent):
         except TypeError:
             return self.app.get_viewer_by_id(viewer)
 
-    def _layer_to_dict(self, layer):
+    def _layer_to_dict(self, layer, label_to_color=None, label_mixed_color=None):
         d = {"label": layer.layer.label,
              "color": layer.state.color,
-             "icon": self.app.state.layer_icons.get(layer.layer.label)}
+             "icon": self.app.state.layer_icons.get(layer.layer.label),
+             "visible": layer.state.bitmap_visible,
+             "mixed_color": False if not label_mixed_color else label_mixed_color[layer.layer.label]}
         return d
 
     def _on_viewer_changed(self, msg=None):
@@ -1287,10 +1289,29 @@ class LayerSelect(SelectPluginComponent):
         # same name in different viewers will be randomly assigned within plot_options
         # based on which was found _first.
         layer_labels = [layer.layer.label for layer in layers]
+        print("LayerSelect", layer_labels)
+        print("unique return", np.unique(layer_labels, return_index=True))
         _, inds = np.unique(layer_labels, return_index=True)
-        layers = [layers[i] for i in inds]
+        layers_unique = [layers[i] for i in inds]
+        label_to_color = {}
+        label_mixed_color = {}
+        for layer in layers:
+            label = layer.layer.label
+            color = layer.state.color
+            # label_to_color tracks all colors per layer label
+            if label not in label_to_color:
+                label_to_color[label] = [color]
+                label_mixed_color[label] = False
+            else:
+                # If the color is not yet present, then layers
+                # with this label have mixed color
+                if color not in label_to_color[label]:
+                    label_mixed_color[label] = True
+                label_to_color[label] += [color]
 
-        self.items = manual_items + [self._layer_to_dict(layer) for layer in layers]
+        self.items = manual_items + [self._layer_to_dict(layer, label_to_color, label_mixed_color)
+                                     for layer in layers_unique]
+
         self._apply_default_selection()
 
     @cached_property

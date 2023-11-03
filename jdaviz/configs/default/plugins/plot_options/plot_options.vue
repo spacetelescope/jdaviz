@@ -93,13 +93,12 @@
 
     <!-- LAYER OPTIONS -->
     <j-plugin-section-header>Layer options</j-plugin-section-header>
-    <plugin-layer-select
+    <plugin-layer-select-tabs
       :items="layer_items"
       :selected.sync="layer_selected"
       :multiselect="multiselect"
-      :show_if_single_entry="true"
-      :label="multiselect ? 'Layers': 'Layer'"
-      :hint="multiselect ? 'Select layers to set options simultaneously' : 'Select the data or subset to set options.'"
+      label="Layers"
+      hint="Select the data or subset to set options."
     />
 
     <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>

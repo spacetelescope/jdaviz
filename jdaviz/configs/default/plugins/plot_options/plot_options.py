@@ -330,7 +330,6 @@ class PlotOptions(PluginTemplateMixin):
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')  # noqa
-
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
             ['#FFD300', '#AAAA00', '#555500'],
@@ -929,3 +928,30 @@ class PlotOptions(PluginTemplateMixin):
 
         return isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView,
                                                      MosvizImageView, MosvizProfile2DView))
+
+    @observe('line_color_value', 'image_color_value')
+    def color_change_event(self, event):
+        # Do not run when Plot Options is being instantiated
+        if event['old'] is None:
+            return
+        layer_names = [x['label'] for x in self.layer_items]
+
+        if isinstance(self.layer_selected, list):
+            layers_select = self.layer_selected
+        else:
+            layers_select = [self.layer_selected]
+        for layer_select in layers_select:
+            self.layer_items[layer_names.index(layer_select)]['color'] = event['new']
+        self.send_state('layer_items')
+
+    @observe('layer_selected')
+    def layer_selected_change_event(self, event):
+        if event is None or event['old'] is None:
+            return
+        print("layer", self.layer_items, self.layer.items)
+
+    @observe('viewer_selected')
+    def viewer_selected_change_event(self, event):
+        if event is None or event['old'] is None:
+            return
+        print("viewer", self.layer_items, self.layer.items)
