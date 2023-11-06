@@ -1104,6 +1104,18 @@ class Application(VuetifyTemplate, HubListener):
                  "sky_region": None,
                  "subset_state": subset_state}]
 
+    def _get_wcs_from_subset(self, subset_state):
+        """ Usually WCS is subset.parent.coords, except special cuebviz case."""
+
+        if self.config == 'cubeviz':
+            parent_data = subset_state.attributes[0].parent
+            wcs = parent_data.meta.get("_orig_spatial_wcs", None)
+        else:
+            wcs = subset_state.xatt.parent.coords  # imviz, try getting WCS from subset data
+
+        return wcs
+
+
     def _get_roi_subset_definition(self, subset_state, to_sky=False):
 
         # pixel region
@@ -1111,11 +1123,7 @@ class Application(VuetifyTemplate, HubListener):
 
         wcs = None
         if to_sky:
-            if self.config == 'cubeviz':
-                parent_data = subset_state.attributes[0].parent
-                wcs = parent_data.meta.get("_orig_spatial_wcs", None)
-            else:
-                wcs = subset_state.xatt.parent.coords  # imviz, try getting WCS from subset data
+            wcs = self._get_wcs_from_subset(subset_state)
 
         # if no spatial wcs on subset, we have to skip computing sky region for this subset
         # but want to do so without raising an error (since many subsets could be requested)

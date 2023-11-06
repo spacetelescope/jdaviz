@@ -14,11 +14,15 @@ from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Any, List, Unicode, Bool, observe
 
-from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
+from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import MultiMaskSubsetState
+
+from regions import CircleSkyRegion, CirclePixelRegion, PixCoord, EllipseSkyRegion, EllipsePixelRegion
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 
 __all__ = ['SubsetPlugin']
 
@@ -76,6 +80,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                    handler=self._on_subset_update)
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_display_unit_changed)
+        self.session.hub.subscribe(self, LinkUpdatedMessage,
+                                   handler=self._on_link_update)
 
         self.subset_select = SubsetSelect(self,
                                           'subset_items',
@@ -84,6 +90,15 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                           default_text="Create New")
         self.subset_states = []
         self.spectral_display_unit = None
+
+    def _on_link_update(self, *args):
+        # set to True only when link type is 'wcs'. if none or 'pixel', set
+        # this to false and display pixel coordinates
+        self.display_sky_coordinates = (self.app._link_type == 'wcs')
+
+        # only update if link changes and there are subsets.
+        if len(self.subset_states) > 0:
+            self._get_subset_definition(*args)
 
     def _sync_selected_from_state(self, *args):
         if not hasattr(self, 'subset_select') or self.multiselect:
@@ -145,7 +160,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         subset_information = self.app.get_subsets(self.subset_selected,
                                                   simplify_spectral=False,
-                                                  use_display_units=True)
+                                                  use_display_units=True,
+                                                  include_sky_region=True)
+        # self.hub.broadcast(SnackbarMessage(f"subsets {subset_information}", color='warning',
+        #                                        sender=self))
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
         if not subset_information:
             return
@@ -170,12 +188,20 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     "orig": subset_state.xatt.parent.label})
 
                 if isinstance(subset_state.roi, CircularROI):
-                    x, y = subset_state.roi.center()
-                    r = subset_state.roi.radius
+                    if self.display_sky_coordinates:
+                        sky_region = spec['sky_region']
+                        x = sky_region.center.ra.deg
+                        y = sky_region.center.dec.deg
+                        r = sky_region.radius.deg
+                        display_unit_label = '(degrees)'
+                    else:
+                        x, y = subset_state.roi.center()
+                        r = subset_state.roi.radius
+                        display_unit_label = '(pixels)'
                     subset_definition += [
-                        {"name": "X Center", "att": "xc", "value": x, "orig": x},
-                        {"name": "Y Center", "att": "yc", "value": y, "orig": y},
-                        {"name": "Radius", "att": "radius", "value": r, "orig": r}]
+                        {"name": f"X Center {display_unit_label}", "att": "xc", "value": x, "orig": x},
+                        {"name": f"Y Center {display_unit_label}", "att": "yc", "value": y, "orig": y},
+                        {"name": f"Radius {display_unit_label}", "att": "radius", "value": r, "orig": r}]
 
                 elif isinstance(subset_state.roi, RectangularROI):
                     for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
@@ -188,26 +214,48 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         {"name": "Angle", "att": "theta", "value": theta, "orig": theta})
 
                 elif isinstance(subset_state.roi, EllipticalROI):
-                    xc, yc = subset_state.roi.center()
-                    rx = subset_state.roi.radius_x
-                    ry = subset_state.roi.radius_y
-                    theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
+                    if self.display_sky_coordinates:
+                        sky_region = spec['sky_region']
+                        xc = sky_region.center.ra.deg
+                        yc = sky_region.center.dec.deg
+                        rx = sky_region.height.deg
+                        ry = sky_region.width.deg
+                        angle = sky_region.angle.value
+                        theta = np.around(np.degrees(angle), decimals=_around_decimals)
+                        display_unit_label = '(degrees)'
+                    else:
+                        xc, yc = subset_state.roi.center()
+                        rx = subset_state.roi.radius_x
+                        ry = subset_state.roi.radius_y
+                        theta = np.around(np.degrees(subset_state.roi.theta), decimals=_around_decimals)
+                        display_unit_label = '(pixels)'
+
                     subset_definition += [
-                        {"name": "X Center", "att": "xc", "value": xc, "orig": xc},
-                        {"name": "Y Center", "att": "yc", "value": yc, "orig": yc},
-                        {"name": "X Radius", "att": "radius_x", "value": rx, "orig": rx},
-                        {"name": "Y Radius", "att": "radius_y", "value": ry, "orig": ry},
+                        {"name": f"X Center {display_unit_label}", "att": "xc", "value": xc, "orig": xc},
+                        {"name": f"Y Center {display_unit_label}", "att": "yc", "value": yc, "orig": yc},
+                        {"name": f"X Radius {display_unit_label}", "att": "radius_x", "value": rx, "orig": rx},
+                        {"name": f"Y Radius {display_unit_label}", "att": "radius_y", "value": ry, "orig": ry},
                         {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
 
                 elif isinstance(subset_state.roi, CircularAnnulusROI):
-                    x, y = subset_state.roi.center()
-                    inner_r = subset_state.roi.inner_radius
-                    outer_r = subset_state.roi.outer_radius
-                    subset_definition += [{"name": "X Center", "att": "xc", "value": x, "orig": x},
-                                          {"name": "Y Center", "att": "yc", "value": y, "orig": y},
-                                          {"name": "Inner radius", "att": "inner_radius",
+                    if self.display_sky_coordinates:
+                        sky_region = spec['sky_region']
+                        x = sky_region.center.ra.deg
+                        y = sky_region.center.dec.deg
+                        inner_r =sky_region.inner_radius.deg
+                        outer_r =sky_region.outer_radius.deg
+                        display_unit_label = '(degrees)'
+                    else:
+                        x, y = subset_state.roi.center()
+                        inner_r = subset_state.roi.inner_radius
+                        outer_r = subset_state.roi.outer_radius
+                        display_unit_label = '(pixels)'
+
+                    subset_definition += [{"name": f"X Center {display_unit_label}", "att": "xc", "value": x, "orig": x},
+                                          {"name": f"Y Center {display_unit_label}", "att": "yc", "value": y, "orig": y},
+                                          {"name": f"Inner radius {display_unit_label}", "att": "inner_radius",
                                            "value": inner_r, "orig": inner_r},
-                                          {"name": "Outer radius", "att": "outer_radius",
+                                          {"name": f"Outer radius {display_unit_label}", "att": "outer_radius",
                                            "value": outer_r, "orig": outer_r}]
 
                 subset_type = subset_state.roi.__class__.__name__
@@ -302,6 +350,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if self.subset_selected != self.subset_select.default_text:
                 self._get_subset_definition(self.subset_selected)
 
+    def _convert_sky_input(self, subset_type):
+        pass
+
     def vue_update_subset(self, *args):
         if self.multiselect:
             self.hub.broadcast(SnackbarMessage("Cannot update subset "
@@ -318,14 +369,120 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if len(self.subset_states) <= index:
                 return
             sub_states = self.subset_states[index]
+
+            # if the update was done in sky coordinates, we need to convert these
+            # back to pixels before the subset is updated.
+            wcs = None
+            if self.display_sky_coordinates:
+
+                wcs = self.app._get_wcs_from_subset(sub_states)
+                if wcs is not None: 
+                    if self.subset_types[index] == "TrueCircularROI":
+                        xy = [x['value'] for x in sub if 'Center' in x['name']]
+                        rad = [x['value'] for x in sub if 'Radius' in x['name']][0]
+
+                        orig_xy = [x['orig'] for x in sub if 'Center' in x['name']]
+                        orig_rad = [x['orig'] for x in sub if 'Radius' in x['name']][0]
+
+                        pixregion_xy = CircleSkyRegion(center=SkyCoord(*xy*u.deg),
+                                                       radius=rad*u.deg).to_pixel(wcs)
+                        pixregion_orig_xy = CircleSkyRegion(center=SkyCoord(*orig_xy*u.deg),
+                                                            radius=orig_rad*u.deg).to_pixel(wcs)
+
+                        new_xy = (pixregion_xy.center.x, pixregion_xy.center.y)
+                        new_rad = pixregion_xy.radius
+
+                        new_orig_xy = (pixregion_orig_xy.center.x, pixregion_orig_xy.center.y)
+                        new_orig_rad = pixregion_orig_xy.radius
+
+                    elif self.subset_types[index] == "TrueEllipticalROI":
+                        xy = [x['value'] for x in sub if 'Center' in x['name']]
+                        rads = [x['value'] for x in sub if 'Radius' in x['name']]
+                        angle = [x['value'] for x in sub if 'Angle' in x['name']][0]
+
+                        orig_xy = [x['orig'] for x in sub if 'Center' in x['name']]
+                        orig_rads = [x['orig'] for x in sub if 'Radius' in x['name']]
+                        orig_angle = [x['orig'] for x in sub if 'Angle' in x['name']][0]
+
+                        pixregion_xy = EllipsePixelRegion(SkyCoord(*xy*u.deg), 2*rads[0]*u.deg,
+                                                          2*rads[1]*u.deg, angle*u.deg).to_pixel(wcs)
+                        pixregion_orig_xy = EllipsePixelRegion(SkyCoord(*orig_xy*u.deg), 2*orig_rads[0]*u.deg,
+                                                          2*orig_rads[1]*u.deg, orig_angle*u.deg).to_pixel(wcs)
+
+                        new_xy = (pixregion_xy.center.x, pixregion_xy.center.y)
+                        new_rads = (pixregion_xy.height / 2., pixregion_xy.width / 2.)
+                        new_angle = pixregion_xy.angle.to(u.deg).value
+
+                        new_orig_xy = (pixregion_orig_xy.center.x, pixregion_orig_xy.center.y)
+                        new_orig_rads = (pixregion_orig_xy.height / 2., pixregion_orig_xy.width / 2.)
+                        new_orig_angle = pixregion_orig_xy.angle.to(u.deg).value
+
+                    elif self.subset_types[index] == "CircularAnnulusROI":
+                        xy = [x['value'] for x in sub if 'Center' in x['name']]
+                        rads = [x['value'] for x in sub if 'Radius' in x['name']]
+
+                        orig_xy = [x['orig'] for x in sub if 'Center' in x['name']]
+                        orig_rads = [x['orig'] for x in sub if 'Radius' in x['name']]
+
+                        pixregion_xy = CircleAnnulusPixelRegion(SkyCoord(*xy*u.deg), rads[0]*u.deg,
+                                                                rads[1]*u.deg).to_pixel(wcs)
+
+                        pixregion_orig_xy = CircleAnnulusPixelRegion(SkyCoord(*orig_xy*u.deg), orig_rads[0]*u.deg,
+                                                                orig_rads[1]*u.deg).to_pixel(wcs)
+
             for d_att in sub:
+
                 if d_att["att"] == 'parent':  # Read-only
                     continue
+
+                # we need WCS to update subset if input was in sky coordinates.
+                if wcs is not None:
+                    if self.subset_types[index] == "TrueCircularROI":
+                        if d_att["att"] == 'xc':
+                            d_att["value"] = new_xy[0]
+                            d_att["orig"] = new_orig_xy[0]
+                        if d_att["att"] == 'yc':
+                            d_att["value"] = new_xy[1]
+                            d_att["orig"] = new_orig_xy[1]
+                        if d_att["att"] == 'radius':
+                            d_att["value"] = new_rad
+                            d_att["orig"] = new_orig_rad
+
+                    elif self.subset_types[index] == "TrueEllipticalROI":
+                        if d_att["att"] == 'xc':
+                            d_att["value"] = new_xy[0]
+                            d_att["orig"] = new_orig_xy[0]
+                        if d_att["att"] == 'yc':
+                            d_att["value"] = new_xy[1]
+                            d_att["orig"] = new_orig_xy[1]
+                        if d_att["att"] == 'radius_x':
+                            d_att["value"] = new_rads[0]
+                            d_att["orig"] = new_orig_rads[0]
+                        if d_att["att"] == 'radius_y':
+                            d_att["value"] = new_rads[1]
+                            d_att["orig"] = new_orig_rads[1]
+                        if d_att["att"] == 'theta':
+                            d_att["value"] = new_angle
+                            d_att["orig"] = new_orig_angle
+
+                    elif self.subset_types[index] == "CircularAnnulusROI":
+                        if d_att["att"] == 'x':
+                            d_att["value"] = new_xy[0]
+                            d_att["orig"] = new_orig_xy[0]
+                        if d_att["att"] == 'y':
+                            d_att["value"] = new_xy[1]
+                            d_att["orig"] = new_orig_xy[1]
+                        if d_att["att"] == 'inner_radius':
+                            d_att["value"] = new_rads[0]
+                            d_att["orig"] = new_orig_rads[0]
+                        if d_att["att"] == 'outer_radius':
+                            d_att["value"] = new_rads[0]
+                            d_att["orig"] = new_orig_rads[0]
 
                 if d_att["att"] == 'theta':  # Humans use degrees but glue uses radians
                     d_val = np.radians(d_att["value"])
                 else:
-                    d_val = float(d_att["value"])
+                    d_val = float(d_att["value"])        
 
                 # Convert from display unit to original unit if necessary
                 if self.subset_types[index] == "Range":
@@ -337,11 +494,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                             d_val = d_val.to(u.Unit(base_units))
                             d_val = d_val.value
 
-                if float(d_att["orig"]) != d_val:
+                if float(d_att["orig"]) != d_val: 
                     if self.subset_types[index] == "Range":
                         setattr(sub_states, d_att["att"], d_val)
                     else:
                         setattr(sub_states.roi, d_att["att"], d_val)
+
         self._push_update_to_ui()
 
     def _push_update_to_ui(self, subset_name=None):
