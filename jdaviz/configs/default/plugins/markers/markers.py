@@ -2,7 +2,8 @@ import numpy as np
 from astropy import units as u
 from traitlets import Bool, observe
 
-from jdaviz.core.events import ViewerAddedMessage, ChangeRefDataMessage
+from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
+                                AddDataMessage, RemoveDataMessage)
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -82,7 +83,15 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
         # account for image rotation due to a change in reference data
-        self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
+        self.hub.subscribe(self, ChangeRefDataMessage,
+                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
+
+        # enable/disable mark based on whether parent data entry is in viewer
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
+
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
 
     def _create_viewer_callbacks(self, viewer):
         if not self.is_active:
@@ -94,26 +103,34 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
-    def _on_refdata_change(self, msg):
-        viewer_mark = self._get_mark(msg.viewer)
+    def _recompute_mark_positions(self, viewer):
+        if self.table is None or self.table._qtable is None:
+            return
 
-        # TODO: when a data layer is unloaded from the viewer, the marks need to be hidden
-        # and re-shown when added back to the viewer.  When deleted from the app, should the
-        # rows in the table be cleared?  This will then account for the case where a
-        # mark is added to data without WCS that is dropped when changing from pixel->WCS linking
-        orig_world_x = self.table._qtable['world'][:, 0]
-        orig_world_y = self.table._qtable['world'][:, 1]
+        viewer_labels = [lyr.layer.label for lyr in viewer.layers]
+        data_labels = self.table._qtable['data_label']
+        in_viewer = [data_label in viewer_labels for data_label in data_labels]
+
+        viewer_mark = self._get_mark(viewer)
+        if not np.any(in_viewer):
+            viewer_mark.x, viewer_mark.y = [], []
+            return
+
+        orig_world_x = self.table._qtable['world'][:, 0][in_viewer]
+        orig_world_y = self.table._qtable['world'][:, 1][in_viewer]
 
         if self.app._link_type == 'wcs':
-            new_wcs = msg.data.coords
-            new_x, new_y = new_wcs.world_to_pixel(orig_world_x*u.deg, orig_world_y*u.deg)
+            new_wcs = viewer.state.reference_data.coords
+            new_x, new_y = new_wcs.world_to_pixel(orig_world_x*u.deg,
+                                                  orig_world_y*u.deg)
         else:
-            # need to convert based on the WCS of the individual data layers on which the mark
-            # was created
-            data_labels = self.table._qtable['data_label']
+            # then pixel linked, so we need to convert based on the WCS of the individual data
+            # layers on which each mark was first created
             new_x, new_y = np.zeros_like(orig_world_x), np.zeros_like(orig_world_y)
-            for data_label in np.unique(data_labels):
-                these = data_labels == data_label
+            for data_label in np.unique(data_labels[in_viewer]):
+                these = data_labels[in_viewer] == data_label
+                if not np.any(these):
+                    continue
                 wcs = self.app.data_collection[data_label].coords
                 new_x[these], new_y[these] = wcs.world_to_pixel(orig_world_x[these]*u.deg,
                                                                 orig_world_y[these]*u.deg)
