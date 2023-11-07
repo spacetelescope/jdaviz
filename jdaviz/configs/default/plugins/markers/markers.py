@@ -55,7 +55,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             headers = ['pixel', 'pixel:unreliable',
                        'world', 'world:unreliable',
                        'value', 'value:unit', 'value:unreliable',
-                       'viewer', 'link_type', 'reference_data']
+                       'viewer']
 
         elif self.config == 'specviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
@@ -96,13 +96,28 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_refdata_change(self, msg):
         viewer_mark = self._get_mark(msg.viewer)
-        # we act from the previous state instead of the original since the original WCS may have
-        # been deleted.  If this causes a buildup in errors, we could first try to access the
-        # original or cache its WCS in the table so we always have access.
-        prev_x, prev_y = viewer_mark.x, viewer_mark.y
-        prev_wcs = msg.old.coords
-        new_wcs = msg.data.coords
-        new_x, new_y = new_wcs.world_to_pixel(prev_wcs.pixel_to_world(prev_x*u.pix, prev_y*u.pix))
+
+        # TODO: when a data layer is unloaded from the viewer, the marks need to be hidden
+        # and re-shown when added back to the viewer.  When deleted from the app, should the
+        # rows in the table be cleared?  This will then account for the case where a
+        # mark is added to data without WCS that is dropped when changing from pixel->WCS linking
+        orig_world_x = self.table._qtable['world'][:, 0]
+        orig_world_y = self.table._qtable['world'][:, 1]
+
+        if self.app._link_type == 'wcs':
+            new_wcs = msg.data.coords
+            new_x, new_y = new_wcs.world_to_pixel(orig_world_x*u.deg, orig_world_y*u.deg)
+        else:
+            # need to convert based on the WCS of the individual data layers on which the mark
+            # was created
+            data_labels = self.table._qtable['data_label']
+            new_x, new_y = np.zeros_like(orig_world_x), np.zeros_like(orig_world_y)
+            for data_label in np.unique(data_labels):
+                these = data_labels == data_label
+                wcs = self.app.data_collection[data_label].coords
+                new_x[these], new_y[these] = wcs.world_to_pixel(orig_world_x[these]*u.deg,
+                                                                orig_world_y[these]*u.deg)
+
         viewer_mark.x, viewer_mark.y = new_x, new_y
 
     def _get_mark(self, viewer):

@@ -571,6 +571,11 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
 
         refdata, iref = get_reference_image_data(app)
 
+    # set internal tracking of link_type before changing reference data for anything that is
+    # subscribed to a change in reference data
+    app._link_type = link_type
+    app._wcs_use_affine = wcs_use_affine
+
     if link_type == 'pixels' and old_link_type == 'wcs':
         # if changing from WCS to pixel linking, set bottom image data
         # layer as reference data in all viewers:
@@ -644,9 +649,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
 
         app.hub.broadcast(SnackbarMessage(
             'Images successfully relinked', color='success', timeout=8000, sender=app))
-
-    app._link_type = link_type
-    app._wcs_use_affine = wcs_use_affine
 
     for viewer in app._viewer_store.values():
         wcs_linked = link_type == 'wcs'
