@@ -341,7 +341,7 @@ class SelectLine(CheckableTool, HubListener):
 
 @viewer_tool
 class StretchBounds(CheckableTool):
-    icon = os.path.join(ICON_DIR, 'line_select.svg')
+    icon = os.path.join(ICON_DIR, 'stretch_bounds.svg')
     tool_id = 'jdaviz:stretch_bounds'
     action_text = 'Set Stretch VMin and VMax'
     tool_tip = 'Set closest stretch bound (VMin/VMax) with click or click+drag'
