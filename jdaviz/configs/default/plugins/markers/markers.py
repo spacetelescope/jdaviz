@@ -84,7 +84,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         # account for image rotation due to a change in reference data
         self.hub.subscribe(self, ChangeRefDataMessage,
-                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
+                           handler=lambda msg: self._recompute_mark_positions(msg.viewer,
+                                                                              new_wcs=msg.data.coords))  # noqa
 
         # enable/disable mark based on whether parent data entry is in viewer
         self.hub.subscribe(self, AddDataMessage,
@@ -103,7 +104,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
-    def _recompute_mark_positions(self, viewer):
+    def _recompute_mark_positions(self, viewer, new_wcs=None):
         if self.table is None or self.table._qtable is None:
             return
 
@@ -120,9 +121,16 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         orig_world_y = self.table._qtable['world'][:, 1][in_viewer]
 
         if self.app._link_type == 'wcs':
-            new_wcs = viewer.state.reference_data.coords
-            new_x, new_y = new_wcs.world_to_pixel(orig_world_x*u.deg,
-                                                  orig_world_y*u.deg)
+            if new_wcs is None:
+                new_wcs = viewer.state.reference_data.coords
+            try:
+                new_x, new_y = new_wcs.world_to_pixel(orig_world_x*u.deg,
+                                                      orig_world_y*u.deg)
+            except ValueError:
+                # can temporarily fail with "ValueError: Number of world inputs (2) does not match
+                # expected (1)", in which case we'll temporarily clear markers and should resolve
+                # itself on the next message
+                new_x, new_y = [], []
         else:
             # then pixel linked, so we need to convert based on the WCS of the individual data
             # layers on which each mark was first created
