@@ -115,7 +115,7 @@ module.exports = {
       // default to passed values, whenever value or uncertainty are changed
       // updateTruncatedValues will overwrite the displayed values
       multi_select: multi_select,
-      showExtraItems: false,
+      showExtraItems: Object.keys(this.$props.viewer.selected_data_items).length == 0,
       valueTrunc: this.value,
       uncertTrunc: this.uncertainty
     }
