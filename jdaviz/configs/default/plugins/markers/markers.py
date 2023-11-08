@@ -108,9 +108,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         if self.table is None or self.table._qtable is None:
             return
 
-        viewer_labels = [lyr.layer.label for lyr in viewer.layers]
+        viewer_id = viewer.reference if viewer.reference is not None else viewer.reference_id
+        viewer_loaded_data = [lyr.layer.label for lyr in viewer.layers]
         data_labels = self.table._qtable['data_label']
-        in_viewer = [data_label in viewer_labels for data_label in data_labels]
+        viewer_labels = self.table._qtable['viewer']
+        # note: could eventually have a user-provided switch to show markers in other viewers
+        # by just skipping this first viewer_label == viewer_id check
+        in_viewer = [viewer_label == viewer_id and data_label in viewer_loaded_data
+                     for viewer_label, data_label in zip(viewer_labels, data_labels)]
 
         viewer_mark = self._get_mark(viewer)
         if not np.any(in_viewer):
