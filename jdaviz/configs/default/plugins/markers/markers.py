@@ -145,8 +145,12 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 if not np.any(these):
                     continue
                 wcs = self.app.data_collection[data_label].coords
-                new_x[these], new_y[these] = wcs.world_to_pixel(orig_world_x[these]*u.deg,
-                                                                orig_world_y[these]*u.deg)
+                try:
+                    new_x[these], new_y[these] = wcs.world_to_pixel(orig_world_x[these]*u.deg,
+                                                                    orig_world_y[these]*u.deg)
+                except ValueError:
+                    new_x, new_y = [], []
+                    break
 
         viewer_mark.x, viewer_mark.y = new_x, new_y
 
