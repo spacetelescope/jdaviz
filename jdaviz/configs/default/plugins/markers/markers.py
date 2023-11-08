@@ -129,12 +129,10 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             if new_wcs is None:
                 new_wcs = viewer.state.reference_data.coords
             try:
-                new_x, new_y = new_wcs.world_to_pixel(orig_world_x*u.deg,
-                                                      orig_world_y*u.deg)
-            except ValueError:
-                # can temporarily fail with "ValueError: Number of world inputs (2) does not match
-                # expected (1)", in which case we'll temporarily clear markers and should resolve
-                # itself on the next message
+                new_x, new_y = new_wcs.world_to_pixel_values(orig_world_x*u.deg,
+                                                             orig_world_y*u.deg)
+            except Exception:
+                # fail gracefully
                 new_x, new_y = [], []
         else:
             # then pixel linked, so we need to convert based on the WCS of the individual data
@@ -146,9 +144,10 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                     continue
                 wcs = self.app.data_collection[data_label].coords
                 try:
-                    new_x[these], new_y[these] = wcs.world_to_pixel(orig_world_x[these]*u.deg,
-                                                                    orig_world_y[these]*u.deg)
-                except ValueError:
+                    new_x[these], new_y[these] = wcs.world_to_pixel_values(orig_world_x[these]*u.deg,  # noqa
+                                                                           orig_world_y[these]*u.deg)  # noqa
+                except Exception:
+                    # fail gracefully
                     new_x, new_y = [], []
                     break
 
