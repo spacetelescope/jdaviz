@@ -7,7 +7,7 @@ New Features
 - Plots in plugins now include basic zoom/pan tools for Plot Options,
   Imviz Line Profiles, and Imviz's aperture photometry. [#2498]
 
-- Histogram plot in Plot Options now includes tool to set stretch vmin and vmax. [#2513]
+- Histogram plot in Plot Options now includes tool to set stretch vmin and vmax. [#2513, #2556]
 
 - The Plot Options plugin now include a 'spline' stretch feature. [#2525]
 
