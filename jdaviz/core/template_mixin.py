@@ -3273,11 +3273,6 @@ class Plot(PluginSubcomponent):
 
     figure = Any().tag(sync=True, **widget_serialization)
     toolbar = Any().tag(sync=True, **widget_serialization)
-    tools_nested = [
-                    ['jdaviz:homezoom', 'jdaviz:prevzoom'],
-                    ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
-                    ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
-                ]
 
     def __init__(self, plugin, viewer_type='scatter', app=None, *args, **kwargs):
         super().__init__(plugin, 'Plot', *args, **kwargs)
@@ -3299,7 +3294,15 @@ class Plot(PluginSubcomponent):
         self.figure.title_style = {'font-size': '12px'}
         self.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 60, 'right': 10}
 
-        self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, [])
+        self.tools_nested = [
+                        ['jdaviz:homezoom', 'jdaviz:prevzoom'],
+                        ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
+                        ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
+                    ]
+        self._initialize_toolbar()
+
+    def _initialize_toolbar(self, default_tool_priority=[]):
+        self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, default_tool_priority)
 
     @property
     def app(self):
