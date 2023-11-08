@@ -20,7 +20,7 @@ from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, 
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import MultiMaskSubsetState
 
-from regions import CircleSkyRegion, CirclePixelRegion, PixCoord, EllipseSkyRegion, EllipsePixelRegion
+from regions import CircleSkyRegion, CirclePixelRegion, PixCoord, EllipseSkyRegion, EllipsePixelRegion, CircleAnnulusSkyRegion
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
@@ -91,13 +91,19 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_states = []
         self.spectral_display_unit = None
 
+        # if hasattr(self.app, '_link_type'):
+        #     self.display_sky_coordinates = (self.app._link_type == 'wcs')
+        # else:
+        #     self.display_sky_coordinates = False
+
     def _on_link_update(self, *args):
         # set to True only when link type is 'wcs'. if none or 'pixel', set
         # this to false and display pixel coordinates
+
         self.display_sky_coordinates = (self.app._link_type == 'wcs')
 
-        # only update if link changes and there are subsets.
-        if len(self.subset_states) > 0:
+        # only update if link changes and there is an active selection in plugin
+        if self.subset_selected != self.subset_select.default_text:
             self._get_subset_definition(*args)
 
     def _sync_selected_from_state(self, *args):
@@ -154,16 +160,18 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         Convert what app.get_subsets returns into something the UI of this plugin
         can display.
         """
+
+        self.hub.broadcast(SnackbarMessage(f'in _unpack_subsets_for_ui', color='error', sender=self))
+
         if self.multiselect:
             self.is_centerable = True
             return
-
+        
         subset_information = self.app.get_subsets(self.subset_selected,
                                                   simplify_spectral=False,
                                                   use_display_units=True,
                                                   include_sky_region=True)
-        # self.hub.broadcast(SnackbarMessage(f"subsets {subset_information}", color='warning',
-        #                                        sender=self))
+        
         _around_decimals = 6  # Avoid 30 degrees from coming back as 29.999999999999996
         if not subset_information:
             return
@@ -190,10 +198,15 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if isinstance(subset_state.roi, CircularROI):
                     if self.display_sky_coordinates:
                         sky_region = spec['sky_region']
-                        x = sky_region.center.ra.deg
-                        y = sky_region.center.dec.deg
-                        r = sky_region.radius.deg
-                        display_unit_label = '(degrees)'
+                        if sky_region is not None:
+                            x = sky_region.center.ra.deg
+                            y = sky_region.center.dec.deg
+                            r = sky_region.radius.deg
+                            display_unit_label = '(degrees)'
+                        else:
+                            x, y = subset_state.roi.center()
+                            r = subset_state.roi.radius
+                            display_unit_label = '(pixels)'
                     else:
                         x, y = subset_state.roi.center()
                         r = subset_state.roi.radius
@@ -242,8 +255,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         sky_region = spec['sky_region']
                         x = sky_region.center.ra.deg
                         y = sky_region.center.dec.deg
-                        inner_r =sky_region.inner_radius.deg
-                        outer_r =sky_region.outer_radius.deg
+                        inner_r = sky_region.inner_radius.to(u.deg).value
+                        outer_r = sky_region.outer_radius.to(u.deg).value
                         display_unit_label = '(degrees)'
                     else:
                         x, y = subset_state.roi.center()
@@ -257,6 +270,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                            "value": inner_r, "orig": inner_r},
                                           {"name": f"Outer radius {display_unit_label}", "att": "outer_radius",
                                            "value": outer_r, "orig": outer_r}]
+
 
                 subset_type = subset_state.roi.__class__.__name__
 
@@ -354,6 +368,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         pass
 
     def vue_update_subset(self, *args):
+
         if self.multiselect:
             self.hub.broadcast(SnackbarMessage("Cannot update subset "
                                                "when multiselect is active", color='warning',
@@ -372,12 +387,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
             # if the update was done in sky coordinates, we need to convert these
             # back to pixels before the subset is updated.
+            
             wcs = None
             if self.display_sky_coordinates:
-
+                
                 wcs = self.app._get_wcs_from_subset(sub_states)
+
                 if wcs is not None: 
+
                     if self.subset_types[index] == "TrueCircularROI":
+
                         xy = [x['value'] for x in sub if 'Center' in x['name']]
                         rad = [x['value'] for x in sub if 'Radius' in x['name']][0]
 
@@ -395,7 +414,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         new_orig_xy = (pixregion_orig_xy.center.x, pixregion_orig_xy.center.y)
                         new_orig_rad = pixregion_orig_xy.radius
 
-                    elif self.subset_types[index] == "TrueEllipticalROI":
+
+                    if self.subset_types[index] == "EllipticalROI":
+                        
                         xy = [x['value'] for x in sub if 'Center' in x['name']]
                         rads = [x['value'] for x in sub if 'Radius' in x['name']]
                         angle = [x['value'] for x in sub if 'Angle' in x['name']][0]
@@ -404,9 +425,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         orig_rads = [x['orig'] for x in sub if 'Radius' in x['name']]
                         orig_angle = [x['orig'] for x in sub if 'Angle' in x['name']][0]
 
-                        pixregion_xy = EllipsePixelRegion(SkyCoord(*xy*u.deg), 2*rads[0]*u.deg,
+                        pixregion_xy = EllipseSkyRegion(SkyCoord(*xy*u.deg), 2*rads[0]*u.deg,
                                                           2*rads[1]*u.deg, angle*u.deg).to_pixel(wcs)
-                        pixregion_orig_xy = EllipsePixelRegion(SkyCoord(*orig_xy*u.deg), 2*orig_rads[0]*u.deg,
+                        pixregion_orig_xy = EllipseSkyRegion(SkyCoord(*orig_xy*u.deg), 2*orig_rads[0]*u.deg,
                                                           2*orig_rads[1]*u.deg, orig_angle*u.deg).to_pixel(wcs)
 
                         new_xy = (pixregion_xy.center.x, pixregion_xy.center.y)
@@ -417,18 +438,27 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         new_orig_rads = (pixregion_orig_xy.height / 2., pixregion_orig_xy.width / 2.)
                         new_orig_angle = pixregion_orig_xy.angle.to(u.deg).value
 
-                    elif self.subset_types[index] == "CircularAnnulusROI":
+                    if self.subset_types[index] == "CircularAnnulusROI":
+
                         xy = [x['value'] for x in sub if 'Center' in x['name']]
-                        rads = [x['value'] for x in sub if 'Radius' in x['name']]
+                        rads = [x['value'] for x in sub if 'radius' in x['name']]
 
                         orig_xy = [x['orig'] for x in sub if 'Center' in x['name']]
-                        orig_rads = [x['orig'] for x in sub if 'Radius' in x['name']]
+                        orig_rads = [x['orig'] for x in sub if 'radius' in x['name']]
 
-                        pixregion_xy = CircleAnnulusPixelRegion(SkyCoord(*xy*u.deg), rads[0]*u.deg,
-                                                                rads[1]*u.deg).to_pixel(wcs)
+                        pixregion_xy = CircleAnnulusSkyRegion(SkyCoord(*xy*u.deg),
+                                                              inner_radius=rads[0]*u.deg,
+                                                              outer_radius=rads[1]*u.deg).to_pixel(wcs)
+                        pixregion_orig_xy = CircleAnnulusSkyRegion(SkyCoord(*orig_xy*u.deg),
+                                                                   inner_radius=orig_rads[0]*u.deg,
+                                                                   outer_radius=orig_rads[1]*u.deg).to_pixel(wcs)
 
-                        pixregion_orig_xy = CircleAnnulusPixelRegion(SkyCoord(*orig_xy*u.deg), orig_rads[0]*u.deg,
-                                                                orig_rads[1]*u.deg).to_pixel(wcs)
+                        new_xy = (pixregion_xy.center.x, pixregion_xy.center.y)
+                        new_rads = (pixregion_xy.inner_radius, pixregion_xy.outer_radius)
+
+                        new_orig_xy = (pixregion_orig_xy.center.x, pixregion_orig_xy.center.y)
+                        new_orig_rads = (pixregion_orig_xy.inner_radius, pixregion_orig_xy.outer_radius)
+
 
             for d_att in sub:
 
@@ -476,8 +506,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                             d_att["value"] = new_rads[0]
                             d_att["orig"] = new_orig_rads[0]
                         if d_att["att"] == 'outer_radius':
-                            d_att["value"] = new_rads[0]
-                            d_att["orig"] = new_orig_rads[0]
+                            d_att["value"] = new_rads[1]
+                            d_att["orig"] = new_orig_rads[1]
 
                 if d_att["att"] == 'theta':  # Humans use degrees but glue uses radians
                     d_val = np.radians(d_att["value"])
