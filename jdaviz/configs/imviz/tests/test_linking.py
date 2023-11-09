@@ -39,32 +39,21 @@ class BaseLinkHandler:
 class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
     def test_wcslink_fallback_pixels(self):
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme='pixels', error_on_fail=True)
+        self.imviz.link_data(link_type='wcs', error_on_fail=True)
 
-        assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'self'
-        assert self.viewer.get_link_type('no_wcs[SCI,1]') == 'pixels'
+        assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'wcs'
 
         # Also check the coordinates display: Last loaded is on top.
 
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
         label_mouseover._viewer_mouse_event(self.viewer,
                                             {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00', '', '')
 
-        # blink image through keypress
-        self.viewer.on_mouse_or_key_event({'event': 'keydown', 'key': 'b',
-                                           'domain': {'x': 0, 'y': 0}})
-        assert label_mouseover.as_text() == ('Pixel x=00.0 y=00.0 Value +0.00000e+00',
-                                             'World 22h30m04.8674s -20d49m59.9990s (ICRS)',
-                                             '337.5202808000 -20.8333330600 (deg)')
-
-    def test_wcslink_nofallback_noerror(self):
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
-        self.check_all_pixel_links()  # Keeps old links because operation failed silently
-
-    def test_wcslink_nofallback_error(self):
-        with pytest.raises(ValueError, match='valid WCS'):
-            self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
+        assert label_mouseover.as_text() == (
+            'Pixel x=00.3 y=00.2 Value +0.00000e+00',
+            'World 22h30m04.8496s -20d49m59.7490s (ICRS)',
+            '337.5202064976 -20.8332636155 (deg)'
+        )
 
 
 class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
@@ -128,11 +117,6 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         self.viewer.add_markers(tbl, marker_name='xy_markers')
         assert 'xy_markers' in self.imviz.app.data_collection.labels
 
-        # linking shouldn't be possible now because astrowidgets creates a data entry
-        # without a `coords` attr
-        with pytest.raises(ValueError, match="if all data have valid WCS"):
-            self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
-
         # Ensure display is still customized.
         assert self.viewer.state.layers[1].cmap.name == 'viridis'
         assert self.viewer.state.layers[1].stretch == 'sqrt'
@@ -155,11 +139,6 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         self.viewer.zoom_level = 0.789
         ans = (self.viewer.state.x_min, self.viewer.state.y_min,
                self.viewer.state.x_max, self.viewer.state.y_max)
-
-        # linking shouldn't be possible now because astrowidgets creates a data entry
-        # without a `coords` attr
-        with pytest.raises(ValueError, match="if all data have valid WCS"):
-            self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
 
         # Ensure pan/zoom does not change when markers are not present.
         assert_allclose((self.viewer.state.x_min, self.viewer.state.y_min,

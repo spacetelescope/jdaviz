@@ -309,8 +309,8 @@ class Application(VuetifyTemplate, HubListener):
 
         # Imviz linking
         self._wcs_only_label = "_WCS_ONLY"
+        self._link_type = None
         if self.config == "imviz":
-            self._link_type = None
             self._wcs_use_affine = None
 
         # Subscribe to messages indicating that a new viewer needs to be
