@@ -68,6 +68,14 @@
       </glue-state-sync-wrapper>
     </div>
 
+    <div v-if="image_color_mode_value === 'One color per layer'">
+      <v-row justify="end">
+        <j-tooltip tooltipcontent="Apply preset RGB colors, scaling, and opacities to visible layers">
+          <v-btn color="primary" text @click="apply_RGB_presets">Assign Presets</v-btn>
+        </j-tooltip>
+      </v-row>
+    </div>
+
     <!-- GENERAL:AXES -->
     <glue-state-sync-wrapper v-if="axes_visible_sync.in_subscribed_states && config !== 'imviz'" :sync="axes_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('axes_visible')">
       <v-switch
@@ -181,7 +189,7 @@
         </v-menu>
       </div>
     </glue-state-sync-wrapper>
-    
+
     <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_width_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_width')">
       <glue-float-field label="Line Width" :value.sync="line_width_value" />
     </glue-state-sync-wrapper>
@@ -520,7 +528,7 @@
     <!-- IMAGE:CONTOUR -->
     <j-plugin-section-header v-if="contour_visible_sync.in_subscribed_states">Contours</j-plugin-section-header>
     <div style="display: grid"> <!-- overlay container -->
-      <div style="grid-area: 1/1">        
+      <div style="grid-area: 1/1">
         <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_visible')">
           <span>
             <v-btn icon @click.stop="contour_visible_value = !contour_visible_value">
@@ -568,7 +576,7 @@
           </div>
           <div v-else>
             <glue-state-sync-wrapper :sync="contour_custom_levels_sync" :multiselect="multiselect" @unmix-state="unmix_state('contour_levels')">
-              <v-text-field 
+              <v-text-field
                 label="Contour Levels"
                 :value="contour_custom_levels_txt"
                 @focus="contour_custom_levels_focus"
@@ -580,7 +588,7 @@
       </div>
       <div v-if="contour_spinner"
            class="text-center"
-           style="grid-area: 1/1; 
+           style="grid-area: 1/1;
                   z-index:2;
                   margin-left: -24px;
                   margin-right: -24px;

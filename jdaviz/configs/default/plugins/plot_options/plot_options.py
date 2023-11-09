@@ -1,3 +1,4 @@
+import math
 import os
 import matplotlib
 import numpy as np
@@ -604,6 +605,50 @@ class PlotOptions(PluginTemplateMixin):
         attr_name = data.get('name')
         value = data.get('value')
         setattr(self, attr_name, value)
+
+    def vue_apply_RGB_presets(self, data):
+        # Preselected colors we want to use for 5 or less layers
+        preset_colors = [self.swatches_palette[0][0],
+                         "#0000FF",
+                         "#00FF00",
+                         self.swatches_palette[1][0],
+                         self.swatches_palette[4][1]]
+
+        # Switch back to this at the end
+        initial_layer = self.layer_selected
+
+        # Filter out subset layers
+        image_layers = [layer for layer in self.layer.choices if "Subset" not in layer]
+        visible_layers = []
+        for layer in image_layers:
+            self.layer_selected = layer
+            if self.image_visible:
+                visible_layers.append(layer)
+
+        # Set opacity to something that seems sensible
+        n_visible = len(visible_layers)
+        default_opacity = 1
+        if n_visible > 2:
+            default_opacity = 1 / math.log2(n_visible)
+        # Sample along a colormap if we have too many layers
+        if len(visible_layers) > 5:
+            cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
+            def _rgb_to_hex(rgb):
+                rgb = [int(x * 255) for x in rgb]
+                return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}{rgb[3]:02x}"
+
+        for i in range(n_visible):
+            self.layer_selected = visible_layers[i]
+            self.image_opacity_value = default_opacity
+            if len(visible_layers) < 6:
+                self.image_color_value = preset_colors[i]
+            else:
+                self.image_color_value = _rgb_to_hex(cmap(i))
+
+            self.stretch_function_value = "arcsinh"
+            self.stretch_preset_value = 99
+
+        self.layer_selected = initial_layer
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
