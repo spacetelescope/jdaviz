@@ -54,11 +54,13 @@
 
     <v-row justify="end">
       <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
-        <v-btn :disabled="label_invalid_msg.length > 0 || action_disabled"
+        <v-btn :disabled="label_invalid_msg.length > 0 || action_disabled || action_spinner"
           text
           color="accent"
           @click="$emit('click:action')"
-        >{{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
+        >
+          <v-icon>{{action_spinner ? 'mdi-progress-check' : 'mdi-check'}}</v-icon>
+        {{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
         </v-btn>
       </j-tooltip>
     </v-row>
@@ -75,6 +77,6 @@
 module.exports = {
   props: ['label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
           'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint',
-          'action_disabled', 'action_label', 'action_tooltip']
+          'action_disabled', 'action_spinner', 'action_label', 'action_tooltip']
 };
 </script>
