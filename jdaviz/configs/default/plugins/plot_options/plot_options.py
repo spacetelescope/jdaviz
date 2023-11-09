@@ -568,7 +568,7 @@ class PlotOptions(PluginTemplateMixin):
                        'image_contrast', 'image_bias',
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
-                       'stretch_curve_visible']
+                       'stretch_curve_visible', 'apply_RGB_presets']
 
         return PluginUserApi(self, expose)
 
@@ -606,7 +606,14 @@ class PlotOptions(PluginTemplateMixin):
         value = data.get('value')
         setattr(self, attr_name, value)
 
-    def vue_apply_RGB_presets(self, data):
+    def apply_RGB_presets(self):
+        """
+        Applies preset colors, opacities, and stretch settings to all visible layers
+        (in all viewers) when in Monochromatic mode.
+        """
+
+        if self.image_color_mode_value != "One color per layer":
+            raise ValueError("RGB presets can only be applied if color mode is Monochromatic.")
         # Preselected colors we want to use for 5 or less layers
         preset_colors = [self.swatches_palette[0][0],
                          "#0000FF",
@@ -649,6 +656,9 @@ class PlotOptions(PluginTemplateMixin):
             self.stretch_preset_value = 99
 
         self.layer_selected = initial_layer
+
+    def vue_apply_RGB_presets(self, data):
+        self.apply_RGB_presets()
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
