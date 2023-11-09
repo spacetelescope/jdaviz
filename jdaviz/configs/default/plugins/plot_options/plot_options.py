@@ -640,6 +640,7 @@ class PlotOptions(PluginTemplateMixin):
         # Sample along a colormap if we have too many layers
         if len(visible_layers) > 5:
             cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
+
             def _rgb_to_hex(rgb):
                 rgb = [int(x * 255) for x in rgb]
                 return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}{rgb[3]:02x}"
