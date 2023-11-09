@@ -107,6 +107,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def _recompute_mark_positions(self, viewer, new_wcs=None):
         if self.table is None or self.table._qtable is None:
             return
+        if 'world' not in self.table.headers_avail:
+            return
 
         viewer_id = viewer.reference if viewer.reference is not None else viewer.reference_id
         viewer_loaded_data = [lyr.layer.label for lyr in viewer.layers]
