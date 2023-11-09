@@ -53,7 +53,7 @@
       :hint="multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
-    <div v-if="image_visible_sync.in_subscribed_states && image_visible_value">
+    <div v-if="image_color_mode_sync.in_subscribed_states">
       <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color_mode')">
         <v-select
           attach
@@ -69,14 +69,14 @@
     </div>
 
     <!-- GENERAL:AXES -->
-    <glue-state-sync-wrapper v-if="config !== 'imviz'":sync="axes_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('axes_visible')">
+    <glue-state-sync-wrapper v-if="axes_visible_sync.in_subscribed_states && config !== 'imviz'" :sync="axes_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('axes_visible')">
       <v-switch
         v-model="axes_visible_value"
         label="Show Axes"
         />
     </glue-state-sync-wrapper>
 
-    <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
+    <glue-state-sync-wrapper v-if="uncertainty_visible_sync.in_subscribed_states" :sync="uncertainty_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('uncertainty_visible')">
       <v-switch
         v-model="uncertainty_visible_value"
         label="Plot uncertainties"
