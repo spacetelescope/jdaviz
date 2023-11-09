@@ -122,8 +122,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             viewer_mark.x, viewer_mark.y = [], []
             return
 
-        orig_world_x = self.table._qtable['world'][:, 0][in_viewer]
-        orig_world_y = self.table._qtable['world'][:, 1][in_viewer]
+        orig_world_x = np.asarray(self.table._qtable['world'][:, 0][in_viewer])
+        orig_world_y = np.asarray(self.table._qtable['world'][:, 1][in_viewer])
 
         if self.app._link_type == 'wcs':
             if new_wcs is None:
@@ -134,9 +134,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             except Exception:
                 # fail gracefully
                 new_x, new_y = [], []
-        else:
-            # then pixel linked, so we need to convert based on the WCS of the individual data
-            # layers on which each mark was first created
+        elif self.app._link_type == 'pixels':
+            # we need to convert based on the WCS of the individual data layers on which each mark
+            # was first created
             new_x, new_y = np.zeros_like(orig_world_x), np.zeros_like(orig_world_y)
             for data_label in np.unique(data_labels[in_viewer]):
                 these = data_labels[in_viewer] == data_label
@@ -150,6 +150,19 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                     # fail gracefully
                     new_x, new_y = [], []
                     break
+        else:
+            raise NotImplementedError(f"link_type {self.app._link_type} not implemented")
+
+        # check for entries that do not correspond to a layer or only have pixel coordinates
+        pixel_only_inds = data_labels == ''
+        if np.any(pixel_only_inds):
+            # TODO: should we rescale these since pixel coordinates when linked by WCS are always
+            # on the range 0-1 because of the orientation layer?  Or hide the pixel option in the
+            # cycler when WCS-linked?
+            pixel_x = np.asarray(self.table._qtable['pixel'][:, 0])
+            pixel_y = np.asarray(self.table._qtable['pixel'][:, 1])
+            new_x = np.append(new_x, pixel_x[pixel_only_inds])
+            new_y = np.append(new_y, pixel_y[pixel_only_inds])
 
         viewer_mark.x, viewer_mark.y = new_x, new_y
 
