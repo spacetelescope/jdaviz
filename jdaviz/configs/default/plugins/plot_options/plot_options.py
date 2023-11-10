@@ -629,7 +629,7 @@ class PlotOptions(PluginTemplateMixin):
         visible_layers = []
         for layer in image_layers:
             self.layer_selected = layer
-            if self.image_visible:
+            if self.image_visible.value:
                 visible_layers.append(layer)
 
         # Set opacity to something that seems sensible
@@ -638,7 +638,7 @@ class PlotOptions(PluginTemplateMixin):
         if n_visible > 2:
             default_opacity = 1 / math.log2(n_visible)
         # Sample along a colormap if we have too many layers
-        if len(visible_layers) > 5:
+        if n_visible > 5:
             cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
 
             def _rgb_to_hex(rgb):
@@ -648,7 +648,7 @@ class PlotOptions(PluginTemplateMixin):
         for i in range(n_visible):
             self.layer_selected = visible_layers[i]
             self.image_opacity_value = default_opacity
-            if len(visible_layers) < 6:
+            if n_visible < 6:
                 self.image_color_value = preset_colors[i]
             else:
                 self.image_color_value = _rgb_to_hex(cmap(i))

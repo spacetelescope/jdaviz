@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.nddata import NDData
+import matplotlib
 from numpy.testing import assert_allclose
 from photutils.datasets import make_4gaussians_image
 
@@ -250,3 +251,56 @@ def test_update_knots_mismatched_length():
     stretch = SplineStretch()
     with pytest.raises(ValueError):
         stretch.update_knots(x=[0, 0.1, 0.2], y=[0, 0.05])
+
+
+def test_apply_presets(imviz_helper):
+    arr = np.arange(36).reshape(6, 6)
+    po = imviz_helper.plugins['Plot Options']
+
+    preset_colors = [po._obj.swatches_palette[0][0], "#0000FF", "#00FF00",
+                     po._obj.swatches_palette[1][0],]
+
+    # Test applying presets with < 6 layers
+
+    for i in range(4):
+        imviz_helper.load_data(arr, data_label=f"array_{i}")
+
+    po.image_color_mode = "Monochromatic"
+    po.apply_RGB_presets()
+
+    for i in range(4):
+        po.layer = f"array_{i}"
+        assert po.stretch_function.value == "arcsinh"
+        assert po.stretch_preset.value == 99
+        assert po.image_color.value == preset_colors[i]
+
+    # Test applying presets with > 5 layers
+
+    for i in range(4):
+        imviz_helper.load_data(arr, data_label=f"array_{i+4}")
+
+    po.layer = "array_5"
+    po.image_visible = False
+    po.layer = "array_3"
+
+    po.apply_RGB_presets()
+
+    assert po.layer.selected == "array_3"
+
+    colorbar_colors = matplotlib.colormaps['gist_rainbow'].resampled(7)
+    color_ind = 0
+
+    def _rgb_to_hex(rgb):
+        rgb = [int(x * 255) for x in rgb]
+        return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}{rgb[3]:02x}"
+
+    for i in range(8):
+        po.layer = f"array_{i}"
+        if i == 5:
+            # Make sure this one didn't change
+            assert po.stretch_function.value == "linear"
+        else:
+            assert po.stretch_function.value == "arcsinh"
+            assert po.stretch_preset.value == 99
+            assert po.image_color.value == _rgb_to_hex(colorbar_colors(color_ind))
+            color_ind += 1
