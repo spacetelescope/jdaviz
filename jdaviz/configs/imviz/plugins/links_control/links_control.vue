@@ -7,32 +7,58 @@
 
     <div style="display: grid"> <!-- overlay container -->
       <div style="grid-area: 1/1">
-        <div v-if="!wcs_linking_available">
-          <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
-              Please add at least one data with valid WCS to link by WCS
-          </v-alert>
+        <v-alert v-if="!wcs_linking_available" type='warning' style="margin-left: -12px; margin-right: -12px">
+            Please add at least one data with valid WCS to link by WCS
+        </v-alert>
+
+        <div v-if="need_clear_astrowidget_markers"
+              class="text-center"
+              style="grid-area: 1/1; 
+                     z-index:2;
+                     margin-left: -24px;
+                     margin-right: -24px;
+                     padding-top: 60px;
+                     background-color: rgb(0 0 0 / 80%)">
+           <v-card color="transparent" elevation=0 >
+             <v-card-text width="100%">
+               <div class="white--text">
+                 Astrowidget markers must be cleared before re-linking
+               </div>
+             </v-card-text>
+
+             <v-card-actions>
+               <v-row justify="end">
+                 <v-btn tile small color="accent" class="mr-4" @click="reset_markers" >Clear Markers</v-btn>
+               </v-row>
+             </v-card-actions>
+           </v-card>
         </div>
+
+        <v-alert v-if="plugin_markers_exist" type='warning' style="margin-left: -12px; margin-right: -12px">
+          Marker positions may not be pixel-perfect when changing link options.
+        </v-alert>
+
         <v-row>
-        <v-radio-group
-          label="Link type"
-          hint="Type of linking to be done."
-          v-model="link_type_selected"
-          @change="delete_subsets($event)"
-          :disabled="!wcs_linking_available"
-          persistent-hint
-          row>
-          <v-radio
-            v-for="item in link_type_items"
-            :key="item.label"
-            :label="item.label"
-            :value="item.label"
-          ></v-radio>
-        </v-radio-group>
-        <div v-if="need_clear_subsets">
-          <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
-              Existing subsets will be deleted on changing link type.
-          </v-alert>
-        </div>
+          <v-radio-group
+            label="Link type"
+            hint="Type of linking to be done."
+            v-model="link_type_selected"
+            @change="delete_subsets($event)"
+            :disabled="!wcs_linking_available"
+            persistent-hint
+            row>
+            <v-radio
+              v-for="item in link_type_items"
+              :key="item.label"
+              :label="item.label"
+              :value="item.label"
+            ></v-radio>
+          </v-radio-group>
+          <div v-if="need_clear_subsets">
+            <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
+                Existing subsets will be deleted on changing link type.
+            </v-alert>
+          </div>
         </v-row>
 
         <v-row>
@@ -135,35 +161,8 @@
                   <v-btn color="primary" color="accent" text :disabled="rotation_angle===''" @click="create_new_orientation_from_data">Add orientation</v-btn>
                 </v-row>
         </div>
-
-      </div>
-      <div v-if="need_clear_astrowidget_markers"
-            class="text-center"
-            style="grid-area: 1/1; 
-                   z-index:2;
-                   margin-left: -24px;
-                   margin-right: -24px;
-                   padding-top: 60px;
-                   background-color: rgb(0 0 0 / 80%)">
-         <v-card color="transparent" elevation=0 >
-           <v-card-text width="100%">
-             <div class="white--text">
-               Astrowidget markers must be cleared before re-linking
-             </div>
-           </v-card-text>
-
-           <v-card-actions>
-             <v-row justify="end">
-               <v-btn tile small color="accent" class="mr-4" @click="reset_markers" >Clear Markers</v-btn>
-             </v-row>
-           </v-card-actions>
-         </v-card>
       </div>
 
-      <v-alert v-if="plugin_markers_exist" type='warning' style="margin-left: -12px; margin-right: -12px">
-        Marker positions may not be pixel-perfect when changing link options.
-      </v-alert>
-  
       <div v-if="linking_in_progress"
            class="text-center"
            style="grid-area: 1/1; 
