@@ -612,7 +612,8 @@ class PlotOptions(PluginTemplateMixin):
         (in all viewers) when in Monochromatic mode.
         """
 
-        if self.image_color_mode_value != "One color per layer":
+        if (self.image_color_mode_value != "One color per layer" or
+                self.image_color_mode_sync['mixed']):
             raise ValueError("RGB presets can only be applied if color mode is Monochromatic.")
         # Preselected colors we want to use for 5 or less layers
         preset_colors = [self.swatches_palette[0][0],

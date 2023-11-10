@@ -68,7 +68,7 @@
       </glue-state-sync-wrapper>
     </div>
 
-    <div v-if="image_color_mode_value === 'One color per layer'">
+    <div v-if="image_color_mode_value === 'One color per layer' && !image_color_mode_sync['mixed']">
       <v-row justify="end">
         <j-tooltip tooltipcontent="Apply preset RGB colors, scaling, and opacities to visible layers">
           <v-btn color="accent" text @click="apply_RGB_presets">Assign Presets</v-btn>
