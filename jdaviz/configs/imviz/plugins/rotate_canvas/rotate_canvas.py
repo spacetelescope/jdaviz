@@ -24,6 +24,7 @@ class RotateCanvas(PluginTemplateMixin, ViewerSelectMixin):
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
       Viewer to show orientation/compass information.
     * ``angle``:

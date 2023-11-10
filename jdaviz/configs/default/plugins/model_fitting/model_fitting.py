@@ -52,6 +52,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to fit the model.
     * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):

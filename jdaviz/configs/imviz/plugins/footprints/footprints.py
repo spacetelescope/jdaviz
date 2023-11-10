@@ -30,6 +30,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``overlay`` (:class:`~jdaviz.core.template_mixin.EditableSelectPluginComponent`): the
         currently active overlay (all other traitlets control this overlay instance)
     * :meth:`rename_overlay`

@@ -24,6 +24,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     """
     template_file = __file__, "catalogs.vue"
     catalog_items = List([]).tag(sync=True)
