@@ -85,8 +85,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
         # account for image rotation due to a change in reference data
         self.hub.subscribe(self, ChangeRefDataMessage,
-                           handler=lambda msg: self._recompute_mark_positions(msg.viewer,
-                                                                              new_wcs=msg.data.coords))  # noqa
+                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
 
         # enable/disable mark based on whether parent data entry is in viewer
         self.hub.subscribe(self, AddDataMessage,
@@ -105,7 +104,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
-    def _recompute_mark_positions(self, viewer, new_wcs=None):
+    def _recompute_mark_positions(self, viewer):
         if self.table is None or self.table._qtable is None:
             return
         if 'world' not in self.table.headers_avail:
@@ -129,8 +128,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         orig_world_y = np.asarray(self.table._qtable['world'][:, 1][in_viewer])
 
         if self.app._link_type == 'wcs':
-            if new_wcs is None:
-                new_wcs = viewer.state.reference_data.coords
+            # convert from the sky coordinates in the table to pixels via the WCS of the current
+            # reference data
+            new_wcs = viewer.state.reference_data.coords
             try:
                 new_x, new_y = new_wcs.world_to_pixel_values(orig_world_x*u.deg,
                                                              orig_world_y*u.deg)

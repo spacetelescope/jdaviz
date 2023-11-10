@@ -25,7 +25,7 @@ class TestLinksControl(BaseImviz_WCS_WCS):
             lc_plugin.link_type.selected = 'WCS'
         assert lc_plugin.link_type.selected == 'Pixels'
 
-        lc_plugin.vue_reset_markers()
+        lc_plugin.vue_reset_astrowidget_markers()
 
         assert lc_plugin.need_clear_astrowidget_markers is False
         lc_plugin.link_type.selected = 'WCS'
