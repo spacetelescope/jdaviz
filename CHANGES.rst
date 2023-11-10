@@ -17,6 +17,8 @@ New Features
 
 - Reorder viewer and layer settings in Plot Options. [#2543]
 
+- Plugin "action" buttons disable and show icon indicating that an action is in progress. [#2560]
+
 Cubeviz
 ^^^^^^^
 
