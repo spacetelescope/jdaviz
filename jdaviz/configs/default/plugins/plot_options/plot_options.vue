@@ -71,7 +71,7 @@
     <div v-if="image_color_mode_value === 'One color per layer'">
       <v-row justify="end">
         <j-tooltip tooltipcontent="Apply preset RGB colors, scaling, and opacities to visible layers">
-          <v-btn color="primary" text @click="apply_RGB_presets">Assign Presets</v-btn>
+          <v-btn color="accent" text @click="apply_RGB_presets">Assign Presets</v-btn>
         </j-tooltip>
       </v-row>
     </div>
