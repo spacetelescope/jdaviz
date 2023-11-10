@@ -59,8 +59,16 @@
           color="accent"
           @click="$emit('click:action')"
         >
-          <v-icon>{{action_spinner ? 'mdi-progress-check' : 'mdi-check'}}</v-icon>
-        {{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
+          <v-progress-circular
+            v-if="action_spinner"
+            indeterminate
+            color="primary"
+            size="20"
+            width="3"
+            style="margin-right: 4px"
+          ></v-progress-circular>
+          <span v-else style="width: 24px"></span>
+          {{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
         </v-btn>
       </j-tooltip>
     </v-row>
