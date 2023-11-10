@@ -3,7 +3,8 @@ from astropy import units as u
 from traitlets import Bool, observe
 
 from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
-                                AddDataMessage, RemoveDataMessage)
+                                AddDataMessage, RemoveDataMessage,
+                                MarkersPluginUpdate)
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -226,6 +227,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             x, y = row_info['axes_x'], row_info['axes_y']
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
+            self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
+
     def clear_table(self):
         """
         Clear all entries/markers from the current table.
@@ -233,3 +236,5 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         super().clear_table()
         for mark in self.marks.values():
             mark.clear()
+
+        self.hub.broadcast(MarkersPluginUpdate(table_length=0, sender=self))

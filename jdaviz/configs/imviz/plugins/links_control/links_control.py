@@ -16,7 +16,8 @@ from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
 from jdaviz.core.events import (
-    LinkUpdatedMessage, ExitBatchLoadMessage, MarkersChangedMessage, ChangeRefDataMessage,
+    LinkUpdatedMessage, ExitBatchLoadMessage, ChangeRefDataMessage,
+    AstrowidgetMarkersChangedMessage, MarkersPluginUpdate,
     SnackbarMessage
 )
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -61,7 +62,8 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     wcs_use_affine = Bool(True).tag(sync=True)
     wcs_linking_available = Bool(False).tag(sync=True)
 
-    need_clear_markers = Bool(False).tag(sync=True)
+    need_clear_astrowidget_markers = Bool(False).tag(sync=True)
+    plugin_markers_exist = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
     need_clear_subsets = Bool(False).tag(sync=True)
 
@@ -114,8 +116,11 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         self.hub.subscribe(self, ExitBatchLoadMessage,
                            handler=self._on_new_app_data)
 
-        self.hub.subscribe(self, MarkersChangedMessage,
-                           handler=self._on_markers_changed)
+        self.hub.subscribe(self, AstrowidgetMarkersChangedMessage,
+                           handler=self._on_astrowidget_markers_changed)
+
+        self.hub.subscribe(self, MarkersPluginUpdate,
+                           handler=self._on_markers_plugin_update)
 
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
@@ -175,8 +180,11 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
         self._link_image_data()
         self._check_if_data_with_wcs_exists()
 
-    def _on_markers_changed(self, msg):
-        self.need_clear_markers = msg.has_markers
+    def _on_astrowidget_markers_changed(self, msg):
+        self.need_clear_astrowidget_markers = msg.has_markers
+
+    def _on_markers_plugin_update(self, msg):
+        self.plugin_markers_exist = msg.table_length > 0
 
     @observe('link_type_selected', 'wcs_use_fallback', 'wcs_use_affine')
     def _update_link(self, msg={}):
@@ -202,7 +210,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
 
         self.linking_in_progress = True
 
-        if self.need_clear_markers:
+        if self.need_clear_astrowidget_markers:
             setattr(self, msg.get('name'), msg.get('old'))
             self.linking_in_progress = False
             raise ValueError(f"cannot change linking with markers present (value reverted to "
@@ -246,7 +254,7 @@ class LinksControl(PluginTemplateMixin, ViewerSelectMixin):
     def vue_delete_subsets(self, *args):
         self.delete_subsets()
 
-    def vue_reset_markers(self, *args):
+    def vue_reset_astrowidget_markers(self, *args):
         for viewer in self.app._viewer_store.values():
             viewer.reset_markers()
 

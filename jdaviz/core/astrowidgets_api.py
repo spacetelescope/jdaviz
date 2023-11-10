@@ -10,7 +10,7 @@ from glue.config import colormaps
 from glue.core import Data
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
-from jdaviz.core.events import SnackbarMessage, MarkersChangedMessage
+from jdaviz.core.events import SnackbarMessage, AstrowidgetMarkersChangedMessage
 from jdaviz.core.helpers import data_has_valid_wcs
 
 __all__ = ['AstrowidgetsImageViewerMixin']
@@ -500,7 +500,7 @@ class AstrowidgetsImageViewerMixin:
 
             self._marktags.add(marker_name)
 
-            self.session.hub.broadcast(MarkersChangedMessage(True, sender=self))
+            self.session.hub.broadcast(AstrowidgetMarkersChangedMessage(True, sender=self))
 
     def remove_markers(self, marker_name=None):
         """Remove some but not all of the markers by name used when
@@ -535,7 +535,8 @@ class AstrowidgetsImageViewerMixin:
         self.session.application.data_collection.remove(data)
         self._marktags.remove(marker_name)
 
-        self.session.hub.broadcast(MarkersChangedMessage(len(self._marktags) > 0, sender=self))
+        self.session.hub.broadcast(AstrowidgetMarkersChangedMessage(len(self._marktags) > 0,
+                                                                    sender=self))
 
     def reset_markers(self):
         """Delete all markers."""

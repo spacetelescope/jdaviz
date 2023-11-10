@@ -7,7 +7,8 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'SliceSelectSliceMessage',
            'SliceToolStateMessage',
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
-           'MarkersChangedMessage', 'CanvasRotationChangedMessage',
+           'AstrowidgetMarkersChangedMessage', 'MarkersPluginUpdate',
+           'CanvasRotationChangedMessage',
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage']
 
 
@@ -352,8 +353,8 @@ class ExitBatchLoadMessage(Message):
         super().__init__(*args, **kwargs)
 
 
-class MarkersChangedMessage(Message):
-    '''Message generated when markers are added/removed from an image viewer'''
+class AstrowidgetMarkersChangedMessage(Message):
+    '''Message generated when markers are added/removed from an image viewer via astrowidgets API'''
     def __init__(self, has_markers, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._has_markers = has_markers
@@ -361,6 +362,13 @@ class MarkersChangedMessage(Message):
     @property
     def has_markers(self):
         return self._has_markers
+
+
+class MarkersPluginUpdate(Message):
+    '''Message when the length of the markers plugin table changes'''
+    def __init__(self, table_length, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.table_length = table_length
 
 
 class CanvasRotationChangedMessage(Message):

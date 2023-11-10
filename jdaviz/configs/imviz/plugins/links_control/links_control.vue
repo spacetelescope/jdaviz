@@ -137,7 +137,7 @@
         </div>
 
       </div>
-      <div v-if="need_clear_markers"
+      <div v-if="need_clear_astrowidget_markers"
             class="text-center"
             style="grid-area: 1/1; 
                    z-index:2;
@@ -148,7 +148,7 @@
          <v-card color="transparent" elevation=0 >
            <v-card-text width="100%">
              <div class="white--text">
-               Markers must be cleared before re-linking
+               Astrowidget markers must be cleared before re-linking
              </div>
            </v-card-text>
 
@@ -158,7 +158,12 @@
              </v-row>
            </v-card-actions>
          </v-card>
-      </div>      
+      </div>
+
+      <v-alert v-if="plugin_markers_exist" type='warning' style="margin-left: -12px; margin-right: -12px">
+        Marker positions may not be pixel-perfect when changing link options.
+      </v-alert>
+  
       <div v-if="linking_in_progress"
            class="text-center"
            style="grid-area: 1/1; 
