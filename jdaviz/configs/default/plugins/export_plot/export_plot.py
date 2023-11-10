@@ -7,7 +7,7 @@ from traitlets import Any, Bool, Unicode
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, with_spinner
 from jdaviz.core.user_api import PluginUserApi
 
 try:
@@ -146,6 +146,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         """
         self.save_figure(filetype=filetype)
 
+    @with_spinner('movie_recording')
     def _save_movie(self, i_start, i_end, fps, filename, rm_temp_files):
         # NOTE: All the stuff here has to be in the same thread but
         #       separate from main app thread to work.
@@ -161,8 +162,6 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         i_step = 1  # Need n_frames check if we allow tweaking
 
         try:
-            self.movie_recording = True
-
             while i <= i_end:
                 if self.movie_interrupt:
                     break
@@ -190,7 +189,6 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
             if video:
                 video.release()
             slice_plg._on_slider_updated({'new': orig_slice})
-            self.movie_recording = False
 
         if rm_temp_files or self.movie_interrupt:
             for cur_pngfile in temp_png_files:
