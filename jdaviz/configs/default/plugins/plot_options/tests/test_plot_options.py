@@ -302,5 +302,6 @@ def test_apply_presets(imviz_helper):
         else:
             assert po.stretch_function.value == "arcsinh"
             assert po.stretch_preset.value == 99
-            assert po.image_color.value == _rgb_to_hex(colorbar_colors(color_ind))
+            assert po.image_color.value == matplotlib.colors.to_hex(colorbar_colors(color_ind),
+                                                                    keep_alpha=True)
             color_ind += 1

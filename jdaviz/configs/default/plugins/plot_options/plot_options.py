@@ -641,17 +641,13 @@ class PlotOptions(PluginTemplateMixin):
         if n_visible > 5:
             cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
 
-            def _rgb_to_hex(rgb):
-                rgb = [int(x * 255) for x in rgb]
-                return f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}{rgb[3]:02x}"
-
         for i in range(n_visible):
             self.layer_selected = visible_layers[i]
             self.image_opacity_value = default_opacity
             if n_visible < 6:
                 self.image_color_value = preset_colors[i]
             else:
-                self.image_color_value = _rgb_to_hex(cmap(i))
+                self.image_color_value = matplotlib.colors.to_hex(cmap(i), keep_alpha=True)
 
             self.stretch_function_value = "arcsinh"
             self.stretch_preset_value = 99
