@@ -179,6 +179,7 @@
                 :add_to_viewer_selected.sync="trace_add_to_viewer_selected"
                 action_label="Create"
                 action_tooltip="Create Trace"
+                :action_spinner="trace_spinner"
                 @click:action="create_trace"
               ></plugin-add-results>
             </v-expansion-panel-content>
@@ -293,6 +294,7 @@
                 :add_to_viewer_selected.sync="bg_add_to_viewer_selected"
                 action_label="Export"
                 action_tooltip="Create Background Image"
+                :action_spinner="bg_img_spinner"
                 @click:action="create_bg_img"
               ></plugin-add-results>
             </v-expansion-panel-content>
@@ -415,6 +417,7 @@
         action_label="Extract"
         action_tooltip="Extract 1D Spectrum"
         :action_disabled="ext_specreduce_err.length > 0"
+        :action_spinner="spinner"
         @click:action="extract_spectrum"
       ></plugin-add-results>
     </div>

@@ -44,7 +44,7 @@ from jdaviz.utils import get_subset_type
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
-           'skip_if_no_updates_since_last_active',
+           'skip_if_no_updates_since_last_active', 'with_spinner',
            'ViewerPropertiesMixin',
            'BasePluginComponent',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
@@ -266,6 +266,28 @@ def skip_if_no_updates_since_last_active(skip_if_not_active=True):
     return decorator
 
 
+def with_spinner(spinner_traitlet='spinner'):
+    """
+    decorator on a plugin method to set a traitlet to True at the beginning
+    and False either on failure or successful completion.  This traitlet can
+    then be used in the UI to disable elements or display a spinner during
+    operation.  Each plugin gets a 'spinner' traitlet by default, but some plugins
+    may want different controls for different sections/actions within the plugin.
+    """
+    def decorator(meth):
+        def wrapper(self, *args, **kwargs):
+            setattr(self, spinner_traitlet, True)
+            try:
+                ret_ = meth(self, *args, **kwargs)
+            except Exception:
+                setattr(self, spinner_traitlet, False)
+                raise
+            setattr(self, spinner_traitlet, False)
+            return ret_
+        return wrapper
+    return decorator
+
+
 class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
@@ -276,6 +298,7 @@ class PluginTemplateMixin(TemplateMixin):
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
     is_active = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to plugin_opened and keep_active
+    spinner = Bool(False).tag(sync=True)  # noqa use along-side @with_spinner() and <plugin-add-results :action_spinner="spinner">
 
     def __init__(self, **kwargs):
         self._viewer_callbacks = {}

@@ -45,6 +45,7 @@
       :add_to_viewer_selected.sync="add_to_viewer_selected"
       action_label="Collapse"
       action_tooltip="Collapse data"
+      :action_spinner="spinner"
       @click:action="collapse"
     ></plugin-add-results>
 

@@ -19,7 +19,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         NonFiniteUncertaintyMismatchMixin,
                                         AutoTextField,
                                         AddResultsMixin,
-                                        TableMixin)
+                                        TableMixin,
+                                        with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
@@ -767,6 +768,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # only want spectral viewers in the options
             self.add_results.viewer.filters = ['is_spectrum_viewer']
 
+    @with_spinner()
     def calculate_fit(self, add_data=True):
         """
         Calculate the fit.

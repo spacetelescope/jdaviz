@@ -10,7 +10,8 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
-                                        SelectPluginComponent, AddResultsMixin)
+                                        SelectPluginComponent, AddResultsMixin,
+                                        with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['GaussianSmooth']
@@ -176,6 +177,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         return results
 
+    @with_spinner()
     def spectral_smooth(self):
         """
         Smooth the input spectrum along the spectral axis.  To add the resulting spectrum into
@@ -199,6 +201,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         return spec_smoothed
 
+    @with_spinner('spinner')
     def spatial_smooth(self):
         """
         Use astropy convolution machinery to smooth the spatial dimensions of

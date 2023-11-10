@@ -13,7 +13,8 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
-                                        AddResultsMixin)
+                                        AddResultsMixin,
+                                        with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['MomentMap']
@@ -91,6 +92,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         label_comps += [f"moment {self.n_moment}"]
         self.results_label_default = " ".join(label_comps)
 
+    @with_spinner()
     def calculate_moment(self, add_data=True):
         """
         Calculate the moment map
