@@ -89,7 +89,7 @@ class PluginUserApi(UserApiWrapper):
       help(plugin_object.show)
     """
     def __init__(self, plugin, expose=[], readonly=[]):
-        expose = list(set(list(expose) + ['open_in_tray', 'show']))
+        expose = list(set(list(expose) + ['open_in_tray', 'close_in_tray', 'show']))
         if plugin.uses_active_status:
             expose += ['keep_active', 'as_active']
         super().__init__(plugin, expose, readonly)
