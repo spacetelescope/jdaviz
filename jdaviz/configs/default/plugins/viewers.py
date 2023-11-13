@@ -34,6 +34,7 @@ class JdavizViewerMixin:
 
     @property
     def user_api(self):
+        # default exposed user APIs.  Can override this method in any particular viewer.
         if isinstance(self, BqplotImageView):
             if hasattr(self, 'zoom_level'):
                 expose = ['zoom', 'zoom_level']
@@ -41,6 +42,8 @@ class JdavizViewerMixin:
                 # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
                 # but also shouldn't expose set_lims because of equal aspect ratio concerns
                 expose = []
+        elif isinstance(self, TableViewer):
+            expose = []
         else:
             expose = ['set_lims']
         return ViewerUserApi(self, expose=expose)
