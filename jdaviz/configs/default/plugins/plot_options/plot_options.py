@@ -641,15 +641,12 @@ class PlotOptions(PluginTemplateMixin):
         # Sample along a colormap if we have too many layers
         if n_visible > len(preset_colors):
             cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
+            preset_colors = [matplotlib.colors.to_hex(cmap(i), keep_alpha=True) for i in range(n_visible)]
 
         for i in range(n_visible):
             self.layer_selected = visible_layers[i]
             self.image_opacity_value = default_opacity
-            if n_visible <= len(preset_colors):
-                self.image_color_value = preset_colors[i]
-            else:
-                self.image_color_value = matplotlib.colors.to_hex(cmap(i), keep_alpha=True)
-
+            self.image_color_value = preset_colors[i]
             self.stretch_function_value = "arcsinh"
             self.stretch_preset_value = 99
 
