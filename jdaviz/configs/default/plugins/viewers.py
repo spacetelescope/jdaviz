@@ -49,6 +49,24 @@ class JdavizViewerMixin:
         return ViewerUserApi(self, expose=expose)
 
     def set_lims(self, x_min=None, x_max=None, y_min=None, y_max=None):
+        """
+        Set viewer axes limits.
+
+        Parameters
+        ----------
+        x_min : float or None, optional
+            lower-limit of x-axis (in current axes units)
+        x_max: float or None, optional
+            upper-limit of x-axis (in current axes units)
+        y_min : float or None, optional
+            lower-limit of y-axis (in current axes units)
+        y_max: float or None, optional
+            upper-limit of y-axis (in current axes units)
+        """
+        for val in (x_min, x_max, y_min, y_max):
+            if val is not None and not isinstance(val, (float, int)):
+                raise TypeError('all arguments must be None, int, or float')
+
         with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
             if x_min is not None:
                 self.state.x_min = x_min
