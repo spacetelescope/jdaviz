@@ -4,7 +4,6 @@ from glue.core.subset_group import GroupedSubset
 from bqplot import Lines
 from glue_jupyter.bqplot.image import BqplotImageView
 
-from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
 from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
@@ -17,7 +16,7 @@ __all__ = ['CubevizImageView', 'CubevizProfileView']
 
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
-class CubevizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewerMixin):
+class CubevizImageView(JdavizViewerMixin, BqplotImageView):
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
     # NOTE: zoom and pan are merged here for space consideration and to avoid
     # overflow to second row when opening the tray
