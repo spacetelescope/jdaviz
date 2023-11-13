@@ -2899,16 +2899,23 @@ class PlotOptionsSyncState(BasePluginComponent):
                 if glue_name in ['contour_visible', 'bitmap_visible']:
                     state.add_callback('visible', self._on_glue_layer_visible_changed)
 
-                if self.sync.get('choices') is None and \
-                        (hasattr(getattr(type(state), glue_name), 'get_display_func')
-                         or glue_name == 'cmap'):
-                    # then we can access and populate the choices.  We are assuming here
-                    # that each state-instance with this same name will have the same
-                    # choices and that those will not change.  If we ever hookup options
-                    # with changing choices, we'll need additional logic to sync to those
-                    # and handle mixed state in the choices...
+                if (
+                    # We are assuming here that each state-instance with this same name
+                    # will have the same choices and that those will not change. If we
+                    # ever hookup options with changing choices, we'll need additional
+                    # logic to sync to those and handle mixed state in the choices...
+                    self.sync.get('choices') is None and
+                    (
+                        hasattr(getattr(type(state), glue_name), 'get_display_func') or
+                        glue_name == 'cmap'
+                    )
+                ) or (
+                    # update choices in `sync` if glue state choices are updated
+                    # during glue Component add/rename/delete:
+                    glue_name == 'cmap_att'
+                ):
+                    # then we can access and populate/update the choices.
                     self.sync = {**self.sync, 'choices': self._get_glue_choices(state)}
-
         self.sync = {**self.sync,
                      'in_subscribed_states': in_subscribed_states,
                      'icons': icons,
