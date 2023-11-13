@@ -1,6 +1,6 @@
 import astropy.units as u
 
-__all__ = ['UserApiWrapper', 'PluginUserApi']
+__all__ = ['UserApiWrapper', 'PluginUserApi', 'ViewerUserApi']
 
 _internal_attrs = ('_obj', '_expose', '_readonly', '__doc__')
 
@@ -98,3 +98,20 @@ class PluginUserApi(UserApiWrapper):
 
     def __repr__(self):
         return f'<{self._obj._registry_label} API>'
+
+
+class ViewerUserApi(UserApiWrapper):
+    """
+    This is an API wrapper around a viewer.  For a full list of attributes/methods,
+    call dir(viewer_object) and for help on any of those methods,
+    call help(viewer_object.attribute).
+
+    For example::
+      help(viewer_object.show)
+    """
+    def __init__(self, viewer, expose=[], readonly=[]):
+        expose = list(set(list(expose) + []))
+        super().__init__(viewer, expose, readonly)
+
+    def __repr__(self):
+        return f'<{self._obj.reference} API>'

@@ -1,4 +1,5 @@
 import numpy as np
+from echo import delay_callback
 
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue_jupyter.bqplot.profile import BqplotProfileView
@@ -7,7 +8,9 @@ from glue_jupyter.table import TableViewer
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
+from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
+from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.utils import ColorCycler, get_subset_type
 
 __all__ = ['JdavizViewerMixin']
@@ -29,6 +32,25 @@ class JdavizViewerMixin:
 
         # Allow each viewer to cycle through colors for each new addition to the viewer:
         self.color_cycler = ColorCycler()
+
+    @property
+    def user_api(self):
+        if isinstance(self, AstrowidgetsImageViewerMixin):
+            expose = ['zoom', 'zoom_level']
+        else:
+            expose = ['set_lims']
+        return ViewerUserApi(self, expose=expose)
+
+    def set_lims(self, x_min=None, x_max=None, y_min=None, y_max=None):
+        with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            if x_min is not None:
+                self.state.x_min = x_min
+            if x_max is not None:
+                self.state.x_max = x_max
+            if y_min is not None:
+                self.state.y_min = y_min
+            if y_max is not None:
+                self.state.y_max = y_max
 
     @property
     def native_marks(self):

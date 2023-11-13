@@ -123,6 +123,19 @@ class ConfigHelper(HubListener):
                 for item in self.app.state.tray_items}
 
     @property
+    def viewers(self):
+        """
+        Access API objects for any viewer.
+
+        Returns
+        -------
+        viewers : dict
+            dict of viewer objects
+        """
+        return {getattr(viewer, 'reference', k): viewer.user_api
+                for k, viewer in self.app._viewer_store.items()}
+
+    @property
     def fitted_models(self):
         """
         Returns the fitted models.
