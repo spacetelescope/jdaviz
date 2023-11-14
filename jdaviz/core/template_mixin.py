@@ -1260,7 +1260,8 @@ class LayerSelect(SelectPluginComponent):
              "color": layer.state.color,
              "icon": self.app.state.layer_icons.get(layer.layer.label),
              "visible": layer.state.bitmap_visible,
-             "mixed_color": False if not label_mixed_color else label_mixed_color[layer.layer.label]}
+             "mixed_color": (False if not label_mixed_color
+                             else label_mixed_color[layer.layer.label])}
         return d
 
     def _on_viewer_changed(self, msg=None):
