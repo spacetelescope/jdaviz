@@ -623,6 +623,8 @@ class PlotOptions(PluginTemplateMixin):
                          self.swatches_palette[0][0],
                          ]
 
+        preset_inds = {2: [1,4], 3: [1,2,4], 4: [1,2,3,4]}
+
         # Switch back to this at the end
         initial_layer = self.layer_selected
 
@@ -640,10 +642,8 @@ class PlotOptions(PluginTemplateMixin):
         if n_visible > 2:
             default_opacity = 1 / math.log2(n_visible)
         # Sample along a colormap if we have too many layers
-        if n_visible == 2:
-            preset_colors = [preset_colors[1], preset_colors[4]]
-        elif n_visible == 3:
-            preset_colors = [preset_colors[1], preset_colors[2], preset_colors[4]]
+        if n_visible >= 2 and n_visible < len(preset_colors):
+            preset_colors = [preset_colors[i] for i in preset_inds[n_visible]]
         elif n_visible > len(preset_colors):
             cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
             preset_colors = [matplotlib.colors.to_hex(cmap(i), keep_alpha=True) for
