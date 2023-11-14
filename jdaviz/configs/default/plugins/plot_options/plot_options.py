@@ -1,3 +1,4 @@
+import math
 import os
 import matplotlib
 import numpy as np
@@ -567,7 +568,7 @@ class PlotOptions(PluginTemplateMixin):
                        'image_contrast', 'image_bias',
                        'contour_visible', 'contour_mode',
                        'contour_min', 'contour_max', 'contour_nlevels', 'contour_custom_levels',
-                       'stretch_curve_visible']
+                       'stretch_curve_visible', 'apply_RGB_presets']
 
         return PluginUserApi(self, expose)
 
@@ -604,6 +605,61 @@ class PlotOptions(PluginTemplateMixin):
         attr_name = data.get('name')
         value = data.get('value')
         setattr(self, attr_name, value)
+
+    def apply_RGB_presets(self):
+        """
+        Applies preset colors, opacities, and stretch settings to all visible layers
+        (in all viewers) when in Monochromatic mode.
+        """
+
+        if (self.image_color_mode_value != "One color per layer" or
+                self.image_color_mode_sync['mixed']):
+            raise ValueError("RGB presets can only be applied if color mode is Monochromatic.")
+        # Preselected colors we want to use for 5 or less layers
+        preset_colors = [self.swatches_palette[0][0],
+                         self.swatches_palette[1][0],
+                         "#00FF00",
+                         "#0000FF",
+                         self.swatches_palette[4][1]
+                         ]
+
+        # Switch back to this at the end
+        initial_layer = self.layer_selected
+
+        # Filter out subset layers
+        image_layers = [layer for layer in self.layer.choices if "Subset" not in layer]
+        visible_layers = []
+        for layer in image_layers:
+            self.layer_selected = layer
+            if self.image_visible.value:
+                visible_layers.append(layer)
+
+        # Set opacity to something that seems sensible
+        n_visible = len(visible_layers)
+        default_opacity = 1
+        if n_visible > 2:
+            default_opacity = 1 / math.log2(n_visible)
+        # Sample along a colormap if we have too many layers
+        if n_visible == 2:
+            preset_colors = [preset_colors[0], preset_colors[3]]
+        elif n_visible == 3:
+            preset_colors = [preset_colors[0], preset_colors[2], preset_colors[3]]
+        elif n_visible > len(preset_colors):
+            cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
+            preset_colors = [matplotlib.colors.to_hex(cmap(i), keep_alpha=True) for
+                             i in range(n_visible)]
+
+        for i in range(n_visible):
+            self.layer_selected = visible_layers[i]
+            self.image_opacity_value = default_opacity
+            self.image_color_value = preset_colors[i]
+            self.stretch_function_value = "arcsinh"
+            self.stretch_preset_value = 99
+
+        self.layer_selected = initial_layer
+
+    def vue_apply_RGB_presets(self, data):
+        self.apply_RGB_presets()
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
