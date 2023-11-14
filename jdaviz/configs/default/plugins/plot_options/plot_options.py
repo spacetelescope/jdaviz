@@ -623,7 +623,7 @@ class PlotOptions(PluginTemplateMixin):
                          self.swatches_palette[0][0],
                          ]
 
-        preset_inds = {2: [1,4], 3: [1,2,4], 4: [1,2,3,4]}
+        preset_inds = {2: [1, 4], 3: [1, 2, 4], 4: [1, 2, 3, 4]}
 
         # Switch back to this at the end
         initial_layer = self.layer_selected

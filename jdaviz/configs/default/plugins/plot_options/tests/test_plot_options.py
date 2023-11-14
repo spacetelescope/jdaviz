@@ -258,7 +258,7 @@ def test_apply_presets(imviz_helper):
     po = imviz_helper.plugins['Plot Options']
 
     preset_colors_4 = ["#0000FF", "#00FF00", po._obj.swatches_palette[1][0],
-                     po._obj.swatches_palette[0][0]]
+                       po._obj.swatches_palette[0][0]]
 
     # Test applying presets with < 6 layers
 
