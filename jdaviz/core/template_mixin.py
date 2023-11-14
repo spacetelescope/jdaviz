@@ -1247,6 +1247,8 @@ class LayerSelect(SelectPluginComponent):
         self.add_observe(viewer, self._on_viewer_changed)
         self._on_layers_changed()
 
+        self.callbacks_list = []
+
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
         # of additional viewers in imviz.
@@ -1274,6 +1276,14 @@ class LayerSelect(SelectPluginComponent):
         if new != old:
             self._clear_cache()
             self._on_layers_changed()
+            added_viewers = list(set(new) - set(old))
+            removed_viewers = list(set(old) - set(new))
+            for old_viewer in removed_viewers:
+                for layer in self._get_viewer(old_viewer).state.layers:
+                    layer.remove_callback('color', self._on_layers_changed)
+            for new_viewer in added_viewers:
+                for layer in self._get_viewer(new_viewer).state.layers:
+                    layer.add_callback('color', self._on_layers_changed)
 
     @observe('filters')
     def _on_layers_changed(self, msg=None):
