@@ -218,9 +218,9 @@ class Imviz(ImageConfigHelper):
                     self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
 
         else:
-            if 'Links Control' not in self.plugins.keys():
+            if 'Orientation' not in self.plugins.keys():
                 # otherwise plugin will handle linking automatically with DataCollectionAddMessage
-                self.link_data(link_type='pixels', error_on_fail=False)
+                self.link_data(link_type='wcs', error_on_fail=False)
 
             # One input might load into multiple Data objects.
             # NOTE: If the batch_load context manager was used, it will
@@ -450,7 +450,7 @@ def get_reference_image_data(app, viewer_id=None):
     return refdata, iref
 
 
-def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_affine=True,
+def link_image_data(app, link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=True,
                     error_on_fail=False, update_plugin=True):
     """(Re)link loaded data in Imviz with the desired link type.
 
@@ -522,10 +522,11 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
             else:
                 # fall back on pixel linking
                 link_type = 'pixels'
+
     # if the plugin exists, send a message so that the plugin's state is updated and spinner
     # is shown (the plugin will make a call back here)
-    if 'imviz-links-control' in [item['name'] for item in app.state.tray_items]:
-        link_plugin = app.get_tray_item_from_name('imviz-links-control')
+    if 'imviz-orientation' in [item['name'] for item in app.state.tray_items]:
+        link_plugin = app.get_tray_item_from_name('imviz-orientation')
         if update_plugin:
             link_plugin.linking_in_progress = True
     else:
@@ -547,6 +548,8 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     refdata, iref = get_reference_image_data(app)
     # default reference layer is the first-loaded image:
     default_reference_layer = get_bottom_layer(app._jdaviz_helper.default_viewer)
+    if default_reference_layer is None:
+        default_reference_layer = refdata
 
     # if linking via WCS, add WCS-only reference data layer:
     insert_base_wcs_layer = (
@@ -577,18 +580,14 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     app._wcs_use_affine = wcs_use_affine
 
     if link_type == 'pixels' and old_link_type == 'wcs':
-        # if changing from WCS to pixel linking, set bottom image data
-        # layer as reference data in all viewers:
-        refdata = get_bottom_layer(app._jdaviz_helper.default_viewer)
-
         for viewer_id in app.get_viewer_ids():
             app._change_reference_data(
-                refdata.label, viewer_id=viewer_id
+                default_reference_layer.label, viewer_id=viewer_id
             )
 
     links_list = []
-    ids0 = refdata.pixel_component_ids
-    ndim_range = range(refdata.ndim)
+    ids0 = default_reference_layer.pixel_component_ids
+    ndim_range = range(default_reference_layer.ndim)
 
     for i, data in enumerate(app.data_collection):
         # Do not link with self

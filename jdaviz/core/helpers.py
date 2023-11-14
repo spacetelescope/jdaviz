@@ -131,8 +131,15 @@ class ConfigHelper(HubListener):
         plugins : dict
             dict of plugin objects
         """
-        return {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
-                for item in self.app.state.tray_items}
+        plugins = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
+                   for item in self.app.state.tray_items}
+
+        # handle renamed plugins during deprecation
+        if 'Orientation' in plugins.keys():
+            plugins['Links Control'] = plugins['Orientation']._obj.user_api
+            plugins['Links Control']._deprecated_renamed_as = 'Orientation'
+
+        return plugins
 
     @property
     def viewers(self):

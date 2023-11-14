@@ -117,7 +117,7 @@ Pan/Zoom and Linked Pan/Zoom
 Linked Pan/Zoom is an Imviz-specific feature enabled only when there are multiple viewers that
 allows the user to pan and zoom images in multiple different viewers simultaneously. This works by matching images
 based on the way they are linked together. Images are linked by pixels on load time,
-but you can re-link them via WCS using :ref:`imviz-link-control`.
+but you can re-link them via WCS using :ref:`imviz-orientation`.
 
 Single-viewer Pan/Zoom is also available and is used in a similar way as in
 other Jdaviz tools. To access this option when there are multiple viewers, right-click on the
@@ -216,7 +216,7 @@ section above in the same way you would with the other subset selection
 tools.
 
 When you have multiple images loaded and linked by WCS
-(see :ref:`imviz-link-control`), the region defined is with respect to
+(see :ref:`imviz-orientation`), the region defined is with respect to
 the reference image, which might not be the image you are viewing.
 
 .. warning::

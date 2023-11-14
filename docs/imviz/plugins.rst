@@ -99,12 +99,16 @@ To export the table into the notebook via the API, call
 :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
 (see :ref:`plugin-apis`).
 
-.. _imviz-link-control:
+.. _imviz-orientation:
 
-Link Control
-============
+Orientation
+===========
 
-This plugin is used to re-link images by pixels or WCS using
+.. note::
+
+  This plugin was previous called "Links Control"
+
+This plugin is used to align image layers by pixels or sky (WCS) using
 :func:`~jdaviz.configs.imviz.helper.link_image_data`.
 All images are automatically linked by pixels on load but you can use
 it to re-link by pixels or WCS as needed.

@@ -309,7 +309,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # Imviz linking
         self._wcs_only_label = "_WCS_ONLY"
-        self._link_type = 'pixels'
+        self._link_type = 'WCS'
         if self.config == "imviz":
             self._wcs_use_affine = None
 
@@ -492,7 +492,7 @@ class Application(VuetifyTemplate, HubListener):
             else:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
-                    layer_name: alpha_index(len(self.state.layer_icons) - n_wcs_layers)
+                    layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items() if ic != wcs_only_refdata_icon]) - n_wcs_layers)
                 }
 
     def _change_reference_data(self, new_refdata_label, viewer_id=None):
@@ -511,15 +511,10 @@ class Application(VuetifyTemplate, HubListener):
 
         old_refdata = viewer.state.reference_data
 
-        if (new_refdata_label == old_refdata.label) or (old_refdata.coords is None):
+        if old_refdata is not None and ((new_refdata_label == old_refdata.label)
+                                        or (old_refdata.coords is None)):
             # if there's no refdata change nor WCS, don't do anything:
             return
-
-        # locate the central coordinate of old refdata in this viewer:
-        sky_cen = viewer._get_center_skycoord(old_refdata)
-
-        # estimate FOV in the viewer with old reference data:
-        fov_sky_init = viewer._get_fov(old_refdata)
 
         new_refdata = self.data_collection[new_refdata_label]
 
@@ -537,12 +532,21 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._get_viewer_item(viewer_ref)
         viewer_item['reference_data_label'] = new_refdata.label
 
+        if old_refdata is None:
+            return
+
         self.hub.broadcast(ChangeRefDataMessage(
             new_refdata,
             viewer,
             viewer_id=viewer.reference,
             old=old_refdata,
             sender=self))
+
+        # locate the central coordinate of old refdata in this viewer:
+        sky_cen = viewer._get_center_skycoord(old_refdata)
+
+        # estimate FOV in the viewer with old reference data:
+        fov_sky_init = viewer._get_fov(old_refdata)
 
         if (
             all('_WCS_ONLY' in refdata.meta for refdata in [old_refdata, new_refdata]) and
@@ -1786,7 +1790,7 @@ class Application(VuetifyTemplate, HubListener):
 
                     # Translate bounds through WCS if needed
                     if (self.config == "imviz" and
-                            self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
+                            self._jdaviz_helper.plugins["Orientation"].link_type == "WCS"):
                         # Get the correct link to use for translation
                         roi = subset_state.roi
                         if type(roi) in (CircularROI, CircularAnnulusROI,
@@ -2005,7 +2009,7 @@ class Application(VuetifyTemplate, HubListener):
         # the reference data (which would leave 0 external_links).
         if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
             if self.config == "imviz" and imviz_refdata:
-                link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
+                link_type = self._jdaviz_helper.plugins["Orientation"].link_type.selected.lower()
                 self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():

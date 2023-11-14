@@ -20,10 +20,10 @@ toolbar:
   - g-coords-info
 tray:
   - g-metadata-viewer
+  - imviz-orientation
   - g-plot-options
   - g-subset-plugin
   - g-markers
-  - imviz-links-control
   - imviz-compass
   - imviz-line-profile-xy
   - imviz-aper-phot-simple

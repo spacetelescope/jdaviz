@@ -113,7 +113,7 @@
                   <div v-if="trayItemVisible(trayItem, state.tray_items_filter)">
                     <v-expansion-panel-header >
                       <j-tooltip :tipid="trayItem.name">
-                        {{ trayItem.label }}
+                        {{ trayItem.label == 'Orientation' ? 'Orientation (prev. Links Control)' : trayItem.label }}
                       </j-tooltip>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px;">
