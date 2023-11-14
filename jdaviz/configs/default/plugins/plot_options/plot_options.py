@@ -616,11 +616,11 @@ class PlotOptions(PluginTemplateMixin):
                 self.image_color_mode_sync['mixed']):
             raise ValueError("RGB presets can only be applied if color mode is Monochromatic.")
         # Preselected colors we want to use for 5 or less layers
-        preset_colors = [self.swatches_palette[0][0],
-                         self.swatches_palette[1][0],
-                         "#00FF00",
+        preset_colors = [self.swatches_palette[4][1],
                          "#0000FF",
-                         self.swatches_palette[4][1]
+                         "#00FF00",
+                         self.swatches_palette[1][0],
+                         self.swatches_palette[0][0],
                          ]
 
         # Switch back to this at the end
@@ -641,9 +641,9 @@ class PlotOptions(PluginTemplateMixin):
             default_opacity = 1 / math.log2(n_visible)
         # Sample along a colormap if we have too many layers
         if n_visible == 2:
-            preset_colors = [preset_colors[0], preset_colors[3]]
+            preset_colors = [preset_colors[1], preset_colors[4]]
         elif n_visible == 3:
-            preset_colors = [preset_colors[0], preset_colors[2], preset_colors[3]]
+            preset_colors = [preset_colors[1], preset_colors[2], preset_colors[4]]
         elif n_visible > len(preset_colors):
             cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
             preset_colors = [matplotlib.colors.to_hex(cmap(i), keep_alpha=True) for
