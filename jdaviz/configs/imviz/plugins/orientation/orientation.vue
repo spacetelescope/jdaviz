@@ -97,12 +97,12 @@
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east left">
-              <v-btn icon @click="set_north_up_east_left">
+              <v-btn icon @click="select_north_up_east_left">
                 <img :src="icons['nuel']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east right">
-              <v-btn icon @click="set_north_up_east_right">
+              <v-btn icon @click="select_north_up_east_right">
                 <img :src="icons['nuer']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
               </v-btn>
             </j-tooltip>

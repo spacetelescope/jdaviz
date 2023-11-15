@@ -95,7 +95,7 @@
             <j-viewer-data-select-item
               :item="item"
               :icon="layer_icons[item.name]"
-              :icons="iconsf"
+              :icons="icons"
               :viewer="viewer"
               :multi_select="multi_select"
               :is_wcs_only="false"
