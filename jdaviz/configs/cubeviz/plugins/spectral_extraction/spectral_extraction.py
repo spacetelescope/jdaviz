@@ -12,7 +12,8 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         SpatialSubsetSelectMixin,
-                                        AddResultsMixin)
+                                        AddResultsMixin,
+                                        with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 
@@ -72,6 +73,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             )
         )
 
+    @with_spinner()
     def collapse_to_spectrum(self, add_data=True, **kwargs):
         """
         Collapse over the spectral axis.

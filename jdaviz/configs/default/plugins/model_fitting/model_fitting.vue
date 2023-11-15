@@ -261,6 +261,7 @@
         action_label="Fit Model"
         action_tooltip="Fit the model to the data"
         :action_disabled="model_equation_invalid_msg.length > 0 || !spectral_subset_valid"
+        :action_spinner="spinner"
         @click:action="apply"
       >
         <div v-if="config!=='cubeviz' || !cube_fit">

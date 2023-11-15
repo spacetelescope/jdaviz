@@ -46,6 +46,7 @@
       :add_to_viewer_selected.sync="add_to_viewer_selected"
       action_label="Calculate"
       action_tooltip="Calculate moment map"
+      :action_spinner="spinner"
       @click:action="calculate_moment"
     ></plugin-add-results>
     

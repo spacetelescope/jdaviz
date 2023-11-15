@@ -50,6 +50,7 @@
         :add_to_viewer_selected.sync="add_to_viewer_selected"
         action_label="Smooth"
         action_tooltip="Smooth data"
+        :action_spinner="spinner"
         @click:action="apply"
       ></plugin-add-results>
     </j-tray-plugin>

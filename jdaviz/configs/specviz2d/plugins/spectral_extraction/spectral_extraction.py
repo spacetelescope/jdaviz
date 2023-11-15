@@ -9,7 +9,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         DatasetSelect,
                                         AddResults,
-                                        skip_if_no_updates_since_last_active)
+                                        skip_if_no_updates_since_last_active,
+                                        with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.marks import PluginLine
@@ -130,6 +131,7 @@ class SpectralExtraction(PluginTemplateMixin):
     trace_results_label_overwrite = Bool().tag(sync=True)
     trace_add_to_viewer_items = List().tag(sync=True)
     trace_add_to_viewer_selected = Unicode().tag(sync=True)
+    trace_spinner = Bool(False).tag(sync=True)
 
     # BACKGROUND
     bg_dataset_items = List().tag(sync=True)
@@ -156,6 +158,7 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_results_label_overwrite = Bool().tag(sync=True)
     bg_add_to_viewer_items = List().tag(sync=True)
     bg_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_img_spinner = Bool(False).tag(sync=True)
 
     bg_spec_results_label = Unicode().tag(sync=True)
     bg_spec_results_label_default = Unicode().tag(sync=True)
@@ -164,6 +167,7 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_spec_results_label_overwrite = Bool().tag(sync=True)
     bg_spec_add_to_viewer_items = List().tag(sync=True)
     bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_spec_spinner = Bool(False).tag(sync=True)
 
     bg_sub_results_label = Unicode().tag(sync=True)
     bg_sub_results_label_default = Unicode().tag(sync=True)
@@ -172,6 +176,7 @@ class SpectralExtraction(PluginTemplateMixin):
     bg_sub_results_label_overwrite = Bool().tag(sync=True)
     bg_sub_add_to_viewer_items = List().tag(sync=True)
     bg_sub_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_sub_spinner = Bool(False).tag(sync=True)
 
     # EXTRACT
     ext_dataset_items = List().tag(sync=True)
@@ -195,6 +200,7 @@ class SpectralExtraction(PluginTemplateMixin):
     ext_results_label_overwrite = Bool().tag(sync=True)
     ext_add_to_viewer_items = List().tag(sync=True)
     ext_add_to_viewer_selected = Unicode().tag(sync=True)
+    # uses default "spinner"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -682,6 +688,7 @@ class SpectralExtraction(PluginTemplateMixin):
         else:  # pragma: no cover
             raise NotImplementedError(f"trace of type {trace.__class__.__name__} not supported")
 
+    @with_spinner('trace_spinner')
     def export_trace(self, add_data=False, **kwargs):
         """
         Create a specreduce Trace object from the input parameters
@@ -780,6 +787,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         self.bg_width = bg.width
 
+    @with_spinner('bg_spinner')
     def export_bg(self, **kwargs):
         """
         Create a specreduce Background object from the input parameters defined in the plugin.
@@ -817,6 +825,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return bg
 
+    @with_spinner('bg_img_spinner')
     def export_bg_img(self, add_data=False, **kwargs):
         """
         Create a background 2D spectrum from the input parameters defined in the plugin.
@@ -843,6 +852,7 @@ class SpectralExtraction(PluginTemplateMixin):
                                 color='error', sender=self)
             )
 
+    @with_spinner('bg_spec_spinner')
     def export_bg_spectrum(self, add_data=False, **kwargs):
         """
         Create a background 1D spectrum from the input parameters defined in the plugin.
@@ -863,6 +873,7 @@ class SpectralExtraction(PluginTemplateMixin):
     def vue_create_bg_spec(self, *args):
         self.export_bg_spectrum(add_data=True)
 
+    @with_spinner('bg_sub_spinner')
     def export_bg_sub(self, add_data=False, **kwargs):
         """
         Create a background-subtracted 2D spectrum from the input parameters defined in the plugin.
@@ -936,6 +947,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
         return ext
 
+    @with_spinner('spinner')
     def export_extract_spectrum(self, add_data=False, **kwargs):
         """
         Create an extracted 1D spectrum from the input parameters defined in the plugin.

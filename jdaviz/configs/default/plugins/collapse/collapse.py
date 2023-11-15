@@ -11,7 +11,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SelectPluginComponent,
                                         SpectralSubsetSelectMixin,
-                                        AddResultsMixin)
+                                        AddResultsMixin,
+                                        with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['Collapse']
@@ -69,6 +70,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         label_comps += ["collapsed"]
         self.results_label_default = " ".join(label_comps)
 
+    @with_spinner()
     def collapse(self, add_data=True):
         """
         Collapse over the spectral axis.

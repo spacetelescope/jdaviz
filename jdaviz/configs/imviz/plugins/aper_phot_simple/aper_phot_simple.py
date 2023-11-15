@@ -22,7 +22,7 @@ from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
-                                        SubsetSelect, TableMixin, PlotMixin)
+                                        SubsetSelect, TableMixin, PlotMixin, with_spinner)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import PRIHDR_KEY
 
@@ -305,6 +305,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
             self.hub.broadcast(SnackbarMessage(
                 f"Failed to extract {background_selected}: {repr(e)}", color='error', sender=self))
 
+    @with_spinner()
     def calculate_photometry(self, dataset=None, aperture=None, background=None,
                              background_value=None, pixel_area=None, counts_factor=None,
                              flux_scaling=None, add_to_table=True, update_plots=True):
@@ -726,6 +727,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, DatasetMultiSelectMixin, Tab
 
         return _unpack_dict_list(mult_values, single_values)
 
+    @with_spinner()
     def calculate_batch_photometry(self, options=[], add_to_table=True, update_plots=True,
                                    full_exceptions=False):
         """

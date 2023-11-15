@@ -8,7 +8,8 @@ from traitlets import List, Unicode, Bool, Int
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
-                                        FileImportSelectPluginComponent, HasFileImportSelect)
+                                        FileImportSelectPluginComponent, HasFileImportSelect,
+                                        with_spinner)
 
 __all__ = ['Catalogs']
 
@@ -55,6 +56,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         return '', {path: table}
 
+    @with_spinner()
     def search(self):
         """
         Search the catalog, display markers on the viewer, and return a table of results (or None

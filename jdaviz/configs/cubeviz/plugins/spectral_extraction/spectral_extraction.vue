@@ -36,6 +36,7 @@
       :add_to_viewer_selected.sync="add_to_viewer_selected"
       action_label="Extract"
       action_tooltip="Run spectral extraction with error and mask propagation"
+      :action_spinner="spinner"
       @click:action="spectral_extraction"
     ></plugin-add-results>
 
