@@ -8,7 +8,7 @@ from glue.core.subset_group import GroupedSubset
 
 import astropy.units as u
 from jdaviz.configs.imviz.helper import (
-    link_image_data, get_bottom_layer
+    link_image_data
 )
 from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
@@ -244,6 +244,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.linking_in_progress = False
         self._update_layer_label_default()
 
+        # Clear previous zoom limits because they no longer mean anything.
+        for v in self.app._viewer_store.values():
+            v._prev_limits = None
+
     def _on_subset_change(self, msg):
         self.need_clear_subsets = len(self.app.data_collection.subset_groups) > 0
 
@@ -260,8 +264,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             viewer.reset_markers()
 
     def _get_wcs_angles(self):
-        viewer = self.app.get_viewer(self.viewer.selected)
-        first_loaded_image = get_bottom_layer(viewer)
+        first_loaded_image = self.app.data_collection[0]
         degn, dege, flip = get_compass_info(
             first_loaded_image.coords, first_loaded_image.shape
         )[-3:]
@@ -303,8 +306,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if wrt_data is None:
             # if not specified, use first-loaded image layer as the
             # default rotation:
-            viewer = self.app.get_viewer(self.viewer.selected)
-            wrt_data = get_bottom_layer(viewer)
+            wrt_data = self.app.data_collection[0]
 
         # Default rotation is the same orientation as the original reference data:
         degn = self._get_wcs_angles()[0]
@@ -384,7 +386,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         else:
             is_subset = False
         return (
-            ref_data is not None and len(viewer.data()) and
+            ref_data is not None and
             len(self.orientation.selected) and len(self.viewer.selected) and
             not is_subset
         )

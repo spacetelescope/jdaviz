@@ -422,7 +422,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         def _do_recentering(subset, subset_state):
             try:
-                reg = _get_region_from_spatial_subset(self, subset_state) # noqa
+                reg = _get_region_from_spatial_subset(self, subset_state)
                 aperture = regions2aperture(reg)
                 data = self.dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])

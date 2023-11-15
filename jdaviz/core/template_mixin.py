@@ -1803,9 +1803,7 @@ class SubsetSelect(SelectPluginComponent):
             subset_state = self.selected_subset_state
         else:
             subset_state = self._get_subset_state(subset)
-        region = _get_region_from_spatial_subset(self.plugin,
-                                                 subset_state,
-                                                 dataset=dataset)
+        region = _get_region_from_spatial_subset(self.plugin, subset_state)
         region.meta['label'] = subset
         return region
 

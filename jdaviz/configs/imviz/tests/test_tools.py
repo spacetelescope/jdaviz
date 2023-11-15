@@ -68,7 +68,7 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
 # We use a new test class to avoid a dirty state from previous test.
 class TestSinglePixelRegion(BaseImviz_WCS_WCS):
     def test_singlepixelregion(self):
-        self.imviz.link_data(link_type='wcs')
+        # NOTE: This only works in pixel linking now, not WCS linking.
 
         t = self.imviz.default_viewer._obj.toolbar.tools['jdaviz:singlepixelregion']
         t.activate()

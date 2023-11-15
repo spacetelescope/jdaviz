@@ -495,8 +495,13 @@ def _get_rotated_nddata_from_label(
     degn, dege, flip = get_compass_info(data.coords, data.shape)[-3:]
     has_east_left = flip
     has_north_up = True  # assumed
-    lat_axis = _get_latitude_axis_idx(wcs)
-    lon_axis = _get_longitude_axis_idx(wcs)
+
+    if isinstance(wcs, GWCS):
+        lat_axis = wcs.world_axis_names.index("lat")
+        lon_axis = wcs.world_axis_names.index("lon")
+    else:  # FITS WCS
+        lat_axis = wcs.wcs.lat
+        lon_axis = wcs.wcs.lng
 
     if (
         not has_east_left and target_wcs_east_left and
@@ -533,36 +538,10 @@ def _get_rotated_nddata_from_label(
     )
 
 
-def _get_longitude_axis_idx(wcs):
-    if any(['lon' in name.lower() for name in wcs.world_axis_names]):
-        # for gwcs:
-        [lon_axis] = [i for i, axis in enumerate(wcs.world_axis_names)
-                      if axis.lower() == 'lon']
-    else:
-        # for FITS WCS:
-        [lon_axis] = [i for i, axis in enumerate(wcs.wcs.ctype)
-                      if axis.upper().startswith('RA')]
-    return lon_axis
-
-
-def _get_latitude_axis_idx(wcs):
-    if any(['lat' in name.lower() for name in wcs.world_axis_names]):
-        # for gwcs:
-        [lat_axis] = [i for i, axis in enumerate(wcs.world_axis_names)
-                      if axis.lower() == 'lat']
-    else:
-        # for FITS WCS:
-        [lat_axis] = [i for i, axis in enumerate(wcs.wcs.ctype)
-                      if axis.upper().startswith('DEC')]
-    return lat_axis
-
-
-def compute_scale(wcs, fiducial,
-                  disp_axis, pscale_ratio=1):
-    """
-    Compute scaling transform. This method comes from the `jwst` package:
-        https://github.com/spacetelescope/jwst/blob/
-        95467186aca9784ece9451b33d437d80d550a795/jwst/assign_wcs/util.py#L103
+# This method comes from the jwst package:
+# https://github.com/spacetelescope/jwst/blob/95467186aca9784ece9451b33d437d80d550a795/jwst/assign_wcs/util.py#L103
+def compute_scale(wcs, fiducial, disp_axis, pscale_ratio=1):
+    """Compute scaling transform.
 
     Parameters
     ----------

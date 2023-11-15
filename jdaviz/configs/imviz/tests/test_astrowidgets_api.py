@@ -111,8 +111,7 @@ class TestCenter(BaseImviz_WCS_WCS):
         self.viewer.center_on((0, 0))
         assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
                          self.viewer.state.y_min, self.viewer.state.y_max),
-                        [lim if i > 1 else lim + 1
-                         for i, lim in enumerate(expected_position)], rtol=rtol)
+                        [-5.75, 5.25, -5.75, 5.25], rtol=rtol)
 
         # Centering by sky on second data.
         self.viewer.blink_once()

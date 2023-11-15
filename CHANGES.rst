@@ -20,6 +20,15 @@ Cubeviz
 Imviz
 ^^^^^
 
+- There is now option for image rotation in Links Control plugin.
+  This feature requires WCS linking. [#2179]
+
+- Aperture photometry (previously "Imviz Simple Aperture Photometry") now supports batch mode. [#2465]
+
+- Aperture photometry sum is now presented in scientific notation consistently. [#2530]
+
+- Expose sky regions in get_subsets. If 'include_sky_region' is True, a sky Region will be returned (in addition to a pixel Region) for spatial subsets with parent data that was a WCS. [#2496]
+
 Mosviz
 ^^^^^^
 
@@ -43,6 +52,12 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Linking by WCS will now always generate a hidden reference data layer
+  without distortion. As a result, when WCS linked, the first loaded data
+  is no longer the reference data. Additionally, if data is distorted,
+  its distortion will show when linked by WCS. If there is also data without WCS,
+  it can no longer be displayed when WCS linked. [#2179]
 
 Mosviz
 ^^^^^^
@@ -309,8 +324,6 @@ Cubeviz
 
 Imviz
 ^^^^^
-
-- Added viewer rotation support via Glue linking [#2179]
 
 - The stretch histogram within plot options can now be popped-out into its own window. [#2314]
 

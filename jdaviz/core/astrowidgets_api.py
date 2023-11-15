@@ -131,8 +131,16 @@ class AstrowidgetsImageViewerMixin:
             Sky offset has invalid unit.
 
         """
+        i_top = get_top_layer_index(self)
+        image = self.layers[i_top].layer
         width = self.state.x_max - self.state.x_min
         height = self.state.y_max - self.state.y_min
+        x_cen = self.state.x_min + (width * 0.5)
+        y_cen = self.state.y_min + (height * 0.5)
+        if hasattr(self, '_get_real_xy'):
+            real_cen = self._get_real_xy(image, x_cen, y_cen)
+        else:
+            real_cen = (x_cen, y_cen)
 
         dx, dx_coord = _offset_is_pixel_or_sky(dx)
         dy, dy_coord = _offset_is_pixel_or_sky(dy)
@@ -141,24 +149,17 @@ class AstrowidgetsImageViewerMixin:
             raise ValueError(f'dx is of type {dx_coord} but dy is of type {dy_coord}')
 
         if dx_coord == 'wcs':
-            i_top = get_top_layer_index(self)
-            image = self.layers[i_top].layer
             if data_has_valid_wcs(image):
                 # To avoid distortion headache, assume offset is relative to
                 # displayed center.
-                x_cen = self.state.x_min + (width * 0.5)
-                y_cen = self.state.y_min + (height * 0.5)
-                sky_cen = image.coords.pixel_to_world(x_cen, y_cen)
-                new_sky_cen = sky_cen.spherical_offsets_by(dx, dy)
-                self.center_on(new_sky_cen)
+                sky_cen = image.coords.pixel_to_world(real_cen[0], real_cen[1])
+                new_cen = sky_cen.spherical_offsets_by(dx, dy)
             else:
                 raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
         else:
-            with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                self.state.x_min += dx
-                self.state.y_min += dy
-                self.state.x_max = self.state.x_min + width
-                self.state.y_max = self.state.y_min + height
+            new_cen = (real_cen[0] + dx, real_cen[1] + dy)
+
+        self.center_on(new_cen)
 
     @property
     def zoom_level(self):
@@ -173,10 +174,18 @@ class AstrowidgetsImageViewerMixin:
         if self.shape is None:  # pragma: no cover
             raise ValueError('Viewer is still loading, try again later')
 
+        if hasattr(self, '_get_real_xy'):
+            i_top = get_top_layer_index(self)
+            image = self.layers[i_top].layer
+            real_min = self._get_real_xy(image, self.state.x_min, self.state.y_min)
+            real_max = self._get_real_xy(image, self.state.x_max, self.state.y_max)
+        else:
+            real_min = (self.state.x_min, self.state.y_min)
+            real_max = (self.state.x_max, self.state.y_max)
         screenx = self.shape[1]
         screeny = self.shape[0]
-        zoom_x = screenx / (self.state.x_max - self.state.x_min)
-        zoom_y = screeny / (self.state.y_max - self.state.y_min)
+        zoom_x = screenx / abs(real_max[0] - real_min[0])
+        zoom_y = screeny / abs(real_max[1] - real_min[1])
 
         return max(zoom_x, zoom_y)  # Similar to Ginga get_scale()
 
@@ -187,8 +196,7 @@ class AstrowidgetsImageViewerMixin:
                 (isinstance(val, (int, float)) and val <= 0)):
             raise ValueError(f'Unsupported zoom level: {val}')
 
-        image = self.state.reference_data
-        if (image is None or self.shape is None or
+        if (self.shape is None or
                 self.state.x_att is None or self.state.y_att is None):  # pragma: no cover
             return
 
@@ -196,15 +204,24 @@ class AstrowidgetsImageViewerMixin:
         if val == 'fit':
             self.state.reset_limits()
             return
+
+        new_dx = self.shape[1] * 0.5 / val
+        if hasattr(self, '_get_real_xy'):
+            i_top = get_top_layer_index(self)
+            image = self.layers[i_top].layer
+            real_min = self._get_real_xy(image, self.state.x_min, self.state.y_min)
+            real_max = self._get_real_xy(image, self.state.x_max, self.state.y_max)
+            cur_xcen = (real_min[0] + real_max[0]) * 0.5
+            new_x_min = self._get_real_xy(image, cur_xcen - new_dx - 0.5, real_min[1], reverse=True)[0]  # noqa: E501
+            new_x_max = self._get_real_xy(image, cur_xcen + new_dx - 0.5, real_max[1], reverse=True)[0]  # noqa: E501
         else:
             cur_xcen = (self.state.x_min + self.state.x_max) * 0.5
-            new_dx = self.shape[1] * 0.5 / val
-            new_x_min = cur_xcen - new_dx
-            new_x_max = cur_xcen + new_dx
+            new_x_min = cur_xcen - new_dx - 0.5
+            new_x_max = cur_xcen + new_dx - 0.5
 
         with delay_callback(self.state, 'x_min', 'x_max'):
-            self.state.x_min = new_x_min - 0.5
-            self.state.x_max = new_x_max - 0.5
+            self.state.x_min = new_x_min
+            self.state.x_max = new_x_max
 
         # We need to adjust the limits in here to avoid triggering all
         # the update events then changing the limits again.
@@ -451,8 +468,12 @@ class AstrowidgetsImageViewerMixin:
         self._validate_marker_name(marker_name)
         jglue = self.session.application
 
-        # Link markers to reference image data.
-        image = self.state.reference_data
+        # Link markers to top visible image data or reference data.
+        if not use_skycoord and hasattr(self, '_get_real_xy'):
+            i_top = get_top_layer_index(self)
+            image = self.layers[i_top].layer
+        else:
+            image = self.state.reference_data
 
         # TODO: Is Glue smart enough to no-op if link already there?
         if use_skycoord:

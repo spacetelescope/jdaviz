@@ -106,7 +106,7 @@ Orientation
 
 .. note::
 
-  This plugin was previous called "Links Control"
+    This plugin was previous called "Links Control".
 
 This plugin is used to align image layers by pixels or sky (WCS) using
 :func:`~jdaviz.configs.imviz.helper.link_image_data`.
@@ -118,6 +118,13 @@ to represent the offset between images, if possible. It is much more
 performant at the cost of accuracy but should be accurate to within a pixel
 for most cases. If approximation fails, WCS linking still automatically
 falls back to full transformation.
+
+Since Jdaviz v3.9, when linking by WCS, a hidden reference data layer
+without distortion will be created and all the data would be linked to
+it instead of the first loaded data. As a result, working in pixel
+space when linked by WCS is not recommended. Additionally, any data
+with distorted WCS would show as distorted on the display. Furthermore,
+any data without WCS can no longer be shown in WCS linking mode.
 
 For the best experience, it is recommended that you decide what kind of
 link you want and set it at the beginning of your Imviz session,
@@ -133,6 +140,21 @@ From the API within the Jupyter notebook (if linking by WCS):
 .. code-block:: python
 
     imviz.link_data(link_type='wcs')
+
+.. _imviz-orientation-rotation:
+
+Orientation: Image Rotation
+===========================
+
+When linked by WCS, sky rotation is also possible. You can choose from
+presets (N-up, E-left/right) or provide your own sky angle.
+
+.. warning::
+
+    Each rotation request created a new reference data layer in the background.
+    Just as in :ref:`imviz-import-data`, the performance would be impacted by
+    the number of active rotation layers you have; Only keep the desired rotation layer.
+    Note that the "default orientation" layer cannot be removed.
 
 .. _imviz-compass:
 

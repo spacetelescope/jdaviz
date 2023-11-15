@@ -6,7 +6,6 @@ from copy import deepcopy
 import numpy as np
 import astropy.units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
-from gwcs.wcs import WCS as GWCS
 from glue.core import BaseData
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
@@ -400,17 +399,6 @@ def layer_is_table_data(layer):
     return isinstance(layer, BaseData) and layer.ndim == 1
 
 
-def get_bottom_layer(viewer):
-    """
-    Get the first-loaded image layer in Imviz.
-    """
-    image_layers = [lyr.layer for lyr in viewer.layers
-                    if lyr.visible and layer_is_image_data(lyr.layer)]
-    if not len(image_layers):
-        return None
-    return image_layers[0]
-
-
 def get_wcs_only_layer_labels(app):
     return [data.label for data in app.data_collection
             if layer_is_wcs_only(data)]
@@ -509,7 +497,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                          f"got {wcs_fallback_scheme}")
     if link_type == 'wcs':
         at_least_one_data_have_wcs = len([
-            hasattr(d, 'coords') and isinstance(d.coords, (BaseHighLevelWCS, GWCS))
+            hasattr(d, 'coords') and isinstance(d.coords, BaseHighLevelWCS)
             for d in app.data_collection
         ]) > 0
         if not at_least_one_data_have_wcs:
@@ -547,9 +535,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     old_link_type = getattr(app, '_link_type', None)
     refdata, iref = get_reference_image_data(app)
     # default reference layer is the first-loaded image:
-    default_reference_layer = get_bottom_layer(app._jdaviz_helper.default_viewer)
-    if default_reference_layer is None:
-        default_reference_layer = refdata
+    default_reference_layer = app.data_collection[0]
 
     # if linking via WCS, add WCS-only reference data layer:
     insert_base_wcs_layer = (
@@ -600,6 +586,10 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
 
         if data in data_already_linked:
             # links already exist for this entry and we're not changing the type
+            continue
+
+        # We are not touching fake WCS layers in pixel linking.
+        if link_type == 'pixels' and data.meta.get('_WCS_ONLY'):
             continue
 
         ids1 = data.pixel_component_ids

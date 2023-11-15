@@ -305,43 +305,38 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
         return link_type
 
-    def _get_fov(self, data):
+    def _get_fov(self):
+        data = self.state.reference_data
+        if self.jdaviz_app._link_type != "wcs" or data.coords is None:
+            return
+
         # compute the mean of the height and width of the
         # viewer's FOV on ``data`` in world units:
         x_corners = [
             self.state.x_min,
             self.state.x_max,
-            self.state.x_min,
-            self.state.x_max
+            self.state.x_min
         ]
         y_corners = [
             self.state.y_min,
             self.state.y_min,
-            self.state.y_max,
             self.state.y_max
         ]
 
-        y_corners, x_corners = self._get_real_xy(
-            data, x_corners, y_corners
-        )[:2]
-        sky_corners = data.coords.pixel_to_world(x_corners * u.pix, y_corners * u.pix)
+        sky_corners = data.coords.pixel_to_world(x_corners, y_corners)
         height_sky = abs(sky_corners[0].separation(sky_corners[2]))
         width_sky = abs(sky_corners[0].separation(sky_corners[1]))
         fov_sky = u.Quantity([height_sky, width_sky]).mean()
         return fov_sky
 
     def _get_center_skycoord(self, data=None):
-        if data is None:
-            data = self.state.reference_data
         # get SkyCoord for the center of ``data`` in this viewer:
-        width = self.state.x_max - self.state.x_min
-        height = self.state.y_max - self.state.y_min
-        x_cen = self.state.x_min + (width * 0.5)
-        y_cen = self.state.y_min + (height * 0.5)
-        x_cen, y_cen = self._get_real_xy(
-            data, x_cen, y_cen
-        )[:2]
-        sky_cen = data.coords.pixel_to_world(
-            x_cen * u.pix, y_cen * u.pix
-        )
-        return sky_cen
+        x_cen = (self.state.x_min + self.state.x_max) * 0.5
+        y_cen = (self.state.y_min + self.state.y_max) * 0.5
+
+        if (self.jdaviz_app._link_type == "wcs" or data is None
+                or data.label == self.state.reference_data.label):
+            return self.state.reference_data.coords.pixel_to_world(x_cen, y_cen)
+
+        if data.coords is not None:
+            return data.coords.pixel_to_world(x_cen, y_cen)

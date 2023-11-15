@@ -559,7 +559,7 @@ class Application(VuetifyTemplate, HubListener):
             # adjust zoom to account for new refdata if both the
             # old and new refdata are WCS-only layers
             # (which also ensures zoom_level is already determined):
-            fov_sky_final = viewer._get_fov(new_refdata)
+            fov_sky_final = viewer._get_fov()
             viewer.zoom(
                 float(fov_sky_final / fov_sky_init)
             )

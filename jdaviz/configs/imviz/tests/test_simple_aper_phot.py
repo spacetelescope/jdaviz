@@ -13,23 +13,14 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
-from jdaviz.configs.imviz.tests.test_linking import _transform_refdata_pixel_coords
 
 
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
     def test_plugin_wcs_dithered(self):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
-        coords_0 = _transform_refdata_pixel_coords(
-            self.imviz.app.data_collection[-1], self.imviz.app.data_collection[0],
-            in_x=0, in_y=0
-        )
-        coords_9 = _transform_refdata_pixel_coords(
-            self.imviz.app.data_collection[-1], self.imviz.app.data_collection[0],
-            in_x=9, in_y=9
-        )
-        self.imviz._apply_interactive_region(
-            'bqplot:truecircle', coords_0, coords_9
-        )  # Draw a circle
+
+        reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5).to_sky(self.wcs_1)
+        self.imviz.load_regions(reg)
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
@@ -123,15 +114,9 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(tbl['sum'], [63.617251, 62.22684693104279], rtol=1e-4)
 
         # Make sure it also works on an ellipse subset.
-        coords_2 = _transform_refdata_pixel_coords(
-            self.imviz.app.data_collection[-1], self.imviz.app.data_collection[0],
-            in_x=0, in_y=0
-        )
-        coords_3 = _transform_refdata_pixel_coords(
-            self.imviz.app.data_collection[-1], self.imviz.app.data_collection[0],
-            in_x=9, in_y=4
-        )
-        self.imviz._apply_interactive_region('bqplot:ellipse', coords_2, coords_3)
+        reg = EllipsePixelRegion(center=PixCoord(x=4.5, y=2.0), width=9.0, height=4.0).to_sky(self.wcs_1)  # noqa: E501
+        self.imviz.load_regions(reg)
+
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
@@ -285,34 +270,14 @@ class TestAdvancedAperPhot:
 
         # Link them by WCS
         imviz_helper.link_data(link_type='wcs')
+        w = imviz_helper.app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
-        regions = []
-        positions = [(145.1, 168.3), (48.3, 200.3)]
-        downsample_factor = 25
-
-        def _transform_coords(x, y):
-            coords = _transform_refdata_pixel_coords(
-                imviz_helper.app.data_collection[-1], imviz_helper.app.data_collection[0],
-                in_x=x, in_y=y
-            )
-            return coords
-
-        for x, y in positions:
-            x, y = _transform_coords(x, y)
-            regions.append(CirclePixelRegion(
-                center=PixCoord(x=x, y=y), radius=5 / downsample_factor
-            ))
-
-        ellipse_coords = _transform_coords(x=84.7, y=224.1)
-        rectangle_coords = _transform_coords(x=229, y=152)
-        regions += [
-            EllipsePixelRegion(center=PixCoord(*ellipse_coords), width=23 / downsample_factor,
-                               height=9 / downsample_factor,
-                               angle=2.356 * u.rad),
-            RectanglePixelRegion(center=PixCoord(*rectangle_coords), width=17 / downsample_factor,
-                                 height=7 / downsample_factor)]
-        imviz_helper.load_regions(regions)
+        imviz_helper.load_regions([
+            CirclePixelRegion(center=PixCoord(x=145.1, y=168.3), radius=5).to_sky(w),
+            CirclePixelRegion(center=PixCoord(x=48.3, y=200.3), radius=5).to_sky(w),
+            EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9, angle=2.356 * u.rad).to_sky(w),  # noqa: E501
+            RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w)])
 
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj
@@ -325,8 +290,8 @@ class TestAdvancedAperPhot:
     @pytest.mark.parametrize(('subset_label', 'expected_sum'), [
         ('Subset 1', 738.8803424408962),
         ('Subset 2', 857.5194857987592),
-        ('Subset 3', 679.005667),
-        ('Subset 4', 928.499787)])
+        ('Subset 3', 472.17364321556005),
+        ('Subset 4', 837.0023608207703)])
     def test_aperphot(self, data_label, local_bkg, subset_label, expected_sum):
         """All data should give similar result for the same Subset."""
         self.phot_plugin.dataset_selected = data_label
@@ -345,9 +310,9 @@ class TestAdvancedAperPhot:
         ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 4)
     ])
     @pytest.mark.parametrize(('bg_label', 'expected_bg'), [
-        ('Subset 2', 5.596018),
-        ('Subset 3', 5.828865),
-        ('Subset 4', 5.997768)])
+        ('Subset 2', 12.269274711608887),
+        ('Subset 3', 7.935906410217285),
+        ('Subset 4', 11.120951652526855)])
     def test_sky_background(self, data_label, fac, bg_label, expected_bg):
         """All background (median) should give similar result for the same Subset.
         Down-sampled data has higher factor due to flux conservation.

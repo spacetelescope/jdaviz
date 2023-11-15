@@ -778,6 +778,14 @@ class ImageConfigHelper(ConfigHelper):
                 bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
                 continue
 
+            if (isinstance(region, (CircularAperture, EllipticalAperture,
+                                    RectangularAperture, CircularAnnulus,
+                                    CirclePixelRegion, EllipsePixelRegion,
+                                    RectanglePixelRegion, CircleAnnulusPixelRegion))
+                    and self.app._link_type == "wcs"):
+                bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+                continue
+
             # photutils: Convert to regions shape first
             if isinstance(region, (CircularAperture, SkyCircularAperture,
                                    EllipticalAperture, SkyEllipticalAperture,
