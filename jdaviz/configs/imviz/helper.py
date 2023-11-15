@@ -199,7 +199,7 @@ class Imviz(ImageConfigHelper):
             show_in_viewer = f"{self.app.config}-0"
 
         if show_in_viewer:
-            linked_by_wcs = self.app._link_type == 'wcs'
+            linked_by_wcs = self.app._link_type.lower() == 'wcs'
             if linked_by_wcs:
                 for applied_label, visible, is_wcs_only, has_wcs in zip(
                         applied_labels, applied_visible, layer_is_wcs_only, layer_has_wcs

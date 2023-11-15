@@ -127,7 +127,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         orig_world_x = np.asarray(self.table._qtable['world'][:, 0][in_viewer])
         orig_world_y = np.asarray(self.table._qtable['world'][:, 1][in_viewer])
 
-        if self.app._link_type == 'wcs':
+        if self.app._link_type.lower() == 'wcs':
             # convert from the sky coordinates in the table to pixels via the WCS of the current
             # reference data
             new_wcs = viewer.state.reference_data.coords
