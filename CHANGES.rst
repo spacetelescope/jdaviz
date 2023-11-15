@@ -17,7 +17,7 @@ New Features
 
 - Reorder viewer and layer settings in Plot Options. [#2543, #2557]
 
-- Add button in Plot Options to apply preset RBG options to visible layers when in Monochromatic mode. [#2558]
+- Add button in Plot Options to apply preset RBG options to visible layers when in Monochromatic mode. [#2558, #2568]
 
 Cubeviz
 ^^^^^^^

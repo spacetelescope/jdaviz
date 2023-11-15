@@ -257,8 +257,8 @@ def test_apply_presets(imviz_helper):
     arr = np.arange(36).reshape(6, 6)
     po = imviz_helper.plugins['Plot Options']
 
-    preset_colors = [po._obj.swatches_palette[0][0], po._obj.swatches_palette[1][0],
-                     "#00FF00", "#0000FF", po._obj.swatches_palette[4][1]]
+    preset_colors_4 = ["#0000FF", "#00FF00", po._obj.swatches_palette[1][0],
+                       po._obj.swatches_palette[0][0]]
 
     # Test applying presets with < 6 layers
 
@@ -272,7 +272,7 @@ def test_apply_presets(imviz_helper):
         po.layer = f"array_{i}"
         assert po.stretch_function.value == "arcsinh"
         assert po.stretch_preset.value == 99
-        assert po.image_color.value == preset_colors[i]
+        assert po.image_color.value == preset_colors_4[i]
 
     # Test applying presets with > 5 layers
 
