@@ -100,7 +100,7 @@ class PluginUserApi(UserApiWrapper):
 
     def __repr__(self):
         if self._deprecated_renamed_as:
-            logging.warning(f"DeprecationWarning: in the future, this plugin API will only be available by its new name '{self._deprecated_renamed_as}'")
+            logging.warning(f"DeprecationWarning: in the future, this plugin API will only be available by its new name '{self._deprecated_renamed_as}'")  # noqa
             super().__setattr__('_deprecated_renamed_as', None)
         return f'<{self._obj._registry_label} API>'
 
@@ -123,12 +123,12 @@ class ViewerUserApi(UserApiWrapper):
 
     def __getattr__(self, *args, **kwargs):
         if super().__getattr__('_deprecated_renamed_as'):
-            logging.warning(f"DeprecationWarning: in the future, this plugin API will only be available by its new name '{self._deprecated_renamed_as}'")
+            logging.warning(f"DeprecationWarning: in the future, this plugin API will only be available by its new name '{self._deprecated_renamed_as}'")  # noqa
             super().__setattr__('_deprecated_renamed_as', None)
         return super().__getattr__(*args, **kwargs)
 
     def __setattr__(self, *args, **kwargs):
         if hasattr(self, '_deprecated_renamed_as') and self._deprecated_renamed_as:
-            logging.warning(f"DeprecationWarning: in the future, this plugin API will only be available by its new name '{self._deprecated_renamed_as}'")
+            logging.warning(f"DeprecationWarning: in the future, this plugin API will only be available by its new name '{self._deprecated_renamed_as}'")  # noqa
             super().__setattr__('_deprecated_renamed_as', None)
         return super().__setattr__(*args, **kwargs)
