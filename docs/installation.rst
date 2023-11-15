@@ -144,3 +144,6 @@ after you restarted the Python kernel):
 .. code-block:: bash
 
     pip install -e .
+
+Note: It is recommended to install the package without ``-e`` flag initially
+to ensure that the template files are copied correctly.
