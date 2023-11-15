@@ -2284,12 +2284,12 @@ class Application(VuetifyTemplate, HubListener):
         viewer.figure_widget.layout.height = '100%'
 
         if hasattr(viewer.state, 'linked_by_wcs'):
-            links_control_plugin = self._jdaviz_helper.plugins.get('Links Control', None)
-            if links_control_plugin is not None:
-                viewer.state.linked_by_wcs = links_control_plugin.link_type.selected == 'WCS'
+            orientation_plugin = self._jdaviz_helper.plugins.get('Orientation', None)
+            if orientation_plugin is not None:
+                viewer.state.linked_by_wcs = orientation_plugin.link_type.selected == 'WCS'
             elif len(self._viewer_store):
                 # The plugin would only not exist for instances of Imviz where the user has
-                # intentionally removed the Links Control plugin, but in that case we will
+                # intentionally removed the Orientation plugin, but in that case we will
                 # adopt "linked_by_wcs" from the first (assuming all are the same)
                 # NOTE: deleting the default viewer is forbidden both by API and UI, but if
                 # for some reason that was the case here, linked_by_wcs will default to False

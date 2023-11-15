@@ -488,7 +488,7 @@ def link_image_data(app, link_type='wcs', wcs_fallback_scheme=None, wcs_use_affi
         some Imviz functionality may not work properly.
 
     update_plugin : bool
-        Whether to update the state of the "Links Control" plugin, if available.
+        Whether to update the state of the "Orientation" plugin, if available.
 
     Raises
     ------
