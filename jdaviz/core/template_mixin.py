@@ -1245,6 +1245,7 @@ class LayerSelect(SelectPluginComponent):
 
         self.app.state.add_callback('layer_icons', lambda _: self._on_layers_changed())
         self.add_observe(viewer, self._on_viewer_changed)
+        self.add_observe(selected, self._on_layers_changed)
         self._on_layers_changed()
 
         self.callbacks_list = []
@@ -1304,21 +1305,47 @@ class LayerSelect(SelectPluginComponent):
         print("unique return", np.unique(layer_labels, return_index=True))
         _, inds = np.unique(layer_labels, return_index=True)
         layers_unique = [layers[i] for i in inds]
+
+        # if self.selected_obj and len(self.selected_obj) > 0 and isinstance(self.selected_obj[0], list):
+        #     selected_labels = [selected.layer.label for selected in self.selected_obj[0]]
+        # else:
+        #     selected_labels = None
+        selected_labels = self.selected
+
+        selected_color = None
+        mixed_selected_color = False
         label_to_color = {}
         label_mixed_color = {}
+        print(selected_labels)
         for layer in layers:
             label = layer.layer.label
             color = layer.state.color
+            if selected_labels and label in selected_labels and selected_color is None:
+                selected_color = color
+            elif selected_labels and label in selected_labels and color is not selected_color:
+                mixed_selected_color = True
             # label_to_color tracks all colors per layer label
+            print(label, label_to_color, color, selected_color, mixed_selected_color)
             if label not in label_to_color:
                 label_to_color[label] = [color]
-                label_mixed_color[label] = False
+                label_mixed_color[label] = (False if (selected_labels is None
+                                                      or len(selected_labels) == 0
+                                                      or not self.multiselect
+                                                      or (color == selected_color
+                                                          and not mixed_selected_color))
+                                            else True)
             else:
                 # If the color is not yet present, then layers
                 # with this label have mixed color
                 if color not in label_to_color[label]:
                     label_mixed_color[label] = True
                 label_to_color[label] += [color]
+                label_mixed_color[label] = (False if (selected_labels is None
+                                                      or len(selected_labels) == 0
+                                                      or not self.multiselect
+                                                      or (color == selected_color
+                                                          and not mixed_selected_color))
+                                            else True)
 
         self.items = manual_items + [self._layer_to_dict(layer, label_to_color, label_mixed_color)
                                      for layer in layers_unique]
