@@ -74,7 +74,7 @@
           <plugin-viewer-select
             :items="viewer_items"
             :selected.sync="viewer_selected"
-            :multiselect=false
+            :multiselect="false"
             :label="'Viewer'"
             :show_if_single_entry="multiselect"
             :hint="'Select the viewer to set orientation'"
@@ -82,13 +82,15 @@
           <plugin-layer-select
             :items="orientation_layer_items"
             :selected.sync="orientation_layer_selected"
-            :multiselect=false
+            :multiselect="false"
+            :icons="icons"
             :show_if_single_entry="true"
             :label="'Orientation in viewer'"
             :hint="'Select the viewer orientation'"
           />
           <v-row>
             <span style="line-height: 36px">Presets:</span>
+            <!-- NOTE: changes to icons here should be manually reflected in layer_icons in app.py -->
             <j-tooltip tooltipcontent="Default orientation">
               <v-btn icon @click="select_default_orientation">
                 <v-icon>mdi-image-outline</v-icon>
@@ -96,12 +98,12 @@
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east left">
               <v-btn icon @click="set_north_up_east_left">
-                <img :src="icon_nuel" width="24" class="invert-if-dark" style="opacity: 0.65"/>
+                <img :src="icons['nuel']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east right">
               <v-btn icon @click="set_north_up_east_right">
-                <img :src="icon_nuer" width="24" class="invert-if-dark" style="opacity: 0.65"/>
+                <img :src="icons['nuer']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
               </v-btn>
             </j-tooltip>
           </v-row>

@@ -1,12 +1,10 @@
-import os
-from traitlets import List, Unicode, Bool, observe
+from traitlets import List, Unicode, Bool, Dict, observe
 
 from glue.core.message import (
     DataCollectionAddMessage, SubsetCreateMessage, SubsetDeleteMessage
 )
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
-from glue_jupyter.common.toolbar_vuetify import read_icon
 
 import astropy.units as u
 from jdaviz.configs.imviz.helper import (
@@ -26,7 +24,6 @@ from jdaviz.core.template_mixin import (
     PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
 )
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.core.tools import ICON_DIR
 
 __all__ = ['Orientation']
 
@@ -78,12 +75,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     relink = Bool(True).tag(sync=True)
     east_left = Bool(True).tag(sync=True)  # set convention for east left of north
 
-    icon_nuer = Unicode(
-        read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml')
-    ).tag(sync=True)
-    icon_nuel = Unicode(
-        read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml')
-    ).tag(sync=True)
+    icons = Dict().tag(sync=True)
 
     viewer_items = List().tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
@@ -98,6 +90,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.icons = {k: v for k, v in self.app.state.icons.items()}
 
         self.link_type = SelectPluginComponent(self,
                                                items='link_type_items',

@@ -210,7 +210,9 @@ class ApplicationState(State):
 
     icons = DictCallbackProperty({
         'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
-        'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')
+        'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml'),
+        'nuer': read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml'),
+        'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml')
     }, docstring="Custom application icons")
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
@@ -479,20 +481,22 @@ class Application(VuetifyTemplate, HubListener):
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
-        wcs_only_refdata_icon = 'mdi-compass-outline'
+        wcs_only_refdata_icon = ''  # blank - might be replaced with custom icon in the future
+        # any changes here should also be manually reflected in orientation.vue
+        orientation_icons = {'Default orientation': 'mdi-image-outline',
+                             'North-up, East-left': 'nuel',
+                             'North-up, East-right': 'nuer'}
 
-        n_wcs_layers = (
-            len([icon.startswith('mdi-rotate-left') for icon in self.state.layer_icons])
-            if is_wcs_only else 0
-        )
         if layer_name not in self.state.layer_icons:
             if is_wcs_only:
                 self.state.layer_icons = {**self.state.layer_icons,
-                                          layer_name: wcs_only_refdata_icon}
+                                          layer_name: orientation_icons.get(layer_name,
+                                                                            wcs_only_refdata_icon)}
             else:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
-                    layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items() if ic != wcs_only_refdata_icon]) - n_wcs_layers)
+                    layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items()
+                                                 if not ic.startswith('mdi-')]))
                 }
 
     def _change_reference_data(self, new_refdata_label, viewer_id=None):

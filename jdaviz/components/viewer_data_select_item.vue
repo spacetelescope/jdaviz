@@ -5,16 +5,12 @@
         :tooltipcontent="isRefData() ? 'Current viewer orientation' : 'Set as viewer orientation'"
         span_style="width: 36px"
       >
-        <span @click="selectRefData">
-          <v-badge
-            dot
-            style="margin-right: 0px; margin-left: 8px; margin-top: 6px"
-            color="accent"
-            :value="isRefData()"
-          >
-            <j-layer-viewer-icon :icon="icon" icon_size="20" color="#000000DE"></j-layer-viewer-icon>
-          </v-badge>
-        </span>
+        <v-btn 
+          icon
+          :color="isRefData() ? 'accent' : 'default'"
+          @click="selectRefData">
+            <v-icon>{{isRefData() ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
+        </v-btn>
       </j-tooltip>
     </div>
     <div v-else-if="isSelected">
@@ -50,8 +46,7 @@
     </div>
 
     <j-tooltip :tooltipcontent="is_wcs_only ? '' : 'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
-      <j-layer-viewer-icon v-if="!is_wcs_only" span_style="margin-left: 4px;" :icon="icon" color="#000000DE"></j-layer-viewer-icon>
-      <span v-else style="padding-right: 24px"></span>
+      <j-layer-viewer-icon span_style="margin-left: 4px;" :icon="icon" :icons="icons" color="#000000DE"></j-layer-viewer-icon>
 
       <div class="text-ellipsis-middle" style="font-weight: 500;">
         <span>
@@ -89,7 +84,7 @@
 <script>
 
 module.exports = {
-  props: ['item', 'icon', 'multi_select', 'viewer', 'n_data_entries', 'is_wcs_only'],
+  props: ['item', 'icon', 'icons', 'multi_select', 'viewer', 'n_data_entries', 'is_wcs_only'],
   methods: {
     selectClicked() {
       prevVisibleState = this.visibleState

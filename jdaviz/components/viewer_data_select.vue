@@ -47,6 +47,7 @@
           <j-viewer-data-select-item
             :item="item"
             :icon="layer_icons[item.name]"
+            :icons="icons"
             :viewer="viewer"
             :multi_select="multi_select"
             :is_wcs_only="false"
@@ -63,6 +64,7 @@
             <j-viewer-data-select-item
               :item="item"
               :icon="layer_icons[item.name]"
+              :icons="icons"
               :viewer="viewer"
               :multi_select="multi_select"
               :is_wcs_only="true"
@@ -93,6 +95,7 @@
             <j-viewer-data-select-item
               :item="item"
               :icon="layer_icons[item.name]"
+              :icons="iconsf"
               :viewer="viewer"
               :multi_select="multi_select"
               :is_wcs_only="false"
