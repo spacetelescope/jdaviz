@@ -31,7 +31,7 @@
     <v-alert
       v-else-if="mode=='remove'"
       type="warning"
-      style="width: 100%"
+      style="width: 100%; padding-top: 16px; padding-bottom: 16px"
     >
       <span>remove '{{selected}}' {{label.toLowerCase()}}?</span>
       <template v-slot:append>
