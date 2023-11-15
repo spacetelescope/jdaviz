@@ -450,7 +450,7 @@ def get_reference_image_data(app, viewer_id=None):
     return refdata, iref
 
 
-def link_image_data(app, link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=True,
+def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_affine=True,
                     error_on_fail=False, update_plugin=True):
     """(Re)link loaded data in Imviz with the desired link type.
 

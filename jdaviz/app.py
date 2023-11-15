@@ -311,7 +311,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # Imviz linking
         self._wcs_only_label = "_WCS_ONLY"
-        self._link_type = 'WCS'
+        self._link_type = 'pixels'
         if self.config == "imviz":
             self._wcs_use_affine = None
 
