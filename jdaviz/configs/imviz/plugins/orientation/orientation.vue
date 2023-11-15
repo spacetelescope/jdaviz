@@ -10,38 +10,25 @@
         <j-plugin-section-header>Align Layers</j-plugin-section-header>
 
         <v-alert v-if="!wcs_linking_available" type='warning' style="margin-left: -12px; margin-right: -12px">
-            Please add at least one data with valid WCS to align by sky (WCS).
+          Please add at least one data with valid WCS to align by sky (WCS).
         </v-alert>
 
-        <div v-if="need_clear_astrowidget_markers"
-              class="text-center"
-              style="grid-area: 1/1; 
-                     z-index:2;
-                     margin-left: -24px;
-                     margin-right: -24px;
-                     padding-top: 60px;
-                     background-color: rgb(0 0 0 / 80%)">
-           <v-card color="transparent" elevation=0 >
-             <v-card-text width="100%">
-               <div class="white--text">
-                 Astrowidget markers must be cleared before changing alignment/linking options.
-               </div>
-             </v-card-text>
-
-             <v-card-actions>
-               <v-row justify="end">
-                 <v-btn tile small color="accent" class="mr-4" @click="reset_markers" >Clear Markers</v-btn>
-               </v-row>
-             </v-card-actions>
-           </v-card>
-        </div>
+        <v-alert v-if="need_clear_astrowidget_markers" type='warning' style="margin-left: -12px; margin-right: -12px">
+          Astrowidget markers must be cleared before changing alignment/linking options.
+          <v-row justify="end">
+            <v-btn @click="reset_markers">Clear Markers</v-btn>
+          </v-row>
+        </v-alert>
 
         <v-alert v-if="plugin_markers_exist" type='warning' style="margin-left: -12px; margin-right: -12px">
           Marker positions may not be pixel-perfect when changing alignment/linking options.
         </v-alert>
 
         <v-alert v-if="need_clear_subsets" type='warning' style="margin-left: -12px; margin-right: -12px">
-            Existing subsets will be deleted on changing alignment/linking options.
+          Existing subsets will be deleted on changing alignment/linking options.
+          <v-row justify="end">
+            <v-btn @click="delete_subsets">Clear Subsets</v-btn>
+          </v-row>
         </v-alert>
 
         <v-row class="row-min-bottom-padding">
@@ -50,7 +37,7 @@
             hint="Align individual image layers by pixels or on the sky by WCS."
             v-model="link_type_selected"
             @change="delete_subsets($event)"
-            :disabled="!wcs_linking_available"
+            :disabled="!wcs_linking_available || need_clear_astrowidget_markers || need_clear_subsets"
             persistent-hint
             row>
             <v-radio
