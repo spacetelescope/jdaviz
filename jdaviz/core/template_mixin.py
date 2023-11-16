@@ -1334,7 +1334,10 @@ class LayerSelect(SelectPluginComponent):
             layer = kwargs.pop('layer', None)
             if not layer:
                 return
-            index = [index for index, item in enumerate(self.items) if item['label'] == layer.layer.label][0]  # noqa
+            index = [index for index, item in enumerate(self.items) if item['label'] == layer.layer.label]  # noqa
+            if not index:
+                print("Unable to change color")
+            index = index[0]
             self.items[index]['color'] = layer.color
             self.plugin.send_state('layer_items')
             # Is this faster?
