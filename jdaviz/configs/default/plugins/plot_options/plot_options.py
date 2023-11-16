@@ -468,10 +468,6 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
         self.stretch_histogram._initialize_toolbar(["jdaviz:stretch_bounds"])
 
-        # NOTE: this is a current workaround so the histogram viewer doesn't crash when replacing
-        # data.  Note also that passing x=[0] fails on SOME machines, so we'll pass [0, 1] instead
-        self.stretch_histogram._add_data('ref', x=[0, 1])
-        self.stretch_histogram.layers['ref'].state.visible = False
         self.stretch_histogram._add_data('histogram', x=[0, 1])
 
         self.stretch_histogram.add_line('vmin', x=[0, 0], y=[0, 1], ynorm=True, color='#c75d2c')
@@ -490,6 +486,8 @@ class PlotOptions(PluginTemplateMixin):
             color="#007BA1",  # "inactive" blue
         )
         self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
+        self.stretch_histogram.viewer.state.update_bins_on_reset_limits = False
+        self.stretch_histogram.viewer.state.x_limits_percentile = 95
         with self.stretch_histogram.figure.hold_sync():
             self.stretch_histogram.figure.axes[0].label = 'pixel value'
             self.stretch_histogram.figure.axes[0].num_ticks = 3
