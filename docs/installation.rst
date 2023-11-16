@@ -108,19 +108,12 @@ You also need the up-to-date tags for proper software versioning:
     git rebase upstream/main
 
 For the rest of contributing workflow, it is very similar to
-`how to make code contribution to astropy <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_,
-except for the change log.
-If your patch requires a change log, see ``CHANGES.rst`` for examples.
+`how to make a code contribution to astropy <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_,
+including setting up virtual environments, git basics, and more.
 
-To install ``jdaviz`` for development or from source in an editable mode
-(i.e., changes to the locally checked out code would reflect in runtime
-after you restarted the Python kernel):
+An exception is the change log; if your patch requires a change log, see ``CHANGES.rst`` for examples.
 
-.. code-block:: bash
-
-    pip install -e .
-
-Optionally, to enable the hot reloading of Vue.js templates, install
+One option is to enable the hot reloading of Vue.js templates, install
 ``watchdog``:
 
 .. code-block:: bash
@@ -134,3 +127,23 @@ of a notebook:
 
     from jdaviz import enable_hot_reloading
     enable_hot_reloading()
+
+Another option is to enable magic commands for Python autoreloading, to use it,
+add the following to the top of a notebook:
+
+.. code-block:: python
+
+    %load_ext autoreload
+    %autoreload 2
+
+
+To install ``jdaviz`` for development or from source in an editable mode
+(i.e., changes to the locally checked out code would reflect in runtime
+after you restarted the Python kernel):
+
+.. code-block:: bash
+
+    pip install -e .
+
+Note: It is recommended to install the package without ``-e`` flag initially
+to ensure that the template files are copied correctly.
