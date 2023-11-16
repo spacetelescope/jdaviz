@@ -39,6 +39,7 @@ class UnitConversion(PluginTemplateMixin):
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``spectral_unit`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Global unit to use for all spectral axes.
     * ``flux_unit`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):

@@ -29,6 +29,7 @@ class Slice(PluginTemplateMixin):
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``slice``
       Current slice number.
     * ``wavelength``

@@ -34,6 +34,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
       Viewer to select for exporting the figure image.
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * :meth:`save_figure`
     * :meth:`save_movie` (Cubeviz only)
     * `i_start` (Cubeviz only)

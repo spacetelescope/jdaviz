@@ -389,6 +389,21 @@ class PluginTemplateMixin(TemplateMixin):
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
 
+    def close_in_tray(self, close_sidebar=False):
+        """
+        Close the plugin in the sidebar/tray.
+
+        Parameters
+        ----------
+        close_sidebar : bool
+            Whether to also close the sidebar itself.
+        """
+        app_state = self.app.state
+        index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
+        app_state.tray_items_open = [ind for ind in app_state.tray_items_open if ind != index]
+        if close_sidebar:
+            self.app.state.drawer = False
+
     @observe('plugin_opened', 'keep_active')
     def _update_is_active(self, *args):
         self.is_active = self.keep_active or self.plugin_opened

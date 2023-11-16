@@ -34,6 +34,7 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the spectral extraction, or ``No Subset``.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
