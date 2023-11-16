@@ -1323,8 +1323,9 @@ class LayerSelect(SelectPluginComponent):
             # Trying to figure out the difference between watching `layer_icons` and
             # subscribing to Data add/remove messages
             print("LAYER ICON CHANGED")
-        elif msg and msg == 'color_change':
+        elif msg and msg == 'color_change' and isinstance(self.selected, str):
             # Update the items index for only the layer affected
+            # and only if one label is selected
             layer = kwargs.pop('layer', None)
             if not layer:
                 return
@@ -1376,7 +1377,7 @@ class LayerSelect(SelectPluginComponent):
             # then there is no mixed color state. Otherwise there is.
             if selected_labels and label in selected_labels and selected_color is None:
                 selected_color = color
-            elif selected_labels and label in selected_labels and color is not selected_color:
+            elif selected_labels and label in selected_labels and color != selected_color:
                 mixed_selected_color = True
 
             # label_to_color tracks all colors per layer label
