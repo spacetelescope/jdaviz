@@ -1260,8 +1260,8 @@ class LayerSelect(SelectPluginComponent):
         d = {"label": layer.layer.label,
              "color": layer.state.color,
              "icon": self.app.state.layer_icons.get(layer.layer.label),
-             "visible": (layer.state.bitmap_visible if hasattr(layer, 'state')
-                                                       and hasattr(layer.state, 'bitmap_visible')
+             "visible": (layer.state.bitmap_visible
+                         if hasattr(layer, 'state') and hasattr(layer.state, 'bitmap_visible')
                          else layer.visible),
              "mixed_color": (False if not label_mixed_color
                              else label_mixed_color[layer.layer.label]),
