@@ -728,7 +728,6 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
                 self.selected = [s for s in self.labels if s in self.selected]
                 return
             is_valid = False
-        print(self.selected, self.labels, self.selected in self.labels)
         is_valid = self.selected in self.labels
         if callable(self.default_mode):
             # callable was defined and passed by the plugin or inheriting component.
