@@ -1282,9 +1282,13 @@ class LayerSelect(SelectPluginComponent):
             added_viewers = list(set(new) - set(old))
             removed_viewers = list(set(old) - set(new))
             for old_viewer in removed_viewers:
+                if self._get_viewer(old_viewer) is None:
+                    continue
                 for layer in self._get_viewer(old_viewer).state.layers:
                     layer.remove_callback('color', lambda _: self._on_layers_changed('color_change'))  # noqa
             for new_viewer in added_viewers:
+                if self._get_viewer(new_viewer) is None:
+                    continue
                 for layer in self._get_viewer(new_viewer).state.layers:
                     layer.add_callback('color', lambda _: self._on_layers_changed('color_change'))
 
@@ -1299,7 +1303,7 @@ class LayerSelect(SelectPluginComponent):
                     # for determining which layer to watch for the color change event
                     layer.add_callback('color', lambda _: self._on_layers_changed('color_change', layer=layer))  # noqa
                     # TODO: Add ability to add new item to self.items instead of recompiling
-                    self._on_layers_changed('subset_added')
+                    # self._on_layers_changed('subset_added')
                     return
 
     def _on_data_added(self, msg=None):
@@ -1314,7 +1318,7 @@ class LayerSelect(SelectPluginComponent):
                     # TODO: find out if this conflicts with another color change event
                     #  and is causing the lag in the color picker
                     layer.add_callback('color', lambda _: self._on_layers_changed('color_change', layer=layer))  # noqa
-        self._on_layers_changed('data_added')
+        # self._on_layers_changed('data_added')
 
     @observe('filters')
     def _on_layers_changed(self, msg=None, **kwargs):
@@ -1398,8 +1402,14 @@ class LayerSelect(SelectPluginComponent):
 
         # Send layers with unique labels and what colors are associated
         # with that label and if layers with that label are in a mixed color state
-        self.items = manual_items + [self._layer_to_dict(layer, label_to_color, label_mixed_color)
+        items = manual_items + [self._layer_to_dict(layer, label_to_color, label_mixed_color)
                                      for layer in layers_unique]
+
+        print(items)
+        def _sort_by_icon(items_dict):
+            return items_dict['icon']
+        items.sort(key=_sort_by_icon)
+        self.items = items
 
         self._apply_default_selection()
 
