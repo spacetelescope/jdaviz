@@ -1298,8 +1298,9 @@ class LayerSelect(SelectPluginComponent):
                     # A subset layer is created for each data in the viewer, this is an issue
                     # for determining which layer to watch for the color change event
                     layer.add_callback('color', lambda _: self._on_layers_changed('color_change', layer=layer))  # noqa
-                    break
-        self._on_layers_changed('subset_added')
+                    # TODO: Add ability to add new item to self.items instead of recompiling
+                    self._on_layers_changed('subset_added')
+                    return
 
     def _on_data_added(self, msg=None):
         print("DATA ADDED", self.plugin.app.data_collection[-1].label)
