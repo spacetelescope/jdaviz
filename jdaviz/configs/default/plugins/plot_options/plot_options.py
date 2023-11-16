@@ -330,6 +330,7 @@ class PlotOptions(PluginTemplateMixin):
         super().__init__(*args, **kwargs)
         self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')  # noqa
+
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
             ['#FFD300', '#AAAA00', '#555500'],
