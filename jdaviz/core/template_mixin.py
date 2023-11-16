@@ -1403,9 +1403,8 @@ class LayerSelect(SelectPluginComponent):
         # Send layers with unique labels and what colors are associated
         # with that label and if layers with that label are in a mixed color state
         items = manual_items + [self._layer_to_dict(layer, label_to_color, label_mixed_color)
-                                     for layer in layers_unique]
+                                for layer in layers_unique]
 
-        print(items)
         def _sort_by_icon(items_dict):
             return items_dict['icon']
         items.sort(key=_sort_by_icon)
