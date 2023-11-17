@@ -626,7 +626,8 @@ class PlotOptions(PluginTemplateMixin):
         # Switch back to this at the end
         initial_layer = self.layer_selected
 
-        visible_layers = [layer['label'] for layer in self.layer.items if not layer['is_subset'] and layer['visible']]  # noqa
+        # Determine layers visible in selected viewer(s) - consider mixed to be visible
+        visible_layers = [layer['label'] for layer in self.layer.items if not layer['is_subset'] and (layer['visible'] or layer['mixed_visibility'])]  # noqa
 
         # Set opacity to something that seems sensible
         n_visible = len(visible_layers)

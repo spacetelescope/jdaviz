@@ -27,7 +27,9 @@ module.exports = {
   methods: {
     tooltipContent(item) {
       var tooltip = item.label
-      if (!item.visible) {
+      if (item.mixed_visibility) {
+        tooltip += '<br/>Visible: mixed'
+      } else if (!item.visible) {
         tooltip += '<br/>Visible: false'
       }
       if (this.$props.colormode === 'Colormaps' && !item.is_subset) {
@@ -42,7 +44,7 @@ module.exports = {
     },
     visibilityStyle(item) {
       if (item.mixed_visibility){
-        return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7) 3px, transparent 3px, transparent 3px, transparent 10px)'
+        return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.3), rgba(0,0,0,0.3) 3px, transparent 3px, transparent 3px, transparent 10px)'
       }
       else if (item.visible) {
         return 'repeating-linear-gradient(30deg, transparent, transparent 10px)'
