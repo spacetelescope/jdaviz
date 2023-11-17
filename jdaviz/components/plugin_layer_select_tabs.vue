@@ -1,25 +1,24 @@
 <template>
   <div>
-    <v-row>
-      <v-col v-for="(item, index) in items">
+    <span style="display: inline-block; white-space: nowrap; margin-left: -24px; width: calc(100% + 48px); overflow-x: scroll; overflow-y: hidden">
+      <span v-for="(item, index) in items" :style="'display: inline-block; padding: 12px; '+(selected.includes(item.label) ? 'background-color: rgba(0,0,0,0.1)' : '')">
         <j-tooltip :tooltipcontent="tooltipContent(item)">
           <v-btn
             :rounded="item.is_subset"
             :elevation="(selected.indexOf(item.label) !== -1 || selected === item.label) ? 0 : 20 "
             @click="() => {if (!multiselect){$emit('update:selected', item.label)} else if(selected.indexOf(item.label) === -1) {$emit('update:selected', selected.concat(item.label))} else {$emit('update:selected', selected.filter(select => select != item.label))} }"
-            :style="'background: '+visibilityStyle(item)+', '+colorStyle(item)"
-          
+            :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityStyle(item)+', '+colorStyle(item)"
+            width="30px"
+            min-width="30px"
+            height="30px"
           >
             <span style="color: white; text-shadow: 0px 0px 3px black">
               {{ item.icon }}
             </span>
           </v-btn>
         </j-tooltip>
-      </v-col>
-    </v-row>
-    <v-row>
-      <span>Selected: {{ selected }}</span>
-    </v-row>
+      </span>
+    </span>
  </div>
 </template>
 
@@ -48,11 +47,12 @@ module.exports = {
     },
     colorStyle(item) {
       if (item.mixed_color) {
-        //colors = ['blue', 'green']
-        colors = ['red', 'green', 'blue']
-        const strip_width = 62 / colors.length
+        colors = ['blue', 'green']
+        //colors = ['red', 'green', 'blue']
+        //colors = ['red', 'green', 'blue', 'purple', 'yellow']
+        const strip_width = 42 / colors.length
 
-        var style = 'repeating-linear-gradient( -30deg, '
+        var style = 'repeating-linear-gradient( -45deg, '
         for ([ind, color] of colors.entries()) {
           style += color + ' '+ind*strip_width+'px, ' + color + ' '+(ind+1)*strip_width+'px'
           if (ind !== colors.length-1) {
@@ -62,7 +62,7 @@ module.exports = {
         style += ')'
         return style
       } else {
-        return 'repeating-linear-gradient( -30deg, '+item.color+', '+item.color+' 20px)'
+        return 'repeating-linear-gradient( -45deg, '+item.color+', '+item.color+' 20px)'
       }
     }
   }

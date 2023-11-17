@@ -15,7 +15,7 @@
     white-space: nowrap; 
     margin-left: -12px;
     margin-right: -12px;
-    margin-top: 40px;
+    margin-top: 36px;
     margin-bottom: 8px;
 }
 
