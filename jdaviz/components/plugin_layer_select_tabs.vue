@@ -30,12 +30,12 @@ module.exports = {
       if (!item.visible) {
         tooltip += '<br/>Visible: false'
       }
-      if (this.$props.colormode === 'Colormaps') {
+      if (this.$props.colormode === 'Colormaps' && !item.is_subset) {
         tooltip += '<br/>Color mode: colormap'
-      } else if (this.$props.colormode === 'mixed') {
+      } else if (this.$props.colormode === 'mixed' && !item.is_subset) {
         tooltip += '<br/>Color mode: mixed'
       }
-      if (item.mixed_color && this.$props.colormode !== 'Colormaps') {
+      if (item.mixed_color && (this.$props.colormode !== 'Colormaps' || item.is_subset)) {
         tooltip += '<br/>Color: mixed'
       }
       return tooltip
@@ -51,7 +51,7 @@ module.exports = {
       }
     },
     colorStyle(item) {
-      if (this.$props.colormode == 'Colormaps') {
+      if (this.$props.colormode == 'Colormaps' && !item.is_subset) {
         return 'repeating-linear-gradient( -45deg, gray, gray 20px)'
       }
       if (item.mixed_color) {
