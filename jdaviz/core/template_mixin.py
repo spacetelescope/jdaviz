@@ -3143,8 +3143,10 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._update_mixed_state()
         self._processing_change_from_glue = False
 
-    def unmix_state(self):
-        self._on_value_changed({'new': self.value})
+    def unmix_state(self, new_value=None):
+        if new_value is None:
+            new_value = self.value
+        self._on_value_changed({'new': new_value})
         self.sync = {**self.sync,
                      'mixed': False}
 

@@ -646,10 +646,10 @@ class PlotOptions(PluginTemplateMixin):
 
         for i in range(n_visible):
             self.layer_selected = visible_layers[i]
-            self.image_opacity_value = default_opacity
-            self.image_color_value = preset_colors[i]
-            self.stretch_function_value = "arcsinh"
-            self.stretch_preset_value = 99
+            self.image_opacity.unmix_state(default_opacity)
+            self.image_color.unmix_state(preset_colors[i])
+            self.stretch_function.unmix_state("arcsinh")
+            self.stretch_preset.unmix_state(99)
 
         self.layer_selected = initial_layer
 
