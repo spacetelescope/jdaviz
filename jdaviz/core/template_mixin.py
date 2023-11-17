@@ -1370,9 +1370,7 @@ class LayerSelect(SelectPluginComponent):
         for layer in layers:
             label = layer.layer.label
             color = layer.state.color.lower()
-            visible = ((layer.state.bitmap_visible and layer.visible)
-                       if hasattr(layer, 'state') and hasattr(layer.state, 'bitmap_visible')
-                       else layer.visible)
+            visible = getattr(layer.state, 'bitmap_visible', True) and layer.visible
             # This handles the subset case since each subset can only be one color,
             # even though there is a layer with the subsets name for each data layer that
             # subset is applied to
