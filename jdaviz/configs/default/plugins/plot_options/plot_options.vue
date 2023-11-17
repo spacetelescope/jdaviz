@@ -611,7 +611,7 @@ module.exports = {
     this.contour_custom_levels_user_editing = false
     this.throttledSetValue = _.throttle(
       (name, v) => { this.set_value({name: name, value: v}) },
-      100);
+      600);
   },
   watch: {
     contour_custom_levels_value() {
