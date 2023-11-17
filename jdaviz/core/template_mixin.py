@@ -1266,9 +1266,7 @@ class LayerSelect(SelectPluginComponent):
              "color": layer.state.color,
              "all_colors_to_label": label_to_color.get(layer.layer.label, False),
              "icon": self.app.state.layer_icons.get(layer.layer.label),
-             "visible": ((layer.state.bitmap_visible and layer.visible)
-                         if hasattr(layer, 'state') and hasattr(layer.state, 'bitmap_visible')
-                         else layer.visible),
+             "visible": getattr(layer.state, 'bitmap_visible', True) and layer.visible,
              "mixed_color": label_mixed_color.get(layer.layer.label, False),
              "mixed_visibility": label_mixed_visibility.get(layer.layer.label, False),
              "is_subset": is_subset}
@@ -1292,12 +1290,10 @@ class LayerSelect(SelectPluginComponent):
                     continue
                 for layer in self._get_viewer(old_viewer).state.layers:
                     layer.remove_callback('color', self._on_layers_changed)
-                    # Will uncommenting this have unintended consequences?
-
-                    # if hasattr(layer, 'bitmap_visible'):
-                    #     layer.remove_callback('bitmap_visible', self._on_layers_changed)
-                    # elif hasattr(layer, 'visible'):
-                    #     layer.remove_callback('visible', self._on_layers_changed)
+                    if hasattr(layer, 'bitmap_visible'):
+                        layer.remove_callback('bitmap_visible', self._on_layers_changed)
+                    elif hasattr(layer, 'visible'):
+                        layer.remove_callback('visible', self._on_layers_changed)
 
             for new_viewer in added_viewers:
                 if self._get_viewer(new_viewer) is None:
