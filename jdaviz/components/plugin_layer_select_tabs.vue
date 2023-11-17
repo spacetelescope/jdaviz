@@ -1,7 +1,7 @@
 <template>
   <div>
-    <span style="display: inline-block; white-space: nowrap; margin-left: -24px; width: calc(100% + 48px); overflow-x: scroll; overflow-y: hidden">
-      <span v-for="(item, index) in items" :style="'display: inline-block; padding: 12px; '+(selected.includes(item.label) ? 'background-color: rgba(0,0,0,0.1)' : '')">
+    <span class="suppress-scrollbar" style="display: inline-block; white-space: nowrap; margin-left: -24px; width: calc(100% + 48px); overflow-x: scroll; overflow-y: hidden">
+      <span v-for="(item, index) in items" :class="selected.includes(item.label) ? 'layer-tab-selected' : ''" :style="'display: inline-block; padding: 12px; '+(selected.includes(item.label) ? 'border-top: 2px solid #c75109' : '')">
         <j-tooltip :tooltipcontent="tooltipContent(item)">
           <v-btn
             :rounded="item.is_subset"
