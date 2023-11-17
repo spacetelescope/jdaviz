@@ -5,7 +5,6 @@
         <j-tooltip :tooltipcontent="tooltipContent(item)">
           <v-btn
             :rounded="item.is_subset"
-            :elevation="(selected.indexOf(item.label) !== -1 || selected === item.label) ? 0 : 20 "
             @click="() => {if (!multiselect){$emit('update:selected', item.label)} else if(selected.indexOf(item.label) === -1) {$emit('update:selected', selected.concat(item.label))} else {$emit('update:selected', selected.filter(select => select != item.label))} }"
             :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityStyle(item)+', '+colorStyle(item)"
             width="30px"
