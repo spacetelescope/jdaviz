@@ -626,13 +626,7 @@ class PlotOptions(PluginTemplateMixin):
         # Switch back to this at the end
         initial_layer = self.layer_selected
 
-        # Filter out subset layers
-        image_layers = [layer for layer in self.layer.choices if "Subset" not in layer]
-        visible_layers = []
-        for layer in image_layers:
-            self.layer_selected = layer
-            if self.image_visible.value:
-                visible_layers.append(layer)
+        visible_layers = [layer['label'] for layer in self.layer.items if not layer['is_subset'] and layer['visible']]
 
         # Set opacity to something that seems sensible
         n_visible = len(visible_layers)
