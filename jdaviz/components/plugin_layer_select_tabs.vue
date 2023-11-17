@@ -54,9 +54,7 @@ module.exports = {
         return 'repeating-linear-gradient( -45deg, gray, gray 20px)'
       }
       if (item.mixed_color) {
-        colors = ['blue', 'green']
-        //colors = ['red', 'green', 'blue']
-        //colors = ['red', 'green', 'blue', 'purple', 'yellow']
+        colors = item.all_colors_to_label
         const strip_width = 42 / colors.length
 
         var style = 'repeating-linear-gradient( -45deg, '
