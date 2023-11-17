@@ -1266,7 +1266,7 @@ class LayerSelect(SelectPluginComponent):
              "color": layer.state.color,
              "all_colors_to_label": label_to_color.get(layer.layer.label, False),
              "icon": self.app.state.layer_icons.get(layer.layer.label),
-             "visible": (layer.state.bitmap_visible
+             "visible": ((layer.state.bitmap_visible and layer.visible)
                          if hasattr(layer, 'state') and hasattr(layer.state, 'bitmap_visible')
                          else layer.visible),
              "mixed_color": label_mixed_color.get(layer.layer.label, False),
@@ -1306,7 +1306,7 @@ class LayerSelect(SelectPluginComponent):
                     layer.add_callback('color', self._on_layers_changed)
                     if hasattr(layer, 'bitmap_visible'):
                         layer.add_callback('bitmap_visible', self._on_layers_changed)
-                    elif hasattr(layer, 'visible'):
+                    if hasattr(layer, 'visible'):
                         layer.add_callback('visible', self._on_layers_changed)
 
     def _on_subset_created(self, msg=None):
@@ -1337,7 +1337,7 @@ class LayerSelect(SelectPluginComponent):
                     layer.add_callback('color', self._on_layers_changed)
                     if hasattr(layer, 'bitmap_visible'):
                         layer.add_callback('bitmap_visible', self._on_layers_changed)
-                    elif hasattr(layer, 'visible'):
+                    if hasattr(layer, 'visible'):
                         layer.add_callback('visible', self._on_layers_changed)
 
         self._on_layers_changed('data_added')
@@ -1374,7 +1374,7 @@ class LayerSelect(SelectPluginComponent):
         for layer in layers:
             label = layer.layer.label
             color = layer.state.color.lower()
-            visible = (layer.state.bitmap_visible
+            visible = ((layer.state.bitmap_visible and layer.visible)
                        if hasattr(layer, 'state') and hasattr(layer.state, 'bitmap_visible')
                        else layer.visible)
             # This handles the subset case since each subset can only be one color,
