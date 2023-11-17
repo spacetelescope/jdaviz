@@ -1323,7 +1323,7 @@ class LayerSelect(SelectPluginComponent):
         self._on_layers_changed('subset_added')
 
     def _on_data_added(self, msg=None):
-        if msg is None or msg.data is None:
+        if msg is None or not hasattr(msg, 'data') or msg.data is None:
             return
         new_data_label = msg.data.label
         viewer = self.viewer if isinstance(self.viewer, list) else [self.viewer]
