@@ -41,13 +41,14 @@ module.exports = {
       return tooltip
     },
     visibilityStyle(item) {
-      if (item.visible) {
+      if (item.mixed_visibility){
+        return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7) 3px, transparent 3px, transparent 3px, transparent 10px)'
+      }
+      else if (item.visible) {
         return 'repeating-linear-gradient(30deg, transparent, transparent 10px)'
       } else {
         return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.8), rgba(0,0,0,0.8) 7px, transparent 7px, transparent 7px, transparent 10px)'
       }
-      // mixed visibility:
-      // 'repeating-linear-gradient(30deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7) 3px, transparent 3px, transparent 3px, transparent 10px)'
     },
     colorStyle(item) {
       if (this.$props.colormode == 'Colormaps') {
