@@ -96,6 +96,7 @@
       :items="layer_items"
       :selected.sync="layer_selected"
       :multiselect="multiselect"
+      :colormode="image_color_mode_sync['mixed'] ? 'mixed' : image_color_mode_value"
       label="Layers"
       hint="Select the data or subset to set options."
     />
@@ -368,8 +369,8 @@
         </span>
       </glue-state-sync-wrapper>
 
-      <div v-if="image_visible_sync.in_subscribed_states && image_visible_value">
-        <glue-state-sync-wrapper v-if="image_color_mode_value === 'Colormaps'" :sync="image_colormap_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_colormap')">
+      <div v-if="image_visible_sync.in_subscribed_states && (image_visible_value || image_visible_sync['mixed'])">
+        <glue-state-sync-wrapper v-if="image_color_mode_value === 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_colormap_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_colormap')">
           <v-select
             attach
             :menu-props="{ left: true }"
@@ -379,7 +380,7 @@
             dense
           ></v-select>
         </glue-state-sync-wrapper>
-        <glue-state-sync-wrapper v-else :sync="image_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color')">
+        <glue-state-sync-wrapper v-if="image_color_mode_value !== 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color')">
           <div>
             <v-subheader class="pl-0 slider-label" style="height: 12px">Image Color</v-subheader>
             <v-menu>

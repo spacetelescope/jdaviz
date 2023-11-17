@@ -24,15 +24,20 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'multiselect'],
+  props: ['items', 'selected', 'multiselect', 'colormode'],
   methods: {
     tooltipContent(item) {
       var tooltip = item.label
       if (!item.visible) {
-        tooltip += '<br/>not visible'
+        tooltip += '<br/>Visible: false'
       }
-      if (item.mixed_color) {
-        tooltip += '<br/>mixed-color'
+      if (this.$props.colormode === 'Colormaps') {
+        tooltip += '<br/>Color mode: colormap'
+      } else if (this.$props.colormode === 'mixed') {
+        tooltip += '<br/>Color mode: mixed'
+      }
+      if (item.mixed_color && this.$props.colormode !== 'Colormaps') {
+        tooltip += '<br/>Color: mixed'
       }
       return tooltip
     },
@@ -46,6 +51,9 @@ module.exports = {
       // 'repeating-linear-gradient(30deg, rgba(0,0,0,0.7), rgba(0,0,0,0.7) 3px, transparent 3px, transparent 3px, transparent 10px)'
     },
     colorStyle(item) {
+      if (this.$props.colormode == 'Colormaps') {
+        return 'repeating-linear-gradient( -45deg, gray, gray 20px)'
+      }
       if (item.mixed_color) {
         colors = ['blue', 'green']
         //colors = ['red', 'green', 'blue']
@@ -61,9 +69,9 @@ module.exports = {
         }
         style += ')'
         return style
-      } else {
-        return 'repeating-linear-gradient( -45deg, '+item.color+', '+item.color+' 20px)'
-      }
+      } 
+      return 'repeating-linear-gradient( -45deg, '+item.color+', '+item.color+' 20px)'
+
     }
   }
 };
