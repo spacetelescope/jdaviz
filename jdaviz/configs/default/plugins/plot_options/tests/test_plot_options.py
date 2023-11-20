@@ -305,3 +305,75 @@ def test_apply_presets(imviz_helper):
             assert po.image_color.value == matplotlib.colors.to_hex(colorbar_colors(color_ind),
                                                                     keep_alpha=True)
             color_ind += 1
+
+
+def test_track_mixed_states(imviz_helper):
+    # Initialize two viewer with 3 data each.
+    # Each layer of the data will be RGB
+    arr = np.arange(36).reshape(6, 6)
+    po = imviz_helper.app.get_tray_item_from_name("g-plot-options")
+    rgb_colors = ["#ff0000", "#00ff00", "#0000ff"]
+
+    for i in range(3):
+        imviz_helper.load_data(arr, data_label=f"array_{i}")
+
+    po.image_color_mode_value = 'One color per layer'
+    for i in range(3):
+        po.layer_selected = f"array_{i}"
+        po.image_color.value = rgb_colors[i]
+
+    imviz_helper.create_image_viewer(viewer_name="imviz-1")
+    po.viewer_selected = "imviz-1"
+    po.image_color_mode_value = 'One color per layer'
+    for i in range(3):
+        imviz_helper.app.add_data_to_viewer("imviz-1", data_label=f"array_{i}")
+        po.layer_selected = f"array_{i}"
+        po.image_color.value = rgb_colors[i]
+
+    # Switch to multiselect to test mixing and unmixing of states
+    po.multiselect = True
+    po.viewer_selected = ["imviz-0", "imviz-1"]
+    assert po.layer.items[-1]["label"] == "array_2"
+    # The corresponding layer in each viewer is the same color,
+    # so the state is not mixed.
+    assert not po.layer.items[-1]["mixed_color"]
+
+    # Change the color of one of the layers in one viewer
+    po.viewer_selected = ["imviz-1"]
+    po.layer_selected = ["array_2"]
+    po.image_color.value = "#595959"
+    po.viewer_selected = ["imviz-0", "imviz-1"]
+    # The color state is now mixed when two viewers are selected
+    assert po.layer.items[-1]["label"] == "array_2"
+    assert po.layer.items[-1]["mixed_color"]
+
+    # Now test mixed visibility
+    po.viewer_selected = ["imviz-1"]
+    po.layer_selected = ["array_1", "array_2"]
+    po.image_visible.value = False
+    po.viewer_selected = ["imviz-0", "imviz-1"]
+    assert po.layer.items[-1]["label"] == "array_2"
+    assert po.layer.items[-1]["mixed_visibility"]
+    assert po.layer.items[-2]["label"] == "array_1"
+    assert po.layer.items[-2]["mixed_visibility"]
+
+    # Test unmixing visibility
+    po.image_visible.unmix_state(True)
+    assert not po.layer.items[-1]["mixed_visibility"]
+    assert po.layer.items[-1]["visible"]
+    assert not po.layer.items[-2]["mixed_visibility"]
+    assert po.layer.items[-2]["visible"]
+
+    # Now test unmixing color
+    po.viewer_selected = ["imviz-0", "imviz-1"]
+    assert po.layer.items[-1]["mixed_color"]
+    assert po.layer.items[-2]["mixed_color"]
+
+    # Make sure that all selected layers are no longer
+    # mixed state and are the same color
+    po.image_color.unmix_state()
+    assert not po.layer.items[-1]["mixed_color"]
+    assert not po.layer.items[-2]["mixed_color"]
+    assert po.image_color.value == "#00ff00"
+    assert po.layer.items[-1]["color"] == "#00ff00"
+    assert po.layer.items[-2]["color"] == "#00ff00"
