@@ -154,7 +154,14 @@
         </v-row>
 
         <v-row justify="end">
-          <v-btn color="primary" text @click="do_aper_phot" :disabled="aperture_selected === background_selected || spinner">Calculate</v-btn>
+          <plugin-action-button
+            :results_isolated_to_plugin="true"
+            @click="do_aper_phot"
+            :spinner="spinner"
+            :disabled="aperture_selected === background_selected"
+          >
+            Calculate
+          </plugin-action-button>
         </v-row>
       </div>
     </div>

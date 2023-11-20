@@ -71,7 +71,13 @@
     <div v-if="image_color_mode_value === 'One color per layer' && !image_color_mode_sync['mixed']">
       <v-row justify="end">
         <j-tooltip tooltipcontent="Apply preset RGB colors, scaling, and opacities to visible layers">
-          <v-btn color="accent" text @click="apply_RGB_presets">Assign Presets</v-btn>
+          <plugin-action-button
+            :spinner="apply_RGB_presets_spinner"
+            :results_isolated_to_plugin="false"
+            @click="apply_RGB_presets"
+          >
+            Assign Presets
+          </plugin-action-button>
         </j-tooltip>
       </v-row>
     </div>

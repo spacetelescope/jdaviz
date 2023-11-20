@@ -29,10 +29,21 @@
 
     <v-row class="row-no-outside-padding">
        <v-col>
-         <v-btn color="primary" text @click="do_clear">Clear</v-btn>
+         <plugin-action-button
+            :results_isolated_to_plugin="true"
+            @click="do_clear"
+          >
+            Clear
+          </plugin-action-button>
        </v-col>
        <v-col>
-         <v-btn color="primary" text @click="do_search" :disabled="spinner">Search</v-btn>
+         <plugin-action-button
+            :results_isolated_to_plugin="true"
+            @click="do_search"
+            :spinner="spinner"
+          >
+            Search
+          </plugin-action-button>
        </v-col>
     </v-row>
 

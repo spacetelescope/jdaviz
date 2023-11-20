@@ -20,8 +20,12 @@ try to adhere to the following principles:
   components are necessary in a single row.  Always emphasize readability at the default/minimum
   width of the plugin tray, rather than using columns that result in a ton of text overflow.
 * Use ``<v-row justify="end">`` to align content to the right (such as action buttons).
-* Action buttons should use ``<v-btn text></v-btn>`` with ``color="accent"`` if applying something
-  to the viewers/apps/data, and ``color="primary"`` otherwise.
+* Action buttons should use ``<plugin-action-button :results_isolated_to_plugin="true/false">text</v-btn>``
+  to control the color depending on whether the button affects things outside the plugin itself
+  (adding/modifying data collection or subset entries, etc) or are isolated to within the plugin
+  (adding model components in model fitting, etc).  These buttons can be wrapped in tooltip components
+  and also have the capability of adding spinners (by passing a traitlet to ``:spinner``) or disabling
+  (by passing a traitlet to ``:disabled``).
 * To remove vertical padding from rows (i.e., two successive buttons stacked vertically), use
   ``<v-row class="row-min-bottom-padding">``.
 * Use new ``<j-plugin-section-header>Header Text</j-plugin-section-header>`` to separate content
@@ -85,13 +89,12 @@ try to adhere to the following principles:
           </v-row>
 
           <v-row justify="end">
-            <v-btn
-              color="primary"
-              text
+            <plugin-action-button
+              :results_isolated_to_plugin="false"
               :disabled="!form_valid"
               @click="(e) => {add_model(e); validate()}"
               >Action Text
-            </v-btn>
+            </plugin-action-button>
           </v-row>
         </v-form>
       </j-tray-plugin>
