@@ -19,6 +19,8 @@ New Features
 
 - Add button in Plot Options to apply preset RBG options to visible layers when in Monochromatic mode. [#2558]
 
+- Convert the layer select dropdown in Plot Options into a horizontal panel of buttons. [#2566]
+
 Cubeviz
 ^^^^^^^
 
