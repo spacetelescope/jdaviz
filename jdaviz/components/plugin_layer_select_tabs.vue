@@ -1,11 +1,11 @@
 <template>
   <div>
     <span class="suppress-scrollbar" style="display: inline-block; white-space: nowrap; margin-left: -24px; width: calc(100% + 48px); overflow-x: scroll; overflow-y: hidden">
-      <span v-for="(item, index) in items" :class="selected.includes(item.label) ? 'layer-tab-selected' : ''" :style="'display: inline-block; padding: 12px; '+(selected.includes(item.label) ? 'border-top: 2px solid #c75109' : 'border-top: 2px solid transparent')">
+      <span v-for="(item, index) in items" :class="selectedAsList.includes(item.label) ? 'layer-tab-selected' : ''" :style="'display: inline-block; padding: 12px; '+(selectedAsList.includes(item.label) ? 'border-top: 2px solid #c75109' : 'border-top: 2px solid transparent')">
         <j-tooltip :tooltipcontent="tooltipContent(item)">
           <v-btn
             :rounded="item.is_subset"
-            @click="() => {if (!multiselect){$emit('update:selected', item.label)} else if(selected.indexOf(item.label) === -1) {$emit('update:selected', selected.concat(item.label))} else {$emit('update:selected', selected.filter(select => select != item.label))} }"
+            @click="() => {if (!multiselect){$emit('update:selected', item.label)} else if(!selectedAsList.includes(item.label)) {$emit('update:selected', selected.concat(item.label))} else {$emit('update:selected', selected.filter(select => select != item.label))} }"
             :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityStyle(item)+', '+colorStyle(item)"
             width="30px"
             min-width="30px"
@@ -24,6 +24,14 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'multiselect', 'colormode'],
+  computed: {
+    selectedAsList() {
+      if (this.$props.multiselect) { 
+        return this.$props.selected
+      }
+      return [this.$props.selected]
+    }
+  },
   methods: {
     tooltipContent(item) {
       var tooltip = item.label
