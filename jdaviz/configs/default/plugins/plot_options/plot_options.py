@@ -627,13 +627,8 @@ class PlotOptions(PluginTemplateMixin):
         # Switch back to this at the end
         initial_layer = self.layer_selected
 
-        # Filter out subset layers
-        image_layers = [layer for layer in self.layer.choices if "Subset" not in layer]
-        visible_layers = []
-        for layer in image_layers:
-            self.layer_selected = layer
-            if self.image_visible.value:
-                visible_layers.append(layer)
+        # Determine layers visible in selected viewer(s) - consider mixed to be visible
+        visible_layers = [layer['label'] for layer in self.layer.items if not layer['is_subset'] and (layer['visible'] or layer['mixed_visibility'])]  # noqa
 
         # Set opacity to something that seems sensible
         n_visible = len(visible_layers)
@@ -651,10 +646,10 @@ class PlotOptions(PluginTemplateMixin):
 
         for i in range(n_visible):
             self.layer_selected = visible_layers[i]
-            self.image_opacity_value = default_opacity
-            self.image_color_value = preset_colors[i]
-            self.stretch_function_value = "arcsinh"
-            self.stretch_preset_value = 99
+            self.image_opacity.unmix_state(default_opacity)
+            self.image_color.unmix_state(preset_colors[i])
+            self.stretch_function.unmix_state("arcsinh")
+            self.stretch_preset.unmix_state(99)
 
         self.layer_selected = initial_layer
 

@@ -23,6 +23,8 @@ New Features
 
 - Plugin APIs now include a ``close_in_tray()`` method. [#2562]
 
+- Convert the layer select dropdown in Plot Options into a horizontal panel of buttons. [#2566]
+
 Cubeviz
 ^^^^^^^
 
