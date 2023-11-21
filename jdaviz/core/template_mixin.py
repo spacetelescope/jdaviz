@@ -1296,17 +1296,17 @@ class LayerSelect(SelectPluginComponent):
         except TypeError:
             return self.app.get_viewer_by_id(viewer)
 
-    def _layer_to_dict(self, layer, label_to_color={}, label_mixed_color={},
-                       label_to_visibility={}, label_mixed_visibility={}):
+    def _layer_to_dict(self, layer, color=None, cmap=None,
+                       mixed_color=False, mixed_visibility=False):
         is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or
                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))
         d = {"label": layer.layer.label,
-             "color": layer.state.color,
-             "all_colors_to_label": label_to_color.get(layer.layer.label, False),
+             "color": color if color is not None else layer.state.color,
+             "cmap": cmap if cmap is not None else layer.state.cmap.name,
              "icon": self.app.state.layer_icons.get(layer.layer.label),
              "visible": getattr(layer.state, 'bitmap_visible', True) and layer.visible,
-             "mixed_color": label_mixed_color.get(layer.layer.label, False),
-             "mixed_visibility": label_mixed_visibility.get(layer.layer.label, False),
+             "mixed_color": mixed_color,
+             "mixed_visibility": mixed_visibility,
              "is_subset": is_subset}
         return d
 
@@ -1328,6 +1328,7 @@ class LayerSelect(SelectPluginComponent):
                     continue
                 for layer in self._get_viewer(old_viewer).state.layers:
                     layer.remove_callback('color', self._on_layers_changed)
+                    layer.remove_callback('cmap', self._on_layers_changed)
                     if hasattr(layer, 'bitmap_visible'):
                         layer.remove_callback('bitmap_visible', self._on_layers_changed)
                     elif hasattr(layer, 'visible'):
@@ -1338,6 +1339,7 @@ class LayerSelect(SelectPluginComponent):
                     continue
                 for layer in self._get_viewer(new_viewer).state.layers:
                     layer.add_callback('color', self._on_layers_changed)
+                    layer.add_callback('cmap', self._on_layers_changed)
                     if hasattr(layer, 'bitmap_visible'):
                         layer.add_callback('bitmap_visible', self._on_layers_changed)
                     if hasattr(layer, 'visible'):
@@ -1369,6 +1371,7 @@ class LayerSelect(SelectPluginComponent):
                     # TODO: find out if this conflicts with another color change event
                     #  and is causing the lag in the color picker
                     layer.add_callback('color', self._on_layers_changed)
+                    layer.add_callback('cmap', self._on_layers_changed)
                     if hasattr(layer, 'bitmap_visible'):
                         layer.add_callback('bitmap_visible', self._on_layers_changed)
                     if hasattr(layer, 'visible'):
@@ -1398,6 +1401,7 @@ class LayerSelect(SelectPluginComponent):
         selected_color = None
         mixed_selected_color = False
         label_to_color = {}
+        label_to_cmap = {}
         label_mixed_color = {}
         label_to_visibility = {}
         label_mixed_visibility = {}
@@ -1408,6 +1412,7 @@ class LayerSelect(SelectPluginComponent):
         for layer in layers:
             label = layer.layer.label
             color = layer.state.color.lower()
+            cmap = getattr(getattr(layer.state, 'cmap', None), 'name', None)
             visible = getattr(layer.state, 'bitmap_visible', True) and layer.visible
             # This handles the subset case since each subset can only be one color,
             # even though there is a layer with the subsets name for each data layer that
@@ -1415,6 +1420,7 @@ class LayerSelect(SelectPluginComponent):
             if hasattr(layer.state, 'subset_state'):
                 if label not in label_to_color:
                     label_to_color[label] = [color]
+                    label_to_cmap[label] = None
                     label_mixed_color[label] = False
                     label_to_visibility[label] = [visible]
                     label_mixed_visibility[label] = False
@@ -1431,12 +1437,14 @@ class LayerSelect(SelectPluginComponent):
             # label_to_visibility tracks all visibility states per layer label
             if label not in label_to_color:
                 label_to_color[label] = [color]
+                label_to_cmap[label] = [cmap]
                 label_mixed_color[label] = False
                 label_to_visibility[label] = [visible]
                 label_mixed_visibility[label] = False
 
             else:
                 label_to_color[label] += [color]
+                label_to_cmap[label] += [cmap]
                 label_to_visibility[label] += [visible]
 
         # If there is more than one unique color per label or the label is
@@ -1451,8 +1459,11 @@ class LayerSelect(SelectPluginComponent):
 
         # Send layers with unique labels and what colors are associated
         # with that label and if layers with that label are in a mixed color state
-        items = manual_items + [self._layer_to_dict(layer, label_to_color, label_mixed_color,
-                                                    label_to_visibility, label_mixed_visibility)
+        items = manual_items + [self._layer_to_dict(layer,
+                                                    color=label_to_color.get(layer.layer.label),
+                                                    cmap=label_to_cmap.get(layer.layer.label),
+                                                    mixed_color=label_mixed_color.get(layer.layer.label),
+                                                    mixed_visibility=label_mixed_visibility.get(layer.layer.label))  # noqa
                                 for layer in layers_unique]
 
         def _sort_by_icon(items_dict):

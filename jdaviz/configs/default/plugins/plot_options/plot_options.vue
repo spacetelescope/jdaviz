@@ -103,6 +103,7 @@
       :selected.sync="layer_selected"
       :multiselect="multiselect"
       :colormode="image_color_mode_sync['mixed'] ? 'mixed' : image_color_mode_value"
+      :cmap_samples="cmap_samples"
       label="Layers"
       hint="Select the data or subset to set options."
     />

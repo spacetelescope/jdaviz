@@ -23,7 +23,7 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'multiselect', 'colormode'],
+  props: ['items', 'selected', 'multiselect', 'colormode', 'cmap_samples'],
   computed: {
     selectedAsList() {
       if (this.$props.multiselect) { 
@@ -61,24 +61,36 @@ module.exports = {
       }
     },
     colorStyle(item) {
-      if (this.$props.colormode == 'Colormaps' && !item.is_subset) {
-        return 'repeating-linear-gradient( -45deg, gray, gray 20px)'
-      }
-      if (item.mixed_color) {
-        colors = item.all_colors_to_label
-        const strip_width = 42 / colors.length
+      const strip_width = 42 / item.color.length
 
-        var style = 'repeating-linear-gradient( -45deg, '
-        for ([ind, color] of colors.entries()) {
+      var style = 'repeating-linear-gradient( 135deg, '
+      if (this.$props.colormode !== 'Colormaps' || item.is_subset) {
+        for ([ind, color] of item.color.entries()) {
           style += color + ' '+ind*strip_width+'px, ' + color + ' '+(ind+1)*strip_width+'px'
-          if (ind !== colors.length-1) {
+          if (ind !== item.color.length-1) {
             style += ', '
           }
         }
-        style += ')'
-        return style
-      } 
-      return 'repeating-linear-gradient( -45deg, '+item.color+', '+item.color+' 20px)'
+      } else {
+        // colormaps
+        for ([mi, cmap] of item.cmap.entries()) {
+          var colors = this.$props.cmap_samples[cmap]
+          var cmap_strip_width = strip_width / colors.length
+          for ([ci, color] of colors.entries()) {
+            var start = mi*strip_width + ci*cmap_strip_width
+            var end = mi*strip_width+(ci+1)*cmap_strip_width
+            style += color + ' '+start+'px, ' + color + ' '+end+'px'
+            if (ci !== colors.length-1) {
+              style += ', '
+            }
+          }
+          if (mi !== item.cmap.length-1) {
+            style += ', '
+          }
+        }
+      }
+      style += ')'
+      return style
 
     }
   }

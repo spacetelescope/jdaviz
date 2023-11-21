@@ -325,6 +325,7 @@ class PlotOptions(PluginTemplateMixin):
 
     show_viewer_labels = Bool(True).tag(sync=True)
 
+    cmap_samples = Dict().tag(sync=True)
     swatches_palette = List().tag(sync=True)
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
 
@@ -550,6 +551,13 @@ class PlotOptions(PluginTemplateMixin):
 
         self.show_viewer_labels = self.app.state.settings['viewer_labels']
         self.app.state.add_callback('settings', self._on_app_settings_changed)
+
+        # give UI access to sampled version of the available colormap choices
+        def hex_for_cmap(cmap):
+            N = 50
+            cm_sampled = cmap.resampled(N)
+            return [matplotlib.colors.to_hex(cm_sampled(i)) for i in range(N)]
+        self.cmap_samples = {cmap[1].name: hex_for_cmap(cmap[1]) for cmap in colormaps.members}
 
     @property
     def user_api(self):
