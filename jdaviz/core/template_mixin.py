@@ -1311,15 +1311,16 @@ class LayerSelect(SelectPluginComponent):
             for layer in viewer.layers:
                 if layer.layer.label == layer_label:
                     if is_subset is None:
-                        is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or
-                                     (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))
+                        is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or  # noqa
+                                     (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
 
                     if getattr(viewer.state, 'color_mode', None) == 'Colormaps':
                         colors.append(layer.state.cmap.name)
                     else:
                         colors.append(layer.state.color)
 
-                    visibilities.append(getattr(layer.state, 'bitmap_visible', True) and layer.visible)
+                    visibilities.append(getattr(layer.state, 'bitmap_visible', True)
+                                        and layer.visible)
 
         return {"label": layer_label,
                 "is_subset": is_subset,
@@ -1409,7 +1410,8 @@ class LayerSelect(SelectPluginComponent):
         # NOTE: _on_layers_changed is passed without a msg object during init
         # TODO: Handle changes to just one item without recompiling the whole thing
         manual_items = [{'label': label} for label in self.manual_options]
-        all_layers = [layer for viewer in self.viewer_objs for layer in getattr(viewer, 'layers', [])]
+        all_layers = [layer for viewer in self.viewer_objs
+                      for layer in getattr(viewer, 'layers', [])]
         # remove duplicates - we'll loop back through all selected viewers to get a list of colors
         # and visibilities later within _layer_to_dict
         layer_labels = [layer.layer.label for layer in all_layers if self.app.state.layer_icons.get(layer.layer.label)]  # noqa
