@@ -58,7 +58,7 @@
         :results_isolated_to_plugin="true"
         @click="clear_table"
         >Clear Table
-      </v-btn>
+      </plugin-action-button>
     </v-row>
   </div>
 </template>
