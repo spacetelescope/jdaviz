@@ -47,7 +47,7 @@ module.exports = {
   methods: {
     tooltipContent(item) {
       var tooltip = item.label
-      if (item.mixed_visibility) {
+      if (item.visible === 'mixed') {
         tooltip += '<br/>Visibility: mixed'
       } else if (!item.visible) {
         tooltip += '<br/>Visibility: hidden'
@@ -55,13 +55,19 @@ module.exports = {
       if (this.$props.colormode === 'mixed' && !item.is_subset) {
         tooltip += '<br/>Color mode: mixed'
       }
-      if (item.mixed_color && (this.$props.colormode !== 'Colormaps' || item.is_subset)) {
-        tooltip += '<br/>Color: mixed'
+      if (item.colors.length > 1) {
+        if (this.$props.colormode === 'Colormaps') {
+          tooltip += '<br/>Colormap: mixed'
+        } else if (this.$props.colormode === 'mixed') {
+          tooltip += '<br/>Color/colormap: mixed'
+        } else {
+          tooltip += '<br/>Color: mixed'
+        }
       }
       return tooltip
     },
     visibilityStyle(item) {
-      if (item.mixed_visibility){
+      if (item.visible === 'mixed'){
         return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.3), rgba(0,0,0,0.3) 3px, transparent 3px, transparent 3px, transparent 10px)'
       }
       else if (item.visible) {
@@ -71,34 +77,32 @@ module.exports = {
       }
     },
     colorStyle(item) {
-      const strip_width = 42 / item.color.length
-
+      const strip_width = 42 / item.colors.length
+      var cmap_strip_width = strip_width
+      var colors = []
       var style = 'repeating-linear-gradient( 135deg, '
-      if (this.$props.colormode !== 'Colormaps' || item.is_subset) {
-        for ([ind, color] of item.color.entries()) {
-          style += color + ' '+ind*strip_width+'px, ' + color + ' '+(ind+1)*strip_width+'px'
-          if (ind !== item.color.length-1) {
+  
+      for ([mi, color_or_cmap] of item.colors.entries()) {
+        if (color_or_cmap.startsWith('#')) {
+          colors = [color_or_cmap]
+        } else {
+          colors = this.$props.cmap_samples[color_or_cmap]
+        }
+
+        cmap_strip_width = strip_width / colors.length
+        for ([ci, color] of colors.entries()) {
+          var start = mi*strip_width + ci*cmap_strip_width
+          var end = mi*strip_width+(ci+1)*cmap_strip_width
+          style += color + ' '+start+'px, ' + color + ' '+end+'px'
+          if (ci !== colors.length-1) {
             style += ', '
           }
         }
-      } else {
-        // colormaps
-        for ([mi, cmap] of item.cmap.entries()) {
-          var colors = this.$props.cmap_samples[cmap]
-          var cmap_strip_width = strip_width / colors.length
-          for ([ci, color] of colors.entries()) {
-            var start = mi*strip_width + ci*cmap_strip_width
-            var end = mi*strip_width+(ci+1)*cmap_strip_width
-            style += color + ' '+start+'px, ' + color + ' '+end+'px'
-            if (ci !== colors.length-1) {
-              style += ', '
-            }
-          }
-          if (mi !== item.cmap.length-1) {
-            style += ', '
-          }
+        if (mi !== item.colors.length-1) {
+          style += ', '
         }
       }
+    
       style += ')'
       return style
 
