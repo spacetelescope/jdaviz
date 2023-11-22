@@ -36,13 +36,11 @@ module.exports = {
     tooltipContent(item) {
       var tooltip = item.label
       if (item.mixed_visibility) {
-        tooltip += '<br/>Visible: mixed'
+        tooltip += '<br/>Visibility: mixed'
       } else if (!item.visible) {
-        tooltip += '<br/>Visible: false'
+        tooltip += '<br/>Visibility: hidden'
       }
-      if (this.$props.colormode === 'Colormaps' && !item.is_subset) {
-        tooltip += '<br/>Color mode: colormap'
-      } else if (this.$props.colormode === 'mixed' && !item.is_subset) {
+      if (this.$props.colormode === 'mixed' && !item.is_subset) {
         tooltip += '<br/>Color mode: mixed'
       }
       if (item.mixed_color && (this.$props.colormode !== 'Colormaps' || item.is_subset)) {
