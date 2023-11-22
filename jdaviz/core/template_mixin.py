@@ -1325,7 +1325,7 @@ class LayerSelect(SelectPluginComponent):
                 "is_subset": is_subset,
                 "icon": self.app.state.layer_icons.get(layer_label),
                 "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
-                "colors": list(set(colors))}
+                "colors": np.unique(colors).tolist()}
 
     def _on_viewer_selected_changed(self, msg=None):
         # we don't want to update the layers if we're just toggling
