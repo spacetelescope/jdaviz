@@ -354,6 +354,8 @@ class StretchBounds(CheckableTool):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['dragmove', 'click'])
         for mark in self.viewer.figure.marks:
+            print("active marks:", self.viewer.figure.marks)
+            print("mark.labels:", mark.labels)
             if np.any([x in mark.labels for x in ('vmin', 'vmax','stretch_knots')]):
                 mark.colors = ["#c75d2c"]
 
@@ -361,14 +363,21 @@ class StretchBounds(CheckableTool):
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
         for mark in self.viewer.figure.marks:
+            print("deactivated marks:", self.viewer.figure.marks)
+            print("deactivated mark.labels:", mark.labels)
             if np.any([x in mark.labels for x in ('vmin', 'vmax','stretch_knots')]):
                 mark.colors = ["#007BA1"]
         
 
+            print("deactivated state: self.viewer._plugin", self.viewer._plugin)
+        
+
     def on_mouse_event(self, data):
+        #print("data: ", data)
         if (time.time() - self._time_last) <= 0.05:
             # throttle to 200ms
             return
+        normalization_factor = 10000000
 
         # Mouse event coordinates
         event_x = data['domain']['x']
@@ -377,6 +386,12 @@ class StretchBounds(CheckableTool):
         x_min, x_max = self.viewer.state.x_min , self.viewer.state.x_max
         y_min, y_max = self.viewer.state.y_min , self.viewer.state.y_max
 
+        event_y_normalized = event_y / normalization_factor
+    
+
+        # Retrieve current knots and bounds
+        knot_x = self.viewer._plot.marks['stretch_knots'].x
+        knot_y = self.viewer._plot.marks['stretch_knots'].y
 
         current_bounds = [self.viewer._plugin.stretch_vmin_value,
                           self.viewer._plugin.stretch_vmax_value]
@@ -432,6 +447,50 @@ class StretchBounds(CheckableTool):
         else:
             if closest_bound_distance > 0.1:
                 return
+        # Distance from mouse position to each knot
+        distances_to_knots = np.sqrt((knot_x - event_x)**2 + (knot_y - event_y)**2)
+        distances_to_bounds = [abs(current_bounds[0] - event_x), abs(current_bounds[1] - event_x)]
+
+
+        # Determine closest element (knot or bound)
+        closest_knot_index = np.argmin(distances_to_knots)
+        closest_bound_index = np.argmin(distances_to_bounds)
+        closest_knot_distance = distances_to_knots[closest_knot_index]
+        closest_bound_distance = distances_to_bounds[closest_bound_index]
+
+
+        print("event_x: ", event_x)
+        print("event_y: ", event_y)
+        print("knot_x: ", knot_x)
+        print("knot_y: ", knot_y)
+        print("closest_knot_index: ", closest_knot_index)
+        print("closest_bound_index: ", closest_bound_index)
+        print("closest_knot_distance: ", closest_knot_distance)
+        print("closest_bound_distance: ", closest_bound_distance)
+        print("self.viewer._plot: ", self.viewer._plot)
+
+
+        # Pseudo code like   
+        radius = 0.05
+        # Update the closest element
+        # if closest_knot_distance < radius and closest_knot_distance < closest_bound_distance:
+        #     # Closest element is a knot
+        #     new_knot_x = (event_x - self.viewer._plugin.stretch_vmin_value) / (
+        #                 self.viewer._plugin.stretch_vmax_value - self.viewer._plugin.strecth_vmin_value
+        #               )
+        #     new_knot_y = event_y / 0.9 * normalization_factor
+
+        #    # TODO: update the spline will this be with settattr??
+        # # find the closest knot in a specific radius
+
+
+        if closest_knot_distance < closest_bound_distance:
+            knot_x[closest_knot_index] = event_x
+            knot_y[closest_knot_index] = event_y * normalization_factor
+
+            self.viewer._plot.marks['stretch_knots'].x = knot_x
+            self.viewer._plot.marks['stretch_knots'].y = knot_y
+        else:
             att_names = ["stretch_vmin_value", "stretch_vmax_value"][closest_bound_index]
             setattr(self.viewer._plugin, att_names, event_x)
 
