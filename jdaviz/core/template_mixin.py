@@ -1462,7 +1462,7 @@ class LayerSelect(SelectPluginComponent):
         items = manual_items + [self._layer_to_dict(layer,
                                                     color=label_to_color.get(layer.layer.label),
                                                     cmap=label_to_cmap.get(layer.layer.label),
-                                                    mixed_color=label_mixed_color.get(layer.layer.label),
+                                                    mixed_color=label_mixed_color.get(layer.layer.label),  # noqa
                                                     mixed_visibility=label_mixed_visibility.get(layer.layer.label))  # noqa
                                 for layer in layers_unique]
 

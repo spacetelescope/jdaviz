@@ -1,9 +1,9 @@
+import logging
 import math
 import os
 import matplotlib
 import numpy as np
 
-from astropy.utils.decorators import deprecated
 from astropy.visualization import (
     ManualInterval, ContrastBiasStretch, PercentileInterval
 )
@@ -592,11 +592,12 @@ class PlotOptions(PluginTemplateMixin):
 
     @property
     def multiselect(self):
-        # TODO: deprecation warning
+        logging.warning(f"DeprecationWarning: multiselect has been replaced by separate viewer_multiselect and layer_multiselect and will be removed in the future.  This currently evaluates viewer_multiselect or layer_multiselect")  # noqa
         return self.viewer_multiselect or self.layer_multiselect
 
     @multiselect.setter
     def multiselect(self, value):
+        logging.warning(f"DeprecationWarning: multiselect has been replaced by separate viewer_multiselect and layer_multiselect and will be removed in the future.  This currently sets viewer_multiselect and layer_multiselect")  # noqa
         self.viewer_multiselect = value
         self.layer_multiselect = value
 
@@ -717,7 +718,7 @@ class PlotOptions(PluginTemplateMixin):
             # don't update histogram if selected viewer is not an image viewer:
             return
 
-        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj
+        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj  # noqa
 
         # manage viewer zoom limit callbacks
         if ((isinstance(msg, dict) and msg.get('name') == 'viewer_selected')
