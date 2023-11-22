@@ -19,7 +19,7 @@ New Features
 
 - Add button in Plot Options to apply preset RBG options to visible layers when in Monochromatic mode. [#2558, #2568]
 
-- Plugin "action" buttons disable and show icon indicating that an action is in progress. [#2560]
+- Plugin "action" buttons disable and show icon indicating that an action is in progress. [#2560, #2571]
 
 - Plugin APIs now include a ``close_in_tray()`` method. [#2562]
 

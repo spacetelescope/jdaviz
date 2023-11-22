@@ -74,13 +74,13 @@
 
       <v-row justify="end">
         <j-tooltip tipid='plugin-model-fitting-add-model'>
-          <v-btn 
-            color="primary" 
-            text 
+          <plugin-action-button
             :disabled="!form_valid_model_component || comp_label_invalid_msg.length > 0"
+            :results_isolated_to_plugin="true"
             @click="add_model"
-            >Add Component
-          </v-btn>
+          >
+            Add Component
+          </plugin-action-button>
         </j-tooltip>
       </v-row>
     </v-form>

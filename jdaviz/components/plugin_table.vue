@@ -54,12 +54,11 @@
     </v-row>
 
     <v-row v-if="clear_table" justify="end">
-      <v-btn
-        color="primary"
-        text
+      <plugin-action-button
+        :results_isolated_to_plugin="true"
         @click="clear_table"
         >Clear Table
-      </v-btn>
+      </plugin-action-button>
     </v-row>
   </div>
 </template>

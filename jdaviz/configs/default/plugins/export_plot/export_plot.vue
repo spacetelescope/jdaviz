@@ -13,24 +13,22 @@
 
     <div v-if="viewer_selected">
       <v-row justify="end" class="row-min-bottom-padding">
-        <v-btn
-         text
-         color="primary"
+        <plugin-action-button
+         :results_isolated_to_plugin="true"
          @click="() => save_figure('png')"
          :disabled="movie_recording"
         >
-         Export to PNG
-        </v-btn>
+          Export to PNG
+        </plugin-action-button>
       </v-row>
       <v-row justify="end">
-        <v-btn
-         text
-         color="primary"
+        <plugin-action-button
+         :results_isolated_to_plugin="true"
          @click="() => save_figure('svg')"
          :disabled="movie_recording"
         >
-         Export to SVG
-        </v-btn>
+          Export to SVG
+        </plugin-action-button>
       </v-row>
 
       <v-row v-if="config==='cubeviz' && viewer_selected!=='spectrum-viewer' && movie_enabled">

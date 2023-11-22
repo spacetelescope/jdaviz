@@ -34,7 +34,12 @@
     </v-row>
 
     <v-row justify="end">
-      <v-btn color="primary" text @click="draw_plot">Plot</v-btn>
+      <plugin-action-button
+        :results_isolated_to_plugin="true"
+        @click="draw_plot"
+      >
+        Plot
+      </plugin-action-button>
     </v-row>
 
     <v-row v-if="plot_available">

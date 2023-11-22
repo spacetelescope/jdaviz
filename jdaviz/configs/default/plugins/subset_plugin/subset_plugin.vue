@@ -114,12 +114,28 @@
 
       <v-row v-if="!multiselect" justify="end" no-gutters>
         <j-tooltip v-if="can_freeze" tooltipcontent="Freeze subset to a mask on the underlying data entries">
-          <v-btn color="primary" text @click="freeze_subset">Freeze</v-btn>
+          <plugin-action-button
+            :results_isolated_to_plugin="false"
+            @click="freeze_subset"
+          >
+              Freeze
+          </plugin-action-button>
         </j-tooltip>
         <j-tooltip tooltipcontent="Convert composite subset to use only add mode to connect subregions">
-          <v-btn :disabled="!can_simplify" color="primary" text @click="simplify_subset">Simplify</v-btn>
+          <plugin-action-button
+            :disabled="!can_simplify"
+            :results_isolated_to_plugin="false"
+            @click="simplify_subset"
+          >
+            Simplify
+          </plugin-action-button>
         </j-tooltip>
-        <v-btn color="primary" text @click="update_subset">Update</v-btn>
+        <plugin-action-button
+          :results_isolated_to_plugin="false"
+          @click="update_subset"
+        >
+          Update
+        </plugin-action-button>
       </v-row>
   </j-tray-plugin>
 </template>

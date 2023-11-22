@@ -22,7 +22,7 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
                                         PlotOptionsSyncState, Plot,
-                                        skip_if_no_updates_since_last_active)
+                                        skip_if_no_updates_since_last_active, with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
@@ -326,6 +326,7 @@ class PlotOptions(PluginTemplateMixin):
     show_viewer_labels = Bool(True).tag(sync=True)
 
     swatches_palette = List().tag(sync=True)
+    apply_RGB_presets_spinner = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -605,6 +606,7 @@ class PlotOptions(PluginTemplateMixin):
         value = data.get('value')
         setattr(self, attr_name, value)
 
+    @with_spinner('apply_RGB_presets_spinner')
     def apply_RGB_presets(self):
         """
         Applies preset colors, opacities, and stretch settings to all visible layers

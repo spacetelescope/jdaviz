@@ -54,22 +54,14 @@
 
     <v-row justify="end">
       <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
-        <v-btn :disabled="label_invalid_msg.length > 0 || action_disabled || action_spinner"
-          text
-          color="accent"
-          @click="$emit('click:action')"
-        >
-          <v-progress-circular
-            v-if="action_spinner"
-            indeterminate
-            color="primary"
-            size="20"
-            width="3"
-            style="margin-right: 4px"
-          ></v-progress-circular>
-          <span v-else style="width: 24px"></span>
+        <plugin-action-button 
+          :spinner="action_spinner"
+          :disabled="label_invalid_msg.length > 0 || action_disabled"
+          :results_isolated_to_plugin="false"
+          @click="$emit('click:action')">
+
           {{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
-        </v-btn>
+        </plugin-action-button>
       </j-tooltip>
     </v-row>
   </div>

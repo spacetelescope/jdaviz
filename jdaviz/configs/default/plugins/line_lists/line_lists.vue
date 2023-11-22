@@ -106,7 +106,9 @@
 
     <v-row justify="end">
       <j-tooltip tipid='plugin-line-lists-load'>
-        <v-btn color="primary" text @click="load_list">Load List</v-btn>
+        <plugin-action-button 
+          :results_isolated_to_plugin="true"
+          @click="load_list">Load List</plugin-action-button>
       </j-tooltip>
     </v-row>
 
