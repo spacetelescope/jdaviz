@@ -464,7 +464,7 @@
         ></v-text-field>
       </glue-state-sync-wrapper>
 
-      <div v-if="stretch_function_sync.in_subscribed_states && !layer_multiselect">
+      <div v-if="stretch_function_sync.in_subscribed_states && (!layer_multiselect || layer_selected.length <= 1)">
         <jupyter-widget :widget="stretch_histogram_widget"/>
         <v-row>
           <v-expansion-panels accordion>
@@ -490,6 +490,7 @@
                     v-model="stretch_hist_zoom_limits"
                     class="hide-input"
                     label="Limit histogram to current zoom limits"
+                    :disabled="viewer_multiselect && viewer_selected.length > 1"
                   ></v-switch>
                 </v-row>
                 <v-row>

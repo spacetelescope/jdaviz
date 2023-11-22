@@ -708,11 +708,9 @@ class PlotOptions(PluginTemplateMixin):
             self.stretch_histogram.clear_all_marks()
             return
 
-        if ((self.viewer_multiselect and len(self.viewer.selected) > 1)
-                or (self.layer_multiselect and len(self.layer.selected) > 1)):
-            # currently only support single-layer/viewer.  For now we'll just clear and return.
-            # TODO: add support for multi-layer/viewer
-            self.stretch_histogram.clear_all_marks()
+        if self.layer_multiselect and len(self.layer.selected) > 1:
+            # currently only support single-layer, if multiple layers are selected, the plot
+            # will be hidden in the UI
             return
 
         if not self._viewer_is_image_viewer():
@@ -752,7 +750,7 @@ class PlotOptions(PluginTemplateMixin):
         comp = data.get_component(data.main_components[0])
 
         # TODO: further optimization could be done by caching sub_data
-        if self.stretch_hist_zoom_limits:
+        if self.stretch_hist_zoom_limits and (not self.layer_multiselect or len(self.layer_selected) == 1):  # noqa
             if hasattr(viewer, '_get_zoom_limits'):
                 # Viewer limits. This takes account of Imviz linking.
                 xy_limits = viewer._get_zoom_limits(data).astype(int)
