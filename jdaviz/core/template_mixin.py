@@ -1367,7 +1367,8 @@ class LayerSelect(SelectPluginComponent):
                 # new_viewer.state.add_callback('color_mode', self._update_layer_items)
                 for layer in new_viewer.state.layers:
                     layer.add_callback('color', self._update_layer_items)
-                    layer.add_callback('cmap', self._update_layer_items)
+                    if hasattr(layer, 'cmap'):
+                        layer.add_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
                         layer.add_callback('bitmap_visible', self._update_layer_items)
                     if hasattr(layer, 'visible'):
