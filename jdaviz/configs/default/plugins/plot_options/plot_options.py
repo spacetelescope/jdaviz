@@ -893,11 +893,15 @@ class PlotOptions(PluginTemplateMixin):
 
     @observe('stretch_vmin_value')
     def _stretch_vmin_changed(self, msg=None):
-        self.stretch_histogram.marks['vmin'].x = [self.stretch_vmin_value, self.stretch_vmin_value]
+        mark = self.stretch_histogram.marks['vmin']
+        mark.x = [self.stretch_vmin_value, self.stretch_vmin_value]
+        mark.y = [0, 1]
 
     @observe('stretch_vmax_value')
     def _stretch_vmax_changed(self, msg=None):
-        self.stretch_histogram.marks['vmax'].x = [self.stretch_vmax_value, self.stretch_vmax_value]
+        mark = self.stretch_histogram.marks['vmax']
+        mark.x = [self.stretch_vmax_value, self.stretch_vmax_value]
+        mark.y = [0, 1]
 
     @observe("stretch_hist_nbins")
     def _histogram_nbins_changed(self, msg={}):
