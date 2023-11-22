@@ -1314,7 +1314,8 @@ class LayerSelect(SelectPluginComponent):
                         is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or  # noqa
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
 
-                    if getattr(viewer.state, 'color_mode', None) == 'Colormaps':
+                    if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
+                            and hasattr(layer.state, 'cmap')):
                         colors.append(layer.state.cmap.name)
                     else:
                         colors.append(layer.state.color)
@@ -1350,7 +1351,8 @@ class LayerSelect(SelectPluginComponent):
                 # old_viewer.state.remove_callback('color_mode', self._update_layer_items)
                 for layer in old_viewer.state.layers:
                     layer.remove_callback('color', self._update_layer_items)
-                    layer.remove_callback('cmap', self._update_layer_items)
+                    if hasattr(layer, 'cmap'):
+                        layer.remove_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
                         layer.remove_callback('bitmap_visible', self._update_layer_items)
                     elif hasattr(layer, 'visible'):
@@ -1397,7 +1399,8 @@ class LayerSelect(SelectPluginComponent):
                     # TODO: find out if this conflicts with another color change event
                     #  and is causing the lag in the color picker
                     layer.add_callback('color', self._update_layer_items)
-                    layer.add_callback('cmap', self._update_layer_items)
+                    if hasattr(layer, 'cmap'):
+                        layer.add_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
                         layer.add_callback('bitmap_visible', self._update_layer_items)
                     if hasattr(layer, 'visible'):
