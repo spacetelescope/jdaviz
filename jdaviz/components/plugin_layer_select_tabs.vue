@@ -12,7 +12,7 @@
       </j-tooltip>
     </div>
     <span class="suppress-scrollbar" style="display: inline-block; white-space: nowrap; margin-left: -24px; width: calc(100% + 48px); overflow-x: scroll; overflow-y: hidden">
-      <span v-for="(item, index) in items" :class="selectedAsList.includes(item.label) ? 'layer-tab-selected' : ''" :style="'display: inline-block; padding: 12px; '+(selectedAsList.includes(item.label) ? 'border-top: 3px solid #00617E' : 'border-top: 3px solid transparent')">
+      <span v-for="(item, index) in items" :class="selectedAsList.includes(item.label) ? 'layer-tab-selected' : ''" :style="'display: inline-block; padding: 8px; '+(selectedAsList.includes(item.label) ? 'border-top: 3px solid #00617E' : 'border-top: 3px solid transparent')">
         <j-tooltip :tooltipcontent="tooltipContent(item)">
           <v-btn
             :rounded="item.is_subset"
