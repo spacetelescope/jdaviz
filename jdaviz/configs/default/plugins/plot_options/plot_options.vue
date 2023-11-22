@@ -75,7 +75,7 @@
             :results_isolated_to_plugin="false"
             @click="apply_RGB_presets"
           >
-            Assign Presets
+            Assign RGB Presets
           </plugin-action-button>
         </j-tooltip>
       </v-row>
@@ -110,8 +110,7 @@
     <div v-if="layer_selected.length === 0" style="text-align: center">
       no layers selected
     </div>
-    <div v-else class='layer-tab-selected' style="margin-left: -24px; padding-left: 24px; margin-top: -42px; padding-top: 0px; margin-right: -24px; padding-right: 24px">
-
+    <div v-else class='layer-tab-selected' style="margin-left: -24px; padding-left: 24px; margin-top: -42px; margin-right: -24px; padding-right: 24px">
       <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_visible')">
         <span>
@@ -142,7 +141,7 @@
 
       <glue-state-sync-wrapper v-if="subset_visible_value" :sync="subset_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('subset_color')">
         <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px">Subset Color</v-subheader>
+          <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">Subset Color</v-subheader>
           <v-menu>
             <template v-slot:activator="{ on }">
                 <span class="color-menu"
@@ -184,7 +183,7 @@
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('line_color')">
         <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px">Line Color</v-subheader>
+          <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">Line Color</v-subheader>
           <v-menu>
             <template v-slot:activator="{ on }">
                 <span class="color-menu"
@@ -305,7 +304,7 @@
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value==='Fixed'" :sync="marker_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('marker_color')">
           <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px">Color</v-subheader>
+            <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">Color</v-subheader>
             <v-menu>
               <template v-slot:activator="{ on }">
                   <span class="color-menu"
@@ -389,7 +388,7 @@
         </glue-state-sync-wrapper>
         <glue-state-sync-wrapper v-if="image_color_mode_value !== 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_color_sync" :multiselect="multiselect" @unmix-state="unmix_state('image_color')">
           <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px">Image Color</v-subheader>
+            <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">Image Color</v-subheader>
             <v-menu>
               <template v-slot:activator="{ on }">
                   <span class="color-menu"
@@ -652,9 +651,21 @@ module.exports = {
 </script>
 
 <style scoped>
-.color-menu {
-    font-size: 16px;
-    padding-left: 16px;
-    border: 2px solid rgba(0,0,0,0.54);
-}
+  .color-menu {
+      font-size: 16px;
+      padding-left: 16px;
+      border: 2px solid rgba(0,0,0,0.54);
+  }
+
+  .layer-tab-selected {
+    background-color: rgba(0,0,0,0.1); 
+  }
+
+  .theme--dark .layer-tab-selected {
+    background-color: rgba(255,255,255,0.1); 
+  }
+
+  .layer-tab-selected .strike:first-of-type {
+    padding-top: 16px;
+  }
 </style>

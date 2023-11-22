@@ -1,7 +1,7 @@
 <template>
   <div>
     <span class="suppress-scrollbar" style="display: inline-block; white-space: nowrap; margin-left: -24px; width: calc(100% + 48px); overflow-x: scroll; overflow-y: hidden">
-      <span v-for="(item, index) in items" :class="selectedAsList.includes(item.label) ? 'layer-tab-selected' : ''" :style="'display: inline-block; padding: 12px; '+(selectedAsList.includes(item.label) ? 'border-top: 2px solid #c75109' : 'border-top: 2px solid transparent')">
+      <span v-for="(item, index) in items" :class="selectedAsList.includes(item.label) ? 'layer-tab-selected' : ''" :style="'display: inline-block; padding: 12px; '+(selectedAsList.includes(item.label) ? 'border-top: 3px solid #00617E' : 'border-top: 3px solid transparent')">
         <j-tooltip :tooltipcontent="tooltipContent(item)">
           <v-btn
             :rounded="item.is_subset"
@@ -55,7 +55,7 @@ module.exports = {
       else if (item.visible) {
         return 'repeating-linear-gradient(30deg, transparent, transparent 10px)'
       } else {
-        return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.8), rgba(0,0,0,0.8) 7px, transparent 7px, transparent 7px, transparent 10px)'
+        return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.4), rgba(0,0,0,0.4) 8px, transparent 8px, transparent 8px, transparent 10px)'
       }
     },
     colorStyle(item) {
@@ -95,3 +95,15 @@ module.exports = {
 };
   
 </script>
+
+<style scoped>
+  .suppress-scrollbar {
+      overflow-y: scroll;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  }
+  .suppress-scrollbar::-webkit-scrollbar { /* WebKit */
+      width: 0;
+      height: 0;
+  }
+</style>
