@@ -53,6 +53,8 @@ Specviz2d
 API Changes
 -----------
 
+- Removed some previously deprecated methods and arguments. [#2578]
+
 Cubeviz
 ^^^^^^^
 
