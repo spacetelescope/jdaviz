@@ -43,7 +43,8 @@ class JdavizViewerMixin:
                           'colormap_options', 'set_colormap',
                           'stretch_options', 'stretch',
                           'autocut_options', 'cuts',
-                          'marker', 'add_markers', 'remove_markers', 'reset_markers']
+                          'marker', 'add_markers', 'remove_markers', 'reset_markers',
+                          'blink_once', 'reset_limits']
             else:
                 # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
                 # but also shouldn't expose set_limits because of equal aspect ratio concerns
@@ -51,8 +52,14 @@ class JdavizViewerMixin:
         elif isinstance(self, TableViewer):
             expose = []
         else:
-            expose = ['set_limits']
+            expose = ['set_limits', 'reset_limits']
         return ViewerUserApi(self, expose=expose)
+
+    def reset_limits(self):
+        """
+        Reset viewer axes limits.
+        """
+        self.state.reset_limits()
 
     def set_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         """
