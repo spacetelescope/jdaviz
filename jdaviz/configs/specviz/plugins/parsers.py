@@ -4,6 +4,8 @@ from collections import defaultdict
 import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.nddata import StdDevUncertainty
+from astropy.io import fits
+from astropy import units as u
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.events import SnackbarMessage
@@ -39,7 +41,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     # If no data label is assigned, give it a unique name
     if not data_label:
         data_label = app.return_data_label(data, alt_name="specviz_data")
-
     if isinstance(data, SpectrumCollection):
         raise TypeError("SpectrumCollection detected."
                         " Please provide a Spectrum1D or SpectrumList")
@@ -50,7 +51,40 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     elif isinstance(data, SpectrumList):
         pass
     elif isinstance(data, list):
-        data = SpectrumList.read(data, format=format)
+        # special processing for HDUList
+        if isinstance(data, fits.HDUList):
+            data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
+            spec_data = data['EXTRACT1D'].data
+
+            wl = spec_data['WAVELENGTH']
+            flux = spec_data['SURF_BRIGHT']
+            # case to check if uncertainty exists and is not None
+            if hasattr(spec_data, 'SB_ERROR') and spec_data['SB_ERROR'] is not None:
+                uncerts = spec_data['SB_ERROR']
+            else:
+                uncerts = None
+
+            # get units from header
+            for key, value in data['EXTRACT1D'].header.items():
+                if key.startswith('TTYPE') and value == 'WAVELENGTH':
+                    wl_index = int(key[5:])
+                    wave_units = u.Unit(data['EXTRACT1D'].header.get(f'TUNIT{wl_index}'))
+                if key.startswith('TTYPE') and value == 'SURF_BRIGHT':
+                    flux_index = int(key[5:])
+                    flux_units = u.Unit(data['EXTRACT1D'].header.get(f'TUNIT{flux_index}'))
+            
+            # units are not being handled properly yet. 
+            if uncerts is not None:
+                unc = StdDevUncertainty(uncerts * flux_units)
+            else:
+                unc = None
+
+            # create a Spectrum1D instance from HDUList data
+            data = Spectrum1D(flux=flux * flux_units, spectral_axis=wl * wave_units, uncertainty=unc, meta=data['PRIMARY'].header)
+            data = [data]
+        else:
+            # list treated as SpectrumList if not an HDUList
+            data = SpectrumList.read(data, format=format)
     else:
         path = pathlib.Path(data)
 
@@ -127,7 +161,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
     with app.data_collection.delay_link_manager_update():
         for i, spec in enumerate(data):
-
             # note: if SpectrumList, this is just going to be the last unit when
             # combined in the next block. should put a check here to make sure
             # units are all the same or collect them in a list?
@@ -137,7 +170,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             # Make metadata layout conform with other viz.
             spec.meta = standardize_metadata(spec.meta)
 
-            app.add_data(spec, data_label[i])
+            app.add_data(spec,data_label[i])
 
             # handle display, with the SpectrumList special case in mind.
             if i == 0 and show_in_viewer:
