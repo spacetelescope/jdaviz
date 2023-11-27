@@ -137,7 +137,9 @@ class ConfigHelper(HubListener):
         # handle renamed plugins during deprecation
         if 'Orientation' in plugins.keys():
             plugins['Links Control'] = plugins['Orientation']._obj.user_api
-            plugins['Links Control']._deprecated_renamed_as = 'Orientation'
+            plugins['Links Control']._deprecation_msg = 'in the future, the formerly named \"Links Control\" plugin will only be available by its new name: \"Orientation\".'  # noqa
+        if 'Canvas Rotation' in plugins.keys():
+            plugins['Canvas Rotation']._deprecation_msg = 'this functionality will be removed in favor of the implementation for rotation in the \"Orientation\" plugin.'  # noqa
 
         return plugins
 
