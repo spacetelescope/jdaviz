@@ -60,6 +60,9 @@ API Changes
 - User APIs now raise a warning when attempting to set a non-existing attribute to avoid confusion
   caused by typos, etc. [#2577]
 
+- Viewer API now exposed via ``viz.viewers`` dictionary, currently containing APIs to set axes
+  limits. [#2563]
+
 Cubeviz
 ^^^^^^^
 
