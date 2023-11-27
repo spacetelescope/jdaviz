@@ -222,7 +222,8 @@ def test_load_single_image_multi_spec(mosviz_helper, mos_image, spectrum1d, mos_
 
     label_mouseover._viewer_mouse_event(spec2d_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 10, 'y': 100}})
-    assert label_mouseover.as_text() == ('Pixel x=00010.0 y=00100.0 Value +8.12986e-01', '', '')
+    assert label_mouseover.as_text() == ('Pixel x=00010.0 y=00100.0 Value +8.12986e-01',
+                                         'Wave 1.10000e-05 m', '')
     assert label_mouseover.icon == 'c'
 
     # need to trigger a mouseleave or mouseover to reset the traitlets
