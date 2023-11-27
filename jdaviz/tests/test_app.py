@@ -6,7 +6,7 @@ from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import Gauss
 
 # This applies to all viz but testing with Imviz should be enough.
 def test_viewer_calling_app(imviz_helper):
-    viewer = imviz_helper.default_viewer
+    viewer = imviz_helper.default_viewer._obj
     assert viewer.session.jdaviz_app is imviz_helper.app
 
 

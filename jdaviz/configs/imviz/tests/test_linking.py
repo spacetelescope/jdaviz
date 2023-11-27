@@ -24,10 +24,10 @@ class BaseLinkHandler:
 
     @property
     def default_viewer_limits(self):
-        return (self.imviz.default_viewer.state.x_min,
-                self.imviz.default_viewer.state.x_max,
-                self.imviz.default_viewer.state.y_min,
-                self.imviz.default_viewer.state.y_max)
+        return (self.imviz.default_viewer._obj.state.x_min,
+                self.imviz.default_viewer._obj.state.x_max,
+                self.imviz.default_viewer._obj.state.y_min,
+                self.imviz.default_viewer._obj.state.y_max)
 
 
 class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
@@ -104,7 +104,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # linking should not change axes limits, but should when resetting
         assert_allclose(self.default_viewer_limits, orig_pixel_limits)
-        self.imviz.default_viewer.state.reset_limits()
+        self.imviz.default_viewer.reset_limits()
         assert_allclose(self.default_viewer_limits, (-1.5, 9.5, -1, 10))
 
         # Customize display on second image (last loaded).
@@ -370,4 +370,4 @@ def test_imviz_no_data(imviz_helper):
     assert len(links) == 0
 
     with pytest.raises(ValueError, match='No reference data for link look-up'):
-        imviz_helper.default_viewer.get_link_type('foo')
+        imviz_helper.default_viewer._obj.get_link_type('foo')

@@ -7,7 +7,7 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
 class TestPanZoomTools(BaseImviz_WCS_WCS):
     def test_panzoom_tools(self):
-        v = self.imviz.default_viewer
+        v = self.imviz.default_viewer._obj
         v2 = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer('imviz-1', 'has_wcs_1[SCI,1]')
 
@@ -70,7 +70,7 @@ class TestSinglePixelRegion(BaseImviz_WCS_WCS):
     def test_singlepixelregion(self):
         self.imviz.link_data(link_type='wcs')
 
-        t = self.imviz.default_viewer.toolbar.tools['jdaviz:singlepixelregion']
+        t = self.imviz.default_viewer._obj.toolbar.tools['jdaviz:singlepixelregion']
         t.activate()
 
         # Create a region while viewing reference data.
@@ -103,7 +103,7 @@ class TestSinglePixelRegion(BaseImviz_WCS_WCS):
 
 
 def test_blink(imviz_helper):
-    viewer = imviz_helper.default_viewer
+    viewer = imviz_helper.default_viewer._obj
 
     for i in range(3):
         imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}')
@@ -142,7 +142,7 @@ def test_compass_open_while_load(imviz_helper):
 
 def test_tool_visibility(imviz_helper):
     imviz_helper.load_data(np.ones((2, 2)))
-    tb = imviz_helper.default_viewer.toolbar
+    tb = imviz_helper.default_viewer._obj.toolbar
 
     assert not tb.tools_data['jdaviz:boxzoommatch']['visible']
 
