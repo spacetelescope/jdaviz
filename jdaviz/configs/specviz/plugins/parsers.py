@@ -72,15 +72,19 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 if key.startswith('TTYPE') and value == 'SURF_BRIGHT':
                     flux_index = int(key[5:])
                     flux_units = u.Unit(data['EXTRACT1D'].header.get(f'TUNIT{flux_index}'))
-            
-            # units are not being handled properly yet. 
+            # units are not being handled properly yet.
             if uncerts is not None:
                 unc = StdDevUncertainty(uncerts * flux_units)
             else:
                 unc = None
 
             # create a Spectrum1D instance from HDUList data
-            data = Spectrum1D(flux=flux * flux_units, spectral_axis=wl * wave_units, uncertainty=unc, meta=data['PRIMARY'].header)
+            data = Spectrum1D(
+                flux=flux * flux_units,
+                spectral_axis=wl * wave_units,
+                uncertainty=unc,
+                meta=data['PRIMARY'].header
+            )
             data = [data]
         else:
             # list treated as SpectrumList if not an HDUList
@@ -170,7 +174,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             # Make metadata layout conform with other viz.
             spec.meta = standardize_metadata(spec.meta)
 
-            app.add_data(spec,data_label[i])
+            app.add_data(spec, data_label[i])
 
             # handle display, with the SpectrumList special case in mind.
             if i == 0 and show_in_viewer:
