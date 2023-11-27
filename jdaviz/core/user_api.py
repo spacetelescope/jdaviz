@@ -34,8 +34,10 @@ class UserApiWrapper:
         return getattr(exp_obj, 'user_api', exp_obj)
 
     def __setattr__(self, attr, value):
-        if attr in _internal_attrs or attr not in self._expose:
+        if attr in _internal_attrs:
             return super().__setattr__(attr, value)
+        if attr not in self._expose:
+            raise ValueError(f"{attr} is not a valid attribute and cannot be set")
 
         if attr in self._readonly:
             raise AttributeError("cannot set read-only item")

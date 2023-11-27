@@ -190,6 +190,9 @@ def test_user_api(specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d)
     p = specviz_helper.plugins['Model Fitting']
 
+    with pytest.raises(ValueError, match="blah is not a valid attribute and cannot be set"):
+        p.blah = 5
+
     # even though the default label is set to C, adding Linear1D should default to its automatic
     # default label of 'L'
     assert p.model_component == 'Const1D'  # tests SelectPluginComponent's __eq__
