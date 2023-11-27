@@ -935,8 +935,8 @@ class PlotOptions(PluginTemplateMixin):
 
     def set_histogram_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         # NOTE: leaving this out of user API until API is finalized with interactive setting
-        self.stretch_histogram.set_lims(x_min=x_min, x_max=x_max,
-                                        y_min=y_min, y_max=y_max)
+        self.stretch_histogram.set_limits(x_min=x_min, x_max=x_max,
+                                          y_min=y_min, y_max=y_max)
 
     def _viewer_is_image_viewer(self):
         # Import here to prevent circular import (and not at the top of the method so the import

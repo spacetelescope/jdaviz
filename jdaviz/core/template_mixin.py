@@ -3626,7 +3626,7 @@ class Plot(PluginSubcomponent):
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
 
-    def set_lims(self, x_min=None, x_max=None, y_min=None, y_max=None):
+    def set_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         with delay_callback(self.viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
             if x_min is not None:
                 self.viewer.state.x_min = x_min

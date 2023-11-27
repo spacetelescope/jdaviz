@@ -40,15 +40,15 @@ class JdavizViewerMixin:
                 expose = ['zoom', 'zoom_level']
             else:
                 # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
-                # but also shouldn't expose set_lims because of equal aspect ratio concerns
+                # but also shouldn't expose set_limits because of equal aspect ratio concerns
                 expose = []
         elif isinstance(self, TableViewer):
             expose = []
         else:
-            expose = ['set_lims']
+            expose = ['set_limits']
         return ViewerUserApi(self, expose=expose)
 
-    def set_lims(self, x_min=None, x_max=None, y_min=None, y_max=None):
+    def set_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         """
         Set viewer axes limits.
 
