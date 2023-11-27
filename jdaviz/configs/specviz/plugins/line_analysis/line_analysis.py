@@ -170,8 +170,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
-                                           'continuum', 'width',
-                                           'show_continuum_marks', 'get_results'))
+                                           'continuum', 'width', 'get_results'))
 
     def _on_viewer_data_changed(self, msg):
         viewer_id = self.app._viewer_item_by_reference(
