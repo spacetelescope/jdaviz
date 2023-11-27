@@ -3,17 +3,15 @@ import pathlib
 import re
 import uuid
 import warnings
-from inspect import isclass
 import operator
 
 from ipywidgets import widget_serialization
 import ipyvue
 
 from astropy import units as u
-from astropy.nddata import CCDData, NDData
+from astropy.nddata import NDData
 from astropy.io import fits
 from astropy.time import Time
-from astropy.utils.decorators import deprecated
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -22,10 +20,9 @@ from specutils import Spectrum1D, SpectralRegion
 import matplotlib.cm as cm
 import numpy as np
 
-from glue.core.exceptions import IncompatibleAttribute
-from glue.config import colormaps, data_translator
+from glue.config import colormaps
 from glue.config import settings as glue_settings
-from glue.core import BaseData, HubListener, Data, DataCollection
+from glue.core import HubListener
 from glue.core.link_helpers import LinkSame, LinkSameWithUnits
 from glue.core.message import (DataCollectionAddMessage,
                                DataCollectionDeleteMessage,
@@ -33,7 +30,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetUpdateMessage,
                                SubsetDeleteMessage)
 from glue.core.state_objects import State
-from glue.core.subset import (Subset, RangeSubsetState, RoiSubsetState,
+from glue.core.subset import (RangeSubsetState, RoiSubsetState,
                               CompositeSubsetState, InvertState)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.units import unit_converter
@@ -43,7 +40,6 @@ from glue_jupyter.app import JupyterApplication
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.common.tools import TrueCircularROI
 from glue_jupyter.state_traitlets_helpers import GlueState
-from glue_jupyter.bqplot.profile import BqplotProfileView
 from ipyvuetify import VuetifyTemplate
 
 from jdaviz import __version__
