@@ -354,7 +354,7 @@ Canvas Rotation
 
 .. note::
 
-    This plugin is deprecated in favor of rotation via :ref:`imviz-link-control` and will be removed
+    This plugin is deprecated in favor of rotation via :ref:`imviz-orientation` and will be removed
     in a future release.
 
 The canvas rotation plugin allows rotating and horizontally flipping the image to any arbitrary 

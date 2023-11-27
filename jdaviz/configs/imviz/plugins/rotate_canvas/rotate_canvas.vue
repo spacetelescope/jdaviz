@@ -6,7 +6,7 @@
     :popout_button="popout_button">
 
     <v-alert type='warning'>
-      This plugin is deprecated in favor of rotation via Links Control and will be removed
+      This plugin is deprecated in favor of rotation via the Orientation plugin and will be removed
       in a future release.
     </v-alert>
 
