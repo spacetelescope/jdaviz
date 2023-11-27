@@ -8,6 +8,7 @@ from glue_jupyter.table import TableViewer
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
+from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.utils import ColorCycler, get_subset_type
@@ -36,8 +37,13 @@ class JdavizViewerMixin:
     def user_api(self):
         # default exposed user APIs.  Can override this method in any particular viewer.
         if isinstance(self, BqplotImageView):
-            if hasattr(self, 'zoom_level'):
-                expose = ['zoom', 'zoom_level']
+            if isinstance(self, AstrowidgetsImageViewerMixin):
+                expose = ['save',
+                          'center_on', 'offset_by', 'zoom_level', 'zoom',
+                          'colormap_options', 'set_colormap',
+                          'stretch_options', 'stretch',
+                          'autocut_options', 'cuts',
+                          'marker', 'add_markers', 'remove_markers', 'reset_markers']
             else:
                 # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
                 # but also shouldn't expose set_limits because of equal aspect ratio concerns

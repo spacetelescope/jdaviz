@@ -61,7 +61,7 @@ API Changes
   caused by typos, etc. [#2577]
 
 - Viewer API now exposed via ``viz.viewers`` dictionary, currently containing APIs to set axes
-  limits. [#2563]
+  limits as well as astrowidgets API commands for Imviz. [#2563]
 
 Cubeviz
 ^^^^^^^

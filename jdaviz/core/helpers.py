@@ -624,7 +624,7 @@ class ImageConfigHelper(ConfigHelper):
     def default_viewer(self):
         """Default viewer instance. This is typically the first viewer
         (e.g., "imviz-0" or "cubeviz-0")."""
-        return self._default_viewer
+        return self._default_viewer.user_api
 
     def load_regions_from_file(self, region_file, region_format='ds9', max_num_regions=20,
                                **kwargs):
