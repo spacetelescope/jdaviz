@@ -283,6 +283,21 @@ class Application(VuetifyTemplate, HubListener):
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
 
+        # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
+        # https://github.com/glue-viz/glue/blob/main/glue/config.py
+        new_cms = (['Rainbow', cm.rainbow],
+                   ['Seismic', cm.seismic],
+                   ['Reversed: Gray', cm.gray_r],
+                   ['Reversed: Viridis', cm.viridis_r],
+                   ['Reversed: Plasma', cm.plasma_r],
+                   ['Reversed: Inferno', cm.inferno_r],
+                   ['Reversed: Magma', cm.magma_r],
+                   ['Reversed: Hot', cm.hot_r],
+                   ['Reversed: Rainbow', cm.rainbow_r])
+        for cur_cm in new_cms:
+            if cur_cm not in colormaps.members:
+                colormaps.add(*cur_cm)
+
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
 
@@ -332,21 +347,6 @@ class Application(VuetifyTemplate, HubListener):
         self._get_object_cache = {}
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda msg: self._clear_object_cache(msg.subset.label))
-
-        # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
-        # https://github.com/glue-viz/glue/blob/main/glue/config.py
-        new_cms = (['Rainbow', cm.rainbow],
-                   ['Seismic', cm.seismic],
-                   ['Reversed: Gray', cm.gray_r],
-                   ['Reversed: Viridis', cm.viridis_r],
-                   ['Reversed: Plasma', cm.plasma_r],
-                   ['Reversed: Inferno', cm.inferno_r],
-                   ['Reversed: Magma', cm.magma_r],
-                   ['Reversed: Hot', cm.hot_r],
-                   ['Reversed: Rainbow', cm.rainbow_r])
-        for cur_cm in new_cms:
-            if cur_cm not in colormaps.members:
-                colormaps.add(*cur_cm)
 
         # Subscribe to messages that result in changes to the layers
         self.hub.subscribe(self, AddDataMessage,

@@ -1272,21 +1272,21 @@ class LayerSelect(SelectPluginComponent):
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_data_added)
         self.hub.subscribe(self, RemoveDataMessage,
-                           handler=lambda _: self._on_layers_changed())
+                           handler=lambda _: self._update_layer_items())
         self.hub.subscribe(self, AddDataToViewerMessage,
                            handler=self._on_data_added)
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda _: self._on_subset_created())
         # will need SubsetUpdateMessage for name only (style shouldn't force a full refresh)
         # self.hub.subscribe(self, SubsetUpdateMessage,
-        #                    handler=lambda _: self._on_layers_changed())
+        #                    handler=lambda _: self._update_layer_items())
         self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=lambda _: self._on_layers_changed())
+                           handler=lambda _: self._update_layer_items())
 
-        self.app.state.add_callback('layer_icons', self._on_layers_changed)
-        self.add_observe(viewer, self._on_viewer_changed)
-        self.add_observe(selected, self._on_layers_changed)
-        self._on_layers_changed()
+        self.app.state.add_callback('layer_icons', self._update_layer_items)
+        self.add_observe(viewer, self._on_viewer_selected_changed)
+        self.add_observe(selected, self._update_layer_items)
+        self._update_layer_items()
 
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
@@ -1296,21 +1296,40 @@ class LayerSelect(SelectPluginComponent):
         except TypeError:
             return self.app.get_viewer_by_id(viewer)
 
-    def _layer_to_dict(self, layer, label_to_color={}, label_mixed_color={},
-                       label_to_visibility={}, label_mixed_visibility={}):
-        is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or
-                     (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))
-        d = {"label": layer.layer.label,
-             "color": layer.state.color,
-             "all_colors_to_label": label_to_color.get(layer.layer.label, False),
-             "icon": self.app.state.layer_icons.get(layer.layer.label),
-             "visible": getattr(layer.state, 'bitmap_visible', True) and layer.visible,
-             "mixed_color": label_mixed_color.get(layer.layer.label, False),
-             "mixed_visibility": label_mixed_visibility.get(layer.layer.label, False),
-             "is_subset": is_subset}
-        return d
+    @property
+    def viewer_objs(self):
+        viewer_names = self.viewer
+        if not isinstance(viewer_names, list):
+            viewer_names = [viewer_names]
+        return [self._get_viewer(viewer) for viewer in viewer_names]
 
-    def _on_viewer_changed(self, msg=None):
+    def _layer_to_dict(self, layer_label):
+        is_subset = None
+        colors = []
+        visibilities = []
+        for viewer in self.viewer_objs:
+            for layer in viewer.layers:
+                if layer.layer.label == layer_label:
+                    if is_subset is None:
+                        is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or  # noqa
+                                     (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
+
+                    if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
+                            and hasattr(layer.state, 'cmap')):
+                        colors.append(layer.state.cmap.name)
+                    else:
+                        colors.append(layer.state.color)
+
+                    visibilities.append(getattr(layer.state, 'bitmap_visible', True)
+                                        and layer.visible)
+
+        return {"label": layer_label,
+                "is_subset": is_subset,
+                "icon": self.app.state.layer_icons.get(layer_label),
+                "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
+                "colors": np.unique(colors).tolist()}
+
+    def _on_viewer_selected_changed(self, msg=None):
         # we don't want to update the layers if we're just toggling
         # between single and multi-select
         old, new = msg['old'], msg['new']
@@ -1320,28 +1339,40 @@ class LayerSelect(SelectPluginComponent):
             new = [new]
         if new != old:
             self._clear_cache()
-            self._on_layers_changed()
+            self._update_layer_items()
             added_viewers = list(set(new) - set(old))
             removed_viewers = list(set(old) - set(new))
             for old_viewer in removed_viewers:
-                if self._get_viewer(old_viewer) is None:
+                old_viewer = self._get_viewer(old_viewer)
+                if old_viewer is None:
                     continue
-                for layer in self._get_viewer(old_viewer).state.layers:
-                    layer.remove_callback('color', self._on_layers_changed)
+                # NOTE: color_mode callback must be conflicting with something else, so instead
+                # we call _update_layer_items in the PlotOptionsSyncState for color_mode
+                # old_viewer.state.remove_callback('color_mode', self._update_layer_items)
+                for layer in old_viewer.state.layers:
+                    layer.remove_callback('color', self._update_layer_items)
+                    if hasattr(layer, 'cmap'):
+                        layer.remove_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
-                        layer.remove_callback('bitmap_visible', self._on_layers_changed)
+                        layer.remove_callback('bitmap_visible', self._update_layer_items)
                     elif hasattr(layer, 'visible'):
-                        layer.remove_callback('visible', self._on_layers_changed)
+                        layer.remove_callback('visible', self._update_layer_items)
 
             for new_viewer in added_viewers:
-                if self._get_viewer(new_viewer) is None:
+                new_viewer = self._get_viewer(new_viewer)
+                if new_viewer is None:
                     continue
-                for layer in self._get_viewer(new_viewer).state.layers:
-                    layer.add_callback('color', self._on_layers_changed)
+                # NOTE: color_mode callback must be conflicting with something else, so instead
+                # we call _update_layer_items in the PlotOptionsSyncState for color_mode
+                # new_viewer.state.add_callback('color_mode', self._update_layer_items)
+                for layer in new_viewer.state.layers:
+                    layer.add_callback('color', self._update_layer_items)
+                    if hasattr(layer, 'cmap'):
+                        layer.add_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
-                        layer.add_callback('bitmap_visible', self._on_layers_changed)
+                        layer.add_callback('bitmap_visible', self._update_layer_items)
                     if hasattr(layer, 'visible'):
-                        layer.add_callback('visible', self._on_layers_changed)
+                        layer.add_callback('visible', self._update_layer_items)
 
     def _on_subset_created(self, msg=None):
         new_subset_label = self.app.data_collection.subset_groups[-1].label
@@ -1350,11 +1381,11 @@ class LayerSelect(SelectPluginComponent):
             for layer in self._get_viewer(current_viewer).state.layers:
                 if layer.layer.label == new_subset_label:
                     # Is it ok if only one subset layer has this callback?
-                    layer.add_callback('color', self._on_layers_changed)
-                    layer.add_callback('visible', self._on_layers_changed)
+                    layer.add_callback('color', self._update_layer_items)
+                    layer.add_callback('visible', self._update_layer_items)
                     break
                     # TODO: Add ability to add new item to self.items instead of recompiling
-        self._on_layers_changed('subset_added')
+        self._update_layer_items({'source': 'subset_added'})
 
     def _on_data_added(self, msg=None):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
@@ -1368,97 +1399,35 @@ class LayerSelect(SelectPluginComponent):
                     # _on_layers_changed whenever the color changes
                     # TODO: find out if this conflicts with another color change event
                     #  and is causing the lag in the color picker
-                    layer.add_callback('color', self._on_layers_changed)
+                    layer.add_callback('color', self._update_layer_items)
+                    if hasattr(layer, 'cmap'):
+                        layer.add_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
-                        layer.add_callback('bitmap_visible', self._on_layers_changed)
+                        layer.add_callback('bitmap_visible', self._update_layer_items)
                     if hasattr(layer, 'visible'):
-                        layer.add_callback('visible', self._on_layers_changed)
+                        layer.add_callback('visible', self._update_layer_items)
 
-        self._on_layers_changed('data_added')
+        self._update_layer_items({'source': 'data_added'})
 
     @observe('filters')
-    def _on_layers_changed(self, msg=None, **kwargs):
+    def _update_layer_items(self, msg={}):
         # NOTE: _on_layers_changed is passed without a msg object during init
         # TODO: Handle changes to just one item without recompiling the whole thing
-        viewer_names = self.viewer
-        if not isinstance(viewer_names, list):
-            viewer_names = [viewer_names]
-        viewers = [self._get_viewer(viewer) for viewer in viewer_names]
-
         manual_items = [{'label': label} for label in self.manual_options]
-        layers = [layer for viewer in viewers for layer in getattr(viewer, 'layers', [])]
-        # remove duplicates - NOTE: by doing this, any color-mismatch between layers with the
-        # same name in different viewers will be randomly assigned within plot_options
-        # based on which was found _first.
-        layer_labels = [layer.layer.label for layer in layers if self.app.state.layer_icons.get(layer.layer.label)]  # noqa
-        _, inds = np.unique(layer_labels, return_index=True)
-        layers_unique = [layers[i] for i in inds]
+        all_layers = [layer for viewer in self.viewer_objs
+                      for layer in getattr(viewer, 'layers', [])]
+        # remove duplicates - we'll loop back through all selected viewers to get a list of colors
+        # and visibilities later within _layer_to_dict
+        layer_labels = [layer.layer.label for layer in all_layers if self.app.state.layer_icons.get(layer.layer.label)]  # noqa
+        unique_layer_labels = list(set(layer_labels))
 
-        selected_labels = self.selected
-        selected_color = None
-        mixed_selected_color = False
-        label_to_color = {}
-        label_mixed_color = {}
-        label_to_visibility = {}
-        label_mixed_visibility = {}
-
-        # Go through all layers and determine what colors go to what layers based
-        # on what label they use. Also determine if those layers with shared labels
-        # also share color or visibility. If not, show that as a mixed state.
-        for layer in layers:
-            label = layer.layer.label
-            color = layer.state.color.lower()
-            visible = getattr(layer.state, 'bitmap_visible', True) and layer.visible
-            # This handles the subset case since each subset can only be one color,
-            # even though there is a layer with the subsets name for each data layer that
-            # subset is applied to
-            if hasattr(layer.state, 'subset_state'):
-                if label not in label_to_color:
-                    label_to_color[label] = [color]
-                    label_mixed_color[label] = False
-                    label_to_visibility[label] = [visible]
-                    label_mixed_visibility[label] = False
-                continue
-
-            # Determine whether all currently selected layers share the same color. If so
-            # then there is no mixed color state. Otherwise, there is.
-            if selected_labels and label in selected_labels and selected_color is None:
-                selected_color = color
-            elif selected_labels and label in selected_labels and color != selected_color:
-                mixed_selected_color = True
-
-            # label_to_color tracks all colors per layer label
-            # label_to_visibility tracks all visibility states per layer label
-            if label not in label_to_color:
-                label_to_color[label] = [color]
-                label_mixed_color[label] = False
-                label_to_visibility[label] = [visible]
-                label_mixed_visibility[label] = False
-
-            else:
-                label_to_color[label] += [color]
-                label_to_visibility[label] += [visible]
-
-        # If there is more than one unique color per label or the label is
-        # selected and not the same color as other selected labels, then the
-        # current state of the layer's color is mixed
-        for k, v in label_to_color.items():
-            if (len(np.unique(v)) > 1 or
-                    (selected_labels and k in selected_labels and mixed_selected_color)):
-                label_mixed_color[k] = True
-            label_mixed_visibility[k] = (label_to_visibility[k][1:] != label_to_visibility[k][:-1]
-                                         if len(label_to_visibility[k]) > 1 else False)
-
-        # Send layers with unique labels and what colors are associated
-        # with that label and if layers with that label are in a mixed color state
-        items = manual_items + [self._layer_to_dict(layer, label_to_color, label_mixed_color,
-                                                    label_to_visibility, label_mixed_visibility)
-                                for layer in layers_unique]
+        layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
 
         def _sort_by_icon(items_dict):
             return items_dict['icon']
-        items.sort(key=_sort_by_icon)
-        self.items = items
+        layer_items.sort(key=_sort_by_icon)
+
+        self.items = manual_items + layer_items
 
         self._apply_default_selection()
 
@@ -3162,6 +3131,9 @@ class PlotOptionsSyncState(BasePluginComponent):
             # currently in subscribed states will be ignored.
             for viewer in self.subscribed_viewers:
                 viewer._update_layer_icons()
+            # callbacks from the viewer state also do not trigger an update to the
+            # layer items (tabs), so we'll force those to update from here as well.
+            self.plugin.layer._update_layer_items()
 
         if self._processing_change_to_glue:
             return

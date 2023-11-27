@@ -15,12 +15,13 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     po = cubeviz_helper.app.get_tray_item_from_name('g-plot-options')
 
     # default selection for viewer should be flux-viewer (first in list) and nothing for layer
-    assert po.multiselect is False
     assert po.viewer.multiselect is False
     assert po.layer.multiselect is False
     assert po.viewer.selected == 'flux-viewer'
     assert po.layer.selected == 'Unknown spectrum object[FLUX]'
 
+    # deprecated functionality to toggle both at once, replace with setting
+    # individually when removing
     po.multiselect = True
     assert po.viewer.multiselect is True
     assert po.layer.multiselect is True
@@ -59,10 +60,11 @@ def test_multiselect(cubeviz_helper, spectrum1d_cube):
     for viewer_name in ['spectrum-viewer']:
         assert cubeviz_helper.app.get_viewer(viewer_name).state.show_axes is True
 
-    po.multiselect = False
+    po.viewer_multiselect = False
     # should default back to the first selected entry
     assert po.viewer.multiselect is False
     assert po.viewer.selected == 'flux-viewer'
+    po.layer_multiselect = False
     assert po.axes_visible.value is False
 
     po.viewer.selected = 'spectrum-viewer'
@@ -336,7 +338,7 @@ def test_track_mixed_states(imviz_helper):
     assert po.layer.items[-1]["label"] == "array_2"
     # The corresponding layer in each viewer is the same color,
     # so the state is not mixed.
-    assert not po.layer.items[-1]["mixed_color"]
+    assert len(po.layer.items[-1]["colors"]) == 1
 
     # Change the color of one of the layers in one viewer
     po.viewer_selected = ["imviz-1"]
@@ -345,7 +347,7 @@ def test_track_mixed_states(imviz_helper):
     po.viewer_selected = ["imviz-0", "imviz-1"]
     # The color state is now mixed when two viewers are selected
     assert po.layer.items[-1]["label"] == "array_2"
-    assert po.layer.items[-1]["mixed_color"]
+    assert len(po.layer.items[-1]["colors"]) == 2
 
     # Now test mixed visibility
     po.viewer_selected = ["imviz-1"]
@@ -353,27 +355,27 @@ def test_track_mixed_states(imviz_helper):
     po.image_visible.value = False
     po.viewer_selected = ["imviz-0", "imviz-1"]
     assert po.layer.items[-1]["label"] == "array_2"
-    assert po.layer.items[-1]["mixed_visibility"]
+    assert po.layer.items[-1]["visible"] == 'mixed'
     assert po.layer.items[-2]["label"] == "array_1"
-    assert po.layer.items[-2]["mixed_visibility"]
+    assert po.layer.items[-2]["visible"] == 'mixed'
 
     # Test unmixing visibility
     po.image_visible.unmix_state(True)
-    assert not po.layer.items[-1]["mixed_visibility"]
+    assert po.layer.items[-1]["visible"] is True
     assert po.layer.items[-1]["visible"]
-    assert not po.layer.items[-2]["mixed_visibility"]
+    assert po.layer.items[-2]["visible"] is True
     assert po.layer.items[-2]["visible"]
 
     # Now test unmixing color
     po.viewer_selected = ["imviz-0", "imviz-1"]
-    assert po.layer.items[-1]["mixed_color"]
-    assert po.layer.items[-2]["mixed_color"]
+    assert len(po.layer.items[-1]["colors"]) > 1
+    assert len(po.layer.items[-2]["colors"]) == 1
 
     # Make sure that all selected layers are no longer
     # mixed state and are the same color
     po.image_color.unmix_state()
-    assert not po.layer.items[-1]["mixed_color"]
-    assert not po.layer.items[-2]["mixed_color"]
+    assert len(po.layer.items[-1]["colors"]) == 1
+    assert len(po.layer.items[-2]["colors"]) == 1
     assert po.image_color.value == "#00ff00"
-    assert po.layer.items[-1]["color"] == "#00ff00"
-    assert po.layer.items[-2]["color"] == "#00ff00"
+    assert po.layer.items[-1]["colors"][0] == "#00ff00"
+    assert po.layer.items[-2]["colors"][0] == "#00ff00"

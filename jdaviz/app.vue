@@ -451,22 +451,4 @@ a:active {
     font-weight: 500 !important;
 }
 
-.suppress-scrollbar {
-    overflow-y: scroll;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-}
-.suppress-scrollbar::-webkit-scrollbar { /* WebKit */
-    width: 0;
-    height: 0;
-}
-
-.layer-tab-selected {
-  background-color: rgba(0,0,0,0.1); 
-}
-
-.theme--dark .layer-tab-selected {
-  background-color: rgba(255,255,255,0.1); 
-}
-
 </style>

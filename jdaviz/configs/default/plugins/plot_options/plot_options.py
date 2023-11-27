@@ -1,3 +1,4 @@
+import logging
 import math
 import os
 import matplotlib
@@ -103,10 +104,10 @@ class PlotOptions(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * ``multiselect``:
-      whether ``viewer`` and ``layer`` should both be in multiselect mode.
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`):
+    * ``viewer_multiselect``
     * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
+    * ``layer_multiselect``
     * :meth:`select_all`
     * ``subset_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       whether a subset should be visible.
@@ -172,11 +173,11 @@ class PlotOptions(PluginTemplateMixin):
     template_file = __file__, "plot_options.vue"
     uses_active_status = Bool(True).tag(sync=True)
 
-    # multiselect is shared between viewer and layer
-    multiselect = Bool(False).tag(sync=True)
-
+    viewer_multiselect = Bool(False).tag(sync=True)
     viewer_items = List().tag(sync=True)
     viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
+
+    layer_multiselect = Bool(False).tag(sync=True)
     layer_items = List().tag(sync=True)
     layer_selected = Any().tag(sync=True)  # Any needed for multiselect
 
@@ -325,13 +326,15 @@ class PlotOptions(PluginTemplateMixin):
 
     show_viewer_labels = Bool(True).tag(sync=True)
 
+    cmap_samples = Dict().tag(sync=True)
     swatches_palette = List().tag(sync=True)
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'multiselect')
-        self.layer = LayerSelect(self, 'layer_items', 'layer_selected', 'viewer_selected', 'multiselect')  # noqa
+        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
+        self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
+                                 'viewer_selected', 'layer_multiselect')
 
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
@@ -551,9 +554,17 @@ class PlotOptions(PluginTemplateMixin):
         self.show_viewer_labels = self.app.state.settings['viewer_labels']
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
+        # give UI access to sampled version of the available colormap choices
+        def hex_for_cmap(cmap):
+            N = 50
+            cm_sampled = cmap.resampled(N)
+            return [matplotlib.colors.to_hex(cm_sampled(i)) for i in range(N)]
+        self.cmap_samples = {cmap[1].name: hex_for_cmap(cmap[1]) for cmap in colormaps.members}
+
     @property
     def user_api(self):
-        expose = ['multiselect', 'viewer', 'layer', 'select_all', 'subset_visible']
+        expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
+                  'select_all', 'subset_visible']
         if self.config == "cubeviz":
             expose += ['collapse_function', 'uncertainty_visible']
         if self.config != "imviz":
@@ -579,6 +590,17 @@ class PlotOptions(PluginTemplateMixin):
     def _on_app_settings_changed(self, value):
         self.show_viewer_labels = value['viewer_labels']
 
+    @property
+    def multiselect(self):
+        logging.warning(f"DeprecationWarning: multiselect has been replaced by separate viewer_multiselect and layer_multiselect and will be removed in the future.  This currently evaluates viewer_multiselect or layer_multiselect")  # noqa
+        return self.viewer_multiselect or self.layer_multiselect
+
+    @multiselect.setter
+    def multiselect(self, value):
+        logging.warning(f"DeprecationWarning: multiselect has been replaced by separate viewer_multiselect and layer_multiselect and will be removed in the future.  This currently sets viewer_multiselect and layer_multiselect")  # noqa
+        self.viewer_multiselect = value
+        self.layer_multiselect = value
+
     def select_all(self, viewers=True, layers=True):
         """
         Enable multiselect mode and select all viewers and/or layers.
@@ -586,15 +608,16 @@ class PlotOptions(PluginTemplateMixin):
         Parameters
         ----------
         viewers : bool
-            Whether to select all viewers (default: True)
+            Whether to set ``viewer_multiselect`` and select all viewers (default: True)
 
         layers: bool
-            Whether to select all layers (default: True)
+            Whether to set ``layer_multiselect`` and select all layers (default: True)
         """
-        self.multiselect = True
         if viewers:
+            self.viewer_multiselect = True
             self.viewer.select_all()
         if layers:
+            self.layer_multiselect = True
             self.layer.select_all()
 
     def vue_unmix_state(self, name):
@@ -630,7 +653,7 @@ class PlotOptions(PluginTemplateMixin):
         initial_layer = self.layer_selected
 
         # Determine layers visible in selected viewer(s) - consider mixed to be visible
-        visible_layers = [layer['label'] for layer in self.layer.items if not layer['is_subset'] and (layer['visible'] or layer['mixed_visibility'])]  # noqa
+        visible_layers = [layer['label'] for layer in self.layer.items if not layer['is_subset'] and (layer['visible'] in (True, 'mixed'))]  # noqa
 
         # Set opacity to something that seems sensible
         n_visible = len(visible_layers)
@@ -686,18 +709,16 @@ class PlotOptions(PluginTemplateMixin):
             self.stretch_histogram.clear_all_marks()
             return
 
-        if self.multiselect and (len(self.viewer.selected) > 1
-                                 or len(self.layer.selected) > 1):  # pragma: no cover
-            # currently only support single-layer/viewer.  For now we'll just clear and return.
-            # TODO: add support for multi-layer/viewer
-            self.stretch_histogram.clear_all_marks()
+        if self.layer_multiselect and len(self.layer.selected) > 1:
+            # currently only support single-layer, if multiple layers are selected, the plot
+            # will be hidden in the UI
             return
 
         if not self._viewer_is_image_viewer():
             # don't update histogram if selected viewer is not an image viewer:
             return
 
-        viewer = self.viewer.selected_obj[0] if self.multiselect else self.viewer.selected_obj
+        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj  # noqa
 
         # manage viewer zoom limit callbacks
         if ((isinstance(msg, dict) and msg.get('name') == 'viewer_selected')
@@ -715,7 +736,7 @@ class PlotOptions(PluginTemplateMixin):
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                     vs_old.remove_callback(attr, self._update_stretch_histogram)
 
-        if self.multiselect:
+        if self.layer_multiselect:
             data = self.layer.selected_obj[0][0].layer
         elif len(self.layer.selected_obj):
             data = self.layer.selected_obj[0].layer
@@ -730,7 +751,7 @@ class PlotOptions(PluginTemplateMixin):
         comp = data.get_component(data.main_components[0])
 
         # TODO: further optimization could be done by caching sub_data
-        if self.stretch_hist_zoom_limits:
+        if self.stretch_hist_zoom_limits and (not self.layer_multiselect or len(self.layer_selected) == 1):  # noqa
             if hasattr(viewer, '_get_zoom_limits'):
                 # Viewer limits. This takes account of Imviz linking.
                 xy_limits = viewer._get_zoom_limits(data).astype(int)
@@ -806,7 +827,7 @@ class PlotOptions(PluginTemplateMixin):
             # or the stretch histogram hasn't been initialized:
             return
 
-        if self.multiselect:
+        if self.viewer_multiselect or self.layer_multiselect:
             self.stretch_histogram.clear_marks('stretch_curve', 'stretch_knots', 'colorbar')
             return
 

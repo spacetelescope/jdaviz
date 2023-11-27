@@ -1,5 +1,16 @@
 <template>
   <div>
+  <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -6px; z-index: 999">
+    <j-tooltip tipid='viewer-multiselect-toggle'>
+      <v-btn
+        icon
+        style="opacity: 0.7"
+        @click="$emit('update:multiselect', !multiselect)"
+      >
+        <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
+      </v-btn>
+    </j-tooltip>
+  </div>
   <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry">
     <v-select
       :menu-props="{ left: true }"
@@ -64,7 +75,8 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect']
+  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
+          'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck']
 };
 </script>
 
