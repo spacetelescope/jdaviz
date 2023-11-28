@@ -51,7 +51,7 @@ def test_custom_model_labels(specviz_helper, spectrum1d):
 
     for i, model in enumerate(MODELS):
         # Add one of each model with a unique name
-        modelfit_plugin.model_comp_selected = model
+        modelfit_plugin._obj.model_comp_selected = model
         modelfit_plugin._obj.comp_label = f"test_model_{i}"
         modelfit_plugin._obj.vue_add_model({})
 
@@ -159,7 +159,7 @@ def test_refit_plot_options(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
 
-    modelfit_plugin.model_comp_selected = 'Const1D'
+    modelfit_plugin._obj.model_comp_selected = 'Const1D'
     modelfit_plugin._obj.comp_label = "C"
     modelfit_plugin._obj.vue_add_model({})
 
@@ -189,6 +189,9 @@ def test_user_api(specviz_helper, spectrum1d):
         warnings.simplefilter('ignore')
         specviz_helper.load_data(spectrum1d)
     p = specviz_helper.plugins['Model Fitting']
+
+    with pytest.raises(ValueError, match="blah is not a valid attribute and cannot be set"):
+        p.blah = 5
 
     # even though the default label is set to C, adding Linear1D should default to its automatic
     # default label of 'L'

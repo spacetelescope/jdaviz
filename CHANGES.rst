@@ -57,6 +57,9 @@ API Changes
 
 - Deprecated ``app.get_subsets_from_viewer`` is removed, use ``viz_helper.get_subsets`` instead. [#2578]
 
+- User APIs now raise a warning when attempting to set a non-existing attribute to avoid confusion
+  caused by typos, etc. [#2577]
+
 Cubeviz
 ^^^^^^^
 
