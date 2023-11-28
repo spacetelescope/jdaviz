@@ -4,7 +4,6 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-from astropy.utils.exceptions import AstropyDeprecationWarning
 from glue.core import BaseData
 from glue.core.link_helpers import LinkSame
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
@@ -71,7 +70,7 @@ class Imviz(ImageConfigHelper):
             raise ValueError(f"Default viewer '{viewer_id}' cannot be destroyed")
         self.app.vue_destroy_viewer_item(viewer_id)
 
-    def load_data(self, data, data_label=None, do_link=True, show_in_viewer=True, **kwargs):
+    def load_data(self, data, data_label=None, show_in_viewer=True, **kwargs):
         """Load data into Imviz.
 
         Parameters
@@ -105,11 +104,6 @@ class Imviz(ImageConfigHelper):
             automatically determined from filename or randomly generated.
             The final label shown in Imviz may have additional information
             appended for clarity.
-
-        do_link : bool
-            Link the data after parsing. Set this to `False` if you want to
-            load multiple data back-to-back but you must remember to run
-            :meth:`link_data` manually at the end.
 
         show_in_viewer : str or bool
             If `True`, show the data in default viewer.  If a string, show in that viewer.
@@ -190,21 +184,17 @@ class Imviz(ImageConfigHelper):
             for applied_label in applied_labels:
                 self._delayed_show_in_viewer_labels[applied_label] = show_in_viewer
 
-        elif do_link:
+        else:
             if 'Links Control' not in self.plugins.keys():
                 # otherwise plugin will handle linking automatically with DataCollectionAddMessage
                 self.link_data(link_type='pixels', error_on_fail=False)
 
             # One input might load into multiple Data objects.
-            # NOTE: this will not add entries that were skipped with do_link=False
-            # but the batch_load context manager will handle that logic
+            # NOTE: If the batch_load context manager was used, it will
+            # handle that logic instead.
             if show_in_viewer:
                 for applied_label in applied_labels:
                     self.app.add_data_to_viewer(show_in_viewer, applied_label)
-        else:
-            warnings.warn(AstropyDeprecationWarning("do_link=False is deprecated in v3.1 and will "
-                                                    "be removed in a future release.  Use with "
-                                                    "viz.batch_load() instead."))
 
     def link_data(self, **kwargs):
         """(Re)link loaded data in Imviz with the desired link type.

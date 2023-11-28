@@ -6,7 +6,6 @@ from glue.core.message import (SubsetDeleteMessage,
                                SubsetUpdateMessage)
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
-from astropy.utils.decorators import deprecated
 from astropy import units as u
 from specutils import analysis, Spectrum1D
 from specutils.manipulation import extract_region
@@ -171,8 +170,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
-                                           'continuum', 'width',
-                                           'show_continuum_marks', 'get_results'))
+                                           'continuum', 'width', 'get_results'))
 
     def _on_viewer_data_changed(self, msg):
         viewer_id = self.app._viewer_item_by_reference(
@@ -225,10 +223,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         for pos, mark in self.marks.items():
             mark.visible = self.is_active
         self._calculate_statistics(msg)
-
-    @deprecated(since="3.6", alternative="keep_active")
-    def show_continuum_marks(self):
-        self.keep_active = True
 
     @property
     def marks(self):
