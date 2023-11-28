@@ -1,4 +1,5 @@
 import numpy as np
+from echo import delay_callback
 
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue_jupyter.bqplot.profile import BqplotProfileView
@@ -7,7 +8,9 @@ from glue_jupyter.table import TableViewer
 
 from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
+from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
+from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.utils import ColorCycler, get_subset_type
 
 __all__ = ['JdavizViewerMixin']
@@ -29,6 +32,63 @@ class JdavizViewerMixin:
 
         # Allow each viewer to cycle through colors for each new addition to the viewer:
         self.color_cycler = ColorCycler()
+
+    @property
+    def user_api(self):
+        # default exposed user APIs.  Can override this method in any particular viewer.
+        if isinstance(self, BqplotImageView):
+            if isinstance(self, AstrowidgetsImageViewerMixin):
+                expose = ['save',
+                          'center_on', 'offset_by', 'zoom_level', 'zoom',
+                          'colormap_options', 'set_colormap',
+                          'stretch_options', 'stretch',
+                          'autocut_options', 'cuts',
+                          'marker', 'add_markers', 'remove_markers', 'reset_markers',
+                          'blink_once', 'reset_limits']
+            else:
+                # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
+                # but also shouldn't expose set_limits because of equal aspect ratio concerns
+                expose = []
+        elif isinstance(self, TableViewer):
+            expose = []
+        else:
+            expose = ['set_limits', 'reset_limits']
+        return ViewerUserApi(self, expose=expose)
+
+    def reset_limits(self):
+        """
+        Reset viewer axes limits.
+        """
+        self.state.reset_limits()
+
+    def set_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
+        """
+        Set viewer axes limits.
+
+        Parameters
+        ----------
+        x_min : float or None, optional
+            lower-limit of x-axis (in current axes units)
+        x_max: float or None, optional
+            upper-limit of x-axis (in current axes units)
+        y_min : float or None, optional
+            lower-limit of y-axis (in current axes units)
+        y_max: float or None, optional
+            upper-limit of y-axis (in current axes units)
+        """
+        for val in (x_min, x_max, y_min, y_max):
+            if val is not None and not isinstance(val, (float, int)):
+                raise TypeError('all arguments must be None, int, or float')
+
+        with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            if x_min is not None:
+                self.state.x_min = x_min
+            if x_max is not None:
+                self.state.x_max = x_max
+            if y_min is not None:
+                self.state.y_min = y_min
+            if y_max is not None:
+                self.state.y_max = y_max
 
     @property
     def native_marks(self):

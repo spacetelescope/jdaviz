@@ -489,7 +489,7 @@ def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = np.ones((10, 10))
 
     data_label = 'image-data'
-    viewer = imviz_helper.default_viewer
+    viewer = imviz_helper.default_viewer._obj
     imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=True)
     viewer.apply_roi(CircularROI(xc=5, yc=5, radius=2))
     reg = imviz_helper.app.get_subsets("Subset 1")

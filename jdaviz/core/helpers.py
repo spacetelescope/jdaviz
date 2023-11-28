@@ -123,6 +123,19 @@ class ConfigHelper(HubListener):
                 for item in self.app.state.tray_items}
 
     @property
+    def viewers(self):
+        """
+        Access API objects for any viewer.
+
+        Returns
+        -------
+        viewers : dict
+            dict of viewer objects
+        """
+        return {getattr(viewer, 'reference', k): viewer.user_api
+                for k, viewer in self.app._viewer_store.items()}
+
+    @property
     def fitted_models(self):
         """
         Returns the fitted models.
@@ -611,7 +624,7 @@ class ImageConfigHelper(ConfigHelper):
     def default_viewer(self):
         """Default viewer instance. This is typically the first viewer
         (e.g., "imviz-0" or "cubeviz-0")."""
-        return self._default_viewer
+        return self._default_viewer.user_api
 
     def load_regions_from_file(self, region_file, region_format='ds9', max_num_regions=20,
                                **kwargs):
@@ -729,7 +742,7 @@ class ImageConfigHelper(ConfigHelper):
 
         # Subset is global but reference data is viewer-dependent.
         if refdata_label is None:
-            data = self.default_viewer.state.reference_data
+            data = self.default_viewer._obj.state.reference_data
         else:
             data = self.app.data_collection[refdata_label]
 
@@ -763,7 +776,7 @@ class ImageConfigHelper(ConfigHelper):
 
                 # TODO: Do we want user to specify viewer? Does it matter?
                 self.app.session.edit_subset_mode._mode = NewMode
-                self.default_viewer.apply_roi(state)
+                self.default_viewer._obj.apply_roi(state)
                 self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
 
             # Last resort: Masked Subset that is static (if data is not a cube)
@@ -842,7 +855,7 @@ class ImageConfigHelper(ConfigHelper):
         failed_regs = set()
 
         # Subset is global, so we just use default viewer.
-        for lyr in self.default_viewer.layers:
+        for lyr in self.default_viewer._obj.layers:
             if (not hasattr(lyr, 'layer') or not isinstance(lyr.layer, Subset)
                     or lyr.layer.ndim not in (2, 3)):
                 continue
@@ -876,7 +889,7 @@ class ImageConfigHelper(ConfigHelper):
         This is for internal testing only.
         """
         self.app.session.edit_subset_mode._mode = NewMode
-        tool = self.default_viewer.toolbar.tools[toolname]
+        tool = self.default_viewer._obj.toolbar.tools[toolname]
         tool.activate()
         tool.interact.brushing = True
         tool.interact.selected = [from_pix, to_pix]

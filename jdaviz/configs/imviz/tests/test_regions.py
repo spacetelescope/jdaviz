@@ -188,7 +188,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         with pytest.raises(ValueError, match="Cannot load regions without data"):
             imviz_helper.load_data(self.region_file)
 
-        self.viewer = imviz_helper.default_viewer
+        self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.load_regions_from_file(self.region_file, return_bad_regions=True)
         assert len(bad_regions) == 1
@@ -202,7 +202,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.verify_region_loaded('MaskedSubset 1', count=1)
 
     def test_ds9_load_two_good(self, imviz_helper):
-        self.viewer = imviz_helper.default_viewer
+        self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.load_regions_from_file(
             self.region_file, max_num_regions=2, return_bad_regions=True)
@@ -212,7 +212,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
     def test_ds9_load_one_bad(self, imviz_helper):
-        self.viewer = imviz_helper.default_viewer
+        self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.load_regions(self.raw_regions[6], return_bad_regions=True)
         assert len(bad_regions) == 1
@@ -220,7 +220,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.verify_region_loaded('MaskedSubset 1', count=0)
 
     def test_ds9_load_one_good_one_bad(self, imviz_helper):
-        self.viewer = imviz_helper.default_viewer
+        self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.load_regions(
             [self.raw_regions[3], self.raw_regions[6]], return_bad_regions=True)

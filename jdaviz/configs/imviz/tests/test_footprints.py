@@ -12,6 +12,8 @@ pytest.importorskip("pysiaf")
 
 
 def _get_markers_from_viewer(viewer):
+    if hasattr(viewer, '_obj'):
+        viewer = viewer._obj
     return [m for m in viewer.figure.marks if isinstance(m, FootprintOverlay)]
 
 

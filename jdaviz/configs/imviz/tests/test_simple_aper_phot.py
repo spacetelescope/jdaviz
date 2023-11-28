@@ -280,7 +280,7 @@ class TestAdvancedAperPhot:
         imviz_helper.load_regions(regions)
 
         self.imviz = imviz_helper
-        self.viewer = imviz_helper.default_viewer
+        self.viewer = imviz_helper.default_viewer._obj
         self.phot_plugin = imviz_helper.plugins["Aperture Photometry"]._obj
 
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [

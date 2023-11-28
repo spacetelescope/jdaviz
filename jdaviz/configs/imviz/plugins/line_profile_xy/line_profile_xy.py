@@ -127,10 +127,10 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
                                         reset_lims=False)
         zoomed_data_x = comp.data[y_min:y_max, x]
         if zoomed_data_x.size > 0:
-            self.plot_across_x.set_lims(x_min=y_min,
-                                        x_max=y_max,
-                                        y_min=zoomed_data_x.min() * 0.95,
-                                        y_max=zoomed_data_x.max() * 1.05)
+            self.plot_across_x.set_limits(x_min=y_min,
+                                          x_max=y_max,
+                                          y_min=zoomed_data_x.min() * 0.95,
+                                          y_max=zoomed_data_x.max() * 1.05)
         self.plot_across_x.update_style('line', line_visible=True,
                                         markers_visible=False, color='gray', size=10)
         self.plot_across_x.viewer.axis_x.label = 'Y (pix)'
@@ -141,10 +141,10 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
                                         reset_lims=False)
         zoomed_data_y = comp.data[y, x_min:x_max]
         if zoomed_data_y.size > 0:
-            self.plot_across_y.set_lims(x_min=x_min,
-                                        x_max=x_max,
-                                        y_min=zoomed_data_y.min() * 0.95,
-                                        y_max=zoomed_data_y.max() * 1.05)
+            self.plot_across_y.set_limits(x_min=x_min,
+                                          x_max=x_max,
+                                          y_min=zoomed_data_y.min() * 0.95,
+                                          y_max=zoomed_data_y.max() * 1.05)
         self.plot_across_y.update_style('line', line_visible=True,
                                         markers_visible=False, color='gray', size=10)
         self.plot_across_y.viewer.axis_x.label = 'X (pix)'
