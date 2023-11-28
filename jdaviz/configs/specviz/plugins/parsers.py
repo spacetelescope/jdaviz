@@ -5,7 +5,6 @@ import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.nddata import StdDevUncertainty
 from astropy.io import fits
-from astropy import units as u
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.events import SnackbarMessage
@@ -53,39 +52,8 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     elif isinstance(data, list):
         # special processing for HDUList
         if isinstance(data, fits.HDUList):
+            data = [Spectrum1D.read(data)]
             data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
-            spec_data = data['EXTRACT1D'].data
-
-            wl = spec_data['WAVELENGTH']
-            flux = spec_data['SURF_BRIGHT']
-            # case to check if uncertainty exists and is not None
-            if hasattr(spec_data, 'SB_ERROR') and spec_data['SB_ERROR'] is not None:
-                uncerts = spec_data['SB_ERROR']
-            else:
-                uncerts = None
-
-            # get units from header
-            for key, value in data['EXTRACT1D'].header.items():
-                if key.startswith('TTYPE') and value == 'WAVELENGTH':
-                    wl_index = int(key[5:])
-                    wave_units = u.Unit(data['EXTRACT1D'].header.get(f'TUNIT{wl_index}'))
-                if key.startswith('TTYPE') and value == 'SURF_BRIGHT':
-                    flux_index = int(key[5:])
-                    flux_units = u.Unit(data['EXTRACT1D'].header.get(f'TUNIT{flux_index}'))
-            # units are not being handled properly yet.
-            if uncerts is not None:
-                unc = StdDevUncertainty(uncerts * flux_units)
-            else:
-                unc = None
-
-            # create a Spectrum1D instance from HDUList data
-            data = Spectrum1D(
-                flux=flux * flux_units,
-                spectral_axis=wl * wave_units,
-                uncertainty=unc,
-                meta=data['PRIMARY'].header
-            )
-            data = [data]
         else:
             # list treated as SpectrumList if not an HDUList
             data = SpectrumList.read(data, format=format)
