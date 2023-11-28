@@ -581,7 +581,7 @@ class PluginLine(Lines, PluginMark, HubListener):
         self.viewer = viewer
         # color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
-        super().__init__(x=x, y=y, scales=viewer.scales, **kwargs)
+        super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
 
 
 class PluginScatter(Scatter, PluginMark, HubListener):
@@ -589,7 +589,7 @@ class PluginScatter(Scatter, PluginMark, HubListener):
         self.viewer = viewer
         # default color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
-        super().__init__(x=x, y=y, scales=viewer.scales, **kwargs)
+        super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
 
 
 class LineAnalysisContinuum(PluginLine):

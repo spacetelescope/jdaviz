@@ -44,11 +44,15 @@ Imviz
 Mosviz
 ^^^^^^
 
+- Matched mouseover indicator to show same position in 1d and 2d spectral viewers. [#2575]
+
 Specviz
 ^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
+
+- Matched mouseover indicator to show same position in 1d and 2d spectral viewers. [#2575]
 
 API Changes
 -----------

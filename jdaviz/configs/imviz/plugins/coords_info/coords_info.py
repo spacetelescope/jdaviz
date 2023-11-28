@@ -3,17 +3,19 @@ import numpy as np
 from traitlets import Bool, Unicode, observe
 
 from astropy import units as u
+from bqplot import LinearScale
 from glue.core import BaseData
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 
 from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
-from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile2DView
+from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
+                                                   MosvizProfile2DView)
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.helpers import data_has_valid_wcs
-from jdaviz.core.marks import PluginScatter
+from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.utils import get_subset_type
@@ -31,7 +33,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                                  MosvizImageView,
                                  MosvizProfile2DView)
 
-    _viewer_classes_with_marker = (SpecvizProfileView,)
+    _viewer_classes_with_marker = (SpecvizProfileView, MosvizProfile2DView)
 
     dataset_icon = Unicode("").tag(sync=True)  # option for layer (auto, none, or specific layer)
     icon = Unicode("").tag(sync=True)  # currently exposed layer
@@ -79,9 +81,25 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             id = viewer.reference_id
         if id in self._marks:
             return
-        self._marks[id] = PluginScatter(viewer,
-                                        marker='rectangle', stroke_width=1,
-                                        visible=False)
+        if isinstance(viewer, MosvizProfile2DView):
+            self._marks[id] = PluginLine(viewer,
+                                         x=[0, 0], y=[0, 1],
+                                         scales={'x': viewer.scales['x'],
+                                                 'y': LinearScale(min=0, max=1)},
+                                         visible=False)
+        else:
+            self._marks[id] = PluginScatter(viewer,
+                                            marker='rectangle', stroke_width=1,
+                                            visible=False)
+        if isinstance(viewer, MosvizProfileView):
+            matched_id = f"{id}:matched"
+            self._marks[matched_id] = PluginLine(viewer,
+                                                 x=[0, 0], y=[0, 1],
+                                                 scales={'x': viewer.scales['x'],
+                                                         'y': LinearScale(min=0, max=1)},
+                                                 visible=False)
+            viewer.figure.marks = viewer.figure.marks + [self._marks[matched_id]]
+
         viewer.figure.marks = viewer.figure.marks + [self._marks[id]]
 
     def _create_viewer_callbacks(self, viewer):
@@ -112,6 +130,16 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 self._create_marks_for_viewer(viewer, id)
         return self._marks
 
+    @property
+    def _matched_markers(self):
+        if self.app.config == 'specviz2d':
+            return {'specviz2d-0': ['specviz2d-1:matched'],
+                    'specviz2d-1': ['specviz2d-0']}
+        if self.app.config == 'mosviz':
+            return {'mosviz-1': ['mosviz-2:matched'],
+                    'mosviz-2': ['mosviz-1']}
+        return {}
+
     def as_text(self):
         return (f"{self.row1a_title} {self.row1a_text} {self.row1b_title} {self.row1b_text}".strip(),  # noqa
                 f"{self.row2_title} {self.row2_text}".strip(),
@@ -140,9 +168,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def _viewer_mouse_clear_event(self, viewer, data=None):
         self.reset_coords_display()
-        marks = self.marks.get(viewer._reference_id)
-        if marks is not None:
-            marks.visible = False
+        marker_ids = [viewer._reference_id] + self._matched_markers.get(viewer._reference_id, [])
+        for marker_id in marker_ids:
+            marks = self.marks.get(marker_id)
+            if marks is not None:
+                marks.visible = False
 
     def _viewer_mouse_event(self, viewer, data):
         if data['event'] in ('mouseleave', 'mouseenter'):
@@ -336,6 +366,17 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             # TODO: use sky directly, but need to figure out how to have a compatible "blank" entry
             self._dict['world'] = (sky.ra.value, sky.dec.value)
             self._dict['world:unreliable'] = unreliable_world
+        elif isinstance(viewer, MosvizProfile2DView) and hasattr(getattr(image, 'coords', None),
+                                                                 'pixel_to_world_values'):
+            # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
+            wave, pixel = image.coords.pixel_to_world(x, y)
+            self.row2_title = 'Wave'
+            self.row2_text = f'{wave.value:10.5e} {wave.unit.to_string()}'
+            self.row2_unreliable = False
+
+            self.row3_title = '\u00A0'
+            self.row3_text = ""
+            self.row3_unreliable = False
         else:
             self.row2_title = '\u00A0'
             self.row2_text = ""
@@ -396,6 +437,20 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         else:
             self.row1b_title = ''
             self.row1b_text = ''
+
+        if isinstance(viewer, MosvizProfile2DView):
+            self.marks[viewer._reference_id].update_xy([x, x], [0, 1])
+            self.marks[viewer._reference_id].visible = True
+
+            for matched_marker_id in self._matched_markers.get(viewer._reference_id, []):
+                if hasattr(getattr(image, 'coords', None), 'pixel_to_world_values'):
+                    # should already have wave computed from setting the coords-info
+                    matched_viewer = self.app.get_viewer(matched_marker_id.split(':matched')[0])
+                    wave = wave.to_value(matched_viewer.state.x_display_unit)
+                    self.marks[matched_marker_id].update_xy([wave, wave], [0, 1])
+                    self.marks[matched_marker_id].visible = True
+                else:
+                    self.marks[matched_marker_id].visible = False
 
     def _spectrum_viewer_update(self, viewer, x, y):
         def _cursor_fallback():
@@ -541,4 +596,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         self.marks[viewer._reference_id].update_xy([closest_wave], [closest_flux])
         self.marks[viewer._reference_id].visible = True
+        for matched_marker_id in self._matched_markers.get(viewer._reference_id, []):
+            # NOTE: this currently assumes the the matched marker is a vertical line with a
+            # normalized y-scale
+            self.marks[matched_marker_id].update_xy([closest_i, closest_i], [0, 1])
+            self.marks[matched_marker_id].visible = True
         _copy_axes_to_spectral()
