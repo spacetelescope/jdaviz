@@ -41,6 +41,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 AddDataToViewerMessage)
 from jdaviz.core.region_translators import _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
+from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import get_subset_type
 
 
@@ -176,7 +177,10 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.popout_button = PopoutButton(self, window_features='popup,width=400,height=600')
+        self.popout_button = PopoutButton(
+            PopoutStyleWrapper(content=self),
+            window_features='popup,width=400,height=600'
+        )
         self._viewer_callbacks = {}
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
@@ -3172,7 +3176,10 @@ class PluginSubcomponent(VuetifyTemplate):
         super().__init__(*args, **kwargs)
         self._plugin = plugin
         self._component_type = component_type
-        self.popout_button = PopoutButton(self, window_features='popup,width=800,height=300')
+        self.popout_button = PopoutButton(
+            PopoutStyleWrapper(content=self),
+            window_features='popup,width=800,height=300'
+        )
 
     @property
     def display_name(self):
