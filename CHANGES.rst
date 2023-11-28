@@ -53,7 +53,9 @@ Specviz2d
 API Changes
 -----------
 
-- Removed some previously deprecated methods and arguments. [#2578]
+- Deprecated ``app.get_data_from_viewer`` is removed, use ``viz_helper.get_data`` instead. [#2578]
+
+- Deprecated ``app.get_subsets_from_viewer`` is removed, use ``viz_helper.get_subsets`` instead. [#2578]
 
 Cubeviz
 ^^^^^^^
@@ -61,11 +63,15 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Deprecated ``do_link`` argument of ``imviz.load_data`` is removed, use ``batch_load`` context manager instead. [#2578]
+
 Mosviz
 ^^^^^^
 
 Specviz
 ^^^^^^^
+
+- Deprecated ``specviz.load_spectrum`` is removed, use ``specviz.load_data`` instead. [#2578]
 
 Specviz2d
 ^^^^^^^^^
