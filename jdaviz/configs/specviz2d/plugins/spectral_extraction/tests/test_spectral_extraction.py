@@ -22,10 +22,10 @@ def test_plugin(specviz2d_helper):
 
     # test trace marks - won't be created until after opening the plugin
     sp2dv = specviz2d_helper.app.get_viewer('spectrum-2d-viewer')
-    assert len(sp2dv.figure.marks) == 2
+    assert len(sp2dv.figure.marks) == 3
 
     pext.keep_active = True
-    assert len(sp2dv.figure.marks) == 11
+    assert len(sp2dv.figure.marks) == 12
     assert pext.marks['trace'].visible is True
     assert len(pext.marks['trace'].x) > 0
 
@@ -66,7 +66,7 @@ def test_plugin(specviz2d_helper):
     # TODO: Investigate extra hidden mark from glue-jupyter, see
     # https://github.com/spacetelescope/jdaviz/pull/2478#issuecomment-1731864411
     # 3 new trace objects should have been loaded and plotted in the spectrum-2d-viewer
-    assert len(sp2dv.figure.marks) == 15
+    assert len(sp2dv.figure.marks) == 16
 
     # interact with background section, check marks
     pext.trace_trace_selected = 'New Trace'
