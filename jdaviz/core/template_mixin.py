@@ -1422,7 +1422,6 @@ class LayerSelect(SelectPluginComponent):
         unique_layer_labels = list(set(layer_labels))
 
         layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
-        print("layer items", layer_items)
 
         def _sort_by_icon(items_dict):
             return items_dict['icon']
