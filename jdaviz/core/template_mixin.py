@@ -1422,6 +1422,7 @@ class LayerSelect(SelectPluginComponent):
         unique_layer_labels = list(set(layer_labels))
 
         layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
+        print("layer items", layer_items)
 
         def _sort_by_icon(items_dict):
             return items_dict['icon']
@@ -3095,6 +3096,9 @@ class PlotOptionsSyncState(BasePluginComponent):
                 helper = getattr(glue_state, f'{glue_name}_helper')
                 value = [choice for choice in helper.choices if str(choice) == msg['new']][0]
                 setattr(glue_state, glue_name, value)
+
+            elif glue_name == 'color':
+                setattr(glue_state, glue_name, msg['new'].lower())
             else:
                 setattr(glue_state, glue_name, msg['new'])
 
