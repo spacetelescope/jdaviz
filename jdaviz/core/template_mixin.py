@@ -3097,6 +3097,8 @@ class PlotOptionsSyncState(BasePluginComponent):
                 setattr(glue_state, glue_name, value)
 
             elif glue_name == 'color':
+                # set to lower() so that all linked states of a subset
+                # (data in viewer with this subset applied) have matching color values
                 setattr(glue_state, glue_name, msg['new'].lower())
             else:
                 setattr(glue_state, glue_name, msg['new'])
