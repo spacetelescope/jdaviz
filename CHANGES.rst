@@ -6,6 +6,7 @@ New Features
 
 Cubeviz
 ^^^^^^^
+- Calculated moments can now be output in velocity units. [#2584]
 
 Imviz
 ^^^^^
