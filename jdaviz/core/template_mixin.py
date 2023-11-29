@@ -3175,6 +3175,15 @@ class PlotOptionsSyncState(BasePluginComponent):
             # to be an Any traitlet in order to handle "Custom"
             value = type(self.value)(value)
         self.value = value
+
+        if self._glue_name == 'stretch_parameters':
+            # stretch_parameters is a dictionary so won't trigger the @observe on
+            # _update_stretch_curve, so we'll need to manually call it (and make sure
+            # it is not skipped if it has already been called since an actual traitlet change)
+            if '_update_stretch_curve' in self.plugin._methods_skip_since_last_active:
+                self.plugin._methods_skip_since_last_active.remove('_update_stretch_curve')
+            self.plugin._update_stretch_curve()
+
         # need to recompute mixed state
         self._update_mixed_state()
         self._processing_change_from_glue = False
