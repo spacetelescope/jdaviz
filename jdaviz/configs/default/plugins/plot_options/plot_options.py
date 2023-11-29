@@ -832,8 +832,8 @@ class PlotOptions(PluginTemplateMixin):
              'image_contrast_value', 'image_bias_value',
              'stretch_hist_nbins',
              'stretch_curve_visible',
-             'stretch_function_value', 'stretch_vmin_value', 'stretch_vmax_value',
-             'stretch_params_value'
+             'stretch_function_value', 'stretch_vmin_value', 'stretch_vmax_value', 'stretch_params_value',
+             'layer_multiselect'
              )
     @skip_if_no_updates_since_last_active()
     def _update_stretch_curve(self, msg=None):
@@ -871,11 +871,7 @@ class PlotOptions(PluginTemplateMixin):
         stretch = layer.state.stretch_object
 
         # get the stretch object
-        viewer = self.viewer
-        vid = viewer.ids[0]
-        v = self.viewer.app.get_viewer(vid)
-        stretch = v.state.layers[0].stretch_object
-
+        stretch = layer.state.stretch_object
         layer_cmap = layer.state.cmap
 
         # show the colorbar
