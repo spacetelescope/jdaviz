@@ -524,7 +524,7 @@ class PlotOptions(PluginTemplateMixin):
             label='stretch_knots',
             x=[], y=[],
             ynorm='vmin',
-            color="#007BA1",  # "inactive" blue
+            color="#c75d2c",  # "active" orange (tool enabled by default)
         )
         self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
         self.stretch_histogram.viewer.state.update_bins_on_reset_limits = False
@@ -958,6 +958,8 @@ class PlotOptions(PluginTemplateMixin):
             curve_mark.x = curve_x
             # scale to 0.9 so always falls below colorbar (same as for stretch_knots)
             # (may need to revisit this when supporting dragging)
+            curve_y[curve_y < 0] = 0
+            curve_y[curve_y > 1] = 1
             curve_mark.y = 0.9 * curve_y
         else:
             self.stretch_histogram.clear_marks('stretch_curve')
