@@ -520,6 +520,15 @@ class Application(VuetifyTemplate, HubListener):
             # if there's no refdata change nor WCS, don't do anything:
             return
 
+        if old_refdata is None:
+            return
+
+        # locate the central coordinate of old refdata in this viewer:
+        sky_cen = viewer._get_center_skycoord()
+
+        # estimate FOV in the viewer with old reference data:
+        fov_sky_init = viewer._get_fov()
+
         new_refdata = self.data_collection[new_refdata_label]
 
         # make sure new refdata can be selected:
@@ -536,21 +545,12 @@ class Application(VuetifyTemplate, HubListener):
         viewer_item = self._get_viewer_item(viewer_ref)
         viewer_item['reference_data_label'] = new_refdata.label
 
-        if old_refdata is None:
-            return
-
         self.hub.broadcast(ChangeRefDataMessage(
             new_refdata,
             viewer,
             viewer_id=viewer.reference,
             old=old_refdata,
             sender=self))
-
-        # locate the central coordinate of old refdata in this viewer:
-        sky_cen = viewer._get_center_skycoord(old_refdata)
-
-        # estimate FOV in the viewer with old reference data:
-        fov_sky_init = viewer._get_fov(old_refdata)
 
         if (
             all('_WCS_ONLY' in refdata.meta for refdata in [old_refdata, new_refdata]) and
