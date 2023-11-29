@@ -413,7 +413,7 @@
 
         <glue-state-sync-wrapper :sync="image_bias_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_bias')">
           <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px" style="height: 12px">Bias</v-subheader>
+            <v-subheader class="pl-0 slider-label" style="height: 12px">Bias</v-subheader>
             <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_bias_value" hide-details />
           </div>
         </glue-state-sync-wrapper>
@@ -649,11 +649,11 @@ module.exports = {
   }
 
   .layer-tab-selected {
-    background-color: rgba(0,0,0,0.1); 
+    background-color: rgba(0,0,0,0.1);
   }
 
   .theme--dark .layer-tab-selected {
-    background-color: rgba(255,255,255,0.1); 
+    background-color: rgba(255,255,255,0.1);
   }
 
   .layer-tab-selected .strike:first-of-type {
