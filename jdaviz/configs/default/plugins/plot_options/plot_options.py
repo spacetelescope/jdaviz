@@ -61,7 +61,7 @@ class SplineStretch:
     def __init__(self):
         # Cubic Spline (degree 3) for its balance and between accuracy & smoothness.
         # May revisit when knots become editable.
-        # self.k = 3
+        self.k = 3
         self.bc_type = None
         self.t = None
 

@@ -354,8 +354,6 @@ class StretchBounds(CheckableTool):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['dragmove', 'click'])
         for mark in self.viewer.figure.marks:
-            print("active marks:", self.viewer.figure.marks)
-            print("mark.labels:", mark.labels)
             if np.any([x in mark.labels for x in ('vmin', 'vmax','stretch_knots')]):
                 mark.colors = ["#c75d2c"]
 
@@ -363,17 +361,11 @@ class StretchBounds(CheckableTool):
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
         for mark in self.viewer.figure.marks:
-            print("deactivated marks:", self.viewer.figure.marks)
-            print("deactivated mark.labels:", mark.labels)
             if np.any([x in mark.labels for x in ('vmin', 'vmax','stretch_knots')]):
                 mark.colors = ["#007BA1"]
-    
-
-            print("deactivated state: self.viewer._plugin", self.viewer._plugin)
         
 
     def on_mouse_event(self, data):
-        #print("data: ", data)
         if (time.time() - self._time_last) <= 0.05:
             # throttle to 200ms
             return
@@ -390,12 +382,7 @@ class StretchBounds(CheckableTool):
                           self.viewer._plugin.stretch_vmax_value]
 
         distances_to_bounds = [abs(current_bounds[0] - event_x), abs(current_bounds[1] - event_x)]
-
-
-        # Determine closest element (knot or bound)
-        closest_knot_index = np.argmin(distances_to_knots)
         closest_bound_index = np.argmin(distances_to_bounds)
-        closest_knot_distance = distances_to_knots[closest_knot_index]
         closest_bound_distance = distances_to_bounds[closest_bound_index]
 
         stretch_type = self.viewer._plugin.stretch_function_value
@@ -421,7 +408,7 @@ class StretchBounds(CheckableTool):
             if closest_knot_distance > 0.1 and closest_bound_distance > 0.1:
                 return
             if closest_knot_distance < closest_bound_distance:
-                if event_y_norm < 0 or event_y_norm > 1:
+                if event_y_normalized < 0 or event_y_normalized > 1:
                     # comment
                     return
                 if distances_to_knots[knot_index_by_dist[1]] < 0.1:
