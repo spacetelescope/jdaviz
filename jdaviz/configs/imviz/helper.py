@@ -395,10 +395,6 @@ def layer_is_wcs_only(layer):
     return layer_is_2d(layer) and layer.meta.get("_WCS_ONLY", False)
 
 
-def layer_is_table_data(layer):
-    return isinstance(layer, BaseData) and layer.ndim == 1
-
-
 def get_wcs_only_layer_labels(app):
     return [data.label for data in app.data_collection
             if layer_is_wcs_only(data)]
@@ -511,6 +507,11 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                 # fall back on pixel linking
                 link_type = 'pixels'
 
+    # default reference layer is the first-loaded image in default viewer:
+    default_reference_layer = app._jdaviz_helper.default_viewer.first_loaded_data
+    if default_reference_layer is None:  # No data in viewer, just use first in collection
+        default_reference_layer = app.data_collection[0]
+
     # if the plugin exists, send a message so that the plugin's state is updated and spinner
     # is shown (the plugin will make a call back here)
     if 'imviz-orientation' in [item['name'] for item in app.state.tray_items]:
@@ -534,8 +535,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
 
     old_link_type = getattr(app, '_link_type', None)
     refdata, iref = get_reference_image_data(app)
-    # default reference layer is the first-loaded image in default viewer:
-    default_reference_layer = app._jdaviz_helper.default_viewer.first_loaded_data
 
     # if linking via WCS, add WCS-only reference data layer:
     insert_base_wcs_layer = (

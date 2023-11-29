@@ -24,7 +24,7 @@
         </v-btn>
       </j-tooltip>
     </div>
-    <div v-else-if="!linkedByWcs() || item.has_wcs">
+    <div v-else-if="!linkedByWcs() || item.has_wcs || item.is_astrowidgets_markers_table">
       <j-tooltip tipid="viewer-data-enable">
         <v-btn
           icon

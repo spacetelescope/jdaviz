@@ -16,7 +16,7 @@
         <v-alert v-if="need_clear_astrowidget_markers" type='warning' style="margin-left: -12px; margin-right: -12px">
           Astrowidget markers must be cleared before changing alignment/linking options.
           <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
-            <v-btn @click="reset_markers">Clear Markers</v-btn>
+            <v-btn @click="reset_astrowidget_markers">Clear Markers</v-btn>
           </v-row>
         </v-alert>
 

@@ -2,16 +2,16 @@ import os
 import time
 import threading
 from collections import deque
-import numpy as np
 
+import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
 from astropy.wcs.wcsapi import BaseHighLevelWCS
-from ipyvue import watch
-from glue.core.exceptions import IncompatibleAttribute
 from glue.config import settings
+from glue.core import BaseData
+from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
-
+from ipyvue import watch
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type']
@@ -223,6 +223,10 @@ def data_has_valid_wcs(data, ndim=None):
     if ndim is not None:
         status = status and data.coords.world_n_dim == ndim
     return status
+
+
+def layer_is_table_data(layer):
+    return isinstance(layer, BaseData) and layer.ndim == 1
 
 
 def standardize_metadata(metadata):
