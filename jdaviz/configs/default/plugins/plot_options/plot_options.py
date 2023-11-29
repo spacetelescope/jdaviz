@@ -818,6 +818,7 @@ class PlotOptions(PluginTemplateMixin):
              'stretch_hist_nbins',
              'stretch_curve_visible',
              'stretch_function_value', 'stretch_vmin_value', 'stretch_vmax_value',
+             'layer_multiselect'
              )
     @skip_if_no_updates_since_last_active()
     def _update_stretch_curve(self, msg=None):
