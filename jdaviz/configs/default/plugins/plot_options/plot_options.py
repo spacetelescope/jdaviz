@@ -705,8 +705,7 @@ class PlotOptions(PluginTemplateMixin):
             return
 
         if not self.viewer.selected or not self.layer.selected:  # pragma: no cover
-            # nothing to plot
-            self.stretch_histogram.clear_all_marks()
+            # nothing to plot, will be hidden in UI
             return
 
         if self.layer_multiselect and len(self.layer.selected) > 1:
@@ -827,19 +826,19 @@ class PlotOptions(PluginTemplateMixin):
             # or the stretch histogram hasn't been initialized:
             return
 
-        if self.viewer_multiselect or self.layer_multiselect:
-            self.stretch_histogram.clear_marks('stretch_curve', 'stretch_knots', 'colorbar')
+        if self.layer_multiselect and len(self.layer.selected) > 1:
+            # currently only support single-layer, if multiple layers are selected, the plot
+            # will be hidden in the UI
             return
 
-        if len(self.layer.selected_obj):
-            layer = self.layer.selected_obj[0]
-        else:
-            # skip further updates if no data are available:
-            return
+        # could be multi or single-viewer and/or multi-layer with a single entry,
+        # either way, we act on the first entry
+        layer = self.layer.selected_obj[0]
+        while isinstance(layer, list):
+            layer = layer[0]
 
         if isinstance(layer.layer, GroupedSubset):
-            # don't update histogram for subsets:
-            self.stretch_histogram.clear_marks('stretch_curve', 'stretch_knots', 'colorbar')
+            # don't update histogram for subsets, will be hidden in UI
             return
 
         # create the new/updated stretch curve following the colormapping
@@ -945,5 +944,12 @@ class PlotOptions(PluginTemplateMixin):
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
         from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile2DView
 
-        return isinstance(self.viewer.selected_obj, (ImvizImageView, CubevizImageView,
-                                                     MosvizImageView, MosvizProfile2DView))
+        def _is_image_viewer(viewer):
+            return isinstance(viewer, (ImvizImageView, CubevizImageView,
+                                       MosvizImageView, MosvizProfile2DView))
+
+        viewers = self.viewer.selected_obj
+        if not isinstance(viewers, list):
+            viewers = [viewers]
+
+        return np.all([_is_image_viewer(viewer) for viewer in viewers])
