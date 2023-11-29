@@ -12,7 +12,7 @@
       hint="Select the data set."
     />
 
-    <plugin-subset-select 
+    <plugin-subset-select
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
       :has_subregions="spectral_subset_selected_has_subregions"
@@ -35,6 +35,38 @@
       ></v-text-field>
     </v-row>
 
+    <v-div v-if="n_moment > 0">
+      <v-row>
+        <v-radio-group
+          label="Output units"
+          hint="Choose whether calculated moment is in units of wavelength or velocity."
+          v-model="output_unit_selected"
+          row>
+          <v-radio
+            v-for="item in output_unit_items"
+            :key="item.label"
+            :label="item.label"
+            :value="item.label"
+          ></v-radio>
+        </v-radio-group>
+    </v-row>
+    <v-row v-if="output_unit_selected === 'Velocity'" align="center">
+      <v-col cols="9">
+        <v-text-field
+        ref="reference_wavelength"
+        type="number"
+        label="Reference Wavelength"
+        v-model.number="reference_wavelength"
+        hint="Rest wavelength of the line of interest"
+        persistent-hint
+        :rules="[() => reference_wavelength !== '' || 'This field is required',
+                 () => reference_wavelength >=0 || 'Wavelength must be positive']"
+        ></v-text-field>
+      </v-col>
+      <v-col cols="3" justify="left">{{dataset_spectral_unit}}</v-col>
+    </v-row>
+    </v-div>
+
     <plugin-add-results
       :label.sync="results_label"
       :label_default="results_label_default"
@@ -49,7 +81,7 @@
       :action_spinner="spinner"
       @click:action="calculate_moment"
     ></plugin-add-results>
-    
+
     <j-plugin-section-header v-if="export_enabled">Results</j-plugin-section-header>
 
     <div style="display: grid; position: relative"> <!-- overlay container -->
@@ -80,10 +112,10 @@
         opacity=1.0
         :value="overwrite_warn && export_enabled"
         :zIndex=3
-        style="grid-area: 1/1; 
+        style="grid-area: 1/1;
                margin-left: -24px;
                margin-right: -24px">
-      
+
       <v-card color="transparent" elevation=0 >
         <v-card-text width="100%">
           <div class="white--text">

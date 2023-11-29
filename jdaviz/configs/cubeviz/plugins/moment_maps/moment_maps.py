@@ -2,18 +2,20 @@ import os
 from pathlib import Path
 
 from astropy import units as u
+from astropy.constants import c
 from astropy.nddata import CCDData
 
-from traitlets import Unicode, Bool, observe
+from traitlets import Bool, List, Unicode, observe
 from specutils import manipulation, analysis
 
-from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
                                         AddResultsMixin,
+                                        SelectPluginComponent,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 
@@ -51,6 +53,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     filename = Unicode().tag(sync=True)
     moment_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
+    output_unit_items = List().tag(sync=True)
+    output_unit_selected = Unicode().tag(sync=True)
+    reference_wavelength = FloatHandleEmpty().tag(sync=True)
+    dataset_spectral_unit = Unicode().tag(sync=True)
 
     # export_enabled controls whether saving the moment map to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
@@ -61,6 +67,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         super().__init__(*args, **kwargs)
 
         self.moment = None
+
+        self.output_unit = SelectPluginComponent(self,
+                                               items='output_unit_items',
+                                               selected='output_unit_selected',
+                                               manual_options=['Wavelength', 'Velocity'])
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
@@ -92,6 +103,13 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             label_comps += [self.dataset_selected]
         label_comps += [f"moment {self.n_moment}"]
         self.results_label_default = " ".join(label_comps)
+
+    @observe("dataset_selected")
+    def _set_data_units(self, event={}):
+        # Spectral axis is first in this list
+        unit = self.app.data_collection[self.dataset_selected].coords.world_axis_units[0]
+        self.dataset_spectral_unit = unit
+
 
     @with_spinner()
     def calculate_moment(self, add_data=True):
@@ -126,6 +144,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if data_wcs:
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
         self.moment = CCDData(analysis.moment(slab, order=n_moment).T, wcs=data_wcs)
+        if self.output_unit == "Velocity":
+            self.moment = c*(self.moment-self.reference_wavelength)/self.reference_wavelength
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"
