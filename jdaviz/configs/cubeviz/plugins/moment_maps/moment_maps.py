@@ -110,7 +110,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         unit = self.app.data_collection[self.dataset_selected].coords.world_axis_units[0]
         self.dataset_spectral_unit = unit
 
-
     @with_spinner()
     def calculate_moment(self, add_data=True):
         """
@@ -144,8 +143,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if data_wcs:
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
         self.moment = CCDData(analysis.moment(slab, order=n_moment).T, wcs=data_wcs)
+        self.moment = self.moment.convert_unit_to(self.dataset_spectral_unit)
         if self.output_unit == "Velocity":
-            self.moment = c*(self.moment-self.reference_wavelength)/self.reference_wavelength
+            ref_wavelength = self.reference_wavelength * u.Unit(self.dataset_spectral_unit)
+            in_velocity = c*(self.moment-ref_wavelength)/ref_wavelength
+            self.moment = CCDData(in_velocity, wcs=data_wcs)
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"
