@@ -241,6 +241,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
 def skip_if_no_updates_since_last_active(skip_if_not_active=True):
     def decorator(meth):
         def wrapper(self, msg={}):
+            if msg is None:
+                # method was called manually, don't skip
+                return meth(self, msg)
             if isinstance(msg, dict) and msg.get('name', None) == 'is_active':
                 if self.is_active and meth.__name__ in self._methods_skip_since_last_active:
                     # then we haven't received any other messages since the last time the plugin
