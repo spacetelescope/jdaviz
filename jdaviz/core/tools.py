@@ -58,9 +58,6 @@ class _MatchedZoomMixin:
     def _map_limits(self, from_viewer, to_viewer, limits={}):
         return limits
 
-    def _post_activate(self):
-        return
-
     @property
     def match_keys(self):
         keys = []
@@ -79,8 +76,6 @@ class _MatchedZoomMixin:
         super().activate()
         for k in self.match_keys:
             self.viewer.state.add_callback(k, self.on_limits_change)
-
-        self._post_activate()
 
         # Trigger a sync so the initial limits match
         self.on_limits_change()

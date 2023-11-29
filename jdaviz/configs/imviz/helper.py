@@ -534,8 +534,8 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
 
     old_link_type = getattr(app, '_link_type', None)
     refdata, iref = get_reference_image_data(app)
-    # default reference layer is the first-loaded image:
-    default_reference_layer = app.data_collection[0]
+    # default reference layer is the first-loaded image in default viewer:
+    default_reference_layer = app._jdaviz_helper.default_viewer.first_loaded_data
 
     # if linking via WCS, add WCS-only reference data layer:
     insert_base_wcs_layer = (

@@ -263,8 +263,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         for viewer in self.app._viewer_store.values():
             viewer.reset_markers()
 
-    def _get_wcs_angles(self):
-        first_loaded_image = self.app.data_collection[0]
+    def _get_wcs_angles(self, first_loaded_image=None):
+        if first_loaded_image is None:
+            first_loaded_image = self.viewer.selected_obj.first_loaded_data
         degn, dege, flip = get_compass_info(
             first_loaded_image.coords, first_loaded_image.shape
         )[-3:]
@@ -290,26 +291,48 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         Parameters
         ----------
         rotation_angle : float, optional
+            Desired sky orientation angle in degrees.
+            If `None`, the value will follow ``self.rotation_angle``.
+            If nothing is set anywhere, it defaults to zero degrees.
+
         east_left : bool, optional
+            Set to `True` if you want N-up E-left or `False` for N-up E-right.
+            If `None`, the value will follow ``self.east_left``.
+
         label : str, optional
+            Data label for this new orientation layer.
+            If `None`, the value will follow ``self.new_layer_label``.
+
         set_on_create : bool, optional
+            If `True`, this new orientation layer will become active
+            on creation. Otherwise, it will be created but stay inactive
+            in the background.
+
         wrt_data : str, optional
+            Orientation calculations is done with respect to this data WCS.
+            If `None`, it grabs the first loaded data in the selected viewer
+            (may or may not be visible); If no data is loaded in the viewer,
+            nothing will be done.
+
         """
         if self.link_type_selected != 'WCS':
             raise ValueError("must be aligned by WCS to add orientation options")
+
+        if wrt_data is None:
+            # if not specified, use first-loaded image layer as the
+            # default rotation:
+            wrt_data = self.viewer.selected_obj.first_loaded_data
+            if wrt_data is None:  # Nothing in viewer
+                return
 
         rotation_angle = self.rotation_angle_deg(rotation_angle)
         if east_left is None:
             east_left = self.east_left
         if label is None:
             label = self.new_layer_label
-        if wrt_data is None:
-            # if not specified, use first-loaded image layer as the
-            # default rotation:
-            wrt_data = self.app.data_collection[0]
 
         # Default rotation is the same orientation as the original reference data:
-        degn = self._get_wcs_angles()[0]
+        degn = self._get_wcs_angles(first_loaded_image=wrt_data)[0]
 
         if east_left:
             rotation_angle = -degn * u.deg + rotation_angle

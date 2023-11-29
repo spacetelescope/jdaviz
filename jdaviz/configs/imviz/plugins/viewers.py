@@ -150,6 +150,17 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             data_label = self.state.layers[i].layer.label
         return data_label
 
+    @property
+    def first_loaded_data(self):
+        """Data that is first loaded into the viewer.
+        This may not be the visible layer.
+        Returns `None` if no real data is loaded.
+        """
+        for lyr in self.layers:
+            data = lyr.layer
+            if layer_is_image_data(data):
+                return data
+
     def _get_real_xy(self, image, x, y, reverse=False):
         """Return real (X, Y) position and status in case of dithering as well as whether the
         results were within the bounding box of the reference data or required possibly inaccurate
