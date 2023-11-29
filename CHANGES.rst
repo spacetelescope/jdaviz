@@ -1,4 +1,4 @@
-3.8 (unreleased)
+3.8 (2023-11-29)
 ================
 
 New Features
@@ -46,9 +46,6 @@ Mosviz
 
 - Matched mouseover indicator to show same position in 1d and 2d spectral viewers. [#2575]
 
-Specviz
-^^^^^^^
-
 Specviz2d
 ^^^^^^^^^
 
@@ -67,42 +64,26 @@ API Changes
 - Viewer API now exposed via ``viz.viewers`` dictionary, currently containing APIs to set axes
   limits as well as astrowidgets API commands for Imviz. [#2563]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
 - Deprecated ``do_link`` argument of ``imviz.load_data`` is removed, use ``batch_load`` context manager instead. [#2578]
-
-Mosviz
-^^^^^^
 
 Specviz
 ^^^^^^^
 
 - Deprecated ``specviz.load_spectrum`` is removed, use ``specviz.load_data`` instead. [#2578]
 
-Specviz2d
-^^^^^^^^^
-
 Bug Fixes
 ---------
 
-Cubeviz
-^^^^^^^
+- Fix Plot Options stretch histogram's curve for non-gray colormaps. [#2537]
 
 Imviz
 ^^^^^
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
+- Plot options layer selection no longer gets stuck in some cases when deleting
+  the currently selected viewer. [#2541]
 
 Other Changes and Additions
 ---------------------------
@@ -117,32 +98,6 @@ Other Changes and Additions
 - Add swatches to color picker. [#2494]
 
 - Plot options now includes better support for scatter viewers, including toggling line visibility. [#2449]
-
-3.7.2 (unreleased)
-==================
-
-Bug Fixes
----------
-
-- Fix Plot Options stretch histogram's curve for non-gray colormaps. [#2537]
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-- Plot options layer selection no longer gets stuck in some cases when deleting
-  the currently selected viewer. [#2541]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.7.1 (2023-10-25)
 ==================
