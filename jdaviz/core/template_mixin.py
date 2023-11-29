@@ -2982,6 +2982,10 @@ class PlotOptionsSyncState(BasePluginComponent):
             return getattr(state, glue_name).name
         if glue_name in GLUE_STATES_WITH_HELPERS:
             return str(getattr(state, glue_name))
+        if glue_name == 'color':
+            # Set to lower() so that all linked states of a subset
+            # (data in viewer with this subset applied) have matching color values
+            return str(getattr(state, glue_name)).lower()
         if glue_name in ('contour_visible', 'bitmap_visible'):
             # return False if the layer itself is not visible.  Setting this object
             # to True will then set both glue_name and visible to True.
