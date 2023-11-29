@@ -71,26 +71,6 @@ class SplineStretch:
         self._y = np.array([0, 0.05, 0.3, 0.9, 1])
         self.update_knots(self._x, self._y)
 
-    # @property
-    # def x(self):
-    #     return self._x
-
-    # @x.setter
-    # def x(self, value):
-    #     if not np.array_equal(self._x, value):
-    #         self._x = value
-    #         self.update_knots(self._x, self._y)
-
-    # @property
-    # def y(self):
-    #     return self._y
-
-    # @y.setter
-    # def y(self, value):
-    #     if not np.array_equal(self._y, value):
-    #         self._y = value
-    #         self.update_knots(self._x, self._y)
-
     @property
     def knots(self):
         return (self._x, self._y)
@@ -109,12 +89,10 @@ class SplineStretch:
         return self.spline(values)
 
     def update_knots(self, x, y):
-        # Dynamically determine degree based on the number of data points
-        k = min(3, len(self._x) - 1)  # 3 for cubic, but adapt if fewer points
-        self.x = x
-        self.y = y
+        self._x = x
+        self._y = y
         self.spline = make_interp_spline(
-            self.x, self.y, k=k, t=self.t, bc_type=self.bc_type
+            self._x, self._y, k=self.k, t=self.t, bc_type=self.bc_type
         )
 
 
@@ -938,12 +916,10 @@ class PlotOptions(PluginTemplateMixin):
         if isinstance(stretch, SplineStretch) and self.stretch_curve_visible:
             knot_mark = self.stretch_histogram.marks['stretch_knots']
             knot_mark.x = (self.stretch_vmin_value +
-                           np.asarray(stretch.x) * (self.stretch_vmax_value - self.stretch_vmin_value))
+                           np.asarray(stretch._x) * (self.stretch_vmax_value - self.stretch_vmin_value))
             # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
             # (may need to revisit this when supporting dragging)
-            knot_mark.y = 0.9 * np.asarray(stretch.y)
-            print(" knot_mark.x", knot_mark.x)
-            print(" knot_mark.y", knot_mark.y)
+            knot_mark.y = 0.9 * np.asarray(stretch._y)
         else:
             self.stretch_histogram.clear_marks('stretch_knots')
 
