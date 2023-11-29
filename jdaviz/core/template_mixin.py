@@ -3085,8 +3085,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             # If we want to expose dictionary inputs in the plot options UI, 
             # this will need to be updated to check if any of the dictionaries 
             # in the list are not exact matches
-            mixed = None
-            return
+            return None
         return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):
