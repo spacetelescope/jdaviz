@@ -478,7 +478,7 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
-        self.stretch_params = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch_parameters',
+        self.stretch_params = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch_parameters',  # noqa
                                                    'stretch_params_value', 'stretch_params_sync',
                                                    state_filter=is_image)
 
@@ -832,7 +832,8 @@ class PlotOptions(PluginTemplateMixin):
              'image_contrast_value', 'image_bias_value',
              'stretch_hist_nbins',
              'stretch_curve_visible',
-             'stretch_function_value', 'stretch_vmin_value', 'stretch_vmax_value', 'stretch_params_value',
+             'stretch_function_value', 'stretch_vmin_value', 'stretch_vmax_value',
+             'stretch_params_value',
              'layer_multiselect'
              )
     @skip_if_no_updates_since_last_active()
@@ -915,7 +916,7 @@ class PlotOptions(PluginTemplateMixin):
         if isinstance(stretch, SplineStretch) and self.stretch_curve_visible:
             knot_mark = self.stretch_histogram.marks['stretch_knots']
             knot_mark.x = (self.stretch_vmin_value +
-                           np.asarray(stretch._x) * (self.stretch_vmax_value - self.stretch_vmin_value))
+                           np.asarray(stretch._x) * (self.stretch_vmax_value - self.stretch_vmin_value))  # noqa
             # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
             # (may need to revisit this when supporting dragging)
             knot_mark.y = 0.9 * np.asarray(stretch._y)
