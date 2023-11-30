@@ -89,12 +89,35 @@ class _MatchedZoomMixin:
     def on_limits_change(self, *args):
         # from_lims: limits in the viewer belonging to the tool
         from_lims = {k: getattr(self.viewer.state, k) for k in self.match_keys}
+        orig_refdata = self.viewer.state.reference_data
+        if hasattr(self.viewer, '_get_fov') and orig_refdata and orig_refdata.coords:
+            orig_fov_sky = self.viewer._get_fov()
+            sky_cen = self.viewer._get_center_skycoord()
+        else:
+            orig_fov_sky = sky_cen = None
 
         for viewer in self._iter_matched_viewers(include_self=False):
             # orig_lims: limits in this "matched" viewer
             # to_lims: proposed new limits for this "matched" viewer
             orig_lims = {k: getattr(viewer.state, k) for k in self.match_keys}
             to_lims = self._map_limits(self.viewer, viewer, from_lims)
+
+            to_refdata = viewer.state.reference_data
+
+            if to_refdata and to_refdata.coords and (orig_refdata != to_refdata) and orig_fov_sky:
+                # if the viewers have different reference data,
+                # rescale the zoom and center allowing for different
+                # viewer rotations:
+                to_fov_sky = viewer._get_fov(wcs=orig_refdata.coords)
+
+                viewer.zoom(
+                    float(to_fov_sky / orig_fov_sky)
+                )
+                viewer.center_on(sky_cen)
+                continue
+
+            # if the viewers have the same reference data,
+            # make their limits match as usual:
             with delay_callback(viewer.state, *self.match_keys):
                 for ax in self.match_axes:
                     # to avoid recursion we'll only update the state if there is a change

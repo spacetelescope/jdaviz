@@ -316,9 +316,10 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
         return link_type
 
-    def _get_fov(self):
-        data = self.state.reference_data
-        if self.jdaviz_app._link_type != "wcs" or data.coords is None:
+    def _get_fov(self, wcs=None):
+        if wcs is None:
+            wcs = self.state.reference_data.coords
+        if self.jdaviz_app._link_type != "wcs" or wcs is None:
             return
 
         # compute the mean of the height and width of the
@@ -334,7 +335,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             self.state.y_max
         ]
 
-        sky_corners = data.coords.pixel_to_world(x_corners, y_corners)
+        sky_corners = wcs.pixel_to_world(x_corners, y_corners)
         height_sky = abs(sky_corners[0].separation(sky_corners[2]))
         width_sky = abs(sky_corners[0].separation(sky_corners[1]))
         fov_sky = u.Quantity([height_sky, width_sky]).mean()
