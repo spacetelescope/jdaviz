@@ -216,15 +216,15 @@ map is created. You can load this into any image
 viewer pane to inspect the result. You can also save the result to
 a FITS format file by pressing :guilabel:`SAVE AS FITS`.
 
-For example, the middle image viewer in the screenshot above shows the Moment 1 map
+For example, the right image viewer in the screenshot above shows the Moment 2 map
 for a continuum-subtracted cube.  Note that the cube should first be
 continuum-subtracted in order to create continuum-free moment maps of an
 emission line. Moment maps of continuum emission can also be created, but
 moments other than moment 0 may not be physically meaningful.  Also note
-that the units in the moment 1 and moment 2 maps reflect the units of the spectral
-axis (Angstroms in this case). For moments higher than 0, the output units can instead
-be converted to velocity (e.g., m/s for moment 1, m2/s2 for moment 2, etc.) by
-selecting the :guilabel:`Velocty` radio button under :guilabel:`Output Units`
+that by default, the units in the moment 1 and moment 2 maps reflect the units of the
+spectral axis (microns in this case). For moments higher than 0, the output units can
+instead be converted to velocity (e.g., m/s for moment 1, m2/s2 for moment 2, etc.) by
+selecting the :guilabel:`Velocity` radio button under :guilabel:`Output Units`
 and providing a reference wavelength, commonly that of the spectral line of interest.
 
 Line or Continuum Maps
