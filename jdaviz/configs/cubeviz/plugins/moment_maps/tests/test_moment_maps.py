@@ -28,6 +28,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
 
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
     assert mm.results_label == 'moment 0'
+    assert mm.output_unit == "Wavelength"
 
     mm.add_results.viewer.selected = cubeviz_helper._default_uncert_viewer_reference_name
     mm.vue_calculate_moment()
@@ -95,6 +96,48 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
     assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
+                                         "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
+                                         "204.9998877673 27.0001000000 (deg)")
+
+
+def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
+        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+
+    uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
+
+    # Since we are not really displaying, need this to trigger GUI stuff.
+    uncert_viewer.shape = (100, 100)
+    uncert_viewer.state._set_axes_aspect_ratio(1)
+
+    mm = cubeviz_helper.plugins["Moment Maps"]
+    print(mm._obj.dataset_selected)
+    mm._obj.dataset_selected = 'test[FLUX]'
+
+    # Test moment 1 in velocity
+    mm.n_moment = 1
+    mm.add_results.viewer = "uncert-viewer"
+    mm._obj.reference_wavelength = 4.63e-7
+    assert mm._obj.results_label == 'moment 1'
+    mm._obj.output_unit = "Velocity"
+    mm.calculate_moment()
+
+    # Make sure coordinate display works
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
+                                                        'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value -4.14382e+05 m / s",
+                                         "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
+                                         "204.9998877673 27.0001000000 (deg)")
+
+    # Test moment 2 in velocity
+    mm.n_moment = 2
+    mm.calculate_moment()
+
+    label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
+                                                        'domain': {'x': 0, 'y': 0}})
+    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.98755e+16 m2 / s2",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 

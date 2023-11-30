@@ -35,7 +35,7 @@
       ></v-text-field>
     </v-row>
 
-    <v-div v-if="n_moment > 0">
+    <v-div v-if="n_moment > 0 && dataset_spectral_unit !== ''">
       <v-row>
         <v-radio-group
           label="Output units"
