@@ -57,6 +57,8 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+- Temporarily disabled Spline Stretch registration due to incompatibility
+  with the current `glue` version. [#2585]
 
 3.8.1 (unreleased)
 ==================
