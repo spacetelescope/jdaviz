@@ -88,8 +88,8 @@ class SplineStretch:
 
 
 # Add the spline stretch to the glue stretch registry if not registered
-if "spline" not in stretches:
-    stretches.add("spline", SplineStretch(), display="Spline")
+# if "spline" not in stretches:
+#     stretches.add("spline", SplineStretch(), display="Spline")
 
 
 @tray_registry('g-plot-options', label="Plot Options")
