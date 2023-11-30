@@ -1449,7 +1449,6 @@ class LayerSelect(SelectPluginComponent):
                 for layer in getattr(viewer, 'layers', [])
                 # don't include WCS-only layers unless asked:
                 if not hasattr(layer.layer, 'meta') or (
-                    hasattr(layer.layer, 'meta') and
                     not layer.layer.meta.get('_WCS_ONLY', False)
                 )
             ]
