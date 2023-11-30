@@ -4,6 +4,7 @@ from pathlib import Path
 from astropy import units as u
 from astropy.constants import c
 from astropy.nddata import CCDData
+import numpy as np
 
 from traitlets import Bool, List, Unicode, observe
 from specutils import manipulation, analysis
@@ -69,9 +70,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.moment = None
 
         self.output_unit = SelectPluginComponent(self,
-                                               items='output_unit_items',
-                                               selected='output_unit_selected',
-                                               manual_options=['Wavelength', 'Velocity'])
+                                                 items='output_unit_items',
+                                                 selected='output_unit_selected',
+                                                 manual_options=['Wavelength', 'Velocity'])
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
@@ -143,10 +144,13 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if data_wcs:
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
         self.moment = CCDData(analysis.moment(slab, order=n_moment).T, wcs=data_wcs)
-        self.moment = self.moment.convert_unit_to(self.dataset_spectral_unit)
         if self.output_unit == "Velocity":
+            power_unit = f"{self.dataset_spectral_unit}{self.n_moment}"
+            self.moment = np.power(self.moment.convert_unit_to(power_unit), 1/self.n_moment)
+            self.moment = self.moment << u.Unit(self.dataset_spectral_unit)
             ref_wavelength = self.reference_wavelength * u.Unit(self.dataset_spectral_unit)
-            in_velocity = c*(self.moment-ref_wavelength)/ref_wavelength
+            relative_wavelength = (self.moment-ref_wavelength)/ref_wavelength
+            in_velocity = np.power(c*relative_wavelength, self.n_moment)
             self.moment = CCDData(in_velocity, wcs=data_wcs)
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
