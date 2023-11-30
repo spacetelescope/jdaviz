@@ -38,7 +38,7 @@
     <v-div v-if="n_moment > 0 && dataset_spectral_unit !== ''">
       <v-row>
         <v-radio-group
-          label="Output units"
+          label="Output Units"
           hint="Choose whether calculated moment is in units of wavelength or velocity."
           v-model="output_unit_selected"
           column>
