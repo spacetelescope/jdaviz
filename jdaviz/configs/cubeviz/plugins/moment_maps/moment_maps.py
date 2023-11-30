@@ -107,9 +107,13 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @observe("dataset_selected")
     def _set_data_units(self, event={}):
-        # Spectral axis is first in this list
-        unit = self.app.data_collection[self.dataset_selected].coords.world_axis_units[0]
-        self.dataset_spectral_unit = unit
+        if self.dataset_selected != "":
+            # Spectral axis is first in this list
+            if self.app.data_collection[self.dataset_selected].coords is not None:
+                unit = self.app.data_collection[self.dataset_selected].coords.world_axis_units[0]
+                self.dataset_spectral_unit = unit
+            else:
+                self.dataset_spectral_unit = ""
 
     @with_spinner()
     def calculate_moment(self, add_data=True):
