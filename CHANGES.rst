@@ -20,7 +20,7 @@ Cubeviz
 Imviz
 ^^^^^
 
-- There is now option for image rotation in Links Control plugin.
+- There is now option for image rotation in Orientation (was Links Control) plugin.
   This feature requires WCS linking. [#2179]
 
 - Aperture photometry (previously "Imviz Simple Aperture Photometry") now supports batch mode. [#2465]
@@ -52,6 +52,8 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Links Control plugin is now called Orientation. [#2179]
 
 - Linking by WCS will now always generate a hidden reference data layer
   without distortion. As a result, when WCS linked, the first loaded data
