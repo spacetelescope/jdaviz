@@ -148,7 +148,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if data_wcs:
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
         self.moment = CCDData(analysis.moment(slab, order=n_moment).T, wcs=data_wcs)
-        if self.output_unit == "Velocity":
+        if n_moment > 0 and self.output_unit == "Velocity":
             power_unit = f"{self.dataset_spectral_unit}{self.n_moment}"
             self.moment = np.power(self.moment.convert_unit_to(power_unit), 1/self.n_moment)
             self.moment = self.moment << u.Unit(self.dataset_spectral_unit)
