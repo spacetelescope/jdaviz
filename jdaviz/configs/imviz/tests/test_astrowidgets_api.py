@@ -96,7 +96,7 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 class TestCenter(BaseImviz_WCS_WCS):
 
     def test_center_on_pix(self):
-        self.imviz.link_data(link_type='wcs', error_on_fail=True)
+        self.imviz.link_data(link_type='wcs')
 
         # This is the second loaded data that is dithered by 1-pix.
         self.viewer.center_on((0, 0))

@@ -108,8 +108,7 @@ Orientation
 
     This plugin was previous called "Links Control".
 
-This plugin is used to align image layers by pixels or sky (WCS) using
-:func:`~jdaviz.configs.imviz.helper.link_image_data`.
+This plugin is used to align image layers by pixels or sky (WCS).
 All images are automatically linked by pixels on load but you can use
 it to re-link by pixels or WCS as needed.
 

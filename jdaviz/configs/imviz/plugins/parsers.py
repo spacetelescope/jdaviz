@@ -188,7 +188,7 @@ def _parse_image(app, file_obj, data_label, ext=None):
             data_label = app.return_data_label(data_label, alt_name="image_data")
         app.add_data(data, data_label)
 
-    # Do not run link_image_data here. We do it at the end in Imviz.load_data()
+    # Do not link image data here. We do it at the end in Imviz.load_data()
 
 
 def _info_nextensions(app, file_obj):

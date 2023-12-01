@@ -2008,7 +2008,7 @@ class Application(VuetifyTemplate, HubListener):
         if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
             if self.config == "imviz" and imviz_refdata:
                 link_type = self._jdaviz_helper.plugins["Orientation"].link_type.selected.lower()
-                self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
+                self._jdaviz_helper.link_data(link_type=link_type)
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():
                     viewer = self.get_viewer(viewer_ref)

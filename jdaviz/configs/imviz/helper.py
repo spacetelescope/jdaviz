@@ -17,7 +17,7 @@ from jdaviz.configs.imviz.wcs_utils import (
 )
 from jdaviz.utils import data_has_valid_wcs
 
-__all__ = ['Imviz', 'link_image_data']
+__all__ = ['Imviz']
 
 base_wcs_layer_label = 'Default orientation'
 
@@ -219,7 +219,7 @@ class Imviz(ImageConfigHelper):
         else:
             if 'Orientation' not in self.plugins.keys():
                 # otherwise plugin will handle linking automatically with DataCollectionAddMessage
-                self.link_data(link_type='wcs', error_on_fail=False)
+                self.link_data(link_type='wcs')
 
             # One input might load into multiple Data objects.
             # NOTE: If the batch_load context manager was used, it will
@@ -231,14 +231,36 @@ class Imviz(ImageConfigHelper):
                     if (has_wcs and linked_by_wcs) or not linked_by_wcs:
                         self.app.add_data_to_viewer(show_in_viewer, applied_label, visible=visible)
 
-    def link_data(self, **kwargs):
+    def link_data(self, link_type='pixels', wcs_fallback_scheme=None, wcs_use_affine=True):
         """(Re)link loaded data in Imviz with the desired link type.
         All existing links will be replaced.
 
-        See :func:`~jdaviz.configs.imviz.helper.link_image_data`
-        for available keyword options and more details.
+        Parameters
+        ----------
+        link_type : {'pixels', 'wcs'}
+            Choose to link by pixels or WCS.
+
+        wcs_fallback_scheme : {None, 'pixels'}
+            If WCS linking failed, choose to fall back to linking by pixels or not at all.
+            This is only used when ``link_type='wcs'``.
+            Choosing `None` may result in some Imviz functionality not working properly.
+
+        wcs_use_affine : bool
+            Use an affine transform to represent the offset between images if possible
+            (requires that the approximation is accurate to within 1 pixel with the
+            full WCS transformations). If approximation fails, it will automatically
+            fall back to full WCS transformation. This is only used when ``link_type='wcs'``.
+            Affine approximation is much more performant at the cost of accuracy.
+
         """
-        link_image_data(self.app, **kwargs)
+        from jdaviz.configs.imviz.plugins.orientation.orientation import link_type_msg_to_trait
+        plg = self.plugins["Orientation"]
+        plg._obj.linking_in_progress = True
+        plg.link_type = link_type_msg_to_trait[link_type]
+        plg._obj.wcs_use_fallback = wcs_fallback_scheme == 'pixels'
+        plg.wcs_use_affine = wcs_use_affine
+        plg._obj.linking_in_progress = False
+        plg._obj._update_link()
 
     def get_link_type(self, data_label_1, data_label_2):
         """Find the type of ``glue`` linking between the given
@@ -254,7 +276,7 @@ class Imviz(ImageConfigHelper):
         Returns
         -------
         link_type : {'pixels', 'wcs', 'self'}
-            One of the link types accepted by :func:`~jdaviz.configs.imviz.helper.link_image_data`
+            One of the link types accepted by the Orientation plugin
             or ``'self'`` if the labels are identical.
 
         Raises
@@ -434,6 +456,9 @@ def get_reference_image_data(app, viewer_id=None):
     return refdata, iref
 
 
+# TODO: This is not really public API, so we can move what Orientation uses here into the plugin
+#       and remove this function from helper.py module in the future. Also move base_wcs_layer_label
+#       and remove update_plugin keyword when that happens.
 def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_affine=True,
                     error_on_fail=False, update_plugin=True):
     """(Re)link loaded data in Imviz with the desired link type.
@@ -534,7 +559,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                                  f" Clear markers with viewer.reset_markers() first")
 
     old_link_type = getattr(app, '_link_type', None)
-    refdata, iref = get_reference_image_data(app)
 
     # if linking via WCS, add WCS-only reference data layer:
     insert_base_wcs_layer = (
@@ -557,7 +581,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                 base_wcs_layer_label, viewer_id=viewer_id
             )
 
-        refdata, iref = get_reference_image_data(app)
+    refdata, iref = get_reference_image_data(app)
 
     # set internal tracking of link_type before changing reference data for anything that is
     # subscribed to a change in reference data

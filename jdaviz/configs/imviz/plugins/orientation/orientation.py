@@ -7,9 +7,7 @@ from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 
 import astropy.units as u
-from jdaviz.configs.imviz.helper import (
-    link_image_data
-)
+from jdaviz.configs.imviz.helper import link_image_data
 from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
@@ -173,8 +171,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             components = [str(comp) for comp in msg.data.main_components]
             if "ra" in components or "Lon" in components:
                 # linking currently removes any markers, so we want to skip
-                # linking immediately after new markers are added
-                # (see imviz.helper.link_image_data).
+                # linking immediately after new markers are added.
                 # Eventually we'll probably want to support linking WITH markers,
                 # at which point this if-statement should be removed.
                 return
@@ -189,9 +186,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     @observe('link_type_selected', 'wcs_use_fallback', 'wcs_use_affine')
     def _update_link(self, msg={}):
-        """Run :func:`jdaviz.configs.imviz.helper.link_image_data`
-        with the selected parameters.
-        """
+        """Run link_image_data with the selected parameters."""
         if not hasattr(self, 'link_type'):
             # could happen before plugin is fully initialized
             return

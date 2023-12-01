@@ -23,7 +23,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         hdu3 = NDData(arr, wcs=self.wcs_1)
         self.imviz.load_data(hdu3, data_label='has_wcs_3')
 
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
+        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
 
         # Add a subset
         reg = CirclePixelRegion(PixCoord(2, 2), 3).to_sky(self.wcs_1)

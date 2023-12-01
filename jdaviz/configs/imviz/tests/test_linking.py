@@ -2,7 +2,7 @@ import pytest
 from astropy.table import Table
 from astropy.wcs import WCS
 from glue.core.link_helpers import LinkSame
-from glue.plugins.wcs_autolinking.wcs_autolinking import AffineLink, OffsetLink
+from glue.plugins.wcs_autolinking.wcs_autolinking import AffineLink, OffsetLink, WCSLink
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, PolygonPixelRegion
 
@@ -24,7 +24,7 @@ class BaseLinkHandler:
         assert all([isinstance(link, (AffineLink, OffsetLink)) for link in links])
 
     def test_pixel_linking(self):
-        self.imviz.link_data(link_type='pixels', error_on_fail=True)
+        self.imviz.link_data(link_type='pixels')
         self.check_all_pixel_links()
 
     @property
@@ -38,7 +38,7 @@ class BaseLinkHandler:
 class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
     def test_wcslink_fallback_pixels(self):
-        self.imviz.link_data(link_type='wcs', error_on_fail=True)
+        self.imviz.link_data(link_type='wcs')
 
         assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'wcs'
 
@@ -88,7 +88,7 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         orig_pixel_limits = self.default_viewer_limits
         assert_allclose(orig_pixel_limits, (-0.5, 9.5, -0.5, 9.5))
 
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, error_on_fail=True)
+        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 2
         assert isinstance(links[0], (AffineLink, OffsetLink))
@@ -164,31 +164,28 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
                                                  '337.5202064976 -20.8332636155 (deg)')
 
         # Changing link type will raise an error
-        with pytest.raises(ValueError, match="cannot change link_type"):
-            self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None, error_on_fail=True)
+        with pytest.raises(ValueError, match=".*only be changed after existing subsets are deleted"):  # noqa: E501
+            self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None)
 
         self.viewer.reset_markers()
-        self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None, error_on_fail=True)
+        self.imviz.plugins["Orientation"].delete_subsets()
+        self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None)
         assert 'xy_markers' not in self.imviz.app.data_collection.labels
         assert len(self.viewer._marktags) == 0
 
     def test_wcslink_fullblown(self):
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=False,
-                             error_on_fail=True)
+        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=False)
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 2
-        assert isinstance(links[0], (AffineLink, OffsetLink))
+        assert isinstance(links[0], WCSLink)
         assert self.viewer.get_link_type('has_wcs_1[SCI,1]') == 'wcs'
         assert self.viewer.get_link_type('has_wcs_2[SCI,1]') == 'wcs'
 
     # Also test other exception handling here.
 
     def test_invalid_inputs(self):
-        with pytest.raises(ValueError, match='link_type'):
+        with pytest.raises(KeyError):
             self.imviz.link_data(link_type='foo')
-
-        with pytest.raises(ValueError, match='wcs_fallback_scheme'):
-            self.imviz.link_data(link_type='wcs', wcs_fallback_scheme='foo')
 
         with pytest.raises(ValueError, match='not found in data collection external links'):
             self.viewer.get_link_type('foo')
@@ -198,7 +195,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
 
     def test_wcslink_rotated(self):
         # FITS WCS will be reference, GWCS is rotated, no_wcs linked by pixel to ref.
-        self.imviz.link_data(link_type='wcs', error_on_fail=True)
+        self.imviz.link_data(link_type='wcs')
 
         # The zoom box for GWCS is now a rotated rombus.
         fits_wcs_zoom_limits = self.viewer._get_zoom_limits(
@@ -298,7 +295,7 @@ def test_imviz_no_data(imviz_helper):
     with pytest.raises(ValueError, match='No valid reference data'):
         get_reference_image_data(imviz_helper.app)
 
-    imviz_helper.link_data(error_on_fail=True)  # Just no-op, do not crash
+    imviz_helper.link_data()  # Just no-op, do not crash
     links = imviz_helper.app.data_collection.external_links
     assert len(links) == 0
 

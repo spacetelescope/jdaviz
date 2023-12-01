@@ -282,7 +282,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         Returns
         -------
         link_type : {'pixels', 'wcs', 'self'}
-            One of the link types accepted by :func:`~jdaviz.configs.imviz.helper.link_image_data`
+            One of the link types accepted by the Orientation plugin
             or ``'self'`` if the data label belongs to the reference data itself.
 
         Raises

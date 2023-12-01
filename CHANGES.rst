@@ -61,6 +61,8 @@ Imviz
   its distortion will show when linked by WCS. If there is also data without WCS,
   it can no longer be displayed when WCS linked. [#2179]
 
+- ``imviz.link_data()`` inputs and behaviors are now consistent with the Orientation plugin. [#2179]
+
 Mosviz
 ^^^^^^
 
