@@ -424,13 +424,13 @@ class StretchBounds(CheckableTool):
                 stretch_x = (knot_x - current_bounds[0]) / (current_bounds[1] - current_bounds[0])
                 stretch_y = knot_y / 0.9
 
-                self.viewer._plugin.stretch_params_value = {'knots': (stretch_x.tolist(), stretch_y.tolist())}
+                self.viewer._plugin.stretch_params_value = {'knots': (stretch_x.tolist(), stretch_y.tolist())}  # noqa
             else:
+                if closest_bound_distance > 0.1:
+                    return
                 att_names = ["stretch_vmin_value", "stretch_vmax_value"][closest_bound_index]
                 setattr(self.viewer._plugin, att_names, event_x)
         else:
-            if closest_bound_distance > 0.1:
-                return
             att_names = ["stretch_vmin_value", "stretch_vmax_value"][closest_bound_index]
             setattr(self.viewer._plugin, att_names, event_x)
 
