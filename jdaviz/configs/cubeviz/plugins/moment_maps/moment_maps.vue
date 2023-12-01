@@ -41,7 +41,7 @@
           label="Output Units"
           hint="Choose whether calculated moment is in units of wavelength or velocity."
           v-model="output_unit_selected"
-          row
+          column
           class="no-hint">
           <v-radio
             v-for="item in output_unit_items"
