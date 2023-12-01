@@ -412,11 +412,11 @@ class Application(VuetifyTemplate, HubListener):
             raise ValueError(f'Invalid verbosity: {val}')
         self._history_verbosity = val
 
-    def set_style_template_file(self, path):
+    def _add_style(self, path):
         """
-        Sets the path to a vue file containing a <style> tag that will be applied on top of the
-        style defined in ``app.vue``.  This is useful for config-specific or downstream styling
-        at the app-level.
+        Appends an addition vue file containing a <style> tag that will be applied on top of the
+        style defined in ``main_styles.vue``.  This is useful for config-specific or downstream
+        styling at the app-level.
 
         Parameters
         ----------
