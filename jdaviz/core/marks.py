@@ -339,7 +339,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         return self._x_all[slice]
 
     def _update_colors_opacities(self):
-        # orange (accent) if active, import button blue otherwise (see css in app.vue)
+        # orange (accent) if active, import button blue otherwise (see css in main_styles.vue)
         if not self._show_if_inactive and not self._active:
             self.label.visible = False
             self.visible = False

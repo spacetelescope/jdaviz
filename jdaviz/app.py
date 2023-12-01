@@ -43,13 +43,13 @@ from glue_jupyter.state_traitlets_helpers import GlueState
 from ipyvuetify import VuetifyTemplate
 
 from jdaviz import __version__
+from jdaviz import style_registry
 from jdaviz.core.config import read_configuration, get_configuration
 from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessage,
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage)
-from jdaviz.core.style_widget import StyleWidget
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
@@ -154,6 +154,9 @@ for name, path in custom_components.items():
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
 
+style_registry.instance.add((__file__, 'main_styles.vue'))
+
+
 class ApplicationState(State):
     """
     The application state object contains all the current front-end state,
@@ -252,6 +255,7 @@ class Application(VuetifyTemplate, HubListener):
     vdocs = Unicode("").tag(sync=True)
     docs_link = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
+    style_registry_instance = Any().tag(sync=True, **widget_serialization)
 
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -259,6 +263,7 @@ class Application(VuetifyTemplate, HubListener):
         self._verbosity = 'warning'
         self._history_verbosity = 'info'
         self.popout_button = PopoutButton(self)
+        self.style_registry_instance = style_registry.instance
 
         # Generate a state object for this application to maintain the state of
         #  the user interface.
@@ -407,19 +412,18 @@ class Application(VuetifyTemplate, HubListener):
             raise ValueError(f'Invalid verbosity: {val}')
         self._history_verbosity = val
 
-    def set_style_template_file(self, path):
+    def _add_style(self, path):
         """
-        Sets the path to a vue file containing a <style> tag that will be applied on top of the
-        style defined in ``app.vue``.  This is useful for config-specific or downstream styling
-        at the app-level.
+        Appends an addition vue file containing a <style> tag that will be applied on top of the
+        style defined in ``main_styles.vue``.  This is useful for config-specific or downstream
+        styling at the app-level.
 
         Parameters
         ----------
         path : str or tuple
             Path to a ``.vue`` file containing style rules to inject into the app.
         """
-        style_widget = StyleWidget(path)
-        self.state.style_widget = "IPY_MODEL_" + style_widget.model_id
+        style_registry.instance.add(path)
 
     def _on_snackbar_message(self, msg):
         """
