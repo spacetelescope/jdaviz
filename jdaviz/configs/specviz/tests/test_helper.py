@@ -3,6 +3,7 @@ from zipfile import ZipFile
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
 from glue.core.roi import XRangeROI
 from glue.core.edit_subset_mode import OrMode, AndMode, AndNotMode
@@ -35,6 +36,23 @@ class TestSpecvizHelper:
         data = self.spec_app.get_data()
 
         assert isinstance(data, Spectrum1D)
+
+    def test_load_hdulist(**kwargs):
+        # Create a fake fits file with a 1D spectrum for testing.
+        primary_header = fits.Header({'TELESCOP': 'Fake Telescope'})
+        primary_hdu = fits.PrimaryHDU(header=primary_header)
+
+        # Image extension HDU with a 1D spectrum
+        wavelength = np.linspace(5000, 6000, 100)
+        flux = np.random.random(100)
+        spectrum_table = fits.BinTableHDU.from_columns([
+            fits.Column(name='WAVELENGTH', array=wavelength, format='E'),
+            fits.Column(name='FLUX', array=flux, format='E')
+        ])
+        spectrum_table.header['INSTRUME'] = 'Fake Instrument'
+        fake_hdulist = fits.HDUList([primary_hdu, spectrum_table])
+
+        return fake_hdulist
 
     def test_load_spectrum_list_no_labels(self):
         # now load three more spectra from a SpectrumList, without labels
