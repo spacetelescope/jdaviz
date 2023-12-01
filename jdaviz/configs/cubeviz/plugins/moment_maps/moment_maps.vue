@@ -88,7 +88,7 @@
       </span>
     </v-row>
 
-    <j-plugin-section-header v-if="export_enabled">Results</j-plugin-section-header>
+    <j-plugin-section-header v-if="moment_available && export_enabled">Results</j-plugin-section-header>
 
     <div style="display: grid; position: relative"> <!-- overlay container -->
       <div style="grid-area: 1/1">

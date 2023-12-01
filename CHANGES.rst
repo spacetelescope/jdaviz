@@ -8,6 +8,9 @@ Cubeviz
 ^^^^^^^
 - Calculated moments can now be output in velocity units. [#2584]
 
+- Added functionality to Collapse and Spectral Extraction plugins to save results to FITS file. [#2586]
+
+
 Imviz
 ^^^^^
 
