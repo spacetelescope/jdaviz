@@ -35,13 +35,14 @@
       ></v-text-field>
     </v-row>
 
-    <v-div v-if="n_moment > 0 && dataset_spectral_unit !== ''">
+    <div v-if="n_moment > 0 && dataset_spectral_unit !== ''">
       <v-row>
         <v-radio-group
           label="Output Units"
           hint="Choose whether calculated moment is in units of wavelength or velocity."
           v-model="output_unit_selected"
-          column>
+          row
+          class="no-hint">
           <v-radio
             v-for="item in output_unit_items"
             :key="item.label"
@@ -49,23 +50,21 @@
             :value="item.label"
           ></v-radio>
         </v-radio-group>
-    </v-row>
-    <v-row v-if="output_unit_selected === 'Velocity'" align="center">
-      <v-col cols="9">
+      </v-row>
+      <v-row v-if="output_unit_selected === 'Velocity'">
         <v-text-field
         ref="reference_wavelength"
         type="number"
         label="Reference Wavelength"
         v-model.number="reference_wavelength"
+        :suffix="dataset_spectral_unit.replace('Angstrom', 'A')"
         hint="Rest wavelength of the line of interest"
         persistent-hint
         :rules="[() => reference_wavelength !== '' || 'This field is required',
-                 () => reference_wavelength >=0 || 'Wavelength must be positive']"
+                 () => reference_wavelength > 0 || 'Wavelength must be positive']"
         ></v-text-field>
-      </v-col>
-      <v-col cols="3" justify="left">{{dataset_spectral_unit}}</v-col>
-    </v-row>
-    </v-div>
+      </v-row>
+    </div>
 
     <plugin-add-results
       :label.sync="results_label"
