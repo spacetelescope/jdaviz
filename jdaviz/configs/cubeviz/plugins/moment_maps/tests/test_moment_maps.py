@@ -118,9 +118,13 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     # Test moment 1 in velocity
     mm.n_moment = 1
     mm.add_results.viewer = "uncert-viewer"
-    mm._obj.reference_wavelength = 4.63e-7
     assert mm._obj.results_label == 'moment 1'
-    mm._obj.output_unit = "Velocity"
+    mm.output_unit = "Velocity"
+
+    with pytest.raises(ValueError, match="reference_wavelength must be set"):
+        mm.calculate_moment()
+
+    mm.reference_wavelength = 4.63e-7
     mm.calculate_moment()
 
     # Make sure coordinate display works

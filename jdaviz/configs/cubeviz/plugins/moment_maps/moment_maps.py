@@ -45,6 +45,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the line, or ``Entire Spectrum``.
     * ``n_moment``
+    * ``output_unit``
+      Choice of "Wavelength" or "Velocity", applicable for n_moment >= 1.
+    * ``reference_wavelength``
+      Reference wavelength for conversion of output to velocity units.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`calculate_moment`
     """
@@ -95,6 +99,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # NOTE: leaving save_as_fits out for now - we may want a more general API to do that
         # accross all plugins at some point
         return PluginUserApi(self, expose=('dataset', 'spectral_subset', 'n_moment',
+                                           'output_unit', 'reference_wavelength',
                                            'add_results', 'calculate_moment'))
 
     @observe("dataset_selected", "dataset_items", "n_moment")
@@ -148,7 +153,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if data_wcs:
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
         self.moment = CCDData(analysis.moment(slab, order=n_moment).T, wcs=data_wcs)
-        if n_moment > 0 and self.output_unit == "Velocity":
+        if n_moment > 0 and self.output_unit_selected.lower() == "velocity":
+            # Catch this if called from API
+            if not self.reference_wavelength > 0.0:
+                raise ValueError("reference_wavelength must be set for output in velocity units.")
             power_unit = f"{self.dataset_spectral_unit}{self.n_moment}"
             self.moment = np.power(self.moment.convert_unit_to(power_unit), 1/self.n_moment)
             self.moment = self.moment << u.Unit(self.dataset_spectral_unit)
