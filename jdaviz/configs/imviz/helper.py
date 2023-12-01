@@ -255,12 +255,9 @@ class Imviz(ImageConfigHelper):
         """
         from jdaviz.configs.imviz.plugins.orientation.orientation import link_type_msg_to_trait
         plg = self.plugins["Orientation"]
-        plg._obj.linking_in_progress = True
-        plg.link_type = link_type_msg_to_trait[link_type]
         plg._obj.wcs_use_fallback = wcs_fallback_scheme == 'pixels'
         plg.wcs_use_affine = wcs_use_affine
-        plg._obj.linking_in_progress = False
-        plg._obj._update_link()
+        plg.link_type = link_type_msg_to_trait[link_type]
 
     def get_link_type(self, data_label_1, data_label_2):
         """Find the type of ``glue`` linking between the given
