@@ -104,16 +104,17 @@ class _MatchedZoomMixin:
 
             to_refdata = viewer.state.reference_data
 
-            if to_refdata and to_refdata.coords and (orig_refdata != to_refdata) and orig_fov_sky:
+            if (to_refdata and to_refdata.coords and (orig_refdata != to_refdata)
+                    and (orig_fov_sky is not None)):
                 # if the viewers have different reference data,
                 # rescale the zoom and center allowing for different
                 # viewer rotations:
                 to_fov_sky = viewer._get_fov(wcs=orig_refdata.coords)
 
+                viewer.center_on(sky_cen)
                 viewer.zoom(
                     float(to_fov_sky / orig_fov_sky)
                 )
-                viewer.center_on(sky_cen)
                 continue
 
             # if the viewers have the same reference data,
