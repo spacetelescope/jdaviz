@@ -78,8 +78,15 @@
       action_label="Calculate"
       action_tooltip="Calculate moment map"
       :action_spinner="spinner"
+      :action_disabled="n_moment > 0 && output_unit_selected === 'Velocity' && reference_wavelength === 0"
       @click:action="calculate_moment"
     ></plugin-add-results>
+
+    <v-row v-if="n_moment > 0 && output_unit_selected === 'Velocity' && reference_wavelength === 0">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          Cannot calculate moment: Must set reference wavelength for output in velocity units.
+      </span>
+    </v-row>
 
     <j-plugin-section-header v-if="export_enabled">Results</j-plugin-section-header>
 
