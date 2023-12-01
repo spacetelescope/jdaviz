@@ -207,7 +207,7 @@ def show_launcher(configs=ALL_JDAVIZ_CONFIGS, filepath='', height='450px'):
         by the selected configuration. Applies to the launcher and all instances of the same
         application in the notebook.
     '''
-    # Color defined manually due to the custom theme not being defined yet (in app.vue)
+    # Color defined manually due to the custom theme not being defined yet (in main_styles.vue)
     height = f"{height}px" if isinstance(height, int) else height
     main = v.Sheet(class_="mx-25",
                    attributes={"id": "popout-widget-container"},

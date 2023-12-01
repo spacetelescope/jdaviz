@@ -8,6 +8,8 @@ Tray Plugins
 In order to be consistent with layout, styling, and spacing, UI development on plugins should
 try to adhere to the following principles:
 
+* CSS intended to be applied app-wide should live in ``main_styles.vue`` so that they are available
+  to all popout instances via ``PopoutStyleWrapper`` (exists on anything that inherits ``TemplateMixin``).
 * Any tray plugin should utilize ``<j-tray-plugin :disabled_msg='disabled_msg' :popout_button="popout_button">`` as the
   outer-container (which provides consistent styling rules).  If the plugin makes use of active status
   (live-preview marks or viewer callbacks), then also pass `` :uses_active_status="uses_active_status" @plugin-ping="plugin_ping($event)"``.

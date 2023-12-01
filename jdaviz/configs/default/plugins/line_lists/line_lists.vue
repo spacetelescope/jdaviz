@@ -30,7 +30,7 @@
       <j-docs-link>Shift spectral lines according to a specific redshift. Only enabled if at least one line is plotted.</j-docs-link>
     </v-row>
     <v-row style='margin-bottom: 0px'>
-      <!-- colors are app.vue primary and toolbar colors -->
+      <!-- colors are main_style.vue primary and toolbar colors -->
       <v-slider
         :value="rs_slider"
         @input="throttledSlider"
