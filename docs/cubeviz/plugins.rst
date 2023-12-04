@@ -76,10 +76,10 @@ corresponding wavelength highlighted in the spectrum viewer.
 
 The slider can be grabbed to scrub through the cube.  To choose
 a specific slice, enter a slice number (integer) or an approximate
-wavelength (in which case the nearest slice will be selected and 
+wavelength (in which case the nearest slice will be selected and
 the wavelength entry will update to the exact value of that slice).
 
-The spectrum viewer also contains a tool to allow clicking and 
+The spectrum viewer also contains a tool to allow clicking and
 dragging in the spectrum plot to choose the currently selected slice.
 When the slice tool is active, clicking anywhere on the spectrum viewer
 will select the nearest slice across all viewers, even if the indicator
@@ -142,7 +142,7 @@ Model Fitting
         Specviz documentation on fitting spectral models.
 
 For Cubeviz, there is an additional option to fit the model over each individual spaxel by
-enabling the :guilabel:`Cube Fit` toggle before pressing :guilabel:`Fit Model`.  
+enabling the :guilabel:`Cube Fit` toggle before pressing :guilabel:`Fit Model`.
 The best-fit parameters for each spaxel are stored in planes and saved in a data structure.
 The resulting model itself is saved with the label specified in the :guilabel:`Output Data Label` field.
 
@@ -216,15 +216,16 @@ map is created. You can load this into any image
 viewer pane to inspect the result. You can also save the result to
 a FITS format file by pressing :guilabel:`SAVE AS FITS`.
 
-For example, the middle image viewer in the screenshot above shows the Moment 1 map
+For example, the right image viewer in the screenshot above shows the Moment 2 map
 for a continuum-subtracted cube.  Note that the cube should first be
 continuum-subtracted in order to create continuum-free moment maps of an
 emission line. Moment maps of continuum emission can also be created, but
 moments other than moment 0 may not be physically meaningful.  Also note
-that the units in the moment 1 and moment 2 maps reflect the units of the spectral
-axis (Angstroms in this case). The units of the input cube should first be
-converted to velocity units before running the plugin if those units are
-desired for the output moment maps.
+that by default, the units in the moment 1 and moment 2 maps reflect the units of the
+spectral axis (microns in this case). For moments higher than 0, the output units can
+instead be converted to velocity (e.g., m/s for moment 1, m2/s2 for moment 2, etc.) by
+selecting the :guilabel:`Velocity` radio button under :guilabel:`Output Units`
+and providing a reference wavelength, commonly that of the spectral line of interest.
 
 Line or Continuum Maps
 ----------------------
