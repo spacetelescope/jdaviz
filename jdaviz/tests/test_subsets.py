@@ -43,10 +43,10 @@ def test_region_from_subset_2d(cubeviz_helper):
     assert subset_plugin.subset_types == ["EllipticalROI"]
     assert subset_plugin.is_centerable
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "X Center", key) == 1
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Center", key) == 3.5
-        assert subset_plugin._get_value_from_subset_definition(0, "X Radius", key) == 1.2
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Radius", key) == 3.3
+        assert subset_plugin._get_value_from_subset_definition(0, "X Center (pixels)", key) == 1
+        assert subset_plugin._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 3.5
+        assert subset_plugin._get_value_from_subset_definition(0, "X Radius (pixels)", key) == 1.2
+        assert subset_plugin._get_value_from_subset_definition(0, "Y Radius (pixels)", key) == 3.3
         assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
 
     # Recenter GUI should not be exposed, but API call would raise exception.
