@@ -90,17 +90,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_states = []
         self.spectral_display_unit = None
 
-        link_type = getattr(self.app, '_link_type', None)
-        self.display_sky_coordinates = (link_type == 'wcs' and not self.multiselect)
+        self.display_sky_coordinates = (self.app._link_type == 'wcs' and not self.multiselect)
 
     def _on_link_update(self, *args):
-        """When linking is changed pixels<>wcs, change display units of the
-           subset plugin from pixel (for pixel linking) to sky (for wcs linking).
-           If there is an active selection in the subset plugin, push this change
-           to the UI upon link change by calling _get_subset_definition, which
-           will re-determine how to display subset information."""
+	"""When linking is changed pixels<>wcs, change display units of the
+	   subset plugin from pixel (for pixel linking) to sky (for WCS linking).
+	   If there is an active selection in the subset plugin, push this change
+	   to the UI upon link change by calling _get_subset_definition, which
+	   will re-determine how to display subset information."""
 
-        self.display_sky_coordinates = (self.app._link_type == 'wcs')
+		self.display_sky_coordinates = (self.app._link_type == 'wcs')
 
         if self.subset_selected != self.subset_select.default_text:
             self._get_subset_definition(*args)

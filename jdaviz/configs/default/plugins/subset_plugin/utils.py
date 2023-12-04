@@ -78,22 +78,22 @@ def _subset_def_to_region(subset_type, sub, val='value', name='name'):
 
 
 def _sky_region_to_subset_def(sky_region, _around_decimals=6):
-    """Generates a 'subset_definition' list of dictionaries from a
-       `regions.SkyRegion`object.
+    """ Generates a 'subset_definition' list of dictionaries from a
+    `regions.SkyRegion`object.
 
-       Parameters
-       ----------
-        sky_region : `regions.SkyRegion`
-            Name of ROI class (CircularROI/TrueCircularROI, EllipticalROI,
-            CircularAnnulusROI, or RectangularROI)
-        _around_decimals : str
-            Rounding for 'theta', if present.
+    Parameters
+    ----------
+    sky_region : `regions.SkyRegion`
+        Name of ROI class (CircularROI/TrueCircularROI, EllipticalROI,
+        CircularAnnulusROI, or RectangularROI).
+    _around_decimals : str
+        Rounding for 'theta', if present.
 
-       Returns
-       -------
-        deff : list of dict
-            List of dictionaries, each sub-dictionary describing a
-            subset attribute."""
+     Returns
+     -------
+    deff : list of dict
+        List of dictionaries, each sub-dictionary describing a
+        subset attribute."""
 
     if isinstance(sky_region, CircleSkyRegion):
         x = sky_region.center.ra.deg
@@ -106,9 +106,9 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
     if isinstance(sky_region, EllipseSkyRegion):
         xc = sky_region.center.ra.deg
         yc = sky_region.center.dec.deg
-        rx = sky_region.width.to(u.deg).value / 2.
-        ry = sky_region.height.to(u.deg).value / 2.
-        ang = (sky_region.angle).to(u.deg).value
+        rx = sky_region.width.to_value(u.deg) * 0.5
+        ry = sky_region.height.to_value(u.deg) * 0.5
+        ang = sky_region.angle.to_value(u.deg)
         theta = np.around(ang, decimals=_around_decimals)
         deff = [{"name": "RA Center (degrees)", "att": "xc", "value": xc, "orig": xc},
                 {"name": "Dec Center (degrees)", "att": "yc", "value": yc, "orig": yc},
@@ -119,8 +119,8 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
     if isinstance(sky_region, CircleAnnulusSkyRegion):
         xc = sky_region.center.ra.deg
         yc = sky_region.center.dec.deg
-        inner_r = sky_region.inner_radius.to(u.deg).value
-        outer_r = sky_region.outer_radius.to(u.deg).value
+        inner_r = sky_region.inner_radius.to_value(u.deg)
+        outer_r = sky_region.outer_radius.to_value(u.deg)
         deff = [{"name": "RA Center (degrees)", "att": "xc", "value": xc, "orig": xc},
                 {"name": "Dec Center (degrees)", "att": "yc", "value": yc, "orig": yc},
                 {"name": "Inner Radius (degrees)", "att": "inner_radius",
@@ -139,7 +139,7 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
             name = att.replace('X', 'RA ').replace('Y', 'Dec ')
             deff.append({"name": f"{name} (degrees)", "att": att.lower(),
                          "value": val, "orig": val})
-        theta = (sky_region.angle).to(u.deg).value
+        theta = sky_region.angle.to_value(u.deg)
         deff.append({"name": "Angle", "att": "theta", "value": theta, "orig": theta})
 
     return deff
@@ -147,14 +147,14 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
 
 def _get_pixregion_params_in_dict(region):
     """Given a Region, returns a dictionary with the attribute names
-    of the corresponding ROI type (i.e CirclePixelRegion and CircularROI).
+    of the corresponding ROI type (i.e., CirclePixelRegion and CircularROI).
 
-   This makes use of `jdaviz.core.region_translators.regions2roi`, but instead
-   of returning an ROI object it returns a dictionary of parameters that
-   would be used to create that same ROI object. This involves changing some
-   keys and deleting some, which is why that `regions2roi` can't be
-   called directly.
-   """
+    This makes use of `jdaviz.core.region_translators.regions2roi`, but instead
+    of returning an ROI object it returns a dictionary of parameters that
+    would be used to create that same ROI object. This involves changing some
+    keys and deleting some, which is why that `regions2roi` can't be
+    called directly.
+    """
 
     roi = regions2roi(region)
     region_dict = roi.__dict__.copy()

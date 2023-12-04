@@ -358,8 +358,8 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, 5.745596129482831)  # Changed
 
     # Draw ellipse on another object
-    # EllipsePixelRegion(center=PixCoord(x=20.5, y=20.5), width=41, height=15)
-    imviz_helper.default_viewer.apply_roi(EllipticalROI(20.5, 20.5, 41, 15))
+    # EllipsePixelRegion(center=PixCoord(x=20.5, y=37.5), width=41, height=15)
+    imviz_helper.default_viewer.apply_roi(EllipticalROI(20.5, 37.5, 41, 15))
 
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_2 = CircleAnnulusPixelRegion(
