@@ -9,6 +9,7 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
                                 RectangularAperture, EllipticalAnnulus)
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
@@ -137,7 +138,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
-        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
+        #self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
+        self.imviz.default_viewer.apply_roi(RectangularROI(0, 9, 0, 9))
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 3'
         phot_plugin.background_selected = 'Subset 3'
@@ -339,7 +341,7 @@ def test_annulus_background(imviz_helper):
 
     # Mark an object of interest
     # CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
-    imviz_helper._apply_interactive_region('bqplot:truecircle', (143, 18), (157, 32))
+    imviz_helper.default_viewer.apply_roi(CircularROI(150, 25, 7))
 
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(
@@ -357,8 +359,9 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, 5.745596129482831)  # Changed
 
     # Draw ellipse on another object
-    # EllipsePixelRegion(center=PixCoord(x=20.5, y=37.5), width=41, height=15)
-    imviz_helper._apply_interactive_region('bqplot:ellipse', (0, 30), (41, 45))
+    # EllipsePixelRegion(center=PixCoord(x=20.5, y=20.5), width=41, height=15)
+    #imviz_helper._apply_interactive_region('bqplot:ellipse', (0, 30), (41, 45))
+    imviz_helper.default_viewer.apply_roi(EllipticalROI(20.5, 20.5, 41, 15))
 
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_2 = CircleAnnulusPixelRegion(
@@ -390,10 +393,10 @@ def test_annulus_background(imviz_helper):
     # Edit the annulus and make sure background updates
     subset_plugin = imviz_helper.plugins["Subset Tools"]._obj
     subset_plugin.subset_selected = "Subset 4"
-    subset_plugin._set_value_in_subset_definition(0, "X Center", "value", 25.5)
-    subset_plugin._set_value_in_subset_definition(0, "Y Center", "value", 42.5)
-    subset_plugin._set_value_in_subset_definition(0, "Inner radius", "value", 40)
-    subset_plugin._set_value_in_subset_definition(0, "Outer radius", "value", 45)
+    subset_plugin._set_value_in_subset_definition(0, "X Center (pixels)", "value", 25.5)
+    subset_plugin._set_value_in_subset_definition(0, "Y Center (pixels)", "value", 42.5)
+    subset_plugin._set_value_in_subset_definition(0, "Inner Radius (pixels)", "value", 40)
+    subset_plugin._set_value_in_subset_definition(0, "Outer Radius (pixels)", "value", 45)
     subset_plugin.vue_update_subset()
     assert_allclose(phot_plugin.background_value, 4.89189)
 
