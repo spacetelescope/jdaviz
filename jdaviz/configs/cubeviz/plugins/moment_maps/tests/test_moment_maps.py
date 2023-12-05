@@ -9,8 +9,6 @@ from astropy.wcs import WCS
 from astroquery.mast import Observations
 from numpy.testing import assert_allclose
 
-from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
-
 
 def test_user_api(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
