@@ -2045,13 +2045,18 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         for pos, mark in self.continuum_marks.items():
             mark.update_xy(mark_x.get(pos, []), mark_y.get(pos, []))
 
-    def _get_continuum(self, dataset, spatial_subset, spectral_subset):
+    def _get_continuum(self, dataset, spatial_subset, spectral_subset, update_marks=False):
         if dataset.selected == '':
             self._update_continuum_marks()
             return None, None, None
 
-        full_spectrum = dataset.selected_spectrum_for_spatial_subset(spatial_subset.selected if spatial_subset is not None else None,  # noqa
-                                                                     use_display_units=True)
+        if spatial_subset == 'per-pixel':
+            if self.app.config != 'cubeviz':
+                raise ValueError("per-pixel only supported for cubeviz")
+            full_spectrum = dataset.selected_obj
+        else:
+            full_spectrum = dataset.selected_spectrum_for_spatial_subset(spatial_subset.selected if spatial_subset is not None else None,  # noqa
+                                                                         use_display_units=True)
 
         if full_spectrum is None or self.continuum_width == "":
             self._update_continuum_marks()
@@ -2088,9 +2093,11 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             # we know we'll just use the endpoints, so let's be efficient and not even
             # try extracting from the region
             continuum_mask = np.array([0, len(spectral_axis)-1])
-            mark_x = {'left': np.array([]),
-                      'center': np.array([min(spectral_axis.value), max(spectral_axis.value)]),
-                      'right': np.array([])}
+            if update_marks:
+                mark_x = {'left': np.array([]),
+                          'center': np.array([min(spectral_axis.value),
+                                              max(spectral_axis.value)]),
+                          'right': np.array([])}
 
         elif self.continuum_subset_selected == "Surrounding":
             # self.spectral_subset_selected != "Entire Spectrum"
@@ -2118,9 +2125,13 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                 right, = np.where(spectral_axis == max(spectrum.spectral_axis))
 
             continuum_mask = np.concatenate((left, right))
-            mark_x = {'left': np.array([min(spectral_axis.value[continuum_mask]), sr_lower.value]),
-                      'center': np.array([sr_lower.value, sr_upper.value]),
-                      'right': np.array([sr_upper.value, max(spectral_axis.value[continuum_mask])])}
+            if update_marks:
+                mark_x = {'left': np.array([min(spectral_axis.value[continuum_mask]),
+                                            sr_lower.value]),
+                          'center': np.array([sr_lower.value,
+                                              sr_upper.value]),
+                          'right': np.array([sr_upper.value,
+                                             max(spectral_axis.value[continuum_mask])])}
 
         else:
             # we'll access the mask of the continuum and then apply that to the spectrum.  For a
@@ -2132,7 +2143,9 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                 use_display_units=False).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
-            if spectral_subset.selected == "Entire Spectrum":
+            if not update_marks:
+                pass
+            elif spectral_subset.selected == "Entire Spectrum":
                 mark_x = {'left': spectral_axis_nanmasked,
                           'center': spectral_axis.value,
                           'right': []}
@@ -2152,15 +2165,33 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
 
         continuum_x = spectral_axis[continuum_mask].value
         min_x = min(spectral_axis.value)
-        continuum_y = full_spectrum.flux[continuum_mask].value
-        # DEV NOTE: could replace this with internal calls to the model fitting infrastructure
-        # to enable other model-types and to give visual feedback (by labeling the model
-        # as line_analysis:continuum, for example)
-        slope, intercept = np.polyfit(continuum_x-min_x, continuum_y, deg=1)
-        continuum = slope * (spectrum.spectral_axis.value-min_x) + intercept
-        mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
+        if spatial_subset == 'per-pixel':
+            # full_spectrum.flux is a cube, so we want to act on all spaxels independently
+            continuum_y = full_spectrum.flux[:, :, continuum_mask].value
 
-        self._update_continuum_marks(mark_x, mark_y)
+            def fit_continuum(continuum_y_spaxel):
+                return np.polyfit(continuum_x-min_x, continuum_y_spaxel, deg=1)
+
+            # compute the linear fit for each spaxel independently, along the spectral axis
+            slopes_intercepts = np.apply_along_axis(fit_continuum, 2, continuum_y)
+            slopes = slopes_intercepts[:, :, 0]
+            intercepts = slopes_intercepts[:, :, 1]
+
+            # spectrum.spectral_axis is an array, but we need our continuum to have the same
+            # shape as the fluxes in the cube, so let's just duplicate to the correct shape
+            spectral_axis_cube = np.zeros(spectrum.flux.shape)
+            spectral_axis_cube[:, :] = spectrum.spectral_axis.value
+
+            continuum = slopes[:, :, np.newaxis] * (spectral_axis_cube-min_x) + intercepts[:, :, np.newaxis]  # noqa
+        else:
+            continuum_y = full_spectrum.flux[continuum_mask].value
+            slope, intercept = np.polyfit(continuum_x-min_x, continuum_y, deg=1)
+            continuum = slope * (spectrum.spectral_axis.value-min_x) + intercept
+
+        if update_marks:
+            mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
+            self._update_continuum_marks(mark_x, mark_y)
+
         return spectrum, continuum, spectrum - continuum
 
 

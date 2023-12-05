@@ -113,9 +113,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @observe('is_active')
     def _is_active_changed(self, msg):
-#        if self.disabled_msg:
-#            return
-
         for pos, mark in self.continuum_marks.items():
             mark.visible = self.is_active
         self._calculate_continuum(msg)
@@ -148,7 +145,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # NOTE: there is no use in caching this, as the continuum will need to be re-computed
         # per-spaxel to use within calculating the moment map
-        _ = self._get_continuum(self.dataset, None, self.spectral_subset)
+        _ = self._get_continuum(self.dataset,
+                                None,
+                                self.spectral_subset,
+                                update_marks=True)
 
     @with_spinner()
     def calculate_moment(self, add_data=True):
@@ -160,16 +160,22 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         add_data : bool
             Whether to add the resulting data object to the app according to ``add_results``.
         """
-        # Retrieve the data cube and slice out desired region, if specified
-        if "_orig_spec" in self.dataset.selected_obj.meta:
-            cube = self.dataset.selected_obj.meta["_orig_spec"]
+        if self.continuum.selected == 'None':
+            if "_orig_spec" in self.dataset.selected_obj.meta:
+                cube = self.dataset.selected_obj.meta["_orig_spec"]
+            else:
+                cube = self.dataset.selected_obj
         else:
-            cube = self.dataset.selected_obj
+            # TODO: need to account for _orig_spec here?
+            _, _, cube = self._get_continuum(self.dataset,
+                                             'per-pixel',
+                                             self.spectral_subset,
+                                             update_marks=False)
 
+        # slice out desired region
+        # TODO: should we add a warning for a composite spectral subset?
         spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
-
-        # TODO: per-pixel continuum subtraction within the slab (but continuum probably needs the full cube...)
 
         # Calculate the moment and convert to CCDData to add to the viewers
         try:
