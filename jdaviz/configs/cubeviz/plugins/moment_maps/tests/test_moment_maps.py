@@ -104,7 +104,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert os.path.isfile(mm._obj.filename)
 
     mm._obj.n_moment = 1
-    mm._obj.output_unit_selected = "Wavelength"
+    mm._obj.output_unit_selected = "Spectral Unit"
     assert mm._obj.results_label == 'moment 1'
     assert mm._obj.results_label_overwrite is False
     mm._obj.vue_calculate_moment()

@@ -88,7 +88,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
                                                  selected='output_unit_selected',
-                                                 manual_options=['Flux', 'Wavelength',
+                                                 manual_options=['Flux', 'Spectral Unit',
                                                                  'Velocity', 'Velocity^N'])
 
         # Initialize extra key in items dictionary
@@ -145,12 +145,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if self.n_moment == 0:
             self.output_unit_selected = "Flux"
         elif ((self.n_moment == 1 and self.output_unit_selected in ("Flux", "Velocity^N")) or
-              (self.n_moment > 1 and self.output_unit_selected in ("Flux", "Wavelength"))):
+              (self.n_moment > 1 and self.output_unit_selected in ("Flux", "Spectral Unit"))):
             self.output_unit_selected = "Velocity"
         self.send_state("output_unit_selected")
 
         unit_dict = {"Flux": "",
-                     "Wavelength": "",
+                     "Spectral Unit": "",
                      "Velocity": "km/s",
                      "Velocity^N": f"km{self.n_moment}/s{self.n_moment}"}
 
@@ -160,7 +160,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             if self.app.data_collection[self.dataset_selected].coords is not None:
                 sunit = data.coords.world_axis_units[0]
                 self.dataset_spectral_unit = sunit
-                unit_dict["Wavelength"] = sunit
+                unit_dict["Spectral Unit"] = sunit
             else:
                 self.dataset_spectral_unit = ""
             unit_dict["Flux"] = data.get_component('flux').units
