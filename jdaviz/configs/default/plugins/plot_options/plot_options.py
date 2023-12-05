@@ -907,11 +907,15 @@ class PlotOptions(PluginTemplateMixin):
         # show "knot" locations if the stretch_function is a spline
         if isinstance(stretch, SplineStretch) and self.stretch_curve_visible:
             knot_mark = self.stretch_histogram.marks['stretch_knots']
+            # ensure knot x values are within 0-1 range after scaling
+            limited_knots_x = np.clip(np.asarray(stretch._x), 0, 1)
             knot_mark.x = (self.stretch_vmin_value +
-                           np.asarray(stretch._x) * (self.stretch_vmax_value - self.stretch_vmin_value))  # noqa
+                           np.asarray(limited_knots_x) * (self.stretch_vmax_value - self.stretch_vmin_value)) 
             # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
             # (may need to revisit this when supporting dragging)
-            knot_mark.y = 0.9 * np.asarray(stretch._y)
+            # ensure knot y values are within the 0-1 range
+            limited_knots_y = np.clip(np.asarray(stretch._y), 0, 1)
+            knot_mark.y = 0.9 * np.asarray(limited_knots_y)
         else:
             self.stretch_histogram.clear_marks('stretch_knots')
 
