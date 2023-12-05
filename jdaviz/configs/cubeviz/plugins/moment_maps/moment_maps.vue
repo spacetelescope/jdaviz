@@ -87,7 +87,7 @@
       ></v-text-field>
     </v-row>
 
-    <div v-if="n_moment > 0 && dataset_spectral_unit !== ''">
+    <div v-if="dataset_spectral_unit !== ''">
       <v-row>
         <v-radio-group
           label="Output Units"
@@ -96,13 +96,13 @@
           column
           class="no-hint">
           <v-radio
-            v-for="item in output_unit_items"
+            v-for="item in output_radio_items"
             :label="item.label + ' (' + item.unit_str + ')'"
             :value="item.label"
           ></v-radio>
         </v-radio-group>
       </v-row>
-      <v-row v-if="output_unit_selected === 'Velocity'">
+      <v-row v-if="output_unit_selected !== 'Wavelength' && output_unit_selected !== 'Flux'">
         <v-text-field
         ref="reference_wavelength"
         type="number"
@@ -129,11 +129,11 @@
       action_label="Calculate"
       action_tooltip="Calculate moment map"
       :action_spinner="spinner"
-      :action_disabled="n_moment > 0 && output_unit_selected === 'Velocity' && reference_wavelength === 0"
+      :action_disabled="n_moment > 0 && output_unit_selected !== 'Wavelength' && output_unit_selected !== 'Flux' && reference_wavelength === 0"
       @click:action="calculate_moment"
     ></plugin-add-results>
 
-    <v-row v-if="n_moment > 0 && output_unit_selected === 'Velocity' && reference_wavelength === 0">
+    <v-row v-if="n_moment > 0 && output_unit_selected !== 'Wavelength' && output_unit_selected !== 'Flux' && reference_wavelength === 0">
       <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           Cannot calculate moment: Must set reference wavelength for output in velocity units.
       </span>
