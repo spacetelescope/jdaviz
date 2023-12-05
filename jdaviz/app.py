@@ -838,7 +838,6 @@ class Application(VuetifyTemplate, HubListener):
                                                      get_sky_regions=include_sky_region)
 
             elif isinstance(subset.subset_state, RoiSubsetState):
-
                 subset_region = self._get_roi_subset_definition(subset.subset_state,
                                                                 to_sky=include_sky_region)
 
