@@ -47,17 +47,17 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     flux_viewer.shape = (100, 100)
     flux_viewer.state._set_axes_aspect_ratio(1)
 
-    mm = MomentMap(app=cubeviz_helper.app)
-    mm.dataset_selected = 'test[FLUX]'
+    mm = cubeviz_helper.plugins["Moment Maps"]
+    mm.dataset = 'test[FLUX]'
 
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
-    assert mm.results_label == 'moment 0'
-    assert mm.output_unit == "Wavelength"
+    assert mm._obj.results_label == 'moment 0'
+    assert mm.output_unit == "Flux"
 
-    mm.add_results.viewer.selected = cubeviz_helper._default_uncert_viewer_reference_name
-    mm.vue_calculate_moment()
+    mm._obj.add_results.viewer.selected = cubeviz_helper._default_uncert_viewer_reference_name
+    mm._obj.vue_calculate_moment()
 
-    assert mm.moment_available
+    assert mm._obj.moment_available
     assert dc[1].label == 'moment 0'
     mv_data = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_uncert_viewer_reference_name
@@ -69,8 +69,8 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     assert len(dc.links) == 14
 
     # label should remain unchanged but raise overwrite warnings
-    assert mm.results_label == 'moment 0'
-    assert mm.results_label_overwrite is True
+    assert mm._obj.results_label == 'moment 0'
+    assert mm._obj.results_label_overwrite is True
 
     # Make sure coordinate display works
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
@@ -100,15 +100,16 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 
-    assert mm.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
-    mm.filename = str(tmpdir.join(mm.filename))  # But we want it in tmpdir for testing.
-    mm.vue_save_as_fits()
-    assert os.path.isfile(mm.filename)
+    assert mm._obj.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
+    mm._obj.filename = str(tmpdir.join(mm._obj.filename))  # But we want it in tmpdir for testing.
+    mm._obj.vue_save_as_fits()
+    assert os.path.isfile(mm._obj.filename)
 
-    mm.n_moment = 1
-    assert mm.results_label == 'moment 1'
-    assert mm.results_label_overwrite is False
-    mm.vue_calculate_moment()
+    mm._obj.n_moment = 1
+    mm._obj.output_unit_selected = "Wavelength"
+    assert mm._obj.results_label == 'moment 1'
+    assert mm._obj.results_label_overwrite is False
+    mm._obj.vue_calculate_moment()
 
     assert dc[2].label == 'moment 1'
 
@@ -165,7 +166,7 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
 
     label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
                                                         'domain': {'x': 0, 'y': 0}})
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.98755e+16 m2 / s2",
+    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value -2.99792e+08 m / s",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 
