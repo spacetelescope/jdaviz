@@ -3183,8 +3183,6 @@ class PlotOptionsSyncState(BasePluginComponent):
             # stretch_parameters is a dictionary so won't trigger the @observe on
             # _update_stretch_curve, so we'll need to manually call it (and make sure
             # it is not skipped if it has already been called since an actual traitlet change)
-            if '_update_stretch_curve' in self.plugin._methods_skip_since_last_active:
-                self.plugin._methods_skip_since_last_active.remove('_update_stretch_curve')
             self.plugin._update_stretch_curve()
 
         # need to recompute mixed state
