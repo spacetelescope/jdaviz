@@ -28,7 +28,7 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import PchipInterpolator
 
 __all__ = ['PlotOptions']
 
@@ -59,12 +59,6 @@ class SplineStretch:
     """
 
     def __init__(self):
-        # Cubic Spline (degree 3) for its balance and between accuracy & smoothness.
-        # May revisit when knots become editable.
-        self.k = 3
-        self.bc_type = None
-        self.t = None
-
         # Default x, y values(0-1) range chosen for a typical initial spline shape.
         # Can be modified if required.
         self._x = np.array([0, 0.1, 0.2, 0.7, 1])
@@ -91,9 +85,7 @@ class SplineStretch:
     def update_knots(self, x, y):
         self._x = x
         self._y = y
-        self.spline = make_interp_spline(
-            self._x, self._y, k=self.k, t=self.t, bc_type=self.bc_type
-        )
+        self.spline = PchipInterpolator(self._x, self._y)
 
 
 # Add the spline stretch to the glue stretch registry if not registered
