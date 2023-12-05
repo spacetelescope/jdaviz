@@ -37,7 +37,7 @@ class TestSpecvizHelper:
 
         assert isinstance(data, Spectrum1D)
 
-    def test_load_hdulist(**kwargs):
+    def test_load_hdulist(self):
         # Create a fake fits file with a 1D spectrum for testing.
         primary_header = fits.Header({'TELESCOP': 'Fake Telescope'})
         primary_hdu = fits.PrimaryHDU(header=primary_header)
@@ -51,8 +51,10 @@ class TestSpecvizHelper:
         ])
         spectrum_table.header['INSTRUME'] = 'Fake Instrument'
         fake_hdulist = fits.HDUList([primary_hdu, spectrum_table])
-
-        return fake_hdulist
+        self.spec_app.load_data(fake_hdulist)
+        data = self.spec_app.get_data()
+        # HDUList should load as Spectrum1D
+        assert isinstance(data, Spectrum1D)
 
     def test_load_spectrum_list_no_labels(self):
         # now load three more spectra from a SpectrumList, without labels
