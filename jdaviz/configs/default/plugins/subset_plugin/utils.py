@@ -89,8 +89,8 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
     _around_decimals : str
         Rounding for 'theta', if present.
 
-     Returns
-     -------
+    Returns
+    -------
     deff : list of dict
         List of dictionaries, each sub-dictionary describing a
         subset attribute."""
