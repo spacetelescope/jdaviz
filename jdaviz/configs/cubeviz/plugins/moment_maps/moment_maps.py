@@ -141,6 +141,14 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @observe("dataset_selected", "n_moment")
     def _set_data_units(self, event={}):
+
+        if self.n_moment == 0:
+            self.output_unit_selected = "Flux"
+        elif ((self.n_moment == 1 and self.output_unit_selected in ("Flux", "Velocity^N")) or
+              (self.n_moment > 1 and self.output_unit_selected in ("Flux", "Wavelength"))):
+            self.output_unit_selected = "Velocity"
+        self.send_state("output_unit_selected")
+
         unit_dict = {"Flux": "",
                      "Wavelength": "",
                      "Velocity": "km/s",

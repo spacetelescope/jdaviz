@@ -91,12 +91,13 @@
       <v-row>
         <v-radio-group
           label="Output Units"
-          hint="Choose whether calculated moment is in units of wavelength or velocity."
+          hint="Choose the output units for calculated moment."
           v-model="output_unit_selected"
           column
           class="no-hint">
           <v-radio
             v-for="item in output_radio_items"
+            :key="item.label"
             :label="item.label + ' (' + item.unit_str + ')'"
             :value="item.label"
           ></v-radio>
