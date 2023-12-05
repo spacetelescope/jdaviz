@@ -10,6 +10,7 @@ Cubeviz
 
 - Added functionality to Collapse and Spectral Extraction plugins to save results to FITS file. [#2586]
 
+- Moment map plugin now supports linear per-spaxel continuum subtraction. [#2587]
 
 Imviz
 ^^^^^
