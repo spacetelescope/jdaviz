@@ -88,7 +88,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
                                                  selected='output_unit_selected',
-                                                 manual_options=['Flux', 'Wavelength', 'Velocity', 'Velocity^N'])
+                                                 manual_options=['Flux', 'Wavelength',
+                                                                 'Velocity', 'Velocity^N'])
 
         # Initialize extra key in items dictionary
         for item in self.output_unit_items:
@@ -171,7 +172,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # Force Traitlets to update
         self.send_state("output_unit_items")
         self.send_state("output_radio_items")
-
 
     @observe("dataset_selected", "spectral_subset_selected",
              "continuum_subset_selected", "continuum_width")
