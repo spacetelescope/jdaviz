@@ -910,7 +910,7 @@ class PlotOptions(PluginTemplateMixin):
             # ensure knot x values are within 0-1 range after scaling
             limited_knots_x = np.clip(np.asarray(stretch._x), 0, 1)
             knot_mark.x = (self.stretch_vmin_value +
-                           np.asarray(limited_knots_x) * (self.stretch_vmax_value - self.stretch_vmin_value)) 
+                           np.asarray(limited_knots_x) * (self.stretch_vmax_value - self.stretch_vmin_value))  # noqa
             # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
             # (may need to revisit this when supporting dragging)
             # ensure knot y values are within the 0-1 range
