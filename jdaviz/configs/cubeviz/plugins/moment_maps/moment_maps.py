@@ -87,7 +87,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
                                                  selected='output_unit_selected',
-                                                 manual_options=['Wavelength', 'Velocity'])
+                                                 manual_options=['Wavelength', 'Velocity', 'Velocity^N'])
+
+        # Initialize extra key in items dictionary
+        for item in self.output_unit_items:
+            item["unit_str"] = ""
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
@@ -133,15 +137,27 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         label_comps += [f"moment {self.n_moment}"]
         self.results_label_default = " ".join(label_comps)
 
-    @observe("dataset_selected")
+    @observe("dataset_selected", "n_moment")
     def _set_data_units(self, event={}):
+        unit_dict = {"Wavelength": "",
+                     "Velocity": "km/s",
+                     "Velocity^N": f"km{self.n_moment}/s{self.n_moment}"}
+
         if self.dataset_selected != "":
             # Spectral axis is first in this list
             if self.app.data_collection[self.dataset_selected].coords is not None:
                 unit = self.app.data_collection[self.dataset_selected].coords.world_axis_units[0]
                 self.dataset_spectral_unit = unit
+                unit_dict["Wavelength"] = unit
             else:
                 self.dataset_spectral_unit = ""
+
+        # Update units in selection item dictionary
+        for item in self.output_unit_items:
+            item["unit_str"] = unit_dict[item["label"]]
+
+        # Force Traitlets to update
+        self.send_state("output_unit_items")
 
     @observe("dataset_selected", "spectral_subset_selected",
              "continuum_subset_selected", "continuum_width")

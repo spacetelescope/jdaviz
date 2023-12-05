@@ -97,8 +97,7 @@
           class="no-hint">
           <v-radio
             v-for="item in output_unit_items"
-            :key="item.label"
-            :label="item.label"
+            :label="item.label + ' (' + item.unit_str + ')'"
             :value="item.label"
           ></v-radio>
         </v-radio-group>
