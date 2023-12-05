@@ -7,7 +7,7 @@ from astropy.nddata import CCDData
 import numpy as np
 
 from traitlets import Bool, List, Unicode, observe
-from specutils import manipulation, analysis
+from specutils import manipulation, analysis, Spectrum1D
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
@@ -15,6 +15,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
+                                        AddResults,
                                         AddResultsMixin,
                                         SelectPluginComponent,
                                         SpectralContinuumMixin,
@@ -57,6 +58,15 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     template_file = __file__, "moment_maps.vue"
     uses_active_status = Bool(True).tag(sync=True)
 
+    continuum_results_label = Unicode().tag(sync=True)
+    continuum_results_label_default = Unicode().tag(sync=True)
+    continuum_results_label_auto = Bool(True).tag(sync=True)
+    continuum_results_label_invalid_msg = Unicode('').tag(sync=True)
+    continuum_results_label_overwrite = Bool().tag(sync=True)
+    continuum_add_to_viewer_items = List().tag(sync=True)
+    continuum_add_to_viewer_selected = Unicode().tag(sync=True)
+    continuum_spinner = Bool(False).tag(sync=True)
+
     n_moment = IntHandleEmpty(0).tag(sync=True)
     filename = Unicode().tag(sync=True)
     moment_available = Bool(False).tag(sync=True)
@@ -75,6 +85,16 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         super().__init__(*args, **kwargs)
 
         self.moment = None
+
+        self.continuum_add_results = AddResults(self, 'continuum_results_label',
+                                                'continuum_results_label_default',
+                                                'continuum_results_label_auto',
+                                                'continuum_results_label_invalid_msg',
+                                                'continuum_results_label_overwrite',
+                                                'continuum_add_to_viewer_items',
+                                                'continuum_add_to_viewer_selected')
+        self.continuum_add_results.viewer.filters = ['is_image_viewer']
+        self.continuum_results_label_default = 'continuum'
 
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
@@ -107,6 +127,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # accross all plugins at some point
         return PluginUserApi(self, expose=('dataset', 'spectral_subset',
                                            'continuum', 'continuum_width',
+                                           'continuum_add_results', 'calculate_continuum',
                                            'n_moment',
                                            'output_unit', 'reference_wavelength',
                                            'add_results', 'calculate_moment'))
@@ -122,6 +143,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         label_comps = []
         if hasattr(self, 'dataset') and len(self.dataset.labels) > 1:
             label_comps += [self.dataset_selected]
+        self.continuum_results_label_default = " ".join(label_comps) + " continuum"
+
         label_comps += [f"moment {self.n_moment}"]
         self.results_label_default = " ".join(label_comps)
 
@@ -150,7 +173,33 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                 self.spectral_subset,
                                 update_marks=True)
 
-    @with_spinner()
+    @with_spinner('continuum_spinner')
+    def calculate_continuum(self, add_data=True):
+        # TODO: need to account for _orig_spec here?
+        cube, continuum_cube, sub_cube = self._get_continuum(self.dataset,
+                                                             'per-pixel',
+                                                             self.spectral_subset,
+                                                             update_marks=False)
+
+        full_cube = self.dataset.selected_obj
+        _, inds, _ = np.intersect1d(full_cube.spectral_axis.value, sub_cube.spectral_axis.value,
+                                    assume_unique=True, return_indices=True)
+        flux = np.full(full_cube.flux.shape, np.nan)
+        flux[:, :, inds] = continuum_cube
+
+        full_continuum_cube = Spectrum1D(spectral_axis=full_cube.spectral_axis,
+                                         flux=flux*full_cube.flux.unit,
+                                         wcs=full_cube.wcs)
+
+        if add_data:
+            self.continuum_add_results.add_results_from_plugin(full_continuum_cube)
+
+        return full_continuum_cube
+
+    def vue_calculate_continuum(self, *args):
+        self.calculate_continuum(add_data=True)
+
+    @with_spinner('')
     def calculate_moment(self, add_data=True):
         """
         Calculate the moment map
