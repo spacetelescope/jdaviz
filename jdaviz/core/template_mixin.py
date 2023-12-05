@@ -9,6 +9,7 @@ import numpy as np
 import os
 import threading
 import time
+import warnings
 
 from echo import delay_callback
 from functools import cached_property
@@ -28,6 +29,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
+from specutils.manipulation import extract_region
 from traitlets import Any, Bool, HasTraits, List, Unicode, observe
 
 from ipywidgets import widget_serialization
@@ -35,10 +37,16 @@ from ipypopout import PopoutButton
 
 from jdaviz import __version__
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 AddDataToViewerMessage)
+from jdaviz.core.marks import (LineAnalysisContinuum,
+                               LineAnalysisContinuumCenter,
+                               LineAnalysisContinuumLeft,
+                               LineAnalysisContinuumRight,
+                               ShadowLine)
 from jdaviz.core.region_translators import _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
@@ -52,7 +60,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
            'PluginSubcomponent',
            'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
-           'DatasetSpectralSubsetValidMixin',
+           'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'NonFiniteUncertaintyMismatchMixin',
@@ -1977,6 +1985,183 @@ class NonFiniteUncertaintyMismatchMixin(VuetifyTemplate, HubListener):
         # np.any returns numpy bool type, which traitlets doesn't like
         # so cast to boolean
         self.non_finite_uncertainty_mismatch = bool(mismatch)
+
+
+class SpectralContinuumMixin(VuetifyTemplate, HubListener):
+    """
+    Plugin select to choose options for a linear spectral continuum.
+    """
+    continuum_subset_items = List().tag(sync=True)
+    continuum_subset_selected = Unicode().tag(sync=True)
+
+    continuum_width = FloatHandleEmpty(3).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.continuum = SubsetSelect(self,
+                                      'continuum_subset_items',
+                                      'continuum_subset_selected',
+                                      manual_options=['None', 'Surrounding'],
+                                      default_mode='first',
+                                      filters=['is_spectral'])
+
+    def _continuum_remove_none_option(self):
+        self.continuum.items = [item for item in self.continuum.items
+                                if item['label'] != 'None']
+        self.continuum._apply_default_selection()
+
+    @property
+    def continuum_marks(self):
+        marks = {}
+        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        if viewer is None:
+            return {}
+        for mark in viewer.figure.marks:
+            if isinstance(mark, LineAnalysisContinuum):
+                # NOTE: we don't use isinstance anymore because of nested inheritance
+                if mark.__class__.__name__ == 'LineAnalysisContinuumLeft':
+                    marks['left'] = mark
+                elif mark.__class__.__name__ == 'LineAnalysisContinuumCenter':
+                    marks['center'] = mark
+                elif mark.__class__.__name__ == 'LineAnalysisContinuumRight':
+                    marks['right'] = mark
+
+        if not len(marks):
+            if not viewer.state.reference_data:
+                # we don't have data yet for scales, defer initializing
+                return {}
+            # then haven't been initialized yet, so initialize with empty
+            # marks that will be populated once the first analysis is done.
+            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.is_active),
+                     'center': LineAnalysisContinuumCenter(viewer, visible=self.is_active),
+                     'right': LineAnalysisContinuumRight(viewer, visible=self.is_active)}
+            shadows = [ShadowLine(mark, shadow_width=2) for mark in marks.values()]
+            # NOTE: += won't trigger the figure to notice new marks
+            viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
+
+        return marks
+
+    def _update_continuum_marks(self, mark_x={}, mark_y={}):
+        for pos, mark in self.continuum_marks.items():
+            mark.update_xy(mark_x.get(pos, []), mark_y.get(pos, []))
+
+    def _get_continuum(self, dataset, spatial_subset, spectral_subset):
+        if dataset.selected == '':
+            self._update_continuum_marks()
+            return None, None, None
+
+        full_spectrum = dataset.selected_spectrum_for_spatial_subset(spatial_subset.selected if spatial_subset is not None else None,  # noqa
+                                                                     use_display_units=True)
+
+        if full_spectrum is None or self.continuum_width == "":
+            self._update_continuum_marks()
+            return None, None, None
+
+        spectral_axis = full_spectrum.spectral_axis
+        if spectral_axis.unit == u.pix:
+            # plugin should be disabled so not get this far, but can still get here
+            # before the disabled message is set
+            self._update_continuum_marks()
+            return None, None, None
+
+        if self.continuum_subset_selected == spectral_subset.selected:
+            # already raised a validation error in the UI
+            self._update_continuum_marks()
+            return None, None, None
+
+        if spectral_subset.selected == "Entire Spectrum":
+            spectrum = full_spectrum
+        else:
+            sr = self.app.get_subsets(spectral_subset.selected,
+                                      simplify_spectral=True,
+                                      use_display_units=True)
+            spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
+            sr_lower = np.nanmin(spectrum.spectral_axis[spectrum.spectral_axis.value >= sr.lower.value])  # noqa
+            sr_upper = np.nanmax(spectrum.spectral_axis[spectrum.spectral_axis.value <= sr.upper.value])  # noqa
+
+        if self.continuum_subset_selected == 'None':
+            self._update_continuum_marks()
+            return spectrum, np.zeros_like(spectrum.flux.value), spectrum
+
+        # compute continuum
+        if self.continuum_subset_selected == "Surrounding" and spectral_subset.selected == "Entire Spectrum": # noqa
+            # we know we'll just use the endpoints, so let's be efficient and not even
+            # try extracting from the region
+            continuum_mask = np.array([0, len(spectral_axis)-1])
+            mark_x = {'left': np.array([]),
+                      'center': np.array([min(spectral_axis.value), max(spectral_axis.value)]),
+                      'right': np.array([])}
+
+        elif self.continuum_subset_selected == "Surrounding":
+            # self.spectral_subset_selected != "Entire Spectrum"
+            if self.continuum_width > 10 or self.continuum_width < 1:
+                # DEV NOTE: if changing the limits, make sure to also update the form validation
+                # rules in line_analysis.vue
+                self._update_continuum_marks()
+                return None, None, None
+
+            spectral_region_width = sr_upper - sr_lower
+            # convert width from total relative width, to width per "side"
+            width = (self.continuum_width - 1) / 2
+            left, = np.where((spectral_axis < sr_lower) &
+                             (spectral_axis > sr_lower - spectral_region_width*width))
+            if not len(left):
+                # then no points matching the width are available outside the line region,
+                # so we'll default to the left-most point of the line region.
+                left, = np.where(spectral_axis == min(spectrum.spectral_axis))
+
+            right, = np.where((spectral_axis > sr_upper) &
+                              (spectral_axis < sr_upper + spectral_region_width*width))
+            if not len(right):
+                # then no points matching the width are available outside the line region,
+                # so we'll default to the right-most point of the line region.
+                right, = np.where(spectral_axis == max(spectrum.spectral_axis))
+
+            continuum_mask = np.concatenate((left, right))
+            mark_x = {'left': np.array([min(spectral_axis.value[continuum_mask]), sr_lower.value]),
+                      'center': np.array([sr_lower.value, sr_upper.value]),
+                      'right': np.array([sr_upper.value, max(spectral_axis.value[continuum_mask])])}
+
+        else:
+            # we'll access the mask of the continuum and then apply that to the spectrum.  For a
+            # spatially-collapsed spectrum in cubeviz, this will access the mask from the full
+            # cube, but still apply that to the spatially-collapsed spectrum.
+            continuum_mask = ~self._specviz_helper.get_data(
+                dataset.selected,
+                spectral_subset=self.continuum_subset_selected,
+                use_display_units=False).mask
+            spectral_axis_nanmasked = spectral_axis.value.copy()
+            spectral_axis_nanmasked[~continuum_mask] = np.nan
+            if spectral_subset.selected == "Entire Spectrum":
+                mark_x = {'left': spectral_axis_nanmasked,
+                          'center': spectral_axis.value,
+                          'right': []}
+            else:
+                mark_x = {'left': spectral_axis_nanmasked[spectral_axis.value < sr_lower.value],
+                          'right': spectral_axis_nanmasked[spectral_axis.value > sr_upper.value]}
+                # Center should extend (at least) across the line region between the full
+                # range defined by the continuum subset(s).
+                # OK for mark_x to be all NaNs.
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=RuntimeWarning)
+                    mark_x_min = np.nanmin(mark_x['left'])
+                    mark_x_max = np.nanmax(mark_x['right'])
+                left_min = np.nanmin([mark_x_min, sr_lower.value])
+                right_max = np.nanmax([mark_x_max, sr_upper.value])
+                mark_x['center'] = np.array([left_min, right_max])
+
+        continuum_x = spectral_axis[continuum_mask].value
+        min_x = min(spectral_axis.value)
+        continuum_y = full_spectrum.flux[continuum_mask].value
+        # DEV NOTE: could replace this with internal calls to the model fitting infrastructure
+        # to enable other model-types and to give visual feedback (by labeling the model
+        # as line_analysis:continuum, for example)
+        slope, intercept = np.polyfit(continuum_x-min_x, continuum_y, deg=1)
+        continuum = slope * (spectrum.spectral_axis.value-min_x) + intercept
+        mark_y = {k: slope * (v-min_x) + intercept for k, v in mark_x.items()}
+
+        self._update_continuum_marks(mark_x, mark_y)
+        return spectrum, continuum, spectrum - continuum
 
 
 class ViewerSelect(SelectPluginComponent):

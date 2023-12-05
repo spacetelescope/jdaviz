@@ -49,7 +49,7 @@
     <j-plugin-section-header>Continuum</j-plugin-section-header>
     <v-row>
       <j-docs-link>
-        {{spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
+        {{continuum_subset_selected=='Surrounding' && spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
         {{continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
         When this plugin is opened, a visual indicator will show on the spectrum plot showing the continuum fitted as a thick line, and interpolated into the line region as a thin line.
       </j-docs-link>
@@ -70,11 +70,11 @@
       <v-text-field
         label="Width"
         type="number"
-        v-model.number="width"
+        v-model.number="continuum_width"
         step="0.1"
-        :rules="[() => width!=='' || 'This field is required.',
-                 () => width<=10 || 'Width must be <= 10.',
-                 () => width>=1 || 'Width must be >= 1.']"
+        :rules="[() => continuum_width!=='' || 'This field is required.',
+                 () => continuum_width<=10 || 'Width must be <= 10.',
+                 () => continuum_width>=1 || 'Width must be >= 1.']"
         hint="Width, relative to the overall line spectral region, to fit the linear continuum (excluding the region containing the line).  If 1, will use endpoints within line region only."
         persistent-hint
       >

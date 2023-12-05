@@ -2,7 +2,15 @@
   <j-tray-plugin
     description='Create a 2D image from a data cube.'
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'"
+    :uses_active_status="uses_active_status"
+    @plugin-ping="plugin_ping($event)"
+    :keep_active.sync="keep_active"
     :popout_button="popout_button">
+
+    <j-plugin-section-header>Cube</j-plugin-section-header>
+    <v-row>
+      <j-docs-link>Choose the input cube and spectral subset.</j-docs-link>
+    </v-row>
 
     <plugin-dataset-select
       :items="dataset_items"
@@ -21,6 +29,50 @@
       label="Spectral region"
       hint="Spectral region to compute the moment map."
     />
+
+    <j-plugin-section-header>Continuum Subtraction</j-plugin-section-header>
+    <v-row>
+      <j-docs-link v-if="continuum_subset_selected==='None'">
+        Choose whether and how to compute the continuum for continuum subtraction.
+      </j-docs-link>
+      <j-docs-link v-else>
+        {{continuum_subset_selected=='Surrounding' && spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
+        {{continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
+        When this plugin is opened, a visual indicator will show on the spectrum plot showing the continuum fitted as a thick line, and interpolated into the line region as a thin line.
+        When computing the moment map, these same input options will be used to compute and subtract a linear continuum for each spaxel, independently.
+      </j-docs-link>
+    </v-row>
+
+    <plugin-subset-select 
+      :items="continuum_subset_items"
+      :selected.sync="continuum_subset_selected"
+      :show_if_single_entry="true"
+      :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
+      label="Continuum"
+      hint="Select spectral region that defines the continuum."
+    />
+
+    <v-row v-if="continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
+      <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
+           in line_analysis.py  -->
+      <v-text-field
+        label="Width"
+        type="number"
+        v-model.number="continuum_width"
+        step="0.1"
+        :rules="[() => continuum_width!=='' || 'This field is required.',
+                 () => continuum_width<=10 || 'Width must be <= 10.',
+                 () => continuum_width>=1 || 'Width must be >= 1.']"
+        hint="Width, relative to the overall line spectral region, to fit the linear continuum (excluding the region containing the line).  If 1, will use endpoints within line region only."
+        persistent-hint
+      >
+      </v-text-field>
+    </v-row>
+
+    <j-plugin-section-header>Moment</j-plugin-section-header>
+    <v-row>
+      <j-docs-link>Options for generating the moment map.</j-docs-link>
+    </v-row>
 
     <v-row>
       <v-text-field

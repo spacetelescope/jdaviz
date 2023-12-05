@@ -17,6 +17,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralSubsetSelectMixin,
                                         AddResultsMixin,
                                         SelectPluginComponent,
+                                        SpectralContinuumMixin,
+                                        skip_if_no_updates_since_last_active,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 
@@ -30,7 +32,7 @@ u.add_enabled_units([spaxel])
 @tray_registry('cubeviz-moment-maps', label="Moment Maps",
                viewer_requirements=['spectrum', 'image'])
 class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin,
-                AddResultsMixin):
+                SpectralContinuumMixin, AddResultsMixin):
     """
     See the :ref:`Moment Maps Plugin Documentation <moment-maps>` for more details.
 
@@ -53,6 +55,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     * :meth:`calculate_moment`
     """
     template_file = __file__, "moment_maps.vue"
+    uses_active_status = Bool(True).tag(sync=True)
 
     n_moment = IntHandleEmpty(0).tag(sync=True)
     filename = Unicode().tag(sync=True)
@@ -88,19 +91,34 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @property
     def _default_image_viewer_reference_name(self):
-        return self.jdaviz_helper._default_image_viewer_reference_name
+        return getattr(
+            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'flux-viewer'
+        )
 
     @property
     def _default_spectrum_viewer_reference_name(self):
-        return self.jdaviz_helper._default_spectrum_viewer_reference_name
+        return getattr(
+            self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
+        )
 
     @property
     def user_api(self):
         # NOTE: leaving save_as_fits out for now - we may want a more general API to do that
         # accross all plugins at some point
-        return PluginUserApi(self, expose=('dataset', 'spectral_subset', 'n_moment',
+        return PluginUserApi(self, expose=('dataset', 'spectral_subset',
+                                           'continuum', 'continuum_width',
+                                           'n_moment',
                                            'output_unit', 'reference_wavelength',
                                            'add_results', 'calculate_moment'))
+
+    @observe('is_active')
+    def _is_active_changed(self, msg):
+#        if self.disabled_msg:
+#            return
+
+        for pos, mark in self.continuum_marks.items():
+            mark.visible = self.is_active
+        self._calculate_continuum(msg)
 
     @observe("dataset_selected", "dataset_items", "n_moment")
     def _set_default_results_label(self, event={}):
@@ -120,6 +138,18 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             else:
                 self.dataset_spectral_unit = ""
 
+    @observe("dataset_selected", "spectral_subset_selected",
+             "continuum_subset_selected", "continuum_width")
+    @skip_if_no_updates_since_last_active()
+    def _calculate_continuum(self, msg=None):
+        if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None:  # noqa
+            # during initial init, this can trigger before the component is initialized
+            return
+
+        # NOTE: there is no use in caching this, as the continuum will need to be re-computed
+        # per-spaxel to use within calculating the moment map
+        _ = self._get_continuum(self.dataset, None, self.spectral_subset)
+
     @with_spinner()
     def calculate_moment(self, add_data=True):
         """
@@ -138,6 +168,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
+
+        # TODO: per-pixel continuum subtraction within the slab (but continuum probably needs the full cube...)
 
         # Calculate the moment and convert to CCDData to add to the viewers
         try:
