@@ -46,8 +46,8 @@ class TestSpecvizHelper:
         wavelength = np.linspace(5000, 6000, 100)
         flux = np.random.random(100)
         spectrum_table = fits.BinTableHDU.from_columns([
-            fits.Column(name='WAVELENGTH', array=wavelength, format='E'),
-            fits.Column(name='FLUX', array=flux, format='E')
+            fits.Column(name='WAVELENGTH', array=wavelength, format='E', unit="Angstrom"),
+            fits.Column(name='FLUX', array=flux, format='E', unit="Jy")
         ])
         spectrum_table.header['INSTRUME'] = 'Fake Instrument'
         fake_hdulist = fits.HDUList([primary_hdu, spectrum_table])
