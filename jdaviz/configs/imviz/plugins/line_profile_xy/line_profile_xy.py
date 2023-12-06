@@ -127,12 +127,11 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         self.plot_across_x._update_data('line', x=range(comp.data.shape[0]), y=comp.data[:, x],
                                         reset_lims=False)
         zoomed_data_x = comp.data[y_min:y_max, x]
-        zoomed_data_x_finite = zoomed_data_x[np.isfinite(zoomed_data_x)]
         if zoomed_data_x.size > 0:
             self.plot_across_x.set_limits(x_min=y_min,
                                           x_max=y_max,
-                                          y_min=zoomed_data_x_finite.min() * 0.95,
-                                          y_max=zoomed_data_x_finite.max() * 1.05)
+                                          y_min=np.nanmin(zoomed_data_x) * 0.95,
+                                          y_max=np.nanmax(zoomed_data_x) * 1.05)
         self.plot_across_x.update_style('line', line_visible=True,
                                         markers_visible=False, color='gray', size=10)
         self.plot_across_x.viewer.axis_x.label = 'Y (pix)'
@@ -142,12 +141,11 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
         self.plot_across_y._update_data('line', x=range(comp.data.shape[1]), y=comp.data[y, :],
                                         reset_lims=False)
         zoomed_data_y = comp.data[y, x_min:x_max]
-        zoomed_data_y_finite = zoomed_data_y[np.isfinite(zoomed_data_y)]
         if zoomed_data_y.size > 0:
             self.plot_across_y.set_limits(x_min=x_min,
                                           x_max=x_max,
-                                          y_min=zoomed_data_y_finite.min() * 0.95,
-                                          y_max=zoomed_data_y_finite.max() * 1.05)
+                                          y_min=np.nanmin(zoomed_data_y) * 0.95,
+                                          y_max=np.nanmax(zoomed_data_y) * 1.05)
         self.plot_across_y.update_style('line', line_visible=True,
                                         markers_visible=False, color='gray', size=10)
         self.plot_across_y.viewer.axis_x.label = 'X (pix)'
