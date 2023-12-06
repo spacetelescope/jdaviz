@@ -12,6 +12,30 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import MomentMap
 
 
+def test_user_api(cubeviz_helper, spectrum1d_cube):
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
+        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+
+    mm = cubeviz_helper.plugins['Moment Maps']
+    assert not mm._obj.continuum_marks['center'].visible
+    with mm.as_active():
+        assert mm._obj.continuum_marks['center'].visible
+        mm.n_moment = 0
+        # no continuum so marks should be empty
+        assert len(mm._obj.continuum_marks['center'].x) == 0
+
+        mom = mm.calculate_moment()
+
+        mm.continuum = 'Surrounding'
+        mm.continuum_width = 10
+        assert len(mm._obj.continuum_marks['center'].x) > 0
+
+        mom_sub = mm.calculate_moment()
+
+        assert mom != mom_sub
+
+
 def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
