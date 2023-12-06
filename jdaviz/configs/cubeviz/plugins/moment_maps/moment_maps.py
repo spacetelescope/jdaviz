@@ -28,6 +28,10 @@ __all__ = ['MomentMap']
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
+moment_unit_options = {0: ["Flux"],
+                       1: ["Velocity", "Spectral Unit"],
+                       2: ["Velocity", "Velocity^N"]}
+
 
 @tray_registry('cubeviz-moment-maps', label="Moment Maps",
                viewer_requirements=['spectrum', 'image'])
@@ -142,11 +146,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     @observe("dataset_selected", "n_moment")
     def _set_data_units(self, event={}):
 
-        if self.n_moment == 0:
-            self.output_unit_selected = "Flux"
-        elif ((self.n_moment == 1 and self.output_unit_selected in ("Flux", "Velocity^N")) or
-              (self.n_moment > 1 and self.output_unit_selected in ("Flux", "Spectral Unit"))):
-            self.output_unit_selected = "Velocity"
+        unit_options_index = 2 if self.n_moment > 2 else self.n_moment
+        if self.output_unit_selected not in moment_unit_options[unit_options_index]:
+            self.output_unit_selected = moment_unit_options[unit_options_index][0]
         self.send_state("output_unit_selected")
 
         unit_dict = {"Flux": "",
@@ -206,6 +208,21 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         add_data : bool
             Whether to add the resulting data object to the app according to ``add_results``.
         """
+
+        # Check to make sure API use hasn't put us into an invalid state.
+        try:
+            n_moment = int(self.n_moment)
+            if n_moment < 0:
+                raise ValueError("Moment must be a positive integer")
+        except ValueError:
+            raise ValueError("Moment must be a positive integer")
+
+        unit_options_index = 2 if n_moment > 2 else n_moment
+        if self.output_unit_selected not in moment_unit_options[unit_options_index]:
+            raise ValueError("Selected output units must be in "
+                             f"{moment_unit_options[unit_options_index]} for"
+                             f"moment {self.n_moment}")
+
         if self.continuum.selected == 'None':
             if "_orig_spec" in self.dataset.selected_obj.meta:
                 cube = self.dataset.selected_obj.meta["_orig_spec"]
@@ -222,13 +239,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
 
+        # Retrieve the data cube and slice out desired region, if specified
+        if "_orig_spec" in self.dataset.selected_obj.meta:
+            cube = self.dataset.selected_obj.meta["_orig_spec"]
+
         # Calculate the moment and convert to CCDData to add to the viewers
-        try:
-            n_moment = int(self.n_moment)
-            if n_moment < 0:
-                raise ValueError("Moment must be a positive integer")
-        except ValueError:
-            raise ValueError("Moment must be a positive integer")
         # Need transpose to align JWST mirror shape: This is because specutils
         # arrange the array shape to be (nx, ny, nz) but 2D visualization
         # assumes (ny, nx) as per row-major convention.

@@ -130,11 +130,11 @@
       action_label="Calculate"
       action_tooltip="Calculate moment map"
       :action_spinner="spinner"
-      :action_disabled="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && output_unit_selected !== 'Flux' && reference_wavelength === 0"
+      :action_disabled="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0"
       @click:action="calculate_moment"
     ></plugin-add-results>
 
-    <v-row v-if="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && output_unit_selected !== 'Flux' && reference_wavelength === 0">
+    <v-row v-if="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0">
       <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           Cannot calculate moment: Must set reference wavelength for output in velocity units.
       </span>
