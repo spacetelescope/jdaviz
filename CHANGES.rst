@@ -65,6 +65,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Compatibility with glue-core 1.17. [#2591]
+
 Cubeviz
 ^^^^^^^
 
