@@ -69,37 +69,6 @@
       </v-text-field>
     </v-row>
 
-    <v-row v-if="continuum_subset_selected !== 'None'">
-      <v-expansion-panels accordion>
-        <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
-            <span style="padding: 6px">Export Continuum</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <j-docs-link>
-              Expose the continuum (as a cube).
-              {{spectral_subset_selected!='Entire Spectrum' ? 'Fluxes in slices outside of \''+spectral_subset_selected+'\' will be padded with nans.' : null}}
-            </j-docs-link>
-            <plugin-add-results
-              :label.sync="continuum_results_label"
-              :label_default="continuum_results_label_default"
-              :label_auto.sync="continuum_results_label_auto"
-              :label_invalid_msg="continuum_results_label_invalid_msg"
-              :label_overwrite="continuum_results_label_overwrite"
-              label_hint="Label for the continuum cube"
-              :add_to_viewer_items="continuum_add_to_viewer_items"
-              :add_to_viewer_selected.sync="continuum_add_to_viewer_selected"
-              action_label="Calculate"
-              action_tooltip="Calculate Continuum Cube"
-              :action_spinner="continuum_spinner"
-              @click:action="calculate_continuum"
-            ></plugin-add-results>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
-    </v-row>
-
-
     <j-plugin-section-header>Moment</j-plugin-section-header>
     <v-row>
       <j-docs-link>Options for generating the moment map.</j-docs-link>
