@@ -4,6 +4,7 @@ import os
 import matplotlib
 import numpy as np
 
+from astropy.utils import minversion
 from astropy.visualization import (
     ManualInterval, ContrastBiasStretch, PercentileInterval
 )
@@ -31,6 +32,8 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty
 from scipy.interpolate import make_interp_spline
 
 __all__ = ['PlotOptions']
+
+GLUE_LT_1_17 = not minversion("glue", "1.17")
 
 
 class SplineStretch:
@@ -89,7 +92,10 @@ class SplineStretch:
 
 # Add the spline stretch to the glue stretch registry if not registered
 if "spline" not in stretches:
-    stretches.add("spline", SplineStretch(), display="Spline")
+    if GLUE_LT_1_17:
+        stretches.add("spline", SplineStretch(), display="Spline")
+    else:
+        stretches.add("spline", SplineStretch, display="Spline")
 
 
 @tray_registry('g-plot-options', label="Plot Options")
@@ -846,7 +852,10 @@ class PlotOptions(PluginTemplateMixin):
         # procedure in glue's CompositeArray:
         interval = ManualInterval(self.stretch_vmin_value, self.stretch_vmax_value)
         contrast_bias = ContrastBiasStretch(self.image_contrast_value, self.image_bias_value)
-        stretch = stretches.members[self.stretch_function_value]
+        if GLUE_LT_1_17:
+            stretch = stretches.members[self.stretch_function_value]
+        else:
+            stretch = stretches.members[self.stretch_function_value]()
         layer_cmap = layer.state.cmap
 
         # show the colorbar
