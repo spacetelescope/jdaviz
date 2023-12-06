@@ -31,7 +31,7 @@
           </v-switch>
         </v-row>
 
-        <v-row v-if="link_type_selected == 'WCS'">
+        <v-row v-if="!inapplicable_attrs.includes('wcs_use_affine')">
           <v-switch
             label="Fast approximation"
             hint="Use fast approximation for image alignment if possible (accurate to <1 pixel)."

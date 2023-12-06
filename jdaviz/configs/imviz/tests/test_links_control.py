@@ -29,3 +29,13 @@ class TestLinksControl(BaseImviz_WCS_WCS):
 
         assert lc_plugin.need_clear_markers is False
         lc_plugin.link_type.selected = 'WCS'
+
+    def test_user_api(self):
+        lc_plugin = self.imviz.plugins['Links Control']
+        assert lc_plugin.link_type == 'Pixels'
+        # wcs_use_affine is inapplicable when link_type == 'Pixels'
+        with pytest.raises(AttributeError):
+            lc_plugin.wcs_use_affine
+
+        lc_plugin.link_type = 'WCS'
+        assert lc_plugin.wcs_use_affine is True
