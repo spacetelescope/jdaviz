@@ -85,7 +85,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the continuum, or ``Surrounding`` to use a region surrounding the
       subset set in ``spectral_subset``.
-    * :attr:`continuum_width`:
+    * ```continuum_width``:
       Width, relative to the overall line spectral region, to fit the linear continuum
       (excluding the region containing the line). If 1, will use endpoints within line region
       only.

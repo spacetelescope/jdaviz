@@ -46,6 +46,14 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
       Dataset to use for computing line statistics.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the line, or ``Entire Spectrum``.
+    * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Subset to use for the continuum, or ``None`` to skip continuum subtraction,
+      or ``Surrounding`` to use a region surrounding the
+      subset set in ``spectral_subset``.
+    * ``continuum_width``:
+      Width, relative to the overall line spectral region, to fit the linear continuum
+      (excluding the region containing the line). If 1, will use endpoints within line region
+      only.
     * ``n_moment``
     * ``output_unit``
       Choice of "Wavelength" or "Velocity", applicable for n_moment >= 1.
