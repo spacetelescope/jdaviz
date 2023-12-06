@@ -393,6 +393,9 @@ class StretchBounds(CheckableTool):
             # event_y is in units of the y-axis (density),
             # so we need to rescale event_y to the same units as knot_y
             event_y_normalized = (event_y - y_min) / (y_max - y_min)
+            # Drop event if the event coordinate are out of bounds
+            if not 0 <= event_y_normalized <= 0.92:
+                return
 
             # Distance from mouse position to each knot, normalized to viewer axes size
             distances_to_knots = np.sqrt(((knot_x - event_x) / (x_max - x_min)) ** 2 +
