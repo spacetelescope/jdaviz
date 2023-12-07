@@ -1,4 +1,5 @@
 import os
+import logging
 
 import numpy as np
 from glue.core.message import (SubsetDeleteMessage,
@@ -8,7 +9,6 @@ from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
 from specutils import analysis, Spectrum1D
 
-from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
                                 SpectralMarksChangedMessage,
@@ -99,9 +99,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     spatial_subset_items = List().tag(sync=True)
     spatial_subset_selected = Unicode().tag(sync=True)
 
-    # TODO: remove and replace with user API deprecation
-    width = FloatHandleEmpty(3).tag(sync=True)
-
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
     results_centroid = Float().tag(sync=True)  # stored in AA units
@@ -159,18 +156,22 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         )
 
     # backwards compatibility for width (replace with user API deprecation)
-    @observe('width')
-    def _sync_width_to_continuum_width(self, *args):
-        self.continuum_width = self.width
+    @property
+    def width(self):
+        logging.warning(f"DeprecationWarning: width was replaced by continuum_width in 3.9 and will be removed in a future release")  # noqa
+        return self.continuum_width
 
-    @observe('continuum_width')
-    def _sync_continuum_width_to_width(self, *args):
-        self.width = self.continuum_width
+    @width.setter
+    def width(self, width):
+        logging.warning("DeprecationWarning: width was replaced by continuum_width in 3.9 and will be removed in a future release")  # noqa
+        self.continuum_width = width
 
     @property
     def user_api(self):
+        # deprecated: width was replaced with continuum_width in 3.9 so should be removed from the
+        # user API and the property and setter above as soon as 3.11.
         return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
-                                           'continuum', 'continuum_width', 'get_results'))
+                                           'continuum', 'width', 'continuum_width', 'get_results'))
 
     def _on_viewer_data_changed(self, msg):
         viewer_id = self.app._viewer_item_by_reference(

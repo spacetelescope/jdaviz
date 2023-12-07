@@ -27,6 +27,9 @@ Specviz2d
 API Changes
 -----------
 
+- ``width`` argument in Line Analysis plugin is renamed to ``continuum_width`` and ``width``
+  will be removed in a future release. [#2587]
+
 Cubeviz
 ^^^^^^^
 
