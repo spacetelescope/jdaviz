@@ -221,7 +221,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if self.disabled_msg:
             return
 
-        # TODO: move to mixin?
         for pos, mark in self.continuum_marks.items():
             mark.visible = self.is_active
         self._calculate_statistics(msg)

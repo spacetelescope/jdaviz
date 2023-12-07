@@ -174,7 +174,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             else:
                 cube = self.dataset.selected_obj
         else:
-            # TODO: need to account for _orig_spec here?
             _, _, cube = self._get_continuum(self.dataset,
                                              'per-pixel',
                                              self.spectral_subset,
