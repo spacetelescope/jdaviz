@@ -51,8 +51,9 @@ class TestSpecvizHelper:
         ])
         spectrum_table.header['INSTRUME'] = 'Fake Instrument'
         fake_hdulist = fits.HDUList([primary_hdu, spectrum_table])
+        self.label = "Test 1D Spectrum"
         self.spec_app.load_data(fake_hdulist)
-        data = self.spec_app.get_data()
+        data = self.spec_app.get_data(data_label=self.label)
         # HDUList should load as Spectrum1D
         assert isinstance(data, Spectrum1D)
 
