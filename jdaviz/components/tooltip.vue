@@ -97,6 +97,8 @@ const tooltips = {
   'plugin-line-analysis-sync-identify': 'Lock/unlock selection with identified line',
   'plugin-line-analysis-assign': 'Assign the centroid wavelength and update the redshift',
   'plugin-moment-save-fits': 'Save moment map as FITS file',
+  'plugin-extract-save-fits': 'Save spectral extraction as FITS file',
+  'plugin-collapse-save-fits': 'Save collapsed cube as FITS file',
   'plugin-link-apply': 'Apply linking to data',
   'plugin-footprints-color-picker': 'Change the color of the footprint overlay',
 }

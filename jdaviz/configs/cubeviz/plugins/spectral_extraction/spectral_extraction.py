@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from packaging.version import Version
 import numpy as np
 import astropy
@@ -5,11 +8,12 @@ import astropy.units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, NDUncertainty
 )
-from traitlets import List, Unicode, observe
+from traitlets import Bool, List, Unicode, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
+                                        DatasetSelectMixin,
                                         SelectPluginComponent,
                                         SpatialSubsetSelectMixin,
                                         AddResultsMixin,
@@ -25,7 +29,8 @@ ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
 @tray_registry(
     'cubeviz-spectral-extraction', label="Spectral Extraction", viewer_requirements='spectrum'
 )
-class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResultsMixin):
+class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
+                         SpatialSubsetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Spectral Extraction Plugin Documentation <spex>` for more details.
 
@@ -43,6 +48,13 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
     template_file = __file__, "spectral_extraction.vue"
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
+    filename = Unicode().tag(sync=True)
+    extracted_spec_available = Bool(False).tag(sync=True)
+    overwrite_warn = Bool(False).tag(sync=True)
+    # export_enabled controls whether saving to a file is enabled via the UI.  This
+    # is a temporary measure to allow server-installations to disable saving server-side until
+    # saving client-side is supported
+    export_enabled = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
 
@@ -51,6 +63,8 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
         )
 
         super().__init__(*args, **kwargs)
+
+        self.extracted_spec = None
 
         self.function = SelectPluginComponent(
             self,
@@ -63,6 +77,11 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
         if ASTROPY_LT_5_3_2:
             self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy>=5.3.2"
+
+        if self.app.state.settings.get('server_is_remote', False):
+            # when the server is remote, saving the file in python would save on the server, not
+            # on the user's machine, so export support in cubeviz should be disabled
+            self.export_enabled = False
 
     @property
     def user_api(self):
@@ -157,6 +176,12 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             mask=mask
         )
 
+        # stuff for exporting to file
+        self.extracted_spec = collapsed_spec
+        self.extracted_spec_available = True
+        fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
+        self.filename = f"extracted_{self.function_selected.lower()}_{fname_label}.fits"
+
         if add_data:
             self.add_results.add_results_from_plugin(
                 collapsed_spec, label=self.results_label, replace=False
@@ -172,6 +197,50 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
     def vue_spectral_extraction(self, *args, **kwargs):
         self.collapse_to_spectrum(add_data=True)
+
+    def vue_save_as_fits(self, *args):
+        self._save_extracted_spec_to_fits()
+
+    def vue_overwrite_fits(self, *args):
+        """Attempt to force writing the spectral extraction if the user
+        confirms the desire to overwrite."""
+        self.overwrite_warn = False
+        self._save_extracted_spec_to_fits(overwrite=True)
+
+    def _save_extracted_spec_to_fits(self, overwrite=False, *args):
+
+        if not self.export_enabled:
+            # this should never be triggered since this is intended for UI-disabling and the
+            # UI section is hidden, but would prevent any JS-hacking
+            raise ValueError("Writing out extracted spectrum to file is currently disabled")
+
+        # Make sure file does not end up in weird places in standalone mode.
+        path = os.path.dirname(self.filename)
+        if path and not os.path.exists(path):
+            raise ValueError(f"Invalid path={path}")
+        elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
+            filename = Path(os.environ["JDAVIZ_START_DIR"]) / self.filename
+        else:
+            filename = Path(self.filename).resolve()
+
+        if filename.exists():
+            if overwrite:
+                # Try to delete the file
+                filename.unlink()
+                if filename.exists():
+                    # Warn the user if the file still exists
+                    raise FileExistsError(f"Unable to delete {filename}. Check user permissions.")
+            else:
+                self.overwrite_warn = True
+                return
+
+        filename = str(filename)
+        self.extracted_spec.write(filename)
+
+        # Let the user know where we saved the file.
+        self.hub.broadcast(SnackbarMessage(
+            f"Extracted spectrum saved to {os.path.abspath(filename)}",
+                           sender=self, color="success"))
 
     @observe('spatial_subset_selected')
     def _set_default_results_label(self, event={}):

@@ -1,3 +1,4 @@
+import os
 import pytest
 from packaging.version import Version
 import numpy as np
@@ -87,3 +88,53 @@ def test_subset(
     collapsed_spec_2 = plg.collapse_to_spectrum()
 
     assert np.all(np.equal(collapsed_spec_2.uncertainty.array, expected_uncert))
+
+
+def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tmpdir):
+
+    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
+
+    extract_plugin = cubeviz_helper.plugins['Spectral Extraction']
+
+    # make sure export enabled is true, and that before the collapse function
+    # is run `collapsed_spec_available` is correctly set to False
+    assert extract_plugin._obj.export_enabled
+    assert extract_plugin._obj.extracted_spec_available is False
+
+    # run extract function, and make sure `extracted_spec_available` was set to True
+    extract_plugin._obj.vue_spectral_extraction()
+    assert extract_plugin._obj.extracted_spec_available
+
+    # check that default filename is correct, then change path
+    fname = 'extracted_sum_Unknown spectrum object_FLUX.fits'
+    assert extract_plugin._obj.filename == fname
+    extract_plugin._obj.filename = os.path.join(tmpdir, fname)
+
+    # save output file with default name, make sure it exists
+    extract_plugin._obj.vue_save_as_fits()
+    assert os.path.isfile(os.path.join(tmpdir, fname))
+
+    # read file back in, make sure it matches
+    dat = Spectrum1D.read(os.path.join(tmpdir, fname))
+    assert np.all(dat.data == extract_plugin._obj.extracted_spec.data)
+    assert dat.unit == extract_plugin._obj.extracted_spec.unit
+
+    # make sure correct error message is raised when export_enabled is False
+    # this won't appear in UI, but just to be safe.
+    extract_plugin._obj.export_enabled = False
+    msg = "Writing out extracted spectrum to file is currently disabled"
+    with pytest.raises(ValueError, match=msg):
+        extract_plugin._obj.vue_save_as_fits()
+    extract_plugin._obj.export_enabled = True  # set back to True
+
+    # check that trying to overwrite without overwrite=True sets overwrite_warn to True, to
+    # display popup in UI
+    assert extract_plugin._obj.overwrite_warn is False
+    extract_plugin._obj.vue_save_as_fits()
+    assert extract_plugin._obj.overwrite_warn
+
+    # check that writing out to a non existent directory fails as expected
+    extract_plugin._obj.filename = '/this/path/doesnt/exist.fits'
+    with pytest.raises(ValueError, match="Invalid path=/this/path/doesnt"):
+        extract_plugin._obj.vue_save_as_fits()
+    extract_plugin._obj.filename == fname  # set back to original filename
