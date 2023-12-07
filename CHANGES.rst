@@ -65,7 +65,10 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- Compatibility with glue-core 1.17. [#2591]
+- Compatibility with glue-core 1.17. [#2591, #2595]
+
+- Fix image layer visibility toggle in plot options. [#2595]
+
 
 Cubeviz
 ^^^^^^^
