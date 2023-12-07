@@ -4,6 +4,7 @@ from collections import defaultdict
 import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.nddata import StdDevUncertainty
+from astropy.io import fits
 from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.events import SnackbarMessage
@@ -39,7 +40,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     # If no data label is assigned, give it a unique name
     if not data_label:
         data_label = app.return_data_label(data, alt_name="specviz_data")
-
     if isinstance(data, SpectrumCollection):
         raise TypeError("SpectrumCollection detected."
                         " Please provide a Spectrum1D or SpectrumList")
@@ -50,7 +50,13 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     elif isinstance(data, SpectrumList):
         pass
     elif isinstance(data, list):
-        data = SpectrumList.read(data, format=format)
+        # special processing for HDUList
+        if isinstance(data, fits.HDUList):
+            data = [Spectrum1D.read(data)]
+            data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
+        else:
+            # list treated as SpectrumList if not an HDUList
+            data = SpectrumList.read(data, format=format)
     else:
         path = pathlib.Path(data)
 
@@ -127,7 +133,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
     with app.data_collection.delay_link_manager_update():
         for i, spec in enumerate(data):
-
             # note: if SpectrumList, this is just going to be the last unit when
             # combined in the next block. should put a check here to make sure
             # units are all the same or collect them in a list?
