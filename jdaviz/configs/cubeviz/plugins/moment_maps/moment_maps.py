@@ -95,10 +95,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                                  manual_options=['Flux', 'Spectral Unit',
                                                                  'Velocity', 'Velocity^N'])
 
-        # Initialize extra key in items dictionary
-        for item in self.output_unit_items:
-            item["unit_str"] = ""
-
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
 
@@ -145,7 +141,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @observe("dataset_selected", "n_moment")
     def _set_data_units(self, event={}):
-        if isinstance(self.n_moment, str): 
+        if isinstance(self.n_moment, str):
             return
         unit_options_index = 2 if self.n_moment > 2 else self.n_moment
         if self.output_unit_selected not in moment_unit_options[unit_options_index]:
@@ -221,7 +217,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         unit_options_index = 2 if n_moment > 2 else n_moment
         if self.output_unit_selected not in moment_unit_options[unit_options_index]:
             raise ValueError("Selected output units must be in "
-                             f"{moment_unit_options[unit_options_index]} for"
+                             f"{moment_unit_options[unit_options_index]} for "
                              f"moment {self.n_moment}")
 
         if self.continuum.selected == 'None':
