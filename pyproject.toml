@@ -1,7 +1,7 @@
 [project]
 name = "jdaviz"
 description = "Astronomical data analysis development leveraging the Jupyter platform"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 authors = [
     { name = "JDADF Developers", email = "help@stsci.edu" },
 ]
