@@ -433,7 +433,7 @@ def get_reference_image_data(app, viewer_id=None):
     Return the reference data in the first image viewer and its index
     """
     if viewer_id is None:
-        refdata = app._jdaviz_helper.default_viewer.state.reference_data
+        refdata = app._jdaviz_helper.default_viewer._obj.state.reference_data
     else:
         viewer = app.get_viewer_by_id(viewer_id)
         refdata = viewer.state.reference_data
@@ -530,7 +530,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                 link_type = 'pixels'
 
     # default reference layer is the first-loaded image in default viewer:
-    default_reference_layer = app._jdaviz_helper.default_viewer.first_loaded_data
+    default_reference_layer = app._jdaviz_helper.default_viewer._obj.first_loaded_data
     if default_reference_layer is None:  # No data in viewer, just use first in collection
         default_reference_layer = app.data_collection[0]
 

@@ -138,7 +138,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
-        self.imviz.default_viewer.apply_roi(RectangularROI(0, 9, 0, 9))
+        self.imviz.default_viewer._obj.apply_roi(RectangularROI(0, 9, 0, 9))
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 3'
         phot_plugin.background_selected = 'Subset 3'
@@ -340,7 +340,7 @@ def test_annulus_background(imviz_helper):
 
     # Mark an object of interest
     # CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
-    imviz_helper.default_viewer.apply_roi(CircularROI(150, 25, 7))
+    imviz_helper.default_viewer._obj.apply_roi(CircularROI(150, 25, 7))
 
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(
@@ -359,7 +359,7 @@ def test_annulus_background(imviz_helper):
 
     # Draw ellipse on another object
     # EllipsePixelRegion(center=PixCoord(x=20.5, y=37.5), width=41, height=15)
-    imviz_helper.default_viewer.apply_roi(EllipticalROI(20.5, 37.5, 41, 15))
+    imviz_helper.default_viewer._obj.apply_roi(EllipticalROI(20.5, 37.5, 41, 15))
 
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_2 = CircleAnnulusPixelRegion(

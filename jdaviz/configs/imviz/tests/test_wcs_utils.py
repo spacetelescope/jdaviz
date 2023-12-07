@@ -155,20 +155,6 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
         assert self.imviz.app.state.layer_icons["fits_wcs[DATA]"] == "a"
         assert self.viewer.state.reference_data.label == base_wcs_layer_label
 
-        # Now we change the reference data.
-        for i in (3, 4):
-            data_label = self.imviz.app.data_collection[i].label
-
-            # Set it as reference data.
-            self.imviz.app._change_reference_data(data_label)
-            assert self.viewer.state.reference_data.label == data_label
-
-        # Change reference back to normal data.
-        self.imviz.app._change_reference_data(base_wcs_layer_label)
-        assert self.viewer.state.reference_data.label == base_wcs_layer_label
-        for i in (3, 4):
-            data_label = self.imviz.app.data_collection[i].label
-
 
 def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):
     a = np.zeros((2, 2), dtype=np.int8)

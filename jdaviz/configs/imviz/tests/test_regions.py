@@ -3,7 +3,6 @@ import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Angle
 from astropy.utils.data import get_pkg_data_filename
-from numpy.testing import assert_allclose
 from photutils.aperture import CircularAperture, SkyCircularAperture
 from regions import (PixCoord, CircleSkyRegion, RectanglePixelRegion, CirclePixelRegion,
                      EllipsePixelRegion, PointSkyRegion, PolygonPixelRegion,

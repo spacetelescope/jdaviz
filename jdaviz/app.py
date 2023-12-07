@@ -31,7 +31,9 @@ from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
 from glue_jupyter.bqplot.common.tools import TrueCircularROI
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
+from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
 from traitlets import Dict, Bool, Unicode, Any
@@ -503,7 +505,7 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         if viewer_id is None:
-            viewer = self._jdaviz_helper.default_viewer
+            viewer = self._jdaviz_helper.default_viewer._obj
         else:
             viewer = self.get_viewer(viewer_id)
 
@@ -2308,7 +2310,7 @@ class Application(VuetifyTemplate, HubListener):
         )
 
         if add_layers_to_viewer:
-            ref_data = self._jdaviz_helper.default_viewer.state.reference_data
+            ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
             new_viewer_item['reference_data_label'] = ref_data.label
 
         new_stack_item = self._create_stack_item(

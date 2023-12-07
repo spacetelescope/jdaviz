@@ -145,8 +145,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.linking_in_progress = True
         self.wcs_use_fallback = msg.wcs_use_fallback
         self.wcs_use_affine = msg.wcs_use_affine
-        self.orientation.only_wcs_layers = self.link_type.selected == 'WCS'
-        self.orientation._on_layers_changed()
 
     def _link_image_data(self):
         link_image_data(
@@ -373,7 +371,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def _on_refdata_change(self, msg={}):
         self.orientation.only_wcs_layers = msg.data.meta.get('_WCS_ONLY', False)
-        self.orientation._on_layers_changed()
+        self.orientation._update_layer_items()
 
         # don't select until viewer is available:
         if hasattr(self, 'viewer'):
