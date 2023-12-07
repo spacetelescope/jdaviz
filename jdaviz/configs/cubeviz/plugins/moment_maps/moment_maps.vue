@@ -134,7 +134,13 @@
       @click:action="calculate_moment"
     ></plugin-add-results>
 
-    <v-row v-if="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0">
+    <v-row v-if="n_moment > 0 && output_unit_selected === 'Flux'">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          Cannot calculate moment: Output unit set to invalid value from API.
+      </span>
+    </v-row>
+
+    <v-row v-else-if="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0">
       <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           Cannot calculate moment: Must set reference wavelength for output in velocity units.
       </span>
