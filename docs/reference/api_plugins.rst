@@ -66,7 +66,7 @@ Plugins API
 .. automodapi:: jdaviz.configs.imviz.plugins.line_profile_xy.line_profile_xy
    :no-inheritance-diagram:
 
-.. automodapi:: jdaviz.configs.imviz.plugins.links_control.links_control
+.. automodapi:: jdaviz.configs.imviz.plugins.orientation.orientation
    :no-inheritance-diagram:
 
 .. automodapi:: jdaviz.configs.imviz.plugins.rotate_canvas.rotate_canvas
