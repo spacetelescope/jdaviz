@@ -1,3 +1,5 @@
+from astropy.coordinates import SkyCoord
+import astropy.units as u
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion
 
@@ -20,13 +22,13 @@ class TestImvizSpatialSubsetCentroidPixelLinked(BaseImviz_WCS_GWCS):
             plg._obj.vue_recenter_subset()
 
             # Calculate and move to centroid.
-            for key in ("X Center", "Y Center"):
+            for key in ("X Center (pixels)", "Y Center (pixels)"):
                 assert plg._obj._get_value_from_subset_definition(0, key, "value") == -1
                 assert plg._obj._get_value_from_subset_definition(0, key, "orig") == -1
 
             # Radius will not be touched.
             for key in ("value", "orig"):
-                assert plg._obj._get_value_from_subset_definition(0, "Radius", key) == 3
+                assert plg._obj._get_value_from_subset_definition(0, "Radius (pixels)", key) == 3
 
         assert plg._obj.get_center() == (-1, -1)
 
@@ -47,10 +49,12 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
         data = self.imviz.app.data_collection[plg._obj.dataset_selected]
         # Pixel value is now w.r.t. fake WCS layer, not the selected data.
         for key in ("value", "orig"):
-            x = plg._obj._get_value_from_subset_definition(0, "X Center", key)
-            y = plg._obj._get_value_from_subset_definition(0, "Y Center", key)
-            data_xy = self.viewer._get_real_xy(data, x, y)[:2]
-            assert_allclose(data_xy, -1)
+            # subset definition is now in sky coordinates. get RA and Dec and convert back to pixel
+            # to compare with expected recentered position.
+            ra = plg._obj._get_value_from_subset_definition(0, "RA Center (degrees)", key) * u.deg
+            dec = plg._obj._get_value_from_subset_definition(0, "Dec Center (degrees)", key) * u.deg
+            x, y = SkyCoord(ra, dec).to_pixel(self.wcs_1)
+            assert_allclose((x, y), -1)
 
         # GWCS does not extrapolate and this Subset is out of bounds,
         # so will get NaNs and enter the exception handling logic.
@@ -58,15 +62,23 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
         plg._obj.set_center((2.6836, 1.6332), update=True)  # Move the Subset back first.
         plg._obj.vue_recenter_subset()
         for key in ("value", "orig"):
-            x = plg._obj._get_value_from_subset_definition(0, "X Center", key)
-            y = plg._obj._get_value_from_subset_definition(0, "Y Center", key)
-            assert_allclose((x, y), (2.6836, 1.6332))
+            ra = plg._obj._get_value_from_subset_definition(0, "RA Center (degrees)", key)
+            dec = plg._obj._get_value_from_subset_definition(0, "Dec Center (degrees)", key)
+
+            # make sure what is in subset_definitions matches what is returned by get_subsets
+            subsets = self.imviz.app.get_subsets(include_sky_region=True)
+            subsets_sky = subsets['Subset 1'][0]['sky_region']
+            assert_allclose((ra, dec), (subsets_sky.center.ra.deg, subsets_sky.center.dec.deg))
+            subsets_pix = subsets['Subset 1'][0]['region']
+            assert_allclose((subsets_pix.center.x, subsets_pix.center.y), (2.6836, 1.6332))
 
         # The functionality for set_center has changed so that the subset state itself
         # is updated but that change is not propagated to subset_definitions or the UI until
         # vue_update_subset is called.
         plg._obj.set_center((2, 2), update=False)
         for key in ("value", "orig"):
-            x = plg._obj._get_value_from_subset_definition(0, "X Center", key)
-            y = plg._obj._get_value_from_subset_definition(0, "Y Center", key)
-            assert_allclose((x, y), (2.6836, 1.6332))
+            x = plg._obj._get_value_from_subset_definition(0, "RA Center (degrees)", key)
+            y = plg._obj._get_value_from_subset_definition(0, "Dec Center (degrees)", key)
+            # here 'ra' and 'dec' should remain unchanged from when they were defined, since
+            # vue_update_subset hasn't run
+            assert_allclose((x, y), (ra, dec))
