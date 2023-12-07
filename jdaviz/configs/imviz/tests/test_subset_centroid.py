@@ -46,7 +46,7 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
         plg._obj.subset_selected = 'Subset 1'
         plg._obj.dataset_selected = 'fits_wcs[DATA]'
         plg._obj.vue_recenter_subset()
-        data = self.imviz.app.data_collection[plg._obj.dataset_selected]
+
         # Pixel value is now w.r.t. fake WCS layer, not the selected data.
         for key in ("value", "orig"):
             # subset definition is now in sky coordinates. get RA and Dec and convert back to pixel
