@@ -854,7 +854,7 @@ class PlotOptions(PluginTemplateMixin):
         # procedure in glue's CompositeArray:
         interval = ManualInterval(self.stretch_vmin_value, self.stretch_vmax_value)
         contrast_bias = ContrastBiasStretch(self.image_contrast_value, self.image_bias_value)
-        stretch = layer.state.stretch_object            
+        stretch = layer.state.stretch_object
         layer_cmap = layer.state.cmap
 
         # show the colorbar
