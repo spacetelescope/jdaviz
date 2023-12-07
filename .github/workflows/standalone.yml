@@ -57,6 +57,8 @@ jobs:
       run: |
         rm -rf standalone/dist/jdaviz.app/Contents/MacOS/skimage/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/skimage/.dylibs
+        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/shapely/.dylibs
+        rm -rf standalone/dist/jdaviz.app/Contents/Resources/shapely/.dylibs
 
     - name: Codesign (OSX)
       if: ${{ matrix.os == 'macos' }}
