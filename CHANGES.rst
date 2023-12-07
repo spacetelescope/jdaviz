@@ -79,6 +79,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Line Profile (XY) plugin no longer malfunctions when image contains NaN values. [#2594]
+
 Mosviz
 ^^^^^^
 
