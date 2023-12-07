@@ -44,7 +44,7 @@ class TestSpecvizHelper:
 
         # Image extension HDU with a 1D spectrum
         wavelength = np.linspace(5000, 6000, 100)
-        flux = np.random.random(100)
+        flux = np.ones(100)
         spectrum_table = fits.BinTableHDU.from_columns([
             fits.Column(name='WAVELENGTH', array=wavelength, format='E', unit="Angstrom"),
             fits.Column(name='FLUX', array=flux, format='E', unit="Jy")

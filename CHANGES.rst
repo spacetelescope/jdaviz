@@ -85,7 +85,7 @@ Mosviz
 Specviz
 ^^^^^^^
 
--  Fixed parser bug where an HDUList would load as SpectrumList, even though it was a 1DSpectrum. [#2576]
+-  Fixed parser bug where an HDUList would load as SpectrumList, even though it was a Spectrum1D. [#2576]
 
 Specviz2d
 ^^^^^^^^^
