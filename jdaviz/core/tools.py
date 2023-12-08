@@ -407,10 +407,13 @@ class StretchBounds(CheckableTool):
             closest_knot_index = knot_index_by_dist[0]
             closest_knot_distance = distances_to_knots[closest_knot_index]
 
-            if closest_knot_distance > 0.1 and closest_bound_distance > 0.1:
+            radius_threshold = 0.1
+            x_distance_threshold = 0.1
+            
+            if closest_knot_distance > radius_threshold and closest_bound_distance > x_distance_threshold:  # noqa
                 return
-            if closest_knot_distance < 0.1:
-                if distances_to_knots[knot_index_by_dist[1]] < 0.1:
+            if closest_knot_distance < radius_threshold:
+                if distances_to_knots[knot_index_by_dist[1]] < radius_threshold:
                     # don't allow knots getting too close to each other
                     return
                 if knots_x[closest_knot_index-1] >= event_x or knots_x[closest_knot_index+1] <= event_x:  # noqa
@@ -422,11 +425,11 @@ class StretchBounds(CheckableTool):
                 # knot_x now needs to be mapped from the x-axis to the range 0-1
                 # that the stretch class expects (where 0
                 # corresponds to vmin and 1 to vmax)
-                stretch_x = (knots_x - current_bounds[0]) / (current_bounds[1] - current_bounds[0])   #noqa
+                stretch_x = (knots_x - current_bounds[0]) / (current_bounds[1] - current_bounds[0])   # noqa
                 stretch_y = knots_y / 0.9
                 self.viewer._plugin.stretch_params_value = {'knots': (stretch_x.tolist(), stretch_y.tolist())}  # noqa
             else:
-                if closest_bound_distance > 0.1:
+                if closest_bound_distance > x_distance_threshold:
                     return
                 att_names = ["stretch_vmin_value", "stretch_vmax_value"][closest_bound_index]
                 setattr(self.viewer._plugin, att_names, event_x)
