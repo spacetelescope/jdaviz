@@ -320,10 +320,7 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     sv.toolbar_active_subset.selected = []
 
     # Now create the new spectral subset:
-    sv.apply_roi(XRangeROI(
-        min=min_wavelength.to(u.m).value,
-        max=max_wavelength.to(u.m).value
-    ))
+    sv.apply_roi(XRangeROI(min=min_wavelength.to_value(u.m), max=max_wavelength.to_value(u.m)))
     assert "Subset 2" in p.spectral_subset.choices
 
     # Select the spectral subset

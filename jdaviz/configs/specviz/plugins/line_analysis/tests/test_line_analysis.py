@@ -1,10 +1,11 @@
-import numpy as np
-from numpy.testing import assert_allclose
 import pytest
+import numpy as np
 from astropy import units as u
 from astropy.table import QTable
+from astropy.tests.helper import assert_quantity_allclose
 from glue.core.roi import XRangeROI
 from glue.core.edit_subset_mode import NewMode
+from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D
 
@@ -175,11 +176,10 @@ def test_line_identify(specviz_helper, spectrum1d):
 def test_coerce_unit():
     q_input = 1 * u.Unit('1E-20 erg m / (Angstrom cm**2 s)')
     q_input.uncertainty = 0.1 * u.Unit('1E-20 erg m / (Angstrom cm**2 s)')
+    q_unit = u.Unit('erg / (cm**2 s)')
     q_coerced = _coerce_unit(q_input)
-    assert q_coerced.unit == u.Unit('erg / (cm**2 s)')
-    assert np.allclose(q_coerced.value, 1e-20 * u.m.to(u.Angstrom))
-    assert q_coerced.uncertainty.unit == u.Unit('erg / (cm**2 s)')
-    assert np.allclose(q_coerced.uncertainty.value, 0.1 * 1e-20 * u.m.to(u.Angstrom))
+    assert_quantity_allclose(q_coerced, 1e-10 * q_unit)
+    assert_quantity_allclose(q_coerced.uncertainty, 1e-11 * q_unit)
     q_input.uncertainty = None
     q_coerced = _coerce_unit(q_input)
     assert not hasattr(q_coerced, 'uncertainty')
