@@ -879,8 +879,11 @@ class ImageConfigHelper(ConfigHelper):
             ``regions`` objects.
 
         """
+        from glue_astronomy.translators.regions import roi_subset_state_to_region
+
         regions = {}
         failed_regs = set()
+        to_sky = self.app._link_type == 'wcs'
 
         # Subset is global, so we just use default viewer.
         for lyr in self.default_viewer._obj.layers:
@@ -897,8 +900,11 @@ class ImageConfigHelper(ConfigHelper):
                 continue
 
             try:
-                region = subset_data.data.get_selection_definition(
-                    subset_id=subset_label, format='astropy-regions')
+                if self.app.config == "imviz" and to_sky:
+                    region = roi_subset_state_to_region(subset_data.subset_state, to_sky=to_sky)
+                else:
+                    region = subset_data.data.get_selection_definition(
+                        subset_id=subset_label, format='astropy-regions')
             except (NotImplementedError, ValueError):
                 failed_regs.add(subset_label)
             else:
