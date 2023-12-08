@@ -272,7 +272,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             plot_units = self.data()[0].spectral_axis.unit
 
         line_mark = SpectralLine(self,
-                                 line['rest'].to(plot_units).value,
+                                 line['rest'].to_value(plot_units),
                                  self.redshift,
                                  name=line["linename"],
                                  table_index=line["name_rest"],
@@ -306,7 +306,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             if not line["show"]:
                 continue
             line = SpectralLine(self,
-                                line['rest'].to(plot_units).value,
+                                line['rest'].to_value(plot_units),
                                 redshift=self.redshift,
                                 name=line["linename"],
                                 table_index=line["name_rest"],
