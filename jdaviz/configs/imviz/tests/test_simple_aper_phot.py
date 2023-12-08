@@ -9,7 +9,6 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
                                 RectangularAperture, EllipticalAnnulus)
 from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
-from glue.core.roi import CircularROI, EllipticalROI, RectangularROI
 
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
@@ -138,7 +137,9 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
-        self.imviz.default_viewer._obj.apply_roi(RectangularROI(0, 9, 0, 9))
+        reg = RectanglePixelRegion(center=PixCoord(x=4.5, y=4.5), width=9, height=9).to_sky(self.wcs_1)  # noqa: E501
+        self.imviz.load_regions(reg)
+
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 3'
         phot_plugin.background_selected = 'Subset 3'
@@ -147,8 +148,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 4  # New result is appended
         assert tbl[-1]['id'] == 4
-        assert_quantity_allclose(tbl[-1]['xcenter'], 4.75 * u.pix, rtol=1e-4)
-        assert_quantity_allclose(tbl[-1]['ycenter'], 4.75 * u.pix, rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 4.5 * u.pix)
         sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
         assert_allclose(sky.dec.deg, -20.832083, rtol=1e-4)
@@ -339,13 +340,11 @@ def test_annulus_background(imviz_helper):
     phot_plugin.dataset_selected = 'ones'
 
     # Mark an object of interest
-    # CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
-    imviz_helper.default_viewer._obj.apply_roi(CircularROI(150, 25, 7))
-
+    circle_1 = CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(
         PixCoord(x=150, y=25), inner_radius=7, outer_radius=17)
-    imviz_helper.load_regions([annulus_1])
+    imviz_helper.load_regions([circle_1, annulus_1])
 
     phot_plugin.aperture_selected = 'Subset 1'
     phot_plugin.background_selected = 'Subset 2'
@@ -358,13 +357,11 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, 5.745596129482831)  # Changed
 
     # Draw ellipse on another object
-    # EllipsePixelRegion(center=PixCoord(x=20.5, y=37.5), width=41, height=15)
-    imviz_helper.default_viewer._obj.apply_roi(EllipticalROI(20.5, 37.5, 41, 15))
-
+    ellipse_1 = EllipsePixelRegion(center=PixCoord(x=20.5, y=37.5), width=41, height=15)
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_2 = CircleAnnulusPixelRegion(
         PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
-    imviz_helper.load_regions([annulus_2])
+    imviz_helper.load_regions([ellipse_1, annulus_2])
 
     # Subset 4 (annulus) should be available for the background but not the aperture
     assert 'Subset 4' not in phot_plugin.aperture.choices

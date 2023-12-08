@@ -211,7 +211,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                             {"name": "Radius (pixels)", "att": "radius",
                              "value": r, "orig": r}]
 
-                    if isinstance(subset_state.roi, RectangularROI):
+                    elif isinstance(subset_state.roi, RectangularROI):
                         for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
                             real_att = att.lower()
                             val = getattr(subset_state.roi, real_att)
@@ -224,7 +224,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         subset_definition.append({"name": "Angle", "att": "theta",
                                                   "value": theta, "orig": theta})
 
-                    if isinstance(subset_state.roi, EllipticalROI):
+                    elif isinstance(subset_state.roi, EllipticalROI):
                         xc, yc = subset_state.roi.center()
                         rx = subset_state.roi.radius_x
                         ry = subset_state.roi.radius_y
@@ -243,7 +243,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                             {"name": "Angle", "att": "theta",
                              "value": theta, "orig": theta}]
 
-                    if isinstance(subset_state.roi, CircularAnnulusROI):
+                    elif isinstance(subset_state.roi, CircularAnnulusROI):
                         xc, yc = subset_state.roi.center()
                         inner_r = subset_state.roi.inner_radius
                         outer_r = subset_state.roi.outer_radius
@@ -257,6 +257,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                               {"name": "Outer Radius (pixels)",
                                                "att": "outer_radius",
                                                "value": outer_r, "orig": outer_r}]
+
+                    else:  # pragma: no cover
+                        raise NotImplementedError(f"Unable to translate {subset_state.roi.__class__.__name__}")  # noqa: E501
 
                 subset_type = subset_state.roi.__class__.__name__
 

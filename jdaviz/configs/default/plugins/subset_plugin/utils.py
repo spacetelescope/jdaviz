@@ -74,11 +74,15 @@ def _subset_def_to_region(subset_type, sub, val='value', name='name'):
                                  width=width*u.deg,
                                  height=height*u.deg,
                                  angle=angle*u.deg)
+
+    else:  # pragma: no cover
+        raise NotImplementedError(f"Failed to convert {subset_type} to region.")
+
     return reg
 
 
 def _sky_region_to_subset_def(sky_region, _around_decimals=6):
-    """ Generates a 'subset_definition' list of dictionaries from a
+    """Generates a 'subset_definition' list of dictionaries from a
     `regions.SkyRegion`object.
 
     Parameters
@@ -86,14 +90,15 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
     sky_region : `regions.SkyRegion`
         Name of ROI class (CircularROI/TrueCircularROI, EllipticalROI,
         CircularAnnulusROI, or RectangularROI).
-    _around_decimals : str
+    _around_decimals : int
         Rounding for 'theta', if present.
 
     Returns
     -------
     deff : list of dict
         List of dictionaries, each sub-dictionary describing a
-        subset attribute."""
+        subset attribute.
+    """
 
     if isinstance(sky_region, CircleSkyRegion):
         x = sky_region.center.ra.deg
@@ -103,7 +108,7 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
                 {"name": 'Dec Center (degrees)', "att": "yc", "value": y, "orig": y},
                 {"name": 'Radius (degrees)', "att": "radius", "value": r, "orig": r}]
 
-    if isinstance(sky_region, EllipseSkyRegion):
+    elif isinstance(sky_region, EllipseSkyRegion):
         xc = sky_region.center.ra.deg
         yc = sky_region.center.dec.deg
         rx = sky_region.width.to_value(u.deg) * 0.5
@@ -116,7 +121,7 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
                 {"name": "Dec Radius (degrees)", "att": "radius_y", "value": ry, "orig": ry},
                 {"name": "Angle", "att": "theta", "value": theta, "orig": theta}]
 
-    if isinstance(sky_region, CircleAnnulusSkyRegion):
+    elif isinstance(sky_region, CircleAnnulusSkyRegion):
         xc = sky_region.center.ra.deg
         yc = sky_region.center.dec.deg
         inner_r = sky_region.inner_radius.to_value(u.deg)
@@ -128,12 +133,14 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
                 {"name": "Outer Radius (degrees)", "att": "outer_radius",
                  "value": outer_r, "orig": outer_r}]
 
-    if isinstance(sky_region, RectangleSkyRegion):
+    elif isinstance(sky_region, RectangleSkyRegion):
         deff = []
-        mins_maxs = {'xmin': sky_region.center.ra.deg - ((sky_region.width).to(u.deg).value / 2.),
-                     'xmax': sky_region.center.ra.deg + ((sky_region.width).to(u.deg).value / 2.),
-                     'ymin': sky_region.center.dec.deg - ((sky_region.height).to(u.deg).value / 2.),
-                     'ymax': sky_region.center.dec.deg + ((sky_region.height).to(u.deg).value / 2.)}
+        dsky_ra = (sky_region.width).to_value(u.deg) * 0.5
+        dsky_dec = (sky_region.height).to_value(u.deg) * 0.5
+        mins_maxs = {'xmin': sky_region.center.ra.deg - dsky_ra,
+                     'xmax': sky_region.center.ra.deg + dsky_ra,
+                     'ymin': sky_region.center.dec.deg - dsky_dec,
+                     'ymax': sky_region.center.dec.deg + dsky_dec}
         for att in ("Xmin", "Xmax", "Ymin", "Ymax"):
             val = mins_maxs[att.lower()]
             name = att.replace('X', 'RA ').replace('Y', 'Dec ')
@@ -141,6 +148,9 @@ def _sky_region_to_subset_def(sky_region, _around_decimals=6):
                          "value": val, "orig": val})
         theta = sky_region.angle.to_value(u.deg)
         deff.append({"name": "Angle", "att": "theta", "value": theta, "orig": theta})
+
+    else:  # pragma: no cover
+        raise NotImplementedError(f"Failed to convert {sky_region} to subset definition.")
 
     return deff
 
