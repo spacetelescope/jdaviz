@@ -409,7 +409,6 @@ class StretchBounds(CheckableTool):
 
             radius_threshold = 0.1
             x_distance_threshold = 0.1
-            
             if closest_knot_distance > radius_threshold and closest_bound_distance > x_distance_threshold:  # noqa
                 return
             if closest_knot_distance < radius_threshold:
