@@ -63,9 +63,6 @@ def test_stretch_bounds(imviz_helper):
                'domain': {'x': 1.3, 'y': 342},
                'button': 0, 'altKey': False, 'ctrlKey': False, 'metaKey': False}
 
-    initial_vmin = plot_options.stretch_vmin_value
-    initial_vmax = plot_options.stretch_vmax_value
-
     stretch_tool.on_mouse_event(min_msg)
     time.sleep(0.3)
     stretch_tool.on_mouse_event(max_msg)
