@@ -39,20 +39,27 @@
       :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
-    <div v-if="viewer_selected === 'spectrum-viewer'">
+    <v-row v-if="viewer_selected === 'spectrum-viewer'">
       <v-expansion-panels popout>
         <v-expansion-panel>
           <v-expansion-panel-header v-slot="{ open }">
-            <span style="padding: 6px">Viewer axis limits</span>
+            <span style="padding: 6px">Viewer bounds</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row v-for="limit in viewer_limits">
-              <span>TESTING</span>
+            <v-row v-for="item in spectrum_viewer_limits">
+              <v-text-field
+              ref="item"
+              :label="item.label"
+              v-model.number="item.value"
+              type="number"
+              step="0.1"
+              :suffix="item.unit"
+              ></v-text-field>
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
-    </div>
+    </v-row>
 
     <div v-if="image_color_mode_sync.in_subscribed_states">
       <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('image_color_mode')">

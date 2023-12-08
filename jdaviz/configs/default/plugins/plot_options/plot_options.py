@@ -177,6 +177,7 @@ class PlotOptions(PluginTemplateMixin):
     viewer_multiselect = Bool(False).tag(sync=True)
     viewer_items = List().tag(sync=True)
     viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
+    spectrum_viewer_limits = List().tag(sync=True)
 
     layer_multiselect = Bool(False).tag(sync=True)
     layer_items = List().tag(sync=True)
@@ -557,7 +558,13 @@ class PlotOptions(PluginTemplateMixin):
         self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
                                                  'axes_visible_value', 'axes_visible_sync',
                                                  state_filter=not_profile)
-        # zoom limits
+
+        # zoom limits (spectrum viewer only)
+        self.spectrum_viewer_limits = [{"label": "x_min", "value": 0, "unit": "test"},
+                              {"label": "x_max", "value": 1, "unit": "test"},
+                              {"label": "y_min", "value": 0, "unit": "test"},
+                              {"label": "y_max", "value": 1, "unit": "test"}]
+
         # display_units
 
         self.show_viewer_labels = self.app.state.settings['viewer_labels']
