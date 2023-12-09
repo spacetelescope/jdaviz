@@ -100,7 +100,7 @@ class PluginUserApi(UserApiWrapper):
 
     def __repr__(self):
         if self._deprecation_msg:
-            logging.warning(f"DeprecationWarning: {self._deprecation_msg}")
+            logging.warning("DeprecationWarning: %s" % self._deprecation_msg)
             super().__setattr__('_deprecation_msg', None)
         return f'<{self._obj._registry_label} API>'
 
