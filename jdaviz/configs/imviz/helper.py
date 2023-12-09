@@ -198,7 +198,7 @@ class Imviz(ImageConfigHelper):
             show_in_viewer = f"{self.app.config}-0"
 
         if show_in_viewer:
-            linked_by_wcs = self.app._link_type.lower() == 'wcs'
+            linked_by_wcs = self.app._link_type == 'wcs'
             if linked_by_wcs:
                 for applied_label, visible, is_wcs_only, has_wcs in zip(
                         applied_labels, applied_visible, layer_is_wcs_only, layer_has_wcs
@@ -502,9 +502,6 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         Invalid inputs or reference data.
 
     """
-    # to avoid any confusion with the capitalized-versions in the links control plugin, let's
-    # just always compare against lowercase here.
-    link_type = link_type.lower()
     if len(app.data_collection) <= 1 and link_type != 'wcs':  # No need to link, we are done.
         return
 

@@ -119,7 +119,7 @@ for most cases. If approximation fails, WCS linking still automatically
 falls back to full transformation.
 
 Since Jdaviz v3.9, when linking by WCS, a hidden reference data layer
-without distortion will be created and all the data would be linked to
+without distortion (default orientation) will be created and all the data would be linked to
 it instead of the first loaded data. As a result, working in pixel
 space when linked by WCS is not recommended. Additionally, any data
 with distorted WCS would show as distorted on the display. Furthermore,
