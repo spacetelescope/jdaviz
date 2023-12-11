@@ -734,10 +734,10 @@ class PlotOptions(PluginTemplateMixin):
         self.send_state("spectrum_viewer_limits")
 
     def vue_apply_updated_bounds(self, msg={}):
-        self.spectrum_viewer.set_limits(x_min = self.spectrum_viewer_limits["x_min"]["value"],
-                                        x_max = self.spectrum_viewer_limits["x_max"]["value"],
-                                        y_min = self.spectrum_viewer_limits["y_min"]["value"],
-                                        y_max = self.spectrum_viewer_limits["y_max"]["value"],)
+        self.spectrum_viewer.set_limits(x_min=self.spectrum_viewer_limits["x_min"]["value"],
+                                        x_max=self.spectrum_viewer_limits["x_max"]["value"],
+                                        y_min=self.spectrum_viewer_limits["y_min"]["value"],
+                                        y_max=self.spectrum_viewer_limits["y_max"]["value"],)
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
