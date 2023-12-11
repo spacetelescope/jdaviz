@@ -85,7 +85,6 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         for menu_ind in range(self._max_menu_ind):
             has_primary = False
             n_visible = 0
-            primary_id = None
             if self.active_tool_id:
                 current_primary_active = self.tools_data[self.active_tool_id]['menu_ind'] == menu_ind  # noqa
             else:
@@ -116,15 +115,18 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                     primary = visible and not has_primary
 
                 if primary:
-                    primary_id = tool_id
                     has_primary = True
 
                 self.tools_data[tool_id] = {**info,
                                             'primary': primary,
                                             'visible': visible}
-            if primary_id:
-                self.tools_data[primary_id] = {**self.tools_data[primary_id],
-                                               'has_suboptions': n_visible > 1}
+
+            # update has_suboptions for all entries in this menu
+            for tool_id, info in self.tools_data.items():
+                if info['menu_ind'] != menu_ind:
+                    continue
+                self.tools_data[tool_id] = {**self.tools_data[tool_id],
+                                            'has_suboptions': n_visible > 1}
 
         # mutation to dictionary needs to be manually sent to update the UI
         self.send_state("tools_data")
