@@ -57,7 +57,8 @@
               ></v-text-field>
             </v-row>
             <v-row>
-              <plugin-action-button :results_isolated_to_plugin="true/false" @click="apply_updated_bounds">Apply Updated Bounds</plugin-action-button>
+              <plugin-action-button :results_isolated_to_plugin="false" @click="apply_updated_bounds">Apply Updated Bounds</plugin-action-button>
+
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
