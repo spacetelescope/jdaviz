@@ -39,7 +39,7 @@
       :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
-    <v-row v-if="viewer_selected === 'spectrum-viewer'">
+    <v-row v-if="viewer_selected === 'spectrum-viewer' || (viewer_selected[0] === 'spectrum-viewer' && viewer_selected.length === 1)">
       <v-expansion-panels popout>
         <v-expansion-panel>
           <v-expansion-panel-header v-slot="{ open }">
@@ -55,6 +55,9 @@
               step="0.1"
               :suffix="item.unit"
               ></v-text-field>
+            </v-row>
+            <v-row>
+              <plugin-action-button :results_isolated_to_plugin="true/false" @click="apply_updated_bounds">Apply Updated Bounds</plugin-action-button>
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
