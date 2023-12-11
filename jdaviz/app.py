@@ -2286,17 +2286,24 @@ class Application(VuetifyTemplate, HubListener):
             msg.cls, data=msg.data, show=False)
         viewer.figure_widget.layout.height = '100%'
 
+        linked_by_wcs = self._link_type.lower() == 'wcs'
+
         if hasattr(viewer.state, 'linked_by_wcs'):
             orientation_plugin = self._jdaviz_helper.plugins.get('Orientation', None)
             if orientation_plugin is not None:
-                viewer.state.linked_by_wcs = orientation_plugin.link_type.selected == 'WCS'
+                linked_by_wcs = orientation_plugin.link_type.selected == 'WCS'
             elif len(self._viewer_store):
                 # The plugin would only not exist for instances of Imviz where the user has
                 # intentionally removed the Orientation plugin, but in that case we will
                 # adopt "linked_by_wcs" from the first (assuming all are the same)
                 # NOTE: deleting the default viewer is forbidden both by API and UI, but if
                 # for some reason that was the case here, linked_by_wcs will default to False
-                viewer.state.linked_by_wcs = list(self._viewer_store.values())[0].state.linked_by_wcs  # noqa
+                linked_by_wcs = list(self._viewer_store.values())[0].state.linked_by_wcs  # noqa
+            viewer.state.linked_by_wcs = linked_by_wcs
+
+        if linked_by_wcs:
+            from jdaviz.configs.imviz.helper import get_wcs_only_layer_labels
+            viewer.state.wcs_only_layers = get_wcs_only_layer_labels(self)
 
         if msg.x_attr is not None:
             x = msg.data.id[msg.x_attr]
@@ -2309,9 +2316,8 @@ class Application(VuetifyTemplate, HubListener):
             viewer=viewer, vid=vid, name=name, reference=name
         )
 
-        if add_layers_to_viewer:
-            ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
-            new_viewer_item['reference_data_label'] = ref_data.label
+        ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
+        new_viewer_item['reference_data_label'] = ref_data.label
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',

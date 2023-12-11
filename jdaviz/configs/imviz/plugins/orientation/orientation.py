@@ -7,14 +7,14 @@ from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 
 import astropy.units as u
-from jdaviz.configs.imviz.helper import link_image_data
+from jdaviz.configs.imviz.helper import link_image_data, get_wcs_only_layer_labels
 from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
 from jdaviz.core.events import (
     LinkUpdatedMessage, ExitBatchLoadMessage, ChangeRefDataMessage,
     AstrowidgetMarkersChangedMessage, MarkersPluginUpdate,
-    SnackbarMessage
+    SnackbarMessage, AddDataToViewerMessage, ViewerAddedMessage
 )
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
@@ -126,6 +126,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._on_subset_change)
+
+        self.hub.subscribe(self, ViewerAddedMessage,
+                           handler=self._on_viewer_added)
+
+        self.hub.subscribe(self, AddDataToViewerMessage,
+                           handler=self._on_data_add_to_viewer)
 
         self._update_layer_label_default()
 
@@ -352,12 +358,39 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def _add_data_to_all_viewers(self, data_label):
         for viewer_ref in self.viewer.choices:
-            layers_in_viewer = [
-                layer.layer.label for layer in
+            layers = [
+                layer.label for layer in
                 self.app.get_viewer_by_id(self.viewer.selected).layers
             ]
-            if data_label not in layers_in_viewer:
-                self.app.add_data_to_viewer(viewer_ref, data_label, visible=False)
+            if data_label not in layers:
+                self.app.add_data_to_viewer(viewer_ref, data_label)
+
+    def _on_viewer_added(self, msg):
+        for data_label in get_wcs_only_layer_labels(self.app):
+            self._add_data_to_all_viewers(data_label)
+
+        self.orientation.choices = get_wcs_only_layer_labels(self.app)
+
+        if hasattr(self, 'orientation'):
+            self.viewer.selected = msg._viewer_id
+            self._change_reference_data(
+                self.orientation.selected,
+                viewer_id=msg._viewer_id
+            )
+
+    def _on_data_add_to_viewer(self, msg):
+        if not hasattr(self, 'viewer'):
+            return
+
+        viewer_id = self.viewer.selected_obj.reference_id
+
+        if viewer_id != 'imviz-0' and self.viewer.selected_obj.state.reference_data is None:
+            self.app._change_reference_data(
+                self.orientation.selected,
+                viewer_id=viewer_id
+            )
+        else:
+            self.orientation_layer_selected = self.ref_data.label
 
     def vue_add_orientation(self, *args, **kwargs):
         self.add_orientation(set_on_create=True)
@@ -422,8 +455,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def _on_viewer_change(self, msg={}):
         # don't update choices until viewer is available:
         if hasattr(self, 'viewer'):
-            viewer = self.app.get_viewer(self.viewer.selected)
-            self.orientation.choices = viewer.state.wcs_only_layers
+            self.orientation.choices = get_wcs_only_layer_labels(self.app)
             self.orientation.selected = self.ref_data.label
 
     def create_north_up_east_left(self, label="North-up, East-left", set_on_create=False):
