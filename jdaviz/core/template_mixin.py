@@ -2053,10 +2053,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         if spatial_subset == 'per-pixel':
             if self.app.config != 'cubeviz':
                 raise ValueError("per-pixel only supported for cubeviz")
-            if "_orig_spec" in self.dataset.selected_obj.meta:
-                full_spectrum = self.dataset.selected_obj.meta["_orig_spec"]
-            else:
-                full_spectrum = self.dataset.selected_obj
+            full_spectrum = self.dataset.selected_obj
         else:
             full_spectrum = dataset.selected_spectrum_for_spatial_subset(spatial_subset.selected if spatial_subset is not None else None,  # noqa
                                                                          use_display_units=True)
