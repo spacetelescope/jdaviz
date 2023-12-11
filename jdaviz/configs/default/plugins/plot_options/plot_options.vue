@@ -465,7 +465,15 @@
       </glue-state-sync-wrapper>
 
       <div v-if="stretch_function_sync.in_subscribed_states && (!layer_multiselect || layer_selected.length <= 1)">
-        <jupyter-widget :widget="stretch_histogram_widget"/>
+        <glue-state-sync-wrapper 
+            :sync="stretch_hist_sync"
+            :multiselect="layer_multiselect" 
+            @unmix-state="unmix_state(['stretch_function', 'stretch_vmin', 'stretch_vmax',
+                                       'image_color_mode', 'image_color', 'image_colormap'])"
+        >
+          <jupyter-widget :widget="stretch_histogram_widget"/>
+        </glue-state-sync-wrapper>
+
         <v-row>
           <v-expansion-panels accordion>
             <v-expansion-panel>

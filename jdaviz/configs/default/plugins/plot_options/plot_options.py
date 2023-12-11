@@ -268,6 +268,7 @@ class PlotOptions(PluginTemplateMixin):
     stretch_params_value = Dict().tag(sync=True)
     stretch_params_sync = Dict().tag(sync=True)
 
+    stretch_hist_sync = Dict().tag(sync=True)
     stretch_hist_zoom_limits = Bool().tag(sync=True)
     stretch_hist_nbins = IntHandleEmpty(25).tag(sync=True)
     stretch_histogram_widget = Unicode().tag(sync=True)
@@ -627,9 +628,12 @@ class PlotOptions(PluginTemplateMixin):
             self.layer_multiselect = True
             self.layer.select_all()
 
-    def vue_unmix_state(self, name):
-        sync_state = getattr(self, name)
-        sync_state.unmix_state()
+    def vue_unmix_state(self, names):
+        if isinstance(names, str):
+            names = [names]
+        for name in names:
+            sync_state = getattr(self, name)
+            sync_state.unmix_state()
 
     def vue_set_value(self, data):
         attr_name = data.get('name')
@@ -688,6 +692,17 @@ class PlotOptions(PluginTemplateMixin):
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
 
+    @observe('stretch_function_sync', 'stretch_vmin_sync', 'stretch_vmax_sync',
+             'image_color_mode_sync', 'image_color_sync', 'image_colormap_sync')
+    def _update_stretch_hist_sync(self, msg={}):
+        # the histogram should show as mixed if ANY of the input parameters are mixed
+        # these should match in the @observe above, all_syncs here, as well as the strings
+        # passed to unmix_state in the <glue-state-sync-wrapper> in plot_options.vue
+        all_syncs = [self.stretch_function_sync, self.stretch_vmin_sync, self.stretch_vmax_sync,
+                     self.image_color_mode_sync, self.image_color_sync, self.image_colormap_sync]
+        self.stretch_hist_sync = {'in_subscribed_states': bool(np.any([sync.get('in_subscribed_states', False) for sync in all_syncs])),  # noqa
+                                  'mixed': bool(np.any([sync.get('mixed', False) for sync in all_syncs]))}  # noqa
+
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     @skip_if_no_updates_since_last_active()
@@ -742,13 +757,14 @@ class PlotOptions(PluginTemplateMixin):
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
                     vs_old.remove_callback(attr, self._update_stretch_histogram)
 
-        if self.layer_multiselect:
-            data = self.layer.selected_obj[0][0].layer
-        elif len(self.layer.selected_obj):
-            data = self.layer.selected_obj[0].layer
-        else:
+        if not len(self.layer.selected_obj):
             # skip further updates if no data are available:
             return
+        if isinstance(self.layer.selected_obj[0], list):
+            # multiselect case (but we won't check multiselect since the selection can lag behind)
+            data = self.layer.selected_obj[0][0].layer
+        else:
+            data = self.layer.selected_obj[0].layer
 
         if isinstance(data, GroupedSubset):
             # don't update histogram for subsets:
