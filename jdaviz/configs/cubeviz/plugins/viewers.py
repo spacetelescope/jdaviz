@@ -251,6 +251,9 @@ class CubevizProfileView(SpecvizProfileView):
                     )
 
         elif subset_type == 'spectral':
+            spectral_layers = self._get_spectral_subset_layers(layer_state.layer.data.label)
+            for layer in spectral_layers:
+                layer.visible = False
             # need to add marks for every intersection between THIS spectral subset and ALL spatial
             # subset marks corresponding to this data
             spatial_layers = [sub_layer for sub_layer in
