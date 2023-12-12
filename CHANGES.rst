@@ -7,6 +7,8 @@ New Features
 
 - Stretch histogram shows a spinner when the histogram data is updating. [#2644]
 
+- Spectrum viewer bounds can now be set through the Plot Options UI. [#2604]
+
 Cubeviz
 ^^^^^^^
 - Calculated moments can now be output in velocity units. [#2584, #2588]
