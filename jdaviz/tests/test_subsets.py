@@ -954,7 +954,8 @@ class TestRegionsFromSubsets:
 
     def test_subset_renaming(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d, 'myfile')
-        viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+        spectrum_viewer_name = specviz_helper._default_spectrum_viewer_reference_name
+        viewer = specviz_helper.app.get_viewer(spectrum_viewer_name)
 
         viewer.apply_roi(XRangeROI(6200, 6800))
 
