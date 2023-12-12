@@ -2286,7 +2286,7 @@ class Application(VuetifyTemplate, HubListener):
             msg.cls, data=msg.data, show=False)
         viewer.figure_widget.layout.height = '100%'
 
-        linked_by_wcs = self._link_type.lower() == 'wcs'
+        linked_by_wcs = self._link_type == 'wcs'
 
         if hasattr(viewer.state, 'linked_by_wcs'):
             orientation_plugin = self._jdaviz_helper.plugins.get('Orientation', None)
