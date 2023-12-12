@@ -951,3 +951,18 @@ class TestRegionsFromSubsets:
         imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         assert subsets['Subset 1'][0]['sky_region'] is None
+
+    def test_subset_renaming(self, specviz_helper, spectrum1d):
+        specviz_helper.load_data(spectrum1d, 'myfile')
+        viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+
+        viewer.apply_roi(XRangeROI(6200, 6800))
+
+        get_data_1 = specviz_helper.get_data('myfile', spectral_subset='Subset 1')
+
+        subset_group = specviz_helper.app.data_collection.subset_groups
+        subset_group[0].label = 'diffname'
+        get_data_2 = specviz_helper.get_data('myfile', spectral_subset='diffname')
+
+        assert_quantity_allclose(get_data_1.flux, get_data_2.flux)
+        assert_quantity_allclose(get_data_1.spectral_axis, get_data_2.spectral_axis)
