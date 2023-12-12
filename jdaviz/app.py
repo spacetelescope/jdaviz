@@ -2298,7 +2298,7 @@ class Application(VuetifyTemplate, HubListener):
                 # adopt "linked_by_wcs" from the first (assuming all are the same)
                 # NOTE: deleting the default viewer is forbidden both by API and UI, but if
                 # for some reason that was the case here, linked_by_wcs will default to False
-                linked_by_wcs = list(self._viewer_store.values())[0].state.linked_by_wcs  # noqa
+                linked_by_wcs = self._jdaviz_helper.default_viewer.state.linked_by_wcs
             viewer.state.linked_by_wcs = linked_by_wcs
 
         if linked_by_wcs:
