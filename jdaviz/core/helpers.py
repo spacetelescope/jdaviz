@@ -865,7 +865,8 @@ class ImageConfigHelper(ConfigHelper):
 
             # TODO: Remove this when Jdaviz support round-tripping, see
             # https://github.com/spacetelescope/jdaviz/pull/721
-            if not subset_label.startswith('Subset'):
+
+            if subset_label not in [sg.label for sg in self.app.data_collection.subset_groups]:
                 continue
 
             try:
