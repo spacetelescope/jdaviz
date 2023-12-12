@@ -173,6 +173,11 @@ class LineListTool(PluginTemplateMixin):
         if msg is None or msg.viewer_id != self._viewer_id or msg.data is None:
             return
 
+        viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer_data_labels = [layer.layer.label for layer in viewer.layers]
+        if msg.data.label not in viewer_data_labels:
+            return
+
         label = msg.data.label
         try:
             viewer_data = self.app._jdaviz_helper.get_data(data_label=label)
