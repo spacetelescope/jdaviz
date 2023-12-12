@@ -378,9 +378,13 @@ class StretchBounds(CheckableTool):
         current_bounds = [self.viewer._plugin.stretch_vmin_value,
                           self.viewer._plugin.stretch_vmax_value]
 
-        distances_to_bounds = [abs(current_bounds[0] - event_x), abs(current_bounds[1] - event_x)]
-        closest_bound_index = np.argmin(distances_to_bounds)
-        closest_bound_distance = distances_to_bounds[closest_bound_index]
+        vmin_normalized = (current_bounds[0] - x_min) / (x_max - x_min)
+        vmax_normalized = (current_bounds[1] - x_min) / (x_max - x_min)
+        event_x_normalized = (event_x - x_min) / (x_max - x_min)
+
+        distances_to_bounds_normalized = [abs(vmin_normalized - event_x_normalized), abs(vmax_normalized - event_x_normalized)]  # noqa
+        closest_bound_index = np.argmin(distances_to_bounds_normalized)
+        closest_bound_distance = distances_to_bounds_normalized[closest_bound_index]
 
         stretch_type = self.viewer._plugin.stretch_function_value
         if stretch_type == 'spline':
