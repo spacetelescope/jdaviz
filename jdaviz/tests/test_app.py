@@ -170,3 +170,22 @@ def test_viewer_renaming_imviz(imviz_helper):
             old_reference='non-existent',
             new_reference='this-is-forbidden'
         )
+
+def test_check_valid_subset_label(self, imviz_helper):
+
+    # imviz instance with some data
+    data = NDData(np.ones((50, 50)) * u.nJy)
+    imviz_helper.load_data(data)
+
+    # apply three subsets, with their default names of `Subset 1`, `Subset 2`, and `Subset 3`
+    imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(20, 20, 10))
+    imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(25, 25, 10))
+    imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(30, 30, 10))
+
+    # we should not be able to rename or add a subset named 'subset 1', since 'Subset 1'
+    # exists. make sure this warns and returns accordingly.
+
+    new_name = 'subset 1'
+
+    with pytest.raises(UserWarning, )
+
