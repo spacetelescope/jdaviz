@@ -761,6 +761,8 @@ class PlotOptions(PluginTemplateMixin):
             # skip further updates if no data are available:
             return
         if isinstance(self.layer.selected_obj[0], list):
+            if not len(self.layer.selected_obj[0]):
+                return
             # multiselect case (but we won't check multiselect since the selection can lag behind)
             data = self.layer.selected_obj[0][0].layer
         else:
@@ -860,6 +862,8 @@ class PlotOptions(PluginTemplateMixin):
         # either way, we act on the first entry
         layer = self.layer.selected_obj[0]
         while isinstance(layer, list):
+            if not len(layer):
+                return
             layer = layer[0]
 
         if isinstance(layer.layer, GroupedSubset):
