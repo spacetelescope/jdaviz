@@ -433,7 +433,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def ref_data(self):
-        return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
+        if hasattr(self, 'viewer'):
+            return self.app.get_viewer_by_id(self.viewer.selected).state.reference_data
+        return None
 
     @property
     def _refdata_change_available(self):
@@ -454,9 +456,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     @observe('viewer_selected')
     def _on_viewer_change(self, msg={}):
         # don't update choices until viewer is available:
-        if hasattr(self, 'viewer'):
+        ref_data = self.ref_data
+        if hasattr(self, 'viewer') and ref_data is not None:
             self.orientation.choices = get_wcs_only_layer_labels(self.app)
-            self.orientation.selected = self.ref_data.label
+            self.orientation.selected = ref_data.label
 
     def create_north_up_east_left(self, label="North-up, East-left", set_on_create=False):
         """
