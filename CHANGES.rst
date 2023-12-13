@@ -76,11 +76,12 @@ Bug Fixes
 
 - Fix image layer visibility toggle in plot options. [#2595]
 
-
 - Fixes viewer toolbar items losing ability to bring up right-click menu. [#2605]
 
 Cubeviz
 ^^^^^^^
+
+- Fixes ability to remove cube data from the app. [#2608]
 
 Imviz
 ^^^^^
