@@ -1464,13 +1464,18 @@ class LayerSelect(SelectPluginComponent):
             ]
         # remove duplicates - we'll loop back through all selected viewers to get a list of colors
         # and visibilities later within _layer_to_dict
-        layer_labels = [layer.layer.label for layer in all_layers if self.app.state.layer_icons.get(layer.layer.label)]  # noqa
+        layer_labels = [
+            layer.layer.label for layer in all_layers
+            if self.app.state.layer_icons.get(layer.layer.label) or
+            getattr(self, 'only_wcs_layers', False)
+        ]
         unique_layer_labels = list(set(layer_labels))
-
         layer_items = [self._layer_to_dict(layer_label) for layer_label in unique_layer_labels]
 
         def _sort_by_icon(items_dict):
-            return items_dict['icon']
+            icon = items_dict['icon']
+            return icon if icon is not None else ''
+
         layer_items.sort(key=_sort_by_icon)
 
         self.items = manual_items + layer_items

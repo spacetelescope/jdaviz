@@ -559,6 +559,7 @@ class Application(VuetifyTemplate, HubListener):
             viewer.zoom(
                 float(fov_sky_final / fov_sky_init)
             )
+            # viewer.center_on(sky_cen)
 
         # only re-center the viewer if all data layers have WCS:
         has_wcs_per_data = [data_has_valid_wcs(d) for d in viewer.data()]
@@ -2317,7 +2318,7 @@ class Application(VuetifyTemplate, HubListener):
         )
 
         ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
-        new_viewer_item['reference_data_label'] = ref_data.label
+        new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',

@@ -1,6 +1,7 @@
 import os
 import time
 
+import astropy.units as u
 import numpy as np
 from echo import delay_callback
 from glue.config import viewer_tool
@@ -111,7 +112,11 @@ class _MatchedZoomMixin:
                 # viewer rotations:
                 to_fov_sky = viewer._get_fov(wcs=orig_refdata.coords)
 
-                viewer.center_on(sky_cen)
+                viewer_center = viewer._get_center_skycoord(orig_refdata)
+                if sky_cen.separation(viewer_center) > 0.1 * u.arcsec:
+                    # avoid recentering if the viewer is already nearly centered
+                    viewer.center_on(sky_cen)
+
                 viewer.zoom(
                     float(to_fov_sky / orig_fov_sky)
                 )

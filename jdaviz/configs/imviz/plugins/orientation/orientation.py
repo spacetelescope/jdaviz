@@ -7,7 +7,7 @@ from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 
 import astropy.units as u
-from jdaviz.configs.imviz.helper import link_image_data, get_wcs_only_layer_labels
+from jdaviz.configs.imviz.helper import link_image_data, base_wcs_layer_label
 from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
@@ -354,43 +354,33 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self._add_data_to_all_viewers(label)
 
         if set_on_create:
+            self.orientation._update_layer_items()
             self.orientation.selected = label
 
     def _add_data_to_all_viewers(self, data_label):
-        for viewer_ref in self.viewer.choices:
+        for viewer_ref in self.app.get_viewer_reference_names():
             layers = [
                 layer.label for layer in
-                self.app.get_viewer_by_id(self.viewer.selected).layers
+                self.app.get_viewer(viewer_ref).layers
             ]
             if data_label not in layers:
                 self.app.add_data_to_viewer(viewer_ref, data_label)
 
     def _on_viewer_added(self, msg):
-        for data_label in get_wcs_only_layer_labels(self.app):
+        for data_label in self.orientation.choices:
             self._add_data_to_all_viewers(data_label)
 
-        self.orientation.choices = get_wcs_only_layer_labels(self.app)
-
-        if hasattr(self, 'orientation'):
+        if hasattr(self, 'orientation') and len(self.orientation.choices):
             self.viewer.selected = msg._viewer_id
-            self._change_reference_data(
-                self.orientation.selected,
-                viewer_id=msg._viewer_id
-            )
+            self.orientation.selected = self.orientation.choices[0]
 
     def _on_data_add_to_viewer(self, msg):
-        if not hasattr(self, 'viewer'):
-            return
-
-        viewer_id = self.viewer.selected_obj.reference_id
-
-        if viewer_id != 'imviz-0' and self.viewer.selected_obj.state.reference_data is None:
-            self.app._change_reference_data(
-                self.orientation.selected,
-                viewer_id=viewer_id
-            )
-        else:
-            self.orientation_layer_selected = self.ref_data.label
+        if (
+            msg._viewer_reference != 'imviz-0' and
+            self.app.get_viewer_by_id(msg._viewer_reference).state.reference_data is None
+        ):
+            self.viewer.selected = msg._viewer_reference
+            self.orientation.selected = base_wcs_layer_label
 
     def vue_add_orientation(self, *args, **kwargs):
         self.add_orientation(set_on_create=True)
@@ -404,16 +394,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def _on_refdata_change(self, msg={}):
         self.orientation.only_wcs_layers = msg.data.meta.get('_WCS_ONLY', False)
-        self.orientation._update_layer_items()
-
-        # don't select until viewer is available:
         if hasattr(self, 'viewer'):
             ref_data = self.ref_data
             viewer = self.app.get_viewer(self.viewer.selected)
 
             # don't select until reference data are available:
             if ref_data is not None:
-                self.orientation.selected = ref_data.label
                 link_type = viewer.get_link_type(ref_data.label)
                 if link_type != 'self':
                     self.link_type_selected = link_type_msg_to_trait[link_type]
@@ -458,8 +444,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # don't update choices until viewer is available:
         ref_data = self.ref_data
         if hasattr(self, 'viewer') and ref_data is not None:
-            self.orientation.choices = get_wcs_only_layer_labels(self.app)
-            self.orientation.selected = ref_data.label
+            self.orientation._update_layer_items()
+            if ref_data.label in self.orientation.choices:
+                self.orientation.selected = ref_data.label
 
     def create_north_up_east_left(self, label="North-up, East-left", set_on_create=False):
         """
@@ -492,7 +479,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.create_north_up_east_right(set_on_create=True)
 
     def vue_select_default_orientation(self, *args, **kwargs):
-        self.orientation.select_default()
+        self.orientation.selected = base_wcs_layer_label
 
     @observe('east_left', 'rotation_angle')
     def _update_layer_label_default(self, event={}):
