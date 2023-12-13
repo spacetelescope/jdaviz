@@ -180,6 +180,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
 
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        viewer_data_labels = [layer.layer.label for layer in viewer.layers]
+        if msg.data.label not in viewer_data_labels:
+            return
+
         get_data_kwargs = {'data_label': msg.data.label}
         if self.config == 'cubeviz':
             get_data_kwargs['function'] = getattr(viewer.state, 'function', None)
