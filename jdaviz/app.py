@@ -559,7 +559,6 @@ class Application(VuetifyTemplate, HubListener):
             viewer.zoom(
                 float(fov_sky_final / fov_sky_init)
             )
-            # viewer.center_on(sky_cen)
 
         # only re-center the viewer if all data layers have WCS:
         has_wcs_per_data = [data_has_valid_wcs(d) for d in viewer.data()]

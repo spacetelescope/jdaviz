@@ -77,6 +77,9 @@ class AstrowidgetsImageViewerMixin:
 
         """
         i_top = get_top_layer_index(self)
+        if i_top is None:
+            return
+
         image = self.layers[i_top].layer
 
         if isinstance(point, SkyCoord):

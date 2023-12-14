@@ -424,8 +424,14 @@ def get_top_layer_index(viewer):
     This is because when blinked, first layer might not be top visible layer.
 
     """
-    return [i for i, lyr in enumerate(viewer.layers)
-            if lyr.visible and layer_is_image_data(lyr.layer)][-1]
+    visible_image_layers = [
+        i for i, lyr in enumerate(viewer.layers)
+        if lyr.visible and layer_is_image_data(lyr.layer)
+    ]
+
+    if len(visible_image_layers):
+        return visible_image_layers[-1]
+    return None
 
 
 def get_reference_image_data(app, viewer_id=None):
