@@ -28,6 +28,10 @@ __all__ = ['MomentMap']
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
+moment_unit_options = {0: ["Flux"],
+                       1: ["Velocity", "Spectral Unit"],
+                       2: ["Velocity", "Velocity^N"]}
+
 
 @tray_registry('cubeviz-moment-maps', label="Moment Maps",
                viewer_requirements=['spectrum', 'image'])
@@ -70,6 +74,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     moment_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
     output_unit_items = List().tag(sync=True)
+    output_radio_items = List().tag(sync=True)
     output_unit_selected = Unicode().tag(sync=True)
     reference_wavelength = FloatHandleEmpty().tag(sync=True)
     dataset_spectral_unit = Unicode().tag(sync=True)
@@ -87,7 +92,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
                                                  selected='output_unit_selected',
-                                                 manual_options=['Wavelength', 'Velocity'])
+                                                 manual_options=['Flux', 'Spectral Unit',
+                                                                 'Velocity', 'Velocity^N'])
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
@@ -133,15 +139,46 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         label_comps += [f"moment {self.n_moment}"]
         self.results_label_default = " ".join(label_comps)
 
-    @observe("dataset_selected")
+    @observe("dataset_selected", "n_moment")
     def _set_data_units(self, event={}):
+        if isinstance(self.n_moment, str) or self.n_moment < 0:
+            return
+        unit_options_index = 2 if self.n_moment > 2 else self.n_moment
+        if self.output_unit_selected not in moment_unit_options[unit_options_index]:
+            self.output_unit_selected = moment_unit_options[unit_options_index][0]
+        self.send_state("output_unit_selected")
+
+        unit_dict = {"Flux": "",
+                     "Spectral Unit": "",
+                     "Velocity": "km/s",
+                     "Velocity^N": f"km{self.n_moment}/s{self.n_moment}"}
+
         if self.dataset_selected != "":
             # Spectral axis is first in this list
+            data = self.app.data_collection[self.dataset_selected]
             if self.app.data_collection[self.dataset_selected].coords is not None:
-                unit = self.app.data_collection[self.dataset_selected].coords.world_axis_units[0]
-                self.dataset_spectral_unit = unit
+                sunit = data.coords.world_axis_units[0]
+                self.dataset_spectral_unit = sunit
+                unit_dict["Spectral Unit"] = sunit
             else:
                 self.dataset_spectral_unit = ""
+            unit_dict["Flux"] = data.get_component('flux').units
+
+        # Update units in selection item dictionary
+        for item in self.output_unit_items:
+            item["unit_str"] = unit_dict[item["label"]]
+
+        # Filter what we want based on n_moment
+        if self.n_moment == 0:
+            self.output_radio_items = [self.output_unit_items[0],]
+        elif self.n_moment == 1:
+            self.output_radio_items = self.output_unit_items[1:3]
+        else:
+            self.output_radio_items = self.output_unit_items[2:]
+
+        # Force Traitlets to update
+        self.send_state("output_unit_items")
+        self.send_state("output_radio_items")
 
     @observe("dataset_selected", "spectral_subset_selected",
              "continuum_subset_selected", "continuum_width")
@@ -168,6 +205,21 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         add_data : bool
             Whether to add the resulting data object to the app according to ``add_results``.
         """
+
+        # Check to make sure API use hasn't put us into an invalid state.
+        try:
+            n_moment = int(self.n_moment)
+            if n_moment < 0:
+                raise ValueError("Moment must be a positive integer")
+        except ValueError:
+            raise ValueError("Moment must be a positive integer")
+
+        unit_options_index = 2 if n_moment > 2 else n_moment
+        if self.output_unit_selected not in moment_unit_options[unit_options_index]:
+            raise ValueError("Selected output units must be in "
+                             f"{moment_unit_options[unit_options_index]} for "
+                             f"moment {self.n_moment}")
+
         if self.continuum.selected == 'None':
             if "_orig_spec" in self.dataset.selected_obj.meta:
                 cube = self.dataset.selected_obj.meta["_orig_spec"]
@@ -185,12 +237,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
 
         # Calculate the moment and convert to CCDData to add to the viewers
-        try:
-            n_moment = int(self.n_moment)
-            if n_moment < 0:
-                raise ValueError("Moment must be a positive integer")
-        except ValueError:
-            raise ValueError("Moment must be a positive integer")
         # Need transpose to align JWST mirror shape: This is because specutils
         # arrange the array shape to be (nx, ny, nz) but 2D visualization
         # assumes (ny, nx) as per row-major convention.
@@ -198,7 +244,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if data_wcs:
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
         self.moment = CCDData(analysis.moment(slab, order=n_moment).T, wcs=data_wcs)
-        if n_moment > 0 and self.output_unit_selected.lower() == "velocity":
+        if n_moment > 0 and self.output_unit_selected.lower()[0:8] == "velocity":
             # Catch this if called from API
             if not self.reference_wavelength > 0.0:
                 raise ValueError("reference_wavelength must be set for output in velocity units.")
@@ -207,7 +253,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             self.moment = self.moment << u.Unit(self.dataset_spectral_unit)
             ref_wavelength = self.reference_wavelength * u.Unit(self.dataset_spectral_unit)
             relative_wavelength = (self.moment-ref_wavelength)/ref_wavelength
-            in_velocity = np.power(c*relative_wavelength, self.n_moment)
+            in_velocity = c*relative_wavelength
+            if self.output_unit_selected.lower() == "velocity^n":
+                in_velocity = np.power(in_velocity, self.n_moment)
             self.moment = CCDData(in_velocity, wcs=data_wcs)
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
