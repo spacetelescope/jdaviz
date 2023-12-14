@@ -1,8 +1,8 @@
 import os
 import time
 
-import astropy.units as u
 import numpy as np
+from astropy import units as u
 from echo import delay_callback
 from glue.config import viewer_tool
 from glue.core import HubListener
