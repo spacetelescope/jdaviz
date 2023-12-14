@@ -141,7 +141,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @observe("dataset_selected", "n_moment")
     def _set_data_units(self, event={}):
-        if isinstance(self.n_moment, str):
+        if isinstance(self.n_moment, str) or self.n_moment < 0:
             return
         unit_options_index = 2 if self.n_moment > 2 else self.n_moment
         if self.output_unit_selected not in moment_unit_options[unit_options_index]:

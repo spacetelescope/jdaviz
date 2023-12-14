@@ -33,6 +33,17 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
 
         assert mom != mom_sub
 
+        mm.n_moment = -1
+        with pytest.raises(ValueError, match="Moment must be a positive integer"):
+            mm.calculate_moment()
+
+        mm.n_moment = 1
+        with pytest.raises(ValueError, match="not one of"):
+            mm._obj.output_unit_selected = "Bad Unit"
+        mm._obj.output_unit_selected = "Flux"
+        with pytest.raises(ValueError, match="units must be in"):
+            mm.calculate_moment()
+
 
 def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     dc = cubeviz_helper.app.data_collection
