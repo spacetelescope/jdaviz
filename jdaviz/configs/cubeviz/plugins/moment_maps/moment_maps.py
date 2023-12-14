@@ -236,10 +236,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
 
-        # Retrieve the data cube and slice out desired region, if specified
-        if "_orig_spec" in self.dataset.selected_obj.meta:
-            cube = self.dataset.selected_obj.meta["_orig_spec"]
-
         # Calculate the moment and convert to CCDData to add to the viewers
         # Need transpose to align JWST mirror shape: This is because specutils
         # arrange the array shape to be (nx, ny, nz) but 2D visualization
