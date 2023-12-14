@@ -249,6 +249,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
 def skip_if_no_updates_since_last_active(skip_if_not_active=True):
     def decorator(meth):
         def wrapper(self, msg={}):
+            if msg is None:
+                # method was called manually, don't skip
+                return meth(self, msg)
             if isinstance(msg, dict) and msg.get('name', None) == 'is_active':
                 if self.is_active and meth.__name__ in self._methods_skip_since_last_active:
                     # then we haven't received any other messages since the last time the plugin
@@ -487,6 +490,7 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin):
     handled within the component, support for caching and clearing caches on properties,
     and common properties for accessing the app, etc.
     """
+
     def __init__(self, plugin, **kwargs):
         self._plugin_traitlets = {k: v for k, v in kwargs.items() if v is not None}
         self._plugin = plugin
@@ -898,6 +902,7 @@ class FileImportSelectPluginComponent(SelectPluginComponent):
           <g-file-import id="file-uploader"></g-file-import>
       </plugin-file-import>
     """
+
     def __init__(self, plugin, **kwargs):
         self._cached_obj = {}
 
@@ -1052,6 +1057,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         hint="Select an item to modify."
       </plugin-editable-select>
     """
+
     def __init__(self, *args, **kwargs):
         """
         Parameters
@@ -1248,6 +1254,7 @@ class LayerSelect(SelectPluginComponent):
         hint="Select layer."
       />
     """
+
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
                  default_text=None, manual_options=[],
@@ -1559,6 +1566,7 @@ class SubsetSelect(SelectPluginComponent):
       />
 
     """
+
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text'):
@@ -2247,6 +2255,7 @@ class ViewerSelect(SelectPluginComponent):
       />
 
     """
+
     def __init__(self, plugin, items, selected,
                  multiselect=None,
                  default_text=None, manual_options=[], default_mode='first'):
@@ -2355,7 +2364,7 @@ class ViewerSelect(SelectPluginComponent):
         was_empty = len(self.items) == 0
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{k: v for k, v in vd.items() if k != 'viewer'}
-                                     for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])] # noqa
+                                     for vd in self.viewer_dicts if self._is_valid_item(vd['viewer'])]  # noqa
         self._apply_default_selection(skip_if_current_valid=not was_empty)
 
 
@@ -2442,6 +2451,7 @@ class DatasetSelect(SelectPluginComponent):
       />
 
     """
+
     def __init__(self, plugin, items, selected,
                  multiselect=None,
                  filters=['not_from_plugin_model_fitting', 'layer_in_viewers'],
@@ -2573,7 +2583,7 @@ class DatasetSelect(SelectPluginComponent):
                 # then this is a bar Application object, so ignore this filter
                 return True
             for viewer in self.viewers:
-                if data.label in [l.layer.label for l in viewer.layers]: # noqa E741
+                if data.label in [l.layer.label for l in viewer.layers]:  # noqa E741
                     return True
             return False
 
@@ -2727,6 +2737,7 @@ class AutoTextField(BasePluginComponent):
       ></plugin-auto-label>
 
     """
+
     def __init__(self, plugin, value, default, auto,
                  invalid_msg):
         super().__init__(plugin, value=value,
@@ -2842,6 +2853,7 @@ class AddResults(BasePluginComponent):
       ></plugin-add-results>
 
     """
+
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
                  add_to_viewer_items, add_to_viewer_selected,
@@ -3071,6 +3083,7 @@ class PlotOptionsSyncState(BasePluginComponent):
     * :attr:`linked_states`
     * :meth:`unmix_state`
     """
+
     def __init__(self, plugin, viewer_select, layer_select, glue_name,
                  value, sync, spinner=None, state_filter=None):
         super().__init__(plugin, value=value, sync=sync)
@@ -3281,11 +3294,18 @@ class PlotOptionsSyncState(BasePluginComponent):
         self.sync = {**self.sync,
                      'in_subscribed_states': in_subscribed_states,
                      'icons': icons,
-                     'mixed': len(np.unique(current_glue_values, axis=0)) > 1}
-
+                     'mixed': self.is_mixed(current_glue_values)}
         if len(current_glue_values):
             # sync the initial value of the widget, avoiding recursion
             self._on_glue_value_changed(current_glue_values[0])
+
+    def is_mixed(self, glue_values):
+        if len(glue_values) and isinstance(glue_values[0], dict):
+            # If we want to expose dictionary inputs in the plot options UI,
+            # this will need to be updated to check if any of the dictionaries
+            # in the list are not exact matches
+            return None
+        return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):
         if len(self.linked_states) <= 1:
@@ -3294,7 +3314,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             current_glue_values = []
             for state in self.linked_states:
                 current_glue_values.append(self._get_glue_value(state))
-                mixed = len(np.unique(current_glue_values, axis=0)) > 1
+            mixed = self.is_mixed(current_glue_values)
         self.sync = {**self.sync,
                      'mixed': mixed}
 
@@ -3374,6 +3394,13 @@ class PlotOptionsSyncState(BasePluginComponent):
             # to be an Any traitlet in order to handle "Custom"
             value = type(self.value)(value)
         self.value = value
+
+        if self._glue_name == 'stretch_parameters':
+            # stretch_parameters is a dictionary so won't trigger the @observe on
+            # _update_stretch_curve, so we'll need to manually call it (and make sure
+            # it is not skipped if it has already been called since an actual traitlet change)
+            self.plugin._update_stretch_curve()
+
         # need to recompute mixed state
         self._update_mixed_state()
         self._processing_change_from_glue = False
@@ -3660,6 +3687,7 @@ class Plot(PluginSubcomponent):
         self._plugin = plugin
         self.viewer = app.new_data_viewer(viewer_type, show=False)
         self.viewer._plugin = plugin
+        self.viewer._plot = self
         self._viewer_type = viewer_type
         if viewer_type == 'histogram':
             self._viewer_components = ('x',)

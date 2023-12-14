@@ -28,7 +28,7 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import PchipInterpolator
 
 __all__ = ['PlotOptions']
 
@@ -59,18 +59,23 @@ class SplineStretch:
     """
 
     def __init__(self):
-        # Cubic Spline (degree 3) for its balance and between accuracy & smoothness.
-        # May revisit when knots become editable.
-        self.k = 3
-        self.bc_type = None
-        self.t = None
-
         # Default x, y values(0-1) range chosen for a typical initial spline shape.
         # Can be modified if required.
-        self.update_knots(
-            x=np.array([0, 0.1, 0.2, 0.7, 1]),
-            y=np.array([0, 0.05, 0.3, 0.9, 1])
-        )
+        self._x = np.array([0, 0.1, 0.2, 0.7, 1])
+        self._y = np.array([0, 0.05, 0.3, 0.9, 1])
+        self.update_knots(self._x, self._y)
+
+    @property
+    def knots(self):
+        return (self._x, self._y)
+
+    @knots.setter
+    def knots(self, value):
+        x, y = value
+        if len(x) != len(y):
+            # Silently return
+            return
+        self.update_knots(x, y)
 
     def __call__(self, values, out=None, clip=False):
         # For our uses, we can ignore `out` and `clip`, but those would need
@@ -78,13 +83,9 @@ class SplineStretch:
         return self.spline(values)
 
     def update_knots(self, x, y):
-        if len(x) != len(y):
-            raise ValueError("x and y must be the same length.")
-        self.x = x
-        self.y = y
-        self.spline = make_interp_spline(
-            self.x, self.y, k=self.k, t=self.t, bc_type=self.bc_type
-        )
+        self._x = x
+        self._y = y
+        self.spline = PchipInterpolator(self._x, self._y)
 
 
 # Add the spline stretch to the glue stretch registry if not registered
@@ -263,6 +264,9 @@ class PlotOptions(PluginTemplateMixin):
 
     stretch_vmax_value = Float().tag(sync=True)
     stretch_vmax_sync = Dict().tag(sync=True)
+
+    stretch_params_value = Dict().tag(sync=True)
+    stretch_params_sync = Dict().tag(sync=True)
 
     stretch_hist_zoom_limits = Bool().tag(sync=True)
     stretch_hist_nbins = IntHandleEmpty(25).tag(sync=True)
@@ -466,6 +470,9 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_vmax = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_max',
                                                  'stretch_vmax_value', 'stretch_vmax_sync',
                                                  state_filter=is_image)
+        self.stretch_params = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch_parameters',  # noqa
+                                                   'stretch_params_value', 'stretch_params_sync',
+                                                   state_filter=is_image)
 
         self.stretch_histogram = Plot(self, viewer_type='histogram')
         # Add the stretch bounds tool to the default Plot viewer.
@@ -487,7 +494,7 @@ class PlotOptions(PluginTemplateMixin):
             label='stretch_knots',
             x=[], y=[],
             ynorm='vmin',
-            color="#007BA1",  # "inactive" blue
+            color="#c75d2c",  # "active" orange (tool enabled by default)
         )
         self.stretch_histogram.add_scatter('colorbar', x=[], y=[], ynorm='vmin', marker='square', stroke_width=33)  # noqa: E501
         self.stretch_histogram.viewer.state.update_bins_on_reset_limits = False
@@ -818,6 +825,7 @@ class PlotOptions(PluginTemplateMixin):
              'stretch_hist_nbins',
              'stretch_curve_visible',
              'stretch_function_value', 'stretch_vmin_value', 'stretch_vmax_value',
+             'stretch_params_value', 'stretch_preset_value',
              'layer_multiselect'
              )
     @skip_if_no_updates_since_last_active()
@@ -847,7 +855,6 @@ class PlotOptions(PluginTemplateMixin):
         interval = ManualInterval(self.stretch_vmin_value, self.stretch_vmax_value)
         contrast_bias = ContrastBiasStretch(self.image_contrast_value, self.image_bias_value)
         stretch = layer.state.stretch_object
-
         layer_cmap = layer.state.cmap
 
         # show the colorbar
@@ -891,10 +898,9 @@ class PlotOptions(PluginTemplateMixin):
         if isinstance(stretch, SplineStretch) and self.stretch_curve_visible:
             knot_mark = self.stretch_histogram.marks['stretch_knots']
             knot_mark.x = (self.stretch_vmin_value +
-                           stretch.x * (self.stretch_vmax_value - self.stretch_vmin_value))
+                           np.asarray(stretch._x) * (self.stretch_vmax_value - self.stretch_vmin_value))  # noqa
             # scale to 0.9 so always falls below colorbar (same as for stretch_curve)
-            # (may need to revisit this when supporting dragging)
-            knot_mark.y = 0.9 * stretch.y
+            knot_mark.y = 0.9 * np.asarray(stretch._y)
         else:
             self.stretch_histogram.clear_marks('stretch_knots')
 
@@ -907,8 +913,6 @@ class PlotOptions(PluginTemplateMixin):
 
             curve_mark = self.stretch_histogram.marks['stretch_curve']
             curve_mark.x = curve_x
-            # scale to 0.9 so always falls below colorbar (same as for stretch_knots)
-            # (may need to revisit this when supporting dragging)
             curve_mark.y = 0.9 * curve_y
         else:
             self.stretch_histogram.clear_marks('stretch_curve')

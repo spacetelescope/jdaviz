@@ -354,28 +354,91 @@ class StretchBounds(CheckableTool):
         self.viewer.add_event_callback(self.on_mouse_event,
                                        events=['dragmove', 'click'])
         for mark in self.viewer.figure.marks:
-            if np.any([x in mark.labels for x in ('vmin', 'vmax')]):
+            if np.any([x in mark.labels for x in ('vmin', 'vmax', 'stretch_knots')]):
                 mark.colors = ["#c75d2c"]
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_event)
         for mark in self.viewer.figure.marks:
-            if np.any([x in mark.labels for x in ('vmin', 'vmax')]):
+            if np.any([x in mark.labels for x in ('vmin', 'vmax', 'stretch_knots')]):
                 mark.colors = ["#007BA1"]
 
     def on_mouse_event(self, data):
-        if (time.time() - self._time_last) <= 0.05:
+        if (time.time() - self._time_last) <= 0.02:
             # throttle to 200ms
             return
 
+        # Mouse event coordinates
         event_x = data['domain']['x']
-        current_bounds = [self.viewer._plugin.stretch_vmin_value,
-                          self.viewer._plugin.stretch_vmax_value,]
-        att_names = ["stretch_vmin_value", "stretch_vmax_value"]
-        closest_bound_ind = np.argmin([abs(current_bounds[0] - event_x),
-                                       abs(current_bounds[1] - event_x)])
+        event_y = data['domain']['y']
 
-        setattr(self.viewer._plugin, att_names[closest_bound_ind], event_x)
+        x_min, x_max = self.viewer.state.x_min, self.viewer.state.x_max
+        y_min, y_max = self.viewer.state.y_min, self.viewer.state.y_max
+
+        current_bounds = [self.viewer._plugin.stretch_vmin_value,
+                          self.viewer._plugin.stretch_vmax_value]
+
+        vmin_normalized = (current_bounds[0] - x_min) / (x_max - x_min)
+        vmax_normalized = (current_bounds[1] - x_min) / (x_max - x_min)
+        event_x_normalized = (event_x - x_min) / (x_max - x_min)
+
+        distances_to_bounds_normalized = [abs(vmin_normalized - event_x_normalized), abs(vmax_normalized - event_x_normalized)]  # noqa
+        closest_bound_index = np.argmin(distances_to_bounds_normalized)
+        closest_bound_distance = distances_to_bounds_normalized[closest_bound_index]
+
+        stretch_type = self.viewer._plugin.stretch_function_value
+        if stretch_type == 'spline':
+            # Retrieve current knots and bounds
+            # knots_x is in units of the x-axis (pixel value)
+            knots_x = self.viewer._plot.marks['stretch_knots'].x
+            # knots_y is in units of the (hidden) normalized y-axis from 0 to 1
+            knots_y = self.viewer._plot.marks['stretch_knots'].y
+
+            # event_y is in units of the y-axis (density),
+            # so we need to rescale event_y to the same units as knots_y
+            event_y_normalized = (event_y - y_min) / (y_max - y_min)
+            # Drop event if the event coordinate are out of bounds
+            if not 0 <= event_y_normalized <= 0.9:
+                return
+
+            # Distance from mouse position to each knot, normalized to viewer axes size
+            distances_to_knots = np.sqrt(((knots_x - event_x) / (x_max - x_min)) ** 2 +
+                                         ((knots_y - event_y_normalized)) ** 2)
+
+            # we don't consider the first or last knot
+            # as those should remain anchored to 0 and 1, respectively
+            knot_index_by_dist = np.argsort(distances_to_knots[1:-1]) + 1
+            closest_knot_index = knot_index_by_dist[0]
+            closest_knot_distance = distances_to_knots[closest_knot_index]
+
+            radius_threshold = 0.1
+            x_distance_threshold = 0.1
+            if closest_knot_distance > radius_threshold and closest_bound_distance > x_distance_threshold:  # noqa
+                return
+            if closest_knot_distance < radius_threshold:
+                if distances_to_knots[knot_index_by_dist[1]] < radius_threshold:
+                    # don't allow knots getting too close to each other
+                    return
+                if knots_x[closest_knot_index-1] >= event_x or knots_x[closest_knot_index+1] <= event_x:  # noqa
+                    return
+                # knots_x and event_x are in units of the x-axis (pixel value)
+                knots_x[closest_knot_index] = event_x
+                # knots_y and event_y_data_units are in units of the y-axis (density)
+                knots_y[closest_knot_index] = event_y_normalized
+                # knot_x now needs to be mapped from the x-axis to the range 0-1
+                # that the stretch class expects (where 0
+                # corresponds to vmin and 1 to vmax)
+                stretch_x = (knots_x - current_bounds[0]) / (current_bounds[1] - current_bounds[0])   # noqa
+                stretch_y = knots_y / 0.9
+                self.viewer._plugin.stretch_params_value = {'knots': (stretch_x.tolist(), stretch_y.tolist())}  # noqa
+            else:
+                if closest_bound_distance > x_distance_threshold:
+                    return
+                att_names = ["stretch_vmin_value", "stretch_vmax_value"][closest_bound_index]
+                setattr(self.viewer._plugin, att_names, event_x)
+        else:
+            att_names = ["stretch_vmin_value", "stretch_vmax_value"][closest_bound_index]
+            setattr(self.viewer._plugin, att_names, event_x)
 
         self._time_last = time.time()
 
