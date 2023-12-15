@@ -951,3 +951,38 @@ class TestRegionsFromSubsets:
         imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         assert subsets['Subset 1'][0]['sky_region'] is None
+
+    def test_subset_renaming(self, specviz_helper, spectrum1d):
+        specviz_helper.load_data(spectrum1d, 'myfile')
+        spectrum_viewer_name = specviz_helper._default_spectrum_viewer_reference_name
+        viewer = specviz_helper.app.get_viewer(spectrum_viewer_name)
+
+        viewer.apply_roi(XRangeROI(6200, 7200))
+        get_data_no_sub = specviz_helper.get_data('myfile')
+        get_data_1 = specviz_helper.get_data('myfile', spectral_subset='Subset 1')
+
+        get_data_1_mask = np.where(~get_data_1.mask)
+
+        # Retrieving data with no subset means mask is None
+        assert get_data_no_sub.mask is None
+        assert len(get_data_1_mask[0]) > 0
+
+        # rename subset to 'diffname'
+        subset_group = specviz_helper.app.data_collection.subset_groups
+        subset_group[0].label = 'diffname'
+        get_data_2 = specviz_helper.get_data('myfile', spectral_subset='diffname')
+
+        assert_quantity_allclose(get_data_1.flux, get_data_2.flux)
+        assert_quantity_allclose(get_data_1.spectral_axis, get_data_2.spectral_axis)
+        get_data_2_mask = np.where(~get_data_2.mask)
+        assert (get_data_1_mask[0] == get_data_2_mask[0]).all()
+
+        # when we officially implement subset renaming in jdaviz, we will want
+        # to be aware of the case of naming subsets after existing data
+        # and handle it appropriately
+        subset_group = specviz_helper.app.data_collection.subset_groups
+        subset_group[0].label = 'myfile'
+        get_data_3 = specviz_helper.get_data('myfile', spectral_subset='myfile')
+
+        get_data_3_mask = np.where(~get_data_3.mask)
+        assert (get_data_1_mask[0] == get_data_3_mask[0]).all()
