@@ -379,3 +379,15 @@ def test_track_mixed_states(imviz_helper):
     assert po.image_color.value == "#00ff00"
     assert po.layer.items[-1]["colors"][0] == "#00ff00"
     assert po.layer.items[-2]["colors"][0] == "#00ff00"
+
+    # test spline stretch mixed state
+    po.viewer_selected = ["imviz-0"]
+    po.layer_selected = ["array_1"]
+    po.stretch_function_value = 'spline'
+    po.viewer_selected = ["imviz-0", "imviz-1"]
+    assert po.stretch_function_sync['mixed']
+
+    po.vue_unmix_state(['stretch_function', 'stretch_params'])
+    assert not po.stretch_function_sync['mixed']
+    assert po.stretch_function_value == 'spline'
+    assert not po.stretch_params_sync['mixed']
