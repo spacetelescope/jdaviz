@@ -957,22 +957,34 @@ class TestRegionsFromSubsets:
         spectrum_viewer_name = specviz_helper._default_spectrum_viewer_reference_name
         viewer = specviz_helper.app.get_viewer(spectrum_viewer_name)
 
-        viewer.apply_roi(XRangeROI(6200, 6800))
-
+        viewer.apply_roi(XRangeROI(6200, 7200))
+        get_data_no_sub = specviz_helper.get_data('myfile')
         get_data_1 = specviz_helper.get_data('myfile', spectral_subset='Subset 1')
 
+        get_data_1_mask = np.where(get_data_1.mask == False)
+
+        # Retrieving data with no subset means mask is None
+        assert get_data_no_sub.mask is None
+        assert len(get_data_1_mask[0]) > 0
+
+        # rename subset to 'diffname'
         subset_group = specviz_helper.app.data_collection.subset_groups
         subset_group[0].label = 'diffname'
         get_data_2 = specviz_helper.get_data('myfile', spectral_subset='diffname')
 
         assert_quantity_allclose(get_data_1.flux, get_data_2.flux)
         assert_quantity_allclose(get_data_1.spectral_axis, get_data_2.spectral_axis)
+        get_data_2_mask = np.where(get_data_2.mask == False)
+        assert (set(get_data_1_mask[0]) - set(get_data_2_mask[0])
+                == set(get_data_2_mask[0]) - set(get_data_1_mask[0]))
 
         # when we officially implement subset renaming in jdaviz, we will want
-        # to be aware of this case and handle it appropriately
+        # to be aware of the case of naming subsets after existing data
+        # and handle it appropriately
         subset_group = specviz_helper.app.data_collection.subset_groups
         subset_group[0].label = 'myfile'
         get_data_3 = specviz_helper.get_data('myfile', spectral_subset='myfile')
 
-        assert_quantity_allclose(get_data_1.flux, get_data_3.flux)
-        assert_quantity_allclose(get_data_1.spectral_axis, get_data_3.spectral_axis)
+        get_data_3_mask = np.where(get_data_3.mask == False)
+        assert (set(get_data_1_mask[0]) - set(get_data_3_mask[0])
+                == set(get_data_3_mask[0]) - set(get_data_1_mask[0]))
