@@ -961,7 +961,7 @@ class TestRegionsFromSubsets:
         get_data_no_sub = specviz_helper.get_data('myfile')
         get_data_1 = specviz_helper.get_data('myfile', spectral_subset='Subset 1')
 
-        get_data_1_mask = np.where(get_data_1.mask == False)
+        get_data_1_mask = np.where(not get_data_1.mask)
 
         # Retrieving data with no subset means mask is None
         assert get_data_no_sub.mask is None
@@ -974,7 +974,7 @@ class TestRegionsFromSubsets:
 
         assert_quantity_allclose(get_data_1.flux, get_data_2.flux)
         assert_quantity_allclose(get_data_1.spectral_axis, get_data_2.spectral_axis)
-        get_data_2_mask = np.where(get_data_2.mask == False)
+        get_data_2_mask = np.where(not get_data_2.mask)
         assert (set(get_data_1_mask[0]) - set(get_data_2_mask[0])
                 == set(get_data_2_mask[0]) - set(get_data_1_mask[0]))
 
@@ -985,6 +985,6 @@ class TestRegionsFromSubsets:
         subset_group[0].label = 'myfile'
         get_data_3 = specviz_helper.get_data('myfile', spectral_subset='myfile')
 
-        get_data_3_mask = np.where(get_data_3.mask == False)
+        get_data_3_mask = np.where(not get_data_3.mask)
         assert (set(get_data_1_mask[0]) - set(get_data_3_mask[0])
                 == set(get_data_3_mask[0]) - set(get_data_1_mask[0]))
