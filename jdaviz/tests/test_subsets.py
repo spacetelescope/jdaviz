@@ -967,3 +967,12 @@ class TestRegionsFromSubsets:
 
         assert_quantity_allclose(get_data_1.flux, get_data_2.flux)
         assert_quantity_allclose(get_data_1.spectral_axis, get_data_2.spectral_axis)
+
+        # when we officially implement subset renaming in jdaviz, we will want
+        # to be aware of this case and handle it appropriately
+        subset_group = specviz_helper.app.data_collection.subset_groups
+        subset_group[0].label = 'myfile'
+        get_data_3 = specviz_helper.get_data('myfile', spectral_subset='myfile')
+
+        assert_quantity_allclose(get_data_1.flux, get_data_3.flux)
+        assert_quantity_allclose(get_data_1.spectral_axis, get_data_3.spectral_axis)
