@@ -3223,6 +3223,8 @@ class PlotOptionsSyncState(BasePluginComponent):
             # return False if the layer itself is not visible.  Setting this object
             # to True will then set both glue_name and visible to True.
             return getattr(state, glue_name) and getattr(state, 'visible')
+        if glue_name in ('c_min', 'c_max'):
+            return float(getattr(state, glue_name))
 
         return getattr(state, glue_name)
 
@@ -3331,7 +3333,9 @@ class PlotOptionsSyncState(BasePluginComponent):
             # change to one of the linked_states changes the value that will be adopted when
             # unmixing something in mixed state and results in more consistent and predictable
             # behavior
+            self._processing_change_from_glue = True
             self.value = current_glue_values[0]
+            self._processing_change_from_glue = False
         self.sync = {**self.sync,
                      'mixed': mixed}
 
