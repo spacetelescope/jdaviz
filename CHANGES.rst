@@ -20,6 +20,9 @@ Imviz
 
 - Line Profile (XY) plugin no longer malfunctions when image contains NaN values. [#2594]
 
+- Stretch histogram now represents mixed state for any of the inputs (when multiple viewers are
+  selected) with an overlay appropriately. [#2606]
+
 Mosviz
 ^^^^^^
 
