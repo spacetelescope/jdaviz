@@ -46,7 +46,7 @@
             <span style="padding: 6px">Viewer bounds</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row v-for="item in spectrum_viewer_limits">
+            <v-row v-for="item in viewer_limits">
               <v-text-field
               ref="item"
               :label="item.label"
@@ -493,11 +493,11 @@
       <div v-if="stretch_function_sync.in_subscribed_states && (!layer_multiselect || layer_selected.length <= 1)">
         <div style="display: grid"> <!-- overlay container -->
           <div style="grid-area: 1/1">
-            <glue-state-sync-wrapper 
+            <glue-state-sync-wrapper
                 :sync="stretch_hist_sync"
-                :multiselect="layer_multiselect" 
+                :multiselect="layer_multiselect"
                 @unmix-state="unmix_state(['stretch_function', 'stretch_params',
-                                           'stretch_vmin', 'stretch_vmax', 
+                                           'stretch_vmin', 'stretch_vmax',
                                            'image_color_mode', 'image_color', 'image_colormap'])"
             >
               <jupyter-widget :widget="stretch_histogram_widget"/>
@@ -505,7 +505,7 @@
           </div>
           <div v-if="stretch_hist_spinner"
                class="text-center"
-               style="grid-area: 1/1; 
+               style="grid-area: 1/1;
                       z-index:2;
                       margin-left: -24px;
                       margin-right: -24px;

@@ -14,7 +14,7 @@ from glue.core.subset_group import GroupedSubset
 from glue.config import colormaps, stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
-from glue.viewers.image.state import ImageSubsetLayerState
+from glue.viewers.image.state import ImageSubsetLayerState, ImageViewerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue.viewers.image.composite_array import COLOR_CONVERTER
 from glue_jupyter.bqplot.image.state import BqplotImageLayerState
@@ -563,7 +563,8 @@ class PlotOptions(PluginTemplateMixin):
         self.viewer_limits = {}
         for viewer in self.viewer.choices:
             temp_viewer = self.app.get_viewer(viewer)
-            if not_image(temp_viewer.state):
+            if not isinstance(temp_viewer.state, ImageViewerState):
+                print(f"Adding callback for {temp_viewer}, {type(temp_viewer.state)}")
                 self.viewer_limits[viewer] =  {"x_min": {"value": 0, "unit": "test"},
                                                "x_max": {"value": 1, "unit": "test"},
                                                "y_min": {"value": 0, "unit": "test"},
@@ -726,20 +727,24 @@ class PlotOptions(PluginTemplateMixin):
                                   'mixed': bool(np.any([sync.get('mixed', False) for sync in all_syncs]))}  # noqa
 
     def _sync_viewer_limits(self, msg={}):
-        print(msg)
-        for axis in ("x", "y"):
-            unit = getattr(self.spectrum_viewer.state, f"{axis}_display_unit")
-            for bound in ("_min", "_max"):
-                value = getattr(self.spectrum_viewer.state, f"{axis}{bound}")
-                self.viewer_limits[f"{axis}{bound}"]["value"] = value
-                self.viewer_limits[f"{axis}{bound}"]["unit"] = unit
+        for viewer in self.viewer_limits:
+            temp_viewer = self.app.get_viewer(viewer)
+            for axis in ("x", "y"):
+                unit = getattr(temp_viewer.state, f"{axis}_display_unit")
+                for bound in ("_min", "_max"):
+                    value = getattr(temp_viewer.state, f"{axis}{bound}")
+                    self.viewer_limits[viewer][f"{axis}{bound}"]["value"] = value
+                    self.viewer_limits[viewer][f"{axis}{bound}"]["unit"] = unit
         self.send_state("viewer_limits")
 
     def vue_apply_updated_bounds(self, msg={}):
-        self.spectrum_viewer.set_limits(x_min=self.viewer_limits["x_min"]["value"],
-                                        x_max=self.viewer_limits["x_max"]["value"],
-                                        y_min=self.viewer_limits["y_min"]["value"],
-                                        y_max=self.viewer_limits["y_max"]["value"],)
+        viewers = self.viewer.selected_obj if self.viewer_multiselect else [self.viewer.selected_obj]
+        for viewer in viewers:
+            temp_viewer = self.app.get_viewer(viewer)
+            temp_viewer.set_limits(x_min=self.viewer_limits["x_min"]["value"],
+                                   x_max=self.viewer_limits["x_max"]["value"],
+                                   y_min=self.viewer_limits["y_min"]["value"],
+                                   y_max=self.viewer_limits["y_max"]["value"],)
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
