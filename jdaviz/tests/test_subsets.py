@@ -975,8 +975,7 @@ class TestRegionsFromSubsets:
         assert_quantity_allclose(get_data_1.flux, get_data_2.flux)
         assert_quantity_allclose(get_data_1.spectral_axis, get_data_2.spectral_axis)
         get_data_2_mask = np.where(~get_data_2.mask)
-        assert (set(get_data_1_mask[0]) - set(get_data_2_mask[0])
-                == set(get_data_2_mask[0]) - set(get_data_1_mask[0]))
+        assert (get_data_1_mask[0] == get_data_2_mask[0]).all()
 
         # when we officially implement subset renaming in jdaviz, we will want
         # to be aware of the case of naming subsets after existing data
@@ -986,5 +985,4 @@ class TestRegionsFromSubsets:
         get_data_3 = specviz_helper.get_data('myfile', spectral_subset='myfile')
 
         get_data_3_mask = np.where(~get_data_3.mask)
-        assert (set(get_data_1_mask[0]) - set(get_data_3_mask[0])
-                == set(get_data_3_mask[0]) - set(get_data_1_mask[0]))
+        assert (get_data_1_mask[0] == get_data_3_mask[0]).all()
