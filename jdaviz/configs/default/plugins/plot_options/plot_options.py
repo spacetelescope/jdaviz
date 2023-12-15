@@ -27,6 +27,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.events import SliceSelectSliceMessage
 
 from scipy.interpolate import make_interp_spline
 
@@ -500,6 +501,9 @@ class PlotOptions(PluginTemplateMixin):
             self.stretch_histogram.figure.axes[1].num_ticks = 2
         self.stretch_histogram_widget = f'IPY_MODEL_{self.stretch_histogram.model_id}'
 
+        self.session.hub.subscribe(self, SliceSelectSliceMessage,
+                                   handler=self._update_stretch_on_slice_change)
+
         self.subset_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'visible',
                                                    'subset_visible_value', 'subset_visible_sync',
                                                    state_filter=is_spatial_subset)
@@ -680,6 +684,13 @@ class PlotOptions(PluginTemplateMixin):
 
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
+
+    def _update_stretch_on_slice_change(self, msg):
+        print(msg.slice)
+        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj  # noqa
+        sliced_data = viewer.state.reference_data.get_object(statistic=None)[:, :, msg.slice]
+        self.stretch_vmin.value = float(sliced_data.min().value)
+        self.stretch_vmax.value = float(sliced_data.max().value)
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
