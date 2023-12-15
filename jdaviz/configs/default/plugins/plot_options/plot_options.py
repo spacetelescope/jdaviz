@@ -177,7 +177,7 @@ class PlotOptions(PluginTemplateMixin):
     viewer_multiselect = Bool(False).tag(sync=True)
     viewer_items = List().tag(sync=True)
     viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
-    spectrum_viewer_limits = Dict().tag(sync=True)
+    viewer_limits = Dict().tag(sync=True)
 
     layer_multiselect = Bool(False).tag(sync=True)
     layer_items = List().tag(sync=True)
@@ -559,16 +559,17 @@ class PlotOptions(PluginTemplateMixin):
                                                  'axes_visible_value', 'axes_visible_sync',
                                                  state_filter=not_profile)
 
-        # zoom limits (spectrum viewer only)
-        self.spectrum_viewer_limits = {"x_min": {"value": 0, "unit": "test"},
-                                       "x_max": {"value": 1, "unit": "test"},
-                                       "y_min": {"value": 0, "unit": "test"},
-                                       "y_max": {"value": 1, "unit": "test"}}
-
-        if "spectrum-viewer" in self.viewer.choices:
-            self.spectrum_viewer = self.app.get_viewer('spectrum-viewer')
-            for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
-                self.spectrum_viewer.state.add_callback(attr, self._sync_sv_limits)
+        # zoom limits (spectrum viewers only)
+        self.viewer_limits = {}
+        for viewer in self.viewer.choices:
+            temp_viewer = self.app.get_viewer(viewer)
+            if not_image(temp_viewer.state):
+                self.viewer_limits[viewer] =  {"x_min": {"value": 0, "unit": "test"},
+                                               "x_max": {"value": 1, "unit": "test"},
+                                               "y_min": {"value": 0, "unit": "test"},
+                                               "y_max": {"value": 1, "unit": "test"}}
+                for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
+                    temp_viewer.state.add_callback(attr, self._sync_viewer_limits)
 
         # display_units
 
@@ -724,20 +725,21 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_hist_sync = {'in_subscribed_states': bool(np.any([sync.get('in_subscribed_states', False) for sync in all_syncs])),  # noqa
                                   'mixed': bool(np.any([sync.get('mixed', False) for sync in all_syncs]))}  # noqa
 
-    def _sync_sv_limits(self, msg={}):
+    def _sync_viewer_limits(self, msg={}):
+        print(msg)
         for axis in ("x", "y"):
             unit = getattr(self.spectrum_viewer.state, f"{axis}_display_unit")
             for bound in ("_min", "_max"):
                 value = getattr(self.spectrum_viewer.state, f"{axis}{bound}")
-                self.spectrum_viewer_limits[f"{axis}{bound}"]["value"] = value
-                self.spectrum_viewer_limits[f"{axis}{bound}"]["unit"] = unit
-        self.send_state("spectrum_viewer_limits")
+                self.viewer_limits[f"{axis}{bound}"]["value"] = value
+                self.viewer_limits[f"{axis}{bound}"]["unit"] = unit
+        self.send_state("viewer_limits")
 
     def vue_apply_updated_bounds(self, msg={}):
-        self.spectrum_viewer.set_limits(x_min=self.spectrum_viewer_limits["x_min"]["value"],
-                                        x_max=self.spectrum_viewer_limits["x_max"]["value"],
-                                        y_min=self.spectrum_viewer_limits["y_min"]["value"],
-                                        y_max=self.spectrum_viewer_limits["y_max"]["value"],)
+        self.spectrum_viewer.set_limits(x_min=self.viewer_limits["x_min"]["value"],
+                                        x_max=self.viewer_limits["x_max"]["value"],
+                                        y_min=self.viewer_limits["y_min"]["value"],
+                                        y_max=self.viewer_limits["y_max"]["value"],)
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
