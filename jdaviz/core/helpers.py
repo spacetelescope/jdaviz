@@ -132,8 +132,8 @@ class ConfigHelper(HubListener):
         viewers : dict
             dict of viewer objects
         """
-        return {getattr(viewer, 'reference', k): viewer.user_api
-                for k, viewer in self.app._viewer_store.items()}
+        return {viewer._ref_or_id: viewer.user_api
+                for viewer in self.app._viewer_store.values()}
 
     @property
     def fitted_models(self):

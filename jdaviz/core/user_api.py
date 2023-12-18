@@ -114,4 +114,4 @@ class ViewerUserApi(UserApiWrapper):
         super().__init__(viewer, expose, readonly)
 
     def __repr__(self):
-        return f'<{self._obj.reference} API>'
+        return f'<{self._obj._ref_or_id} API>'
