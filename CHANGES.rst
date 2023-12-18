@@ -31,6 +31,9 @@ API Changes
 - ``width`` argument in Line Analysis plugin is renamed to ``continuum_width`` and ``width``
   will be removed in a future release. [#2587]
 
+- New API access to ``viz.data_labels``, ``viewer.data_labels_visible`` and
+  ``viewer.data_labels_loaded``. [#2626]
+
 Cubeviz
 ^^^^^^^
 
