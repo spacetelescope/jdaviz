@@ -92,6 +92,8 @@ Imviz
 - Stretch histogram now represents mixed state for any of the inputs (when multiple viewers are
   selected) with an overlay appropriately. [#2606]
 
+- Fixes viewer keys in ``viz.viewers`` for additionally created viewers. [#2624]
+
 Mosviz
 ^^^^^^
 
