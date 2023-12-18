@@ -31,12 +31,10 @@ embed:
     - share/**/*
 
 plugin:
-- all:
-  - changed-files:
-    - any-glob-to-any-file:
-      - '**/plugins/**/*'
-    - all-globs-to-all-files:
-      - '!**/plugins/viewers.py'
+- changed-files:
+  - all-globs-to-any-file:
+    - '**/plugins/**/*'
+    - '!**/plugins/viewers.py'
 
 cubeviz:
 - changed-files:
