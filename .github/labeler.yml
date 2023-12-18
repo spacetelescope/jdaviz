@@ -1,32 +1,62 @@
 documentation:
-  - docs/**/*
-  - licenses/*
-  - notebooks/**/*
-  - .readthedocs.yaml
-  - README.rst
+- changed-files:
+  - any-glob-to-any-file:
+    - docs/**/*
+    - licenses/*
+    - notebooks/**/*
+    - .mailmap
+    - .readthedocs.yaml
+    - README.rst
+    - LICENSE.rst
+    - '*.md'
+    - '*.cff'
 
 testing:
-  - .github/workflows/*
-  - jdaviz/conftest.py
-  - jdaviz/tests/*
-  - .bandit.yaml
-  - tox.ini
+- changed-files:
+  - any-glob-to-any-file:
+    - .github/workflows/*
+    - jdaviz/conftest.py
+    - jdaviz/tests/*
+    - .bandit.yaml
+    - .flake8
+    - codecov.yml
+    - conftest.py
+    - '**/conftest.py'
+    - tox.ini
 
 embed:
-  - jdaviz/*.vue
-  - share/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - jdaviz/*.vue
+    - share/**/*
+
+plugin:
+- changed-files:
+  - all-globs-to-any-file:
+    - '**/plugins/**/*'
+    - '!**/plugins/viewers.py'
 
 cubeviz:
-  - jdaviz/configs/cubeviz/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - jdaviz/configs/cubeviz/**/*
 
 imviz:
-  - jdaviz/configs/imviz/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - jdaviz/configs/imviz/**/*
 
 mosviz:
-  - jdaviz/configs/mosviz/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - jdaviz/configs/mosviz/**/*
 
 specviz:
-  - jdaviz/configs/specviz/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - jdaviz/configs/specviz/**/*
 
 specviz2d:
-  - jdaviz/configs/specviz2d/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - jdaviz/configs/specviz2d/**/*
