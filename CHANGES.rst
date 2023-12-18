@@ -3,7 +3,7 @@
 
 New Features
 ------------
-- Stretch bounds tool now enables dynamic adjustment of spline knots. [#2545]
+- Stretch bounds tool now enables dynamic adjustment of spline knots. [#2545, #2623]
 
 Cubeviz
 ^^^^^^^

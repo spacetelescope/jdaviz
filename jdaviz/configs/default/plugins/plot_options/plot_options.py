@@ -634,6 +634,12 @@ class PlotOptions(PluginTemplateMixin):
         for name in names:
             sync_state = getattr(self, name)
             sync_state.unmix_state()
+        if 'stretch_params' in names:
+            # there is no way to call send_state to force the update to the layers,
+            # so we'll force an update by clearing first
+            stretch_params = dict(self.stretch_params_value)
+            self.stretch_params_value = {}
+            self.stretch_params_value = stretch_params
 
     def vue_set_value(self, data):
         attr_name = data.get('name')
@@ -692,13 +698,15 @@ class PlotOptions(PluginTemplateMixin):
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
 
-    @observe('stretch_function_sync', 'stretch_vmin_sync', 'stretch_vmax_sync',
+    @observe('stretch_function_sync', 'stretch_params_sync',
+             'stretch_vmin_sync', 'stretch_vmax_sync',
              'image_color_mode_sync', 'image_color_sync', 'image_colormap_sync')
     def _update_stretch_hist_sync(self, msg={}):
         # the histogram should show as mixed if ANY of the input parameters are mixed
         # these should match in the @observe above, all_syncs here, as well as the strings
         # passed to unmix_state in the <glue-state-sync-wrapper> in plot_options.vue
-        all_syncs = [self.stretch_function_sync, self.stretch_vmin_sync, self.stretch_vmax_sync,
+        all_syncs = [self.stretch_function_sync, self.stretch_params_sync,
+                     self.stretch_vmin_sync, self.stretch_vmax_sync,
                      self.image_color_mode_sync, self.image_color_sync, self.image_colormap_sync]
         self.stretch_hist_sync = {'in_subscribed_states': bool(np.any([sync.get('in_subscribed_states', False) for sync in all_syncs])),  # noqa
                                   'mixed': bool(np.any([sync.get('mixed', False) for sync in all_syncs]))}  # noqa

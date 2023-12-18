@@ -3223,6 +3223,8 @@ class PlotOptionsSyncState(BasePluginComponent):
             # return False if the layer itself is not visible.  Setting this object
             # to True will then set both glue_name and visible to True.
             return getattr(state, glue_name) and getattr(state, 'visible')
+        if glue_name in ('c_min', 'c_max'):
+            return float(getattr(state, glue_name))
 
         return getattr(state, glue_name)
 
@@ -3301,10 +3303,22 @@ class PlotOptionsSyncState(BasePluginComponent):
 
     def is_mixed(self, glue_values):
         if len(glue_values) and isinstance(glue_values[0], dict):
-            # If we want to expose dictionary inputs in the plot options UI,
-            # this will need to be updated to check if any of the dictionaries
-            # in the list are not exact matches
-            return None
+            if len(np.unique([len(item) for item in glue_values], axis=0)) > 1:
+                # different lengths
+                return True
+
+            # guaranteed to have same lengths
+            if len(np.unique([list(item.keys()) for item in glue_values], axis=0)) > 1:
+                # different keys
+                return True
+
+            # guaranteed to each have the same set of keys, so now we can loop over keys and
+            # compare values
+            for k in glue_values[0].keys():
+                if len(np.unique([item.get(k) for item in glue_values], axis=0)) > 1:
+                    return True
+
+            return False
         return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):
@@ -3315,6 +3329,13 @@ class PlotOptionsSyncState(BasePluginComponent):
             for state in self.linked_states:
                 current_glue_values.append(self._get_glue_value(state))
             mixed = self.is_mixed(current_glue_values)
+            # ensure the value corresponds to the first entry, this prevents the case where a glue
+            # change to one of the linked_states changes the value that will be adopted when
+            # unmixing something in mixed state and results in more consistent and predictable
+            # behavior
+            self._processing_change_from_glue = True
+            self.value = current_glue_values[0]
+            self._processing_change_from_glue = False
         self.sync = {**self.sync,
                      'mixed': mixed}
 

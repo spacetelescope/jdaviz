@@ -468,7 +468,8 @@
         <glue-state-sync-wrapper 
             :sync="stretch_hist_sync"
             :multiselect="layer_multiselect" 
-            @unmix-state="unmix_state(['stretch_function', 'stretch_vmin', 'stretch_vmax',
+            @unmix-state="unmix_state(['stretch_function', 'stretch_params',
+                                       'stretch_vmin', 'stretch_vmax', 
                                        'image_color_mode', 'image_color', 'image_colormap'])"
         >
           <jupyter-widget :widget="stretch_histogram_widget"/>
