@@ -35,7 +35,7 @@ plugin:
   - changed-files:
     - any-glob-to-any-file:
       - '**/plugins/**/*'
-    - all-globs-to-any-file:
+    - all-globs-to-all-files:
       - '!**/plugins/viewers.py'
 
 cubeviz:
