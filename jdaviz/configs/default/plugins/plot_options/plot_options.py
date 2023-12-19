@@ -211,7 +211,7 @@ class PlotOptions(PluginTemplateMixin):
     viewer_x_max_value = FloatHandleEmpty().tag(sync=True)
     viewer_x_max_sync = Dict().tag(sync=True)
 
-    viewer_x_unit_value = Unicode().tag(sync=True)
+    viewer_x_unit_value = Unicode(allow_none=True).tag(sync=True)
     viewer_x_unit_sync = Dict().tag(sync=True)
 
     viewer_y_min_value = FloatHandleEmpty().tag(sync=True)
@@ -220,7 +220,7 @@ class PlotOptions(PluginTemplateMixin):
     viewer_y_max_value = FloatHandleEmpty().tag(sync=True)
     viewer_y_max_sync = Dict().tag(sync=True)
 
-    viewer_y_unit_value = Unicode().tag(sync=True)
+    viewer_y_unit_value = Unicode(allow_none=True).tag(sync=True)
     viewer_y_unit_sync = Dict().tag(sync=True)
 
     viewer_x_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
@@ -748,14 +748,20 @@ class PlotOptions(PluginTemplateMixin):
             # plugin hasn't been fully initialized yet
             return
 
+        if not self.viewer.selected:  # pragma: no cover
+            # nothing selected yet
+            return
+
         viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj # noqa
         if not isinstance(viewer.state, ImageViewerState):
-            stretch_step = (viewer.state.x_max) / 100.
-            self.viewer_x_bound_step = np.round(stretch_step,
-                                                decimals=-int(np.log10(stretch_step))+1)
-            stretch_step = (viewer.state.y_max) / 100.
-            self.viewer_y_bound_step = np.round(stretch_step,
-                                                decimals=-int(np.log10(stretch_step))+1)
+            if hasattr(viewer.state, "x_max") and viewer.state.x_max is not None:
+                stretch_step = (viewer.state.x_max) / 100.
+                self.viewer_x_bound_step = np.round(stretch_step,
+                                                    decimals=-int(np.log10(stretch_step))+1)
+            if hasattr(viewer.state, "y_max") and viewer.state.y_max is not None:
+                stretch_step = (viewer.state.y_max) / 100.
+                self.viewer_y_bound_step = np.round(stretch_step,
+                                                    decimals=-int(np.log10(stretch_step))+1)
 
     @observe('stretch_function_sync', 'stretch_params_sync',
              'stretch_vmin_sync', 'stretch_vmax_sync',

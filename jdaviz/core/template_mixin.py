@@ -3325,8 +3325,12 @@ class PlotOptionsSyncState(BasePluginComponent):
             return False
 
         # Need this for temporary None value during startup
-        elif len(glue_values) and glue_values[0] is None:
-            return False
+        elif len(glue_values):
+            no_nones = [x for x in glue_values if x is not None]
+            if len(no_nones) == 0:
+                return False
+            if len(no_nones) != len(glue_values):
+                return True
 
         return len(np.unique(glue_values, axis=0)) > 1
 
