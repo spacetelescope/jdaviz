@@ -211,11 +211,17 @@ class PlotOptions(PluginTemplateMixin):
     viewer_x_max_value = Float().tag(sync=True)
     viewer_x_max_sync = Dict().tag(sync=True)
 
+    viewer_x_unit_value = Unicode().tag(sync=True)
+    viewer_x_unit_sync = Dict().tag(sync=True)
+
     viewer_y_min_value = Float().tag(sync=True)
     viewer_y_min_sync = Dict().tag(sync=True)
 
     viewer_y_max_value = Float().tag(sync=True)
     viewer_y_max_sync = Dict().tag(sync=True)
+
+    viewer_y_unit_value = Unicode().tag(sync=True)
+    viewer_y_unit_sync = Dict().tag(sync=True)
 
     # scatter/marker options
     marker_visible_value = Bool().tag(sync=True)
@@ -430,6 +436,10 @@ class PlotOptions(PluginTemplateMixin):
                                                  'viewer_x_max_value', 'viewer_x_max_sync',
                                                  state_filter=not_image_viewer)
 
+        self.viewer_x_unit = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_display_unit',
+                                                 'viewer_x_unit_value', 'viewer_x_unit_sync',
+                                                 state_filter=not_image_viewer)
+
         self.viewer_y_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_min',
                                                  'viewer_y_min_value', 'viewer_y_min_sync',
                                                  state_filter=not_image)
@@ -437,6 +447,10 @@ class PlotOptions(PluginTemplateMixin):
         self.viewer_y_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_max',
                                                  'viewer_y_max_value', 'viewer_y_max_sync',
                                                  state_filter=not_image)
+
+        self.viewer_y_unit = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_display_unit',
+                                                 'viewer_y_unit_value', 'viewer_y_unit_sync',
+                                                 state_filter=not_image_viewer)
 
         # Scatter/marker options:
         # NOTE: marker_visible hides the entire layer (including the line)
@@ -589,21 +603,6 @@ class PlotOptions(PluginTemplateMixin):
         self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
                                                  'axes_visible_value', 'axes_visible_sync',
                                                  state_filter=not_profile)
-
-        # zoom limits (spectrum viewers only)
-        self.viewer_limits = {}
-        for viewer in self.viewer.choices:
-            temp_viewer = self.app.get_viewer(viewer)
-            if not isinstance(temp_viewer.state, ImageViewerState):
-                print(f"Adding callback for {temp_viewer}, {type(temp_viewer.state)}")
-                self.viewer_limits[viewer] =  {"x_min": {"value": 0, "unit": "test"},
-                                               "x_max": {"value": 1, "unit": "test"},
-                                               "y_min": {"value": 0, "unit": "test"},
-                                               "y_max": {"value": 1, "unit": "test"}}
-                for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
-                    temp_viewer.state.add_callback(attr, self._sync_viewer_limits)
-
-        # display_units
 
         self.show_viewer_labels = self.app.state.settings['viewer_labels']
         self.app.state.add_callback('settings', self._on_app_settings_changed)

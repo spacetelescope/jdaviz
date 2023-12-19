@@ -53,6 +53,7 @@
                 v-model.number="viewer_x_min_value"
                 type="number"
                 :step="stretch_vstep"
+                :suffix="viewer_x_unit_value"
               ></v-text-field>
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="viewer_x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_max')">
@@ -62,6 +63,7 @@
                 v-model.number="viewer_x_max_value"
                 type="number"
                 :step="stretch_vstep"
+                :suffix="viewer_x_unit_value"
               ></v-text-field>
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="viewer_y_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_min')">
@@ -71,6 +73,7 @@
                 v-model.number="viewer_y_min_value"
                 type="number"
                 :step="stretch_vstep"
+                :suffix="viewer_y_unit_value"
               ></v-text-field>
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="viewer_y_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_max')">
@@ -80,12 +83,9 @@
                 v-model.number="viewer_y_max_value"
                 type="number"
                 :step="stretch_vstep"
+                :suffix="viewer_y_unit_value"
               ></v-text-field>
             </glue-state-sync-wrapper>
-            <v-row>
-              <plugin-action-button :results_isolated_to_plugin="false" @click="apply_updated_bounds">Apply Updated Bounds</plugin-action-button>
-
-            </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
