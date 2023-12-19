@@ -26,7 +26,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
                                         skip_if_no_updates_since_last_active, with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 
 from scipy.interpolate import PchipInterpolator
 
@@ -205,19 +205,19 @@ class PlotOptions(PluginTemplateMixin):
     uncertainty_visible_value = Int().tag(sync=True)
     uncertainty_visible_sync = Dict().tag(sync=True)
 
-    viewer_x_min_value = Float().tag(sync=True)
+    viewer_x_min_value = FloatHandleEmpty().tag(sync=True)
     viewer_x_min_sync = Dict().tag(sync=True)
 
-    viewer_x_max_value = Float().tag(sync=True)
+    viewer_x_max_value = FloatHandleEmpty().tag(sync=True)
     viewer_x_max_sync = Dict().tag(sync=True)
 
     viewer_x_unit_value = Unicode().tag(sync=True)
     viewer_x_unit_sync = Dict().tag(sync=True)
 
-    viewer_y_min_value = Float().tag(sync=True)
+    viewer_y_min_value = FloatHandleEmpty().tag(sync=True)
     viewer_y_min_sync = Dict().tag(sync=True)
 
-    viewer_y_max_value = Float().tag(sync=True)
+    viewer_y_max_value = FloatHandleEmpty().tag(sync=True)
     viewer_y_max_sync = Dict().tag(sync=True)
 
     viewer_y_unit_value = Unicode().tag(sync=True)
