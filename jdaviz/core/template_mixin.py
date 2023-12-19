@@ -3323,6 +3323,11 @@ class PlotOptionsSyncState(BasePluginComponent):
                     return True
 
             return False
+
+        # Need this for temporary None value during startup
+        elif len(glue_values) and glue_values[0] is None:
+            return False
+
         return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):
