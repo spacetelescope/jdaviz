@@ -119,18 +119,15 @@ div.output_wrapper {
   display: none;
 }
 
-.cubeviz .lm_close {
+.lm_close {
+  /* hide the close button on the right (which allows closing an entire group of tabs) 
+  so that we can control the ability to close tabs at the per-viewer level */
   display: none !important;
 }
 
 .cubeviz .lm_close_tab {
+  /* do not allow closing any viewer tabs in cubeviz */
   display: none;
-}
-
-.imviz .lm_close {
-  /* hide the close button on the right to prevent closing the default viewer
-     since we cannot easily discriminate between different viewers in the filter here */
-  display: none !important;
 }
 
 .imviz .lm_tab[title="imviz-0"] > .lm_close_tab {
