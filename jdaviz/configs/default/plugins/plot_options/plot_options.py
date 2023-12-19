@@ -223,6 +223,9 @@ class PlotOptions(PluginTemplateMixin):
     viewer_y_unit_value = Unicode().tag(sync=True)
     viewer_y_unit_sync = Dict().tag(sync=True)
 
+    viewer_x_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
+    viewer_y_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
+
     # scatter/marker options
     marker_visible_value = Bool().tag(sync=True)
     marker_visible_sync = Dict().tag(sync=True)
@@ -743,6 +746,19 @@ class PlotOptions(PluginTemplateMixin):
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
 
+    @observe('viewer_selected')
+    def _update_viewer_bound_steps(self, msg={}):
+        if not hasattr(self, 'viewer'):  # pragma: no cover
+            # plugin hasn't been fully initialized yet
+            return
+
+        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj
+        if not isinstance(viewer.state, ImageViewerState):
+            stretch_step = (viewer.state.x_max) / 100.
+            self.viewer_x_bound_step = np.round(stretch_step, decimals=-int(np.log10(stretch_step))+1)
+            stretch_step = (viewer.state.y_max) / 100.
+            self.viewer_y_bound_step = np.round(stretch_step, decimals=-int(np.log10(stretch_step))+1)
+
     @observe('stretch_function_sync', 'stretch_params_sync',
              'stretch_vmin_sync', 'stretch_vmax_sync',
              'image_color_mode_sync', 'image_color_sync', 'image_colormap_sync')
@@ -755,17 +771,6 @@ class PlotOptions(PluginTemplateMixin):
                      self.image_color_mode_sync, self.image_color_sync, self.image_colormap_sync]
         self.stretch_hist_sync = {'in_subscribed_states': bool(np.any([sync.get('in_subscribed_states', False) for sync in all_syncs])),  # noqa
                                   'mixed': bool(np.any([sync.get('mixed', False) for sync in all_syncs]))}  # noqa
-
-    def _sync_viewer_limits(self, msg={}):
-        for viewer in self.viewer_limits:
-            temp_viewer = self.app.get_viewer(viewer)
-            for axis in ("x", "y"):
-                unit = getattr(temp_viewer.state, f"{axis}_display_unit")
-                for bound in ("_min", "_max"):
-                    value = getattr(temp_viewer.state, f"{axis}{bound}")
-                    setattr(self, f"{axis}{bound}_value", value)
-                    self.viewer_limits[viewer][f"{axis}{bound}"]["unit"] = unit
-        self.send_state("viewer_limits")
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')

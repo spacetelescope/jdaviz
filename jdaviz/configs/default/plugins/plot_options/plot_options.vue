@@ -52,7 +52,7 @@
                 label="Viewer X Min"
                 v-model.number="viewer_x_min_value"
                 type="number"
-                :step="stretch_vstep"
+                :step="viewer_x_bound_step"
                 :suffix="viewer_x_unit_value"
               ></v-text-field>
             </glue-state-sync-wrapper>
@@ -62,7 +62,7 @@
                 label="Viewer X Max"
                 v-model.number="viewer_x_max_value"
                 type="number"
-                :step="stretch_vstep"
+                :step="viewer_x_bound_step"
                 :suffix="viewer_x_unit_value"
               ></v-text-field>
             </glue-state-sync-wrapper>
@@ -72,7 +72,7 @@
                 label="Viewer Y Min"
                 v-model.number="viewer_y_min_value"
                 type="number"
-                :step="stretch_vstep"
+                :step="viewer_y_bound_step"
                 :suffix="viewer_y_unit_value"
               ></v-text-field>
             </glue-state-sync-wrapper>
@@ -82,7 +82,7 @@
                 label="Viewer Y Max"
                 v-model.number="viewer_y_max_value"
                 type="number"
-                :step="stretch_vstep"
+                :step="viewer_y_bound_step"
                 :suffix="viewer_y_unit_value"
               ></v-text-field>
             </glue-state-sync-wrapper>
