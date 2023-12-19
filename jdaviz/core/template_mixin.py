@@ -3301,7 +3301,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                      'in_subscribed_states': in_subscribed_states,
                      'icons': icons,
                      'mixed': self.is_mixed(current_glue_values)}
-        if len(current_glue_values):
+        if len(current_glue_values) and current_glue_values[0] is not None:
             # sync the initial value of the widget, avoiding recursion
             self._on_glue_value_changed(current_glue_values[0])
 

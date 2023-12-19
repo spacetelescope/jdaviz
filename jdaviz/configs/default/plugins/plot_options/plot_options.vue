@@ -46,16 +46,42 @@
             <span style="padding: 6px">Viewer bounds</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row v-for="item in viewer_limits">
+            <glue-state-sync-wrapper :sync="viewer_x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_min')">
               <v-text-field
-              ref="item"
-              :label="item.label"
-              v-model.number="item.value"
-              type="number"
-              step="0.1"
-              :suffix="item.unit"
+                ref="viewer_x_min"
+                label="Viewer X Min"
+                v-model.number="viewer_x_min_value"
+                type="number"
+                :step="stretch_vstep"
               ></v-text-field>
-            </v-row>
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_max')">
+              <v-text-field
+                ref="viewer_x_max"
+                label="Viewer X Max"
+                v-model.number="viewer_x_max_value"
+                type="number"
+                :step="stretch_vstep"
+              ></v-text-field>
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_y_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_min')">
+              <v-text-field
+                ref="viewer_y_min"
+                label="Viewer Y Min"
+                v-model.number="viewer_y_min_value"
+                type="number"
+                :step="stretch_vstep"
+              ></v-text-field>
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_y_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_max')">
+              <v-text-field
+                ref="viewer_y_max"
+                label="Viewer Y Max"
+                v-model.number="viewer_y_max_value"
+                type="number"
+                :step="stretch_vstep"
+              ></v-text-field>
+            </glue-state-sync-wrapper>
             <v-row>
               <plugin-action-button :results_isolated_to_plugin="false" @click="apply_updated_bounds">Apply Updated Bounds</plugin-action-button>
 

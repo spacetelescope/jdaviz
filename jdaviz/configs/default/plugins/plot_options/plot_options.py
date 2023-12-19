@@ -205,6 +205,18 @@ class PlotOptions(PluginTemplateMixin):
     uncertainty_visible_value = Int().tag(sync=True)
     uncertainty_visible_sync = Dict().tag(sync=True)
 
+    viewer_x_min_value = Float().tag(sync=True)
+    viewer_x_min_sync = Dict().tag(sync=True)
+
+    viewer_x_max_value = Float().tag(sync=True)
+    viewer_x_max_sync = Dict().tag(sync=True)
+
+    viewer_y_min_value = Float().tag(sync=True)
+    viewer_y_min_sync = Dict().tag(sync=True)
+
+    viewer_y_max_value = Float().tag(sync=True)
+    viewer_y_max_sync = Dict().tag(sync=True)
+
     # scatter/marker options
     marker_visible_value = Bool().tag(sync=True)
     marker_visible_sync = Dict().tag(sync=True)
@@ -369,6 +381,9 @@ class PlotOptions(PluginTemplateMixin):
         def not_image(state):
             return not is_image(state)
 
+        def not_image_viewer(state):
+            return not isinstance(state, ImageViewerState)
+
         def not_image_or_spatial_subset(state):
             return not is_image(state) and not is_spatial_subset(state)
 
@@ -406,6 +421,22 @@ class PlotOptions(PluginTemplateMixin):
                                                   'line_as_steps_value', 'line_as_steps_sync')
         self.uncertainty_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty',  # noqa
                                                         'uncertainty_visible_value', 'uncertainty_visible_sync')  # noqa
+
+        self.viewer_x_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_min',
+                                                 'viewer_x_min_value', 'viewer_x_min_sync',
+                                                 state_filter=not_image_viewer)
+
+        self.viewer_x_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_max',
+                                                 'viewer_x_max_value', 'viewer_x_max_sync',
+                                                 state_filter=not_image_viewer)
+
+        self.viewer_y_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_min',
+                                                 'viewer_y_min_value', 'viewer_y_min_sync',
+                                                 state_filter=not_image)
+
+        self.viewer_y_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_max',
+                                                 'viewer_y_max_value', 'viewer_y_max_sync',
+                                                 state_filter=not_image)
 
         # Scatter/marker options:
         # NOTE: marker_visible hides the entire layer (including the line)
@@ -733,18 +764,9 @@ class PlotOptions(PluginTemplateMixin):
                 unit = getattr(temp_viewer.state, f"{axis}_display_unit")
                 for bound in ("_min", "_max"):
                     value = getattr(temp_viewer.state, f"{axis}{bound}")
-                    self.viewer_limits[viewer][f"{axis}{bound}"]["value"] = value
+                    setattr(self, f"{axis}{bound}_value", value)
                     self.viewer_limits[viewer][f"{axis}{bound}"]["unit"] = unit
         self.send_state("viewer_limits")
-
-    def vue_apply_updated_bounds(self, msg={}):
-        viewers = self.viewer.selected_obj if self.viewer_multiselect else [self.viewer.selected_obj]
-        for viewer in viewers:
-            temp_viewer = self.app.get_viewer(viewer)
-            temp_viewer.set_limits(x_min=self.viewer_limits["x_min"]["value"],
-                                   x_max=self.viewer_limits["x_max"]["value"],
-                                   y_min=self.viewer_limits["y_min"]["value"],
-                                   y_max=self.viewer_limits["y_max"]["value"],)
 
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
