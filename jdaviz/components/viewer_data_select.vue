@@ -75,6 +75,7 @@
         </div>
 
         <div v-if="extraDataItems.length > 0" style="margin-bottom: -8px;">
+        <div v-if="extraDataItems.length" style="margin-bottom: -100px; height: 200px">
           <v-row key="extra-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
             <span 
               @click="toggleShowExtraItems"
