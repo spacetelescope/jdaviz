@@ -132,9 +132,8 @@ class JdavizViewerMixin:
         # Do not override default for subsets as for some reason
         # this isn't getting called when they're first added, but rather when
         # the next state change is made (for example: manually changing the visibility)
-        #layer_state = self._get_layer(msg.subset.label)
         subset_type = get_subset_type(layer_state.layer)
-        
+
         if subset_type == 'spectral':
             if self.__class__.__name__ == 'CubevizImageView':
                 # don't display images layers in flux/uncert-viewers if they're spectral
