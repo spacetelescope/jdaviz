@@ -21,3 +21,12 @@ def test_specviz_zoom_level(specviz_helper):
     assert v._obj.state.x_max == 2
     assert v._obj.state.y_min == 1
     assert v._obj.state.y_max == 2
+
+
+def test_specviz_data_labels(specviz_helper, spectrum1d):
+    label = "Test 1D Spectrum"
+    specviz_helper.load_data(spectrum1d, data_label=label)
+
+    assert specviz_helper.data_labels == [label]
+    assert specviz_helper.viewers['spectrum-viewer'].data_labels_loaded == [label]
+    assert specviz_helper.viewers['spectrum-viewer'].data_labels_visible == [label]
