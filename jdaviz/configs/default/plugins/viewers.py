@@ -129,23 +129,28 @@ class JdavizViewerMixin:
             layer_state.add_callback('as_steps', self._show_uncertainty_changed)
 
     def _expected_subset_layer_default(self, layer_state):
-        if self.__class__.__name__ == 'CubevizImageView':
-            # Do not override default for subsets as for some reason
-            # this isn't getting called when they're first added, but rather when
-            # the next state change is made (for example: manually changing the visibility)
-            subset_type = self.get_subset_type(layer_state.layer)
-            if subset_type == 'spatial':
-                return
-            elif subset_type == 'spectral':
-                spectral_layers = self._get_spectral_subset_layers(layer_state.layer.data.label)
-                for layer in spectral_layers:
-                    layer.visible = False
-            else:
-                return
-        '''
-        default visibility based on the visibility of the "parent" data layer
-        layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
-        '''
+        # Do not override default for subsets as for some reason
+        # this isn't getting called when they're first added, but rather when
+        # the next state change is made (for example: manually changing the visibility)
+        #layer_state = self._get_layer(msg.subset.label)
+        subset_type = get_subset_type(layer_state.layer)
+        
+        if subset_type == 'spectral':
+            if self.__class__.__name__ == 'CubevizImageView':
+                # don't display images layers in flux/uncert-viewers if they're spectral
+                layer_state.visible = False
+            elif self.__class__.__name__ == 'CubevizProfileView':
+                # default visibility of spectrum-viewer layers
+                layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
+        elif subset_type == 'spatial':
+            # display spatial layers
+            if (self.__class__.__name__ == 'CubevizImageView' or
+                    self.__class__.__name__ == 'CubevizProfileView'):
+                layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
+        else:
+            # Other configs, and for Cubeviz
+            # Want to plot spatial or None type subsets, in both Viewers
+            layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
 
     def _update_layer_icons(self):
         # update visible_layers (TODO: move this somewhere that can update on color change, etc)
