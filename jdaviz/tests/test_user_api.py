@@ -13,6 +13,13 @@ class TestImviz_WCS_WCS(BaseImviz_WCS_WCS):
         assert v._obj.state.x_min == 1.5
         assert v._obj.state.x_max == 6.5
 
+    def test_imviz_viewers(self):
+        self.imviz.create_image_viewer()
+        self.imviz.create_image_viewer()
+
+        # regression test for https://github.com/spacetelescope/jdaviz/pull/2624
+        assert len(self.imviz.viewers) == 3
+
 
 def test_specviz_zoom_level(specviz_helper):
     v = specviz_helper.viewers['spectrum-viewer']
