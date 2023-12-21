@@ -36,7 +36,10 @@ class JdavizViewerMixin:
     @property
     def user_api(self):
         # default exposed user APIs.  Can override this method in any particular viewer.
-        expose = ['data_labels', 'data_labels_loaded', 'data_labels_visible']
+        if not isinstance(self, TableViewer):
+            expose = ['data_labels', 'data_labels_loaded', 'data_labels_visible']
+        else:
+            expose = []
         if isinstance(self, BqplotImageView):
             if isinstance(self, AstrowidgetsImageViewerMixin):
                 expose += ['save',
