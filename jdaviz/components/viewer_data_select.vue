@@ -151,7 +151,8 @@ module.exports = {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
           if (item.meta.Plugin === undefined) {
             // then the data can be a cube (auto-collapsed) as long as its the flux data
-            return item.name.indexOf('[FLUX]') !== -1 && this.dataItemInViewer(item, returnExtraItems)
+            // if this logic moves to python, we could check directly against reference data instead
+            return (item.name.indexOf('[FLUX]') !== -1 || item.name.indexOf('[SCI]') !== -1) && this.dataItemInViewer(item, returnExtraItems)
           } else if (item.meta.Plugin === 'GaussianSmooth') {
             // spectrally smoothed would still be a collapsible cube
             return item.ndims === 3 && this.dataItemInViewer(item, returnExtraItems)

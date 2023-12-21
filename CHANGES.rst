@@ -84,6 +84,8 @@ Cubeviz
 
 - Fixes ability to remove cube data from the app. [#2608]
 
+- Fixes [SCI] data not showing in the spectrum viewer's data menu. [#2631]
+
 Imviz
 ^^^^^
 
