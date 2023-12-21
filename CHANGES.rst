@@ -1,4 +1,4 @@
-3.8.1 (unreleased)
+3.8.1 (2023-12-21)
 ==================
 
 Bug Fixes
@@ -27,16 +27,10 @@ Imviz
 
 - Fixes viewer keys in ``viz.viewers`` for additionally created viewers. [#2624]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 -  Fixed parser bug where an HDUList would load as SpectrumList, even though it was a Spectrum1D. [#2576]
-
-Specviz2d
-^^^^^^^^^
 
 3.8 (2023-11-29)
 ================

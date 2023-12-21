@@ -27,6 +27,9 @@ authors:
 - family-names: "Geda"
   given-names: "Robel"
   orcid: "https://orcid.org/0000-0003-1509-9966"
+- family-names: "Green"
+  given-names: "Gilbert"
+  orcid: "https://orcid.org/0009-0004-2370-0699"
 - family-names: "Jones"
   given-names: "Craig"
 - family-names: "Karatay"
@@ -70,9 +73,9 @@ authors:
 - family-names: "Volfman"
   given-names: "Sabrina"
 title: "Jdaviz"
-version: 3.8.0
+version: 3.8.1
 doi: https://doi.org/10.5281/zenodo.5513927
-date-released: 2023-11-29
+date-released: 2023-12-21
 url: "https://github.com/spacetelescope/jdaviz"
 
 # see a full list of contributors here: https://github.com/spacetelescope/jdaviz/graphs/contributors
