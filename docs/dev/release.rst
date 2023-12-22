@@ -4,7 +4,7 @@ Package Release Instructions
 
 This document outlines the steps for releasing a versioned Jdaviz package to
 PyPI. Currently, these do not cover submitting package updates to other
-distribution outlets, such as ``astroconda`` or ``conda-forge``.
+distribution outlets, such as ``conda-forge``.
 
 This process currently requires you (the release manager) to have sufficient GitHub
 permissions to tag, push, and create a GitHub release on Jdaviz repository. These
@@ -89,8 +89,8 @@ You can do a release from your fork directly without a clean code check-out.
      git commit -m "Preparing release vX.Y.0"
 
 #. Push the ``vX.Y.x`` branch to upstream.
-   Make sure the CI passes. If any of the CI fails, especially the job that
-   says "Release", abandon this way. Stop here; do not continue! Otherwise,
+   Make sure the CI passes. If any of the CI fails,
+   abandon this way. Stop here; do not continue! Otherwise,
    go to the next step.
 
 #. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
@@ -295,8 +295,8 @@ instances of ``vX.Y.x`` with ``v3.5.x``.
      git commit -m "Preparing release vX.Y.Z"
 
 #. Push the ``vX.Y.x`` branch to upstream.
-   Make sure the CI passes. If any of the CI fails, especially the job that
-   says "Release", abandon this way. Stop here; do not continue! Otherwise,
+   Make sure the CI passes. If any of the CI fails,
+   abandon this way. Stop here; do not continue! Otherwise,
    go to the next step.
 
 #. Go to `Releases on GitHub <https://github.com/spacetelescope/jdaviz/releases>`_
