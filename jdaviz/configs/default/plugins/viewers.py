@@ -36,24 +36,57 @@ class JdavizViewerMixin:
     @property
     def user_api(self):
         # default exposed user APIs.  Can override this method in any particular viewer.
+        if not isinstance(self, TableViewer):
+            expose = ['data_labels', 'data_labels_loaded', 'data_labels_visible']
+        else:
+            expose = []
         if isinstance(self, BqplotImageView):
             if isinstance(self, AstrowidgetsImageViewerMixin):
-                expose = ['save',
-                          'center_on', 'offset_by', 'zoom_level', 'zoom',
-                          'colormap_options', 'set_colormap',
-                          'stretch_options', 'stretch',
-                          'autocut_options', 'cuts',
-                          'marker', 'add_markers', 'remove_markers', 'reset_markers',
-                          'blink_once', 'reset_limits']
+                expose += ['save',
+                           'center_on', 'offset_by', 'zoom_level', 'zoom',
+                           'colormap_options', 'set_colormap',
+                           'stretch_options', 'stretch',
+                           'autocut_options', 'cuts',
+                           'marker', 'add_markers', 'remove_markers', 'reset_markers',
+                           'blink_once', 'reset_limits']
             else:
                 # cubeviz image viewers don't inherit from AstrowidgetsImageViewerMixin yet,
                 # but also shouldn't expose set_limits because of equal aspect ratio concerns
-                expose = []
+                expose += []
         elif isinstance(self, TableViewer):
-            expose = []
+            expose += []
         else:
-            expose = ['set_limits', 'reset_limits']
+            expose += ['set_limits', 'reset_limits']
         return ViewerUserApi(self, expose=expose)
+
+    @property
+    def data_labels_loaded(self):
+        """
+        List of data labels loaded in this viewer.
+
+        Returns
+        -------
+        data_labels : list
+            list of strings
+        """
+        viewer_item = self.jdaviz_app._get_viewer_item(self.reference_id)
+        return [self.jdaviz_app._get_data_item_by_id(data_id)['name']
+                for data_id in viewer_item.get('selected_data_items', {}).keys()]
+
+    @property
+    def data_labels_visible(self):
+        """
+        List of data labels visible in this viewer.
+
+        Returns
+        -------
+        data_labels : list
+            list of strings
+        """
+        viewer_item = self.jdaviz_app._get_viewer_item(self.reference_id)
+        return [self.jdaviz_app._get_data_item_by_id(data_id)['name']
+                for data_id, visibility in viewer_item.get('selected_data_items', {}).items()
+                if visibility != 'hidden']
 
     def reset_limits(self):
         """

@@ -110,6 +110,18 @@ class ConfigHelper(HubListener):
         self.app.load_data(data, parser_reference=parser_reference, **kwargs)
 
     @property
+    def data_labels(self):
+        """
+        List of data labels loaded and available in jdaviz
+
+        Returns
+        -------
+        data_labels : list
+            list of strings
+        """
+        return [data.label for data in self.app.data_collection]
+
+    @property
     def plugins(self):
         """
         Access API objects for plugins in the plugin tray.
