@@ -93,6 +93,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if self.subset_selected != self.subset_select.default_text:
                 self.subset_selected = self.subset_select.default_text
                 self.show_region_info = False
+            # Reset theta to 0 if we're creating a new subset
+            for viewer_id in self.app._viewer_store:
+                viewer = self.app.get_viewer(viewer_id)
+                if hasattr(viewer.toolbar.active_tool, "_roi") and hasattr(viewer.toolbar.active_tool._roi, "theta"):
+                    viewer.toolbar.active_tool._roi.theta = 0
+
         else:
             new_label = self.session.edit_subset_mode.edit_subset[0].label
             if new_label != self.subset_selected:
@@ -103,7 +109,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     def _on_subset_update(self, *args):
         self._sync_selected_from_state(*args)
-        if 'Create New' in self.subset_selected:
+        if 'create new' in self.subset_selected.lower():
             return
         self._get_subset_definition(*args)
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
