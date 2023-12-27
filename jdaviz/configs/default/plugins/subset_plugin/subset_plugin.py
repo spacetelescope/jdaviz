@@ -96,8 +96,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             # Reset theta to 0 if we're creating a new subset
             for viewer_id in self.app._viewer_store:
                 viewer = self.app.get_viewer(viewer_id)
-                if hasattr(viewer.toolbar.active_tool, "_roi") and hasattr(viewer.toolbar.active_tool._roi, "theta"):
-                    viewer.toolbar.active_tool._roi.theta = 0
+                if hasattr(viewer.toolbar.active_tool, "_roi"):
+                    if hasattr(viewer.toolbar.active_tool._roi, "theta"):
+                        viewer.toolbar.active_tool._roi.theta = 0
 
         else:
             new_label = self.session.edit_subset_mode.edit_subset[0].label
