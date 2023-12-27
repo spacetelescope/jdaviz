@@ -73,6 +73,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Changing the angle of a subset no longer sometimes applies that angle to subsequent new subsets. [#2639]
+
 Cubeviz
 ^^^^^^^
 
