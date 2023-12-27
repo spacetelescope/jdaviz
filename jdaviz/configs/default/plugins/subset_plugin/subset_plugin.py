@@ -93,12 +93,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if self.subset_selected != self.subset_select.default_text:
                 self.subset_selected = self.subset_select.default_text
                 self.show_region_info = False
-            # Reset theta to 0 if we're creating a new subset
+            # Ditch the previous ROI if it was saved on the tool
             for viewer_id in self.app._viewer_store:
                 viewer = self.app.get_viewer(viewer_id)
                 if hasattr(viewer.toolbar.active_tool, "_roi"):
-                    if hasattr(viewer.toolbar.active_tool._roi, "theta"):
-                        viewer.toolbar.active_tool._roi.theta = 0
+                    viewer.toolbar.active_tool._roi = None
 
         else:
             new_label = self.session.edit_subset_mode.edit_subset[0].label
