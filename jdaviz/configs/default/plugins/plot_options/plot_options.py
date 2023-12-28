@@ -742,8 +742,7 @@ class PlotOptions(PluginTemplateMixin):
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
 
-    @observe('viewer_selected', 'viewer_x_max_value', 'viewer_x_min_value',
-             'viewer_y_max_value', 'viewer_y_min_value')
+    @observe('viewer_selected','viewer_x_max_value', 'viewer_x_min_value', 'viewer_y_max_value', 'viewer_y_min_value')
     def _update_viewer_bound_steps(self, msg={}):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet
@@ -757,17 +756,24 @@ class PlotOptions(PluginTemplateMixin):
         if not isinstance(viewer.state, ImageViewerState):
             # We round these values to show, e.g., 7.15 instead of 7.1499999
             if hasattr(viewer.state, "x_max") and viewer.state.x_max is not None:
-                stretch_step = (viewer.state.x_max) / 100.
-                decimals = -int(np.log10(stretch_step))+1
-                self.viewer_x_bound_step = np.round(stretch_step, decimals=decimals)
+                bound_step = (viewer.state.x_max) / 100.
+                decimals = -int(np.log10(bound_step))+1
+                self.viewer_x_bound_step = np.round(bound_step, decimals=decimals)
                 self.viewer_x_max_value = np.round(self.viewer_x_max_value, decimals=decimals)
                 self.viewer_x_min_value = np.round(self.viewer_x_min_value, decimals=decimals)
             if hasattr(viewer.state, "y_max") and viewer.state.y_max is not None:
-                stretch_step = (viewer.state.y_max) / 100.
-                decimals=-int(np.log10(stretch_step))+1
-                self.viewer_y_bound_step = np.round(stretch_step, decimals=decimals)
+                bound_step = (viewer.state.y_max) / 100.
+                decimals=-int(np.log10(bound_step))+1
+                self.viewer_y_bound_step = np.round(bound_step, decimals=decimals)
                 self.viewer_y_max_value = np.round(self.viewer_y_max_value, decimals=decimals)
                 self.viewer_y_min_value = np.round(self.viewer_y_min_value, decimals=decimals)
+
+    def vue_reset_viewer_bounds(self, _):
+        # This button is currently only exposed if only the spectrum viewer is selected
+        viewer = self.app.get_viewer('spectrum-viewer')
+        # Have to put something in each field or they won't update properly on home click
+
+        viewer.toolbar.tools['jdaviz:homezoom'].activate()
 
     @observe('stretch_function_sync', 'stretch_params_sync',
              'stretch_vmin_sync', 'stretch_vmax_sync',

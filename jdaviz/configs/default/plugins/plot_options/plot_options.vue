@@ -47,45 +47,51 @@
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
             <glue-state-sync-wrapper :sync="viewer_x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_min')">
-              <v-text-field
+              <glue-float-field
                 ref="viewer_x_min"
                 label="Viewer X Min"
-                v-model.number="viewer_x_min_value"
+                :value.sync="viewer_x_min_value"
                 type="number"
                 :step="viewer_x_bound_step"
                 :suffix="viewer_x_unit_value"
-              ></v-text-field>
+              />
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="viewer_x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_max')">
-              <v-text-field
+              <glue-float-field
                 ref="viewer_x_max"
                 label="Viewer X Max"
-                v-model.number="viewer_x_max_value"
+                :value.sync="viewer_x_max_value"
                 type="number"
                 :step="viewer_x_bound_step"
                 :suffix="viewer_x_unit_value"
-              ></v-text-field>
+              />
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="viewer_y_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_min')">
-              <v-text-field
+              <glue-float-field
                 ref="viewer_y_min"
                 label="Viewer Y Min"
-                v-model.number="viewer_y_min_value"
+                :value.sync="viewer_y_min_value"
                 type="number"
                 :step="viewer_y_bound_step"
                 :suffix="viewer_y_unit_value"
-              ></v-text-field>
+              />
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="viewer_y_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_max')">
-              <v-text-field
+              <glue-float-field
                 ref="viewer_y_max"
                 label="Viewer Y Max"
-                v-model.number="viewer_y_max_value"
+                :value.sync="viewer_y_max_value"
                 type="number"
                 :step="viewer_y_bound_step"
                 :suffix="viewer_y_unit_value"
-              ></v-text-field>
+              />
             </glue-state-sync-wrapper>
+            <plugin-action-button
+              :results_isolated_to_plugin="false"
+              @click="reset_viewer_bounds"
+            >
+              Reset viewer bounds
+            </plugin-action-button>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
