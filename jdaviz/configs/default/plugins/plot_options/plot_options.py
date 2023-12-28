@@ -754,14 +754,19 @@ class PlotOptions(PluginTemplateMixin):
 
         viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj # noqa
         if not isinstance(viewer.state, ImageViewerState):
+            # We round these values to show, e.g., 7.15 instead of 7.1499999
             if hasattr(viewer.state, "x_max") and viewer.state.x_max is not None:
                 stretch_step = (viewer.state.x_max) / 100.
-                self.viewer_x_bound_step = np.round(stretch_step,
-                                                    decimals=-int(np.log10(stretch_step))+1)
+                decimals = -int(np.log10(stretch_step))+1
+                self.viewer_x_bound_step = np.round(stretch_step, decimals=decimals)
+                self.viewer_x_max_value = np.round(self.viewer_x_max_value, decimals=decimals)
+                self.viewer_x_min_value = np.round(self.viewer_x_min_value, decimals=decimals)
             if hasattr(viewer.state, "y_max") and viewer.state.y_max is not None:
                 stretch_step = (viewer.state.y_max) / 100.
-                self.viewer_y_bound_step = np.round(stretch_step,
-                                                    decimals=-int(np.log10(stretch_step))+1)
+                decimals=-int(np.log10(stretch_step))+1
+                self.viewer_y_bound_step = np.round(stretch_step, decimals=decimals)
+                self.viewer_y_max_value = np.round(self.viewer_y_max_value, decimals=decimals)
+                self.viewer_y_min_value = np.round(self.viewer_y_min_value, decimals=decimals)
 
     @observe('stretch_function_sync', 'stretch_params_sync',
              'stretch_vmin_sync', 'stretch_vmax_sync',
