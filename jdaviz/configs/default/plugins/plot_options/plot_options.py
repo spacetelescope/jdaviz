@@ -742,7 +742,8 @@ class PlotOptions(PluginTemplateMixin):
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
 
-    @observe('viewer_selected')
+    @observe('viewer_selected', 'viewer_x_max_value', 'viewer_x_min_value',
+             'viewer_y_max_value', 'viewer_y_min_value')
     def _update_viewer_bound_steps(self, msg={}):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet
