@@ -758,13 +758,13 @@ class PlotOptions(PluginTemplateMixin):
             # We round these values to show, e.g., 7.15 instead of 7.1499999
             if hasattr(viewer.state, "x_max") and viewer.state.x_max is not None:
                 bound_step = (viewer.state.x_max - viewer.state.x_min) / 100.
-                decimals = -int(np.log10(bound_step)) + 1
+                decimals = -int(np.log10(abs(bound_step))) + 1 if bound_step != 0 else 6
                 self.viewer_x_bound_step = np.round(bound_step, decimals=decimals)
                 self.viewer_x_max_value = np.round(self.viewer_x_max_value, decimals=decimals)
                 self.viewer_x_min_value = np.round(self.viewer_x_min_value, decimals=decimals)
             if hasattr(viewer.state, "y_max") and viewer.state.y_max is not None:
                 bound_step = (viewer.state.y_max - viewer.state.y_min) / 100.
-                decimals = -int(np.log10(bound_step)) + 1
+                decimals = -int(np.log10(abs(bound_step))) + 1 if bound_step != 0 else 6
                 self.viewer_y_bound_step = np.round(bound_step, decimals=decimals)
                 self.viewer_y_max_value = np.round(self.viewer_y_max_value, decimals=decimals)
                 self.viewer_y_min_value = np.round(self.viewer_y_min_value, decimals=decimals)
