@@ -284,7 +284,7 @@ Other Changes and Additions
 New Features
 ------------
 
-- Improved design of Launcher and pass filepath arg from cli when no config specified. [#2311, #2417]
+- Improved design of Launcher and pass filepath argument from CLI when no configuration is specified. [#2311, #2417, #2418]
 
 - Subset Tools plugin now displays the parent data of a spatial (ROI) subset. [#2154]
 
