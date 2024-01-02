@@ -39,7 +39,7 @@
       :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
-    <v-row v-if="viewer_selected === 'spectrum-viewer' || (viewer_selected[0] === 'spectrum-viewer' && viewer_selected.length === 1)">
+    <v-row v-if="show_viewer_bounds">
       <v-expansion-panels popout>
         <v-expansion-panel>
           <v-expansion-panel-header v-slot="{ open }">
