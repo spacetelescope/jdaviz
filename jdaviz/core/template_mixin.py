@@ -1099,6 +1099,7 @@ class EditableSelectPluginComponent(SelectPluginComponent):
         self._on_rename_after_selection = kwargs.get('on_rename_after_selection', lambda *args: None)  # noqa
         self._on_remove = kwargs.get('on_remove', lambda *args: None)
         self._on_remove_after_selection = kwargs.get('on_remove_after_selection', lambda *args: None)  # noqa
+        self._validate_choice = kwargs.get('validate_choice', lambda *args: '')
 
     def _multiselect_changed(self):
         # already subscribed to traitlet by SelectPluginComponent
@@ -1143,6 +1144,9 @@ class EditableSelectPluginComponent(SelectPluginComponent):
             raise ValueError("new choice must not be blank")
         if label in self.choices:
             raise ValueError(f"'{label}' is already a valid choice")
+        validate_err = self._validate_choice(label)
+        if len(validate_err):
+            raise ValueError(f"'{label}' is not valid: {validate_err}")
 
     def add_choice(self, label, set_as_selected=True):
         """
