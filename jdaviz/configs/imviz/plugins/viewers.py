@@ -78,6 +78,23 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
             if key_pressed in ('b', 'B'):
                 self.blink_once(reversed=key_pressed=='B')  # noqa: E225
+            elif key_pressed in ('d', 'D', 'f', 'F'):
+                self.select_next_layer(reversed=key_pressed in ('d', 'D'))  # noqa: E225
+
+    def select_next_layer(self, reversed=False):
+        # Select next layer in Plot Options plugin. If reversed,
+        # select previous layer.
+        plot_options_plugin = self.jdaviz_app.get_tray_item_from_name('g-plot-options')
+        items = plot_options_plugin.layer_items
+        selected = plot_options_plugin.layer_selected
+        labels = [x['label'] for x in items]
+        label_index = labels.index(selected)
+        if reversed:
+            plot_options_plugin.layer_selected = labels[label_index - 1]
+        elif label_index + 1 == len(labels):
+            plot_options_plugin.layer_selected = labels[0]
+        else:
+            plot_options_plugin.layer_selected = labels[label_index + 1]
 
     def blink_once(self, reversed=False):
         # Simple blinking of images - this will make it so that only one
