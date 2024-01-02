@@ -1,17 +1,21 @@
 import os
+import warnings
 
-import gwcs
 import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
+from astropy.utils.exceptions import AstropyUserWarning
 from astropy.wcs import NoConvergence
 from echo import delay_callback
 from glue.config import colormaps
-from glue.core import Data
+from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRegion,
+                     PolygonPixelRegion, RectanglePixelRegion, Region, Regions)
 
 from jdaviz.configs.imviz.helper import get_top_layer_index
-from jdaviz.core.events import SnackbarMessage, MarkersChangedMessage
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import data_has_valid_wcs
+from jdaviz.core.marks import FootprintOverlay
+from jdaviz.core.region_translators import regions2roi
 
 __all__ = ['AstrowidgetsImageViewerMixin']
 
@@ -33,10 +37,9 @@ class AstrowidgetsImageViewerMixin:
     def init_astrowidgets_api(self):
         """This method must be called in child class ``__init__``."""
         # Markers
-        self._marktags = set()
+        self._marker_regions = {}  # defaultdict + Regions combo does not work
         self._default_mark_tag_name = 'default-marker-name'
-        # marker shape not settable: https://github.com/glue-viz/glue/issues/2202
-        self.marker = {'color': 'red', 'alpha': 1.0, 'markersize': 5}
+        self.marker = {'color': 'red', 'alpha': 1.0, 'fill': False}
 
     def save(self, filename):
         """Save out the current image view to given PNG filename.
@@ -357,9 +360,9 @@ class AstrowidgetsImageViewerMixin:
 
         Marker can be set as follows; e.g.::
 
-            {'color': 'red', 'alpha': 1.0, 'markersize': 3}
-            {'color': '#ff0000', 'alpha': 0.5, 'markersize': 10}
-            {'color': (1, 0, 0)}
+            {'color': 'red', 'alpha': 1.0}
+            {'color': '#ff0000', 'alpha': 0.5}
+            {'color': (1, 0, 0), 'fill': True}
 
         The valid properties for Glue markers are listed at
         https://docs.glueviz.org/en/stable/api/glue.core.visual.VisualAttributes.html
@@ -369,10 +372,11 @@ class AstrowidgetsImageViewerMixin:
 
     @marker.setter
     def marker(self, val):
+        # NOTE: markersize is controled by Region dimension.
         # Validation: Ideally Glue should do this but we have to due to
         # https://github.com/glue-viz/glue/issues/2203
         given = set(val.keys())
-        allowed = set(('color', 'alpha', 'markersize', 'fill'))
+        allowed = set(('color', 'alpha', 'fill'))
         if not given.issubset(allowed):
             raise KeyError(f'Invalid attribute(s): {given - allowed}')
         if 'color' in val:
@@ -382,10 +386,6 @@ class AstrowidgetsImageViewerMixin:
             alpha = val['alpha']
             if not isinstance(alpha, (int, float)) or alpha < 0 or alpha > 1:
                 raise ValueError(f'Invalid alpha: {alpha}')
-        if 'markersize' in val:
-            size = val['markersize']
-            if not isinstance(size, (int, float)):
-                raise ValueError(f'Invalid marker size: {size}')
         if 'fill' in val:
             fill = val['fill']
             if not isinstance(fill, bool):
@@ -402,105 +402,139 @@ class AstrowidgetsImageViewerMixin:
                 f"The marker name {marker_name} is not allowed. Any name is "
                 f"allowed except these: {', '.join(self.RESERVED_MARKER_SET_NAMES)}")
 
-    def add_markers(self, table, x_colname='x', y_colname='y',
-                    skycoord_colname='coord', use_skycoord=False,
-                    marker_name=None):
-        """Creates markers w.r.t. the reference image at given points
-        in the table.
+    def _get_marks(self, marker_name):
+        return [mark for mark in self.figure.marks
+                if (isinstance(mark, FootprintOverlay) and (mark.overlay == marker_name))]
 
-        .. note:: Use `marker` to change marker appearance.
-
-        .. note::
-           Once markers are added, linking cannot be changed.  To change linking options,
-           remove and re-add the markers manually.
+    def get_markers(self, marker_name=None):
+        """Get the markers as regions.
 
         Parameters
         ----------
-        table : `~astropy.table.Table`
-            Table containing marker locations.
+        marker_name : str or `None`
+            The name of the marker set to use. If `None`, all
+            markers will be returned.
 
-        x_colname, y_colname : str
-            Column names for X and Y.
-            Coordinates must be 0-indexed.
+        Returns
+        -------
+        regs : `regions.Regions`
+            Regions object with all the desired regions.
+            If no match, it returns an empty ``Regions``.
 
-        skycoord_colname : str
-            Column name with `~astropy.coordinates.SkyCoord` objects.
+        """
+        if marker_name is None:
+            regs = Regions([])
+            # Should we prune duplicates? Would set() work?
+            for val in self._marker_regions.values():
+                regs.extend(val.regions)
+        elif marker_name not in self._marker_regions:
+            regs = Regions([])
+        else:
+            regs = self._marker_regions[marker_name]
+        return regs
 
-        use_skycoord : bool
-            If `True`, use ``skycoord_colname`` to mark.
-            Otherwise, use ``x_colname`` and ``y_colname``.
+    def add_markers(self, regions, marker_name=None):
+        """Creates markers using given Astropy regions.
+
+        .. note:: Marker appearance is controlled by region shape and ``self.marker``.
+
+        .. note::
+           Once markers are added, they are static w.r.t. reference image
+           even when the regions are sky regions. To change markers,
+           remove and then re-add the modified regions manually.
+
+        Parameters
+        ----------
+        regions : `regions.Region`, `regions.Regions`, or a list of `regions.Region`
+            Astropy regions to mark.
 
         marker_name : str, optional
-            Name to assign the markers in the table. Providing a name
+            Name to assign the markers. Providing a name
             allows markers to be removed by name at a later time.
 
         Raises
         ------
-        AttributeError
-            Sky coordinates are given but reference image does not have a valid WCS.
+        TypeError
+            Invalid regions.
 
         ValueError
-            Invalid marker name.
+            Invalid marker name or reference data.
 
         """
-        from glue.viewers.scatter.state import ScatterLayerState
+        if isinstance(regions, Region):
+            regions = [regions]
+        elif not isinstance(regions, (Regions, list, tuple)):
+            raise TypeError(f"Markers cannot accept {regions}")
 
         if marker_name is None:
             marker_name = self._default_mark_tag_name
 
         self._validate_marker_name(marker_name)
-        jglue = self.session.application
 
-        # Link markers to reference image data.
-        image = self.state.reference_data
+        marker_color = self.marker.get("color", "red")
+        marker_alpha = self.marker.get("alpha", 1)
+        fill_opacity = 0.2 if self.marker.get("fill", False) else 0
 
-        # TODO: Is Glue smart enough to no-op if link already there?
-        if use_skycoord:
-            if not data_has_valid_wcs(image):
-                raise AttributeError(f'{getattr(image, "label", None)} does not have a valid WCS')
-            sky = table[skycoord_colname]
-            t_glue = Data(marker_name, ra=sky.ra.deg, dec=sky.dec.deg)
-            dcomps = image.components
-            if (isinstance(image.coords, gwcs.WCS) and
-                    image.coords.output_frame.reference_frame.name != 'galactic' and
-                    'Lon' in dcomps and 'Lat' in dcomps):
-                ra_str = 'Lon'
-                dec_str = 'Lat'
+        # TODO: Consolidate with Footprints and Markers plugins? But it is not easy...
+        #       Footprints plugin has pysiaf and GUI specific settings.
+        #       Markers plugin has spectrum viewer support that is out of scope here.
+
+        # TODO: need to re-call this logic when the reference_data is changed...
+        if self.state.reference_data is None:
+            raise ValueError("No reference data in viewer.")
+        wcs = self.state.reference_data.coords
+
+        # the following logic is adapted from
+        # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
+        new_marks = []
+        for in_reg in regions:
+            if hasattr(in_reg, "to_pixel"):  # Sky region
+                if wcs is None:
+                    warnings.warn(
+                        f"Failed to mark this region, skipping: {in_reg}", AstropyUserWarning)
+                    continue
+                reg = in_reg.to_pixel(wcs)
             else:
-                ra_str = 'Right Ascension'
-                dec_str = 'Declination'
-            with jglue.data_collection.delay_link_manager_update():
-                jglue.data_collection[marker_name] = t_glue
-                jglue.add_link(t_glue, 'ra', image, ra_str)
-                jglue.add_link(t_glue, 'dec', image, dec_str)
-        else:
-            t_glue = Data(marker_name, **table[x_colname, y_colname])
-            with jglue.data_collection.delay_link_manager_update():
-                jglue.data_collection[marker_name] = t_glue
-                jglue.add_link(t_glue, x_colname, image, image.pixel_component_ids[1].label)
-                jglue.add_link(t_glue, y_colname, image, image.pixel_component_ids[0].label)
+                reg = in_reg
 
-        try:
-            self.add_data(t_glue)
-        except Exception as e:  # pragma: no cover
-            self.session.hub.broadcast(SnackbarMessage(
-                f"Failed to add markers '{marker_name}': {repr(e)}",
-                color="warning", sender=self))
-        else:
-            # Only can set alpha and color using self.add_data(), so brute force here instead.
-            # https://github.com/glue-viz/glue/issues/2201
-            for lyr in self.state.layers:
-                if isinstance(lyr, ScatterLayerState) and lyr.layer.label == marker_name:
-                    for key, val in self.marker.items():
-                        setattr(lyr, {'markersize': 'size'}.get(key, key), val)
-                    break
+            if isinstance(reg, PolygonPixelRegion):
+                x_coords = reg.vertices.x
+                y_coords = reg.vertices.y
 
-            self.jdaviz_app.set_data_visibility(self.reference_id, marker_name,
-                                                visible=True, replace=False)
+            # bqplot marker does not respect image pixel sizes, so need to render as polygon.
+            elif isinstance(reg, RectanglePixelRegion):
+                reg = reg.to_polygon()
+                x_coords = reg.vertices.x
+                y_coords = reg.vertices.y
+            elif isinstance(reg, (CirclePixelRegion, EllipsePixelRegion,
+                                  CircleAnnulusPixelRegion)):
+                # Astropy regions cannot convert these to polygons natively, so use glue.
+                x_coords, y_coords = regions2roi(reg).to_polygon()
 
-            self._marktags.add(marker_name)
+            else:
+                warnings.warn(
+                    f"Failed to mark this region, skipping: {in_reg}", AstropyUserWarning)
+                continue
 
-            self.session.hub.broadcast(MarkersChangedMessage(True, sender=self))
+            new_marks.append(FootprintOverlay(
+                self,
+                marker_name,
+                x=x_coords,
+                y=y_coords,
+                colors=[marker_color],
+                opacities=[marker_alpha],
+                fill_opacities=[fill_opacity],
+                visible=True))
+
+            # Since we have to render everything as polygon in Jdaviz,
+            # we need to track the original shapes separately for roundtripping.
+            if marker_name in self._marker_regions:
+                # Should we prune duplicates? Would set() work?
+                self._marker_regions[marker_name].append(in_reg)
+            else:
+                self._marker_regions[marker_name] = Regions([in_reg])
+
+        self.figure.marks = self.figure.marks + new_marks
 
     def remove_markers(self, marker_name=None):
         """Remove some but not all of the markers by name used when
@@ -516,32 +550,23 @@ class AstrowidgetsImageViewerMixin:
         if marker_name is None:
             marker_name = self._default_mark_tag_name
 
-        # TODO: How to test manually created tiled viewers in CI?
-        if marker_name not in self._marktags:  # pragma: no cover
-            self.session.hub.broadcast(SnackbarMessage(
-                f"Failed to remove markers '{marker_name}': Not added by this viewer",
-                color="warning", sender=self))
+        if marker_name not in self._marker_regions:  # no-op
             return
 
-        try:
-            i = self.session.application.data_collection.labels.index(marker_name)
-        except ValueError as e:  # pragma: no cover
-            self.session.hub.broadcast(SnackbarMessage(
-                f"Failed to remove markers '{marker_name}': {repr(e)}",
-                color="warning", sender=self))
-            return
+        # TODO: Consolidate with Footprints and Markers plugins?
 
-        data = self.session.application.data_collection[i]
-        self.session.application.data_collection.remove(data)
-        self._marktags.remove(marker_name)
+        del self._marker_regions[marker_name]
 
-        self.session.hub.broadcast(MarkersChangedMessage(len(self._marktags) > 0, sender=self))
+        # Remove any marks objects corresponding to this marker name.
+        self.figure.marks = [m for m in self.figure.marks
+                             if getattr(m, 'overlay', None) != marker_name]
 
     def reset_markers(self):
         """Delete all markers."""
         # Grab the entire list of marker names before iterating
         # otherwise what we are iterating over changes.
-        for marker_name in list(self._marktags):
+        mkeys = list(self._marker_regions.keys())
+        for marker_name in mkeys:
             self.remove_markers(marker_name=marker_name)
 
 

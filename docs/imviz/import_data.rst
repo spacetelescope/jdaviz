@@ -142,20 +142,22 @@ data entries into the viewer until after the parsing is complete::
 Importing catalogs via the API
 ==============================
 
-If you have a catalog file supported by `astropy.table.Table`, you
-can load the catalog into Imviz and add markers to Imviz viewers to show
-positions from the catalog. These markers are different than Imviz
+If you have a catalog file, you can load the catalog into Imviz and
+add markers to Imviz viewers to show positions from the catalog.
+These markers are different than Imviz
 :ref:`spatial regions <imviz_defining_spatial_regions>` as they are only meant to mark catalog positions.
-Loading markers can be done with the following commands:
+Loading markers can be done with the following commands
+(in this example, they are defined to be circles each with radius of 1 arcsec):
 
 .. code-block:: python
 
-    viewer.marker = {'color': 'green', 'alpha': 0.8, 'markersize': 10, 'fill': False}
-    my_markers = Table.read('my_catalog.ecsv')
-    coord_i2d = Table({'coord': [SkyCoord(ra=my_catalog['sky_centroid'].ra.degree,
-                                          dec=my_catalog['sky_centroid'].dec.degree,
-                                          unit="deg")]})
-    viewer.add_markers(coord_i2d, use_skycoord=True, marker_name='my_markers')
+    from astropy import units as u
+    from regions import CircleSkyRegion
+    viewer.marker = {'color': 'green', 'alpha': 0.8, 'fill': False}
+    my_catalog = Table.read('my_catalog.ecsv')
+    r = 1 * u.arcsec
+    regs = [CircleSkyRegion(c, r) for c in my_catalog['sky_centroid']]
+    viewer.add_markers(regs, marker_name='my_markers')
 
 If you have a large catalog, you might want to filter your table to the
 marks of interest before adding them to Imviz, in order to avoid performance

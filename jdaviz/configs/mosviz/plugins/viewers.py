@@ -1,7 +1,6 @@
 import numpy as np
 
 from astropy.coordinates import SkyCoord
-from astropy.table import QTable
 from functools import cached_property
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
@@ -49,18 +48,22 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewe
                 isinstance(layer_state.layer, BaseData)]
 
     # NOTE: This is currently only for debugging. It is not used in app.
-    def _mark_targets(self):
+    def _mark_targets(self):  # pragma: no cover
         table_data = self.jdaviz_app.data_collection['MOS Table']
 
         if ("R.A." not in table_data.component_ids() or
                 "Dec." not in table_data.component_ids()):
             return
 
+        from astropy import units as u
+        from regions import CircleSkyRegion
+
         ra = table_data["R.A."]
         dec = table_data["Dec."]
         sky = SkyCoord(ra, dec, unit='deg')
-        t = QTable({'coord': sky})
-        self.add_markers(t, use_skycoord=True, marker_name='Targets')
+        sky_radius = 0.1 * u.arcsec
+        t = [CircleSkyRegion(c, sky_radius) for c in sky]
+        self.add_markers(t, marker_name='Targets')
 
 
 @viewer_registry("mosviz-profile-2d-viewer", label="Spectrum 2D (Mosviz)")
