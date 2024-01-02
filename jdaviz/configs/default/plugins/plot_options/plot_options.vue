@@ -465,15 +465,33 @@
       </glue-state-sync-wrapper>
 
       <div v-if="stretch_function_sync.in_subscribed_states && (!layer_multiselect || layer_selected.length <= 1)">
-        <glue-state-sync-wrapper 
-            :sync="stretch_hist_sync"
-            :multiselect="layer_multiselect" 
-            @unmix-state="unmix_state(['stretch_function', 'stretch_params',
-                                       'stretch_vmin', 'stretch_vmax', 
-                                       'image_color_mode', 'image_color', 'image_colormap'])"
-        >
-          <jupyter-widget :widget="stretch_histogram_widget"/>
-        </glue-state-sync-wrapper>
+        <div style="display: grid"> <!-- overlay container -->
+          <div style="grid-area: 1/1">
+            <glue-state-sync-wrapper 
+                :sync="stretch_hist_sync"
+                :multiselect="layer_multiselect" 
+                @unmix-state="unmix_state(['stretch_function', 'stretch_params',
+                                           'stretch_vmin', 'stretch_vmax', 
+                                           'image_color_mode', 'image_color', 'image_colormap'])"
+            >
+              <jupyter-widget :widget="stretch_histogram_widget"/>
+            </glue-state-sync-wrapper>
+          </div>
+          <div v-if="stretch_hist_spinner"
+               class="text-center"
+               style="grid-area: 1/1; 
+                      z-index:2;
+                      margin-left: -24px;
+                      margin-right: -24px;
+                      padding-top: 240px;
+                      background-color: rgb(0 0 0 / 20%)">
+            <v-progress-circular
+              indeterminate
+              color="spinner"
+              size="50"
+              width="6"
+            ></v-progress-circular>
+          </div>
 
         <v-row>
           <v-expansion-panels accordion>
