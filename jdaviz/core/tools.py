@@ -2,7 +2,6 @@ import os
 import time
 
 import numpy as np
-from astropy import units as u
 from echo import delay_callback
 from glue.config import viewer_tool
 from glue.core import HubListener
@@ -92,7 +91,7 @@ class _MatchedZoomMixin:
         from_lims = {k: getattr(self.viewer.state, k) for k in self.match_keys}
         orig_refdata = self.viewer.state.reference_data
         if hasattr(self.viewer, '_get_fov') and orig_refdata and orig_refdata.coords:
-            orig_fov_sky = self.viewer._get_fov()
+            orig_fov_sky = self.viewer._get_fov(wcs=orig_refdata.coords)
             sky_cen = self.viewer._get_center_skycoord()
         else:
             orig_fov_sky = sky_cen = None
@@ -102,45 +101,37 @@ class _MatchedZoomMixin:
             # to_lims: proposed new limits for this "matched" viewer
             orig_lims = {k: getattr(viewer.state, k) for k in self.match_keys}
             to_lims = self._map_limits(self.viewer, viewer, from_lims)
+            matched_refdata = viewer.state.reference_data
 
-            to_refdata = viewer.state.reference_data
+            if hasattr(viewer, '_get_fov'):
+                to_fov_sky = viewer._get_fov(wcs=matched_refdata.coords)
+            else:
+                to_fov_sky = None
 
-            if (to_refdata and to_refdata.coords and (orig_refdata != to_refdata)
-                    and (orig_fov_sky is not None)):
-                # if the viewers have different reference data,
-                # rescale the zoom and center allowing for different
-                # viewer rotations:
-                to_fov_sky = viewer._get_fov(wcs=orig_refdata.coords)
+            if to_fov_sky is not None and orig_fov_sky is not None:
+                old_level = viewer.zoom_level
+                viewer.zoom_level = old_level * float(to_fov_sky / orig_fov_sky)
+                viewer.center_on(sky_cen)
 
-                viewer_center = viewer._get_center_skycoord(orig_refdata)
-                if sky_cen.separation(viewer_center) > 0.1 * u.arcsec:
-                    # avoid recentering if the viewer is already nearly centered
-                    viewer.center_on(sky_cen)
+            else:
+                with delay_callback(viewer.state, *self.match_keys):
+                    for ax in self.match_axes:
+                        if None in orig_lims.values():
+                            orig_range = np.inf
+                        else:
+                            orig_range = abs(orig_lims.get(f'{ax}_max') -
+                                             orig_lims.get(f'{ax}_min'))
+                        to_range = abs(to_lims.get(f'{ax}_max') -
+                                       to_lims.get(f'{ax}_min'))
+                        tol = 1e-6 * min(orig_range, to_range)
 
-                viewer.zoom(
-                    float(to_fov_sky / orig_fov_sky)
-                )
-                continue
+                        for k in (f'{ax}_min', f'{ax}_max'):
+                            value = to_lims.get(k)
+                            orig_value = orig_lims.get(k)
 
-            # if the viewers have the same reference data,
-            # make their limits match as usual:
-            with delay_callback(viewer.state, *self.match_keys):
-                for ax in self.match_axes:
-                    # to avoid recursion we'll only update the state if there is a change
-                    # outside a tolerance set by some fraction of the limits range
-                    if None in orig_lims.values():
-                        orig_range = np.inf
-                    else:
-                        orig_range = abs(orig_lims.get(f'{ax}_max') - orig_lims.get(f'{ax}_min'))
-                    to_range = abs(to_lims.get(f'{ax}_max') - to_lims.get(f'{ax}_min'))
-                    tol = 1e-6 * min(orig_range, to_range)
-
-                    for k in (f'{ax}_min', f'{ax}_max'):
-                        value = to_lims.get(k)
-                        orig_value = orig_lims.get(k)
-                        if not np.isnan(value) and (orig_value is None or
-                                                    abs(value-orig_lims.get(k, np.inf)) > tol):
-                            setattr(viewer.state, k, value)
+                            if not np.isnan(value) and (orig_value is None or
+                                                        abs(value-orig_lims.get(k, np.inf)) > tol):
+                                setattr(viewer.state, k, value)
 
     def is_visible(self):
         return len(self.viewer.jdaviz_app._viewer_store) > 1

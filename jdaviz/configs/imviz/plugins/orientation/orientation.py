@@ -14,7 +14,7 @@ from jdaviz.configs.imviz.wcs_utils import (
 from jdaviz.core.events import (
     LinkUpdatedMessage, ExitBatchLoadMessage, ChangeRefDataMessage,
     AstrowidgetMarkersChangedMessage, MarkersPluginUpdate,
-    SnackbarMessage, AddDataToViewerMessage, ViewerAddedMessage
+    SnackbarMessage, ViewerAddedMessage, AddDataMessage
 )
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
@@ -130,7 +130,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.hub.subscribe(self, ViewerAddedMessage,
                            handler=self._on_viewer_added)
 
-        self.hub.subscribe(self, AddDataToViewerMessage,
+        self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_data_add_to_viewer)
 
         self._update_layer_label_default()
@@ -224,7 +224,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # load data into the viewer that are now compatible with the
         # new link type, remove data from the viewer that are now
         # incompatible:
-        wcs_linked = self.link_type.selected.lower() == 'wcs'
+        wcs_linked = self.link_type.selected == 'WCS'
         viewer_selected = self.app.get_viewer(self.viewer.selected)
 
         data_in_viewer = self.app.get_viewer(viewer_selected.reference).data()
@@ -239,6 +239,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                     self.hub.broadcast(SnackbarMessage(
                         f"Data '{data.label}' does not have a valid WCS - removing from viewer.",
                         sender=self, color="warning"))
+
+        if wcs_linked:
+            self._send_wcs_layers_to_all_viewers()
 
         self.linking_in_progress = False
         self._update_layer_label_default()
@@ -351,36 +354,54 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
         # add orientation layer to all viewers:
-        self._add_data_to_all_viewers(label)
+        for viewer_ref in self.app._viewer_store:
+            self._add_data_to_viewer(label, viewer_ref)
 
         if set_on_create:
-            self.orientation._update_layer_items()
             self.orientation.selected = label
 
-    def _add_data_to_all_viewers(self, data_label):
-        for viewer_ref in self.app.get_viewer_reference_names():
-            layers = [
-                layer.label for layer in
-                self.app.get_viewer(viewer_ref).layers
-            ]
-            if data_label not in layers:
-                self.app.add_data_to_viewer(viewer_ref, data_label)
+    def _add_data_to_viewer(self, data_label, viewer_id):
+        viewer = self.app.get_viewer_by_id(viewer_id)
+
+        wcs_only_layers = viewer.state.wcs_only_layers
+        if data_label not in wcs_only_layers:
+            self.app.add_data_to_viewer(viewer_id, data_label)
 
     def _on_viewer_added(self, msg):
-        for data_label in self.orientation.choices:
-            self._add_data_to_all_viewers(data_label)
+        self._send_wcs_layers_to_all_viewers(viewers_to_update=[msg._viewer_id])
 
-        if hasattr(self, 'orientation') and len(self.orientation.choices):
-            self.viewer.selected = msg._viewer_id
-            self.orientation.selected = self.orientation.choices[0]
+    @observe('viewer_items')
+    def _send_wcs_layers_to_all_viewers(self, *args, **kwargs):
+        if not hasattr(self, 'viewer'):
+            return
+
+        wcs_only_layers = self.app.get_viewer_by_id('imviz-0').state.wcs_only_layers
+
+        viewers_to_update = kwargs.get(
+            'viewers_to_update', self.app.get_viewer_reference_names()
+        )
+
+        for viewer_ref in viewers_to_update:
+            for wcs_layer in wcs_only_layers:
+                if wcs_layer not in self.app.get_viewer_by_id(viewer_ref).state.wcs_only_layers:
+                    self.app.add_data_to_viewer(viewer_ref, wcs_layer)
+
+            self.viewer.selected = viewer_ref
+
+            self.orientation.set_wcs_only_filter(wcs_only=self.link_type_selected == 'WCS')
+            # select the default orientation if no data have yet been
+            # added to a newly created viewer:
+            if (
+                    base_wcs_layer_label in self.orientation.choices and
+                    not len(self.viewer.selected_obj.layers)
+            ):
+                self.orientation.selected = base_wcs_layer_label
 
     def _on_data_add_to_viewer(self, msg):
-        if (
-            msg._viewer_reference != 'imviz-0' and
-            self.app.get_viewer_by_id(msg._viewer_reference).state.reference_data is None
-        ):
-            self.viewer.selected = msg._viewer_reference
-            self.orientation.selected = base_wcs_layer_label
+        if msg._viewer_id != 'imviz-0':
+            if len(self.viewer.selected_obj.layers) == 1:
+                # on adding first data layer, reset the limits:
+                self.viewer.selected_obj.state.reset_limits()
 
     def vue_add_orientation(self, *args, **kwargs):
         self.add_orientation(set_on_create=True)
@@ -392,8 +413,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 self.orientation.selected, viewer_id=self.viewer.selected
             )
 
-    def _on_refdata_change(self, msg={}):
-        self.orientation.only_wcs_layers = msg.data.meta.get('_WCS_ONLY', False)
+    def _on_refdata_change(self, msg):
+        self.orientation.set_wcs_only_filter(wcs_only=msg.data.meta.get('_WCS_ONLY', False))
         if hasattr(self, 'viewer'):
             ref_data = self.ref_data
             viewer = self.app.get_viewer(self.viewer.selected)
@@ -406,10 +427,15 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             elif not len(viewer.data()):
                 self.link_type_selected = link_type_msg_to_trait['pixels']
 
+            if msg._data.label not in self.orientation.choices:
+                return
+
+            self.orientation.selected = msg._data.label
+
             # we never want to highlight subsets of pixels within WCS-only layers,
             # so if this layer is an ImageSubsetLayerState on a WCS-only layer,
             # ensure that it is never visible:
-            for layer in viewer.state.layers:
+            for layer in self.viewer.selected_obj.state.layers:
                 if (
                     hasattr(layer.layer, 'label') and
                     layer.layer.label.startswith("Subset") and
@@ -426,7 +452,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def _refdata_change_available(self):
         viewer = self.app.get_viewer(self.viewer.selected)
-        ref_data = self.ref_data
         selected_layer = [lyr.layer for lyr in viewer.layers
                           if lyr.layer.label == self.orientation.selected]
         if len(selected_layer):
@@ -434,8 +459,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         else:
             is_subset = False
         return (
-            ref_data is not None and
-            len(self.orientation.selected) and len(self.viewer.selected) and
+            len(self.orientation.selected) and
+            len(self.viewer.selected) and
             not is_subset
         )
 

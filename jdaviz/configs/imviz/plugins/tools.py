@@ -51,7 +51,10 @@ class ImagePanZoom(PanZoom):
         if x is None or y is None:  # Out of bounds
             return
         x, y, _, _ = self.viewer._get_real_xy(image, x, y)
-        self.viewer.center_on((x, y))
+        if image.coords is not None:
+            self.viewer.center_on(image.coords.pixel_to_world(x, y))
+        else:
+            self.viewer.center_on((x, y))
 
 
 @viewer_tool

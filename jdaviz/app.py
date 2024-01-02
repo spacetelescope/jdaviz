@@ -1979,7 +1979,8 @@ class Application(VuetifyTemplate, HubListener):
             layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
             if layer.layer.data.label == data_label and layer_is_wcs_only:
                 layer.visible = False
-                viewer.state.wcs_only_layers.append(data_label)
+                if data_label not in viewer.state.wcs_only_layers:
+                    viewer.state.wcs_only_layers.append(data_label)
                 selected_items.pop(data_id)
 
         # Sets the plot axes labels to be the units of the most recently
@@ -2254,7 +2255,7 @@ class Application(VuetifyTemplate, HubListener):
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,
-            'reference': reference,
+            'reference': reference or name or vid,
             'linked_by_wcs': linked_by_wcs,
         }
 
@@ -2319,6 +2320,12 @@ class Application(VuetifyTemplate, HubListener):
         ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
         new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
 
+        if (
+                getattr(ref_data, 'meta', {}).get('_WCS_ONLY', False) and
+                hasattr(viewer, 'reference') and linked_by_wcs
+        ):
+            viewer.state.reference_data = ref_data
+
         new_stack_item = self._create_stack_item(
             container='gl-stack',
             viewers=[new_viewer_item])
@@ -2333,14 +2340,13 @@ class Application(VuetifyTemplate, HubListener):
 
         self.session.application.viewers.append(viewer)
 
-        # Send out a toast message
-        self.hub.broadcast(ViewerAddedMessage(vid, sender=self))
-
         if add_layers_to_viewer:
             for layer_label in add_layers_to_viewer:
-                self.add_data_to_viewer(viewer.reference, layer_label)
+                if hasattr(viewer, 'reference'):
+                    self.add_data_to_viewer(viewer.reference, layer_label)
 
-            viewer.state.reference_data = ref_data
+        # Send out a toast message
+        self.hub.broadcast(ViewerAddedMessage(vid, sender=self))
 
         return viewer
 
