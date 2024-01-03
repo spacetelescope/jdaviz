@@ -334,6 +334,7 @@ class PlotOptions(PluginTemplateMixin):
     cmap_samples = Dict().tag(sync=True)
     swatches_palette = List().tag(sync=True)
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
+    stretch_hist_spinner = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -714,6 +715,7 @@ class PlotOptions(PluginTemplateMixin):
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     @skip_if_no_updates_since_last_active()
+    @with_spinner('stretch_hist_spinner')
     def _update_stretch_histogram(self, msg={}):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet

@@ -5,6 +5,8 @@ New Features
 ------------
 - Stretch bounds tool now enables dynamic adjustment of spline knots. [#2545, #2623]
 
+- Stretch histogram shows a spinner when the histogram data is updating. [#2644]
+
 Cubeviz
 ^^^^^^^
 - Calculated moments can now be output in velocity units. [#2584, #2588]
