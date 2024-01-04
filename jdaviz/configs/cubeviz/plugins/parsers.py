@@ -243,10 +243,8 @@ def _parse_hdulist(app, hdulist, file_name=None,
         metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
 
         # metadata needs to be added before data is added to data_collection
-        if data_type == 'flux':
-            metadata['_cubetype_flux'] = data_label
-        if data_type == 'uncert':
-            metadata['_cubetype_uncert'] = data_label
+        if data_type == 'flux' or data_type == 'uncert':
+            metadata['_cube_data_type'] = data_type
 
         app.add_data(sc, data_label)
         if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
@@ -305,10 +303,8 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
 
     # metadata needs to be added before data is added to data_collection
-    if data_type == 'flux':
-        metadata['_cubetype_flux'] = data_label
-    if data_type == 'uncert':
-        metadata['_cubetype_uncert'] = data_label
+    if data_type == 'flux' or data_type == 'uncert':
+        metadata['_cube_data_type'] = data_type
 
     app.add_data(data, data_label)
 
@@ -360,10 +356,8 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
     data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
 
     # metadata needs to be added before data is added to data_collection
-    if data_type == 'flux':
-        metadata['_cubetype_flux'] = data_label
-    if data_type == 'uncert':
-        metadata['_cubetype_uncert'] = data_label
+    if data_type == 'flux' or data_type == 'uncert':
+        metadata['_cube_data_type'] = data_type
 
     app.add_data(data, data_label)
 
@@ -417,10 +411,8 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         cur_data_label = app.return_data_label(data_label, attr.upper())
 
         # metadata needs to be added before data is added to data_collection
-        if attr == 'flux':
-            meta['_cubetype_flux'] = cur_data_label
-        if attr == 'uncert':
-            meta['_cubetype_uncert'] = cur_data_label
+        if attr == 'flux' or attr == 'uncert':
+            meta['_cube_data_type'] = attr
 
         app.add_data(s1d, cur_data_label)
 
@@ -470,10 +462,8 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     s3d = Spectrum1D(flux=flux, meta=meta)
 
     # metadata needs to be added before data is added to data_collection
-    if data_type == 'flux':
-        meta['_cubetype_flux'] = data_label
-    if data_type == 'uncert':
-        meta['_cubetype_uncert'] = data_label
+    if data_type == 'flux' or data_type == 'uncert':
+        meta['_cube_data_type'] = data_type
 
     app.add_data(s3d, data_label)
 
