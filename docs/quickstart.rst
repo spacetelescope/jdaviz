@@ -33,27 +33,28 @@ Alternately, if you are using Jupyter Lab::
 As a Standalone Application
 ---------------------------
 
-``jdaviz`` provides a command-line tool to start the standalone desktop application in a browser. 
+``jdaviz`` provides a command-line tool to start the standalone desktop application in a browser.
 To see the syntax and usage, from a terminal, type::
 
     jdaviz --help
 
 Typical usage to load a file into a desired configuration::
 
-    jdaviz --layout=[imviz|specviz|cubeviz|mosviz] /path/to/data/file
+    jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d] /path/to/data/file
 
 For example, to load a FITS image into Imviz::
 
     jdaviz --layout=imviz my_image.fits
 
 To learn more about the various ``jdaviz`` application configurations and loading data,
-see the :ref:`imviz`, :ref:`specviz`, :ref:`cubeviz`, or :ref:`mosviz` tools.
+see the :ref:`imviz`, :ref:`specviz`, :ref:`cubeviz`, :ref:`mosviz`, or :ref:`specviz2d` tools.
 
-.. note::
+The command ``jdaviz`` without any additional input will run a launcher.
+After launching jdaviz, the user can select a file from the file picker. The launcher
+will identify the best configuration according to the file type. Alternatively, the user
+can select the desired configuration by clicking one of the buttons without specifying a file.
+A blank configuration will open and the IMPORT button will be available to select
+a file from the file picker.
 
-   The command ``jdaviz`` without any additional input will run a launcher which is a work
-   in progress (in particular, the file tab is not very user friendly at the moment).
-   We apologize for the inconvenience. After launching jdaviz, the user can select the
-   desired configuration by clicking one of the buttons without specifying a file.
-   A blank configuration will open and the IMPORT button will be available to select
-   a file from a proper file picker.
+.. image:: ./img/jdaviz-launcher.png
+    :alt: Jdaviz Launcher
