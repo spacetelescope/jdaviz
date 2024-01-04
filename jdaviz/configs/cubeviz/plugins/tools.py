@@ -8,6 +8,7 @@ from glue.viewers.common.tool import CheckableTool
 from jdaviz.configs.imviz.plugins.tools import _MatchedZoomMixin
 from jdaviz.core.events import SliceToolStateMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion
+from jdaviz.core.marks import PluginLine
 
 __all__ = []
 
@@ -83,3 +84,29 @@ class SpectrumPerSpaxel(SinglePixelRegion):
     tool_id = 'jdaviz:spectrumperspaxel'
     action_text = 'See spectrum at a single spaxel'
     tool_tip = 'Click on the viewer and see the spectrum at that spaxel in the spectrum viewer'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._spectrum_viewer = None
+        self._mark = None
+
+    def activate(self):
+        self.viewer.add_event_callback(self.on_mouse_move, events=['mousemove', 'mouseleave', 'mouseenter'])
+        if self._spectrum_viewer is None:
+            self._spectrum_viewer = self.viewer.jdaviz_helper.app.get_viewer('spectrum-viewer')
+        if self._mark is None:
+            self._mark = PluginLine(self._spectrum_viewer, visible=False)
+        super().activate()
+
+    def deactivate(self):
+        self.viewer.remove_event_callback(self.on_mouse_move)
+        super().deactivate()
+
+    def on_mouse_move(self, viewer, data):
+        if data['event'] == 'mouseenter':
+            self._mark.visible = True
+        elif data['event'] == 'mouseleave':
+            self._mark.visible = False
+
+        x = data['domain']['x']
+        y = data['domain']['y']
