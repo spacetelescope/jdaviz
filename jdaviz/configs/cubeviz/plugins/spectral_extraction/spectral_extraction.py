@@ -21,6 +21,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 
+
 __all__ = ['SpectralExtraction']
 
 ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
@@ -51,6 +52,7 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
     filename = Unicode().tag(sync=True)
     extracted_spec_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
+
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported
@@ -107,15 +109,24 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
             Additional keyword arguments passed to the NDDataArray collapse operation.
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
+        spectral_cube, uncert_cube = None, None
         # get glue Data objects for the spectral cube and uncertainties
-        flux_viewer = self._app.get_viewer(
-            self._app._jdaviz_helper._default_flux_viewer_reference_name
-        )
-        uncert_viewer = self._app.get_viewer(
-            self._app._jdaviz_helper._default_uncert_viewer_reference_name
-        )
-        [spectral_cube] = flux_viewer.data()
-        [uncert_cube] = uncert_viewer.data()
+        for index in range(len(self.app.data_collection)):
+            if self.app.data_collection[index].meta.get('_cubetype_flux'):
+                [spectral_cube] = [self.app.data_collection[index]]
+            if self.app.data_collection[index].meta.get('_cubetype_uncert'):
+                [uncert_cube] = [self.app.data_collection[index]]
+
+        # verify there isn't N = 0 or N > 1 sets of cube data in data collection
+        if (spectral_cube is None) or (uncert_cube is None):
+            self.disabled_msg = "No data detected, please load data into data collection " \
+                    "and try again to compute spectral extraction."
+            return
+        elif (len([spectral_cube]) > 1) or (len([uncert_cube]) > 1):
+            self.disabled_msg = "Only one dataset is allowed in Cubeviz, please " \
+                    "remove a dataset and try again to compute spectral " \
+                    "extraction."
+            return
 
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
