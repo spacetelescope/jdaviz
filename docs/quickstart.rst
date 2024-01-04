@@ -56,5 +56,5 @@ can select the desired configuration by clicking one of the buttons without spec
 A blank configuration will open and the IMPORT button will be available to select
 a file from the file picker.
 
-.. image:: ../img/jdaviz-launcher.png
+.. image:: ./img/jdaviz-launcher.png
     :alt: Jdaviz Launcher
