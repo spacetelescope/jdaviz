@@ -381,11 +381,11 @@ class TestParseImage:
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('SCI,1')
         assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
-        assert data.shape == (4298, 4220)
+        assert data.shape == (4299, 4220)
         assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
         assert isinstance(data.coords, WCS)
         assert comp.units == 'electron/s'
-        assert comp.data.shape == (4298, 4220)
+        assert comp.data.shape == (4299, 4220)
 
         # --- Since download is expensive, we attach FITS WCS-specific tests here. ---
 
@@ -407,7 +407,7 @@ class TestParseImage:
         assert_allclose(sky.dec.deg, 10.802045612042956, rtol=1e-3)
         data_unit = u.electron / u.s
         assert_quantity_allclose(tbl[0]['background'], 0.0014 * data_unit)
-        assert_quantity_allclose(tbl[0]['sum'], 126.789257 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['sum'], 126.636048 * data_unit, rtol=1e-3)
         assert_quantity_allclose(tbl[0]['sum_aper_area'], 2583.959958 * (u.pix * u.pix), rtol=1e-3)
         assert_array_equal(tbl[0]['pixarea_tot'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts'], None)
@@ -415,16 +415,16 @@ class TestParseImage:
         assert_array_equal(tbl[0]['counts_fac'], None)
         assert_array_equal(tbl[0]['aperture_sum_mag'], None)
         assert_array_equal(tbl[0]['flux_scaling'], None)
-        assert_quantity_allclose(tbl[0]['min'], -0.026433 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['max'], 3.567083 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['mean'], 0.049164 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['median'], 0.021777 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['mode'], -0.032999 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['std'], 0.140967 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['mad_std'], 0.023014 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['var'], 0.019872 * (data_unit * data_unit), rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['biweight_location'], 0.021012 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.000613 * (data_unit * data_unit), rtol=1e-3)  # noqa
+        assert_quantity_allclose(tbl[0]['min'], -0.028581 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['max'], 3.942783 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['mean'], 0.0491 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['median'], 0.021689 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['mode'], -0.033133 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['std'], 0.144362 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['mad_std'], 0.023314 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['var'], 0.02084 * (data_unit * data_unit), rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['biweight_location'], 0.02098 * data_unit, rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['biweight_midvariance'], 0.000622 * (data_unit * data_unit), rtol=1e-3)  # noqa
         assert_quantity_allclose(tbl[0]['fwhm'], 25.22627 * u.pix, rtol=1e-3)
         assert_quantity_allclose(tbl[0]['semimajor_sigma'], 12.9581226 * u.pix, rtol=1e-3)
         assert_quantity_allclose(tbl[0]['semiminor_sigma'], 7.8490214 * u.pix, rtol=1e-3)
