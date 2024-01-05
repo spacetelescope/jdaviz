@@ -4,6 +4,7 @@ import os
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue.viewers.common.tool import CheckableTool
+import numpy as np
 
 from jdaviz.configs.imviz.plugins.tools import _MatchedZoomMixin
 from jdaviz.core.events import SliceToolStateMessage
@@ -89,24 +90,38 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         super().__init__(*args, **kwargs)
         self._spectrum_viewer = None
         self._mark = None
+        self._data = None
 
     def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_move, events=['mousemove', 'mouseleave', 'mouseenter'])
+        self.viewer.add_event_callback(self.on_mouse_move, events=['mousemove', 'mouseleave'])
         if self._spectrum_viewer is None:
             self._spectrum_viewer = self.viewer.jdaviz_helper.app.get_viewer('spectrum-viewer')
         if self._mark is None:
             self._mark = PluginLine(self._spectrum_viewer, visible=False)
+            self._spectrum_viewer.figure.marks = self._spectrum_viewer.figure.marks + [self._mark,]
         super().activate()
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_move)
         super().deactivate()
 
-    def on_mouse_move(self, viewer, data):
-        if data['event'] == 'mouseenter':
-            self._mark.visible = True
-        elif data['event'] == 'mouseleave':
+    def on_mouse_move(self, data):
+        if data['event'] == 'mouseleave':
             self._mark.visible = False
+            return
 
-        x = data['domain']['x']
-        y = data['domain']['y']
+        x = int(np.round(data['domain']['x']))
+        y = int(np.round(data['domain']['y']))
+
+        # Use first visible layer for now
+        cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible][0]
+        spectrum = cube_data.get_object(statistic=None)
+
+        if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
+            self._mark.visible = False
+        else:
+            self._mark.visible = True
+            y_values = spectrum.flux[x,y,:]
+            self._mark.update_xy(spectrum.spectral_axis.value, y_values)
+            self._spectrum_viewer.state.y_max = y_values.max().value * 1.2
+            self._spectrum_viewer.state.y_min = y_values.min().value * 0.8
