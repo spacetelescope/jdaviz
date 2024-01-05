@@ -427,10 +427,11 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             elif not len(viewer.data()):
                 self.link_type_selected = link_type_msg_to_trait['pixels']
 
-            if msg._data.label not in self.orientation.choices:
+            if msg.data.label not in self.orientation.choices:
                 return
 
-            self.orientation.selected = msg._data.label
+            self.orientation.selected = msg.data.label
+
 
             # we never want to highlight subsets of pixels within WCS-only layers,
             # so if this layer is an ImageSubsetLayerState on a WCS-only layer,
