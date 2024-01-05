@@ -417,7 +417,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.orientation.set_wcs_only_filter(wcs_only=msg.data.meta.get('_WCS_ONLY', False))
         if hasattr(self, 'viewer'):
             ref_data = self.ref_data
-            viewer = self.app.get_viewer(self.viewer.selected)
+            viewer = self.viewer.selected_obj
 
             # don't select until reference data are available:
             if ref_data is not None:
