@@ -372,7 +372,6 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
                          flux_viewer_reference_name=None, spectrum_viewer_reference_name=None,
                          uncert_viewer_reference_name=None):
     """Load spectrum1d as a cube."""
-
     if data_label is None:
         data_label = "Unknown spectrum object"
 
@@ -411,9 +410,8 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         cur_data_label = app.return_data_label(data_label, attr.upper())
 
         # metadata needs to be added before data is added to data_collection
-        if attr == 'flux' or attr == 'uncert':
+        if attr == 'flux' or attr == 'uncertainty':
             meta['_cube_data_type'] = attr
-
         app.add_data(s1d, cur_data_label)
 
         if attr == 'flux':
