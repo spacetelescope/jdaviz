@@ -99,9 +99,10 @@ the bottom of the UI.
 Spectrum At Spaxel
 ==================
 
-This tool allows the user to create a one spaxel subset in an image viewer. This subset will then be
+This tool allows the user to create a single-spaxel subset in an image viewer. This subset will then be
 visualized in the spectrum viewer by showing the spectrum at that spaxel.
-Activate this tool and then left-click to create the new region.
+While this tool is active, hovering over a pixel in the image viewer will show a preview of the spectrum
+at that spaxel in the spectrum viewer, and left-clicking will create a new subset at that spaxel.
 Click again to move the region to a new location under the cursor. Holding down the
 alt key (Alt key on Windows, Option key on Mac) while clicking on a spaxel creates a new subset at
 that point instead of moving the previously created region.

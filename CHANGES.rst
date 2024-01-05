@@ -17,6 +17,8 @@ Cubeviz
 
 - Moment map plugin now supports linear per-spaxel continuum subtraction. [#2587]
 
+- Single-pixel subset tool now shows spectrum-at-spaxel on hover. [#2647]
+
 Imviz
 ^^^^^
 
