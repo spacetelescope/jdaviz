@@ -102,14 +102,7 @@ class AstrowidgetsImageViewerMixin:
         else:  # pragma: no cover
             pix = point
 
-        width = self.state.x_max - self.state.x_min
-        height = self.state.y_max - self.state.y_min
-
-        with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            self.state.x_min = pix[0] - (width * 0.5)
-            self.state.y_min = pix[1] - (height * 0.5)
-            self.state.x_max = self.state.x_min + width
-            self.state.y_max = self.state.y_min + height
+        self.state.zoom_center = pix
 
     def offset_by(self, dx, dy):
         """Move the center to a point that is given offset
@@ -182,22 +175,7 @@ class AstrowidgetsImageViewerMixin:
         if self.shape is None:  # pragma: no cover
             raise ValueError('Viewer is still loading, try again later')
 
-        if hasattr(self, '_get_real_xy'):
-            image, i_ref = get_reference_image_data(self.jdaviz_app, self.reference)
-            # TODO: Do we want top layer instead?
-            # i_top = get_top_layer_index(self)
-            # image = self.layers[i_top].layer
-            real_min = self._get_real_xy(image, self.state.x_min, self.state.y_min)
-            real_max = self._get_real_xy(image, self.state.x_max, self.state.y_max)
-        else:
-            real_min = (self.state.x_min, self.state.y_min)
-            real_max = (self.state.x_max, self.state.y_max)
-        screenx = self.shape[1]
-        screeny = self.shape[0]
-        zoom_x = screenx / abs(real_max[0] - real_min[0])
-        zoom_y = screeny / abs(real_max[1] - real_min[1])
-
-        return max(zoom_x, zoom_y)  # Similar to Ginga get_scale()
+        return self.state.zoom_level
 
     # Loosely based on glue/viewers/image/state.py
     @zoom_level.setter
@@ -215,29 +193,7 @@ class AstrowidgetsImageViewerMixin:
             self.state.reset_limits()
             return
 
-        new_dx = self.shape[1] * 0.5 / val
-        if hasattr(self, '_get_real_xy'):
-            image, i_ref = get_reference_image_data(self.jdaviz_app, self.reference)
-            # TODO: Do we want top layer instead?
-            # i_top = get_top_layer_index(self)
-            # image = self.layers[i_top].layer
-            real_min = self._get_real_xy(image, self.state.x_min, self.state.y_min)
-            real_max = self._get_real_xy(image, self.state.x_max, self.state.y_max)
-            cur_xcen = (real_min[0] + real_max[0]) * 0.5
-            new_x_min = self._get_real_xy(image, cur_xcen - new_dx - 0.5, real_min[1], reverse=True)[0]  # noqa: E501
-            new_x_max = self._get_real_xy(image, cur_xcen + new_dx - 0.5, real_max[1], reverse=True)[0]  # noqa: E501
-        else:
-            cur_xcen = (self.state.x_min + self.state.x_max) * 0.5
-            new_x_min = cur_xcen - new_dx - 0.5
-            new_x_max = cur_xcen + new_dx - 0.5
-
-        with delay_callback(self.state, 'x_min', 'x_max'):
-            self.state.x_min = new_x_min
-            self.state.x_max = new_x_max
-
-        # We need to adjust the limits in here to avoid triggering all
-        # the update events then changing the limits again.
-        self.state._adjust_limits_aspect()
+        self.state.zoom_level = val
 
     # Discussion on why we need two different ways to set zoom at
     # https://github.com/astropy/astrowidgets/issues/144

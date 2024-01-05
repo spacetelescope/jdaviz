@@ -1,4 +1,5 @@
-from echo import delay_callback
+from contextlib import contextmanager
+from echo import delay_callback, CallbackProperty
 import numpy as np
 
 from glue.viewers.profile.state import ProfileViewerState
@@ -54,9 +55,76 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
 class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
     linked_by_wcs = False
 
+    zoom_level = CallbackProperty(1.0, docstring='Zoom-level')
+    zoom_center = CallbackProperty((0.0, 0.0), docstring='Coordinates of center of zoom box')
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.wcs_only_layers = []  # For Imviz rotation use.
+        self._during_zoom_sync = False
+        self.add_callback('zoom_level', self._set_zoom_level)
+        self.add_callback('zoom_center', self._set_zoom_center)
+        for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
+            self.add_callback(attr, self._set_axes_lim)
+
+    @contextmanager
+    def during_zoom_sync(self):
+        self._during_zoom_sync = True
+        try:
+            yield
+        except Exception:
+            self._during_zoom_sync = False
+            raise
+        self._during_zoom_sync = False
+
+    def _set_zoom_level(self, zoom_level):
+        if self._during_zoom_sync or not hasattr(self, '_viewer') or self._viewer.shape is None:
+            return
+        if zoom_level <= 0.0:
+            raise ValueError("zoom_level must be positive")
+
+        cur_xcen = (self.x_min + self.x_max) * 0.5
+        new_dx = self._viewer.shape[1] * 0.5 / zoom_level
+        new_x_min = cur_xcen - new_dx
+        new_x_max = cur_xcen + new_dx
+
+        with self.during_zoom_sync():
+            self.x_min = new_x_min - 0.5
+            self.x_max = new_x_max - 0.5
+
+            # We need to adjust the limits in here to avoid triggering all
+            # the update events then changing the limits again.
+            self._adjust_limits_aspect()
+
+    def _set_zoom_center(self, zoom_center):
+        if self._during_zoom_sync:
+            return
+
+        cur_xcen = (self.x_min + self.x_max) * 0.5
+        cur_ycen = (self.y_min + self.y_max) * 0.5
+        delta_x = zoom_center[0] - cur_xcen
+        delta_y = zoom_center[1] - cur_ycen
+
+        with self.during_zoom_sync():
+            self.x_min += delta_x
+            self.x_max += delta_x
+            self.y_min += delta_y
+            self.y_max += delta_y
+
+    def _set_axes_lim(self, *args):
+        if self._during_zoom_sync or not hasattr(self, '_viewer') or self._viewer.shape is None:
+            return
+
+        screenx = self._viewer.shape[1]
+        screeny = self._viewer.shape[0]
+        zoom_x = screenx / (self.x_max - self.x_min)
+        zoom_y = screeny / (self.y_max - self.y_min)
+        center_x = 0.5 * (self.x_max + self.x_min)
+        center_y = 0.5 * (self.y_max + self.y_min)
+
+        with self.during_zoom_sync():
+            self.zoom_level = max(zoom_x, zoom_y)  # Similar to Ginga get_scale()
+            self.zoom_center = (center_x, center_y)
 
     def reset_limits(self, *event):
         if self.reference_data is None:  # Nothing to do

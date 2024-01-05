@@ -36,6 +36,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # provide reference from state back to viewer to use for zoom syncing
+        self.state._viewer = self
         self.init_astrowidgets_api()
         self._subscribe_to_layers_update()
 

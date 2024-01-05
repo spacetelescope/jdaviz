@@ -9,8 +9,9 @@ from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
 from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.utils import get_subset_type
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
+from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
+from jdaviz.utils import get_subset_type
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
 
@@ -31,9 +32,12 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
                 ]
 
     default_class = None
+    _state_cls = FreezableBqplotImageViewerState
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # provide reference from state back to viewer to use for zoom syncing
+        self.state._viewer = self
 
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
