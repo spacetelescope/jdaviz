@@ -375,7 +375,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if not hasattr(self, 'viewer'):
             return
 
-        wcs_only_layers = self.app.get_viewer_by_id('imviz-0').state.wcs_only_layers
+        wcs_only_layers = self.app._jdaviz_helper.default_viewer.state.wcs_only_layers
 
         viewers_to_update = kwargs.get(
             'viewers_to_update', self.app.get_viewer_reference_names()
