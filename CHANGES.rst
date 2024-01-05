@@ -78,6 +78,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+* Fix app top-bar alignment in popouts and when embedded in websites. [#2648]
+
 Cubeviz
 ^^^^^^^
 
