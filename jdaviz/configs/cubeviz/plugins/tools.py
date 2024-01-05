@@ -122,6 +122,9 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         else:
             self._mark.visible = True
             y_values = spectrum.flux[x,y,:]
+            if np.all(np.isnan(y_values)):
+                self._mark.visible=False
+                return
             self._mark.update_xy(spectrum.spectral_axis.value, y_values)
-            self._spectrum_viewer.state.y_max = y_values.max().value * 1.2
-            self._spectrum_viewer.state.y_min = y_values.min().value * 0.8
+            self._spectrum_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
+            self._spectrum_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
