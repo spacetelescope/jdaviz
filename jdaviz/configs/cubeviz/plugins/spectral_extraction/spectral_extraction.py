@@ -112,12 +112,12 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
         spectral_cube, uncert_cube = None, None
         # get glue Data objects for the spectral cube and uncertainties
         for data in self.app.data_collection:
-            if data.meta.get('_cube_data_type'):
-                data_type = data.meta.get('_cube_data_type')
+            data_type = data.meta.get('_cube_data_type')
 
+            if data_type and data_type != 'mask':
                 if data_type == 'flux':
                     spectral_cube = data
-                elif data_type == 'uncert' or 'uncertainty':
+                elif data_type in ['uncert', 'uncertainty']:
                     uncert_cube = data
 
         # verify there isn't N = 0 or N > 1 sets of cube data in data collection
