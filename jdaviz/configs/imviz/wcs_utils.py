@@ -438,24 +438,12 @@ def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape
         image_shape=real_image_shape
     )
 
-    # # create a fake NDData (we use arange so data boundaries show up in Imviz
-    # # if it ever is accidentally exposed) with the rotated GWCS:
-    # placeholder_data = np.nan * np.ones(refdata_shape)
-    #
-    # ndd = NDData(
-    #     data=placeholder_data,
-    #     wcs=new_rotated_gwcs,
-    #     meta={wcs_only_key: True, '_pixel_scales': pixel_scales}
-    # )
-
     # create a fake NDData (we use arange so data boundaries show up in Imviz
     # if it ever is accidentally exposed) with the rotated GWCS:
-    sequential_data = np.arange(
-        np.prod(refdata_shape), dtype=np.int8
-    ).reshape(refdata_shape)
+    placeholder_data = np.nan * np.ones(refdata_shape)
 
     ndd = NDData(
-        data=sequential_data,
+        data=placeholder_data,
         wcs=new_rotated_gwcs,
         meta={wcs_only_key: True, '_pixel_scales': pixel_scales}
     )

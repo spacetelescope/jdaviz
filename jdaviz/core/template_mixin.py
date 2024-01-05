@@ -1311,7 +1311,7 @@ class LayerSelect(SelectPluginComponent):
         self.add_observe(viewer, self._on_viewer_selected_changed)
         self.add_observe(selected, self._update_layer_items)
         self._update_layer_items()
-        self.set_wcs_only_filter(only_wcs_layers)
+        self.update_wcs_only_filter(only_wcs_layers)
 
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
@@ -1481,7 +1481,20 @@ class LayerSelect(SelectPluginComponent):
 
         self._apply_default_selection()
 
-    def set_wcs_only_filter(self, wcs_only):
+    def update_wcs_only_filter(self, wcs_only):
+        """
+        The layers that are populated in LayerSelect.choices
+        will be either WCS-only layers (for setting viewer orientation)
+        or non-WCS-only layers (for "real data"). This method toggles
+        the layer choices by adjusting the layer filters on this
+        LayerSelect instance.
+
+        Parameters
+        ----------
+        wcs_only : bool
+            `True` will filter only the WCS-only layers, `False` will
+            give the non-WCS-only layers.
+        """
         def is_wcs_only(data):
             return data.meta.get(self.app._wcs_only_label, False)
 

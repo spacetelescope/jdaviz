@@ -375,7 +375,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if not hasattr(self, 'viewer'):
             return
 
-        wcs_only_layers = self.app._jdaviz_helper.default_viewer.state.wcs_only_layers
+        wcs_only_layers = self.app._jdaviz_helper.default_viewer._obj.state.wcs_only_layers
 
         viewers_to_update = kwargs.get(
             'viewers_to_update', self.app.get_viewer_reference_names()
@@ -388,7 +388,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
             self.viewer.selected = viewer_ref
 
-            self.orientation.set_wcs_only_filter(wcs_only=self.link_type_selected == 'WCS')
+            self.orientation.update_wcs_only_filter(wcs_only=self.link_type_selected == 'WCS')
             # select the default orientation if no data have yet been
             # added to a newly created viewer:
             if (
@@ -414,7 +414,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             )
 
     def _on_refdata_change(self, msg):
-        self.orientation.set_wcs_only_filter(wcs_only=msg.data.meta.get('_WCS_ONLY', False))
+        self.orientation.update_wcs_only_filter(wcs_only=msg.data.meta.get('_WCS_ONLY', False))
         if hasattr(self, 'viewer'):
             ref_data = self.ref_data
             viewer = self.viewer.selected_obj
@@ -431,7 +431,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 return
 
             self.orientation.selected = msg.data.label
-
 
             # we never want to highlight subsets of pixels within WCS-only layers,
             # so if this layer is an ImageSubsetLayerState on a WCS-only layer,
