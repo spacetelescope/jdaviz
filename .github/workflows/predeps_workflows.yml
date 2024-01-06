@@ -5,6 +5,7 @@ on:
   schedule:
     # run at 9am UTC on Tuesdays
     - cron: '0 9 * * 2'
+  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,6 +21,7 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
 
