@@ -26,7 +26,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
                                         skip_if_no_updates_since_last_active, with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
+from jdaviz.core.custom_traitlets import IntHandleEmpty
 
 from scipy.interpolate import PchipInterpolator
 
@@ -207,19 +207,19 @@ class PlotOptions(PluginTemplateMixin):
     uncertainty_visible_value = Int().tag(sync=True)
     uncertainty_visible_sync = Dict().tag(sync=True)
 
-    viewer_x_min_value = FloatHandleEmpty().tag(sync=True)
+    viewer_x_min_value = Float().tag(sync=True)
     viewer_x_min_sync = Dict().tag(sync=True)
 
-    viewer_x_max_value = FloatHandleEmpty().tag(sync=True)
+    viewer_x_max_value = Float().tag(sync=True)
     viewer_x_max_sync = Dict().tag(sync=True)
 
     viewer_x_unit_value = Unicode(allow_none=True).tag(sync=True)
     viewer_x_unit_sync = Dict().tag(sync=True)
 
-    viewer_y_min_value = FloatHandleEmpty().tag(sync=True)
+    viewer_y_min_value = Float().tag(sync=True)
     viewer_y_min_sync = Dict().tag(sync=True)
 
-    viewer_y_max_value = FloatHandleEmpty().tag(sync=True)
+    viewer_y_max_value = Float().tag(sync=True)
     viewer_y_max_sync = Dict().tag(sync=True)
 
     viewer_y_unit_value = Unicode(allow_none=True).tag(sync=True)
@@ -227,6 +227,12 @@ class PlotOptions(PluginTemplateMixin):
 
     viewer_x_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
     viewer_y_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
+
+    viewer_zoom_center_value = List().tag(sync=True)  # need to split into x/y?
+    viewer_zoom_center_sync = Dict().tag(sync=True)
+
+    viewer_zoom_level_value = Float().tag(sync=True)
+    viewer_zoom_level_sync = Dict().tag(sync=True)
 
     # scatter/marker options
     marker_visible_value = Bool().tag(sync=True)
@@ -357,7 +363,6 @@ class PlotOptions(PluginTemplateMixin):
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     show_viewer_labels = Bool(True).tag(sync=True)
-    show_viewer_bounds = Bool(True).tag(sync=True)
 
     cmap_samples = Dict().tag(sync=True)
     swatches_palette = List().tag(sync=True)
@@ -455,13 +460,19 @@ class PlotOptions(PluginTemplateMixin):
                                                   state_filter=not_image_viewer)
         self.viewer_y_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_min',
                                                  'viewer_y_min_value', 'viewer_y_min_sync',
-                                                 state_filter=not_image)
+                                                 state_filter=not_image_viewer)
         self.viewer_y_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_max',
                                                  'viewer_y_max_value', 'viewer_y_max_sync',
-                                                 state_filter=not_image)
+                                                 state_filter=not_image_viewer)
         self.viewer_y_unit = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_display_unit',
                                                   'viewer_y_unit_value', 'viewer_y_unit_sync',
                                                   state_filter=not_image_viewer)
+        self.viewer_zoom_center = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center',
+                                                       'viewer_zoom_center_value',
+                                                       'viewer_zoom_center_sync')
+        self.viewer_zoom_level = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_level',
+                                                      'viewer_zoom_level_value',
+                                                      'viewer_zoom_level_sync')
 
         # Scatter/marker options:
         # NOTE: marker_visible hides the entire layer (including the line)
@@ -768,17 +779,8 @@ class PlotOptions(PluginTemplateMixin):
             # nothing selected yet
             return
 
-        if self.viewer_multiselect:
-            not_image = [not isinstance(v.state, ImageViewerState) for v in self.viewer.selected_obj] # noqa
-            if np.all(not_image):
-                self.show_viewer_bounds = True
-            else:
-                self.show_viewer_bounds = False
-                return
-
         viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj # noqa
         if not isinstance(viewer.state, ImageViewerState):
-            self.show_viewer_bounds = True
             # We round these values to show, e.g., 7.15 instead of 7.1499999
             if hasattr(viewer.state, "x_max") and viewer.state.x_max is not None:
                 bound_step = (viewer.state.x_max - viewer.state.x_min) / 100.

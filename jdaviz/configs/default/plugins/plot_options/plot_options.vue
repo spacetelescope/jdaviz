@@ -39,8 +39,8 @@
       :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
-    <v-row v-if="show_viewer_bounds">
-      <v-expansion-panels popout>
+    <v-row>
+      <v-expansion-panels accordion>
         <v-expansion-panel>
           <v-expansion-panel-header v-slot="{ open }">
             <span style="padding: 6px">Viewer bounds</span>
@@ -49,7 +49,7 @@
             <glue-state-sync-wrapper :sync="viewer_x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_min')">
               <glue-float-field
                 ref="viewer_x_min"
-                label="Viewer X Min"
+                label="X Min"
                 :value.sync="viewer_x_min_value"
                 type="number"
                 :step="viewer_x_bound_step"
@@ -59,7 +59,7 @@
             <glue-state-sync-wrapper :sync="viewer_x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_max')">
               <glue-float-field
                 ref="viewer_x_max"
-                label="Viewer X Max"
+                label="X Max"
                 :value.sync="viewer_x_max_value"
                 type="number"
                 :step="viewer_x_bound_step"
@@ -69,7 +69,7 @@
             <glue-state-sync-wrapper :sync="viewer_y_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_min')">
               <glue-float-field
                 ref="viewer_y_min"
-                label="Viewer Y Min"
+                label="Y Min"
                 :value.sync="viewer_y_min_value"
                 type="number"
                 :step="viewer_y_bound_step"
@@ -79,11 +79,20 @@
             <glue-state-sync-wrapper :sync="viewer_y_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_max')">
               <glue-float-field
                 ref="viewer_y_max"
-                label="Viewer Y Max"
+                label="Y Max"
                 :value.sync="viewer_y_max_value"
                 type="number"
                 :step="viewer_y_bound_step"
                 :suffix="viewer_y_unit_value"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_zoom_level_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_zoom_level')">
+              <glue-float-field
+                ref="viewer_zoom_level"
+                label="Zoom Level"
+                :value.sync="viewer_zoom_level_value"
+                type="number"
+                :step="0.1"
               />
             </glue-state-sync-wrapper>
             <plugin-action-button
