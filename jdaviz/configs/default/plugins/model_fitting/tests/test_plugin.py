@@ -4,12 +4,14 @@ This does NOT test the actual fitting self (see test_fitting.py for that)
 """
 import warnings
 import pytest
+from contextlib import nullcontext
 
 import numpy as np
 from numpy.testing import assert_allclose
 
 from astropy.nddata import StdDevUncertainty
 from astropy.utils.exceptions import AstropyUserWarning
+from astropy.utils.introspection import minversion
 import astropy.units as u
 
 from glue.core.roi import CircularROI, XRangeROI
@@ -17,6 +19,8 @@ from specutils import Spectrum1D
 
 from jdaviz.configs.cubeviz.plugins.tests.test_parsers import ASTROPY_LT_5_3
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
+
+PYTEST_LT_8_0 = not minversion(pytest, "8.0.dev")
 
 
 def test_default_model_labels(specviz_helper, spectrum1d):
@@ -427,7 +431,13 @@ def test_all_nan_uncert_subset(specviz_helper):
     plugin = specviz_helper.plugins['Model Fitting']
     plugin.create_model_component('Linear1D')
 
-    with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
+    if PYTEST_LT_8_0:
+        ctx = nullcontext()
+    else:
+        ctx = pytest.warns(
+            AstropyUserWarning, match="Non-Finite input data has been removed by the fitter")
+
+    with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'), ctx:
         plugin.calculate_fit()
 
     # check that slope and intercept are fit correctly to just the first 2
