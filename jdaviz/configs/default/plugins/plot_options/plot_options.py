@@ -228,8 +228,11 @@ class PlotOptions(PluginTemplateMixin):
     viewer_x_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
     viewer_y_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
 
-    viewer_zoom_center_value = List().tag(sync=True)  # need to split into x/y?
-    viewer_zoom_center_sync = Dict().tag(sync=True)
+    viewer_zoom_center_x_value = Float().tag(sync=True)
+    viewer_zoom_center_x_sync = Dict().tag(sync=True)
+
+    viewer_zoom_center_y_value = Float().tag(sync=True)
+    viewer_zoom_center_y_sync = Dict().tag(sync=True)
 
     viewer_zoom_level_value = Float().tag(sync=True)
     viewer_zoom_level_sync = Dict().tag(sync=True)
@@ -467,9 +470,12 @@ class PlotOptions(PluginTemplateMixin):
         self.viewer_y_unit = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_display_unit',
                                                   'viewer_y_unit_value', 'viewer_y_unit_sync',
                                                   state_filter=not_image_viewer)
-        self.viewer_zoom_center = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center',
-                                                       'viewer_zoom_center_value',
-                                                       'viewer_zoom_center_sync')
+        self.viewer_zoom_center_x = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center_x',  # noqa
+                                                       'viewer_zoom_center_x_value',
+                                                       'viewer_zoom_center_x_sync')
+        self.viewer_zoom_center_y = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center_y',  # noqa
+                                                       'viewer_zoom_center_y_value',
+                                                       'viewer_zoom_center_y_sync')
         self.viewer_zoom_level = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_level',
                                                       'viewer_zoom_level_value',
                                                       'viewer_zoom_level_sync')

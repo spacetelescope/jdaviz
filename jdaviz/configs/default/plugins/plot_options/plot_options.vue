@@ -86,10 +86,28 @@
                 :suffix="viewer_y_unit_value"
               />
             </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_zoom_center_x_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_zoom_center_x')">
+              <glue-float-field
+                ref="viewer_zoom_center_x"
+                label="Center (x)"
+                :value.sync="viewer_zoom_center_x_value"
+                type="number"
+                :step="0.1"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_zoom_center_y_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_zoom_center_y')">
+              <glue-float-field
+                ref="viewer_zoom_center_y"
+                label="Center (y)"
+                :value.sync="viewer_zoom_center_y_value"
+                type="number"
+                :step="0.1"
+              />
+            </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="viewer_zoom_level_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_zoom_level')">
               <glue-float-field
                 ref="viewer_zoom_level"
-                label="Zoom Level"
+                label="Zoom-Level"
                 :value.sync="viewer_zoom_level_value"
                 type="number"
                 :step="0.1"

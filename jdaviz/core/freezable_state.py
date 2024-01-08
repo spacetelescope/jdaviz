@@ -56,14 +56,16 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
     linked_by_wcs = False
 
     zoom_level = CallbackProperty(1.0, docstring='Zoom-level')
-    zoom_center = CallbackProperty((0.0, 0.0), docstring='Coordinates of center of zoom box')
+    zoom_center_x = CallbackProperty(0.0, docstring='x-coordinate of center of zoom box')
+    zoom_center_y = CallbackProperty(0.0, docstring='y-coordinate of center of zoom box')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.wcs_only_layers = []  # For Imviz rotation use.
         self._during_zoom_sync = False
         self.add_callback('zoom_level', self._set_zoom_level)
-        self.add_callback('zoom_center', self._set_zoom_center)
+        self.add_callback('zoom_center_x', self._set_zoom_center)
+        self.add_callback('zoom_center_y', self._set_zoom_center)
         for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
             self.add_callback(attr, self._set_axes_lim)
 
@@ -96,14 +98,14 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             # the update events then changing the limits again.
             self._adjust_limits_aspect()
 
-    def _set_zoom_center(self, zoom_center):
+    def _set_zoom_center(self, *args):
         if self._during_zoom_sync:
             return
 
         cur_xcen = (self.x_min + self.x_max) * 0.5
         cur_ycen = (self.y_min + self.y_max) * 0.5
-        delta_x = zoom_center[0] - cur_xcen
-        delta_y = zoom_center[1] - cur_ycen
+        delta_x = self.zoom_center_x - cur_xcen
+        delta_y = self.zoom_center_y - cur_ycen
 
         with self.during_zoom_sync():
             self.x_min += delta_x
@@ -124,7 +126,8 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
 
         with self.during_zoom_sync():
             self.zoom_level = max(zoom_x, zoom_y)  # Similar to Ginga get_scale()
-            self.zoom_center = (center_x, center_y)
+            self.zoom_center_x = center_x
+            self.zoom_center_y = center_y
 
     def reset_limits(self, *event):
         if self.reference_data is None:  # Nothing to do
