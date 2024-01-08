@@ -176,6 +176,9 @@ class PlotOptions(PluginTemplateMixin):
     template_file = __file__, "plot_options.vue"
     uses_active_status = Bool(True).tag(sync=True)
 
+    # read-only display units
+    display_units = Dict().tag(sync=True)
+
     viewer_multiselect = Bool(False).tag(sync=True)
     viewer_items = List().tag(sync=True)
     viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
@@ -207,35 +210,29 @@ class PlotOptions(PluginTemplateMixin):
     uncertainty_visible_value = Int().tag(sync=True)
     uncertainty_visible_sync = Dict().tag(sync=True)
 
-    viewer_x_min_value = Float().tag(sync=True)
-    viewer_x_min_sync = Dict().tag(sync=True)
+    x_min_value = Float().tag(sync=True)
+    x_min_sync = Dict().tag(sync=True)
 
-    viewer_x_max_value = Float().tag(sync=True)
-    viewer_x_max_sync = Dict().tag(sync=True)
+    x_max_value = Float().tag(sync=True)
+    x_max_sync = Dict().tag(sync=True)
 
-    viewer_x_unit_value = Unicode(allow_none=True).tag(sync=True)
-    viewer_x_unit_sync = Dict().tag(sync=True)
+    y_min_value = Float().tag(sync=True)
+    y_min_sync = Dict().tag(sync=True)
 
-    viewer_y_min_value = Float().tag(sync=True)
-    viewer_y_min_sync = Dict().tag(sync=True)
+    y_max_value = Float().tag(sync=True)
+    y_max_sync = Dict().tag(sync=True)
 
-    viewer_y_max_value = Float().tag(sync=True)
-    viewer_y_max_sync = Dict().tag(sync=True)
+    x_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
+    y_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
 
-    viewer_y_unit_value = Unicode(allow_none=True).tag(sync=True)
-    viewer_y_unit_sync = Dict().tag(sync=True)
+    zoom_center_x_value = Float().tag(sync=True)
+    zoom_center_x_sync = Dict().tag(sync=True)
 
-    viewer_x_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
-    viewer_y_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
+    zoom_center_y_value = Float().tag(sync=True)
+    zoom_center_y_sync = Dict().tag(sync=True)
 
-    viewer_zoom_center_x_value = Float().tag(sync=True)
-    viewer_zoom_center_x_sync = Dict().tag(sync=True)
-
-    viewer_zoom_center_y_value = Float().tag(sync=True)
-    viewer_zoom_center_y_sync = Dict().tag(sync=True)
-
-    viewer_zoom_level_value = Float().tag(sync=True)
-    viewer_zoom_level_sync = Dict().tag(sync=True)
+    zoom_level_value = Float().tag(sync=True)
+    zoom_level_sync = Dict().tag(sync=True)
 
     # scatter/marker options
     marker_visible_value = Bool().tag(sync=True)
@@ -452,33 +449,24 @@ class PlotOptions(PluginTemplateMixin):
                                                         'uncertainty_visible_value', 'uncertainty_visible_sync')  # noqa
 
         # Viewer bounds
-        self.viewer_x_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_min',
-                                                 'viewer_x_min_value', 'viewer_x_min_sync',
-                                                 state_filter=not_image_viewer)
-        self.viewer_x_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_max',
-                                                 'viewer_x_max_value', 'viewer_x_max_sync',
-                                                 state_filter=not_image_viewer)
-        self.viewer_x_unit = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_display_unit',
-                                                  'viewer_x_unit_value', 'viewer_x_unit_sync',
-                                                  state_filter=not_image_viewer)
-        self.viewer_y_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_min',
-                                                 'viewer_y_min_value', 'viewer_y_min_sync',
-                                                 state_filter=not_image_viewer)
-        self.viewer_y_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_max',
-                                                 'viewer_y_max_value', 'viewer_y_max_sync',
-                                                 state_filter=not_image_viewer)
-        self.viewer_y_unit = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_display_unit',
-                                                  'viewer_y_unit_value', 'viewer_y_unit_sync',
-                                                  state_filter=not_image_viewer)
-        self.viewer_zoom_center_x = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center_x',  # noqa
-                                                       'viewer_zoom_center_x_value',
-                                                       'viewer_zoom_center_x_sync')
-        self.viewer_zoom_center_y = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center_y',  # noqa
-                                                       'viewer_zoom_center_y_value',
-                                                       'viewer_zoom_center_y_sync')
-        self.viewer_zoom_level = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_level',
-                                                      'viewer_zoom_level_value',
-                                                      'viewer_zoom_level_sync')
+        self.x_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_min',
+                                          'x_min_value', 'x_min_sync',
+                                          state_filter=not_image_viewer)
+        self.x_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_max',
+                                          'x_max_value', 'x_max_sync',
+                                          state_filter=not_image_viewer)
+        self.y_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_min',
+                                          'y_min_value', 'y_min_sync',
+                                          state_filter=not_image_viewer)
+        self.y_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_max',
+                                          'y_max_value', 'y_max_sync',
+                                          state_filter=not_image_viewer)
+        self.zoom_center_x = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center_x',
+                                                  'zoom_center_x_value', 'zoom_center_x_sync')
+        self.zoom_center_y = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center_y',
+                                                  'zoom_center_y_value', 'zoom_center_y_sync')
+        self.zoom_level = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_level',
+                                               'zoom_level_value', 'zoom_level_sync')
 
         # Scatter/marker options:
         # NOTE: marker_visible hides the entire layer (including the line)
@@ -638,6 +626,13 @@ class PlotOptions(PluginTemplateMixin):
         self.show_viewer_labels = self.app.state.settings['viewer_labels']
         self.app.state.add_callback('settings', self._on_app_settings_changed)
 
+        sv = self.spectrum_viewer
+        if sv is not None:
+            sv.state.add_callback('x_display_unit',
+                                  self._on_global_display_unit_changed)
+            sv.state.add_callback('y_display_unit',
+                                  self._on_global_display_unit_changed)
+
         # give UI access to sampled version of the available colormap choices
         def hex_for_cmap(cmap):
             N = 50
@@ -652,10 +647,12 @@ class PlotOptions(PluginTemplateMixin):
         if self.config == "cubeviz":
             expose += ['collapse_function', 'uncertainty_visible']
         if self.config != "imviz":
-            expose += ['axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
+            expose += ['x_min', 'x_max', 'y_min', 'y_max',
+                       'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
                        'line_as_steps', 'uncertainty_visible']
         if self.config != "specviz":
-            expose += ['subset_color', 'subset_opacity',
+            expose += ['zoom_center_x', 'zoom_center_y', 'zoom_level',
+                       'subset_color', 'subset_opacity',
                        'stretch_function', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
                        'stretch_hist_zoom_limits', 'stretch_hist_nbins',
                        'image_visible', 'image_color_mode',
@@ -703,6 +700,12 @@ class PlotOptions(PluginTemplateMixin):
         if layers:
             self.layer_multiselect = True
             self.layer.select_all()
+
+    def _on_global_display_unit_changed(self, *args):
+        sv = self.spectrum_viewer
+        self.display_units['spectral'] = sv.state.x_display_unit
+        self.display_units['flux'] = sv.state.y_display_unit
+        self.send_state('display_units')
 
     def vue_unmix_state(self, names):
         if isinstance(names, str):
@@ -774,8 +777,9 @@ class PlotOptions(PluginTemplateMixin):
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
 
-    @observe('viewer_selected', 'viewer_x_max_value', 'viewer_x_min_value',
-             'viewer_y_max_value', 'viewer_y_min_value')
+    @observe('viewer_selected',
+             'x_min_value', 'x_max_value',
+             'y_min_value', 'y_max_value')
     def _update_viewer_bound_steps(self, msg={}):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet
@@ -785,25 +789,16 @@ class PlotOptions(PluginTemplateMixin):
             # nothing selected yet
             return
 
-        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj # noqa
-        if not isinstance(viewer.state, ImageViewerState):
-            # We round these values to show, e.g., 7.15 instead of 7.1499999
-            if hasattr(viewer.state, "x_max") and viewer.state.x_max is not None:
-                bound_step = (viewer.state.x_max - viewer.state.x_min) / 100.
-                decimals = -int(np.log10(abs(bound_step))) + 1 if bound_step != 0 else 6
-                if decimals < 0:
-                    decimals = 0
-                self.viewer_x_bound_step = np.round(bound_step, decimals=decimals)
-                self.viewer_x_max_value = np.round(self.viewer_x_max_value, decimals=decimals)
-                self.viewer_x_min_value = np.round(self.viewer_x_min_value, decimals=decimals)
-            if hasattr(viewer.state, "y_max") and viewer.state.y_max is not None:
-                bound_step = (viewer.state.y_max - viewer.state.y_min) / 100.
-                decimals = -int(np.log10(abs(bound_step))) + 1 if bound_step != 0 else 6
-                if decimals < 0:
-                    decimals = 0
-                self.viewer_y_bound_step = np.round(bound_step, decimals=decimals)
-                self.viewer_y_max_value = np.round(self.viewer_y_max_value, decimals=decimals)
-                self.viewer_y_min_value = np.round(self.viewer_y_min_value, decimals=decimals)
+        for ax in ('x', 'y'):
+            ax_min = getattr(self, f'{ax}_min_value')
+            ax_max = getattr(self, f'{ax}_max_value')
+            bound_step = (ax_max - ax_min) / 100.  # noqa
+            decimals = -int(np.log10(abs(bound_step))) + 1 if bound_step != 0 else 6
+            if decimals < 0:
+                decimals = 0
+            setattr(self, f'{ax}_bound_step', np.round(bound_step, decimals=decimals))
+            setattr(self, f'{ax}_min_value', np.round(ax_min, decimals=decimals))
+            setattr(self, f'{ax}_max_value', np.round(ax_max, decimals=decimals))
 
     def vue_reset_viewer_bounds(self, _):
         # This button is currently only exposed if only the spectrum viewer is selected

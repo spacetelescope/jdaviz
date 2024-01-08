@@ -46,69 +46,69 @@
             <span style="padding: 6px">Viewer bounds</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <glue-state-sync-wrapper :sync="viewer_x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_min')">
+            <glue-state-sync-wrapper :sync="x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('x_min')">
               <glue-float-field
-                ref="viewer_x_min"
+                ref="x_min"
                 label="X Min"
-                :value.sync="viewer_x_min_value"
+                :value.sync="x_min_value"
                 type="number"
-                :step="viewer_x_bound_step"
-                :suffix="viewer_x_unit_value"
+                :step="x_bound_step"
+                :suffix="display_units['spectral']"
               />
             </glue-state-sync-wrapper>
-            <glue-state-sync-wrapper :sync="viewer_x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_max')">
+            <glue-state-sync-wrapper :sync="x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('x_max')">
               <glue-float-field
-                ref="viewer_x_max"
+                ref="x_max"
                 label="X Max"
-                :value.sync="viewer_x_max_value"
+                :value.sync="x_max_value"
                 type="number"
-                :step="viewer_x_bound_step"
-                :suffix="viewer_x_unit_value"
+                :step="x_bound_step"
+                :suffix="display_units['spectral']"
               />
             </glue-state-sync-wrapper>
-            <glue-state-sync-wrapper :sync="viewer_y_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_min')">
+            <glue-state-sync-wrapper :sync="y_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('y_min')">
               <glue-float-field
-                ref="viewer_y_min"
+                ref="y_min"
                 label="Y Min"
-                :value.sync="viewer_y_min_value"
+                :value.sync="y_min_value"
                 type="number"
-                :step="viewer_y_bound_step"
-                :suffix="viewer_y_unit_value"
+                :step="y_bound_step"
+                :suffix="display_units['flux']"
               />
             </glue-state-sync-wrapper>
-            <glue-state-sync-wrapper :sync="viewer_y_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_max')">
+            <glue-state-sync-wrapper :sync="y_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('y_max')">
               <glue-float-field
-                ref="viewer_y_max"
+                ref="y_max"
                 label="Y Max"
-                :value.sync="viewer_y_max_value"
+                :value.sync="y_max_value"
                 type="number"
-                :step="viewer_y_bound_step"
-                :suffix="viewer_y_unit_value"
+                :step="y_bound_step"
+                :suffix="display_units['flux']"
               />
             </glue-state-sync-wrapper>
-            <glue-state-sync-wrapper :sync="viewer_zoom_center_x_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_zoom_center_x')">
+            <glue-state-sync-wrapper :sync="zoom_center_x_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_center_x')">
               <glue-float-field
-                ref="viewer_zoom_center_x"
+                ref="zoom_center_x"
                 label="Center (x)"
-                :value.sync="viewer_zoom_center_x_value"
+                :value.sync="zoom_center_x_value"
                 type="number"
                 :step="0.1"
               />
             </glue-state-sync-wrapper>
-            <glue-state-sync-wrapper :sync="viewer_zoom_center_y_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_zoom_center_y')">
+            <glue-state-sync-wrapper :sync="zoom_center_y_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_center_y')">
               <glue-float-field
-                ref="viewer_zoom_center_y"
+                ref="zoom_center_y"
                 label="Center (y)"
-                :value.sync="viewer_zoom_center_y_value"
+                :value.sync="zoom_center_y_value"
                 type="number"
                 :step="0.1"
               />
             </glue-state-sync-wrapper>
-            <glue-state-sync-wrapper :sync="viewer_zoom_level_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_zoom_level')">
+            <glue-state-sync-wrapper :sync="zoom_level_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_level')">
               <glue-float-field
-                ref="viewer_zoom_level"
+                ref="zoom_level"
                 label="Zoom-Level"
-                :value.sync="viewer_zoom_level_value"
+                :value.sync="zoom_level_value"
                 type="number"
                 :step="0.1"
               />
