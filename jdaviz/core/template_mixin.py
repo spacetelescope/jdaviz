@@ -3301,7 +3301,7 @@ class PlotOptionsSyncState(BasePluginComponent):
                      'in_subscribed_states': in_subscribed_states,
                      'icons': icons,
                      'mixed': self.is_mixed(current_glue_values)}
-        if len(current_glue_values):
+        if len(current_glue_values) and current_glue_values[0] is not None:
             # sync the initial value of the widget, avoiding recursion
             self._on_glue_value_changed(current_glue_values[0])
 
@@ -3323,6 +3323,15 @@ class PlotOptionsSyncState(BasePluginComponent):
                     return True
 
             return False
+
+        # Need this for temporary None value during startup
+        elif len(glue_values):
+            no_nones = [x for x in glue_values if x is not None]
+            if len(no_nones) == 0:
+                return False
+            if len(no_nones) != len(glue_values):
+                return True
+
         return len(np.unique(glue_values, axis=0)) > 1
 
     def _update_mixed_state(self):

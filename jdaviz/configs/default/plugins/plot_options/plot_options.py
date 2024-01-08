@@ -14,7 +14,7 @@ from glue.core.subset_group import GroupedSubset
 from glue.config import colormaps, stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
-from glue.viewers.image.state import ImageSubsetLayerState
+from glue.viewers.image.state import ImageSubsetLayerState, ImageViewerState
 from glue.viewers.scatter.state import ScatterLayerState as BqplotScatterLayerState
 from glue.viewers.image.composite_array import COLOR_CONVERTER
 from glue_jupyter.bqplot.image.state import BqplotImageLayerState
@@ -26,7 +26,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, Layer
                                         skip_if_no_updates_since_last_active, with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 
 from scipy.interpolate import PchipInterpolator
 
@@ -177,6 +177,7 @@ class PlotOptions(PluginTemplateMixin):
     viewer_multiselect = Bool(False).tag(sync=True)
     viewer_items = List().tag(sync=True)
     viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
+    viewer_limits = Dict().tag(sync=True)
 
     layer_multiselect = Bool(False).tag(sync=True)
     layer_items = List().tag(sync=True)
@@ -203,6 +204,27 @@ class PlotOptions(PluginTemplateMixin):
 
     uncertainty_visible_value = Int().tag(sync=True)
     uncertainty_visible_sync = Dict().tag(sync=True)
+
+    viewer_x_min_value = FloatHandleEmpty().tag(sync=True)
+    viewer_x_min_sync = Dict().tag(sync=True)
+
+    viewer_x_max_value = FloatHandleEmpty().tag(sync=True)
+    viewer_x_max_sync = Dict().tag(sync=True)
+
+    viewer_x_unit_value = Unicode(allow_none=True).tag(sync=True)
+    viewer_x_unit_sync = Dict().tag(sync=True)
+
+    viewer_y_min_value = FloatHandleEmpty().tag(sync=True)
+    viewer_y_min_sync = Dict().tag(sync=True)
+
+    viewer_y_max_value = FloatHandleEmpty().tag(sync=True)
+    viewer_y_max_sync = Dict().tag(sync=True)
+
+    viewer_y_unit_value = Unicode(allow_none=True).tag(sync=True)
+    viewer_y_unit_sync = Dict().tag(sync=True)
+
+    viewer_x_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
+    viewer_y_bound_step = Float(0.1).tag(sync=True)  # dynamic based on maximum value
 
     # scatter/marker options
     marker_visible_value = Bool().tag(sync=True)
@@ -330,6 +352,7 @@ class PlotOptions(PluginTemplateMixin):
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     show_viewer_labels = Bool(True).tag(sync=True)
+    show_viewer_bounds = Bool(True).tag(sync=True)
 
     cmap_samples = Dict().tag(sync=True)
     swatches_palette = List().tag(sync=True)
@@ -368,6 +391,9 @@ class PlotOptions(PluginTemplateMixin):
         def not_image(state):
             return not is_image(state)
 
+        def not_image_viewer(state):
+            return not isinstance(state, ImageViewerState)
+
         def not_image_or_spatial_subset(state):
             return not is_image(state) and not is_spatial_subset(state)
 
@@ -405,6 +431,26 @@ class PlotOptions(PluginTemplateMixin):
                                                   'line_as_steps_value', 'line_as_steps_sync')
         self.uncertainty_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_uncertainty',  # noqa
                                                         'uncertainty_visible_value', 'uncertainty_visible_sync')  # noqa
+
+        # Viewer bounds
+        self.viewer_x_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_min',
+                                                 'viewer_x_min_value', 'viewer_x_min_sync',
+                                                 state_filter=not_image_viewer)
+        self.viewer_x_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_max',
+                                                 'viewer_x_max_value', 'viewer_x_max_sync',
+                                                 state_filter=not_image_viewer)
+        self.viewer_x_unit = PlotOptionsSyncState(self, self.viewer, self.layer, 'x_display_unit',
+                                                  'viewer_x_unit_value', 'viewer_x_unit_sync',
+                                                  state_filter=not_image_viewer)
+        self.viewer_y_min = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_min',
+                                                 'viewer_y_min_value', 'viewer_y_min_sync',
+                                                 state_filter=not_image)
+        self.viewer_y_max = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_max',
+                                                 'viewer_y_max_value', 'viewer_y_max_sync',
+                                                 state_filter=not_image)
+        self.viewer_y_unit = PlotOptionsSyncState(self, self.viewer, self.layer, 'y_display_unit',
+                                                  'viewer_y_unit_value', 'viewer_y_unit_sync',
+                                                  state_filter=not_image_viewer)
 
         # Scatter/marker options:
         # NOTE: marker_visible hides the entire layer (including the line)
@@ -557,8 +603,6 @@ class PlotOptions(PluginTemplateMixin):
         self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
                                                  'axes_visible_value', 'axes_visible_sync',
                                                  state_filter=not_profile)
-        # zoom limits
-        # display_units
 
         self.show_viewer_labels = self.app.state.settings['viewer_labels']
         self.app.state.add_callback('settings', self._on_app_settings_changed)
@@ -698,6 +742,52 @@ class PlotOptions(PluginTemplateMixin):
 
     def vue_apply_RGB_presets(self, data):
         self.apply_RGB_presets()
+
+    @observe('viewer_selected', 'viewer_x_max_value', 'viewer_x_min_value',
+             'viewer_y_max_value', 'viewer_y_min_value')
+    def _update_viewer_bound_steps(self, msg={}):
+        if not hasattr(self, 'viewer'):  # pragma: no cover
+            # plugin hasn't been fully initialized yet
+            return
+
+        if not self.viewer.selected:  # pragma: no cover
+            # nothing selected yet
+            return
+
+        if self.viewer_multiselect:
+            not_image = [not isinstance(v.state, ImageViewerState) for v in self.viewer.selected_obj] # noqa
+            if np.all(not_image):
+                self.show_viewer_bounds = True
+            else:
+                self.show_viewer_bounds = False
+                return
+
+        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj # noqa
+        if not isinstance(viewer.state, ImageViewerState):
+            self.show_viewer_bounds = True
+            # We round these values to show, e.g., 7.15 instead of 7.1499999
+            if hasattr(viewer.state, "x_max") and viewer.state.x_max is not None:
+                bound_step = (viewer.state.x_max - viewer.state.x_min) / 100.
+                decimals = -int(np.log10(abs(bound_step))) + 1 if bound_step != 0 else 6
+                if decimals < 0:
+                    decimals = 0
+                self.viewer_x_bound_step = np.round(bound_step, decimals=decimals)
+                self.viewer_x_max_value = np.round(self.viewer_x_max_value, decimals=decimals)
+                self.viewer_x_min_value = np.round(self.viewer_x_min_value, decimals=decimals)
+            if hasattr(viewer.state, "y_max") and viewer.state.y_max is not None:
+                bound_step = (viewer.state.y_max - viewer.state.y_min) / 100.
+                decimals = -int(np.log10(abs(bound_step))) + 1 if bound_step != 0 else 6
+                if decimals < 0:
+                    decimals = 0
+                self.viewer_y_bound_step = np.round(bound_step, decimals=decimals)
+                self.viewer_y_max_value = np.round(self.viewer_y_max_value, decimals=decimals)
+                self.viewer_y_min_value = np.round(self.viewer_y_min_value, decimals=decimals)
+
+    def vue_reset_viewer_bounds(self, _):
+        # This button is currently only exposed if only the spectrum viewer is selected
+        viewers = [self.viewer.selected_obj] if not self.viewer_multiselect else self.viewer.selected_obj # noqa
+        for viewer in viewers:
+            viewer.toolbar.tools['jdaviz:homezoom'].activate()
 
     @observe('stretch_function_sync', 'stretch_params_sync',
              'stretch_vmin_sync', 'stretch_vmax_sync',

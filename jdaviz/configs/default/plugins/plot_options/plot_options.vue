@@ -39,6 +39,64 @@
       :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
 
+    <v-row v-if="show_viewer_bounds">
+      <v-expansion-panels popout>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Viewer bounds</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content class="plugin-expansion-panel-content">
+            <glue-state-sync-wrapper :sync="viewer_x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_min')">
+              <glue-float-field
+                ref="viewer_x_min"
+                label="Viewer X Min"
+                :value.sync="viewer_x_min_value"
+                type="number"
+                :step="viewer_x_bound_step"
+                :suffix="viewer_x_unit_value"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_x_max')">
+              <glue-float-field
+                ref="viewer_x_max"
+                label="Viewer X Max"
+                :value.sync="viewer_x_max_value"
+                type="number"
+                :step="viewer_x_bound_step"
+                :suffix="viewer_x_unit_value"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_y_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_min')">
+              <glue-float-field
+                ref="viewer_y_min"
+                label="Viewer Y Min"
+                :value.sync="viewer_y_min_value"
+                type="number"
+                :step="viewer_y_bound_step"
+                :suffix="viewer_y_unit_value"
+              />
+            </glue-state-sync-wrapper>
+            <glue-state-sync-wrapper :sync="viewer_y_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('viewer_y_max')">
+              <glue-float-field
+                ref="viewer_y_max"
+                label="Viewer Y Max"
+                :value.sync="viewer_y_max_value"
+                type="number"
+                :step="viewer_y_bound_step"
+                :suffix="viewer_y_unit_value"
+              />
+            </glue-state-sync-wrapper>
+            <plugin-action-button
+              :results_isolated_to_plugin="false"
+              @click="reset_viewer_bounds"
+            >
+              Reset viewer bounds
+            </plugin-action-button>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
+
     <div v-if="image_color_mode_sync.in_subscribed_states">
       <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('image_color_mode')">
         <v-select
@@ -467,11 +525,11 @@
       <div v-if="stretch_function_sync.in_subscribed_states && (!layer_multiselect || layer_selected.length <= 1)">
         <div style="display: grid"> <!-- overlay container -->
           <div style="grid-area: 1/1">
-            <glue-state-sync-wrapper 
+            <glue-state-sync-wrapper
                 :sync="stretch_hist_sync"
-                :multiselect="layer_multiselect" 
+                :multiselect="layer_multiselect"
                 @unmix-state="unmix_state(['stretch_function', 'stretch_params',
-                                           'stretch_vmin', 'stretch_vmax', 
+                                           'stretch_vmin', 'stretch_vmax',
                                            'image_color_mode', 'image_color', 'image_colormap'])"
             >
               <jupyter-widget :widget="stretch_histogram_widget"/>
@@ -479,7 +537,7 @@
           </div>
           <div v-if="stretch_hist_spinner"
                class="text-center"
-               style="grid-area: 1/1; 
+               style="grid-area: 1/1;
                       z-index:2;
                       margin-left: -24px;
                       margin-right: -24px;
