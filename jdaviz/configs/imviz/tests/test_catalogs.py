@@ -91,7 +91,7 @@ class TestCatalogs:
         self.imviz = imviz_helper
 
         catalogs_plugin = self.imviz.app.get_tray_item_from_name('imviz-catalogs')
-        catalogs_plugin._obj.plugin_opened = True
+        catalogs_plugin.plugin_opened = True
         # This basically calls the following under the hood:
         #   skycoord_center = SkyCoord(6.62754354, 1.54466139, unit="deg")
         #   zoom_radius = r_max = 3 * u.arcmin
