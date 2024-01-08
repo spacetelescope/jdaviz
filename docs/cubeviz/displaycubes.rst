@@ -111,6 +111,11 @@ You can also use the subset modes that are explained in the
 :ref:`Spatial Regions <imviz_defining_spatial_regions>`
 section above in the same way you would with the other subset selection tools.
 
+Note that moving the cursor outside of the image viewer or deactivating the spectrum-at-spaxel tool
+will revert the spectrum viewer zoom limits from the zoomed-in preview view to the limits set prior
+to using the tool. Thus it may be necessary to reset the zoom to see any single-spaxel subset spectra
+created using the tool.
+
 .. _cubeviz-display-settings:
 
 Display Settings

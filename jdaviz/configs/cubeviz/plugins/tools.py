@@ -89,8 +89,16 @@ class SpectrumPerSpaxel(SinglePixelRegion):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._spectrum_viewer = None
+        self._previous_bounds = None
         self._mark = None
         self._data = None
+
+    def _reset_spectrum_viewer_bounds(self):
+        sv_state = self._spectrum_viewer.state
+        sv_state.x_min = self._previous_bounds[0]
+        sv_state.x_max = self._previous_bounds[1]
+        sv_state.y_min = self._previous_bounds[2]
+        sv_state.y_max = self._previous_bounds[3]
 
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_move, events=['mousemove', 'mouseleave'])
@@ -99,15 +107,20 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         if self._mark is None:
             self._mark = PluginLine(self._spectrum_viewer, visible=False)
             self._spectrum_viewer.figure.marks = self._spectrum_viewer.figure.marks + [self._mark,]
+        # Store these so we can revert to previous user-set zoom after preview view
+        sv_state = self._spectrum_viewer.state
+        self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
         super().activate()
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_move)
+        self._reset_spectrum_viewer_bounds()
         super().deactivate()
 
     def on_mouse_move(self, data):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
+            self._reset_spectrum_viewer_bounds()
             return
 
         x = int(np.round(data['domain']['x']))
