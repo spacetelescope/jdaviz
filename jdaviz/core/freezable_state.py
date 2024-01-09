@@ -60,7 +60,6 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
     zoom_center_y = CallbackProperty(0.0, docstring='y-coordinate of center of zoom box')
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self.wcs_only_layers = []  # For Imviz rotation use.
         self._during_zoom_sync = False
         self.add_callback('zoom_level', self._set_zoom_level)
@@ -68,6 +67,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         self.add_callback('zoom_center_y', self._set_zoom_center)
         for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
             self.add_callback(attr, self._set_axes_lim)
+        super().__init__(*args, **kwargs)
 
     @contextmanager
     def during_zoom_sync(self):
