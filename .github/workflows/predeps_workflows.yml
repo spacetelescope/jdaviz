@@ -20,13 +20,14 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
 
           - name: RC testing on Linux with remote data
             os: ubuntu-latest
-            python: '3.11'
-            toxenv: py311-test-predeps
+            python: '3.12'
+            toxenv: py312-test-predeps
             toxposargs: --remote-data
 
           - name: RC testing on OSX
@@ -36,8 +37,8 @@ jobs:
 
           - name: RC testing on Windows
             os: windows-latest
-            python: '3.10'
-            toxenv: py310-test-predeps
+            python: '3.11'
+            toxenv: py311-test-predeps
 
     steps:
     - name: Checkout code
