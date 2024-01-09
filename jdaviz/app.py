@@ -1899,13 +1899,14 @@ class Application(VuetifyTemplate, HubListener):
         # the reference data (which would leave 0 external_links).
         if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
             if self.config == "imviz" and imviz_refdata:
+                subset_labels = [sg.label for sg in self.data_collection.subset_groups]
                 link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
                 self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():
                     viewer = self.get_viewer(viewer_ref)
                     loaded_layers = [layer.layer.label for layer in viewer.layers if
-                                     "Subset" not in layer.layer.label]
+                                     layer.layer.label not in subset_labels]
                     if len(loaded_layers):
                         self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
                         self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
