@@ -154,7 +154,7 @@ for name, path in custom_components.items():
 ipyvue.register_component_from_file('g-viewer-tab', "container.vue", __file__)
 
 
-style_registry.instance.add((__file__, 'main_styles.vue'))
+style_registry.add((__file__, 'main_styles.vue'))
 
 
 class ApplicationState(State):
@@ -263,7 +263,7 @@ class Application(VuetifyTemplate, HubListener):
         self._verbosity = 'warning'
         self._history_verbosity = 'info'
         self.popout_button = PopoutButton(self)
-        self.style_registry_instance = style_registry.instance
+        self.style_registry_instance = style_registry.get_style_registry()
 
         # Generate a state object for this application to maintain the state of
         #  the user interface.

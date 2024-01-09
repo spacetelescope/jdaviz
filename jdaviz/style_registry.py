@@ -1,8 +1,45 @@
+from pathlib import Path
+import typing as t
+import threading
+
 from traitlets import Any, Dict, Instance, default
 from ipywidgets import widget_serialization
 from ipyvuetify import VuetifyTemplate
 
 from jdaviz.core.style_widget import StyleWidget
+
+
+T = t.TypeVar("T")
+_style_paths: t.Dict[int, Path] = {}
+
+
+# this is a temporary decorator until we can depend on solara, and solara has
+# an equivalent implementation.
+def _singleton(factory: [t.Callable[[], T]]) -> t.Callable[[], T]:
+    def _get_unique_key():
+        try:
+            import solara.server.kernel_context as kernel_context
+
+            try:
+                kc = kernel_context.get_current_context()
+                return kc.id
+            except RuntimeError:
+                pass  # not running in a solara virtual kernel
+        except ModuleNotFoundError:
+            return "not-in-solara"
+
+    instances: t.Dict[str, T] = {}
+    lock = threading.Lock()
+
+    def wrapper(*args, **kwargs) -> T:
+        key = _get_unique_key()
+        if key not in instances:
+            with lock:
+                if key not in instances:
+                    instances[key] = factory(*args, **kwargs)
+        return instances[key]
+
+    return wrapper
 
 
 class StyleRegistry(VuetifyTemplate):
@@ -19,20 +56,17 @@ class StyleRegistry(VuetifyTemplate):
         </template>
         """
 
-    def add(self, path):
-        if hash(path) in self.style_widgets:
-            return
-        self.style_widgets = {**self.style_widgets, hash(path): StyleWidget(path)}
 
-
-instance = StyleRegistry()
+def add(path):
+    if hash(path) in _style_paths:
+        return
+    _style_paths[hash(path)] = path
 
 
 class PopoutStyleWrapper(VuetifyTemplate):
     content = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Instance(
         StyleRegistry,
-        default_value=instance
     ).tag(sync=True, **widget_serialization)
 
     @default("template")
@@ -45,3 +79,15 @@ class PopoutStyleWrapper(VuetifyTemplate):
             </div>
         </template>
         """
+
+    @default("style_registry_instance")
+    @_singleton
+    def _default_style_registry_instance(self):
+        return get_style_registry()
+
+
+@_singleton
+def get_style_registry():
+    return StyleRegistry(
+        style_widgets={key: StyleWidget(path) for key, path in _style_paths.items()}
+    )
