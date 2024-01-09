@@ -697,7 +697,6 @@ class ImageConfigHelper(ConfigHelper):
             * Astropy ``regions`` object
             * ``photutils`` apertures (limited support until ``photutils``
               fully supports ``regions``)
-            * Numpy boolean array (shape must match data, dtype should be ``np.bool_``)
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
@@ -707,7 +706,7 @@ class ImageConfigHelper(ConfigHelper):
             Label of data to use for sky-to-pixel conversion for a region, or
             mask creation. Data must already be loaded into Jdaviz.
             If `None`, defaults to the reference data in the default viewer.
-            Choice of this data is particularly important when sky or masked
+            Choice of this data is particularly important when sky
             region is involved.
 
         return_bad_regions : bool
@@ -716,8 +715,7 @@ class ImageConfigHelper(ConfigHelper):
 
         kwargs : dict
             Extra keywords to be passed into the region's ``to_mask`` method.
-            **This is ignored if the region can be made interactive or
-            if a Numpy array is given.**
+            **This is ignored if the region can be made interactive.**
 
         Returns
         -------
@@ -808,6 +806,7 @@ class ImageConfigHelper(ConfigHelper):
                         bad_regions.append((region, f'Failed to load: {repr(e)}'))
                         continue
 
+                # Boolean mask as input is supported but not advertised.
                 elif (isinstance(region, np.ndarray) and region.shape == data.shape
                         and region.dtype == np.bool_):
                     im = region
