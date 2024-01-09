@@ -109,27 +109,8 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
             Additional keyword arguments passed to the NDDataArray collapse operation.
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
-        spectral_cube, uncert_cube = None, None
-        # get glue Data objects for the spectral cube and uncertainties
-        for data in self.app.data_collection:
-            data_type = data.meta.get('_cube_data_type')
-
-            if data_type and data_type != 'mask':
-                if data_type == 'flux':
-                    spectral_cube = data
-                elif data_type in ['uncert', 'uncertainty']:
-                    uncert_cube = data
-
-        # verify there isn't N = 0 or N > 1 sets of cube data in data collection
-        if (spectral_cube is None) or (uncert_cube is None):
-            self.disabled_msg = "No data detected, please load data into data collection " \
-                    "and try again to compute spectral extraction."
-            return
-        elif (len([spectral_cube]) > 1) or (len([uncert_cube]) > 1):
-            self.disabled_msg = "Only one dataset is allowed in Cubeviz, please " \
-                    "remove a dataset and try again to compute spectral " \
-                    "extraction."
-            return
+        spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
+        uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
 
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
