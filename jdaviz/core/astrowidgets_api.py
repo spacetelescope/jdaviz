@@ -102,7 +102,9 @@ class AstrowidgetsImageViewerMixin:
         else:  # pragma: no cover
             pix = point
 
-        self.state.zoom_center = pix
+        with delay_callback(self.state, 'zoom_center_x', 'zoom_center_y'):
+            self.state.zoom_center_x = pix[0]
+            self.state.zoom_center_y = pix[1]
 
     def offset_by(self, dx, dy):
         """Move the center to a point that is given offset
