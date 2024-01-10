@@ -6,6 +6,7 @@ import astropy
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from specutils import Spectrum1D
 from regions import CirclePixelRegion, PixCoord
+from astropy.utils.exceptions import AstropyUserWarning
 
 ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
 
@@ -43,6 +44,54 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
         collapsed_cube_nddata.data,
         collapsed_cube_s1d.flux.to_value(collapsed_cube_nddata.unit)
     )
+
+
+@pytest.mark.skipif(ASTROPY_LT_5_3_2, reason='Needs astropy 5.3.2 or later')
+def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_uncerts):
+    # Also test if gaussian smooth plugin is run before spec extract
+    # that spec extract yields results of correct cube data
+    gs_plugin = cubeviz_helper.plugins['Gaussian Smooth']._obj
+
+    # give uniform unit uncertainties for spec extract test:
+    spectrum1d_cube_with_uncerts.uncertainty = StdDevUncertainty(
+        np.ones_like(spectrum1d_cube_with_uncerts.data)
+    )
+
+    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
+
+    gs_plugin.mode_selected = 'Spatial'
+    gs_plugin.stddev = 3
+
+    with pytest.warns(
+            AstropyUserWarning,
+            match='The following attributes were set on the data object, but will be ignored'):
+        gs_plugin.vue_apply()
+
+    # create a subset with a single pixel:
+    regions = [
+        # create a subset with a single pixel:
+        CirclePixelRegion(PixCoord(0, 1), radius=0.7),
+        # two-pixel region:
+        CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)
+    ]
+    cubeviz_helper.load_regions(regions)
+
+    extract_plugin = cubeviz_helper.plugins['Spectral Extraction']
+    extract_plugin.function = "Sum"
+    expected_uncert = 2
+
+    extract_plugin.spatial_subset = 'Subset 1'
+    collapsed_spec = extract_plugin.collapse_to_spectrum()
+
+    # this single pixel has two wavelengths, and all uncertainties are unity
+    # irrespective of which collapse function is applied:
+    assert len(collapsed_spec.flux) == 2
+    assert np.all(np.equal(collapsed_spec.uncertainty.array, 1))
+
+    # this two-pixel region has four unmasked data points per wavelength:
+    extract_plugin.spatial_subset = 'Subset 2'
+    collapsed_spec_2 = extract_plugin.collapse_to_spectrum()
+    assert np.all(np.equal(collapsed_spec_2.uncertainty.array, expected_uncert))
 
 
 @pytest.mark.skipif(ASTROPY_LT_5_3_2, reason='Needs astropy 5.3.2 or later')
