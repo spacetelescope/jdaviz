@@ -137,6 +137,10 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             self.zoom_center_y = center_y
 
     def reset_limits(self, *event):
+        # TODO: use consistent logic for all image viewers by removing this if-statement
+        # if/when WCS linking is supported (i.e. in cubeviz)
+        if getattr(self, '_viewer', None) is not None and self._viewer.jdaviz_app.config != 'imviz':
+            return super().reset_limits(*event)
         if self.reference_data is None:  # Nothing to do
             return
 
@@ -176,9 +180,11 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 if not layer.visible or layer.layer.data.ndim == 1:
                     continue
                 pixel_ids = layer.layer.pixel_component_ids
+                pixel_id_x = [comp for comp in pixel_ids if comp.label.endswith('[x]')][0]
+                pixel_id_y = [comp for comp in pixel_ids if comp.label.endswith('[y]')][0]
 
-                x_max = max(x_max, layer.layer.data[pixel_ids[1]].max() + 0.5)
-                y_max = max(y_max, layer.layer.data[pixel_ids[0]].max() + 0.5)
+                x_max = max(x_max, layer.layer.data[pixel_id_x].max() + 0.5)
+                y_max = max(y_max, layer.layer.data[pixel_id_y].max() + 0.5)
 
         with self.during_zoom_sync():
             self.x_min = x_min
