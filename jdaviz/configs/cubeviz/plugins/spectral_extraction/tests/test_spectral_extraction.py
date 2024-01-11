@@ -59,6 +59,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
 
+    gs_plugin.dataset_selected = f'{cubeviz_helper.app.data_collection[0].label}'
     gs_plugin.mode_selected = 'Spatial'
     gs_plugin.stddev = 3
 
@@ -66,6 +67,9 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
             AstropyUserWarning,
             match='The following attributes were set on the data object, but will be ignored'):
         gs_plugin.vue_apply()
+
+    gs_data_label = cubeviz_helper.app.data_collection[2].label
+    cubeviz_helper.app.add_data_to_viewer('flux-viewer', gs_data_label)
 
     # create a subset with a single pixel:
     regions = [
