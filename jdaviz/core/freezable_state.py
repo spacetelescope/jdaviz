@@ -74,9 +74,6 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         self._during_zoom_sync = True
         try:
             yield
-            # We need to adjust the limits in here to avoid triggering all
-            # the update events then changing the limits again.
-            self._adjust_limits_aspect()
         except Exception:
             self._during_zoom_sync = False
             raise
@@ -96,6 +93,10 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         with self.during_zoom_sync():
             self.x_min = new_x_min - 0.5
             self.x_max = new_x_max - 0.5
+
+            # We need to adjust the limits in here to avoid triggering all
+            # the update events then changing the limits again.
+            self._adjust_limits_aspect()
 
     def _set_zoom_center(self, *args):
         if self._during_zoom_sync:
@@ -186,8 +187,11 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 x_max = max(x_max, layer.layer.data[pixel_id_x].max() + 0.5)
                 y_max = max(y_max, layer.layer.data[pixel_id_y].max() + 0.5)
 
-        with self.during_zoom_sync():
+        with delay_callback(self, 'x_min', 'x_max', 'y_min', 'y_max'):
             self.x_min = x_min
             self.x_max = x_max
             self.y_min = y_min
             self.y_max = y_max
+            # We need to adjust the limits in here to avoid triggering all
+            # the update events then changing the limits again.
+            self._adjust_limits_aspect()
