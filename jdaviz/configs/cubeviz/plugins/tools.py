@@ -115,14 +115,13 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         # Add extra y-axis to show on right hand side of spectrum viewer
         if self._extra_axis not in self._spectrum_viewer.figure.axes:
             self._spectrum_viewer.figure.axes.append(self._extra_axis)
-            #self._spectrum_viewer.figure.send_state()
         # Create the mark for the preview spectrum
         if self._mark is None:
             scales = {}
             scales['x'] = self._spectrum_viewer.native_marks[0].scales['x']
             scales['y'] = bqplot.LinearScale()
             self._mark = PluginLine(self._spectrum_viewer, visible=False, scales=scales)
-            self._spectrum_viewer.figure.marks = self._spectrum_viewer.figure.marks + [self._mark,]
+            self._spectrum_viewer.figure.marks = self._spectrum_viewer.figure.marks + [self._mark]
         # Store these so we can revert to previous user-set zoom after preview view
         sv_state = self._spectrum_viewer.state
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
@@ -143,15 +142,15 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
             self._extra_axis.visible=False
-            self._extra_axis.send_state()
+            self._extra_axis.send_state("visible")
             self._spectrum_viewer.figure.fig_margin['right'] = 10
-            self._spectrum_viewer.figure.send_state()
+            self._spectrum_viewer.figure.send_state("fig_margin")
             #self._reset_spectrum_viewer_bounds()
             return
 
         elif data['event'] == 'mouseenter':
             # Make room for the extra axis
-            self._spectrum_viewer.figure.fig_margin['right'] = 50
+            self._spectrum_viewer.figure.fig_margin['right'] = 80
             self._extra_axis.visible = True
 
         x = int(np.round(data['domain']['x']))
@@ -178,13 +177,6 @@ class SpectrumPerSpaxel(SinglePixelRegion):
             float_y_max = float(np.nanmax(y_values.value))
             self._extra_axis.scale.min = float_y_min
             self._extra_axis.scale.max = float_y_max
-            #self._extra_axis.scale = bqplot.LinearScale(min=float_y_min, max=float_y_max)
-            #self._extra_axis.tick_values = np.linspace(float_y_min, float_y_max, 8)
-            #tick_vals = np.linspace(float_y_min, float_y_max, 8)
-            #self._extra_axis.tick_labels = {i: str(tick_vals[i]) for i in range(len(tick_vals))}
 
-            #self._spectrum_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
-            #self._spectrum_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
-
-        self._extra_axis.send_state()
-        self._spectrum_viewer.figure.send_state()
+        self._extra_axis.send_state(["scale", "visible"])
+        self._spectrum_viewer.figure.send_state(["fig_margin", "axes"])
