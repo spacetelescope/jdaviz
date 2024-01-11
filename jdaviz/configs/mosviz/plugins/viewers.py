@@ -33,6 +33,7 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewe
                 ]
 
     default_class = None
+    _state_cls = FreezableBqplotImageViewerState
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
