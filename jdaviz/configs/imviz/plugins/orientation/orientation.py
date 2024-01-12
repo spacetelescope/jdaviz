@@ -398,10 +398,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 self.orientation.selected = base_wcs_layer_label
 
     def _on_data_add_to_viewer(self, msg):
-        if msg._viewer_id != 'imviz-0':
-            if len(self.viewer.selected_obj.layers) == 1:
-                # on adding first data layer, reset the limits:
-                self.viewer.selected_obj.state.reset_limits()
+        if len(self.viewer.selected_obj.layers) == 1:
+            # on adding first data layer, reset the limits:
+            self.viewer.selected_obj.state.reset_limits()
 
     def vue_add_orientation(self, *args, **kwargs):
         self.add_orientation(set_on_create=True)
@@ -435,7 +434,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             # we never want to highlight subsets of pixels within WCS-only layers,
             # so if this layer is an ImageSubsetLayerState on a WCS-only layer,
             # ensure that it is never visible:
-            for layer in self.viewer.selected_obj.state.layers:
+            for layer in viewer.state.layers:
                 if (
                     hasattr(layer.layer, 'label') and
                     layer.layer.label.startswith("Subset") and
