@@ -166,7 +166,11 @@ class AstrowidgetsImageViewerMixin:
 
     @property
     def zoom_level(self):
-        """Zoom level:
+        """
+        The zoom level for an image viewer (not linked by WCS).
+
+        Warning: when a viewer is linked by WCS, the result corresponds
+        to the ``zoom_level`` of the reference data.
 
         * 1 means real-pixel-size.
         * 2 means zoomed in by a factor of 2.
