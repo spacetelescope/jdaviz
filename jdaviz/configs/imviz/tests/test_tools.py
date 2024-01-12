@@ -53,15 +53,15 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
         t_normpan.activate()
         t_normpan.on_click({'event': 'click', 'domain': {'x': 1, 'y': 1}})
         # make sure only first viewer re-centered since this mode is not linked mode
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-1.5, 5.5, -2.5, 4.5))  # noqa
+        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-2.5, 4.5, -2.5, 4.5))  # noqa
         assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-3.5, 3.5, -3.5, 3.5))  # noqa
         t_normpan.deactivate()
 
         t_linkedpan.activate()
         t_linkedpan.on_click({'event': 'click', 'domain': {'x': 2, 'y': 2}})
         # make sure both viewers moved to the new center
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-0.5, 6.5, -1.5, 5.5))  # noqa
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-0.5, 6.5, -1.5, 5.5))  # noqa
+        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-1.5, 5.5, -1.5, 5.5))  # noqa
+        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-1.5, 5.5, -1.5, 5.5))  # noqa
         t_linkedpan.deactivate()
 
 
