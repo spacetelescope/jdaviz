@@ -2283,6 +2283,8 @@ class Application(VuetifyTemplate, HubListener):
         viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The new viewer instance.
         """
+        from jdaviz.configs.imviz.helper import layer_is_wcs_only
+
         viewer = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
         viewer.figure_widget.layout.height = '100%'
@@ -2321,8 +2323,9 @@ class Application(VuetifyTemplate, HubListener):
         new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
 
         if (
-                getattr(ref_data, 'meta', {}).get('_WCS_ONLY', False) and
-                hasattr(viewer, 'reference') and linked_by_wcs
+            layer_is_wcs_only(ref_data) and
+            hasattr(viewer, 'reference') and
+            linked_by_wcs
         ):
             viewer.state.reference_data = ref_data
 
