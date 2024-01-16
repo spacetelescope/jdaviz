@@ -85,6 +85,11 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
 
+        self.disabled_msg = (
+            "Spectral Extraction requires a single dataset to be loaded into Cubeviz, "
+            "please load data to enabl this plugin."
+        )
+
     @property
     def user_api(self):
         return PluginUserApi(

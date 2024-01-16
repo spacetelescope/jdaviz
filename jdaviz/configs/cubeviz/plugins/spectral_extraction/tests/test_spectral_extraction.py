@@ -22,7 +22,7 @@ def test_version_before_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncer
 def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
     # Also test that plugin is disabled before data is loaded.
     plg = cubeviz_helper.plugins['Spectral Extraction']
-    assert plg._obj.disabled_msg == ''
+    assert plg._obj.disabled_msg != ''
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
 
@@ -37,6 +37,7 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     # Collapse the spectral cube using the methods in jdaviz:
     collapsed_cube_s1d = plg.collapse_to_spectrum(add_data=False)  # returns Spectrum1D
 
+    assert plg._obj.disabled_msg == ''
     assert isinstance(spectral_cube, NDDataArray)
     assert isinstance(collapsed_cube_s1d, Spectrum1D)
 

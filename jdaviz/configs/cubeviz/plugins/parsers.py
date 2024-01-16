@@ -13,6 +13,7 @@ from specutils import Spectrum1D
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
+
 __all__ = ['parse_data']
 
 EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
@@ -58,6 +59,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             spectrum_viewer_reference_name=spectrum_viewer_reference_name,
             uncert_viewer_reference_name=uncert_viewer_reference_name
         )
+        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
     elif isinstance(file_obj, str):
         if file_obj.lower().endswith('.gif'):  # pragma: no cover
             _parse_gif(app, file_obj, data_label,
@@ -104,6 +106,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                     spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                     uncert_viewer_reference_name=uncert_viewer_reference_name
                 )
+        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
 
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
@@ -121,11 +124,14 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                 app, file_obj, data_label=data_label,
                 spectrum_viewer_reference_name=spectrum_viewer_reference_name
             )
+        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
+
     elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
         _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type,
                        flux_viewer_reference_name=flux_viewer_reference_name,
                        spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                        uncert_viewer_reference_name=uncert_viewer_reference_name)
+        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
