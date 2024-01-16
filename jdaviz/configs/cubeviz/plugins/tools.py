@@ -127,7 +127,8 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         y = int(np.round(data['domain']['y']))
 
         # Use first visible layer for now
-        cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible]
+        cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible
+                     and len(layer.layer.shape) == 3]
         if len(cube_data) == 0:
             return
         cube_data = cube_data[0]
