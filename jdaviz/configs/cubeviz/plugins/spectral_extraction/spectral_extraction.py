@@ -87,7 +87,7 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
 
         self.disabled_msg = (
             "Spectral Extraction requires a single dataset to be loaded into Cubeviz, "
-            "please load data to enabl this plugin."
+            "please load data to enable this plugin."
         )
 
     @property
