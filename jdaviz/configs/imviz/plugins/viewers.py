@@ -299,7 +299,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if len(self.session.application.data_collection) == 0:
             raise ValueError('No reference data for link look-up')
 
-        ref_label = self.state.reference_data.label
+        ref_label = getattr(self.state.reference_data, 'label', None)
         if data_label == ref_label:
             return 'self'
 

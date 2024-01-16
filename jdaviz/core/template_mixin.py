@@ -1442,25 +1442,12 @@ class LayerSelect(SelectPluginComponent):
         # use getattr so the super() call above doesn't try to access the attr before
         # it is initialized:
 
-        if not getattr(self, 'only_wcs_layers', False):
-            all_layers = [
-                layer for viewer in self.viewer_objs
-                for layer in getattr(viewer, 'layers', [])
-                # don't include WCS-only layers unless asked:
-                if not hasattr(layer.layer, 'meta') or (
-                    not layer.layer.meta.get('_WCS_ONLY', False)
-                )
-            ]
-        else:
-            all_layers = [
-                layer for viewer in self.viewer_objs
-                for layer in getattr(viewer, 'layers', [])
-                # only include WCS-only layers:
-                if (
-                    hasattr(layer.layer, 'meta') and
-                    layer.layer.meta.get('_WCS_ONLY', False)
-                )
-            ]
+        all_layers = [
+            layer for viewer in self.viewer_objs
+            for layer in getattr(viewer, 'layers', [])
+            if self._is_valid_item(layer)
+        ]
+
         # remove duplicates - we'll loop back through all selected viewers to get a list of colors
         # and visibilities later within _layer_to_dict
         layer_labels = [
@@ -1495,8 +1482,8 @@ class LayerSelect(SelectPluginComponent):
             `True` will filter only the WCS-only layers, `False` will
             give the non-WCS-only layers.
         """
-        def is_wcs_only(data):
-            return data.meta.get(self.app._wcs_only_label, False)
+        def is_wcs_only(layer):
+            return getattr(layer.layer, 'meta', {}).get(self.app._wcs_only_label, False)
 
         filter_names = [getattr(filt, '__name__', '') for filt in self.filters]
 

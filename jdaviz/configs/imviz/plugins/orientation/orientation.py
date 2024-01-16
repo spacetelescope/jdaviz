@@ -378,27 +378,27 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         wcs_only_layers = self.app._jdaviz_helper.default_viewer._obj.state.wcs_only_layers
 
         viewers_to_update = kwargs.get(
-            'viewers_to_update', self.app.get_viewer_reference_names()
+            'viewers_to_update', self.app._viewer_store.keys()
         )
-
         for viewer_ref in viewers_to_update:
-            for wcs_layer in wcs_only_layers:
-                if wcs_layer not in self.app.get_viewer_by_id(viewer_ref).state.wcs_only_layers:
-                    self.app.add_data_to_viewer(viewer_ref, wcs_layer)
-
             self.viewer.selected = viewer_ref
-
             self.orientation.update_wcs_only_filter(wcs_only=self.link_type_selected == 'WCS')
-            # select the default orientation if no data have yet been
-            # added to a newly created viewer:
+            for wcs_layer in wcs_only_layers:
+                if wcs_layer not in self.viewer.selected_obj.layers:
+                    self.app.add_data_to_viewer(viewer_ref, wcs_layer)
             if (
-                    base_wcs_layer_label in self.orientation.choices and
-                    not len(self.viewer.selected_obj.layers)
+                self.orientation.selected not in
+                    self.viewer.selected_obj.state.wcs_only_layers and
+                    self.link_type_selected == 'WCS'
             ):
                 self.orientation.selected = base_wcs_layer_label
 
     def _on_data_add_to_viewer(self, msg):
-        if len(self.viewer.selected_obj.layers) == 1:
+        all_wcs_only_layers = all(
+            layer.layer.meta.get(self.app._wcs_only_label)
+            for layer in self.viewer.selected_obj.layers
+        )
+        if all_wcs_only_layers and msg.data.meta.get(self.app._wcs_only_label, False):
             # on adding first data layer, reset the limits:
             self.viewer.selected_obj.state.reset_limits()
 
@@ -411,9 +411,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self.app._change_reference_data(
                 self.orientation.selected, viewer_id=self.viewer.selected
             )
+            viewer_item = self.app._viewer_item_by_id(self.viewer.selected)
+            if viewer_item != self.orientation.selected:
+                viewer_item['reference_data_label'] = self.orientation.selected
 
     def _on_refdata_change(self, msg):
-        self.orientation.update_wcs_only_filter(wcs_only=msg.data.meta.get('_WCS_ONLY', False))
+
         if hasattr(self, 'viewer'):
             ref_data = self.ref_data
             viewer = self.viewer.selected_obj
@@ -468,7 +471,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # don't update choices until viewer is available:
         ref_data = self.ref_data
         if hasattr(self, 'viewer') and ref_data is not None:
-            self.orientation._update_layer_items()
             if ref_data.label in self.orientation.choices:
                 self.orientation.selected = ref_data.label
 
