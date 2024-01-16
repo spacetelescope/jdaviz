@@ -127,17 +127,21 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         y = int(np.round(data['domain']['y']))
 
         # Use first visible layer for now
-        cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible][0]
+        cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible]
+        if len(cube_data) == 0:
+            return
+        cube_data = cube_data[0]
         spectrum = cube_data.get_object(statistic=None)
 
         if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
+            self._reset_spectrum_viewer_bounds()
             self._mark.visible = False
         else:
-            self._mark.visible = True
             y_values = spectrum.flux[x, y, :]
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
                 return
             self._mark.update_xy(spectrum.spectral_axis.value, y_values)
+            self._mark.visible = True
             self._spectrum_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
             self._spectrum_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
