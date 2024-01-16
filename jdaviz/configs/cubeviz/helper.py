@@ -22,6 +22,9 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
     _default_flux_viewer_reference_name = "flux-viewer"
     _default_image_viewer_reference_name = "image-viewer"
 
+    _loaded_flux_cube = None
+    _loaded_uncert_cube = None
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.app.hub.subscribe(self, AddDataMessage,

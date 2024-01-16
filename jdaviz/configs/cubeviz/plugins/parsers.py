@@ -13,6 +13,7 @@ from specutils import Spectrum1D
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
+
 __all__ = ['parse_data']
 
 EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
@@ -58,6 +59,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             spectrum_viewer_reference_name=spectrum_viewer_reference_name,
             uncert_viewer_reference_name=uncert_viewer_reference_name
         )
+        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
     elif isinstance(file_obj, str):
         if file_obj.lower().endswith('.gif'):  # pragma: no cover
             _parse_gif(app, file_obj, data_label,
@@ -104,6 +106,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                     spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                     uncert_viewer_reference_name=uncert_viewer_reference_name
                 )
+        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
 
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
@@ -121,11 +124,14 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                 app, file_obj, data_label=data_label,
                 spectrum_viewer_reference_name=spectrum_viewer_reference_name
             )
+        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
+
     elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
         _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type,
                        flux_viewer_reference_name=flux_viewer_reference_name,
                        spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                        uncert_viewer_reference_name=uncert_viewer_reference_name)
+        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -252,12 +258,14 @@ def _parse_hdulist(app, hdulist, file_name=None,
 
         elif data_type == 'uncert':
             app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
+            app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
 
         else:  # flux
             # Add flux to top left image viewer
             app.add_data_to_viewer(flux_viewer_reference_name, data_label)
             # Add flux to spectrum viewer
             app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
+            app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
 
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
@@ -307,6 +315,11 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     if viewer_name == flux_viewer_reference_name:
         app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
+    if data_type == 'flux':
+        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
+    elif data_type == 'uncert':
+        app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
+
 
 def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None,
                    spectrum_viewer_reference_name=None):
@@ -352,6 +365,11 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
 
     app.add_data_to_viewer(flux_viewer_reference_name, data_label)
     app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
+
+    if data_type == 'flux':
+        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
+    if data_type == 'uncert':
+        app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
 
 
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,
@@ -400,8 +418,10 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         if attr == 'flux':
             app.add_data_to_viewer(flux_viewer_reference_name, cur_data_label)
             app.add_data_to_viewer(spectrum_viewer_reference_name, cur_data_label)
+            app._jdaviz_helper._loaded_flux_cube = app.data_collection[cur_data_label]
         elif attr == 'uncertainty':
             app.add_data_to_viewer(uncert_viewer_reference_name, cur_data_label)
+            app._jdaviz_helper._loaded_uncert_cube = app.data_collection[cur_data_label]
         # We no longer auto-populate the mask cube into a viewer
 
 
@@ -446,8 +466,10 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     if data_type == 'flux':
         app.add_data_to_viewer(flux_viewer_reference_name, data_label)
         app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
+        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
     elif data_type == 'uncert':
         app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
+        app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
 
 
 def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None,
