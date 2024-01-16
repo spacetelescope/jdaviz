@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, NDUncertainty
 )
-from traitlets import List, Unicode, observe
+from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
