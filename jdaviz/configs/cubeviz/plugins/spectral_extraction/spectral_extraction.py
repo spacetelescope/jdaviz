@@ -21,6 +21,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 
+
 __all__ = ['SpectralExtraction']
 
 ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
@@ -51,6 +52,7 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
     filename = Unicode().tag(sync=True)
     extracted_spec_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
+
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported
@@ -83,6 +85,11 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
 
+        self.disabled_msg = (
+            "Spectral Extraction requires a single dataset to be loaded into Cubeviz, "
+            "please load data to enable this plugin."
+        )
+
     @property
     def user_api(self):
         return PluginUserApi(
@@ -107,15 +114,8 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
             Additional keyword arguments passed to the NDDataArray collapse operation.
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
-        # get glue Data objects for the spectral cube and uncertainties
-        flux_viewer = self._app.get_viewer(
-            self._app._jdaviz_helper._default_flux_viewer_reference_name
-        )
-        uncert_viewer = self._app.get_viewer(
-            self._app._jdaviz_helper._default_uncert_viewer_reference_name
-        )
-        [spectral_cube] = flux_viewer.data()
-        [uncert_cube] = uncert_viewer.data()
+        spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
+        uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
 
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
