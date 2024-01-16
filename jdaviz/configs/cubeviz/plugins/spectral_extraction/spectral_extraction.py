@@ -5,7 +5,7 @@ import astropy.units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, NDUncertainty
 )
-from traitlets import List, Unicode, observe
+from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -16,6 +16,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
+
 
 __all__ = ['SpectralExtraction']
 
@@ -43,6 +44,14 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
     template_file = __file__, "spectral_extraction.vue"
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
+    filename = Unicode().tag(sync=True)
+    extracted_spec_available = Bool(False).tag(sync=True)
+    overwrite_warn = Bool(False).tag(sync=True)
+
+    # export_enabled controls whether saving to a file is enabled via the UI.  This
+    # is a temporary measure to allow server-installations to disable saving server-side until
+    # saving client-side is supported
+    export_enabled = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
 
@@ -63,6 +72,16 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
 
         if ASTROPY_LT_5_3_2:
             self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy>=5.3.2"
+
+        if self.app.state.settings.get('server_is_remote', False):
+            # when the server is remote, saving the file in python would save on the server, not
+            # on the user's machine, so export support in cubeviz should be disabled
+            self.export_enabled = False
+
+        self.disabled_msg = (
+            "Spectral Extraction requires a single dataset to be loaded into Cubeviz, "
+            "please load data to enable this plugin."
+        )
 
     @property
     def user_api(self):
@@ -88,15 +107,8 @@ class SpectralExtraction(PluginTemplateMixin, SpatialSubsetSelectMixin, AddResul
             Additional keyword arguments passed to the NDDataArray collapse operation.
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
-        # get glue Data objects for the spectral cube and uncertainties
-        flux_viewer = self._app.get_viewer(
-            self._app._jdaviz_helper._default_flux_viewer_reference_name
-        )
-        uncert_viewer = self._app.get_viewer(
-            self._app._jdaviz_helper._default_uncert_viewer_reference_name
-        )
-        [spectral_cube] = flux_viewer.data()
-        [uncert_cube] = uncert_viewer.data()
+        spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
+        uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
 
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
