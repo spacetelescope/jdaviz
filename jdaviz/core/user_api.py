@@ -15,6 +15,7 @@ class UserApiWrapper:
         self._obj = obj
         self._expose = list(expose) + list(readonly)
         self._readonly = readonly
+        self._deprecation_msg = None
         if obj.__doc__ is not None:
             self.__doc__ = self.__doc__ + "\n\n\n" + obj.__doc__
 
