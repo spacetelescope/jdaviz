@@ -30,7 +30,7 @@ from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
-from traitlets import Any, Bool, HasTraits, List, Unicode, observe
+from traitlets import Any, Bool, Float, HasTraits, List, Unicode, observe
 
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
@@ -520,6 +520,12 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin):
         for attr in attrs:
             if attr in self.__dict__:
                 del self.__dict__[attr]
+
+    def add_traitlets(self, **traitlets):
+        for k, v in traitlets.items():
+            if v is None:
+                continue
+            self._plugin_traitlets[k] = v
 
     def add_observe(self, traitlet_name, handler, first=False):
         self._plugin.observe(handler, traitlet_name)
@@ -1945,7 +1951,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
 class ApertureSubsetSelect(SubsetSelect):
     """
     """
-    def __init__(self, plugin, items, selected, multiselect=None,
+    def __init__(self, plugin, items, selected, radius_factor, multiselect=None,
                  dataset=None, viewers=None):
         """
         Parameters
@@ -1956,6 +1962,8 @@ class ApertureSubsetSelect(SubsetSelect):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
+        radius_factor : str
+            the name of the traitlet defining the radius factor for the drawn aperture
         multiselect : str
             the name of the traitlet defining whether the dropdown should accept multiple selections
         dataset : str
@@ -1974,10 +1982,13 @@ class ApertureSubsetSelect(SubsetSelect):
                          viewers=viewers,
                          default_text=None)
 
+        self.add_traitlets(radius_factor=radius_factor)
+
         self.add_observe('is_active', self._plugin_active_changed)
         # TODO: need to update coords when viewer reference data changes
         # TODO: need to add and populate marks for new viewer
         self.add_observe(selected, self._update_mark_coords)
+        self.add_observe(radius_factor, self._update_mark_coords)
 
     def _plugin_active_changed(self, *args):
         for mark in self.marks:
@@ -2036,12 +2047,16 @@ class ApertureSubsetSelect(SubsetSelect):
         x_coords, y_coords = np.array([]), np.array([])
         for spatial_region in spatial_regions:
             if isinstance(spatial_region, PixelRegion):
-                pixel_region = spatial_region
+                # make a copy so changing the radius doesn't change the cached version in memory
+                pixel_region = spatial_region.copy()
             else:
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
                 if wcs is None:
                     return [], []
                 pixel_region = spatial_region.to_pixel(wcs)
+            # NOTE: this assumes that we'll apply the same radius factor to all subsets (all will
+            # be defined at the same slice for cones in cubes)
+            pixel_region.radius *= self.radius_factor
             roi = regions2roi(pixel_region)
             x, y = roi.to_polygon()
             # concatenate with nan between to avoid line connecting separate subsets
@@ -2081,12 +2096,14 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
     aperture_items = List([]).tag(sync=True)
     aperture_selected = Any('').tag(sync=True)
+    aperture_radius_factor = Float(1).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.aperture = ApertureSubsetSelect(self,
                                              'aperture_items',
                                              'aperture_selected',
+                                             'aperture_radius_factor',
                                              dataset='dataset' if hasattr(self, 'dataset') else None,
                                              multiselect='multiselect' if hasattr(self, 'multiselect') else None)
 
