@@ -9,6 +9,8 @@ New Features
 
 - Spectrum viewer bounds can now be set through the Plot Options UI. [#2604]
 
+- Opacity for spatial subsets is now adjustable from within Plot Options. [#2663]
+
 Cubeviz
 ^^^^^^^
 - Calculated moments can now be output in velocity units. [#2584, #2588]
