@@ -1836,8 +1836,6 @@ class SubsetSelect(SelectPluginComponent):
         if not getattr(self, 'dataset', None):  # pragma: no cover
             raise ValueError("Retrieving subset mask requires associated dataset")
         if self.is_multiselect and self.dataset.is_multiselect:  # pragma: no cover
-            # technically this could work if either has length of one, but would require extra
-            # logic
             raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")  # noqa
         types = self.selected_item.get('type')
         if not isinstance(types, list):
@@ -1994,10 +1992,7 @@ class ApertureSubsetSelect(SubsetSelect):
 
     @property
     def marks(self):
-        # TODO: separate mark creation from coordinate updating
-        # TODO: toggle visibility with plugin active
         # TODO: support multiple ApertureSubsetSelect per-plugin (only retrieve those belonging to this one)
-
         from jdaviz.core.marks import ApertureMark
 
         all_aperture_marks = []
@@ -2027,20 +2022,31 @@ class ApertureSubsetSelect(SubsetSelect):
         from jdaviz.core.region_translators import regions2roi
         from regions import PixelRegion
 
-        if not len(self.selected):
+        if not len(self.selected) or not len(self.dataset.selected):
             return [], []
 
-        # TODO: handle multiselect/multiviewer....
-        spatial_region = self.selected_spatial_region
-        if isinstance(spatial_region, PixelRegion):
-            pixel_region = self.selected_spatial_region
+        if self.multiselect:
+            # assume first dataset (for retrieving the region object)
+            # but iterate over all subsets
+            spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset) for subset in self.selected]
         else:
-            wcs = getattr(viewer.state.reference_data, 'coords', None)
-            if wcs is None:
-                return [], []
-            pixel_region = spatial_region.to_pixel(wcs)
-        roi = regions2roi(pixel_region)
-        x_coords, y_coords = roi.to_polygon()
+            # use cached version
+            spatial_regions = [self.selected_spatial_region]
+
+        x_coords, y_coords = np.array([]), np.array([])
+        for spatial_region in spatial_regions:
+            if isinstance(spatial_region, PixelRegion):
+                pixel_region = spatial_region
+            else:
+                wcs = getattr(viewer.state.reference_data, 'coords', None)
+                if wcs is None:
+                    return [], []
+                pixel_region = spatial_region.to_pixel(wcs)
+            roi = regions2roi(pixel_region)
+            x, y = roi.to_polygon()
+            # concatenate with nan between to avoid line connecting separate subsets
+            x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
+            y_coords = np.concatenate((y_coords, np.array([np.nan]), y))
         return x_coords, y_coords
 
     def _update_mark_coords(self, *args):
