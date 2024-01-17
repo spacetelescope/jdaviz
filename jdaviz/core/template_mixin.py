@@ -59,7 +59,9 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
            'PluginSubcomponent',
-           'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
+           'SubsetSelect',
+           'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
+           'ApertureSubsetSelect', 'ApertureSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
@@ -1634,7 +1636,7 @@ class SubsetSelect(SelectPluginComponent):
             the name of the dataset traitlet defined in ``plugin``, to be used for accessing how
             the subset is applied to the data (masks, etc), optional
         viewers : list
-            the reference names or ids of the viewer to extract the subregion.  If not provided o
+            the reference names or ids of the viewer to extract the subregion.  If not provided or
             None, will loop through all references.
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
@@ -1940,6 +1942,147 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            dataset='dataset' if hasattr(self, 'dataset') else None,
                                            default_text='Entire Cube',
                                            filters=['is_spatial'])
+
+
+class ApertureSubsetSelect(SubsetSelect):
+    """
+    """
+    def __init__(self, plugin, items, selected, multiselect=None,
+                 dataset=None, viewers=None):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        multiselect : str
+            the name of the traitlet defining whether the dropdown should accept multiple selections
+        dataset : str
+            the name of the dataset traitlet defined in ``plugin``, to be used for accessing how
+            the subset is applied to the data (masks, etc), optional
+        viewers : list
+            the reference names or ids of the viewer to extract the subregion.  If not provided or
+            None, will loop through all references.
+        """
+        super().__init__(plugin,
+                         items=items,
+                         selected=selected,
+                         multiselect=multiselect,
+                         filters=['is_spatial', 'is_not_composite', 'is_not_annulus'],
+                         dataset=dataset,
+                         viewers=viewers,
+                         default_text=None)
+
+        self.add_observe('is_active', self._plugin_active_changed)
+        # TODO: need to update coords when viewer reference data changes
+        # TODO: need to add and populate marks for new viewer
+        self.add_observe(selected, self._update_mark_coords)
+
+    def _plugin_active_changed(self, *args):
+        for mark in self.marks:
+            mark.visible = self.plugin.is_active
+
+    @property
+    def image_viewers(self):
+        # TODO: iterator?
+        from glue_jupyter.bqplot.image import BqplotImageView
+
+        return [viewer for viewer in self.app._viewer_store.values() if isinstance(viewer, BqplotImageView)]
+
+    @property
+    def marks(self):
+        # TODO: separate mark creation from coordinate updating
+        # TODO: toggle visibility with plugin active
+        # TODO: support multiple ApertureSubsetSelect per-plugin (only retrieve those belonging to this one)
+
+        from jdaviz.core.marks import ApertureMark
+
+        all_aperture_marks = []
+        for viewer in self.image_viewers:
+            # search for existing mark
+            # TODO: add support for subset multiselect
+            matches = [mark for mark in viewer.figure.marks
+                       if isinstance(mark, ApertureMark)]
+            if len(matches):
+                all_aperture_marks += matches
+                continue
+
+            x_coords, y_coords = self._get_mark_coords(viewer)
+
+            mark = ApertureMark(
+                viewer,
+                x=x_coords,
+                y=y_coords,
+                colors=['#c75109'],
+                fill_opacities=[0.0],
+                visible=self.plugin.is_active)
+            all_aperture_marks.append(mark)
+            viewer.figure.marks = viewer.figure.marks + [mark]
+        return all_aperture_marks
+
+    def _get_mark_coords(self, viewer):
+        from jdaviz.core.region_translators import regions2roi
+        from regions import PixelRegion
+
+        if not len(self.selected):
+            return [], []
+
+        # TODO: handle multiselect/multiviewer....
+        spatial_region = self.selected_spatial_region
+        if isinstance(spatial_region, PixelRegion):
+            pixel_region = self.selected_spatial_region
+        else:
+            wcs = getattr(viewer.state.reference_data, 'coords', None)
+            if wcs is None:
+                return [], []
+            pixel_region = spatial_region.to_pixel(wcs)
+        roi = regions2roi(pixel_region)
+        x_coords, y_coords = roi.to_polygon()
+        return x_coords, y_coords
+
+    def _update_mark_coords(self, *args):
+        for viewer in self.image_viewers:
+            x_coords, y_coords = self._get_mark_coords(viewer)
+            for mark in self.marks:
+                mark.x, mark.y = x_coords, y_coords
+
+
+class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the SubsetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``ApertureSubsetSelectMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.aperture``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-subset-select
+        :items="aperture_items"
+        :selected.sync="aperture_selected"
+        label="Aperture"
+        hint="Select aperture."
+      />
+
+    """
+    aperture_items = List([]).tag(sync=True)
+    aperture_selected = Any('').tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.aperture = ApertureSubsetSelect(self,
+                                             'aperture_items',
+                                             'aperture_selected',
+                                             dataset='dataset' if hasattr(self, 'dataset') else None,
+                                             multiselect='multiselect' if hasattr(self, 'multiselect') else None)
 
 
 class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):

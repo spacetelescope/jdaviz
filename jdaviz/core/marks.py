@@ -17,7 +17,8 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'PluginMark', 'LinesAutoUnit', 'PluginLine', 'PluginScatter',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
-           'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark', 'FootprintOverlay']
+           'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark', 'FootprintOverlay',
+           'ApertureMark']
 
 accent_color = "#c75d2c"
 
@@ -650,6 +651,11 @@ class FootprintOverlay(PluginLine):
     @property
     def overlay(self):
         return self._overlay
+
+
+class ApertureMark(PluginLine):
+    def __init__(self, viewer, **kwargs):
+        super().__init__(viewer, **kwargs)
 
 
 class HistogramMark(Lines):
