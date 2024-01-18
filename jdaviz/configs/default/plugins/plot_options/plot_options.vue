@@ -205,6 +205,13 @@
         </div>
       </glue-state-sync-wrapper>
 
+      <glue-state-sync-wrapper :sync="subset_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_opacity')">
+        <div>
+          <v-subheader class="pl-0 slider-label" style="height: 12px">Subset Opacity</v-subheader>
+          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="subset_opacity_value" hide-details class="no-hint" />
+        </div>
+      </glue-state-sync-wrapper>
+
 
       <!-- PROFILE/LINE -->
       <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && ((!marker_visible_sync.in_subscribed_states && line_visible_value) || (marker_visible_sync.in_subscribed_states && marker_visible_value))) || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
