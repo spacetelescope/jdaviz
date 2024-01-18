@@ -28,7 +28,6 @@ from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
-from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Float, HasTraits, List, Unicode, observe
@@ -48,7 +47,6 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
                                ShadowLine, ApertureMark)
-from jdaviz.core.region_translators import regions2roi
 from jdaviz.core.region_translators import _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
@@ -1975,6 +1973,7 @@ class ApertureSubsetSelect(SubsetSelect):
             the reference names or ids of the viewer to extract the subregion.  If not provided or
             None, will loop through all references.
         """
+        # NOTE: is_not_composite is assumed in _get_mark_coords
         super().__init__(plugin,
                          items=items,
                          selected=selected,
@@ -2033,29 +2032,17 @@ class ApertureSubsetSelect(SubsetSelect):
         if not len(self.selected) or not len(self.dataset.selected):
             return [], []
 
-        if self.multiselect:
-            # assume first dataset (for retrieving the region object)
-            # but iterate over all subsets
-            spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset)  # noqa
-                               for subset in self.selected]
-        else:
-            # use cached version
-            spatial_regions = [self.selected_spatial_region]
+        subset_dicts = self.selected_obj if self.multiselect else [self.selected_obj]
 
         x_coords, y_coords = np.array([]), np.array([])
-        for spatial_region in spatial_regions:
-            if isinstance(spatial_region, PixelRegion):
-                # make a copy so changing the radius doesn't change the cached version in memory
-                pixel_region = spatial_region.copy()
-            else:
-                wcs = getattr(viewer.state.reference_data, 'coords', None)
-                if wcs is None:
-                    return [], []
-                pixel_region = spatial_region.to_pixel(wcs)
+        for subset_dict in subset_dicts:
+            # make a copy so changing the radius doesn't change the cached version in memory
+            # NOTE: this [0] assumes a single subcomponent, which should be safe given the
+            # is_not_composite filter applied
+            roi = subset_dict[0]['subset_state'].roi.copy()
             # NOTE: this assumes that we'll apply the same radius factor to all subsets (all will
             # be defined at the same slice for cones in cubes)
-            pixel_region.radius *= self.radius_factor
-            roi = regions2roi(pixel_region)
+            roi.radius *= self.radius_factor
             x, y = roi.to_polygon()
             # concatenate with nan between to avoid line connecting separate subsets
             x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
