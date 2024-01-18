@@ -192,3 +192,42 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tm
     with pytest.raises(ValueError, match="Invalid path=/this/path/doesnt"):
         extract_plugin._obj.vue_save_as_fits()
     extract_plugin._obj.filename == fname  # set back to original filename
+
+
+def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
+
+    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+    slice_plg = cubeviz_helper.plugins['Slice']
+
+    mark = extract_plg.aperture.marks[0]
+    assert not mark.visible
+    with extract_plg.as_active():
+        assert mark.visible
+        assert not len(mark.x)
+
+        extract_plg.aperture = 'Subset 1'
+        before_x = mark.x
+        assert len(before_x) > 0
+
+        # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
+        slice_plg.slice = 1
+        assert mark.x[1] == before_x[1]
+
+        slice_plg.slice = 0
+        extract_plg._obj.dev_cone_support = True
+        extract_plg._obj.wavelength_dependent = True
+        assert mark.x[1] == before_x[1]
+
+        slice_plg.slice = 1
+        assert mark.x[1] != before_x[1]
+
+        extract_plg._obj.vue_goto_reference_wavelength()
+        assert slice_plg.slice == 0
+
+        slice_plg.slice = 1
+        extract_plg._obj.vue_adopt_slice_as_reference()
+        extract_plg._obj.vue_goto_reference_wavelength()
+        assert slice_plg.slice == 1

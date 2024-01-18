@@ -2055,7 +2055,7 @@ class ApertureSubsetSelect(SubsetSelect):
                 roi.xmax = center[0] + width_orig/2 * self.scale_factor
                 roi.ymin = center[1] - height_orig/2 * self.scale_factor
                 roi.ymax = center[1] + height_orig/2 * self.scale_factor
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError
 
             x, y = roi.to_polygon()

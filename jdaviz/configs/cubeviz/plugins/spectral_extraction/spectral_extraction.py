@@ -141,8 +141,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def vue_goto_reference_wavelength(self, *args):
         self.slice_plugin.wavelength = self.reference_wavelength
-        # TODO: can we get rid of this extra call after properly observing wavelength?
-#        self._update_mark_scale()
 
     def vue_adopt_slice_as_reference(self, *args):
         self.reference_wavelength = self.slice_plugin.wavelength
