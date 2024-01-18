@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 from astropy import units as u
-from astropy.constants import c
 from astropy.nddata import CCDData
 import numpy as np
 
