@@ -53,7 +53,7 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
         flux_unit_str = "erg / (Angstrom cm2 s)"
     else:
         flux_unit_str = "erg / (Angstrom s cm2)"
-    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 {flux_unit_str}',  # noqa
+    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +5.00000e+00 1e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
                                          '205.4398995981 27.0034178810 (deg)')  # noqa
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')

@@ -4,7 +4,6 @@ import warnings
 
 from astropy.nddata import CCDData
 from glue.core import Data
-from specutils import Spectrum1D
 from specutils.manipulation import spectral_slab
 from traitlets import Bool, List, Unicode, observe
 
@@ -101,8 +100,19 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         """
         # Collapsing over the spectral axis. Cut out the desired spectral
         # region. Defaults to the entire spectrum.
-        cube = self.dataset.get_object(cls=Spectrum1D, statistic=None)
+        cube = self.dataset.selected_obj
         spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
+
+        # Extract 2D WCS from input cube.
+        data = self.dataset.selected_dc_item
+        # Similar to coords_info logic.
+        if '_orig_spec' in getattr(data, 'meta', {}):
+            w = data.meta['_orig_spec'].wcs
+        else:
+            w = data.coords
+        data_wcs = getattr(w, 'celestial', None)
+        if data_wcs:
+            data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
 
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='No observer defined on WCS')
@@ -111,15 +121,15 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             collapsed_spec = spec.collapse(self.function_selected.lower(), axis=-1).T  # Quantity
 
             # stuff for exporting to file
-            self.collapsed_spec = collapsed_spec
+            self.collapsed_spec = CCDData(collapsed_spec, wcs=data_wcs)
             self.collapsed_spec_available = True
             fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
             self.filename = f"collapsed_{self.function_selected.lower()}_{fname_label}.fits"
 
         if add_data:
-            data = Data()
+            data = Data(coords=data_wcs)
             data['flux'] = collapsed_spec.value
-            data.get_component('flux').units = str(collapsed_spec.unit)
+            data.get_component('flux').units = collapsed_spec.unit.to_string()
 
             self.add_results.add_results_from_plugin(data)
 
@@ -170,7 +180,7 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
                 return
 
         filename = str(filename)
-        CCDData(self.collapsed_spec).write(filename)
+        self.collapsed_spec.write(filename)
 
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(

@@ -133,3 +133,20 @@ Markers Table
 All mouseover information in the :ref:`markers plugin <markers-plugin>` can be exported to an
 :ref:`astropy table <astropy:astropy-table>`
 by calling :meth:`~jdaviz.core.template_mixin.TableMixin.export_table` (see :ref:`plugin-apis`).
+
+
+.. _cubeviz_export_photometry:
+
+Aperture Photometry
+===================
+
+Cubeviz can export photometry output table like Imviz:
+
+.. code-block:: python
+
+    results = cubeviz.get_aperture_photometry_results()
+
+.. seealso::
+
+    :ref:`Imviz Aperture Photometry <imviz_export_photometry>`
+        Imviz documentation describing exporting of aperture photometry results in Jdaviz.

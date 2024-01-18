@@ -107,6 +107,21 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
 
+        # Custom dataset filters for Cubeviz
+        if self.config == "cubeviz":
+            def valid_cubeviz_datasets(data):
+                comp = data.get_component(data.main_components[0])
+                img_unit = u.Unit(comp.units) if comp.units else u.dimensionless_unscaled
+                acceptable_types = ['spectral flux density wav',
+                                    'photon flux density wav',
+                                    'spectral flux density',
+                                    'photon flux density']
+                return ((data.ndim in (2, 3)) and
+                        ((img_unit == (u.MJy / u.sr)) or
+                         (img_unit.physical_type in acceptable_types)))
+
+            self.dataset.add_filter(valid_cubeviz_datasets)
+
 # TODO: expose public API once finalized
 #    @property
 #    def user_api(self):
@@ -132,11 +147,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             telescope = meta.get('TELESCOP', '')
         if telescope == 'JWST':
+            # Hardcode the flux conversion factor from MJy to ABmag
+            mjy2abmag = 0.003631
             if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
                 defaults['pixel_area'] = meta['photometry']['pixelarea_arcsecsq']
                 if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
-                    # Hardcode the flux conversion factor from MJy to ABmag
-                    defaults['flux_scaling'] = 0.003631
+                    defaults['flux_scaling'] = mjy2abmag
+            elif 'PIXAR_A2' in meta:
+                defaults['pixel_area'] = meta['PIXAR_A2']
+                if 'BUNIT' in meta and meta['BUNIT'] == u.Unit("MJy/sr"):
+                    defaults['flux_scaling'] = mjy2abmag
+
         elif telescope == 'HST':
             # TODO: Add more HST support, as needed.
             # HST pixel scales are from instrument handbooks.
@@ -269,11 +290,26 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     raise ValueError("cannot calculate background median in multiselect")
             else:
                 data = self.dataset.selected_dc_item
+
         comp = data.get_component(data.main_components[0])
+
+        if self.config == "cubeviz" and data.ndim > 2:
+            cube_slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+            cube_slice = int(cube_slice_plg.slice)
+            comp_data = comp.data[:, :, cube_slice].T  # nx, ny --> ny, nx
+            # Similar to coords_info logic.
+            if '_orig_spec' in getattr(data, 'meta', {}):
+                w = data.meta['_orig_spec'].wcs.celestial
+            else:
+                w = data.coords.celestial
+        else:  # "imviz"
+            comp_data = comp.data  # ny, nx
+            w = data.coords
+
         if hasattr(reg, 'to_pixel'):
-            reg = reg.to_pixel(data.coords)
+            reg = reg.to_pixel(w)
         aper_mask_stat = reg.to_mask(mode='center')
-        img_stat = aper_mask_stat.get_values(comp.data, mask=None)
+        img_stat = aper_mask_stat.get_values(comp_data, mask=None)
 
         # photutils/background/_utils.py --> nanmedian()
         return np.nanmedian(img_stat)  # Naturally in data unit
@@ -380,14 +416,34 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except ValueError:  # Clearer error message
             raise ValueError('Missing or invalid background value')
 
+        if self.config == "cubeviz" and data.ndim > 2:
+            cube_slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+            cube_slice = int(cube_slice_plg.slice)
+            comp_data = comp.data[:, :, cube_slice].T  # nx, ny --> ny, nx
+            # Similar to coords_info logic.
+            if '_orig_spec' in getattr(data, 'meta', {}):
+                w = data.meta['_orig_spec'].wcs
+            else:
+                w = data.coords
+        else:  # "imviz"
+            comp_data = comp.data  # ny, nx
+            w = data.coords
+
         if hasattr(reg, 'to_pixel'):
             sky_center = reg.center
-            xcenter, ycenter = data.coords.world_to_pixel(sky_center)
+            if self.config == "cubeviz" and data.ndim > 2:
+                ycenter, xcenter = w.world_to_pixel(
+                    u.Quantity(cube_slice_plg.wavelength, cube_slice_plg.wavelength_unit), sky_center)[1]  # noqa: E501
+            else:  # "imviz"
+                xcenter, ycenter = w.world_to_pixel(sky_center)
         else:
             xcenter = reg.center.x
             ycenter = reg.center.y
             if data.coords is not None:
-                sky_center = data.coords.pixel_to_world(xcenter, ycenter)
+                if self.config == "cubeviz" and data.ndim > 2:
+                    sky_center = w.pixel_to_world(cube_slice, ycenter, xcenter)[1]
+                else:  # "imviz"
+                    sky_center = w.pixel_to_world(xcenter, ycenter)
             else:
                 sky_center = None
 
@@ -395,7 +451,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         include_pixarea_fac = False
         include_counts_fac = False
         include_flux_scale = False
-        comp_data = comp.data
         if comp.units:
             img_unit = u.Unit(comp.units)
             bg = bg * img_unit

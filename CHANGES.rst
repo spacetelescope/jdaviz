@@ -26,6 +26,8 @@ Cubeviz
 
 - Spectral extraction plugin re-organized into subsections to be more consistent with specviz2d. [#2676]
 
+- New aperture photometry plugin that can perform aperture photometry on selected cube slice. [#2666]
+
 Imviz
 ^^^^^
 

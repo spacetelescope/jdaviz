@@ -30,6 +30,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
         assert len(mm._obj.continuum_marks['center'].x) > 0
 
         mom_sub = mm.calculate_moment()
+        assert isinstance(mom_sub.wcs, WCS)
 
         assert mom != mom_sub
 
@@ -45,7 +46,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
             mm.calculate_moment()
 
 
-def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
+def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
@@ -110,7 +111,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
                                          "204.9998877673 27.0001000000 (deg)")
 
     assert mm._obj.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
-    mm._obj.filename = str(tmpdir.join(mm._obj.filename))  # But we want it in tmpdir for testing.
+    mm._obj.filename = str(tmp_path / mm._obj.filename)  # But we want it in tmp_path for testing.
     mm._obj.vue_save_as_fits()
     assert os.path.isfile(mm._obj.filename)
 
@@ -134,7 +135,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
                                          "204.9998877673 27.0001000000 (deg)")
 
 
-def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
+def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
         cubeviz_helper.load_data(spectrum1d_cube, data_label='test')

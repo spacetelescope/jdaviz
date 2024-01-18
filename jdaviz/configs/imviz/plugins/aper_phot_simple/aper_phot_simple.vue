@@ -27,7 +27,7 @@
       :items="dataset_items"
       :selected.sync="dataset_selected"
       :multiselect="multiselect"
-      :show_if_single_entry="false"
+      :show_if_single_entry="true"
       label="Data"
       hint="Select the data for photometry."
     />

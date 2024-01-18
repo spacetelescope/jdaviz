@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-import os
 from astropy.nddata import CCDData
 from astropy import units as u
 from specutils import Spectrum1D
@@ -40,7 +39,7 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     assert dc.external_links[1].cids2[0] == dc[-1].pixel_component_ids[0]
 
 
-def test_save_collapsed_to_fits(cubeviz_helper, spectral_cube_wcs, tmpdir):
+def test_save_collapsed_to_fits(cubeviz_helper, spectral_cube_wcs, tmp_path):
 
     cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
 
@@ -58,15 +57,15 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectral_cube_wcs, tmpdir):
     # check that default filename is correct, then change path
     fname = 'collapsed_sum_Unknown spectrum object_FLUX.fits'
     assert collapse_plugin._obj.filename == fname
-    collapse_plugin._obj.filename = os.path.join(tmpdir, fname)
+    collapse_plugin._obj.filename = str(tmp_path / fname)
 
     # save output file with default name, make sure it exists
     collapse_plugin._obj.vue_save_as_fits()
-    assert os.path.isfile(os.path.join(tmpdir, fname))
+    assert (tmp_path / fname).is_file()
 
     # read file back in, make sure it matches
-    dat = CCDData.read(os.path.join(tmpdir, fname))
-    assert np.all(dat.data == collapse_plugin._obj.collapsed_spec.value)
+    dat = CCDData.read(collapse_plugin._obj.filename)
+    np.testing.assert_array_equal(dat.data, collapse_plugin._obj.collapsed_spec.data)
     assert dat.unit == collapse_plugin._obj.collapsed_spec.unit
 
     # make sure correct error message is raised when export_enabled is False
