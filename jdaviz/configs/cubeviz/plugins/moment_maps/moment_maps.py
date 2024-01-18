@@ -244,7 +244,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
 
         # Convert spectral axis to velocity units if desired output is in velocity
-        if n_moment > 0 and self.output_unit_selected.lower()[0:8] == "velocity":
+        if n_moment > 0 and self.output_unit_selected.lower().startswith("velocity"):
             # Catch this if called from API
             if not self.reference_wavelength > 0.0:
                 raise ValueError("reference_wavelength must be set for output in velocity units.")
