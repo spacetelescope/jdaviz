@@ -183,11 +183,10 @@ class AstrowidgetsImageViewerMixin:
             raise ValueError('Viewer is still loading, try again later')
 
         if hasattr(self, '_get_real_xy'):
-            if self.state.reference_data is not None:
-                image, i_ref = get_reference_image_data(self.jdaviz_app, self.reference)
-            else:
-                i_top = get_top_layer_index(self)
-                image = self.layers[i_top].layer
+            image, i_ref = get_reference_image_data(self.jdaviz_app, self.reference)
+            # TODO: Do we want top layer instead?
+            # i_top = get_top_layer_index(self)
+            # image = self.layers[i_top].layer
             real_min = self._get_real_xy(image, self.state.x_min, self.state.y_min)
             real_max = self._get_real_xy(image, self.state.x_max, self.state.y_max)
         else:
@@ -218,11 +217,10 @@ class AstrowidgetsImageViewerMixin:
 
         new_dx = self.shape[1] * 0.5 / val
         if hasattr(self, '_get_real_xy'):
-            if self.state.reference_data is not None:
-                image, i_ref = get_reference_image_data(self.jdaviz_app, self.reference)
-            else:
-                i_top = get_top_layer_index(self)
-                image = self.layers[i_top].layer
+            image, i_ref = get_reference_image_data(self.jdaviz_app, self.reference)
+            # TODO: Do we want top layer instead?
+            # i_top = get_top_layer_index(self)
+            # image = self.layers[i_top].layer
             real_min = self._get_real_xy(image, self.state.x_min, self.state.y_min)
             real_max = self._get_real_xy(image, self.state.x_max, self.state.y_max)
             cur_xcen = (real_min[0] + real_max[0]) * 0.5
