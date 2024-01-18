@@ -1986,9 +1986,9 @@ class ApertureSubsetSelect(SubsetSelect):
 
         self.add_observe('is_active', self._plugin_active_changed)
         # TODO: need to update coords when viewer reference data changes
-        # TODO: need to add and populate marks for new viewer
         self.add_observe(selected, self._update_mark_coords)
         self.add_observe(radius_factor, self._update_mark_coords)
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._update_mark_coords)
 
     def _plugin_active_changed(self, *args):
         for mark in self.marks:
