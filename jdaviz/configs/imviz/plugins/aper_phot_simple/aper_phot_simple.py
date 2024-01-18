@@ -33,7 +33,7 @@ ASTROPY_LT_5_2 = Version(astropy.__version__) < Version('5.2')
 
 
 @tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")
-class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin, 
+class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                DatasetMultiSelectMixin, TableMixin, PlotMixin):
     """
     The Aperture Photometry plugin performs aperture photometry for drawn regions.

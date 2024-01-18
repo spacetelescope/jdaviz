@@ -28,6 +28,7 @@ from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
+from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Float, HasTraits, List, Unicode, observe
@@ -46,7 +47,8 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
-                               ShadowLine)
+                               ShadowLine, ApertureMark)
+from jdaviz.core.region_translators import regions2roi
 from jdaviz.core.region_translators import _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
@@ -1998,16 +2000,13 @@ class ApertureSubsetSelect(SubsetSelect):
 
     @property
     def image_viewers(self):
-        # TODO: iterator?
-        from glue_jupyter.bqplot.image import BqplotImageView
-
-        return [viewer for viewer in self.app._viewer_store.values() if isinstance(viewer, BqplotImageView)]
+        return [viewer for viewer in self.app._viewer_store.values()
+                if isinstance(viewer, BqplotImageView)]
 
     @property
     def marks(self):
-        # TODO: support multiple ApertureSubsetSelect per-plugin (only retrieve those belonging to this one)
-        from jdaviz.core.marks import ApertureMark
-
+        # NOTE: this will require additional logic if we want to support multiple independent
+        # ApertureSubsetSelect instances per-plugin
         all_aperture_marks = []
         for viewer in self.image_viewers:
             # search for existing mark
@@ -2031,16 +2030,14 @@ class ApertureSubsetSelect(SubsetSelect):
         return all_aperture_marks
 
     def _get_mark_coords(self, viewer):
-        from jdaviz.core.region_translators import regions2roi
-        from regions import PixelRegion
-
         if not len(self.selected) or not len(self.dataset.selected):
             return [], []
 
         if self.multiselect:
             # assume first dataset (for retrieving the region object)
             # but iterate over all subsets
-            spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset) for subset in self.selected]
+            spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset)  # noqa
+                               for subset in self.selected]
         else:
             # use cached version
             spatial_regions = [self.selected_spatial_region]
@@ -2105,8 +2102,8 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
                                              'aperture_items',
                                              'aperture_selected',
                                              'aperture_radius_factor',
-                                             dataset='dataset' if hasattr(self, 'dataset') else None,
-                                             multiselect='multiselect' if hasattr(self, 'multiselect') else None)
+                                             dataset='dataset' if hasattr(self, 'dataset') else None,  # noqa
+                                             multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
 
 class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
