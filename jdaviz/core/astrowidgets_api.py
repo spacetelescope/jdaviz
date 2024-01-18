@@ -246,6 +246,10 @@ class AstrowidgetsImageViewerMixin:
     def zoom(self, val):
         """Zoom in or out by the given factor.
 
+        .. warning::
+            When a viewer is linked by WCS, this method accidentally
+            changes the center also; see the warning in ``zoom_level``.
+
         Parameters
         ----------
         val : int or float
