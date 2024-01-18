@@ -261,7 +261,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             self.moment = np.power(self.moment, 1/self.n_moment)
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)
-        print(np.nanmean(self.moment))
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"

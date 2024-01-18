@@ -165,7 +165,7 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
                                                         'domain': {'x': 0, 'y': 0}})
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value -4.14382e+05 m / s",
+    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value -4.14668e+02 km / s",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 
@@ -174,10 +174,11 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube, tmpdir):
     mm.calculate_moment()
 
     label_mouseover._viewer_mouse_event(uncert_viewer, {'event': 'mousemove',
-                                                        'domain': {'x': 0, 'y': 0}})
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value -2.99792e+08 m / s",
-                                         "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
-                                         "204.9998877673 27.0001000000 (deg)")
+                                                        'domain': {'x': 1, 'y': 1}})
+
+    assert label_mouseover.as_text() == ("Pixel x=01.0 y=01.0 Value +2.32415e+01 km / s",
+                                         "World 13h39m59.9461s +27d00m00.7200s (ICRS)",
+                                         "204.9997755344 27.0001999998 (deg)")
 
 
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
