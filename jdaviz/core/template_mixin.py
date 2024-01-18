@@ -2032,7 +2032,7 @@ class ApertureSubsetSelect(SubsetSelect):
         if not len(self.selected) or not len(self.dataset.selected):
             return [], []
 
-        subset_dicts = self.selected_obj if self.multiselect else [self.selected_obj]
+        subset_dicts = self.selected_obj if getattr(self, 'multiselect', False) else [self.selected_obj]  # noqa
 
         x_coords, y_coords = np.array([]), np.array([])
         for subset_dict in subset_dicts:

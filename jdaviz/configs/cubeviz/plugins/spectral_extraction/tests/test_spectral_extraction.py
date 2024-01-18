@@ -85,7 +85,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
     extract_plugin.function = "Sum"
     expected_uncert = 2
 
-    extract_plugin.spatial_subset = 'Subset 1'
+    extract_plugin.aperture = 'Subset 1'
     collapsed_spec = extract_plugin.collapse_to_spectrum()
 
     # this single pixel has two wavelengths, and all uncertainties are unity
@@ -94,7 +94,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
     assert np.all(np.equal(collapsed_spec.uncertainty.array, 1))
 
     # this two-pixel region has four unmasked data points per wavelength:
-    extract_plugin.spatial_subset = 'Subset 2'
+    extract_plugin.aperture = 'Subset 2'
     collapsed_spec_2 = extract_plugin.collapse_to_spectrum()
     assert np.all(np.equal(collapsed_spec_2.uncertainty.array, expected_uncert))
 
@@ -129,7 +129,7 @@ def test_subset(
     plg.function = function
 
     # single pixel region:
-    plg.spatial_subset = 'Subset 1'
+    plg.aperture = 'Subset 1'
     collapsed_spec_1 = plg.collapse_to_spectrum()
 
     # this single pixel has two wavelengths, and all uncertainties are unity
@@ -138,7 +138,7 @@ def test_subset(
     assert np.all(np.equal(collapsed_spec_1.uncertainty.array, 1))
 
     # this two-pixel region has four unmasked data points per wavelength:
-    plg.spatial_subset = 'Subset 2'
+    plg.aperture = 'Subset 2'
     collapsed_spec_2 = plg.collapse_to_spectrum()
 
     assert np.all(np.equal(collapsed_spec_2.uncertainty.array, expected_uncert))

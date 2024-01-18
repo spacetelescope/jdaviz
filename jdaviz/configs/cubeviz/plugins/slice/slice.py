@@ -11,7 +11,8 @@ from traitlets import Bool, observe, Any, Int
 from specutils.spectra.spectrum1d import Spectrum1D
 
 from jdaviz.core.events import (AddDataMessage, SliceToolStateMessage,
-                                SliceSelectSliceMessage, GlobalDisplayUnitChanged)
+                                SliceSelectSliceMessage, SliceWavelengthUpdatedMessage,
+                                GlobalDisplayUnitChanged)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -216,6 +217,10 @@ class Slice(PluginTemplateMixin):
             viewer.state.slices = (0, 0, value)
         for viewer in self._indicator_viewers:
             viewer._update_slice_indicator(value)
+
+        self.hub.broadcast(SliceWavelengthUpdatedMessage(slice=value,
+                                                         wavelength=self.wavelength,
+                                                         sender=self))
 
     def vue_goto_first(self, *args):
         if self.is_playing:
