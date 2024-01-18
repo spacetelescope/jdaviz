@@ -11,6 +11,8 @@ New Features
 
 - Opacity for spatial subsets is now adjustable from within Plot Options. [#2663]
 
+- Live-preview of aperture selection in plugins. [#2664]
+
 Cubeviz
 ^^^^^^^
 
