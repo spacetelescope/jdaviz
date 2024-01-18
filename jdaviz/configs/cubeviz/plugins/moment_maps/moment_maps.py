@@ -2,12 +2,11 @@ import os
 from pathlib import Path
 
 from astropy import units as u
-from astropy.constants import c
 from astropy.nddata import CCDData
 import numpy as np
 
 from traitlets import Bool, List, Unicode, observe
-from specutils import manipulation, analysis
+from specutils import manipulation, analysis, Spectrum1D
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage
@@ -243,20 +242,25 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         data_wcs = getattr(cube.wcs, 'celestial', None)
         if data_wcs:
             data_wcs = data_wcs.swapaxes(0, 1)  # We also transpose WCS to match.
-        self.moment = CCDData(analysis.moment(slab, order=n_moment).T, wcs=data_wcs)
-        if n_moment > 0 and self.output_unit_selected.lower()[0:8] == "velocity":
+
+        # Convert spectral axis to velocity units if desired output is in velocity
+        if n_moment > 0 and self.output_unit_selected.lower().startswith("velocity"):
             # Catch this if called from API
             if not self.reference_wavelength > 0.0:
                 raise ValueError("reference_wavelength must be set for output in velocity units.")
-            power_unit = f"{self.dataset_spectral_unit}{self.n_moment}"
-            self.moment = np.power(self.moment.convert_unit_to(power_unit), 1/self.n_moment)
-            self.moment = self.moment << u.Unit(self.dataset_spectral_unit)
+
             ref_wavelength = self.reference_wavelength * u.Unit(self.dataset_spectral_unit)
-            relative_wavelength = (self.moment-ref_wavelength)/ref_wavelength
-            in_velocity = c*relative_wavelength
-            if self.output_unit_selected.lower() == "velocity^n":
-                in_velocity = np.power(in_velocity, self.n_moment)
-            self.moment = CCDData(in_velocity, wcs=data_wcs)
+            slab_sa = slab.spectral_axis.to("km/s", doppler_convention="relativistic",
+                                            doppler_rest=ref_wavelength)
+            slab = Spectrum1D(slab.flux, slab_sa)
+
+        # Finally actually calculate the moment
+        self.moment = analysis.moment(slab, order=n_moment).T
+        # If n>1 and velocity is desired, need to take nth root of result
+        if n_moment > 0 and self.output_unit_selected.lower() == "velocity":
+            self.moment = np.power(self.moment, 1/self.n_moment)
+        # Reattach the WCS so we can load the result
+        self.moment = CCDData(self.moment, wcs=data_wcs)
 
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"moment{n_moment}_{fname_label}.fits"
