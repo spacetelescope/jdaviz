@@ -1951,7 +1951,7 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
 class ApertureSubsetSelect(SubsetSelect):
     """
     """
-    def __init__(self, plugin, items, selected, radius_factor, multiselect=None,
+    def __init__(self, plugin, items, selected, scale_factor, multiselect=None,
                  dataset=None, viewers=None):
         """
         Parameters
@@ -1962,7 +1962,7 @@ class ApertureSubsetSelect(SubsetSelect):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
-        radius_factor : str
+        scale_factor : str
             the name of the traitlet defining the radius factor for the drawn aperture
         multiselect : str
             the name of the traitlet defining whether the dropdown should accept multiple selections
@@ -1983,11 +1983,11 @@ class ApertureSubsetSelect(SubsetSelect):
                          viewers=viewers,
                          default_text=None)
 
-        self.add_traitlets(radius_factor=radius_factor)
+        self.add_traitlets(scale_factor=scale_factor)
 
         self.add_observe('is_active', self._plugin_active_changed)
         self.add_observe(selected, self._update_mark_coords)
-        self.add_observe(radius_factor, self._update_mark_coords)
+        self.add_observe(scale_factor, self._update_mark_coords)
         # add marks to any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._update_mark_coords)
         # update coordinates when link type or reference data is _mode_changed
@@ -2042,7 +2042,22 @@ class ApertureSubsetSelect(SubsetSelect):
             roi = subset_dict[0]['subset_state'].roi.copy()
             # NOTE: this assumes that we'll apply the same radius factor to all subsets (all will
             # be defined at the same slice for cones in cubes)
-            roi.radius *= self.radius_factor
+            if hasattr(roi, 'radius'):
+                roi.radius *= self.scale_factor
+            elif hasattr(roi, 'radius_x'):
+                roi.radius_x *= self.scale_factor
+                roi.radius_y *= self.scale_factor
+            elif hasattr(roi, 'center'):
+                center = roi.center()
+                width_orig = roi.xmax - roi.xmin
+                height_orig = roi.ymax - roi.ymin
+                roi.xmin = center[0] - width_orig/2 * self.scale_factor
+                roi.xmax = center[0] + width_orig/2 * self.scale_factor
+                roi.ymin = center[1] - height_orig/2 * self.scale_factor
+                roi.ymax = center[1] + height_orig/2 * self.scale_factor
+            else:
+                raise NotImplementedError
+
             x, y = roi.to_polygon()
             # concatenate with nan between to avoid line connecting separate subsets
             x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
@@ -2081,14 +2096,14 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
     aperture_items = List([]).tag(sync=True)
     aperture_selected = Any('').tag(sync=True)
-    aperture_radius_factor = Float(1).tag(sync=True)
+    aperture_scale_factor = Float(1).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.aperture = ApertureSubsetSelect(self,
                                              'aperture_items',
                                              'aperture_selected',
-                                             'aperture_radius_factor',
+                                             'aperture_scale_factor',
                                              dataset='dataset' if hasattr(self, 'dataset') else None,  # noqa
                                              multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
