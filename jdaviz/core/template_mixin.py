@@ -41,7 +41,7 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
-                                AddDataToViewerMessage)
+                                AddDataToViewerMessage, LinkUpdatedMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -1985,10 +1985,12 @@ class ApertureSubsetSelect(SubsetSelect):
         self.add_traitlets(radius_factor=radius_factor)
 
         self.add_observe('is_active', self._plugin_active_changed)
-        # TODO: need to update coords when viewer reference data changes
         self.add_observe(selected, self._update_mark_coords)
         self.add_observe(radius_factor, self._update_mark_coords)
+        # add marks to any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._update_mark_coords)
+        # update coordinates when link type or reference data is _mode_changed
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._update_mark_coords)
 
     def _plugin_active_changed(self, *args):
         for mark in self.marks:
@@ -2009,7 +2011,6 @@ class ApertureSubsetSelect(SubsetSelect):
         all_aperture_marks = []
         for viewer in self.image_viewers:
             # search for existing mark
-            # TODO: add support for subset multiselect
             matches = [mark for mark in viewer.figure.marks
                        if isinstance(mark, ApertureMark)]
             if len(matches):
