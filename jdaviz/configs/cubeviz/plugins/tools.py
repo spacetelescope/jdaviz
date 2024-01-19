@@ -129,14 +129,14 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         y = int(np.round(data['domain']['y']))
 
         # Use the selected layer from coords_info as long as it's 3D
-        coords_info_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
-        if coords_info_dataset == 'auto':
+        coords_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
+        if coords_dataset == 'auto':
             cube_data = self.viewer.active_image_layer.layer
-        elif coords_info_dataset == 'none':
+        elif coords_dataset == 'none':
             cube_data = self.viewer.layers[0].layer
         else:
             for layer in self.viewer.layers:
-                if layer.layer.label == coords_info_dataset and layer.visible:
+                if layer.layer.label == coords_dataset and layer.visible:
                     if isinstance(layer, BqplotImageSubsetLayerArtist):
                         # cannot expose info for spatial subset layers
                         continue
@@ -147,15 +147,16 @@ class SpectrumPerSpaxel(SinglePixelRegion):
 
         if cube_data.ndim != 3:
             cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible
-                        and layer.layer.ndim == 3]
+                         and layer.layer.ndim == 3]
             if len(cube_data) == 0:
                 return
             cube_data = cube_data[0]
 
         spectrum = cube_data.get_object(statistic=None)
         # Note: change this when Spectrum1D.with_spectral_axis is fixed.
-        if spectrum.spectral_axis.unit != self._spectrum_viewer.state.x_display_unit:
-            new_spectral_axis = spectrum.spectral_axis.to(self._spectrum_viewer.state.x_display_unit)
+        x_unit = self._spectrum_viewer.state.x_display_unit
+        if spectrum.spectral_axis.unit != x_unit:
+            new_spectral_axis = spectrum.spectral_axis.to(x_unit)
             spectrum = Spectrum1D(spectrum.flux, new_spectral_axis)
 
         if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
