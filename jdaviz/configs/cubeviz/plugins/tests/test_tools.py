@@ -18,6 +18,12 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube):
     assert len(flux_viewer.native_marks) == 2
     assert len(spectrum_viewer.data()) == 1
 
+    # Move to spaxel location
+    flux_viewer.toolbar.active_tool.on_mouse_move(
+        {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
+    assert flux_viewer.toolbar.active_tool._mark in spectrum_viewer.figure.marks
+    assert flux_viewer.toolbar.active_tool._mark.visible is True
+
     # Click on spaxel location
     flux_viewer.toolbar.active_tool.on_mouse_event(
         {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -29,6 +35,11 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube):
     reg = subsets.get('Subset 1')[0]['region']
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
+
+    # Mouse leave event
+    flux_viewer.toolbar.active_tool.on_mouse_move(
+        {'event': 'mouseleave', 'domain': {'x': x, 'y': y}, 'altKey': False})
+    assert flux_viewer.toolbar.active_tool._mark.visible is False
 
     # Deselect tool
     flux_viewer.toolbar.active_tool = None
