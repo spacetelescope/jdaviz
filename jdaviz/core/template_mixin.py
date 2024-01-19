@@ -193,6 +193,10 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
 
+        # allow accessing relevant feature-flags from the app
+        self._map_feature_flags = {}
+        self.app.observe(self._feature_flags_changed, 'feature_flags')
+
     @property
     def app(self):
         """
@@ -219,6 +223,13 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
         # for helpers that have a .specviz, return that, otherwise the original helper
         helper = self.app._jdaviz_helper
         return getattr(helper, 'specviz', helper)
+
+    def _feature_flags_changed(self, *args):
+        for traitlet_name, feature in self._map_feature_flags.items():
+            setattr(self, traitlet_name, self.app.feature_flags.get(feature))
+
+    def _sync_feature_flag(self, traitlet_name, feature):
+        self._map_feature_flags[traitlet_name] = feature
 
     def _viewer_callback(self, viewer, plugin_method):
         """

@@ -170,3 +170,11 @@ def test_viewer_renaming_imviz(imviz_helper):
             old_reference='non-existent',
             new_reference='this-is-forbidden'
         )
+
+
+def test_feature_flags(imviz_helper):
+    imviz_helper.app.feature_flags = {'example-feature': False}
+    assert not imviz_helper.app._ff_is_enabled('example-feature')
+    with imviz_helper.app._ff_temporarily_enabled('example-feature'):
+        assert imviz_helper.app._ff_is_enabled('example-feature')
+    assert not imviz_helper.app._ff_is_enabled('example-feature')

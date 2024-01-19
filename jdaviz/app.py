@@ -12,6 +12,7 @@ from astropy import units as u
 from astropy.nddata import NDData
 from astropy.io import fits
 from astropy.time import Time
+from contextlib import contextmanager
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -257,6 +258,19 @@ class Application(VuetifyTemplate, HubListener):
     popout_button = Any().tag(sync=True, **widget_serialization)
     style_registry_instance = Any().tag(sync=True, **widget_serialization)
 
+    # To implement a new feature flag:
+    # * define a label here and set default to False (ie. {'my_feature': False})
+    # * any python can access app._ff_is_enabled('my-feature')
+    # * any templates that need access should define a Boolean traitlet (ie. ff_my_feature) and
+    #   then sync by calling self._sync_feature_flag('ff_my_feature', 'my-feature') in the init
+    #   and can then observe or use this in v-ifs in the vue code
+    # * tests should use: with app._ff_temporarily_enabled('ff_my_feature')
+    #
+    # To make a feature public:
+    # * search for all instances of the feature label and remove any if-blocks, boolean traitlets
+    #   in plugins, and ultimately remove from this dictionary.
+    feature_flags = Dict({}).tag(sync=True)
+
     def __init__(self, configuration=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._jdaviz_helper = None
@@ -411,6 +425,33 @@ class Application(VuetifyTemplate, HubListener):
         if val not in _verbosity_levels:
             raise ValueError(f'Invalid verbosity: {val}')
         self._history_verbosity = val
+
+    def _ff_is_enabled(self, feature):
+        # check if a feature flag is currently enabled
+        return self.feature_flags.get(feature, False)
+
+    def _ff_enable(self, *features):
+        # enable a feature flag for the remainder of the session
+        self.feature_flags = {**self.feature_flags,
+                              **{feature: True for feature in features
+                                 if feature in self.feature_flags}}
+        self.send_state('feature_flags')
+
+    def _ff_disable(self, *features):
+        # disable a feature flag for the remainder of the session
+        self.feature_flags = {**self.feature_flags,
+                              **{feature: False for feature in features
+                                 if feature in self.feature_flags}}
+        self.send_state('feature_flags')
+
+    @contextmanager
+    def _ff_temporarily_enabled(self, *features):
+        # temporarily enable a feature flag (useful for tests)
+        _orig_flags = self.feature_flags.copy()
+        self._ff_enable(*features)
+        yield
+        self.feature_flags = _orig_flags
+        self.send_state('feature_flags')
 
     def _add_style(self, path):
         """
