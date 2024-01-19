@@ -1581,9 +1581,7 @@ class SubsetSelect(SelectPluginComponent):
     * :attr:`selected_obj`
     * :attr:`selected_subset_state`
     * :meth:`selected_min_max`
-    """
 
-    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``items`` (list of dicts with keys: label, color, type)
@@ -1621,7 +1619,6 @@ class SubsetSelect(SelectPluginComponent):
       />
 
     """
-
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text'):
@@ -1950,6 +1947,59 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
 
 class ApertureSubsetSelect(SubsetSelect):
     """
+    Plugin select for aperture subsets, with support for single or multi-selection, as well as
+    live-preview rendered in the viewers.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    * :attr:`~SubsetSelect.selected_obj`
+    * :attr:`~SubsetSelect.selected_subset_state`
+    * :meth:`~SubsetSelect.selected_min_max`
+    * :meth:`marks`
+    * :meth:`image_viewers`
+
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``items`` (list of dicts with keys: label, color, type)
+    * ``selected`` (string)
+
+    Properties (in the object only):
+
+    * ``labels`` (list of labels corresponding to items)
+    * ``selected_item`` (dictionary in ``items`` coresponding to ``selected``, cached)
+    * ``selected_obj`` (subset object corresponding to ``selected``, cached)
+    * ``marks`` (list of marks added to image viewers in the app to preview the apertures)
+
+    Methods (in the object only):
+
+    * ``selected_min_max(cube)`` (quantity, only applicable for spectral subsets)
+
+    To use in a plugin:
+
+    * create (empty) traitlets in the plugin
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets.
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+    * observe the traitlets created and defined in the plugin, as necessary
+
+    Example template (label and hint are optional)::
+
+      <plugin-subset-select
+        :items="aperture_items"
+        :selected.sync="aperture_selected"
+        :show_if_single_entry="true"
+        label="Aperture"
+        hint="Select aperture."
+      />
+
     """
     def __init__(self, plugin, items, selected, scale_factor, multiselect=None,
                  dataset=None, viewers=None):
@@ -2080,7 +2130,7 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
 
     To use in a plugin:
 
-    * add ``ApertureSubsetSelectMixin`` as a mixin to the class
+    * add ``ApertureSubsetSelectMixin`` as a mixin to the class BEFORE ``DatasetSelectMixin``
     * use the traitlets available from the plugin or properties/methods available from
       ``plugin.aperture``.
 
