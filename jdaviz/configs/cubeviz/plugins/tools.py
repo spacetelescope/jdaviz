@@ -3,6 +3,7 @@ import os
 
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
 from specutils import Spectrum1D
@@ -127,12 +128,30 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         x = int(np.round(data['domain']['x']))
         y = int(np.round(data['domain']['y']))
 
-        # Use first visible layer for now
-        cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible
-                     and len(layer.layer.shape) == 3]
-        if len(cube_data) == 0:
-            return
-        cube_data = cube_data[0]
+        # Use the selected layer from coords_info as long as it's 3D
+        coords_info_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
+        if coords_info_dataset == 'auto':
+            cube_data = self.viewer.active_image_layer.layer
+        elif coords_info_dataset == 'none':
+            cube_data = self.viewer.layers[0].layer
+        else:
+            for layer in self.viewer.layers:
+                if layer.layer.label == coords_info_dataset and layer.visible:
+                    if isinstance(layer, BqplotImageSubsetLayerArtist):
+                        # cannot expose info for spatial subset layers
+                        continue
+                    cube_data = layer.layer
+                    break
+            else:
+                return
+
+        if cube_data.ndim != 3:
+            cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible
+                        and layer.layer.ndim == 3]
+            if len(cube_data) == 0:
+                return
+            cube_data = cube_data[0]
+
         spectrum = cube_data.get_object(statistic=None)
         # Note: change this when Spectrum1D.with_spectral_axis is fixed.
         if spectrum.spectral_axis.unit != self._spectrum_viewer.state.x_display_unit:
