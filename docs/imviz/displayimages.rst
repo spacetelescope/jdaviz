@@ -106,7 +106,7 @@ allows the user to zoom images in multiple different viewers simultaneously, not
 :ref:`imviz_pan_zoom`.
 
 Single-viewer Box Zoom is also available and is used in a similar way as in
-other Jdaviz tools. To access this option when there are multiple viewers, 
+other Jdaviz tools. To access this option when there are multiple viewers,
 right-click on the Linked Box Zoom button and left-click on the second option down to select it.
 
 .. _imviz_pan_zoom:
@@ -283,11 +283,17 @@ visualization of that data.
 
 If you wish to access plot options via API
 (also see `~jdaviz.configs.default.plugins.plot_options.plot_options.PlotOptions`),
-you can do the following:
+you can use the following generic example. More specific examples are given
+later in this Section.
 
 .. code-block:: python
 
     plot_options = imviz.plugins['Plot Options']
+    plot_options.layer = 'my file'
+    plot_options.image_colormap = 'Plasma'
+    plot_options.stretch_function = 'Arcsinh'
+    plot_options.stretch_vmin = 0.05
+    plot_options.stretch_vmax = 1.0
 
 Layer
 -----
