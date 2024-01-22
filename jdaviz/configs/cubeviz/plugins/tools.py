@@ -4,7 +4,6 @@ import os
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
-from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
 from specutils import Spectrum1D
