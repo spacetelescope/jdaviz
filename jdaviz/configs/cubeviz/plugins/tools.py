@@ -3,6 +3,7 @@ import os
 
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
@@ -105,7 +106,11 @@ class SpectrumPerSpaxel(SinglePixelRegion):
     def activate(self):
         self.viewer.add_event_callback(self.on_mouse_move, events=['mousemove', 'mouseleave'])
         if self._spectrum_viewer is None:
-            self._spectrum_viewer = self.viewer.jdaviz_helper.app.get_viewer('spectrum-viewer')
+            # Get first profile viewer
+            for _, viewer in self.viewer.jdaviz_helper.app._viewer_store.items():
+                if isinstance(viewer, BqplotProfileView):
+                    self._spectrum_viewer = viewer
+                    break
         if self._mark is None:
             self._mark = PluginLine(self._spectrum_viewer, visible=False)
             self._spectrum_viewer.figure.marks = self._spectrum_viewer.figure.marks + [self._mark,]
@@ -135,24 +140,20 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         elif coords_dataset == 'none':
             cube_data = self.viewer.layers[0].layer
         else:
-            for layer in self.viewer.layers:
-                if layer.layer.label == coords_dataset and layer.visible:
-                    if isinstance(layer, BqplotImageSubsetLayerArtist):
-                        # cannot expose info for spatial subset layers
-                        continue
-                    cube_data = layer.layer
-                    break
-            else:
-                return
+            cube_data = self.viewer.session.application._tools['g-coords-info'].dataset.selected_obj
 
-        if cube_data.ndim != 3:
+        data_shape = cube_data.ndim if hasattr(cube_data, "ndim") else len(cube_data.shape)
+        if data_shape != 3:
             cube_data = [layer.layer for layer in self.viewer.layers if layer.state.visible
                          and layer.layer.ndim == 3]
             if len(cube_data) == 0:
                 return
             cube_data = cube_data[0]
 
-        spectrum = cube_data.get_object(statistic=None)
+        if isinstance(cube_data, Spectrum1D):
+            spectrum = cube_data
+        else:
+            spectrum = cube_data.get_object(statistic=None)
         # Note: change this when Spectrum1D.with_spectral_axis is fixed.
         x_unit = self._spectrum_viewer.state.x_display_unit
         if spectrum.spectral_axis.unit != x_unit:
