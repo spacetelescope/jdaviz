@@ -135,7 +135,7 @@ data entries into the viewer until after the parsing is complete::
     imviz = Imviz()
     with imviz.batch_load():
         for filepath in filepaths:
-            imviz.load_data(filepaths)
+            imviz.load_data(filepath)
     imviz.show()
 
 
