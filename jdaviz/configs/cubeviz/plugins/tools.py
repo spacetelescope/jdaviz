@@ -137,7 +137,10 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         if coords_dataset == 'auto':
             cube_data = self.viewer.active_image_layer.layer
         elif coords_dataset == 'none':
-            cube_data = self.viewer.layers[0].layer
+            if len(self.viewer.layers):
+                cube_data = self.viewer.layers[0].layer
+            else:
+                return
         else:
             cube_data = self.viewer.session.application._tools['g-coords-info'].dataset.selected_obj
 

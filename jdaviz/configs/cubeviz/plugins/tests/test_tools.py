@@ -5,10 +5,11 @@ from regions import RectanglePixelRegion
 
 
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
-def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube_with_uncerts):
+    cubeviz_helper.load_data(spectrum1d_cube_with_uncerts, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
+    uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
 
     # Set the active tool to spectrumperspaxel
@@ -36,6 +37,11 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube):
     assert len(subsets) == 1
     assert isinstance(reg, RectanglePixelRegion)
 
+    # Move out of bounds
+    flux_viewer.toolbar.active_tool.on_mouse_move(
+        {'event': 'mousemove', 'domain': {'x': -1, 'y': -1}, 'altKey': False})
+    assert flux_viewer.toolbar.active_tool._mark.visible is False
+
     # Mouse leave event
     flux_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mouseleave', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -44,6 +50,22 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube):
     # Deselect tool
     flux_viewer.toolbar.active_tool = None
     assert len(flux_viewer.native_marks) == 3
+
+    # Check in uncertainty viewer as well. Set mouseover here
+    cubeviz_helper.app.session.application._tools['g-coords-info'].dataset.selected = 'none'
+    uncert_viewer.toolbar.active_tool = uncert_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
+    uncert_viewer.toolbar.active_tool.on_mouse_move(
+        {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
+    assert uncert_viewer.toolbar.active_tool._mark in spectrum_viewer.figure.marks
+    assert uncert_viewer.toolbar.active_tool._mark.visible is True
+
+    # Select specific data
+    cubeviz_helper.app.session.application._tools['g-coords-info'].dataset.selected = 'test[FLUX]'
+    uncert_viewer.toolbar.active_tool = uncert_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
+    uncert_viewer.toolbar.active_tool.on_mouse_move(
+        {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
+    assert uncert_viewer.toolbar.active_tool._mark in spectrum_viewer.figure.marks
+    assert uncert_viewer.toolbar.active_tool._mark.visible is True
 
 
 def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
