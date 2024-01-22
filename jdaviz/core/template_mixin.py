@@ -2043,6 +2043,11 @@ class ApertureSubsetSelect(SubsetSelect):
         # update coordinates when link type or reference data is _mode_changed
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._update_mark_coords)
 
+    def _update_subset(self, *args, **kwargs):
+        # update coordinates when subset is modified (with subset tools plugin or drag event)
+        super()._update_subset(*args, **kwargs)
+        self._update_mark_coords()
+
     def _plugin_active_changed(self, *args):
         for mark in self.marks:
             mark.visible = self.plugin.is_active
@@ -2086,6 +2091,8 @@ class ApertureSubsetSelect(SubsetSelect):
 
         x_coords, y_coords = np.array([]), np.array([])
         for subset_dict in subset_dicts:
+            if subset_dict is None:
+                continue
             # make a copy so changing the radius doesn't change the cached version in memory
             # NOTE: this [0] assumes a single subcomponent, which should be safe given the
             # is_not_composite filter applied
