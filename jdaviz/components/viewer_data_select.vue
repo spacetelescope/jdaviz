@@ -1,6 +1,6 @@
 <template>
   <j-tooltip v-if="menuButtonAvailable()" tipid="viewer-toolbar-data">
-    <v-menu attach offset-y :close-on-content-click="false" v-model="viewer.data_open">
+    <v-menu attach offset-y :close-on-content-click="false" :close-on-click="false" v-model="viewer.data_open">
       <template v-slot:activator="{ on, attrs }">
         <v-btn 
           text 
