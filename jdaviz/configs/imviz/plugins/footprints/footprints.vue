@@ -18,21 +18,17 @@
       >
     </plugin-editable-select>
 
-    <div v-if="is_pixel_linked">
-      <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
-          cannot plot footprint when pixel-linked (see Links Control plugin)
-          <v-row justify="center">
-            <v-btn @click="link_by_wcs">
-              link by WCS
-            </v-btn>
-          </v-row>
-      </v-alert>
-    </div>
-    <div v-if="viewer_items.length===0">
-      <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
-          no valid viewers (with necessary WCS information) to show footprint overlay
-      </v-alert>
-    </div>
+    <v-alert v-if="is_pixel_linked" type='warning' style="margin-left: -12px; margin-right: -12px">
+      cannot plot footprint when aligned by pixels (see Orientation plugin).
+      <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
+        <v-btn @click="link_by_wcs">
+          link by WCS
+        </v-btn>
+      </v-row>
+    </v-alert>
+    <v-alert v-if="viewer_items.length===0" type='warning' style="margin-left: -12px; margin-right: -12px">
+      no valid viewers (with necessary WCS information) to show footprint overlay.
+    </v-alert>
   
     <div v-if="!is_pixel_linked && viewer_items.length > 0 && overlay_selected.length > 0">
       <j-plugin-section-header>Display Options</j-plugin-section-header>
@@ -79,7 +75,7 @@
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
       <v-alert v-if="!has_pysiaf" type="warning" style="margin-left: -12px; margin-right: -12px">
-        <span>To use JWST footprints, install pysiaf and restart jdaviz</span>
+        To use JWST footprints, install pysiaf and restart jdaviz.
       </v-alert>
 
       <plugin-file-import-select

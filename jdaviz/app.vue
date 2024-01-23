@@ -94,6 +94,7 @@
                   @data-item-unload="data_item_unload($event)"
                   @data-item-remove="data_item_remove($event)"
                   @call-viewer-method="call_viewer_method($event)"
+                  @change-reference-data="change_reference_data($event)"
                 ></g-viewer-tab>
               </gl-row>
             </golden-layout>
@@ -112,11 +113,11 @@
                   <div v-if="trayItemVisible(trayItem, state.tray_items_filter)">
                     <v-expansion-panel-header >
                       <j-tooltip :tipid="trayItem.name">
-                        {{ trayItem.label }}
+                        {{ trayItem.label == 'Orientation' ? 'Orientation (prev. Links Control)' : trayItem.label }}
                       </j-tooltip>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px;">
-                      <jupyter-widget :widget="trayItem.widget" v-if="state.tray_items_open.includes(index)"></jupyter-widget>
+                      <jupyter-widget v-if="state.tray_items_open.includes(index)" :widget="trayItem.widget"></jupyter-widget>
                     </v-expansion-panel-content>
                   </div>
                 </v-expansion-panel>

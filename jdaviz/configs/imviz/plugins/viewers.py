@@ -3,6 +3,7 @@ import numpy as np
 import astropy.units as u
 from astropy.wcs.utils import pixel_to_pixel
 from astropy.visualization import ImageNormalize, LinearStretch, PercentileInterval
+from glue.core.link_helpers import LinkSame
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.imviz import wcs_utils
@@ -132,6 +133,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
     def on_limits_change(self, *args):
         try:
             i = get_top_layer_index(self)
+            if i is None:
+                return
         except IndexError:
             if self.compass is not None:
                 self.compass.clear_compass()
@@ -146,8 +149,22 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         except IndexError:
             data_label = ''
         else:
-            data_label = self.state.layers[i].layer.label
+            if i is None:
+                data_label = ''
+            else:
+                data_label = self.state.layers[i].layer.label
         return data_label
+
+    @property
+    def first_loaded_data(self):
+        """Data that is first loaded into the viewer.
+        This may not be the visible layer.
+        Returns `None` if no real data is loaded.
+        """
+        for lyr in self.layers:
+            data = lyr.layer
+            if layer_is_image_data(data):
+                return data
 
     def _get_real_xy(self, image, x, y, reverse=False):
         """Return real (X, Y) position and status in case of dithering as well as whether the
@@ -169,7 +186,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             # we aren't actually guaranteed to get a SkyCoord out, just for images
             # with valid celestial WCS
             try:
-                link_type = self.get_link_type(image.label)
+                link_type = self.get_link_type(image.label).lower()
 
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
@@ -209,11 +226,13 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         image, which can be inaccurate if given image is dithered and
         they are linked by WCS.
         """
-        if data_has_valid_wcs(image) and self.get_link_type(image.label) == 'wcs':
-            # Convert X,Y from reference data to the one we are actually seeing.
-            x = image.coords.world_to_pixel(self.state.reference_data.coords.pixel_to_world(
+        if self.state.reference_data.meta.get('_WCS_ONLY', False):
+            corner_world_coords = self.state.reference_data.coords.pixel_to_world(
                 (self.state.x_min, self.state.x_min, self.state.x_max, self.state.x_max),
-                (self.state.y_min, self.state.y_max, self.state.y_max, self.state.y_min)))
+                (self.state.y_min, self.state.y_max, self.state.y_max, self.state.y_min)
+            )
+            # Convert X,Y from reference data to the one we are actually seeing.
+            x = image.coords.world_to_pixel(corner_world_coords)
             zoom_limits = np.array(list(zip(x[0], x[1])))
         else:
             zoom_limits = np.array(((self.state.x_min, self.state.y_min),
@@ -268,7 +287,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         Returns
         -------
         link_type : {'pixels', 'wcs', 'self'}
-            One of the link types accepted by :func:`~jdaviz.configs.imviz.helper.link_image_data`
+            One of the link types accepted by the Orientation plugin
             or ``'self'`` if the data label belongs to the reference data itself.
 
         Raises
@@ -280,28 +299,61 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if len(self.session.application.data_collection) == 0:
             raise ValueError('No reference data for link look-up')
 
-        # TODO: Brett Morris might want to look at this for
-        # https://github.com/spacetelescope/jdaviz/pull/2179
-        #     ref_label = self.state.reference_data ???
-        #
-        # The original links were created against data_collection[0], not necessarily
-        # against the current viewer reference_data
-        ref_label = self.session.application.data_collection[0].label
+        ref_label = getattr(self.state.reference_data, 'label', None)
+        if data_label == ref_label:
+            return 'self'
 
-        return self.jdaviz_helper.get_link_type(ref_label, data_label)
+        if ref_label in self.state.wcs_only_layers:
+            return 'wcs'
+
+        link_type = None
+        for elink in self.session.application.data_collection.external_links:
+            elink_labels = (elink.data1.label, elink.data2.label)
+            if data_label in elink_labels and ref_label in elink_labels:
+                if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
+                    link_type = 'pixels'
+                else:  # If not pixels, must be WCS
+                    link_type = 'wcs'
+                break  # Might have duplicate, just grab first match
+
+        if link_type is None:
+            raise ValueError(f'{data_label} not found in data collection external links')
+
+        return link_type
+
+    def _get_fov(self, wcs=None):
+        if wcs is None:
+            wcs = self.state.reference_data.coords
+        if self.jdaviz_app._link_type != "wcs" or wcs is None:
+            return
+
+        # compute the mean of the height and width of the
+        # viewer's FOV on ``data`` in world units:
+        x_corners = [
+            self.state.x_min,
+            self.state.x_max,
+            self.state.x_min
+        ]
+        y_corners = [
+            self.state.y_min,
+            self.state.y_min,
+            self.state.y_max
+        ]
+
+        sky_corners = wcs.pixel_to_world(x_corners, y_corners)
+        height_sky = abs(sky_corners[0].separation(sky_corners[2]))
+        width_sky = abs(sky_corners[0].separation(sky_corners[1]))
+        fov_sky = u.Quantity([height_sky, width_sky]).mean()
+        return fov_sky
 
     def _get_center_skycoord(self, data=None):
-        if data is None:
-            data = self.state.reference_data
         # get SkyCoord for the center of ``data`` in this viewer:
-        width = self.state.x_max - self.state.x_min
-        height = self.state.y_max - self.state.y_min
-        x_cen = self.state.x_min + (width * 0.5)
-        y_cen = self.state.y_min + (height * 0.5)
-        x_cen, y_cen = self._get_real_xy(
-            data, x_cen, y_cen
-        )[:2]
-        sky_cen = data.coords.pixel_to_world(
-            x_cen * u.pix, y_cen * u.pix
-        )
-        return sky_cen
+        x_cen = (self.state.x_min + self.state.x_max) * 0.5
+        y_cen = (self.state.y_min + self.state.y_max) * 0.5
+
+        if (self.jdaviz_app._link_type == "wcs" or data is None
+                or data.label == self.state.reference_data.label):
+            return self.state.reference_data.coords.pixel_to_world(x_cen, y_cen)
+
+        if data.coords is not None:
+            return data.coords.pixel_to_world(x_cen, y_cen)

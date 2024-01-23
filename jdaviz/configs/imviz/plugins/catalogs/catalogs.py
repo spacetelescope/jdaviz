@@ -208,7 +208,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             viewer.remove_markers(marker_name=self._marker_name)
 
         elif self.results_available:
-            from jdaviz.configs.imviz.helper import layer_is_table_data
+            from jdaviz.utils import layer_is_table_data
 
             # resetting values
             self.results_available = False

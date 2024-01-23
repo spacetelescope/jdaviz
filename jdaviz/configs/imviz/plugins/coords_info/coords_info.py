@@ -66,7 +66,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 viewer_refs.append(viewer.reference_id)
 
         self.dataset._manual_options = ['auto', 'none']
-        self.dataset.filters = ['layer_in_viewers']
+        self.dataset.filters = ['layer_in_viewers', 'is_not_wcs_only']
         if self.app.config == 'imviz':
             # filter out scatter-plot entries (from add_markers API, for example)
             self.dataset.add_filter('is_image')

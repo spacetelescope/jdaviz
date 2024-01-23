@@ -1,7 +1,10 @@
 import numpy as np
+from astropy import units as u
 from traitlets import Bool, observe
 
-from jdaviz.core.events import ViewerAddedMessage
+from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
+                                AddDataMessage, RemoveDataMessage,
+                                MarkersPluginUpdate)
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -80,6 +83,17 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
 
+        # account for image rotation due to a change in reference data
+        self.hub.subscribe(self, ChangeRefDataMessage,
+                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
+
+        # enable/disable mark based on whether parent data entry is in viewer
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
+
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=lambda msg: self._recompute_mark_positions(msg.viewer))
+
     def _create_viewer_callbacks(self, viewer):
         if not self.is_active:
             return
@@ -89,6 +103,71 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+
+    def _recompute_mark_positions(self, viewer):
+        if self.table is None or self.table._qtable is None:
+            return
+        if 'world' not in self.table.headers_avail:
+            return
+
+        viewer_id = viewer.reference if viewer.reference is not None else viewer.reference_id
+        viewer_loaded_data = [lyr.layer.label for lyr in viewer.layers]
+        data_labels = self.table._qtable['data_label']
+        viewer_labels = self.table._qtable['viewer']
+        # note: could eventually have a user-provided switch to show markers in other viewers
+        # by just skipping this first viewer_label == viewer_id check
+        in_viewer = [viewer_label == viewer_id and data_label in viewer_loaded_data
+                     for viewer_label, data_label in zip(viewer_labels, data_labels)]
+
+        viewer_mark = self._get_mark(viewer)
+        if not np.any(in_viewer):
+            viewer_mark.x, viewer_mark.y = [], []
+            return
+
+        orig_world_x = np.asarray(self.table._qtable['world'][:, 0][in_viewer])
+        orig_world_y = np.asarray(self.table._qtable['world'][:, 1][in_viewer])
+
+        if self.app._link_type.lower() == 'wcs':
+            # convert from the sky coordinates in the table to pixels via the WCS of the current
+            # reference data
+            new_wcs = viewer.state.reference_data.coords
+            try:
+                new_x, new_y = new_wcs.world_to_pixel_values(orig_world_x*u.deg,
+                                                             orig_world_y*u.deg)
+            except Exception:
+                # fail gracefully
+                new_x, new_y = [], []
+        elif self.app._link_type == 'pixels':
+            # we need to convert based on the WCS of the individual data layers on which each mark
+            # was first created
+            new_x, new_y = np.zeros_like(orig_world_x), np.zeros_like(orig_world_y)
+            for data_label in np.unique(data_labels[in_viewer]):
+                these = data_labels[in_viewer] == data_label
+                if not np.any(these):
+                    continue
+                wcs = self.app.data_collection[data_label].coords
+                try:
+                    new_x[these], new_y[these] = wcs.world_to_pixel_values(orig_world_x[these]*u.deg,  # noqa
+                                                                           orig_world_y[these]*u.deg)  # noqa
+                except Exception:
+                    # fail gracefully
+                    new_x, new_y = [], []
+                    break
+        else:
+            raise NotImplementedError(f"link_type {self.app._link_type} not implemented")
+
+        # check for entries that do not correspond to a layer or only have pixel coordinates
+        pixel_only_inds = data_labels == ''
+        if np.any(pixel_only_inds):
+            # TODO: should we rescale these since pixel coordinates when linked by WCS are always
+            # on the range 0-1 because of the orientation layer?  Or hide the pixel option in the
+            # cycler when WCS-linked?
+            pixel_x = np.asarray(self.table._qtable['pixel'][:, 0])
+            pixel_y = np.asarray(self.table._qtable['pixel'][:, 1])
+            new_x = np.append(new_x, pixel_x[pixel_only_inds])
+            new_y = np.append(new_y, pixel_y[pixel_only_inds])
+
+        viewer_mark.x, viewer_mark.y = new_x, new_y
 
     def _get_mark(self, viewer):
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, MarkersMark)]
@@ -148,6 +227,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             x, y = row_info['axes_x'], row_info['axes_y']
             self._get_mark(viewer).append_xy(getattr(x, 'value', x), getattr(y, 'value', y))
 
+            self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
+
     def clear_table(self):
         """
         Clear all entries/markers from the current table.
@@ -155,3 +236,5 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         super().clear_table()
         for mark in self.marks.values():
             mark.clear()
+
+        self.hub.broadcast(MarkersPluginUpdate(table_length=0, sender=self))

@@ -1,13 +1,10 @@
+import operator
 import os
 import pathlib
 import re
 import uuid
 import warnings
-import operator
-
-from ipywidgets import widget_serialization
 import ipyvue
-
 from astropy import units as u
 from astropy.nddata import NDData
 from astropy.io import fits
@@ -15,13 +12,9 @@ from astropy.time import Time
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-from traitlets import Dict, Bool, Unicode, Any
-from specutils import Spectrum1D, SpectralRegion
 import matplotlib.cm as cm
 import numpy as np
-
-from glue.config import colormaps
-from glue.config import settings as glue_settings
+from glue.config import colormaps, settings as glue_settings
 from glue.core import HubListener
 from glue.core.link_helpers import LinkSame, LinkSameWithUnits
 from glue.core.message import (DataCollectionAddMessage,
@@ -29,18 +22,22 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetCreateMessage,
                                SubsetUpdateMessage,
                                SubsetDeleteMessage)
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.state_objects import State
 from glue.core.subset import (RangeSubsetState, RoiSubsetState,
                               CompositeSubsetState, InvertState)
-from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.units import unit_converter
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
-from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.common.tools import TrueCircularROI
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
+from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
+from ipywidgets import widget_serialization
+from traitlets import Dict, Bool, Unicode, Any
+from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz import __version__
 from jdaviz import style_registry
@@ -49,12 +46,12 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
-                                ViewerRenamedMessage)
+                                ViewerRenamedMessage, ChangeRefDataMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import SnackbarQueue, alpha_index, MultiMaskSubsetState
-from ipypopout import PopoutButton
+from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
+                          MultiMaskSubsetState)
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS']
 
@@ -209,7 +206,9 @@ class ApplicationState(State):
 
     icons = DictCallbackProperty({
         'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
-        'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')
+        'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml'),
+        'nuer': read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml'),
+        'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml')
     }, docstring="Custom application icons")
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
@@ -305,6 +304,12 @@ class Application(VuetifyTemplate, HubListener):
         # If true, link data on load. If false, do not link data to speed up
         # data loading
         self.auto_link = kwargs.pop('auto_link', True)
+
+        # Imviz linking
+        self._wcs_only_label = "_WCS_ONLY"
+        self._link_type = 'pixels'
+        if self.config == "imviz":
+            self._wcs_use_affine = None
 
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
@@ -465,14 +470,101 @@ class Application(VuetifyTemplate, HubListener):
     def _on_layers_changed(self, msg):
         if hasattr(msg, 'data'):
             layer_name = msg.data.label
+            is_wcs_only = msg.data.meta.get(self._wcs_only_label, False)
         elif hasattr(msg, 'subset'):
             layer_name = msg.subset.label
+            is_wcs_only = False
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
+        wcs_only_refdata_icon = ''  # blank - might be replaced with custom icon in the future
+        # any changes here should also be manually reflected in orientation.vue
+        orientation_icons = {'Default orientation': 'mdi-image-outline',
+                             'North-up, East-left': 'nuel',
+                             'North-up, East-right': 'nuer'}
+
         if layer_name not in self.state.layer_icons:
-            self.state.layer_icons = {**self.state.layer_icons,
-                                      layer_name: alpha_index(len(self.state.layer_icons))}
+            if is_wcs_only:
+                self.state.layer_icons = {**self.state.layer_icons,
+                                          layer_name: orientation_icons.get(layer_name,
+                                                                            wcs_only_refdata_icon)}
+            else:
+                self.state.layer_icons = {
+                    **self.state.layer_icons,
+                    layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items()
+                                                 if not ic.startswith('mdi-')]))
+                }
+
+    def _change_reference_data(self, new_refdata_label, viewer_id=None):
+        """
+        Change reference data to Data with ``data_label``.
+        This does not work on data without WCS.
+        """
+        if self.config != 'imviz':
+            # this method is only meant for Imviz for now
+            return
+
+        if viewer_id is None:
+            viewer = self._jdaviz_helper.default_viewer._obj
+        else:
+            viewer = self.get_viewer(viewer_id)
+
+        old_refdata = viewer.state.reference_data
+
+        if old_refdata is not None and ((new_refdata_label == old_refdata.label)
+                                        or (old_refdata.coords is None)):
+            # if there's no refdata change nor WCS, don't do anything:
+            return
+
+        if old_refdata is None:
+            return
+
+        # locate the central coordinate of old refdata in this viewer:
+        sky_cen = viewer._get_center_skycoord()
+
+        # estimate FOV in the viewer with old reference data:
+        fov_sky_init = viewer._get_fov()
+
+        new_refdata = self.data_collection[new_refdata_label]
+
+        # make sure new refdata can be selected:
+        refdata_choices = [choice.label for choice in viewer.state.ref_data_helper.choices]
+        if new_refdata_label not in refdata_choices:
+            viewer.state.ref_data_helper.append_data(new_refdata)
+        viewer.state.ref_data_helper.refresh()
+
+        # set the new reference data in the viewer:
+        viewer.state.reference_data = new_refdata
+
+        # also update the viewer item's reference data label:
+        viewer_ref = viewer.reference
+        viewer_item = self._get_viewer_item(viewer_ref)
+        viewer_item['reference_data_label'] = new_refdata.label
+
+        self.hub.broadcast(ChangeRefDataMessage(
+            new_refdata,
+            viewer,
+            viewer_id=viewer.reference,
+            old=old_refdata,
+            sender=self))
+
+        if (
+            all('_WCS_ONLY' in refdata.meta for refdata in [old_refdata, new_refdata]) and
+            viewer.shape is not None
+        ):
+            # adjust zoom to account for new refdata if both the
+            # old and new refdata are WCS-only layers
+            # (which also ensures zoom_level is already determined):
+            fov_sky_final = viewer._get_fov()
+            viewer.zoom(
+                float(fov_sky_final / fov_sky_init)
+            )
+
+        # only re-center the viewer if all data layers have WCS:
+        has_wcs_per_data = [data_has_valid_wcs(d) for d in viewer.data()]
+        if all(has_wcs_per_data):
+            # re-center the viewer on previous location.
+            viewer.center_on(sky_cen)
 
     def _link_new_data(self, reference_data=None, data_to_be_linked=None):
         """
@@ -681,6 +773,17 @@ class Application(VuetifyTemplate, HubListener):
         """
         return self._viewer_store.get(vid)
 
+    def _get_wcs_from_subset(self, subset_state):
+        """ Usually WCS is subset.parent.coords, except special cubeviz case."""
+
+        if self.config == 'cubeviz':
+            parent_data = subset_state.attributes[0].parent
+            wcs = parent_data.meta.get("_orig_spatial_wcs", None)
+        else:
+            wcs = subset_state.xatt.parent.coords
+
+        return wcs
+
     def get_subsets(self, subset_name=None, spectral_only=False,
                     spatial_only=False, object_only=False,
                     simplify_spectral=True, use_display_units=False,
@@ -737,7 +840,6 @@ class Application(VuetifyTemplate, HubListener):
                                                      get_sky_regions=include_sky_region)
 
             elif isinstance(subset.subset_state, RoiSubsetState):
-
                 subset_region = self._get_roi_subset_definition(subset.subset_state,
                                                                 to_sky=include_sky_region)
 
@@ -869,11 +971,7 @@ class Application(VuetifyTemplate, HubListener):
 
         wcs = None
         if to_sky:
-            if self.config == 'cubeviz':
-                parent_data = subset_state.attributes[0].parent
-                wcs = parent_data.meta.get("_orig_spatial_wcs", None)
-            else:
-                wcs = subset_state.xatt.parent.coords  # imviz, try getting WCS from subset data
+            wcs = self._get_wcs_from_subset(subset_state)
 
         # if no spatial wcs on subset, we have to skip computing sky region for this subset
         # but want to do so without raising an error (since many subsets could be requested)
@@ -1698,7 +1796,7 @@ class Application(VuetifyTemplate, HubListener):
 
                     # Translate bounds through WCS if needed
                     if (self.config == "imviz" and
-                            self._jdaviz_helper.plugins["Links Control"].link_type == "WCS"):
+                            self._jdaviz_helper.plugins["Orientation"].link_type == "WCS"):
                         # Get the correct link to use for translation
                         roi = subset_state.roi
                         if type(roi) in (CircularROI, CircularAnnulusROI,
@@ -1792,6 +1890,12 @@ class Application(VuetifyTemplate, HubListener):
                                  self._get_data_item_by_id(event['item_id'])['name'],
                                  visible=event['visible'], replace=event.get('replace', False))
 
+    def vue_change_reference_data(self, event):
+        self._change_reference_data(
+            self._get_data_item_by_id(event['item_id'])['name'],
+            viewer_id=self._get_viewer_item(event['id'])['name']
+        )
+
     def set_data_visibility(self, viewer_reference, data_label, visible=True, replace=False):
         """
         Set the visibility of the layers corresponding to ``data_label`` in a given viewer.
@@ -1806,7 +1910,7 @@ class Application(VuetifyTemplate, HubListener):
         visible : bool
             Whether to set the layer(s) to visible.
         replace : bool
-            Whether to disable the visilility of all other layers in the viewer
+            Whether to disable the visibility of all other layers in the viewer
         """
         viewer_item = self._get_viewer_item(viewer_reference)
         viewer_id = viewer_item['id']
@@ -1843,8 +1947,12 @@ class Application(VuetifyTemplate, HubListener):
 
         # set visibility state of all applicable layers
         for layer in viewer.layers:
+            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
             if layer.layer.data.label == data_label:
-                if visible and not layer.visible:
+                if layer_is_wcs_only:
+                    layer.visible = False
+                    layer.update()
+                elif visible and not layer.visible:
                     layer.visible = True
                     layer.update()
                 else:
@@ -1865,6 +1973,15 @@ class Application(VuetifyTemplate, HubListener):
             for id in selected_items:
                 if id != data_id:
                     selected_items[id] = 'hidden'
+
+        # remove WCS-only data from selected items, add to wcs_only_layers:
+        for layer in viewer.layers:
+            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
+            if layer.layer.data.label == data_label and layer_is_wcs_only:
+                layer.visible = False
+                if data_label not in viewer.state.wcs_only_layers:
+                    viewer.state.wcs_only_layers.append(data_label)
+                selected_items.pop(data_id)
 
         # Sets the plot axes labels to be the units of the most recently
         # active data.
@@ -1899,8 +2016,8 @@ class Application(VuetifyTemplate, HubListener):
         # the reference data (which would leave 0 external_links).
         if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
             if self.config == "imviz" and imviz_refdata:
-                link_type = self._jdaviz_helper.plugins["Links Control"].link_type.selected.lower()
-                self._jdaviz_helper.link_data(link_type=link_type, error_on_fail=True)
+                link_type = self._jdaviz_helper.plugins["Orientation"].link_type.selected.lower()
+                self._jdaviz_helper.link_data(link_type=link_type)
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():
                     viewer = self.get_viewer(viewer_ref)
@@ -1983,11 +2100,15 @@ class Application(VuetifyTemplate, HubListener):
     def _create_data_item(self, data):
         ndims = len(data.shape)
         wcsaxes = data.meta.get('WCSAXES', None)
+        wcs_only = data.meta.get(self._wcs_only_label, False)
         if wcsaxes is None:
             # then we'll need to determine type another way, we want to avoid
             # this when we can though since its not as cheap
             component_ids = [str(c) for c in data.component_ids()]
-        if data.label == 'MOS Table':
+
+        if wcs_only:
+            typ = 'wcs-only'
+        elif data.label == 'MOS Table':
             typ = 'table'
         elif 'Trace' in data.meta:
             typ = 'trace'
@@ -2032,6 +2153,8 @@ class Application(VuetifyTemplate, HubListener):
             'locked': False,
             'ndims': data.ndim,
             'type': typ,
+            'has_wcs': data_has_valid_wcs(data),
+            'is_astrowidgets_markers_table': (self.config == "imviz") and layer_is_table_data(data),
             'meta': {k: v for k, v in data.meta.items() if _expose_meta(k)},
             'children': []}
 
@@ -2110,6 +2233,12 @@ class Application(VuetifyTemplate, HubListener):
 
         self.state.viewer_icons.setdefault(vid, len(self.state.viewer_icons)+1)
 
+        wcs_only_layers = getattr(viewer.state, 'wcs_only_layers', [])
+
+        reference_data = getattr(viewer.state, 'reference_data', None)
+        reference_data_label = getattr(reference_data, 'label', None)
+        linked_by_wcs = getattr(viewer.state, 'linked_by_wcs', False)
+
         return {
             'id': vid,
             'name': name or vid,
@@ -2119,14 +2248,18 @@ class Application(VuetifyTemplate, HubListener):
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
+            'wcs_only_layers': wcs_only_layers,
+            'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
             'config': self.config,  # give viewer access to app config/layout
             'data_open': False,
             'collapse': True,
-            'reference': reference}
+            'reference': reference or name or vid,
+            'linked_by_wcs': linked_by_wcs,
+        }
 
-    def _on_new_viewer(self, msg, vid=None, name=None):
+    def _on_new_viewer(self, msg, vid=None, name=None, add_layers_to_viewer=False):
         """
         Callback for when the `~jdaviz.core.events.NewViewerMessage` message is
         raised. This method asks the application handler to generate a new
@@ -2150,21 +2283,29 @@ class Application(VuetifyTemplate, HubListener):
         viewer : `~glue_jupyter.bqplot.common.BqplotBaseView`
             The new viewer instance.
         """
+
         viewer = self._application_handler.new_data_viewer(
             msg.cls, data=msg.data, show=False)
         viewer.figure_widget.layout.height = '100%'
 
+        linked_by_wcs = self._link_type == 'wcs'
+
         if hasattr(viewer.state, 'linked_by_wcs'):
-            links_control_plugin = self._jdaviz_helper.plugins.get('Links Control', None)
-            if links_control_plugin is not None:
-                viewer.state.linked_by_wcs = links_control_plugin.link_type.selected == 'WCS'
+            orientation_plugin = self._jdaviz_helper.plugins.get('Orientation', None)
+            if orientation_plugin is not None:
+                linked_by_wcs = orientation_plugin.link_type.selected == 'WCS'
             elif len(self._viewer_store):
                 # The plugin would only not exist for instances of Imviz where the user has
-                # intentionally removed the Links Control plugin, but in that case we will
+                # intentionally removed the Orientation plugin, but in that case we will
                 # adopt "linked_by_wcs" from the first (assuming all are the same)
                 # NOTE: deleting the default viewer is forbidden both by API and UI, but if
                 # for some reason that was the case here, linked_by_wcs will default to False
-                viewer.state.linked_by_wcs = list(self._viewer_store.values())[0].state.linked_by_wcs  # noqa
+                linked_by_wcs = self._jdaviz_helper.default_viewer._obj.state.linked_by_wcs
+            viewer.state.linked_by_wcs = linked_by_wcs
+
+        if linked_by_wcs:
+            from jdaviz.configs.imviz.helper import get_wcs_only_layer_labels
+            viewer.state.wcs_only_layers = get_wcs_only_layer_labels(self)
 
         if msg.x_attr is not None:
             x = msg.data.id[msg.x_attr]
@@ -2176,6 +2317,12 @@ class Application(VuetifyTemplate, HubListener):
         new_viewer_item = self._create_viewer_item(
             viewer=viewer, vid=vid, name=name, reference=name
         )
+
+        ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
+        new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
+
+        if hasattr(viewer, 'reference'):
+            viewer.state.reference_data = ref_data
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
@@ -2190,6 +2337,11 @@ class Application(VuetifyTemplate, HubListener):
         self.state.stack_items.append(new_stack_item)
 
         self.session.application.viewers.append(viewer)
+
+        if add_layers_to_viewer:
+            for layer_label in add_layers_to_viewer:
+                if hasattr(viewer, 'reference'):
+                    self.add_data_to_viewer(viewer.reference, layer_label)
 
         # Send out a toast message
         self.hub.broadcast(ViewerAddedMessage(vid, sender=self))

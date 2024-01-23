@@ -20,7 +20,7 @@ from regions import (CirclePixelRegion, CircleSkyRegion,
 __all__ = ['regions2roi', 'regions2aperture', 'aperture2regions']
 
 
-def _get_region_from_spatial_subset(plugin_obj, subset_state, dataset=None):
+def _get_region_from_spatial_subset(plugin_obj, subset_state):
     """Convert the given ``glue`` ROI subset state to ``regions`` shape.
 
     .. note:: This is for internal use only in Imviz plugins.
@@ -30,15 +30,10 @@ def _get_region_from_spatial_subset(plugin_obj, subset_state, dataset=None):
     plugin_obj : obj
         Plugin instance that needs this translation.
         The plugin is assumed to have a special setup that gives
-        it access to these attributes: ``app`` and ``dataset_selected``.
-        The ``app._jdaviz_helper.get_link_type`` method must also
-        exist.
+        it access to these attributes: ``app`` and ``app._link_type``.
 
     subset_state : obj
         ROI subset state to translate.
-
-    dataset : string, optional
-        Name of the dataset.  If not provided, will look for ``plugin_obj.dataset_selected``.
 
     Returns
     -------
@@ -56,12 +51,8 @@ def _get_region_from_spatial_subset(plugin_obj, subset_state, dataset=None):
     # Subset is defined against its parent. This is not necessarily
     # the current viewer reference data, which can be changed.
 
-    if dataset is None:
-        dataset = plugin_obj.dataset_selected
-
-    # See https://github.com/spacetelescope/jdaviz/issues/2230
-    link_type = plugin_obj.app._jdaviz_helper.get_link_type(
-        subset_state.xatt.parent.label, dataset)
+    # Mixed link types no longer allowed, so just check app setting.
+    link_type = plugin_obj.app._link_type
 
     return roi_subset_state_to_region(subset_state, to_sky=(link_type == 'wcs'))
 

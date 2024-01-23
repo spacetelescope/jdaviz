@@ -96,20 +96,22 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 class TestCenter(BaseImviz_WCS_WCS):
 
     def test_center_on_pix(self):
-        self.imviz.link_data(link_type='wcs', error_on_fail=True)
+        self.imviz.link_data(link_type='wcs')
 
         # This is the second loaded data that is dithered by 1-pix.
         self.viewer.center_on((0, 0))
+        expected_position = [-6.75, 4.25, -5.75, 5.25]
+        rtol = 1e-4
         assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
                          self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-6, 4, -5, 5))
+                        expected_position, rtol=rtol)
 
         # This is the first data.
         self.viewer.blink_once()
         self.viewer.center_on((0, 0))
         assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
                          self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-5, 5, -5, 5))
+                        [-5.75, 5.25, -5.75, 5.25], rtol=rtol)
 
         # Centering by sky on second data.
         self.viewer.blink_once()
@@ -117,7 +119,7 @@ class TestCenter(BaseImviz_WCS_WCS):
         self.viewer.center_on(sky)
         assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
                          self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-6, 4, -5, 5))
+                        expected_position, rtol=rtol)
 
 
 class TestZoom(BaseImviz_WCS_NoWCS):

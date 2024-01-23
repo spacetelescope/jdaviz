@@ -13,7 +13,6 @@ from inspect import isclass
 
 import numpy as np
 import astropy.units as u
-from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.nddata import CCDData, StdDevUncertainty
 from regions.core.core import Region
 from glue.core import HubListener
@@ -28,6 +27,7 @@ from specutils import Spectrum1D, SpectralRegion
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
 from jdaviz.core.template_mixin import show_widget
+from jdaviz.utils import data_has_valid_wcs
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper']
 
@@ -131,8 +131,17 @@ class ConfigHelper(HubListener):
         plugins : dict
             dict of plugin objects
         """
-        return {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
-                for item in self.app.state.tray_items}
+        plugins = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
+                   for item in self.app.state.tray_items}
+
+        # handle renamed plugins during deprecation
+        if 'Orientation' in plugins:
+            plugins['Links Control'] = plugins['Orientation']._obj.user_api
+            plugins['Links Control']._deprecation_msg = 'in the future, the formerly named \"Links Control\" plugin will only be available by its new name: \"Orientation\".'  # noqa
+        if 'Canvas Rotation' in plugins:
+            plugins['Canvas Rotation']._deprecation_msg = 'this functionality will be removed in favor of the implementation for rotation in the \"Orientation\" plugin.'  # noqa
+
+        return plugins
 
     @property
     def viewers(self):
@@ -769,6 +778,14 @@ class ImageConfigHelper(ConfigHelper):
                 bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
                 continue
 
+            if (isinstance(region, (CircularAperture, EllipticalAperture,
+                                    RectangularAperture, CircularAnnulus,
+                                    CirclePixelRegion, EllipsePixelRegion,
+                                    RectanglePixelRegion, CircleAnnulusPixelRegion))
+                    and self.app._link_type == "wcs"):
+                bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+                continue
+
             # photutils: Convert to regions shape first
             if isinstance(region, (CircularAperture, SkyCircularAperture,
                                    EllipticalAperture, SkyEllipticalAperture,
@@ -862,8 +879,11 @@ class ImageConfigHelper(ConfigHelper):
             ``regions`` objects.
 
         """
+        from glue_astronomy.translators.regions import roi_subset_state_to_region
+
         regions = {}
         failed_regs = set()
+        to_sky = self.app._link_type == 'wcs'
 
         # Subset is global, so we just use default viewer.
         for lyr in self.default_viewer._obj.layers:
@@ -880,8 +900,11 @@ class ImageConfigHelper(ConfigHelper):
                 continue
 
             try:
-                region = subset_data.data.get_selection_definition(
-                    subset_id=subset_label, format='astropy-regions')
+                if self.app.config == "imviz" and to_sky:
+                    region = roi_subset_state_to_region(subset_data.subset_state, to_sky=to_sky)
+                else:
+                    region = subset_data.data.get_selection_definition(
+                        subset_id=subset_label, format='astropy-regions')
             except (NotImplementedError, ValueError):
                 failed_regs.add(subset_label)
             else:
@@ -922,14 +945,6 @@ class ImageConfigHelper(ConfigHelper):
         """Delete all regions."""
         for subset_grp in self.app.data_collection.subset_groups:  # should be a copy
             self.app.data_collection.remove_subset_group(subset_grp)
-
-
-def data_has_valid_wcs(data, ndim=None):
-    """Check if given glue Data has WCS that is compatible with APE 14."""
-    status = hasattr(data, 'coords') and isinstance(data.coords, BaseHighLevelWCS)
-    if ndim is not None:
-        status = status and data.coords.world_n_dim == ndim
-    return status
 
 
 def _next_subset_num(label_prefix, subset_groups):

@@ -10,7 +10,16 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy import units as u
+from astropy import coordinates as coord
 from astropy.coordinates import SkyCoord
+from astropy.modeling import models
+from astropy.nddata import NDData
+from astropy.wcs import WCS
+from astropy.wcs.utils import proj_plane_pixel_scales
+
+from gwcs import coordinate_frames as cf
+from gwcs.wcs import WCS as GWCS
+
 from matplotlib.patches import Polygon
 
 __all__ = ['get_compass_info', 'draw_compass_mpl']
@@ -275,3 +284,312 @@ def data_outside_gwcs_bounding_box(data, x, y):
         if not (bb_xmin <= x <= bb_xmax and bb_ymin <= y <= bb_ymax):
             outside_bounding_box = True  # Has to be Python bool, not Numpy bool_
     return outside_bounding_box
+
+
+def _rotated_gwcs(
+    center_world_coord,
+    rotation_angle,
+    pixel_scales,
+    cdelt_signs,
+    refdata_shape=(10, 10),
+    image_shape=None
+):
+    # based on ``gwcs_simple_imaging_units`` in gwcs:
+    #   https://github.com/spacetelescope/gwcs/blob/
+    #   eec9a2b6de8356495f405de3dc6531538589ce5d/gwcs/tests/conftest.py#L165
+    image_extent = u.Quantity(image_shape, u.pix) * u.Quantity(pixel_scales)
+    refdata_extent = image_extent.max()
+    pixel_scales = refdata_extent / u.Quantity(refdata_shape, u.pix)
+
+    # multiplying by +/-1 can flip north/south or east/west:
+    flip_direction = (
+        models.Multiply(cdelt_signs[0]) &
+        models.Multiply(cdelt_signs[1])
+    )
+
+    # shift to compensate for the difference between the center and corner:
+    shift = (
+        models.Shift((0.5 - refdata_shape[0])/2 * u.pix) &
+        models.Shift((0.5 - refdata_shape[1])/2 * u.pix)
+    )
+
+    # rotate field of view:
+    rho = rotation_angle
+    sin_rho = np.sin(rho.to_value(u.rad))
+    cos_rho = np.cos(rho.to_value(u.rad))
+    rotation_matrix = np.array([[cos_rho, -sin_rho],
+                                [sin_rho, cos_rho]])
+    rotation = models.AffineTransformation2D(
+        rotation_matrix * u.deg, translation=[0, 0] * u.deg
+    )
+    rotation.input_units_equivalencies = {
+        "x": u.pixel_scale(pixel_scales[0]),
+        "y": u.pixel_scale(pixel_scales[1])
+    }
+    rotation.inverse = models.AffineTransformation2D(
+        np.linalg.inv(rotation_matrix) * u.pix, translation=[0, 0] * u.pix
+    )
+    rotation.inverse.input_units_equivalencies = {
+        "x": u.pixel_scale(1 / pixel_scales[0]),
+        "y": u.pixel_scale(1 / pixel_scales[1])
+    }
+
+    tan = models.Pix2Sky_TAN()
+    celestial_rotation = models.RotateNative2Celestial(
+        center_world_coord.ra, center_world_coord.dec, 180 * u.deg
+    )
+
+    det2sky = shift | flip_direction | rotation | tan | celestial_rotation
+    det2sky.name = "linear_transform"
+
+    detector_frame = cf.Frame2D(
+        name="detector",
+        axes_names=("x", "y"),
+        unit=(u.pix, u.pix)
+    )
+    sky_frame = cf.CelestialFrame(
+        reference_frame=coord.ICRS(),
+        name='icrs',
+        unit=(u.deg, u.deg)
+    )
+    pipeline = [
+        (detector_frame, det2sky),
+        (sky_frame, None)
+    ]
+
+    return GWCS(pipeline)
+
+
+def _prepare_rotated_nddata(real_image_shape, wcs, rotation_angle, refdata_shape,
+                            wcs_only_key="_WCS_ONLY", data=None,
+                            cdelt_signs=None):
+    cdelt = None
+    # compute the x/y pixel scales from the WCS:
+    if hasattr(wcs, 'pixel_scale_matrix'):
+        pixel_scales = u.Quantity([
+            value * (unit / u.pix)
+            for value, unit in zip(
+                proj_plane_pixel_scales(wcs), wcs.wcs.cunit
+            )
+        ])
+        if getattr(wcs.wcs, 'cd', None) is not None:
+            cdelt = np.diag(wcs.wcs.cd)
+        else:
+            cdelt = wcs.wcs.cdelt
+
+    elif data.meta.get(wcs_only_key, False):
+        # WCS-only layers have pixel scales in meta:
+        pixel_scales = u.Quantity(data.meta['_pixel_scales'])
+
+    elif 'wcsinfo' in data.meta and 'wcs' in data.meta and 'ra_ref' in data.meta['wcsinfo']:
+        # GWCS doesn't yet have a pixel scale attr, so approximate
+        # its behavior using the pixel scale method from jwst:
+        pixel_scales = (2 * [compute_scale(
+            data.meta['wcs'],
+            (data.meta['wcsinfo']['ra_ref'],
+             data.meta['wcsinfo']['dec_ref']),
+            1
+        )]) * u.deg / u.pix
+    else:
+        # fall back on CRVAL cards if they're available
+        wcsinfo = (
+            data.meta.get('_primary_header', None) or
+            data.meta.get('wcsinfo', None) or
+            data.meta.get('wcs', None)
+        )
+        if wcsinfo is not None and not isinstance(wcsinfo, GWCS):
+            crval1 = float(wcsinfo.get('CRVAL1', wcsinfo.get('crval1')))
+            crval2 = float(wcsinfo.get('CRVAL2', wcsinfo.get('crval2')))
+            cdelt = [
+                float(wcsinfo.get('CDELT1', wcsinfo.get('cdelt1'))),
+                float(wcsinfo.get('CDELT2', wcsinfo.get('cdelt2')))
+            ]
+            unit = u.Unit(wcsinfo.get('CUNIT1', wcsinfo.get('cunit1')))
+            fiducial = [crval1, crval2] * unit
+            pixel_scales = (2 * [compute_scale(
+                WCS(data.meta['_primary_header'])
+                if 'wcs' not in data.meta else data.meta['wcs'],
+                fiducial, None, 1
+            )]) * u.deg / u.pix
+        else:
+            # fall back on simple approximation:
+            compare_pixel_coords = [[0, 0], [0, 1]] * u.pix
+            compare_sky_coords = data.coords.pixel_to_world(*compare_pixel_coords)
+            separation = compare_sky_coords[0].separation(compare_sky_coords[1])
+            pixel_scales = u.Quantity([separation, separation]) / u.pix
+
+    # flip e.g. RA or Dec axes?
+    if cdelt_signs is None and cdelt is not None:
+        cdelt_signs = np.sign(cdelt)
+
+    # get the world coordinates of the pixel origin
+    center_pixel_coord = np.array(real_image_shape) / 2 * u.pix
+    center_world_coord = wcs.pixel_to_world(*center_pixel_coord[::-1])
+    rotation_angle = coord.Angle(rotation_angle).wrap_at(360 * u.deg)
+
+    # create a GWCS centered on ``filename``,
+    # and rotated by ``rotation_angle``:
+    new_rotated_gwcs = _rotated_gwcs(
+        center_world_coord,
+        rotation_angle,
+        pixel_scales,
+        cdelt_signs,
+        refdata_shape=refdata_shape,
+        image_shape=real_image_shape
+    )
+
+    # create a fake NDData (we use arange so data boundaries show up in Imviz
+    # if it ever is accidentally exposed) with the rotated GWCS:
+    placeholder_data = np.nan * np.ones(refdata_shape)
+
+    ndd = NDData(
+        data=placeholder_data,
+        wcs=new_rotated_gwcs,
+        meta={wcs_only_key: True, '_pixel_scales': pixel_scales}
+    )
+    return ndd
+
+
+def _get_rotated_nddata_from_label(
+    app, data_label, rotation_angle, refdata_shape=(10, 10),
+    cdelt_signs=None, target_wcs_east_left=True, target_wcs_north_up=True
+):
+    """
+    Create a synthetic NDData which stores GWCS that approximate
+    the WCS in the coords attr of the Data object with label ``data_label``
+    loaded into ``app``.
+
+    This method is useful for rotating pre-loaded datasets when
+    combined with ``app._change_reference_data(data_label)``.
+
+    Parameters
+    ----------
+    app : `~jdaviz.Application`
+        App instance containing ``data_label``.
+    data_label : str
+        Data label for the Data to rotate.
+    rotation_angle : `~astropy.units.Quantity`
+        Angle to rotate the image counter-clockwise from its
+        original orientation.
+    refdata_shape : tuple
+        Shape of the reference data array.
+
+    Returns
+    -------
+    ndd : `~astropy.nddata.NDData`
+        Contains rotated WCS and meaningless data.
+
+    Raises
+    ------
+    ValueError
+        Data has no WCS.
+    """
+    data = app.data_collection[data_label]
+    if data.coords is None:
+        raise ValueError(f"{data_label} has no WCS for rotation.")
+
+    # transform WCS relative to the first loaded data entry:
+    wcs = data.coords
+    degn, dege, flip = get_compass_info(data.coords, data.shape)[-3:]
+    has_east_left = flip
+    has_north_up = True  # assumed
+
+    if isinstance(wcs, GWCS):
+        lat_axis = wcs.world_axis_names.index("lat")
+        lon_axis = wcs.world_axis_names.index("lon")
+    else:  # FITS WCS
+        lat_axis = wcs.wcs.lat
+        lon_axis = wcs.wcs.lng
+
+    if (
+        not has_east_left and target_wcs_east_left and
+        'imviz-compass' in [item['name'] for item in app.state.tray_items]
+    ):
+        # if an east/west flip is necessary, pass that along to the compass:
+        compass_plugin = app.get_tray_item_from_name('imviz-compass')
+        compass_plugin.canvas_flip_horizontal = not compass_plugin.canvas_flip_horizontal
+
+    if cdelt_signs is None:
+        cdelt_signs = [None, None]
+        cdelt_signs[lon_axis] = (
+            1 if ((has_east_left and target_wcs_east_left) or
+                  (not has_east_left and not target_wcs_east_left)) else -1
+        )
+        cdelt_signs[lat_axis] = (
+            1 if ((has_north_up and target_wcs_north_up) or
+                  (not has_north_up and not target_wcs_north_up)) else -1
+        )
+    else:
+        if has_east_left != target_wcs_east_left:
+            cdelt_signs[lon_axis] = -1
+        if has_north_up != target_wcs_north_up:
+            cdelt_signs[lat_axis] = -1
+
+    return _prepare_rotated_nddata(
+        data.shape,
+        data.coords,
+        rotation_angle,
+        refdata_shape,
+        wcs_only_key=app._wcs_only_label,
+        data=data,
+        cdelt_signs=cdelt_signs
+    )
+
+
+# This method comes from the jwst package:
+# https://github.com/spacetelescope/jwst/blob/95467186aca9784ece9451b33d437d80d550a795/jwst/assign_wcs/util.py#L103
+def compute_scale(wcs, fiducial, disp_axis, pscale_ratio=1):
+    """Compute scaling transform.
+
+    Parameters
+    ----------
+    wcs : `~gwcs.wcs.WCS`
+        Reference WCS object from which to compute a scaling factor.
+
+    fiducial : tuple
+        Input fiducial of (RA, DEC) or (RA, DEC, Wavelength) used in calculating reference points.
+
+    disp_axis : int
+        Dispersion axis integer. Assumes the same convention as `wcsinfo.dispersion_direction`
+
+    pscale_ratio : int
+        Ratio of input to output pixel scale
+
+    Returns
+    -------
+    scale : float
+        Scaling factor for x and y or cross-dispersion direction.
+
+    """
+    spectral = 'SPECTRAL' in wcs.output_frame.axes_type
+
+    if spectral and disp_axis is None:
+        raise ValueError('If input WCS is spectral, a disp_axis must be given')
+
+    crpix = np.array(wcs.invert(*fiducial))
+
+    delta = np.zeros_like(crpix)
+    spatial_idx = np.where(np.array(wcs.output_frame.axes_type) == 'SPATIAL')[0]
+    delta[spatial_idx[0]] = 1
+
+    crpix_with_offsets = np.vstack((crpix, crpix + delta, crpix + np.roll(delta, 1))).T
+    crval_with_offsets = wcs(*crpix_with_offsets, with_bounding_box=False)
+
+    coords = SkyCoord(
+        ra=crval_with_offsets[spatial_idx[0]],
+        dec=crval_with_offsets[spatial_idx[1]],
+        unit="deg"
+    )
+    xscale = np.abs(coords[0].separation(coords[1]).value)
+    yscale = np.abs(coords[0].separation(coords[2]).value)
+
+    if pscale_ratio is not None:
+        xscale *= pscale_ratio
+        yscale *= pscale_ratio
+
+    if spectral:
+        # Assuming scale doesn't change with wavelength
+        # Assuming disp_axis is consistent with DataModel.meta.wcsinfo.dispersion.direction
+        return yscale if disp_axis == 1 else xscale
+
+    return np.sqrt(xscale * yscale)

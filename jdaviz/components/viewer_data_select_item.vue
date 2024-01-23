@@ -1,6 +1,19 @@
 <template>
   <div style="display: contents">
-    <div v-if="isSelected">
+    <div v-if="is_wcs_only">
+      <j-tooltip
+        :tooltipcontent="isRefData() ? 'Current viewer orientation' : 'Set as viewer orientation'"
+        span_style="width: 36px"
+      >
+        <v-btn 
+          icon
+          :color="isRefData() ? 'accent' : 'default'"
+          @click="selectRefData">
+            <v-icon>{{isRefData() ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
+        </v-btn>
+      </j-tooltip>
+    </div>
+    <div v-else-if="isSelected">
       <j-tooltip :tipid="multi_select ? 'viewer-data-select' : 'viewer-data-radio'">
         <v-btn 
           icon
@@ -11,9 +24,9 @@
         </v-btn>
       </j-tooltip>
     </div>
-    <div v-else>
+    <div v-else-if="!linkedByWcs() || item.has_wcs || item.is_astrowidgets_markers_table">
       <j-tooltip tipid="viewer-data-enable">
-        <v-btn 
+        <v-btn
           icon
           color="default"
           @click="selectClicked">
@@ -21,10 +34,21 @@
         </v-btn>
       </j-tooltip>
     </div>
+    <div v-else>
+      <j-tooltip tipid="viewer-data-nowcs">
+        <v-btn
+          icon
+          color="default"
+          disabled>
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </j-tooltip>
+    </div>
 
-    <j-tooltip :tooltipcontent="'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
-      <j-layer-viewer-icon span_style="margin-left: 4px; margin-right: 4px" :icon="icon" color="#000000DE"></j-layer-viewer-icon>
-      <div class="text-ellipsis-middle" style="font-weight: 500">
+    <j-tooltip :tooltipcontent="is_wcs_only ? '' : 'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
+      <j-layer-viewer-icon span_style="margin-left: 4px;" :icon="icon" :icons="icons" color="#000000DE"></j-layer-viewer-icon>
+
+      <div class="text-ellipsis-middle" style="font-weight: 500;">
         <span>
           {{itemNamePrefix}}
         </span>
@@ -47,7 +71,7 @@
     </div>
 
     <div v-if="isDeletable" style="padding-left: 2px; right: 2px">
-      <j-tooltip tipid='viewer-data-delete'>
+      <j-tooltip :tipid="is_wcs_only ? 'viewer-wcs-delete' : 'viewer-data-delete'">
         <v-btn
           icon
           @click="$emit('data-item-remove', {item_name: item.name, viewer_id: viewer.id})"
@@ -60,7 +84,7 @@
 <script>
 
 module.exports = {
-  props: ['item', 'icon', 'multi_select', 'viewer', 'n_data_entries'],
+  props: ['item', 'icon', 'icons', 'multi_select', 'viewer', 'n_data_entries', 'is_wcs_only'],
   methods: {
     selectClicked() {
       prevVisibleState = this.visibleState
@@ -74,7 +98,20 @@ module.exports = {
         visible: prevVisibleState != 'visible' || (!this.multi_select && this.$props.item.type !== 'trace'),
         replace: !this.multi_select && this.$props.item.type !== 'trace'
       })
-
+    },
+    selectRefData() {
+      if (this.linkedByWcs() && !this.isRefData() && this.is_wcs_only) {
+        this.$emit('change-reference-data', {
+          id: this.$props.viewer.id,
+          item_id: this.$props.item.id
+        })
+      }
+    },
+    isRefData() {
+      return this.$props.viewer.reference_data_label == this.$props.item.name
+    },
+    linkedByWcs() {
+      return this.$props.viewer.linked_by_wcs
     }
   },
   computed: {
@@ -89,7 +126,7 @@ module.exports = {
     itemNameExtension() {
       if (this.$props.item.name.indexOf("[") !== -1) {
         // return the LAST [ and everything FOLLOWING
-        return '['+this.$props.item.name.split('[').slice(-1)
+        return '[' + this.$props.item.name.split('[').slice(-1)
       } else {
         return ''
       }
@@ -139,7 +176,7 @@ module.exports = {
       isMosviz = this.$props.viewer.config === 'mosviz'
       isCubeviz = this.$props.viewer.config === 'cubeviz'
       isPluginData = !(this.$props.item.meta.Plugin === undefined)
-      return notSelected && (isPluginData || (!isLastDataset && !isMosviz && !isCubeviz))
+      return notSelected && (isPluginData || (!isLastDataset && !isMosviz && !isCubeviz)) && (this.$props.item.name !== 'Default orientation')
     },
     selectTipId() {
       if (this.multi_select) {

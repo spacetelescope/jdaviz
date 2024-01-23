@@ -138,10 +138,8 @@ class BaseImviz_WCS_GWCS:
         # Load data into Imviz:
         # 1. Data with FITS WCS and unit.
         # 2. Data with GWCS (rotated w.r.t. FITS WCS) and no unit.
-        # 3. Data without WCS nor unit.
         imviz_helper.load_data(NDData(arr, wcs=w_fits, unit='electron/s'), data_label='fits_wcs')
         imviz_helper.load_data(NDData(arr, wcs=w_gwcs), data_label='gwcs')
-        imviz_helper.load_data(arr, data_label='no_wcs')
 
         self.wcs_1 = w_fits
         self.wcs_2 = w_gwcs
@@ -238,7 +236,7 @@ def create_example_gwcs(shape):
     return gwcs_wcs.WCS(pipeline)
 
 
-def create_wfi_image_model(image_shape, **kwargs):
+def create_wfi_image_model(image_shape=(20, 10), **kwargs):
     """
     Create a dummy Roman WFI ImageModel instance with valid values
     for attributes required by the schema.

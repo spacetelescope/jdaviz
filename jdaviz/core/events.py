@@ -7,8 +7,9 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'SliceSelectSliceMessage',
            'SliceToolStateMessage',
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
-           'MarkersChangedMessage', 'CanvasRotationChangedMessage',
-           'GlobalDisplayUnitChanged']
+           'AstrowidgetMarkersChangedMessage', 'MarkersPluginUpdate',
+           'CanvasRotationChangedMessage',
+           'GlobalDisplayUnitChanged', 'ChangeRefDataMessage']
 
 
 class NewViewerMessage(Message):
@@ -127,6 +128,32 @@ class RemoveDataMessage(Message):
     @property
     def viewer_id(self):
         return self._viewer_id
+
+
+class ChangeRefDataMessage(Message):
+    def __init__(self, data, viewer, viewer_id=None, old=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self._data = data
+        self._viewer = viewer
+        self._viewer_id = viewer_id
+        self._old = old
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def viewer(self):
+        return self._viewer
+
+    @property
+    def viewer_id(self):
+        return self._viewer_id
+
+    @property
+    def old(self):
+        return self._old
 
 
 class SnackbarMessage(Message):
@@ -326,8 +353,8 @@ class ExitBatchLoadMessage(Message):
         super().__init__(*args, **kwargs)
 
 
-class MarkersChangedMessage(Message):
-    '''Message generated when markers are added/removed from an image viewer'''
+class AstrowidgetMarkersChangedMessage(Message):
+    '''Message generated when markers are added/removed from an image viewer via astrowidgets API'''
     def __init__(self, has_markers, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._has_markers = has_markers
@@ -335,6 +362,13 @@ class MarkersChangedMessage(Message):
     @property
     def has_markers(self):
         return self._has_markers
+
+
+class MarkersPluginUpdate(Message):
+    '''Message when the length of the markers plugin table changes'''
+    def __init__(self, table_length, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.table_length = table_length
 
 
 class CanvasRotationChangedMessage(Message):

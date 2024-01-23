@@ -213,7 +213,11 @@ class JdavizViewerMixin:
 
         visible_layers = {}
         for layer in self.state.layers[::-1]:
-            if layer.visible:
+            layer_is_wcs_only = (
+                    hasattr(layer.layer, 'meta') and
+                    layer.layer.meta.get(self.jdaviz_app._wcs_only_label, False)
+            )
+            if layer.visible and not layer_is_wcs_only:
                 prefix_icon, suffix = _get_layer_info(layer)
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),
                                                      'linewidth': _get_layer_linewidth(layer),

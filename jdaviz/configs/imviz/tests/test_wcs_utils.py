@@ -1,5 +1,6 @@
 import gwcs
 import numpy as np
+import pytest
 from astropy import units as u
 from astropy.coordinates import ICRS
 from astropy.modeling import models
@@ -8,6 +9,8 @@ from gwcs import coordinate_frames as cf
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz import wcs_utils
+from jdaviz.configs.imviz.helper import base_wcs_layer_label
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_GWCS
 
 
 def test_simple_fits_wcs():
@@ -104,3 +107,57 @@ def test_simple_gwcs():
                                   1262.0057201165127, 606.2863901330095,
                                   155.2870478938214, -86.89813081941797))
     assert not result[-1]
+
+
+# TODO: Add more tests.
+class TestWCSOnly(BaseImviz_WCS_GWCS):
+
+    # TODO: Replace private API calls with more public ones when available.
+    def test_non_wcs_layer_labels(self):
+        self.imviz.link_data(link_type="wcs")
+        assert len(self.imviz.app.data_collection) == 3
+
+        # Confirm the WCS-only layer is created by WCS-linking .
+        assert len(self.viewer.state.wcs_only_layers) == 1
+
+        # Load a WCS-only layer, bypassing normal labeling scheme.
+        ndd = wcs_utils._get_rotated_nddata_from_label(
+            app=self.imviz.app,
+            data_label="fits_wcs[DATA]",
+            rotation_angle=5 * u.deg
+        )
+        self.imviz.load_data(ndd, data_label='ndd')
+        assert self.imviz.app.data_collection[3].label == 'ndd'
+
+        # Confirm that all data in collection are labeled.
+        assert len(self.imviz.app.state.layer_icons) == 4  # 3 + 1
+
+        # Confirm the new WCS-only layer is logged.
+        assert len(self.viewer.state.wcs_only_layers) == 2
+
+        # Load a second WCS-only layer.
+        ndd2 = wcs_utils._get_rotated_nddata_from_label(
+            app=self.imviz.app,
+            data_label="fits_wcs[DATA]",
+            rotation_angle=45 * u.deg
+        )
+        self.imviz.load_data(ndd2, data_label="rot: 45.00 deg")
+        assert self.imviz.app.data_collection[4].label == "rot: 45.00 deg"
+
+        # Confirm that all data in collection are labeled.
+        assert len(self.imviz.app.data_collection) == 5  # 3 + 2
+        assert len(self.imviz.app.state.layer_icons) == 5
+
+        # Confirm the second WCS-only layer is logged
+        assert len(self.viewer.state.wcs_only_layers) == 3
+
+        # First entry is image data and the default reference data.
+        assert self.imviz.app.state.layer_icons["fits_wcs[DATA]"] == "a"
+        assert self.viewer.state.reference_data.label == base_wcs_layer_label
+
+
+def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):
+    a = np.zeros((2, 2), dtype=np.int8)
+    imviz_helper.load_data(a, data_label="no_wcs")
+    with pytest.raises(ValueError, match=r".*has no WCS for rotation"):
+        wcs_utils._get_rotated_nddata_from_label(imviz_helper.app, "no_wcs", 0 * u.deg)

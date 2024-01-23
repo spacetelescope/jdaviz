@@ -18,7 +18,9 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_No
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
     def test_plugin_wcs_dithered(self):
         self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
-        self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
+
+        reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5).to_sky(self.wcs_1)
+        self.imviz.load_regions(reg)
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
@@ -76,7 +78,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
-        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * (u.pix * u.pix))  # noqa
+        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * (u.pix * u.pix), rtol=1e-4)  # noqa
         assert_array_equal(tbl['pixarea_tot'], None)
         assert_array_equal(tbl['aperture_sum_counts'], None)
         assert_array_equal(tbl['aperture_sum_counts_err'], None)
@@ -104,15 +106,17 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Sky is the same but xcenter different due to dithering.
         # The aperture sum is different too because mask is a little off limit in second image.
-        assert_quantity_allclose(tbl['xcenter'], [4.5, 5.5] * u.pix)
-        assert_quantity_allclose(tbl['ycenter'], 4.5 * u.pix)
+        assert_quantity_allclose(tbl['xcenter'], [4.5, 5.5] * u.pix, rtol=1e-4)
+        assert_quantity_allclose(tbl['ycenter'], 4.5 * u.pix, rtol=1e-4)
         sky = tbl['sky_center']
         assert_allclose(sky.ra.deg, 337.518943)
         assert_allclose(sky.dec.deg, -20.832083)
-        assert_allclose(tbl['sum'], [63.617251, 62.22684693104279])
+        assert_allclose(tbl['sum'], [63.617251, 62.22684693104279], rtol=1e-4)
 
         # Make sure it also works on an ellipse subset.
-        self.imviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 4))
+        reg = EllipsePixelRegion(center=PixCoord(x=4.5, y=2.0), width=9.0, height=4.0).to_sky(self.wcs_1)  # noqa: E501
+        self.imviz.load_regions(reg)
+
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 2'
         phot_plugin.current_plot_type = 'Radial Profile'
@@ -120,20 +124,22 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         tbl = self.imviz.get_aperture_photometry_results()
         assert len(tbl) == 3  # New result is appended
         assert tbl[-1]['id'] == 3
-        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
-        assert_quantity_allclose(tbl[-1]['ycenter'], 2 * u.pix)
+        assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix, rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['ycenter'], 2 * u.pix, rtol=1e-4)
         sky = tbl[-1]['sky_center']
-        assert_allclose(sky.ra.deg, 337.51894336144454)
-        assert_allclose(sky.dec.deg, -20.832777499255897)
-        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * (u.pix * u.pix))
-        assert_allclose(tbl[-1]['sum'], 28.274334)
-        assert_allclose(tbl[-1]['mean'], 1)
+        assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
+        assert_allclose(sky.dec.deg, -20.832777499255897, rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * (u.pix * u.pix), rtol=1e-4)
+        assert_allclose(tbl[-1]['sum'], 28.274334, rtol=1e-4)
+        assert_allclose(tbl[-1]['mean'], 1, rtol=1e-4)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
         assert tbl[-1]['subset_label'] == 'Subset 2'
 
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
-        self.imviz._apply_interactive_region('bqplot:rectangle', (0, 0), (9, 9))
+        reg = RectanglePixelRegion(center=PixCoord(x=4.5, y=4.5), width=9, height=9).to_sky(self.wcs_1)  # noqa: E501
+        self.imviz.load_regions(reg)
+
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 3'
         phot_plugin.background_selected = 'Subset 3'
@@ -145,8 +151,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_quantity_allclose(tbl[-1]['xcenter'], 4.5 * u.pix)
         assert_quantity_allclose(tbl[-1]['ycenter'], 4.5 * u.pix)
         sky = tbl[-1]['sky_center']
-        assert_allclose(sky.ra.deg, 337.51894336144454)
-        assert_allclose(sky.dec.deg, -20.832083)
+        assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
+        assert_allclose(sky.dec.deg, -20.832083, rtol=1e-4)
         assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * (u.pix * u.pix))
         assert_allclose(tbl[-1]['sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
@@ -158,8 +164,11 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         assert_allclose(phot_plugin.background_value, 1)  # Keeps last value
         phot_plugin.background_selected = 'Subset 1'
         assert_allclose(phot_plugin.background_value, 1)
-        self.imviz.load_data(np.ones((10, 10)) + 1, data_label='twos')
-        phot_plugin.dataset_selected = 'twos'
+
+        hdu3 = fits.ImageHDU(np.ones((10, 10)) + 1, name='SCI')
+        hdu3.header.update(self.wcs_2.to_header())
+        self.imviz.load_data(hdu3, data_label='twos')
+        phot_plugin.dataset_selected = 'twos[SCI,1]'
         assert_allclose(phot_plugin.background_value, 2)  # Recalculate based on new Data
 
         # Curve of growth
@@ -261,23 +270,16 @@ class TestAdvancedAperPhot:
         # Different pixel scale + rotated
         imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
 
-        # Reference image again but without any WCS
-        data = fits.getdata(fn_1, ext=0)
-        imviz_helper.load_data(data, data_label='no_wcs')
-
         # Link them by WCS
         imviz_helper.link_data(link_type='wcs')
+        w = imviz_helper.app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
-        regions = []
-        positions = [(145.1, 168.3), (48.3, 200.3)]
-        for x, y in positions:
-            regions.append(CirclePixelRegion(center=PixCoord(x=x, y=y), radius=5))
-        regions += [
-            EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9,
-                               angle=2.356 * u.rad),
-            RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7)]
-        imviz_helper.load_regions(regions)
+        imviz_helper.load_regions([
+            CirclePixelRegion(center=PixCoord(x=145.1, y=168.3), radius=5).to_sky(w),
+            CirclePixelRegion(center=PixCoord(x=48.3, y=200.3), radius=5).to_sky(w),
+            EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9, angle=2.356 * u.rad).to_sky(w),  # noqa: E501
+            RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w)])
 
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj
@@ -286,8 +288,7 @@ class TestAdvancedAperPhot:
     @pytest.mark.parametrize(('data_label', 'local_bkg'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 5.0),
         ('gauss100_fits_wcs_block_reduced[PRIMARY,1]', 20.0),
-        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 20.0),
-        ('no_wcs', 5.0)])
+        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 20.0)])
     @pytest.mark.parametrize(('subset_label', 'expected_sum'), [
         ('Subset 1', 738.8803424408962),
         ('Subset 2', 857.5194857987592),
@@ -308,8 +309,8 @@ class TestAdvancedAperPhot:
     @pytest.mark.parametrize(('data_label', 'fac'), [
         ('gauss100_fits_wcs[PRIMARY,1]', 1),
         ('gauss100_fits_wcs_block_reduced[PRIMARY,1]', 4),
-        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 4),
-        ('no_wcs', 1)])
+        ('gauss100_fits_wcs_block_reduced_rotated[PRIMARY,1]', 4)
+    ])
     @pytest.mark.parametrize(('bg_label', 'expected_bg'), [
         ('Subset 2', 12.269274711608887),
         ('Subset 3', 7.935906410217285),
@@ -339,13 +340,11 @@ def test_annulus_background(imviz_helper):
     phot_plugin.dataset_selected = 'ones'
 
     # Mark an object of interest
-    # CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
-    imviz_helper._apply_interactive_region('bqplot:truecircle', (143, 18), (157, 32))
-
+    circle_1 = CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(
         PixCoord(x=150, y=25), inner_radius=7, outer_radius=17)
-    imviz_helper.load_regions([annulus_1])
+    imviz_helper.load_regions([circle_1, annulus_1])
 
     phot_plugin.aperture_selected = 'Subset 1'
     phot_plugin.background_selected = 'Subset 2'
@@ -358,13 +357,11 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, 5.745596129482831)  # Changed
 
     # Draw ellipse on another object
-    # EllipsePixelRegion(center=PixCoord(x=20.5, y=37.5), width=41, height=15)
-    imviz_helper._apply_interactive_region('bqplot:ellipse', (0, 30), (41, 45))
-
+    ellipse_1 = EllipsePixelRegion(center=PixCoord(x=20.5, y=37.5), width=41, height=15)
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_2 = CircleAnnulusPixelRegion(
         PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
-    imviz_helper.load_regions([annulus_2])
+    imviz_helper.load_regions([ellipse_1, annulus_2])
 
     # Subset 4 (annulus) should be available for the background but not the aperture
     assert 'Subset 4' not in phot_plugin.aperture.choices
@@ -391,10 +388,10 @@ def test_annulus_background(imviz_helper):
     # Edit the annulus and make sure background updates
     subset_plugin = imviz_helper.plugins["Subset Tools"]._obj
     subset_plugin.subset_selected = "Subset 4"
-    subset_plugin._set_value_in_subset_definition(0, "X Center", "value", 25.5)
-    subset_plugin._set_value_in_subset_definition(0, "Y Center", "value", 42.5)
-    subset_plugin._set_value_in_subset_definition(0, "Inner radius", "value", 40)
-    subset_plugin._set_value_in_subset_definition(0, "Outer radius", "value", 45)
+    subset_plugin._set_value_in_subset_definition(0, "X Center (pixels)", "value", 25.5)
+    subset_plugin._set_value_in_subset_definition(0, "Y Center (pixels)", "value", 42.5)
+    subset_plugin._set_value_in_subset_definition(0, "Inner Radius (pixels)", "value", 40)
+    subset_plugin._set_value_in_subset_definition(0, "Outer Radius (pixels)", "value", 45)
     subset_plugin.vue_update_subset()
     assert_allclose(phot_plugin.background_value, 4.89189)
 

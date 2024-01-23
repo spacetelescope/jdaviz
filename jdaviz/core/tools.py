@@ -58,9 +58,6 @@ class _MatchedZoomMixin:
     def _map_limits(self, from_viewer, to_viewer, limits={}):
         return limits
 
-    def _post_activate(self):
-        return
-
     @property
     def match_keys(self):
         keys = []
@@ -80,8 +77,6 @@ class _MatchedZoomMixin:
         for k in self.match_keys:
             self.viewer.state.add_callback(k, self.on_limits_change)
 
-        self._post_activate()
-
         # Trigger a sync so the initial limits match
         self.on_limits_change()
 
@@ -94,29 +89,49 @@ class _MatchedZoomMixin:
     def on_limits_change(self, *args):
         # from_lims: limits in the viewer belonging to the tool
         from_lims = {k: getattr(self.viewer.state, k) for k in self.match_keys}
+        orig_refdata = self.viewer.state.reference_data
+        if hasattr(self.viewer, '_get_fov') and orig_refdata and orig_refdata.coords:
+            orig_fov_sky = self.viewer._get_fov(wcs=orig_refdata.coords)
+            sky_cen = self.viewer._get_center_skycoord()
+        else:
+            orig_fov_sky = sky_cen = None
 
         for viewer in self._iter_matched_viewers(include_self=False):
             # orig_lims: limits in this "matched" viewer
             # to_lims: proposed new limits for this "matched" viewer
             orig_lims = {k: getattr(viewer.state, k) for k in self.match_keys}
             to_lims = self._map_limits(self.viewer, viewer, from_lims)
-            with delay_callback(viewer.state, *self.match_keys):
-                for ax in self.match_axes:
-                    # to avoid recursion we'll only update the state if there is a change
-                    # outside a tolerance set by some fraction of the limits range
-                    if None in orig_lims.values():
-                        orig_range = np.inf
-                    else:
-                        orig_range = abs(orig_lims.get(f'{ax}_max') - orig_lims.get(f'{ax}_min'))
-                    to_range = abs(to_lims.get(f'{ax}_max') - to_lims.get(f'{ax}_min'))
-                    tol = 1e-6 * min(orig_range, to_range)
+            matched_refdata = viewer.state.reference_data
 
-                    for k in (f'{ax}_min', f'{ax}_max'):
-                        value = to_lims.get(k)
-                        orig_value = orig_lims.get(k)
-                        if not np.isnan(value) and (orig_value is None or
-                                                    abs(value-orig_lims.get(k, np.inf)) > tol):
-                            setattr(viewer.state, k, value)
+            if hasattr(viewer, '_get_fov'):
+                to_fov_sky = viewer._get_fov(wcs=matched_refdata.coords)
+            else:
+                to_fov_sky = None
+
+            if to_fov_sky is not None and orig_fov_sky is not None:
+                old_level = viewer.zoom_level
+                viewer.zoom_level = old_level * float(to_fov_sky / orig_fov_sky)
+                viewer.center_on(sky_cen)
+
+            else:
+                with delay_callback(viewer.state, *self.match_keys):
+                    for ax in self.match_axes:
+                        if None in orig_lims.values():
+                            orig_range = np.inf
+                        else:
+                            orig_range = abs(orig_lims.get(f'{ax}_max') -
+                                             orig_lims.get(f'{ax}_min'))
+                        to_range = abs(to_lims.get(f'{ax}_max') -
+                                       to_lims.get(f'{ax}_min'))
+                        tol = 1e-6 * min(orig_range, to_range)
+
+                        for k in (f'{ax}_min', f'{ax}_max'):
+                            value = to_lims.get(k)
+                            orig_value = orig_lims.get(k)
+
+                            if not np.isnan(value) and (orig_value is None or
+                                                        abs(value-orig_lims.get(k, np.inf)) > tol):
+                                setattr(viewer.state, k, value)
 
     def is_visible(self):
         return len(self.viewer.jdaviz_app._viewer_store) > 1

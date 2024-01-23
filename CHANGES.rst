@@ -13,6 +13,7 @@ New Features
 
 Cubeviz
 ^^^^^^^
+
 - Calculated moments can now be output in velocity units. [#2584, #2588, #2665]
 
 - Added functionality to Collapse and Spectral Extraction plugins to save results to FITS file. [#2586]
@@ -23,6 +24,9 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- There is now option for image rotation in Orientation (was Links Control) plugin.
+  This feature requires WCS linking. [#2179]
 
 Mosviz
 ^^^^^^
@@ -47,6 +51,16 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Links Control plugin is now called Orientation. [#2179]
+
+- Linking by WCS will now always generate a hidden reference data layer
+  without distortion. As a result, when WCS linked, the first loaded data
+  is no longer the reference data. Additionally, if data is distorted,
+  its distortion will show when linked by WCS. If there is also data without WCS,
+  it can no longer be displayed when WCS linked. [#2179]
+
+- ``imviz.link_data()`` inputs and behaviors are now consistent with the Orientation plugin. [#2179]
 
 Mosviz
 ^^^^^^

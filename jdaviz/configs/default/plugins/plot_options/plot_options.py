@@ -370,6 +370,12 @@ class PlotOptions(PluginTemplateMixin):
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
 
+        def is_not_wcs_only(layer):
+            # exclude WCS-only layers from the layer choices:
+            return not getattr(layer.layer, 'meta', {}).get(self.app._wcs_only_label, False)
+
+        self.layer.filters += [is_not_wcs_only]
+
         self.swatches_palette = [
             ['#FF0000', '#AA0000', '#550000'],
             ['#FFD300', '#AAAA00', '#555500'],

@@ -99,13 +99,16 @@ To export the table into the notebook via the API, call
 :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
 (see :ref:`plugin-apis`).
 
-.. _imviz-link-control:
+.. _imviz-orientation:
 
-Link Control
-============
+Orientation
+===========
 
-This plugin is used to re-link images by pixels or WCS using
-:func:`~jdaviz.configs.imviz.helper.link_image_data`.
+.. note::
+
+    This plugin was previous called "Links Control".
+
+This plugin is used to align image layers by pixels or sky (WCS).
 All images are automatically linked by pixels on load but you can use
 it to re-link by pixels or WCS as needed.
 
@@ -114,6 +117,13 @@ to represent the offset between images, if possible. It is much more
 performant at the cost of accuracy but should be accurate to within a pixel
 for most cases. If approximation fails, WCS linking still automatically
 falls back to full transformation.
+
+Since Jdaviz v3.9, when linking by WCS, a hidden reference data layer
+without distortion (labeled "Default orientation") will be created and all the data would be linked to
+it instead of the first loaded data. As a result, working in pixel
+space when linked by WCS is not recommended. Additionally, any data
+with distorted WCS would show as distorted on the display. Furthermore,
+any data without WCS can no longer be shown in WCS linking mode.
 
 For the best experience, it is recommended that you decide what kind of
 link you want and set it at the beginning of your Imviz session,
@@ -129,6 +139,21 @@ From the API within the Jupyter notebook (if linking by WCS):
 .. code-block:: python
 
     imviz.link_data(link_type='wcs')
+
+.. _imviz-orientation-rotation:
+
+Orientation: Image Rotation
+===========================
+
+When linked by WCS, sky rotation is also possible. You can choose from
+presets (N-up, E-left/right) or provide your own sky angle.
+
+.. warning::
+
+    Each rotation request created a new reference data layer in the background.
+    Just as in :ref:`imviz-import-data`, the performance would be impacted by
+    the number of active rotation layers you have; Only keep the desired rotation layer.
+    Note that the "default orientation" layer cannot be removed.
 
 .. _imviz-compass:
 
@@ -347,6 +372,11 @@ To import a regions file or object from the API:
 
 Canvas Rotation
 ===============
+
+.. note::
+
+    This plugin is deprecated in favor of rotation via :ref:`imviz-orientation` and will be removed
+    in a future release.
 
 The canvas rotation plugin allows rotating and horizontally flipping the image to any arbitrary 
 value by rotating the canvas axes themselves.  Note that this does not affect the underlying data, and
