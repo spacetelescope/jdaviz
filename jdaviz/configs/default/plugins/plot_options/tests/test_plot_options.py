@@ -391,3 +391,25 @@ def test_track_mixed_states(imviz_helper):
     assert not po.stretch_function_sync['mixed']
     assert po.stretch_function_value == 'spline'
     assert not po.stretch_params_sync['mixed']
+
+
+def test_segmentation_image(imviz_helper):
+    # Make one circular segment for a hypothetical
+    # image with one source:
+    nx = ny = 100
+    radius = 15
+    x0 = y0 = 50
+
+    segmentation_map = np.zeros((nx, ny))
+    xx, yy = np.meshgrid(np.arange(nx), np.arange(ny))
+    in_circle = np.hypot(xx - x0, yy - y0) < radius
+    segmentation_map[in_circle] = 1
+
+    imviz_helper.load_data(segmentation_map)
+
+    plot_opts = imviz_helper.plugins['Plot Options']
+    plot_opts.image_colormap = 'Random'
+
+    # ensure that stretch preset is listening to the update to the
+    # random colormap so that all colors are uniquely displayed:
+    assert plot_opts.stretch_preset.value == 100

@@ -32,8 +32,32 @@ from jdaviz.utils import is_not_wcs_only
 
 
 from scipy.interpolate import PchipInterpolator
+from photutils.utils import make_random_cmap
 
 __all__ = ['PlotOptions']
+
+
+def _register_random_cmap(
+    cmap_name,
+    bkg_color=[0, 0, 0],
+    bkg_alpha=1,
+    seed=42,
+    ncolors=10_000
+):
+    """
+    Custom random colormap, useful for rendering image
+    segmentation maps. The default background for
+    `label==0` is *transparent*. If the segmentation map
+    contains more than 10,000 labels, adjust the `ncolors`
+    kwarg to ensure uniqueness.
+    """
+    cmap = make_random_cmap(ncolors=ncolors, seed=seed)
+    cmap.colors[0] = bkg_color + [bkg_alpha]
+    cmap.name = cmap_name
+    colormaps.add(cmap_name, cmap)
+
+
+_register_random_cmap('Random', bkg_alpha=1)
 
 
 class SplineStretch:
@@ -1141,3 +1165,13 @@ class PlotOptions(PluginTemplateMixin):
             viewers = [viewers]
 
         return np.all([_is_image_viewer(viewer) for viewer in viewers])
+
+    @observe('image_colormap_value')
+    def _random_cmap_limit_update(self, *args, **kwargs):
+        # if 'Random' colormap is used for visualizing image segmentation,
+        # ensure the stretch limits are the min and max, so all label colors
+        # are unique:
+        if self.image_colormap_value != 'Random':
+            return
+
+        self.stretch_preset.value = 100

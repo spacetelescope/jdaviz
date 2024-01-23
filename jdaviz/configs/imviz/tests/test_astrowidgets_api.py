@@ -182,7 +182,7 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
             'Gray', 'Viridis', 'Plasma', 'Inferno', 'Magma', 'Purple-Blue',
             'Yellow-Green-Blue', 'Yellow-Orange-Red', 'Red-Purple', 'Blue-Green',
             'Hot', 'Red-Blue', 'Red-Yellow-Blue', 'Purple-Orange', 'Purple-Green',
-            'Rainbow', 'Seismic',
+            'Random', 'Rainbow', 'Seismic',
             'Reversed: Gray', 'Reversed: Viridis', 'Reversed: Plasma', 'Reversed: Inferno',
             'Reversed: Magma', 'Reversed: Hot', 'Reversed: Rainbow']
 
