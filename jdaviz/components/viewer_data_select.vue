@@ -1,6 +1,6 @@
 <template>
   <j-tooltip v-if="menuButtonAvailable()" tipid="viewer-toolbar-data">
-    <v-menu attach offset-y :close-on-content-click="false" v-model="viewer.data_open">
+    <v-menu attach offset-y :close-on-content-click="false" v-model="data_menu_open">
       <template v-slot:activator="{ on, attrs }">
         <v-btn 
           text 
@@ -11,7 +11,7 @@
           tile
           icon
           outlined
-          :class="{active: viewer.data_open}"
+          :class="{active: data_menu_open}"
           style="height: 42px; width: 42px">
           <v-icon>mdi-format-list-bulleted-square</v-icon>
         </v-btn>
@@ -114,6 +114,7 @@ module.exports = {
     return {
       // default to passed values, whenever value or uncertainty are changed
       // updateTruncatedValues will overwrite the displayed values
+      data_menu_open: false,
       multi_select: multi_select,
       showExtraItems: Object.keys(this.$props.viewer.selected_data_items).length == 0,
       valueTrunc: this.value,
