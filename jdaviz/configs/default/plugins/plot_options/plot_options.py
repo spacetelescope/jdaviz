@@ -114,6 +114,8 @@ class PlotOptions(PluginTemplateMixin):
       whether a subset should be visible.
     * ``subset_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
+    * ``subset_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      not exposed for Specviz
     * ``axes_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
     * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -302,6 +304,9 @@ class PlotOptions(PluginTemplateMixin):
 
     subset_color_value = Unicode().tag(sync=True)
     subset_color_sync = Dict().tag(sync=True)
+
+    subset_opacity_value = Float().tag(sync=True)
+    subset_opacity_sync = Dict().tag(sync=True)
 
     image_visible_value = Bool().tag(sync=True)
     image_visible_sync = Dict().tag(sync=True)
@@ -561,6 +566,9 @@ class PlotOptions(PluginTemplateMixin):
         self.subset_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
                                                  'subset_color_value', 'subset_color_sync',
                                                  state_filter=is_spatial_subset)
+        self.subset_opacity = PlotOptionsSyncState(self, self.viewer, self.layer, 'alpha',
+                                                   'subset_opacity_value', 'subset_opacity_sync',
+                                                   state_filter=is_spatial_subset)
         self.image_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'bitmap_visible',
                                                   'image_visible_value', 'image_visible_sync',
                                                   state_filter=is_image)
@@ -624,7 +632,7 @@ class PlotOptions(PluginTemplateMixin):
             expose += ['axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
                        'line_as_steps', 'uncertainty_visible']
         if self.config != "specviz":
-            expose += ['subset_color',
+            expose += ['subset_color', 'subset_opacity',
                        'stretch_function', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
                        'stretch_hist_zoom_limits', 'stretch_hist_nbins',
                        'image_visible', 'image_color_mode',

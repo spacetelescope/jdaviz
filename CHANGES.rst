@@ -9,14 +9,18 @@ New Features
 
 - Spectrum viewer bounds can now be set through the Plot Options UI. [#2604]
 
+- Opacity for spatial subsets is now adjustable from within Plot Options. [#2663]
+
 Cubeviz
 ^^^^^^^
 
-- Calculated moments can now be output in velocity units. [#2584, #2588]
+- Calculated moments can now be output in velocity units. [#2584, #2588, #2665]
 
 - Added functionality to Collapse and Spectral Extraction plugins to save results to FITS file. [#2586]
 
 - Moment map plugin now supports linear per-spaxel continuum subtraction. [#2587]
+
+- Single-pixel subset tool now shows spectrum-at-spaxel on hover. [#2647]
 
 Imviz
 ^^^^^
