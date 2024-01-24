@@ -312,7 +312,7 @@ Color mode
 --------
 
 This option allows you to choose whether to use a colormap or or a single color to visualize the image.
-The colormap can be selected from a dropdown within the layer tab. In monochromatic mode, the color
+The colormap can be selected from a dropdown within the Layer tab. In monochromatic mode, the color
 can be chosen from a color picker under "Image Color" within the Layer tab.
 
 In monochromatic mode, the option "Assign RGB presets" appears. This will automatically
