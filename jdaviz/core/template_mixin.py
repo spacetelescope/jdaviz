@@ -1689,7 +1689,8 @@ class SubsetSelect(SelectPluginComponent):
         self._update_has_subregions()
 
     def _on_dataset_selected_changed(self, event):
-        self._clear_cache('selected_subset_mask', 'selected_spatial_region')
+        self._clear_cache('selected_subset_mask',
+                          'selected_spatial_region')
 
     def _subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
@@ -1831,6 +1832,8 @@ class SubsetSelect(SelectPluginComponent):
             subset_state = self.selected_subset_state
         else:
             subset_state = self._get_subset_state(subset)
+        if subset_state is None:
+            return None
         region = _get_region_from_spatial_subset(self.plugin, subset_state)
         region.meta['label'] = subset
         return region
@@ -1844,7 +1847,7 @@ class SubsetSelect(SelectPluginComponent):
         types = self.selected_item.get('type')
         if not isinstance(types, list):
             types = [types]
-        if np.any([type != 'spatial' for type in types]):
+        if np.any([type not in ('spatial', None) for type in types]):
             raise TypeError("This action is only supported on spatial-type subsets")
         if self.is_multiselect:
             return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
@@ -2048,6 +2051,10 @@ class ApertureSubsetSelect(SubsetSelect):
     def _update_subset(self, *args, **kwargs):
         # update coordinates when subset is modified (with subset tools plugin or drag event)
         super()._update_subset(*args, **kwargs)
+        self._update_mark_coords()
+
+    def _on_dataset_selected_changed(self, event):
+        super()._on_dataset_selected_changed(event)
         self._update_mark_coords()
 
     def _plugin_active_changed(self, *args):
