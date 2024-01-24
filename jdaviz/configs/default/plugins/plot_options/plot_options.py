@@ -231,8 +231,8 @@ class PlotOptions(PluginTemplateMixin):
     zoom_center_y_value = Float().tag(sync=True)
     zoom_center_y_sync = Dict().tag(sync=True)
 
-    zoom_level_value = Float().tag(sync=True)
-    zoom_level_sync = Dict().tag(sync=True)
+    zoom_radius_value = Float().tag(sync=True)
+    zoom_radius_sync = Dict().tag(sync=True)
 
     # scatter/marker options
     marker_visible_value = Bool().tag(sync=True)
@@ -465,8 +465,8 @@ class PlotOptions(PluginTemplateMixin):
                                                   'zoom_center_x_value', 'zoom_center_x_sync')
         self.zoom_center_y = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_center_y',
                                                   'zoom_center_y_value', 'zoom_center_y_sync')
-        self.zoom_level = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_level',
-                                               'zoom_level_value', 'zoom_level_sync')
+        self.zoom_radius = PlotOptionsSyncState(self, self.viewer, self.layer, 'zoom_radius',
+                                                'zoom_radius_value', 'zoom_radius_sync')
 
         # Scatter/marker options:
         # NOTE: marker_visible hides the entire layer (including the line)
@@ -651,7 +651,7 @@ class PlotOptions(PluginTemplateMixin):
                        'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
                        'line_as_steps', 'uncertainty_visible']
         if self.config != "specviz":
-            expose += ['zoom_center_x', 'zoom_center_y', 'zoom_level',
+            expose += ['zoom_center_x', 'zoom_center_y', 'zoom_radius',
                        'subset_color', 'subset_opacity',
                        'stretch_function', 'stretch_preset', 'stretch_vmin', 'stretch_vmax',
                        'stretch_hist_zoom_limits', 'stretch_hist_nbins',

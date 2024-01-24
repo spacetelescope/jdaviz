@@ -104,11 +104,11 @@
                 :step="0.1"
               />
             </glue-state-sync-wrapper>
-            <glue-state-sync-wrapper :sync="zoom_level_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_level')">
+            <glue-state-sync-wrapper :sync="zoom_radius_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_radius')">
               <glue-float-field
-                ref="zoom_level"
-                label="Zoom-Level"
-                :value.sync="zoom_level_value"
+                ref="zoom_radius"
+                label="Zoom-radius"
+                :value.sync="zoom_radius_value"
                 type="number"
                 :step="0.1"
               />

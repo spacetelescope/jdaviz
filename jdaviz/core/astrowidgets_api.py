@@ -9,7 +9,7 @@ from echo import delay_callback
 from glue.config import colormaps
 from glue.core import Data
 
-from jdaviz.configs.imviz.helper import get_top_layer_index
+from jdaviz.configs.imviz.helper import get_top_layer_index, get_reference_image_data
 from jdaviz.core.events import SnackbarMessage, AstrowidgetMarkersChangedMessage
 from jdaviz.core.helpers import data_has_valid_wcs
 
@@ -177,7 +177,22 @@ class AstrowidgetsImageViewerMixin:
         if self.shape is None:  # pragma: no cover
             raise ValueError('Viewer is still loading, try again later')
 
-        return self.state.zoom_level
+        if hasattr(self, '_get_real_xy'):
+            image, i_ref = get_reference_image_data(self.jdaviz_app, self.reference)
+            # TODO: Do we want top layer instead?
+            # i_top = get_top_layer_index(self)
+            # image = self.layers[i_top].layer
+            real_min = self._get_real_xy(image, self.state.x_min, self.state.y_min)
+            real_max = self._get_real_xy(image, self.state.x_max, self.state.y_max)
+        else:
+            real_min = (self.state.x_min, self.state.y_min)
+            real_max = (self.state.x_max, self.state.y_max)
+        screenx = self.shape[1]
+        screeny = self.shape[0]
+        zoom_x = screenx / abs(real_max[0] - real_min[0])
+        zoom_y = screeny / abs(real_max[1] - real_min[1])
+
+        return max(zoom_x, zoom_y)  # Similar to Ginga get_scale()
 
     # Loosely based on glue/viewers/image/state.py
     @zoom_level.setter
@@ -195,7 +210,29 @@ class AstrowidgetsImageViewerMixin:
             self.state.reset_limits()
             return
 
-        self.state.zoom_level = val
+        new_dx = self.shape[1] * 0.5 / val
+        if hasattr(self, '_get_real_xy'):
+            image, i_ref = get_reference_image_data(self.jdaviz_app, self.reference)
+            # TODO: Do we want top layer instead?
+            # i_top = get_top_layer_index(self)
+            # image = self.layers[i_top].layer
+            real_min = self._get_real_xy(image, self.state.x_min, self.state.y_min)
+            real_max = self._get_real_xy(image, self.state.x_max, self.state.y_max)
+            cur_xcen = (real_min[0] + real_max[0]) * 0.5
+            new_x_min = self._get_real_xy(image, cur_xcen - new_dx - 0.5, real_min[1], reverse=True)[0]  # noqa: E501
+            new_x_max = self._get_real_xy(image, cur_xcen + new_dx - 0.5, real_max[1], reverse=True)[0]  # noqa: E501
+        else:
+            cur_xcen = (self.state.x_min + self.state.x_max) * 0.5
+            new_x_min = cur_xcen - new_dx - 0.5
+            new_x_max = cur_xcen + new_dx - 0.5
+
+        with delay_callback(self.state, 'x_min', 'x_max'):
+            self.state.x_min = new_x_min
+            self.state.x_max = new_x_max
+
+        # We need to adjust the limits in here to avoid triggering all
+        # the update events then changing the limits again.
+        self.state._adjust_limits_aspect()
 
     # Discussion on why we need two different ways to set zoom at
     # https://github.com/astropy/astrowidgets/issues/144
