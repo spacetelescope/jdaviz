@@ -5,7 +5,7 @@ import regions
 from glue.core.message import DataCollectionAddMessage, DataCollectionDeleteMessage
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import LinkUpdatedMessage
+from jdaviz.core.events import LinkUpdatedMessage, ChangeRefDataMessage
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import regions2roi
 from jdaviz.core.registries import tray_registry
@@ -131,6 +131,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_link_type_updated)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_link_type_updated)
+        self.hub.subscribe(self, ChangeRefDataMessage, handler=lambda _: self._preset_args_changed())  # noqa
         self._on_link_type_updated()
 
     @property
