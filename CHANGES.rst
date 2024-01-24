@@ -51,7 +51,7 @@ API Changes
 Cubeviz
 ^^^^^^^
 
-- ``spatial_subset`` in the spectral extraction plugin is now renamed to ``aperture`` and will
+- ``spatial_subset`` in the spectral extraction plugin is now renamed to ``aperture`` and the deprecated name will
   be removed in a future release. [#2664]
 
 Imviz

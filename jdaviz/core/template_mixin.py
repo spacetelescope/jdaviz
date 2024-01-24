@@ -2123,12 +2123,12 @@ class ApertureSubsetSelect(SubsetSelect):
                 roi.radius_y *= self.scale_factor
             elif hasattr(roi, 'center'):
                 center = roi.center()
-                width_orig = roi.xmax - roi.xmin
-                height_orig = roi.ymax - roi.ymin
-                roi.xmin = center[0] - width_orig/2 * self.scale_factor
-                roi.xmax = center[0] + width_orig/2 * self.scale_factor
-                roi.ymin = center[1] - height_orig/2 * self.scale_factor
-                roi.ymax = center[1] + height_orig/2 * self.scale_factor
+                half_width = abs(roi.xmax - roi.xmin) * 0.5 * self.scale_factor
+                half_height = abs(roi.ymax - roi.ymin) * 0.5 * self.scale_factor
+                roi.xmin = center[0] - half_width
+                roi.xmax = center[0] + half_width
+                roi.ymin = center[1] - half_height
+                roi.ymax = center[1] + half_height
             else:  # pragma: no cover
                 raise NotImplementedError
 
@@ -2149,7 +2149,7 @@ class ApertureSubsetSelect(SubsetSelect):
 
 class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
-    Applies the SubsetSelect component as a mixin in the base plugin.  This
+    Applies the ApertureSubsetSelect component as a mixin in the base plugin.  This
     automatically adds traitlets as well as new properties to the plugin with minimal
     extra code.  For multiple instances or custom traitlet names/defaults, use the
     component instead.
