@@ -28,6 +28,7 @@ from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
+from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
 from traitlets import Any, Bool, Float, HasTraits, List, Unicode, observe
@@ -41,13 +42,13 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
-                                AddDataToViewerMessage, LinkUpdatedMessage)
+                                AddDataToViewerMessage, ChangeRefDataMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
                                ShadowLine, ApertureMark)
-from jdaviz.core.region_translators import _get_region_from_spatial_subset
+from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import get_subset_type
@@ -2040,8 +2041,9 @@ class ApertureSubsetSelect(SubsetSelect):
         self.add_observe(scale_factor, self._update_mark_coords)
         # add marks to any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._update_mark_coords)
-        # update coordinates when link type or reference data is _mode_changed
-        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._update_mark_coords)
+        # update coordinates when reference data is changed
+        # NOTE: when link type is changed, all subsets are required to be dropped
+        self.hub.subscribe(self, ChangeRefDataMessage, handler=self._update_mark_coords)
 
     def _update_subset(self, *args, **kwargs):
         # update coordinates when subset is modified (with subset tools plugin or drag event)
@@ -2086,17 +2088,32 @@ class ApertureSubsetSelect(SubsetSelect):
     def _get_mark_coords(self, viewer):
         if not len(self.selected) or not len(self.dataset.selected):
             return [], []
+        if self.selected in self._manual_options:
+            return [], []
 
-        subset_dicts = self.selected_obj if getattr(self, 'multiselect', False) else [self.selected_obj]  # noqa
+        if getattr(self, 'multiselect', False):
+            # assume first dataset (for retrieving the region object)
+            # but iterate over all subsets
+            spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset)  # noqa
+                               for subset in self.selected if subset != self._manual_options]
+        else:
+            # use cached version
+            spatial_regions = [self.selected_spatial_region]
 
         x_coords, y_coords = np.array([]), np.array([])
-        for subset_dict in subset_dicts:
-            if subset_dict is None:
+        for spatial_region in spatial_regions:
+            if spatial_region is None:
                 continue
-            # make a copy so changing the radius doesn't change the cached version in memory
-            # NOTE: this [0] assumes a single subcomponent, which should be safe given the
-            # is_not_composite filter applied
-            roi = subset_dict[0]['subset_state'].roi.copy()
+
+            if isinstance(spatial_region, PixelRegion):
+                pixel_region = spatial_region
+            else:
+                wcs = getattr(viewer.state.reference_data, 'coords', None)
+                if wcs is None:
+                    return [], []
+                pixel_region = spatial_region.to_pixel(wcs)
+            roi = regions2roi(pixel_region)
+
             # NOTE: this assumes that we'll apply the same radius factor to all subsets (all will
             # be defined at the same slice for cones in cubes)
             if hasattr(roi, 'radius'):
@@ -2116,9 +2133,11 @@ class ApertureSubsetSelect(SubsetSelect):
                 raise NotImplementedError
 
             x, y = roi.to_polygon()
+
             # concatenate with nan between to avoid line connecting separate subsets
             x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
             y_coords = np.concatenate((y_coords, np.array([np.nan]), y))
+
         return x_coords, y_coords
 
     def _update_mark_coords(self, *args):
