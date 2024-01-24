@@ -1175,3 +1175,4 @@ class PlotOptions(PluginTemplateMixin):
             return
 
         self.stretch_preset.value = 100
+        self.stretch_function.value = 'linear'

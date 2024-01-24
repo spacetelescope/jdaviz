@@ -413,3 +413,4 @@ def test_segmentation_image(imviz_helper):
     # ensure that stretch preset is listening to the update to the
     # random colormap so that all colors are uniquely displayed:
     assert plot_opts.stretch_preset.value == 100
+    assert plot_opts.stretch_function.value == 'linear'
