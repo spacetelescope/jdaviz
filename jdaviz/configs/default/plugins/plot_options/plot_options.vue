@@ -472,6 +472,10 @@
             label="Colormap"
             dense
           ></v-select>
+              <v-alert v-if="image_colormap_value == 'Random'" type='warning' style="margin-left: -12px; margin-right: -12px">
+                Note: on selecting the "Random" colormap, the stretch percentile preset
+                is set to min/max and the stretch function is set to linear.
+              </v-alert>
         </glue-state-sync-wrapper>
         <glue-state-sync-wrapper v-if="image_color_mode_value !== 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_color')">
           <div>
