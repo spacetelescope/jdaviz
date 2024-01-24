@@ -281,6 +281,9 @@ To access all of the different display settings for an image viewer, click the
 Changing the display settings DOES NOT change the underlying data, only the
 visualization of that data.
 
+.. image:: ../img/imviz_plot_options.png
+    :alt: Imviz Plot Options
+
 If you wish to access plot options via API
 (also see `~jdaviz.configs.default.plugins.plot_options.plot_options.PlotOptions`),
 you can use the following generic example. More specific examples are given
@@ -300,140 +303,22 @@ Layer
 
 This option allows you to change which layer you are changing the settings for.
 
-Attribute
----------
-
-This shows which extension of the data is being displayed in the current viewer.
-
-Contour
--------
-
-This option selects whether to show or hide contours.
-
-The :guilabel:`Contours` of a second image can also be plotted over a first image or cube. Add
-the second image as data in the data dropdown tab, and select both images. To visualize the contours
-of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
-set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
-the second image will appear superimposed on the first image. In the second figure below, we
-show the contours of an image generated using the Collapse plugin plotted over the leftmost cube
-viewer.  If you overplot them on a cube, the contours will remain unchanged as you scrub through
-the cube.
-
-Bitmap
+Show image
 ------
 
-This option selects whether to show or hide the bitmap (image) in the viewer.
+This option selects whether to show or hide the image in the viewer.
 
-Opacity
--------
-
-Change the translucence of the image.
-
-.. _contrast:
-
-Contrast
+Color mode
 --------
 
-Change the luminance of the color in the image.
+This option allows you to choose whether to use a colormap or or a single color to visualize the image.
+The colormap can be selected from a dropdown within the layer tab. In monochromatic mode, the color
+can be chosen from a color picker under "Image Color" within the Layer tab.
 
-.. _bias:
-
-Bias
-----
-
-Set a constant to subtract from every point in the data array before
-applying the conversion between data value and displayed pixel saturation.
-The :guilabel:`bias` slider center position is 0 bias, such that a user can apply negative
-bias values by sliding it left.
-
-Stretch
--------
-
-Change the equation that is used to convert data values between
-:guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the displayed
-image.
-
-From the API
-^^^^^^^^^^^^
-
-To set the stretch function for just the image being displayed.
-The acceptable values are as defined by glue backend:
-
-.. code-block:: python
-
-    viewer = imviz.default_viewer
-    viewer.stretch_options
-    viewer.stretch = 'sqrt'
-
-To set the stretch function for all the images at once.
-The acceptable values are the same as the GUI menu options
-can be accessed with ``plot_options.stretch_function.choices``:
-
-.. code-block:: python
-
-    plot_options = imviz.plugins['Plot Options']
-    plot_options.select_all()
-    plot_options.stretch_function = 'Square Root'
-
-
-A histogram is displayed showing the distribution of pixel values, with
-vertical lines representing the ``stretch_vmin`` and ``stretch_vmax``
-values, and a colorbar on top. A stretch "curve" can be plotted under the histogram to represent
-how pixel values are mapped to the colorbar. This feature can be toggled
-on from the API with:
-
-.. code-block:: python
-
-    plot_options = imviz.plugins['Plot Options']
-    plot_options.stretch_curve_visible = True
-
-Percentile
-----------
-
-Can be used to set the :guilabel:`min` and :guilabel:`max` values based on percentiles of the data.
-
-Min
-^^^
-
-If the percentile is "custom", then the data value corresponding to the
-minimum of the colormap scale (e.g., black in grayscale) can be set.
-
-Max
-^^^
-
-If the percentile is "custom", then the data value corresponding to the
-maximum of the colormap scale (e.g., white in grayscale) can be set.
-
-From the API
-^^^^^^^^^^^^
-
-To set the percentile for just the image being displayed:
-
-.. code-block:: python
-
-    viewer = imviz.default_viewer
-    viewer.cuts = '95%'  # Preset
-    viewer.cuts = (0, 1000)  # Custom
-
-To set the percentile for all the images at once:
-
-.. code-block:: python
-
-    plot_options = imviz.plugins['Plot Options']
-    plot_options.select_all()
-
-    # Preset
-    plot_options.stretch_preset = '95%'
-
-    # Custom
-    plot_options.stretch_preset = 'Custom'
-    plot_options.stretch_vmin = 0
-    plot_options.stretch_vmax = 1000
-
-Colormap
---------
-
-The spectrum of colors used to visualize data can be changed using this drop-down.
+In monochromatic mode, the option "Assign RGB presets" appears. This will automatically
+assign colors spanning from blue to red to the available layers and will adjust opacity and
+stretch to produce a composite color image (also known as RGB image). You will then
+be able to fine tune all options within each Layer tab.
 
 From the API
 ^^^^^^^^^^^^
@@ -479,6 +364,110 @@ Only after the above is done can you start Imviz and use the custom colormap:
     imviz = Imviz()
     imviz.load_data('myimage.fits')
     imviz.default_viewer.set_colormap('photutils_cmap')
+
+Opacity
+-------
+
+Change the translucence of the image.
+
+.. _contrast:
+
+Contrast
+--------
+
+Change the luminance of the color in the image.
+
+.. _bias:
+
+Bias
+----
+
+Set a constant to subtract from every point in the data array before
+applying the conversion between data value and displayed pixel saturation.
+The :guilabel:`bias` slider center position is 0 bias, such that a user can apply negative
+bias values by sliding it left.
+
+Stretch
+-------
+
+The Stretch Function allows you to change the equation that is used to convert data values between
+:guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the
+image. The Percentile can be used to set the :guilabel:`min` and :guilabel:`max` values based on percentiles of the data.
+An interactive histogram is available and the collapsed menu "More stretch options"
+includes a toggle to limit the histogram to the current zoom limits (which is not on by default)
+and fields to set :guilabel:`min` and :guilabel:`max` manually.
+
+From the API
+^^^^^^^^^^^^
+
+To set the stretch function for just the image being displayed.
+The acceptable values are as defined by glue backend:
+
+.. code-block:: python
+
+    viewer = imviz.default_viewer
+    viewer.stretch_options
+    viewer.stretch = 'sqrt'
+
+To set the stretch function for all the images at once.
+The acceptable values are the same as the GUI menu options
+can be accessed with ``plot_options.stretch_function.choices``:
+
+.. code-block:: python
+
+    plot_options = imviz.plugins['Plot Options']
+    plot_options.select_all()
+    plot_options.stretch_function = 'Square Root'
+
+
+The histogram shows vertical lines representing the ``stretch_vmin`` and ``stretch_vmax``
+values, and a colorbar on top. A stretch "curve" can be plotted on the histogram to represent
+how pixel values are mapped to the colorbar. This feature can be toggled
+on from the API with:
+
+.. code-block:: python
+
+    plot_options = imviz.plugins['Plot Options']
+    plot_options.stretch_curve_visible = True
+
+
+To set the percentile for just the image being displayed:
+
+.. code-block:: python
+
+    viewer = imviz.default_viewer
+    viewer.cuts = '95%'  # Preset
+    viewer.cuts = (0, 1000)  # Custom
+
+To set the percentile for all the images at once:
+
+.. code-block:: python
+
+    plot_options = imviz.plugins['Plot Options']
+    plot_options.select_all()
+
+    # Preset
+    plot_options.stretch_preset = '95%'
+
+    # Custom
+    plot_options.stretch_preset = 'Custom'
+    plot_options.stretch_vmin = 0
+    plot_options.stretch_vmax = 1000
+
+Contour
+-------
+
+This option selects whether to show or hide contours.
+
+The :guilabel:`Contours` of a second image can also be plotted over a first image or cube. Add
+the second image as data in the data dropdown tab, and select both images. To visualize the contours
+of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
+set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
+the second image will appear superimposed on the first image. In the second figure below, we
+show the contours of an image generated using the Collapse plugin plotted over the leftmost cube
+viewer.  If you overplot them on a cube, the contours will remain unchanged as you scrub through
+the cube.
+
 
 Adding New Viewers
 ==================
