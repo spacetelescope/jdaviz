@@ -26,7 +26,7 @@ Imviz
 ^^^^^
 
 - There is now option for image rotation in Orientation (was Links Control) plugin.
-  This feature requires WCS linking. [#2179]
+  This feature requires WCS linking. [#2179, #2673]
 
 Mosviz
 ^^^^^^
