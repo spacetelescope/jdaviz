@@ -6,6 +6,9 @@ Bug Fixes
 
 * Fix app top-bar alignment in popouts and when embedded in websites. [#2648]
 
+* Viewer data-menu is no-longer synced between different instances of the app to avoid recursion
+  between click events. [#2670]
+
 Cubeviz
 ^^^^^^^
 - Fixes Spectral Extraction's assumptions of one data per viewer, and flux data only in
