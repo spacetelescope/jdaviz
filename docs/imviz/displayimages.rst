@@ -392,16 +392,20 @@ Stretch
 
 The Stretch Function allows you to change the equation that is used to convert data values between
 :guilabel:`min` and :guilabel:`max` to the 0 to 1 scale of pixel saturation on the
-image. The Percentile can be used to set the :guilabel:`min` and :guilabel:`max` values based on percentiles of the data.
-An interactive histogram is available and the collapsed menu "More stretch options"
+image. The Percentile can be used to set the :guilabel:`min` and :guilabel:`max`
+values based on percentiles of the data.
+An interactive histogram is available. It shows vertical lines representing
+the ``stretch_vmin`` and ``stretch_vmax`` values, and a colorbar on top.
+The stretch "curve" is plotted on the histogram to represent
+how pixel values are mapped to the colorbar. The collapsed menu "More stretch options"
 includes a toggle to limit the histogram to the current zoom limits (which is not on by default)
 and fields to set :guilabel:`min` and :guilabel:`max` manually.
 
 From the API
 ^^^^^^^^^^^^
 
-To set the stretch function for just the image being displayed.
-The acceptable values are as defined by glue backend:
+To set the stretch function for just the image being displayed
+(the acceptable values are as defined by glue backend):
 
 .. code-block:: python
 
@@ -409,9 +413,9 @@ The acceptable values are as defined by glue backend:
     viewer.stretch_options
     viewer.stretch = 'sqrt'
 
-To set the stretch function for all the images at once.
-The acceptable values are the same as the GUI menu options
-can be accessed with ``plot_options.stretch_function.choices``:
+To set the stretch function for all the images at once
+(the acceptable values are the same as the GUI menu options
+and can be accessed with ``plot_options.stretch_function.choices``):
 
 .. code-block:: python
 
@@ -420,10 +424,7 @@ can be accessed with ``plot_options.stretch_function.choices``:
     plot_options.stretch_function = 'Square Root'
 
 
-The histogram shows vertical lines representing the ``stretch_vmin`` and ``stretch_vmax``
-values, and a colorbar on top. A stretch "curve" can be plotted on the histogram to represent
-how pixel values are mapped to the colorbar. This feature can be toggled
-on from the API with:
+To toggle the stretch curve on the histogram:
 
 .. code-block:: python
 
