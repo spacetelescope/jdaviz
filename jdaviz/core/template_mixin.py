@@ -2151,6 +2151,8 @@ class ApertureSubsetSelect(SubsetSelect):
         for viewer in self.image_viewers:
             x_coords, y_coords = self._get_mark_coords(viewer)
             for mark in self.marks:
+                if mark.viewer != viewer:
+                    continue
                 mark.x, mark.y = x_coords, y_coords
 
 
