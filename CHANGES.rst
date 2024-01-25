@@ -11,6 +11,8 @@ New Features
 
 - Opacity for spatial subsets is now adjustable from within Plot Options. [#2663]
 
+- Live-preview of aperture selection in plugins. [#2664]
+
 Cubeviz
 ^^^^^^^
 
@@ -48,6 +50,9 @@ API Changes
 
 Cubeviz
 ^^^^^^^
+
+- ``spatial_subset`` in the spectral extraction plugin is now renamed to ``aperture`` and the deprecated name will
+  be removed in a future release. [#2664]
 
 Imviz
 ^^^^^

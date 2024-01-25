@@ -27,6 +27,9 @@ def test_plugin_user_apis(cubeviz_helper):
     for plugin_name, plugin_api in cubeviz_helper.plugins.items():
         plugin = plugin_api._obj
         for attr in plugin_api._expose:
+            if plugin_name == 'Spectral Extraction' and attr == 'spatial_subset':
+                # deprecated, so would raise a deprecation warning
+                continue
             assert hasattr(plugin, attr)
 
 

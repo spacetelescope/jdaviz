@@ -22,7 +22,7 @@ try to adhere to the following principles:
   components are necessary in a single row.  Always emphasize readability at the default/minimum
   width of the plugin tray, rather than using columns that result in a ton of text overflow.
 * Use ``<v-row justify="end">`` to align content to the right (such as action buttons).
-* Action buttons should use ``<plugin-action-button :results_isolated_to_plugin="true/false">text</v-btn>``
+* Action buttons should use ``<plugin-action-button :results_isolated_to_plugin="true/false">text</plugin-action-button>``
   to control the color depending on whether the button affects things outside the plugin itself
   (adding/modifying data collection or subset entries, etc) or are isolated to within the plugin
   (adding model components in model fitting, etc).  These buttons can be wrapped in tooltip components

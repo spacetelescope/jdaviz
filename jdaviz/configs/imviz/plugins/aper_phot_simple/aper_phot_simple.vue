@@ -2,6 +2,9 @@
   <j-tray-plugin
     description='Perform aperture photometry for drawn regions.'
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#simple-aperture-photometry'"
+    :uses_active_status="uses_active_status"
+    @plugin-ping="plugin_ping($event)"
+    :keep_active.sync="keep_active"
     :popout_button="popout_button">
 
     <v-row>

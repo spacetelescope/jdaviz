@@ -2,6 +2,9 @@
   <j-tray-plugin
     description='Extract a spectrum from a spectral cube.'
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
+    :uses_active_status="uses_active_status"
+    @plugin-ping="plugin_ping($event)"
+    :keep_active.sync="keep_active"
     :popout_button="popout_button"
     :disabled_msg="disabled_msg">
 
@@ -18,12 +21,52 @@
     </v-row>
 
     <plugin-subset-select 
-      :items="spatial_subset_items"
-      :selected.sync="spatial_subset_selected"
+      :items="aperture_items"
+      :selected.sync="aperture_selected"
       :show_if_single_entry="true"
-      label="Spatial region"
+      label="Spatial aperture"
       hint="Select a spatial region to extract its spectrum."
     />
+
+    <div v-if="aperture_selected !== 'Entire Cube' && dev_cone_support">
+      <v-alert type='warning'>cone support is under active development and hidden from users</v-alert>
+      <v-row>
+        <v-switch
+          v-model="wavelength_dependent"
+          label="Wavelength dependent"
+          hint="Vary aperture linearly with wavelength"
+          persistent-hint>
+        </v-switch>
+      </v-row>
+      <div v-if="wavelength_dependent">
+        <v-row justify="end">
+          <j-tooltip tooltipcontent="Adopt the current slice as the reference wavelength">
+            <plugin-action-button :results_isolated_to_plugin="true" @click="adopt_slice_as_reference">
+              Adopt Current Slice
+            </plugin-action-button>
+          </j-tooltip>
+        </v-row>
+        <v-row>
+          <v-text-field
+            v-model.number="reference_wavelength"
+            type="number"
+            :step="0.1"
+            class="mt-0 pt-0"
+            label="Wavelength"
+            hint="Wavelength at which the aperture matches the selected subset."
+            persistent-hint
+          ></v-text-field>
+        </v-row>
+        <v-row justify="end">
+          <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
+            <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_wavelength">
+              Slice to Reference Wavelength
+            </plugin-action-button>
+          </j-tooltip>
+        </v-row>
+      </div>
+
+    </div>
 
     <plugin-add-results
       :label.sync="results_label"

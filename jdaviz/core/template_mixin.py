@@ -28,9 +28,10 @@ from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
+from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
-from traitlets import Any, Bool, HasTraits, List, Unicode, observe
+from traitlets import Any, Bool, Float, HasTraits, List, Unicode, observe
 
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
@@ -41,13 +42,13 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
-                                AddDataToViewerMessage)
+                                AddDataToViewerMessage, ChangeRefDataMessage)
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
-                               ShadowLine)
-from jdaviz.core.region_translators import _get_region_from_spatial_subset
+                               ShadowLine, ApertureMark)
+from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import get_subset_type
@@ -59,7 +60,9 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'BasePluginComponent',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
            'PluginSubcomponent',
-           'SubsetSelect', 'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
+           'SubsetSelect',
+           'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
+           'ApertureSubsetSelect', 'ApertureSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
@@ -518,6 +521,12 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin):
         for attr in attrs:
             if attr in self.__dict__:
                 del self.__dict__[attr]
+
+    def add_traitlets(self, **traitlets):
+        for k, v in traitlets.items():
+            if v is None:
+                continue
+            self._plugin_traitlets[k] = v
 
     def add_observe(self, traitlet_name, handler, first=False):
         self._plugin.observe(handler, traitlet_name)
@@ -1573,9 +1582,7 @@ class SubsetSelect(SelectPluginComponent):
     * :attr:`selected_obj`
     * :attr:`selected_subset_state`
     * :meth:`selected_min_max`
-    """
 
-    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``items`` (list of dicts with keys: label, color, type)
@@ -1613,7 +1620,6 @@ class SubsetSelect(SelectPluginComponent):
       />
 
     """
-
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
                  default_mode='default_text'):
@@ -1634,7 +1640,7 @@ class SubsetSelect(SelectPluginComponent):
             the name of the dataset traitlet defined in ``plugin``, to be used for accessing how
             the subset is applied to the data (masks, etc), optional
         viewers : list
-            the reference names or ids of the viewer to extract the subregion.  If not provided o
+            the reference names or ids of the viewer to extract the subregion.  If not provided or
             None, will loop through all references.
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
@@ -1683,7 +1689,8 @@ class SubsetSelect(SelectPluginComponent):
         self._update_has_subregions()
 
     def _on_dataset_selected_changed(self, event):
-        self._clear_cache('selected_subset_mask', 'selected_spatial_region')
+        self._clear_cache('selected_subset_mask',
+                          'selected_spatial_region')
 
     def _subset_to_dict(self, subset):
         # find layer artist in default spectrum-viewer
@@ -1825,6 +1832,8 @@ class SubsetSelect(SelectPluginComponent):
             subset_state = self.selected_subset_state
         else:
             subset_state = self._get_subset_state(subset)
+        if subset_state is None:
+            return None
         region = _get_region_from_spatial_subset(self.plugin, subset_state)
         region.meta['label'] = subset
         return region
@@ -1834,13 +1843,11 @@ class SubsetSelect(SelectPluginComponent):
         if not getattr(self, 'dataset', None):  # pragma: no cover
             raise ValueError("Retrieving subset mask requires associated dataset")
         if self.is_multiselect and self.dataset.is_multiselect:  # pragma: no cover
-            # technically this could work if either has length of one, but would require extra
-            # logic
             raise NotImplementedError("cannot access selected_spatial_region for multiple subsets and multiple datasets")  # noqa
         types = self.selected_item.get('type')
         if not isinstance(types, list):
             types = [types]
-        if np.any([type != 'spatial' for type in types]):
+        if np.any([type not in ('spatial', None) for type in types]):
             raise TypeError("This action is only supported on spatial-type subsets")
         if self.is_multiselect:
             return [self._get_spatial_region(dataset=self.dataset.selected, subset=subset) for subset in self.selected]  # noqa
@@ -1940,6 +1947,250 @@ class SpatialSubsetSelectMixin(VuetifyTemplate, HubListener):
                                            dataset='dataset' if hasattr(self, 'dataset') else None,
                                            default_text='Entire Cube',
                                            filters=['is_spatial'])
+
+
+class ApertureSubsetSelect(SubsetSelect):
+    """
+    Plugin select for aperture subsets, with support for single or multi-selection, as well as
+    live-preview rendered in the viewers.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+    * :attr:`~SubsetSelect.selected_obj`
+    * :attr:`~SubsetSelect.selected_subset_state`
+    * :meth:`~SubsetSelect.selected_min_max`
+    * :meth:`marks`
+    * :meth:`image_viewers`
+
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``items`` (list of dicts with keys: label, color, type)
+    * ``selected`` (string)
+
+    Properties (in the object only):
+
+    * ``labels`` (list of labels corresponding to items)
+    * ``selected_item`` (dictionary in ``items`` coresponding to ``selected``, cached)
+    * ``selected_obj`` (subset object corresponding to ``selected``, cached)
+    * ``marks`` (list of marks added to image viewers in the app to preview the apertures)
+
+    Methods (in the object only):
+
+    * ``selected_min_max(cube)`` (quantity, only applicable for spectral subsets)
+
+    To use in a plugin:
+
+    * create (empty) traitlets in the plugin
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets.
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+    * observe the traitlets created and defined in the plugin, as necessary
+
+    Example template (label and hint are optional)::
+
+      <plugin-subset-select
+        :items="aperture_items"
+        :selected.sync="aperture_selected"
+        :show_if_single_entry="true"
+        label="Aperture"
+        hint="Select aperture."
+      />
+
+    """
+    def __init__(self, plugin, items, selected, scale_factor, multiselect=None,
+                 dataset=None, viewers=None):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        scale_factor : str
+            the name of the traitlet defining the radius factor for the drawn aperture
+        multiselect : str
+            the name of the traitlet defining whether the dropdown should accept multiple selections
+        dataset : str
+            the name of the dataset traitlet defined in ``plugin``, to be used for accessing how
+            the subset is applied to the data (masks, etc), optional
+        viewers : list
+            the reference names or ids of the viewer to extract the subregion.  If not provided or
+            None, will loop through all references.
+        """
+        # NOTE: is_not_composite is assumed in _get_mark_coords
+        super().__init__(plugin,
+                         items=items,
+                         selected=selected,
+                         multiselect=multiselect,
+                         filters=['is_spatial', 'is_not_composite', 'is_not_annulus'],
+                         dataset=dataset,
+                         viewers=viewers,
+                         default_text=None)
+
+        self.add_traitlets(scale_factor=scale_factor)
+
+        self.add_observe('is_active', self._plugin_active_changed)
+        self.add_observe(selected, self._update_mark_coords)
+        self.add_observe(scale_factor, self._update_mark_coords)
+        # add marks to any new viewers
+        self.hub.subscribe(self, ViewerAddedMessage, handler=self._update_mark_coords)
+        # update coordinates when reference data is changed
+        # NOTE: when link type is changed, all subsets are required to be dropped
+        self.hub.subscribe(self, ChangeRefDataMessage, handler=self._update_mark_coords)
+
+    def _update_subset(self, *args, **kwargs):
+        # update coordinates when subset is modified (with subset tools plugin or drag event)
+        super()._update_subset(*args, **kwargs)
+        self._update_mark_coords()
+
+    def _on_dataset_selected_changed(self, event):
+        super()._on_dataset_selected_changed(event)
+        self._update_mark_coords()
+
+    def _plugin_active_changed(self, *args):
+        for mark in self.marks:
+            mark.visible = self.plugin.is_active
+
+    @property
+    def image_viewers(self):
+        return [viewer for viewer in self.app._viewer_store.values()
+                if isinstance(viewer, BqplotImageView)]
+
+    @property
+    def marks(self):
+        # NOTE: this will require additional logic if we want to support multiple independent
+        # ApertureSubsetSelect instances per-plugin
+        all_aperture_marks = []
+        for viewer in self.image_viewers:
+            # search for existing mark
+            matches = [mark for mark in viewer.figure.marks
+                       if isinstance(mark, ApertureMark)]
+            if len(matches):
+                all_aperture_marks += matches
+                continue
+
+            x_coords, y_coords = self._get_mark_coords(viewer)
+
+            mark = ApertureMark(
+                viewer,
+                x=x_coords,
+                y=y_coords,
+                colors=['#c75109'],
+                fill_opacities=[0.0],
+                visible=self.plugin.is_active)
+            all_aperture_marks.append(mark)
+            viewer.figure.marks = viewer.figure.marks + [mark]
+        return all_aperture_marks
+
+    def _get_mark_coords(self, viewer):
+        if not len(self.selected) or not len(self.dataset.selected):
+            return [], []
+        if self.selected in self._manual_options:
+            return [], []
+
+        if getattr(self, 'multiselect', False):
+            # assume first dataset (for retrieving the region object)
+            # but iterate over all subsets
+            spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset)  # noqa
+                               for subset in self.selected if subset != self._manual_options]
+        else:
+            # use cached version
+            spatial_regions = [self.selected_spatial_region]
+
+        x_coords, y_coords = np.array([]), np.array([])
+        for spatial_region in spatial_regions:
+            if spatial_region is None:
+                continue
+
+            if isinstance(spatial_region, PixelRegion):
+                pixel_region = spatial_region
+            else:
+                wcs = getattr(viewer.state.reference_data, 'coords', None)
+                if wcs is None:
+                    return [], []
+                pixel_region = spatial_region.to_pixel(wcs)
+            roi = regions2roi(pixel_region)
+
+            # NOTE: this assumes that we'll apply the same radius factor to all subsets (all will
+            # be defined at the same slice for cones in cubes)
+            if hasattr(roi, 'radius'):
+                roi.radius *= self.scale_factor
+            elif hasattr(roi, 'radius_x'):
+                roi.radius_x *= self.scale_factor
+                roi.radius_y *= self.scale_factor
+            elif hasattr(roi, 'center'):
+                center = roi.center()
+                half_width = abs(roi.xmax - roi.xmin) * 0.5 * self.scale_factor
+                half_height = abs(roi.ymax - roi.ymin) * 0.5 * self.scale_factor
+                roi.xmin = center[0] - half_width
+                roi.xmax = center[0] + half_width
+                roi.ymin = center[1] - half_height
+                roi.ymax = center[1] + half_height
+            else:  # pragma: no cover
+                raise NotImplementedError
+
+            x, y = roi.to_polygon()
+
+            # concatenate with nan between to avoid line connecting separate subsets
+            x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
+            y_coords = np.concatenate((y_coords, np.array([np.nan]), y))
+
+        return x_coords, y_coords
+
+    def _update_mark_coords(self, *args):
+        for viewer in self.image_viewers:
+            x_coords, y_coords = self._get_mark_coords(viewer)
+            for mark in self.marks:
+                if mark.viewer != viewer:
+                    continue
+                mark.x, mark.y = x_coords, y_coords
+
+
+class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the ApertureSubsetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``ApertureSubsetSelectMixin`` as a mixin to the class BEFORE ``DatasetSelectMixin``
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.aperture``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-subset-select
+        :items="aperture_items"
+        :selected.sync="aperture_selected"
+        label="Aperture"
+        hint="Select aperture."
+      />
+
+    """
+    aperture_items = List([]).tag(sync=True)
+    aperture_selected = Any('').tag(sync=True)
+    aperture_scale_factor = Float(1).tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.aperture = ApertureSubsetSelect(self,
+                                             'aperture_items',
+                                             'aperture_selected',
+                                             'aperture_scale_factor',
+                                             dataset='dataset' if hasattr(self, 'dataset') else None,  # noqa
+                                             multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
 
 class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):

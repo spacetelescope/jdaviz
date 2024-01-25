@@ -5,17 +5,19 @@ from packaging.version import Version
 import numpy as np
 import astropy
 import astropy.units as u
+from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, NDUncertainty
 )
-from traitlets import Bool, List, Unicode, observe
+from traitlets import Bool, Float, List, Unicode, observe
 
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.events import SnackbarMessage, SliceWavelengthUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SelectPluginComponent,
-                                        SpatialSubsetSelectMixin,
+                                        ApertureSubsetSelectMixin,
                                         AddResultsMixin,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
@@ -30,8 +32,8 @@ ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
 @tray_registry(
     'cubeviz-spectral-extraction', label="Spectral Extraction", viewer_requirements='spectrum'
 )
-class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
-                         SpatialSubsetSelectMixin, AddResultsMixin):
+class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
+                         DatasetSelectMixin, AddResultsMixin):
     """
     See the :ref:`Spectral Extraction Plugin Documentation <spex>` for more details.
 
@@ -41,12 +43,20 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
-      Subset to use for the spectral extraction, or ``No Subset``.
+    * ``aperture`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Subset to use for the spectral extraction, or ``Entire Cube``.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`collapse`
     """
     template_file = __file__, "spectral_extraction.vue"
+    uses_active_status = Bool(True).tag(sync=True)
+
+    # feature flag for cone support
+    dev_cone_support = Bool(False).tag(sync=True)
+    wavelength_dependent = Bool(False).tag(sync=True)
+    reference_wavelength = FloatHandleEmpty().tag(sync=True)
+    slice_wavelength = Float().tag(sync=True)
+
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
@@ -68,6 +78,12 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
 
         self.extracted_spec = None
 
+        # TODO: in the future this could be generalized with support in SelectPluginComponent
+        self.aperture._default_text = 'Entire Cube'
+        self.aperture._manual_options = ['Entire Cube']
+        self.aperture.items = [{"label": "Entire Cube"}]
+        self.aperture.select_default()
+
         self.function = SelectPluginComponent(
             self,
             items='function_items',
@@ -76,6 +92,9 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
         )
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_spectrum_viewer']
+
+        self.session.hub.subscribe(self, SliceWavelengthUpdatedMessage,
+                                   handler=self._on_slice_changed)
 
         if ASTROPY_LT_5_3_2:
             self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy>=5.3.2"
@@ -95,10 +114,43 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
         return PluginUserApi(
             self,
             expose=(
-                'function', 'spatial_subset',
+                'function', 'spatial_subset', 'aperture',
                 'add_results', 'collapse_to_spectrum'
             )
         )
+
+    @property
+    @deprecated(since="3.9", alternative="aperture")
+    def spatial_subset(self):
+        return self.user_api.aperture
+
+    @property
+    def slice_plugin(self):
+        return self.app._jdaviz_helper.plugins['Slice']
+
+    @observe('wavelength_dependent')
+    def _wavelength_dependent_changed(self, *args):
+        if self.wavelength_dependent:
+            self.reference_wavelength = self.slice_plugin.wavelength
+        # NOTE: this can be redundant in the case where reference_wavelength changed and triggers
+        # the observe, but we need to ensure it is updated if reference_wavelength is unchanged
+        self._update_mark_scale()
+
+    def _on_slice_changed(self, msg):
+        self.slice_wavelength = msg.wavelength
+
+    def vue_goto_reference_wavelength(self, *args):
+        self.slice_plugin.wavelength = self.reference_wavelength
+
+    def vue_adopt_slice_as_reference(self, *args):
+        self.reference_wavelength = self.slice_plugin.wavelength
+
+    @observe('reference_wavelength', 'slice_wavelength')
+    def _update_mark_scale(self, *args):
+        if not self.wavelength_dependent:
+            self.aperture.scale_factor = 1.0
+            return
+        self.aperture.scale_factor = self.slice_wavelength/self.reference_wavelength
 
     @with_spinner()
     def collapse_to_spectrum(self, add_data=True, **kwargs):
@@ -121,12 +173,12 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
         # and uncertainties in different glue Data objects, we translate the spectral
         # cube and its uncertainties into separate NDDataArrays, then combine them:
-        if self.spatial_subset_selected != self.spatial_subset.default_text:
+        if self.aperture.selected != self.aperture.default_text:
             nddata = spectral_cube.get_subset_object(
-                subset_id=self.spatial_subset_selected, cls=NDDataArray
+                subset_id=self.aperture.selected, cls=NDDataArray
             )
             uncertainties = uncert_cube.get_subset_object(
-                subset_id=self.spatial_subset_selected, cls=StdDevUncertainty
+                subset_id=self.aperture.selected, cls=StdDevUncertainty
             )
         else:
             nddata = spectral_cube.get_object(cls=NDDataArray)
@@ -242,15 +294,15 @@ class SpectralExtraction(PluginTemplateMixin, DatasetSelectMixin,
             f"Extracted spectrum saved to {os.path.abspath(filename)}",
                            sender=self, color="success"))
 
-    @observe('spatial_subset_selected')
+    @observe('aperture_selected')
     def _set_default_results_label(self, event={}):
         label = "Spectral extraction"
 
         if (
-            hasattr(self, 'spatial_subset') and
-            self.spatial_subset.selected != self.spatial_subset.default_text
+            hasattr(self, 'aperture') and
+            self.aperture.selected != self.aperture.default_text
         ):
-            label += f' ({self.spatial_subset_selected})'
+            label += f' ({self.aperture_selected})'
         self.results_label_default = label
 
 
