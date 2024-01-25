@@ -2089,7 +2089,8 @@ class ApertureSubsetSelect(SubsetSelect):
                 x=x_coords,
                 y=y_coords,
                 colors=['#c75109'],
-                fill_opacities=[0.0])
+                fill_opacities=[0.0],
+                visible=self.plugin.is_active)
             all_aperture_marks.append(mark)
             viewer.figure.marks = viewer.figure.marks + [mark]
         return all_aperture_marks
