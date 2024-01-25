@@ -2253,7 +2253,6 @@ class Application(VuetifyTemplate, HubListener):
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
             'canvas_flip_horizontal': False,  # canvas rotation horizontal flip
             'config': self.config,  # give viewer access to app config/layout
-            'data_open': False,
             'collapse': True,
             'reference': reference or name or vid,
             'linked_by_wcs': linked_by_wcs,
