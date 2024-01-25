@@ -1,10 +1,16 @@
 <template>
-  <div class="strike text--secondary">
+  <div :class="active ? 'strike strike-active text--secondary': 'strike text--secondary'">
      <span>
        <slot></slot>
      </span>
   </div>
 </template>
+
+<script>
+module.exports = {
+  props: ['active'],
+};
+</script>
 
 
 <style scoped>
@@ -32,6 +38,11 @@
     width: 9999px;
     height: 1px;
     background: rgba(0, 0, 0, 0.15);
+}
+
+.strike-active > span:before,
+.strike-active > span:after {
+    background: #c75d2c;  /* active orange */
 }
 
 .strike > span:before {

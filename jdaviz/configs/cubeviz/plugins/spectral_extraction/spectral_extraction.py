@@ -9,7 +9,7 @@ from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, NDUncertainty
 )
-from traitlets import Bool, Float, List, Unicode, observe
+from traitlets import Any, Bool, Float, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceWavelengthUpdatedMessage
@@ -18,6 +18,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SelectPluginComponent,
                                         ApertureSubsetSelectMixin,
+                                        ApertureSubsetSelect,
                                         AddResultsMixin,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
@@ -52,10 +53,22 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     uses_active_status = Bool(True).tag(sync=True)
 
     # feature flag for cone support
-    dev_cone_support = Bool(False).tag(sync=True)
+    dev_cone_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
+    dev_bg_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
+    dev_subpixel_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
+
+    active_step = Unicode().tag(sync=True)
+
     wavelength_dependent = Bool(False).tag(sync=True)
     reference_wavelength = FloatHandleEmpty().tag(sync=True)
     slice_wavelength = Float().tag(sync=True)
+
+    bg_items = List([]).tag(sync=True)
+    bg_selected = Any('').tag(sync=True)
+    bg_scale_factor = Float(1).tag(sync=True)
+    bg_wavelength_dependent = Bool(False).tag(sync=True)
+
+    subpixel = Bool(False).tag(sync=True)
 
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
@@ -84,6 +97,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.aperture.items = [{"label": "Entire Cube"}]
         self.aperture.select_default()
 
+        self.background = ApertureSubsetSelect(self,
+                                               'bg_items',
+                                               'bg_selected',
+                                               'bg_scale_factor',
+                                               dataset='dataset',
+                                               multiselect=None,
+                                               default_text='None')
+
         self.function = SelectPluginComponent(
             self,
             items='function_items',
@@ -111,27 +132,37 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def user_api(self):
-        return PluginUserApi(
-            self,
-            expose=(
-                'function', 'spatial_subset', 'aperture',
-                'add_results', 'collapse_to_spectrum'
-            )
-        )
+        expose = ['function', 'spatial_subset', 'aperture',
+                  'add_results', 'collapse_to_spectrum']
+        if self.dev_cone_support:
+            expose += ['wavelength_dependent', 'reference_wavelength']
+        if self.dev_bg_support:
+            expose += ['background', 'bg_wavelength_dependent']
+        if self.dev_subpixel_support:
+            expose += ['subpixel']
+
+        return PluginUserApi(self, expose=expose)
 
     @property
     @deprecated(since="3.9", alternative="aperture")
     def spatial_subset(self):
         return self.user_api.aperture
 
+    @observe('active_step')
+    def _active_step_changed(self, *args):
+        self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'ext'))
+        self.background._set_mark_visiblities(self.active_step == 'bg')
+
     @property
     def slice_plugin(self):
         return self.app._jdaviz_helper.plugins['Slice']
 
-    @observe('wavelength_dependent')
+    @observe('wavelength_dependent', 'bg_wavelength_dependent')
     def _wavelength_dependent_changed(self, *args):
         if self.wavelength_dependent:
             self.reference_wavelength = self.slice_plugin.wavelength
+        else:
+            self.bg_wavelength_dependent = False
         # NOTE: this can be redundant in the case where reference_wavelength changed and triggers
         # the observe, but we need to ensure it is updated if reference_wavelength is unchanged
         self._update_mark_scale()
@@ -149,8 +180,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _update_mark_scale(self, *args):
         if not self.wavelength_dependent:
             self.aperture.scale_factor = 1.0
-            return
-        self.aperture.scale_factor = self.slice_wavelength/self.reference_wavelength
+        else:
+            self.aperture.scale_factor = self.slice_wavelength/self.reference_wavelength
+        if not self.bg_wavelength_dependent:
+            self.background.scale_factor = 1.0
+        else:
+            self.background.scale_factor = self.slice_wavelength/self.reference_wavelength
 
     @with_spinner()
     def collapse_to_spectrum(self, add_data=True, **kwargs):

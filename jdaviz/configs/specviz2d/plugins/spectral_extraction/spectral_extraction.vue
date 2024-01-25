@@ -29,7 +29,7 @@
 
 
     <div @mouseover="() => active_step='trace'">
-      <j-plugin-section-header>Trace</j-plugin-section-header>
+      <j-plugin-section-header :active="active_step==='trace'">Trace</j-plugin-section-header>
       <v-row>
         <j-docs-link>
           Create a trace for the spectrum.  See the <j-external-link link='https://specreduce.readthedocs.io/en/latest/#module-specreduce.tracing' linktext='specreduce docs'></j-external-link> for more details on the available trace types.
@@ -189,7 +189,7 @@
     </div>
 
     <div @mouseover="() => active_step='bg'">
-      <j-plugin-section-header>Background</j-plugin-section-header>
+      <j-plugin-section-header :active="active_step==='bg'">Background</j-plugin-section-header>
       <v-row>
         <j-docs-link>Create a background and/or background-subtracted image.</j-docs-link>
       </v-row>
@@ -352,7 +352,7 @@
     </div>
 
     <div @mouseover="() => active_step='ext'">
-      <j-plugin-section-header>Extraction</j-plugin-section-header>
+      <j-plugin-section-header :active="active_step==='ext'">Extraction</j-plugin-section-header>
       <v-row>
         <j-docs-link>
           Extract a 1D spectrum from a 2D spectrum.  See the <j-external-link link='https://specreduce.readthedocs.io/en/latest/#module-specreduce.extract' linktext='specreduce docs'></j-external-link> for more details on the available extraction methods.

@@ -654,7 +654,8 @@ class FootprintOverlay(PluginLine):
 
 
 class ApertureMark(PluginLine):
-    def __init__(self, viewer, **kwargs):
+    def __init__(self, viewer, id, **kwargs):
+        self._id = id
         super().__init__(viewer, **kwargs)
 
 
