@@ -52,6 +52,17 @@
 
     <slot></slot>
 
+    <v-row>
+      <v-switch
+        v-model="auto_update_result"
+        @change="(e) => {$emit('update:auto_update_result', auto_update_result)}"
+        label="Auto-update result"
+        hint="Regenerate the resulting data-product whenever any inputs are changed"
+        persistent-hint
+      >
+      </v-switch>
+    </v-row>
+
     <v-row justify="end">
       <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
         <plugin-action-button 
@@ -76,7 +87,7 @@
 <script>
 module.exports = {
   props: ['label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
-          'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint',
+          'add_to_viewer_items', 'add_to_viewer_selected', 'auto_update_result', 'add_to_viewer_hint',
           'action_disabled', 'action_spinner', 'action_label', 'action_tooltip']
 };
 </script>

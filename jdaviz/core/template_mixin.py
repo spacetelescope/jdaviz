@@ -3262,6 +3262,8 @@ class AddResults(BasePluginComponent):
     * ``add_to_viewer_items`` (list of dicts: see ``ViewerSelect``)
     * ``add_to_viewer_selected`` (string: name of the viewer to add the results,
         see ``ViewerSelect``)
+    * ``auto_update_result`` (bool: whether the resulting data-product should be regenerated when
+        any input arguments are changed)
 
 
     Methods:
@@ -3280,6 +3282,7 @@ class AddResults(BasePluginComponent):
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        :auto_update_result.sync="auto_update_result"
         action_label="Apply"
         action_tooltip="Apply the action to the data"
         @click:action="apply"
@@ -3290,12 +3293,14 @@ class AddResults(BasePluginComponent):
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
                  add_to_viewer_items, add_to_viewer_selected,
+                 auto_update_result,
                  label_whitelist_overwrite=[]):
         super().__init__(plugin, label=label,
                          label_default=label_default, label_auto=label_auto,
                          label_invalid_msg=label_invalid_msg, label_overwrite=label_overwrite,
                          add_to_viewer_items=add_to_viewer_items,
-                         add_to_viewer_selected=add_to_viewer_selected)
+                         add_to_viewer_selected=add_to_viewer_selected,
+                         auto_update_result=auto_update_result)
 
         # DataCollectionAdd/Delete are fired even if remain unchecked in all viewers
         self.hub.subscribe(self, DataCollectionAddMessage,
@@ -3319,7 +3324,7 @@ class AddResults(BasePluginComponent):
 
     @property
     def user_api(self):
-        return UserApiWrapper(self, ('label', 'auto', 'viewer'))
+        return UserApiWrapper(self, ('label', 'auto', 'viewer', 'auto_update_result'))
 
     @property
     def label(self):
@@ -3432,6 +3437,10 @@ class AddResults(BasePluginComponent):
         data_item.meta['Plugin'] = self._plugin.__class__.__name__
         if self.app.config == 'mosviz':
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
+
+        if self.auto_update_result:
+            data_item.meta['_update_live_plugin_results'] = self.plugin.user_api.to_dict()
+
         self.app.add_data(data_item, label)
 
         for viewer_ref, visible, preserved in zip(add_to_viewer_refs, add_to_viewer_vis,
@@ -3481,6 +3490,7 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        :auto_update_result.sync="auto_update_result"
         action_label="Apply"
         action_tooltip="Apply the action to the data"
         @click:action="apply"
@@ -3496,12 +3506,15 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
     add_to_viewer_items = List().tag(sync=True)
     add_to_viewer_selected = Unicode().tag(sync=True)
 
+    auto_update_result = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_results = AddResults(self, 'results_label',
                                       'results_label_default', 'results_label_auto',
                                       'results_label_invalid_msg', 'results_label_overwrite',
-                                      'add_to_viewer_items', 'add_to_viewer_selected')
+                                      'add_to_viewer_items', 'add_to_viewer_selected',
+                                      'auto_update_result')
 
 
 class PlotOptionsSyncState(BasePluginComponent):
