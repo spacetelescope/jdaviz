@@ -2317,11 +2317,15 @@ class Application(VuetifyTemplate, HubListener):
             viewer=viewer, vid=vid, name=name, reference=name
         )
 
-        ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
-        new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
+        if self.config == 'imviz':
+            # NOTE: if ever extending image rotation beyond imviz or adding non-image viewers
+            # to imviz: this currently assumes that the helper has a default_viewer and that is an
+            # image viewer
+            ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
+            new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
 
-        if hasattr(viewer, 'reference'):
-            viewer.state.reference_data = ref_data
+            if hasattr(viewer, 'reference'):
+                viewer.state.reference_data = ref_data
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
