@@ -407,9 +407,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         # Extract data values at this position.
         # Check if shape is [x, y, z] or [y, x] and show value accordingly.
         if image.ndim == 3:
-            # needed for cubeviz
-            ix_shape = 0
-            iy_shape = 1
+            if self.app.config == 'lcviz':
+                ix_shape = 2
+                iy_shape = 1
+            else:
+                # cubeviz case
+                ix_shape = 0
+                iy_shape = 1
         elif image.ndim == 2:
             ix_shape = 1
             iy_shape = 0
@@ -426,7 +430,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
                 if image.ndim == 3:
-                    value = arr[int(round(x)), int(round(y)), viewer.state.slices[-1]]
+                    if self.app.config == 'lcviz':
+                        value = arr[viewer.state.slices[0], int(round(y)), int(round(x))]
+                    else:
+                        # cubeviz case:
+                        value = arr[int(round(x)), int(round(y)), viewer.state.slices[-1]]
                 else:  # 2
                     value = arr[int(round(y)), int(round(x))]
             self.row1b_title = 'Value'
