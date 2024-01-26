@@ -11,6 +11,7 @@ from astropy.nddata import (
 )
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
+
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceWavelengthUpdatedMessage
 from jdaviz.core.registries import tray_registry
@@ -76,6 +77,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     filename = Unicode().tag(sync=True)
     extracted_spec_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
+
+    aperture_method_items = List(['exact', 'subpixel', 'center']).tag(sync=True)
+    aperture_method_selected = Unicode('exact').tag(sync=True)
+    cone_aperture_slope = Float().tag(sync=True)
+    cone_aperture_intercept = Float().tag(sync=True)
+    cone_aperture_center = Any().tag(sync=True)
 
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
@@ -283,6 +290,45 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.hub.broadcast(snackbar_message)
 
         return collapsed_spec
+
+    @with_spinner()
+    def cone_aperture(self):
+        # Temporarily here until we decide where this code will go permanently
+        from specutils import Spectrum1D
+        from photutils.aperture import CircularAperture
+        spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
+        nddata = spectral_cube.get_object(cls=NDDataArray)
+
+        # Hardcode to get the DQ array
+        mask_cube = self.app.data_collection[2].get_object(cls=Spectrum1D, statistic=None)
+
+        masks_exact_values = np.zeros_like(mask_cube.flux.value)
+        masks_boolean_values = np.zeros_like(mask_cube.flux.value)
+
+        cone_height = len(mask_cube.spectral_axis)
+        unit = nddata.unit
+        # This will be set in the .vue file once its location in the plugin is set
+        self.cone_aperture_slope = .001
+        self.cone_aperture_intercept = 1
+        self.cone_aperture_center = (25, 25)
+
+        for wavelength in range(1, cone_height):
+            radius = ((self.cone_aperture_slope * u.pix / unit) * (wavelength - 1) * unit
+                      + (self.cone_aperture_intercept * u.pix))
+            aperture = CircularAperture(self.cone_aperture_center, r=radius.value)
+            slice_mask = aperture.to_mask(method=self.aperture_method_selected).to_image(
+                (len(mask_cube.flux), len(mask_cube.flux[0])))
+            # Calculates the mask array based on what function is selected. This array
+            # is then added to the larger array that tracks mask values for the entire
+            # cube
+            if self.function_selected == 'Min':
+                masks_exact_values[:, :, wavelength] = slice_mask
+                masks_boolean_values[:, :, wavelength] = ~(slice_mask < 1)
+            else:
+                masks_exact_values[:, :, wavelength] = slice_mask
+                masks_boolean_values[:, :, wavelength] = ~(slice_mask == 0)
+        all_masks = NDDataArray(data=masks_exact_values, mask=masks_boolean_values)
+        return all_masks
 
     def vue_spectral_extraction(self, *args, **kwargs):
         self.collapse_to_spectrum(add_data=True)
