@@ -2006,7 +2006,7 @@ class ApertureSubsetSelect(SubsetSelect):
 
     """
     def __init__(self, plugin, items, selected, scale_factor, multiselect=None,
-                 dataset=None, viewers=None):
+                 dataset=None, viewers=None, default_text=None):
         """
         Parameters
         ----------
@@ -2035,7 +2035,7 @@ class ApertureSubsetSelect(SubsetSelect):
                          filters=['is_spatial', 'is_not_composite', 'is_not_annulus'],
                          dataset=dataset,
                          viewers=viewers,
-                         default_text=None)
+                         default_text=default_text)
 
         self.add_traitlets(scale_factor=scale_factor)
 
@@ -2057,9 +2057,12 @@ class ApertureSubsetSelect(SubsetSelect):
         super()._on_dataset_selected_changed(event)
         self._update_mark_coords()
 
-    def _plugin_active_changed(self, *args):
+    def _set_mark_visiblities(self, visible):
         for mark in self.marks:
-            mark.visible = self.plugin.is_active
+            mark.visible = visible
+
+    def _plugin_active_changed(self, *args):
+        self._set_mark_visiblities(self.plugin.is_active)
 
     @property
     def image_viewers(self):
@@ -2068,13 +2071,12 @@ class ApertureSubsetSelect(SubsetSelect):
 
     @property
     def marks(self):
-        # NOTE: this will require additional logic if we want to support multiple independent
-        # ApertureSubsetSelect instances per-plugin
         all_aperture_marks = []
         for viewer in self.image_viewers:
             # search for existing mark
             matches = [mark for mark in viewer.figure.marks
-                       if isinstance(mark, ApertureMark)]
+                       if (isinstance(mark, ApertureMark) and
+                           mark._id == self._plugin_traitlets['selected'])]
             if len(matches):
                 all_aperture_marks += matches
                 continue
@@ -2083,6 +2085,7 @@ class ApertureSubsetSelect(SubsetSelect):
 
             mark = ApertureMark(
                 viewer,
+                id=self._plugin_traitlets['selected'],
                 x=x_coords,
                 y=y_coords,
                 colors=['#c75109'],

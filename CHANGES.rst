@@ -24,6 +24,8 @@ Cubeviz
 
 - Single-pixel subset tool now shows spectrum-at-spaxel on hover. [#2647]
 
+- Spectral extraction plugin re-organized into subsections to be more consistent with specviz2d. [#2676]
+
 Imviz
 ^^^^^
 
@@ -38,6 +40,8 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+- Spectral extraction plugin: highlighting of active header section. [#2676]
 
 API Changes
 -----------
