@@ -2317,28 +2317,15 @@ class Application(VuetifyTemplate, HubListener):
             viewer=viewer, vid=vid, name=name, reference=name
         )
 
-        print("*** hasattr(viewer.state, 'reference_data')", hasattr(viewer.state, 'reference_data'))
-        if hasattr(viewer.state, 'reference_data'):
-            if hasattr(self._jdaviz_helper, 'default_viewer'):
-                # in the case of Imviz, we will use the default_viewer defined by the helper
-                def_viewer = self._jdaviz_helper.default_viewer._obj
-            else:
-                # otherwise we need a viewer of the same type
-                for _, other_viewer in self._viewer_store.items():
-                    if (hasattr(other_viewer.state, 'reference_data')
-                            and isinstance(other_viewer, viewer.__class__)):
-                        def_viewer = other_viewer
-                        break
-                else:
-                    def_viewer = None
+        if self.config == 'imviz':
+            # NOTE: if ever extending image rotation beyond imviz or adding non-image viewers
+            # to imviz: this currently assumes that the helper has a default_viewer and that is an
+            # image viewer
+            ref_data = self._jdaviz_helper.default_viewer._obj.state.reference_data
+            new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
 
-            print("*** def_viewer is not None", def_viewer is not None)
-            if def_viewer is not None:
-                ref_data = def_viewer.state.reference_data
-                new_viewer_item['reference_data_label'] = getattr(ref_data, 'label', None)
-
-                if hasattr(viewer, 'reference'):
-                    viewer.state.reference_data = ref_data
+            if hasattr(viewer, 'reference'):
+                viewer.state.reference_data = ref_data
 
         new_stack_item = self._create_stack_item(
             container='gl-stack',
