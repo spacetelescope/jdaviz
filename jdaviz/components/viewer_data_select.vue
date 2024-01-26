@@ -127,6 +127,10 @@ module.exports = {
       if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
         multi_select = false
       }
+    } else if (this.$props.viewer.config === 'lcviz') {
+      if (this.$props.viewer.reference.startsWith('tpf')) {
+        multi_select = false
+      }
     }
     return {
       // default to passed values, whenever value or uncertainty are changed
@@ -193,14 +197,17 @@ module.exports = {
         }
       } else if (this.$props.viewer.config === 'lcviz') {
         // TODO: generalize itemIsVisible so downstream apps can provide their own customized filters
+        if (this.$props.viewer.reference.startsWith('tpf')) {
+          return (item.ndims === 3 && this.dataItemInViewer(item, returnExtraItems))
+        }
         if (item.meta._LCVIZ_EPHEMERIS !== undefined) {
           if (!this.$props.viewer.reference.startsWith('flux-vs-phase:')) {
             return false
           }
           var viewer_ephem_comp = this.$props.viewer.reference.split('flux-vs-phase:')[1].split('[')[0]
-          return item.meta._LCVIZ_EPHEMERIS.ephemeris == viewer_ephem_comp && this.dataItemInViewer(item, returnExtraItems)
+          return item.ndims === 1 && item.meta._LCVIZ_EPHEMERIS.ephemeris == viewer_ephem_comp && this.dataItemInViewer(item, returnExtraItems)
         }
-        return this.dataItemInViewer(item, returnExtraItems)
+        return item.ndims === 1 && this.dataItemInViewer(item, returnExtraItems)
       } else if (this.$props.viewer.config === 'imviz') {
         return this.dataItemInViewer(item, returnExtraItems && !this.wcsOnlyItem(item))
       }
@@ -247,7 +254,7 @@ module.exports = {
       var title = this.$props.viewer.reference || this.$props.viewer.id
       // this translates from kebab-case to human readable (individual words, in title case)
       // each word that should NOT be capitalized needs to explicitly be set here
-      return title.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => {if (['vs'].indexOf(word) !== -1) {return word} else {return word.charAt(0).toUpperCase() + word.slice(1)}}).join(' ');
+      return title.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => {if (['vs', 'tpf'].indexOf(word) !== -1) {return word} else {return word.charAt(0).toUpperCase() + word.slice(1)}}).join(' ');
     },
     showModeToggle() {
       if (this.$props.viewer.config === 'cubeviz') {
