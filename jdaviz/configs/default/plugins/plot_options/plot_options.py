@@ -878,15 +878,16 @@ class PlotOptions(PluginTemplateMixin):
             if not len(self.layer.selected_obj[0]):
                 return
             # multiselect case (but we won't check multiselect since the selection can lag behind)
-            data = self.layer.selected_obj[0][0].layer
+            layer = self.layer.selected_obj[0][0]
         else:
-            data = self.layer.selected_obj[0].layer
+            layer = self.layer.selected_obj[0]
+        data = layer.layer
 
         if isinstance(data, GroupedSubset):
             # don't update histogram for subsets:
             return
 
-        comp = data.get_component(data.main_components[0])
+        comp = data.get_component(layer.state.attribute)
 
         # TODO: further optimization could be done by caching sub_data
         if self.stretch_hist_zoom_limits and (not self.layer_multiselect or len(self.layer_selected) == 1):  # noqa
