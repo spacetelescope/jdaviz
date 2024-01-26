@@ -362,14 +362,14 @@ class Application(VuetifyTemplate, HubListener):
         # Key should be (data_label, statistic) and value the translated object.
         self._get_object_cache = {}
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda msg: self._clear_object_cache(msg.subset.label))
+                           handler=self._on_subset_update_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
 
         # Subscribe to messages that result in changes to the layers
         self.hub.subscribe(self, AddDataMessage,
-                           handler=self._on_layers_changed)
+                           handler=self._on_add_data_message)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_layers_changed)
         self.hub.subscribe(self, SubsetCreateMessage,
@@ -383,6 +383,38 @@ class Application(VuetifyTemplate, HubListener):
             return
         key = f"{msg.plugin._plugin_name}: {msg.table._table_name}"
         self._plugin_tables.setdefault(key, msg.table.user_api)
+
+    def _update_live_plugin_results(self, trigger_data=None, trigger_subset=None):
+        # print("*** _update_live_plugin_results", trigger_data, trigger_subset)
+        for data in self.data_collection:
+            plugin_inputs = data.meta.get('_update_live_plugin_results', None)
+            if plugin_inputs is None:
+                continue
+            # print(f"*** {data.label}, {trigger_data}, {trigger_subset}")
+            # TODO: generalize to any data input (not just dataset)
+            if trigger_data is not None and plugin_inputs.get('dataset') != trigger_data:
+                continue
+            # TODO: generalize to any subset input (not just spectral_subset)
+            if trigger_subset is not None and plugin_inputs.get('spectral_subset') != trigger_subset:
+                continue
+            # update and overwrite data
+            print("*** UPDATING LIVE PLUGIN RESULTS FOR", data.label)
+            # make a new instance of the plugin to avoid changing any UI settings
+            plg = self._jdaviz_helper.plugins.get(data.meta.get('Plugin'))._obj.new()
+            plg.user_api.from_dict(plugin_inputs)
+            # still need to know the method to call to add the results...
+            if data.meta.get('Plugin') != 'Collapse':
+                raise NotImplementedError("currently hardcocded for collapse case")
+            plg.collapse(add_data=True)
+
+    def _on_add_data_message(self, msg):
+        self._on_layers_changed(msg)
+        self._update_live_plugin_results(trigger_data=msg.data.label)
+
+    def _on_subset_update_message(self, msg):
+        # NOTE: print statements in here will require the viewer output_widget
+        self._clear_object_cache(msg.subset.label)
+        self._update_live_plugin_results(trigger_subset=msg.subset.label)
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:

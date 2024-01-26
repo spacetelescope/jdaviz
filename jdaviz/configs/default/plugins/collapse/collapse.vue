@@ -44,6 +44,7 @@
       label_hint="Label for the collapsed cube"
       :add_to_viewer_items="add_to_viewer_items"
       :add_to_viewer_selected.sync="add_to_viewer_selected"
+      :auto_update_result.sync="auto_update_result"
       action_label="Collapse"
       action_tooltip="Collapse data"
       :action_spinner="spinner"
