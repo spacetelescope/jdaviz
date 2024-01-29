@@ -41,7 +41,9 @@
             class="mt-0 pt-0"
             type="number"
             label="Slice (for cube)"
-            hint="Slice number (for cube only)"
+            hint="Extracts photometry from currently selected cube slice"
+            disabled
+
           ></v-text-field>
         </v-col>
       </v-row>
