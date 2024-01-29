@@ -304,12 +304,12 @@ Layer
 This option allows you to change which layer you are changing the settings for.
 
 Show image
-------
+----------
 
 This option selects whether to show or hide the image in the viewer.
 
 Color mode
---------
+----------
 
 This option allows you to choose whether to use a colormap or or a single color to visualize the image.
 The colormap can be selected from a dropdown within the Layer tab. In monochromatic mode, the color
@@ -323,7 +323,7 @@ be able to fine tune all options within each Layer tab.
 From the API
 ^^^^^^^^^^^^
 
-To set the colormap for just the image being displayed:
+The colormap for just the image being displayed can be set using the Astrowidgets API:
 
 .. code-block:: python
 
@@ -331,7 +331,8 @@ To set the colormap for just the image being displayed:
     viewer.colormap_options
     viewer.set_colormap('Viridis')
 
-To set the colormap for all the images at once:
+Or it can be set using the Plugin API (in this example, the colormap is
+being set for all the images at once):
 
 .. code-block:: python
 
@@ -397,15 +398,17 @@ values based on percentiles of the data.
 An interactive histogram is available. It shows vertical lines representing
 the ``stretch_vmin`` and ``stretch_vmax`` values, and a colorbar on top.
 The stretch "curve" is plotted on the histogram to represent
-how pixel values are mapped to the colorbar. The collapsed menu "More stretch options"
+how pixel values are mapped to the colorbar and can be toggled on and off in the plugin.
+The collapsed menu "More stretch options"
 includes a toggle to limit the histogram to the current zoom limits (which is not on by default)
 and fields to set :guilabel:`min` and :guilabel:`max` manually.
 
 From the API
 ^^^^^^^^^^^^
 
-To set the stretch function for just the image being displayed
-(the acceptable values are as defined by glue backend):
+The stretch function for just the image being displayed
+(the acceptable values are as defined by glue backend) can be set using
+the Astrowidgets API:
 
 .. code-block:: python
 
@@ -413,7 +416,7 @@ To set the stretch function for just the image being displayed
     viewer.stretch_options
     viewer.stretch = 'sqrt'
 
-To set the stretch function for all the images at once
+Or it can be set using the Plugin API for a single image or all the images at once
 (the acceptable values are the same as the GUI menu options
 and can be accessed with ``plot_options.stretch_function.choices``):
 
@@ -424,7 +427,7 @@ and can be accessed with ``plot_options.stretch_function.choices``):
     plot_options.stretch_function = 'Square Root'
 
 
-To toggle the stretch curve on the histogram:
+The stretch curve on the histogram can also be toggled using the Plugin API:
 
 .. code-block:: python
 
@@ -432,7 +435,8 @@ To toggle the stretch curve on the histogram:
     plot_options.stretch_curve_visible = True
 
 
-To set the percentile for just the image being displayed:
+The percentile for just the image being displayed can be set
+using the Astrowidgets API:
 
 .. code-block:: python
 
@@ -440,7 +444,7 @@ To set the percentile for just the image being displayed:
     viewer.cuts = '95%'  # Preset
     viewer.cuts = (0, 1000)  # Custom
 
-To set the percentile for all the images at once:
+Or it can be set using the Plugin API for one image or all the images at once:
 
 .. code-block:: python
 
@@ -458,17 +462,12 @@ To set the percentile for all the images at once:
 Contour
 -------
 
-This option selects whether to show or hide contours.
-
-The :guilabel:`Contours` of a second image can also be plotted over a first image or cube. Add
-the second image as data in the data dropdown tab, and select both images. To visualize the contours
-of the second image, go to the :guilabel:`Layer` tab, select the layer to be contour-mapped, and
-set its :guilabel:`Contour` to be on and its :guilabel:`Bitmap` to be off. The contours of
-the second image will appear superimposed on the first image. In the second figure below, we
-show the contours of an image generated using the Collapse plugin plotted over the leftmost cube
-viewer.  If you overplot them on a cube, the contours will remain unchanged as you scrub through
-the cube.
-
+This option selects whether to show or hide contours. It is off by default and can be
+turned on by clicking the eye icon. The :guilabel:`Contours` of a second image can
+be plotted over a first image or cube. The contours of the second image will appear
+superimposed on the first image. If contours are overplotted on a cube, the contours
+will remain unchanged as you scrub through the cube. Please note that this feature is in
+development and will be improved in the future.
 
 Adding New Viewers
 ==================
