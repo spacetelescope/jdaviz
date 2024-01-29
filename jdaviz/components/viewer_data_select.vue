@@ -128,7 +128,7 @@ module.exports = {
         multi_select = false
       }
     } else if (this.$props.viewer.config === 'lcviz') {
-      if (this.$props.viewer.reference.startsWith('tpf')) {
+      if (this.$props.viewer.reference.startsWith('image')) {
         multi_select = false
       }
     }
@@ -197,7 +197,7 @@ module.exports = {
         }
       } else if (this.$props.viewer.config === 'lcviz') {
         // TODO: generalize itemIsVisible so downstream apps can provide their own customized filters
-        if (this.$props.viewer.reference.startsWith('tpf')) {
+        if (this.$props.viewer.reference.startsWith('image')) {
           return (item.ndims === 3 && this.dataItemInViewer(item, returnExtraItems))
         }
         if (item.meta._LCVIZ_EPHEMERIS !== undefined) {
