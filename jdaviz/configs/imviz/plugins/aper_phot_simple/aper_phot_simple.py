@@ -18,7 +18,7 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
+from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage, SliceWavelengthUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
@@ -69,6 +69,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     radial_plot = Any('').tag(sync=True, **widget_serialization)
     fit_radial_profile = Bool(False).tag(sync=True)
     fit_results = List().tag(sync=True)
+
+    cube_slice = Any(0).tag(sync=True)  # Cubeviz only
 
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -121,6 +123,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                          (img_unit.physical_type in acceptable_types)))
 
             self.dataset.add_filter(valid_cubeviz_datasets)
+            self.session.hub.subscribe(self, SliceWavelengthUpdatedMessage,
+                                       handler=self._on_slice_changed)
 
 # TODO: expose public API once finalized
 #    @property
@@ -130,6 +134,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 #                                           'pixel_area', 'counts_factor', 'flux_scaling',
 #                                           'calculate_photometry',
 #                                           'unpack_batch_options', 'calculate_batch_photometry'))
+
+    def _on_slice_changed(self, msg):
+        if self.config != "cubeviz":
+            return
+        self.cube_slice = msg.slice
 
     def _get_defaults_from_metadata(self, dataset=None):
         defaults = {}
@@ -294,8 +303,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         comp = data.get_component(data.main_components[0])
 
         if self.config == "cubeviz" and data.ndim > 2:
-            cube_slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
-            cube_slice = int(cube_slice_plg.slice)
+            cube_slice = int(self.cube_slice)
             comp_data = comp.data[:, :, cube_slice].T  # nx, ny --> ny, nx
             # Similar to coords_info logic.
             if '_orig_spec' in getattr(data, 'meta', {}):
@@ -417,8 +425,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError('Missing or invalid background value')
 
         if self.config == "cubeviz" and data.ndim > 2:
-            cube_slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
-            cube_slice = int(cube_slice_plg.slice)
+            cube_slice = int(self.cube_slice)
             comp_data = comp.data[:, :, cube_slice].T  # nx, ny --> ny, nx
             # Similar to coords_info logic.
             if '_orig_spec' in getattr(data, 'meta', {}):
@@ -432,6 +439,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if hasattr(reg, 'to_pixel'):
             sky_center = reg.center
             if self.config == "cubeviz" and data.ndim > 2:
+                cube_slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
                 ycenter, xcenter = w.world_to_pixel(
                     u.Quantity(cube_slice_plg.wavelength, cube_slice_plg.wavelength_unit), sky_center)[1]  # noqa: E501
             else:  # "imviz"
@@ -518,6 +526,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                    'aperture_sum_mag', 'flux_scaling',
                    'data_label', 'subset_label', 'timestamp'],
             indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
+
+        if self.config == "cubeviz":
+            phot_table.add_column(int(self.cube_slice), name="slice", index=29)
 
         if add_to_table:
             try:

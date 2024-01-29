@@ -17,6 +17,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     assert plg.dataset.labels == ["test[FLUX]", "test[ERR]"]
+    assert int(plg.cube_slice) == 4
 
     plg.dataset_selected = "test[FLUX]"
     plg.aperture_selected = "Subset 1"
@@ -32,6 +33,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     assert_allclose(row["sum"], 75 * flux_unit)  # 3 (w) x 5 (h) x 5 (v)
     assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 5 * flux_unit)
+    assert row["slice"] == 4
 
     # Move slider and make sure it recomputes for a new slice automatically.
     cube_slice_plg = cubeviz_helper.plugins["Slice"]._obj
@@ -48,6 +50,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     assert_allclose(row["sum"], 15 * flux_unit)  # 3 (w) x 5 (h) x 1 (v)
     assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 1 * flux_unit)
+    assert row["slice"] == 0
 
 
 def test_cubeviz_aperphot_generated_2d_collapse(cubeviz_helper, image_cube_hdu_obj_microns):
