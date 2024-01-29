@@ -254,7 +254,7 @@ module.exports = {
       var title = this.$props.viewer.reference || this.$props.viewer.id
       // this translates from kebab-case to human readable (individual words, in title case)
       // each word that should NOT be capitalized needs to explicitly be set here
-      return title.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => {if (['vs', 'tpf'].indexOf(word) !== -1) {return word} else {return word.charAt(0).toUpperCase() + word.slice(1)}}).join(' ');
+      return title.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => {if (['vs'].indexOf(word) !== -1) {return word} else {return word.charAt(0).toUpperCase() + word.slice(1)}}).join(' ');
     },
     showModeToggle() {
       if (this.$props.viewer.config === 'cubeviz') {
