@@ -226,6 +226,24 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                         (ImvizImageView, CubevizImageView, MosvizImageView, MosvizProfile2DView)):
             self._image_viewer_update(viewer, x, y)
 
+    def _image_shape_inds(self, image):
+        if image.ndim == 3:
+            # cubeviz case
+            return (0, 1)
+        elif image.ndim == 2:
+            return (1, 0)
+        else:  # pragma: no cover
+            raise ValueError(f'does not support ndim={image.ndim}')
+
+    def _get_cube_value(self, image, arr, x, y, viewer):
+        if image.ndim == 3:
+            # cubeviz case:
+            return arr[int(round(x)), int(round(y)), viewer.state.slices[-1]]
+        elif image.ndim == 2:
+            return arr[int(round(y)), int(round(x))]
+        else:  # pragma: no cover
+            raise ValueError(f'does not support ndim={image.ndim}')
+
     def _image_viewer_update(self, viewer, x, y):
         # Display the current cursor coordinates (both pixel and world) as
         # well as data values. For now we use the first dataset in the
@@ -406,19 +424,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # Extract data values at this position.
         # Check if shape is [x, y, z] or [y, x] and show value accordingly.
-        if image.ndim == 3:
-            if self.app.config == 'lcviz':
-                ix_shape = 2
-                iy_shape = 1
-            else:
-                # cubeviz case
-                ix_shape = 0
-                iy_shape = 1
-        elif image.ndim == 2:
-            ix_shape = 1
-            iy_shape = 0
-        else:  # pragma: no cover
-            raise ValueError(f'does not support ndim={image.ndim}')
+        ix_shape, iy_shape = self._image_shape_inds(image)
 
         if (-0.5 < x < image.shape[ix_shape] - 0.5 and -0.5 < y < image.shape[iy_shape] - 0.5
                 and hasattr(active_layer, 'attribute')):
@@ -429,14 +435,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             elif isinstance(viewer, CubevizImageView):
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
-                if image.ndim == 3:
-                    if self.app.config == 'lcviz':
-                        value = arr[viewer.state.slices[0], int(round(y)), int(round(x))]
-                    else:
-                        # cubeviz case:
-                        value = arr[int(round(x)), int(round(y)), viewer.state.slices[-1]]
-                else:  # 2
-                    value = arr[int(round(y)), int(round(x))]
+                value = self._get_cube_value(image, arr, x, y, viewer)
             self.row1b_title = 'Value'
             self.row1b_text = f'{value:+10.5e} {unit}'
             self._dict['value'] = float(value)
