@@ -55,6 +55,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
 from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial_subset
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
+from jdaviz.core.registries import tray_registry
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import (
     get_subset_type, is_wcs_only, is_not_wcs_only,
@@ -206,6 +207,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
         self._viewer_callbacks = {}
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
+
+    def new(self):
+        return self.__class__(app=self.app)
 
     @property
     def app(self):
@@ -366,7 +370,7 @@ class PluginTemplateMixin(TemplateMixin):
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
 
-    def __init__(self, **kwargs):
+    def __init__(self, app, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
         self._viewer_callbacks = {}
         # _inactive_thread: thread checking for alive pings to control plugin_opened
@@ -383,7 +387,27 @@ class PluginTemplateMixin(TemplateMixin):
         # in repeated toggling of is_active.  To use, decorate any method that observes traitlet
         # changes (including is_active) with @skip_if_no_updates_since_last_active()
         self._methods_skip_since_last_active = []
-        super().__init__(**kwargs)
+
+        # get default viewer names from the helper, according to the requirements of the plugin
+        for registry_name, tray_item in tray_registry.members.items():
+            if tray_item['cls'] == self.__class__:
+                # If viewer reference names need to be passed to the tray item
+                # constructor, pass the names into the constructor in the format
+                # that the tray items expect.
+                tray_registry_options = tray_item.get('viewer_reference_name_kwargs', {})
+                for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
+                    opt_value = getattr(
+                        self, opt_attr, app._get_first_viewer_reference_name(**get_name_kwargs)
+                    )
+
+                    if opt_value is None:
+                        continue
+
+                    kwargs.setdefault(opt_kwarg, opt_value)
+
+                break
+
+        super().__init__(app=app, **kwargs)
 
     @property
     def user_api(self):

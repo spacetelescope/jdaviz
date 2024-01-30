@@ -2599,33 +2599,8 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
-            tray_registry_options = tray.get('viewer_reference_name_kwargs', {})
 
-            # Optional keyword arguments are required to initialize some
-            # tray items. These kwargs specify the viewer reference names that are
-            # assumed to be present in the configuration.
-            optional_tray_kwargs = dict()
-
-            # If viewer reference names need to be passed to the tray item
-            # constructor, pass the names into the constructor in the format
-            # that the tray items expect.
-            for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
-                opt_value = getattr(
-                    self, opt_attr, self._get_first_viewer_reference_name(**get_name_kwargs)
-                )
-
-                if opt_value is None:
-                    continue
-
-                optional_tray_kwargs[opt_kwarg] = opt_value
-
-            # store a copy of the tray name in the instance so it can be accessed by the
-            # plugin itself
-            tray_item_label = tray.get('label')
-
-            tray_item_instance = tray.get('cls')(
-                app=self, plugin_name=tray_item_label, **optional_tray_kwargs
-            )
+            tray_item_instance = tray.get('cls')(app=self)
 
             # NOTE: is_relevant is later updated by observing irrelevant_msg traitlet
             self.state.tray_items.append({
