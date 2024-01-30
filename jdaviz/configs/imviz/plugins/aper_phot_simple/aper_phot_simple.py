@@ -70,7 +70,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     fit_radial_profile = Bool(False).tag(sync=True)
     fit_results = List().tag(sync=True)
 
-    cube_slice = Any(0).tag(sync=True)  # Cubeviz only
+    # Cubeviz only
+    cube_slice = Any(0).tag(sync=True)
+    is_cube = Bool(False).tag(sync=True)
 
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -139,6 +141,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config != "cubeviz":
             return
         self.cube_slice = msg.slice
+        self._cube_wave = u.Quantity(msg.wavelength, msg.wavelength_unit)
+
+    @observe("dataset_selected")
+    def _on_dataset_selected_changed(self, event={}):
+        if self.config != "cubeviz":
+            return
+        # self.dataset might not exist when app is setting itself up.
+        if hasattr(self, "dataset") and self.dataset.selected_dc_item.ndim > 2:
+            self.is_cube = True
+        else:
+            self.is_cube = False
 
     def _get_defaults_from_metadata(self, dataset=None):
         defaults = {}
@@ -439,9 +452,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if hasattr(reg, 'to_pixel'):
             sky_center = reg.center
             if self.config == "cubeviz" and data.ndim > 2:
-                cube_slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
-                ycenter, xcenter = w.world_to_pixel(
-                    u.Quantity(cube_slice_plg.wavelength, cube_slice_plg.wavelength_unit), sky_center)[1]  # noqa: E501
+                ycenter, xcenter = w.world_to_pixel(self._cube_wave, sky_center)[1]
             else:  # "imviz"
                 xcenter, ycenter = w.world_to_pixel(sky_center)
         else:
@@ -528,7 +539,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
 
         if self.config == "cubeviz":
-            phot_table.add_column(int(self.cube_slice), name="slice", index=29)
+            if data.ndim > 2:
+                slice_val = self._cube_wave
+            else:
+                slice_val = u.Quantity(np.nan, self._cube_wave.unit)
+            phot_table.add_column(slice_val, name="slice", index=29)
 
         if add_to_table:
             try:

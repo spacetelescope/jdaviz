@@ -32,7 +32,7 @@
       hint="Select the data for photometry."
     />
 
-    <div v-if='config == "cubeviz"'>
+    <div v-if='config == "cubeviz" && is_cube'>
       <v-row class="row-no-outside-padding row-min-bottom-padding">
         <v-col>
           <v-text-field
