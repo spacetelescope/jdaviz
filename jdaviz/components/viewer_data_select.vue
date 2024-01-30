@@ -127,6 +127,10 @@ module.exports = {
       if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
         multi_select = false
       }
+    } else if (this.$props.viewer.config === 'lcviz') {
+      if (this.$props.viewer.reference.startsWith('image')) {
+        multi_select = false
+      }
     }
     return {
       // default to passed values, whenever value or uncertainty are changed
@@ -193,14 +197,17 @@ module.exports = {
         }
       } else if (this.$props.viewer.config === 'lcviz') {
         // TODO: generalize itemIsVisible so downstream apps can provide their own customized filters
+        if (this.$props.viewer.reference.startsWith('image')) {
+          return (item.ndims === 3 && this.dataItemInViewer(item, returnExtraItems))
+        }
         if (item.meta._LCVIZ_EPHEMERIS !== undefined) {
           if (!this.$props.viewer.reference.startsWith('flux-vs-phase:')) {
             return false
           }
           var viewer_ephem_comp = this.$props.viewer.reference.split('flux-vs-phase:')[1].split('[')[0]
-          return item.meta._LCVIZ_EPHEMERIS.ephemeris == viewer_ephem_comp && this.dataItemInViewer(item, returnExtraItems)
+          return item.ndims === 1 && item.meta._LCVIZ_EPHEMERIS.ephemeris == viewer_ephem_comp && this.dataItemInViewer(item, returnExtraItems)
         }
-        return this.dataItemInViewer(item, returnExtraItems)
+        return item.ndims === 1 && this.dataItemInViewer(item, returnExtraItems)
       } else if (this.$props.viewer.config === 'imviz') {
         return this.dataItemInViewer(item, returnExtraItems && !this.wcsOnlyItem(item))
       }
