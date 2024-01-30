@@ -227,11 +227,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._image_viewer_update(viewer, x, y)
 
     def _image_shape_inds(self, image):
+        # return the indices in image.shape for the x and y dimension, respectively
         if image.ndim == 3:
             # cubeviz case
-            return (0, 1)
+            return (0, 1)  # (ix_shape, iy_shape)
         elif image.ndim == 2:
-            return (1, 0)
+            return (1, 0)  # (ix_shape, iy_shape)
         else:  # pragma: no cover
             raise ValueError(f'does not support ndim={image.ndim}')
 
