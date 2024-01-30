@@ -19,7 +19,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     assert plg.dataset.labels == ["test[FLUX]", "test[ERR]"]
-    assert int(plg.cube_slice) == 4
+    assert plg.cube_slice == "4.894e+00 um"
 
     plg.dataset_selected = "test[FLUX]"
     plg.aperture_selected = "Subset 1"
@@ -35,7 +35,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     assert_allclose(row["sum"], 75 * flux_unit)  # 3 (w) x 5 (h) x 5 (v)
     assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 5 * flux_unit)
-    assert_quantity_allclose(row["slice"], 4.894499866699333 * u.um)
+    assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
     # Move slider and make sure it recomputes for a new slice automatically.
     cube_slice_plg = cubeviz_helper.plugins["Slice"]._obj
@@ -52,7 +52,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     assert_allclose(row["sum"], 15 * flux_unit)  # 3 (w) x 5 (h) x 1 (v)
     assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 1 * flux_unit)
-    assert_quantity_allclose(row["slice"], 4.8904998665093435 * u.um)
+    assert_quantity_allclose(row["slice_wave"], 4.8904998665093435 * u.um)
 
     # We continue on with test_cubeviz_aperphot_generated_2d_collapse here
     # because we want to make sure the result would append properly between 3D and 2D.
@@ -77,7 +77,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     assert_allclose(row["sum"], 540 * flux_unit)  # 3 (w) x 5 (h) x 36 (v)
     assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 36 * flux_unit)
-    assert np.isnan(row["slice"])
+    assert np.isnan(row["slice_wave"])
 
 
 def test_cubeviz_aperphot_generated_2d_moment(cubeviz_helper, image_cube_hdu_obj_microns):
@@ -108,7 +108,7 @@ def test_cubeviz_aperphot_generated_2d_moment(cubeviz_helper, image_cube_hdu_obj
     assert_allclose(row["sum"], 540 * flux_unit)  # 3 (w) x 5 (h) x 36 (v)
     assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 36 * flux_unit)
-    assert np.isnan(row["slice"])
+    assert np.isnan(row["slice_wave"])
 
     # Moment 1 has no compatible unit, so should not be available for photometry.
     moment_plg.n_moment = 1
@@ -150,7 +150,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
     assert_allclose(row["sum"], 48.54973 * flux_unit)  # 3 (w) x 5 (h) x <5 (v)
     assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
     assert_allclose(row["mean"], 3.236648941040039 * flux_unit)
-    assert_quantity_allclose(row["slice"], 4.894499866699333 * u.um)
+    assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
 
 def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
@@ -181,4 +181,4 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
     assert_allclose(row["pixarea_tot"], 2.350443053909789e-13 * u.sr)
     assert_allclose(row["aperture_sum_mag"], 23.72476627732448 * u.mag)
     assert_allclose(row["mean"], 5 * (u.MJy / u.sr))
-    assert_quantity_allclose(row["slice"], 0.46236 * u.um)
+    assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)

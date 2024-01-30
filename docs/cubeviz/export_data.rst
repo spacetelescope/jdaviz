@@ -154,5 +154,5 @@ Cubeviz can export photometry output table like Imviz:
 In addition to the columns that :ref:`Imviz Aperture Photometry <imviz_export_photometry>`
 would provide, the table from Cubeviz has this extra column after ``data_label``:
 
-* ``slice``: Wavelength value at the selected slice of the cube used for computation.
+* ``slice_wave``: Wavelength value at the selected slice of the cube used for computation.
   If a 2D data (e.g., collapsed cube) is selected, the value would be NaN instead.

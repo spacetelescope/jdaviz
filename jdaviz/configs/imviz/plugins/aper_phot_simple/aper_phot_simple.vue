@@ -36,14 +36,11 @@
       <v-row class="row-no-outside-padding row-min-bottom-padding">
         <v-col>
           <v-text-field
-            v-model.number="cube_slice"
-            :readonly="true"
+            :value="cube_slice"
             class="mt-0 pt-0"
-            type="number"
-            label="Slice (for cube)"
+            label="Slice wavelength"
             hint="Extracts photometry from currently selected cube slice"
             disabled
-
           ></v-text-field>
         </v-col>
       </v-row>
