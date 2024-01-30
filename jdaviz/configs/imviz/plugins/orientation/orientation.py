@@ -397,6 +397,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         all_wcs_only_layers = all(
             layer.layer.meta.get(self.app._wcs_only_label)
             for layer in self.viewer.selected_obj.layers
+            if hasattr(layer.layer, "meta")
         )
         if all_wcs_only_layers and msg.data.meta.get(self.app._wcs_only_label, False):
             # on adding first data layer, reset the limits:
