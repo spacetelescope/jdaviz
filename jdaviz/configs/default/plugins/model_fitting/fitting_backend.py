@@ -120,7 +120,7 @@ def _fit_1D(initial_model, spectrum, run_fitter, filter_non_finite=True, window=
     return output_model, output_spectrum
 
 
-def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
+def _fit_3D(initial_model, spectrum, filter_non_finite=True, window=None, n_cpu=None):
     """
     Fits an astropy CompoundModel to every spaxel in a cube
     using a multiprocessor pool running in parallel. Computes
@@ -193,6 +193,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
                                   spectrum.spectral_axis,
                                   initial_model,
                                   param_set=spx,
+                                  filter_non_finite=filter_non_finite,
                                   window=window,
                                   mask=spectrum.mask)
             r = pool.apply_async(worker, callback=collect_result)
@@ -209,6 +210,7 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
                               spectrum.spectral_axis,
                               initial_model,
                               param_set=spaxels,
+                              filter_non_finite=filter_non_finite,
                               window=window,
                               mask=spectrum.mask)
         collect_result(worker())
@@ -236,11 +238,13 @@ class SpaxelWorker:
     instance. We need to use the current model instance while
     it still exists.
     """
-    def __init__(self, flux_cube, wave_array, initial_model, param_set, window=None, mask=None):
+    def __init__(self, flux_cube, wave_array, initial_model, param_set, filter_non_finite=True,
+                 window=None, mask=None):
         self.cube = flux_cube
         self.wave = wave_array
         self.model = initial_model
         self.param_set = param_set
+        self.filter_non_finite = filter_non_finite
         self.window = window
         self.mask = mask
 
@@ -272,7 +276,8 @@ class SpaxelWorker:
                 weights = 'unc'
             else:
                 weights = None
-            fitted_model = fit_lines(sp, self.model, window=self.window, weights=weights)
+            fitted_model = fit_lines(sp, self.model, filter_non_finite=self.filter_non_finite,
+                                     window=self.window, weights=weights)
 
             fitted_values = fitted_model(self.wave)
 
