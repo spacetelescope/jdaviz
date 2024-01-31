@@ -11,7 +11,7 @@ New Features
 
 - Opacity for spatial subsets is now adjustable from within Plot Options. [#2663]
 
-- Live-preview of aperture selection in plugins. [#2664]
+- Live-preview of aperture selection in plugins. [#2664, #2684]
 
 Cubeviz
 ^^^^^^^
@@ -90,6 +90,8 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Apertures that are selected and later modified to be invalid properly show a warning. [#2684]
 
 Mosviz
 ^^^^^^
