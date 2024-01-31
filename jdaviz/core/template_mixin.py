@@ -2032,11 +2032,12 @@ class ApertureSubsetSelect(SubsetSelect):
                          items=items,
                          selected=selected,
                          multiselect=multiselect,
-                         filters=['is_spatial', 'is_not_composite', 'is_not_annulus'],
+                         filters=['is_spatial'],
                          dataset=dataset,
                          viewers=viewers,
                          default_text=default_text)
 
+        self._selected_supports_aperture = False
         self.add_traitlets(scale_factor=scale_factor)
 
         self.add_observe('is_active', self._plugin_active_changed)
@@ -2063,6 +2064,11 @@ class ApertureSubsetSelect(SubsetSelect):
 
     def _plugin_active_changed(self, *args):
         self._set_mark_visiblities(self.plugin.is_active)
+
+    @property
+    def selected_supports_aperture(self):
+        # TODO: make this a dict traitlet to return message back to UI?
+        return self._selected_supports_aperture
 
     @property
     def image_viewers(self):
@@ -2099,9 +2105,19 @@ class ApertureSubsetSelect(SubsetSelect):
         if not len(self.selected) or not len(self.dataset.selected):
             return [], []
         if self.selected in self._manual_options:
+            self._selected_supports_aperture = False
             return [], []
 
-        if getattr(self, 'multiselect', False):
+        multiselect = getattr(self, 'multiselect', False)
+
+        # if any of the selected entries are composite, then _get_spatial_region
+        # (or selected_spatial_region) will fail.
+        objs = self.selected_obj if multiselect else [self.selected_obj]
+        if np.any([len(obj) > 1 for obj in objs]):
+            self._selected_supports_aperture = False
+            return [], []
+
+        if multiselect:
             # assume first dataset (for retrieving the region object)
             # but iterate over all subsets
             spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset)  # noqa
@@ -2131,7 +2147,7 @@ class ApertureSubsetSelect(SubsetSelect):
             elif hasattr(roi, 'radius_x'):
                 roi.radius_x *= self.scale_factor
                 roi.radius_y *= self.scale_factor
-            elif hasattr(roi, 'center'):
+            elif hasattr(roi, 'center') and hasattr(roi, 'xmin') and hasattr(roi, 'xmax'):
                 center = roi.center()
                 half_width = abs(roi.xmax - roi.xmin) * 0.5 * self.scale_factor
                 half_height = abs(roi.ymax - roi.ymin) * 0.5 * self.scale_factor
@@ -2140,14 +2156,21 @@ class ApertureSubsetSelect(SubsetSelect):
                 roi.ymin = center[1] - half_height
                 roi.ymax = center[1] + half_height
             else:  # pragma: no cover
-                raise NotImplementedError
+                # known unsupported shapes: annulus
+                self._selected_supports_aperture = False
+                return [], []
 
-            x, y = roi.to_polygon()
+            if hasattr(roi, 'to_polygon'):
+                x, y = roi.to_polygon()
 
-            # concatenate with nan between to avoid line connecting separate subsets
-            x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
-            y_coords = np.concatenate((y_coords, np.array([np.nan]), y))
+                # concatenate with nan between to avoid line connecting separate subsets
+                x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
+                y_coords = np.concatenate((y_coords, np.array([np.nan]), y))
+            else:
+                self._selected_supports_aperture = False
+                return [], []
 
+        self._selected_supports_aperture = True
         return x_coords, y_coords
 
     def _update_mark_coords(self, *args):
