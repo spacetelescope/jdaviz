@@ -235,6 +235,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # but we still need to update the flux-scaling warning
             self._multiselect_flux_scaling_warning()
             return
+        if not self.aperture_selected_validity.get('is_aperture'):
+            return
 
         try:
             defaults = self._get_defaults_from_metadata()
@@ -286,6 +288,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.multiselect:
             self._background_selected_changed()
             return
+        # NOTE: aperture_selected can be triggered here before aperture_selected_validity is updated
+        # so we'll still allow the snackbar to be raised as a second warning to the user and to
+        # avoid acting on outdated information
 
         # NOTE: aperture area is only used to determine if a warning should be shown in the UI
         # and so does not need to be calculated within user API calls that don't act on traitlets

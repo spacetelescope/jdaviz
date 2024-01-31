@@ -31,7 +31,7 @@ from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choice
 from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
-from traitlets import Any, Bool, Float, HasTraits, List, Unicode, observe
+from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
@@ -1972,6 +1972,7 @@ class ApertureSubsetSelect(SubsetSelect):
 
     * ``items`` (list of dicts with keys: label, color, type)
     * ``selected`` (string)
+    * ``selected_validity`` (dict)
 
     Properties (in the object only):
 
@@ -2005,7 +2006,8 @@ class ApertureSubsetSelect(SubsetSelect):
       />
 
     """
-    def __init__(self, plugin, items, selected, scale_factor, multiselect=None,
+    def __init__(self, plugin, items, selected, selected_validity,
+                 scale_factor, multiselect=None,
                  dataset=None, viewers=None, default_text=None):
         """
         Parameters
@@ -2016,6 +2018,8 @@ class ApertureSubsetSelect(SubsetSelect):
             the name of the items traitlet defined in ``plugin``
         selected : str
             the name of the selected traitlet defined in ``plugin``
+        selected_validity: str
+            the name of the selected validity dict traitlet defined in ``plugin``
         scale_factor : str
             the name of the traitlet defining the radius factor for the drawn aperture
         multiselect : str
@@ -2037,8 +2041,8 @@ class ApertureSubsetSelect(SubsetSelect):
                          viewers=viewers,
                          default_text=default_text)
 
-        self._selected_supports_aperture = False
-        self.add_traitlets(scale_factor=scale_factor)
+        self.add_traitlets(selected_validity=selected_validity,
+                           scale_factor=scale_factor)
 
         self.add_observe('is_active', self._plugin_active_changed)
         self.add_observe(selected, self._update_mark_coords)
@@ -2064,11 +2068,6 @@ class ApertureSubsetSelect(SubsetSelect):
 
     def _plugin_active_changed(self, *args):
         self._set_mark_visiblities(self.plugin.is_active)
-
-    @property
-    def selected_supports_aperture(self):
-        # TODO: make this a dict traitlet to return message back to UI?
-        return self._selected_supports_aperture
 
     @property
     def image_viewers(self):
@@ -2103,9 +2102,12 @@ class ApertureSubsetSelect(SubsetSelect):
 
     def _get_mark_coords(self, viewer):
         if not len(self.selected) or not len(self.dataset.selected):
+            self.selected_validity = {'is_aperture': False,
+                                      'aperture_message': 'no subset selected'}
             return [], []
         if self.selected in self._manual_options:
-            self._selected_supports_aperture = False
+            self.selected_validity = {'is_aperture': False,
+                                      'aperture_message': 'no subset selected'}
             return [], []
 
         multiselect = getattr(self, 'multiselect', False)
@@ -2114,7 +2116,9 @@ class ApertureSubsetSelect(SubsetSelect):
         # (or selected_spatial_region) will fail.
         objs = self.selected_obj if multiselect else [self.selected_obj]
         if np.any([len(obj) > 1 for obj in objs]):
-            self._selected_supports_aperture = False
+            self.selected_validity = {'is_aperture': False,
+                                      'aperture_message': 'composite subsets are not supported',
+                                      'is_composite': True}
             return [], []
 
         if multiselect:
@@ -2136,12 +2140,16 @@ class ApertureSubsetSelect(SubsetSelect):
             else:
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
                 if wcs is None:
+                    self.selected_validity = {'is_aperture': False,
+                                              'aperture_message': 'invalid wcs'}
                     return [], []
                 pixel_region = spatial_region.to_pixel(wcs)
             roi = regions2roi(pixel_region)
 
             # NOTE: this assumes that we'll apply the same radius factor to all subsets (all will
             # be defined at the same slice for cones in cubes)
+#            if self.scale_factor == 1.0:  # this would catch annulus, which might cause confusion
+#                pass
             if hasattr(roi, 'radius'):
                 roi.radius *= self.scale_factor
             elif hasattr(roi, 'radius_x'):
@@ -2155,9 +2163,15 @@ class ApertureSubsetSelect(SubsetSelect):
                 roi.xmax = center[0] + half_width
                 roi.ymin = center[1] - half_height
                 roi.ymax = center[1] + half_height
+            elif isinstance(roi, CircularAnnulusROI):
+                self.selected_validity = {'is_aperture': False,
+                                          'aperture_message': 'annulus is not a supported aperture'}
+                return [], []
             else:  # pragma: no cover
                 # known unsupported shapes: annulus
-                self._selected_supports_aperture = False
+                # TODO: specific case for annulus
+                self.selected_validity = {'is_aperture': False,
+                                          'aperture_message': 'shape does not support scale factor'}
                 return [], []
 
             if hasattr(roi, 'to_polygon'):
@@ -2167,10 +2181,11 @@ class ApertureSubsetSelect(SubsetSelect):
                 x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
                 y_coords = np.concatenate((y_coords, np.array([np.nan]), y))
             else:
-                self._selected_supports_aperture = False
+                self.selected_validity = {'is_aperture': False,
+                                          'aperture_message': 'could not convert roi to polygon'}
                 return [], []
 
-        self._selected_supports_aperture = True
+        self.selected_validity = {'is_aperture': True}
         return x_coords, y_coords
 
     def _update_mark_coords(self, *args):
@@ -2207,6 +2222,7 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
     aperture_items = List([]).tag(sync=True)
     aperture_selected = Any('').tag(sync=True)
+    aperture_selected_validity = Dict().tag(sync=True)
     aperture_scale_factor = Float(1).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -2214,6 +2230,7 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
         self.aperture = ApertureSubsetSelect(self,
                                              'aperture_items',
                                              'aperture_selected',
+                                             'aperture_selected_validity',
                                              'aperture_scale_factor',
                                              dataset='dataset' if hasattr(self, 'dataset') else None,  # noqa
                                              multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa

@@ -9,7 +9,7 @@ from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, NDUncertainty
 )
-from traitlets import Any, Bool, Float, List, Unicode, observe
+from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceWavelengthUpdatedMessage
@@ -65,6 +65,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     bg_items = List([]).tag(sync=True)
     bg_selected = Any('').tag(sync=True)
+    bg_selected_validity = Dict().tag(sync=True)
     bg_scale_factor = Float(1).tag(sync=True)
     bg_wavelength_dependent = Bool(False).tag(sync=True)
 
@@ -100,6 +101,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.background = ApertureSubsetSelect(self,
                                                'bg_items',
                                                'bg_selected',
+                                               'bg_selected_validity',
                                                'bg_scale_factor',
                                                dataset='dataset',
                                                multiselect=None,
