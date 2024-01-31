@@ -56,6 +56,12 @@
         hint="Select aperture region for photometry (cannot be an annulus or composite subset)."
       />
 
+      <v-row v-if="aperture_selected.length && !aperture_selected_validity.is_aperture">
+        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+            {{aperture_selected}} is not a valid aperture: {{aperture_selected_validity.aperture_message}}.
+        </span>
+      </v-row>
+
       <div v-if="aperture_selected.length > 0">
         <plugin-subset-select
           :items="background_items"
@@ -175,7 +181,7 @@
             :results_isolated_to_plugin="true"
             @click="do_aper_phot"
             :spinner="spinner"
-            :disabled="aperture_selected === background_selected"
+            :disabled="aperture_selected === background_selected || !aperture_selected_validity.is_aperture"
           >
             Calculate
           </plugin-action-button>
