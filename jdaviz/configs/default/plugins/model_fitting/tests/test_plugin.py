@@ -150,13 +150,32 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     modelfit_plugin._obj.results_label = test_label
     # changing the lable should set auto to False, but the event may not have triggered yet
     modelfit_plugin._obj.results_label_auto = False
-    modelfit_plugin._obj.cube_fit = True
+    modelfit_plugin.cube_fit = True
     assert modelfit_plugin._obj.results_label_default == 'cube-fit model'
     assert modelfit_plugin._obj.results_label == test_label
     with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', message=r'.*Model is linear in parameters.*')
+        warnings.filterwarnings('ignore', message='.*Model is linear in parameters.*')
         modelfit_plugin.calculate_fit()
     assert test_label in cubeviz_helper.app.data_collection
+
+
+def test_fit_cube_no_wcs(cubeviz_helper):
+    # This is like when user do something to a cube outside of Jdaviz
+    # and then load it back into a new instance of Cubeviz for further analysis.
+    sp = Spectrum1D(flux=np.ones((7, 8, 9)) * u.nJy)  # ny, nx, nz
+    cubeviz_helper.load_data(sp, data_label="test_cube")
+    mf = cubeviz_helper.plugins['Model Fitting']
+    mf.create_model_component('Linear1D')
+    mf.cube_fit = True
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Model is linear in parameters.*")
+        fitted_model, output_cube = mf.calculate_fit(add_data=True)
+    assert len(fitted_model) == 56  # ny * nx
+    # Make sure shapes are all self-consistent within Cubeviz instance.
+    fitted_data = cubeviz_helper.app.data_collection["cube-fit model"]
+    assert fitted_data.shape == (8, 7, 9)  # nx, ny, nz
+    assert fitted_data.shape == cubeviz_helper.app.data_collection[0].shape
+    assert fitted_data.shape == output_cube.shape
 
 
 def test_refit_plot_options(specviz_helper, spectrum1d):
