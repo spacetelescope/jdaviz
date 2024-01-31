@@ -1,5 +1,6 @@
 <template>
   <component :is="stack.container">
+  <div id="scrollable-container" style="position: relative; overflow: auto;">
     <g-viewer-tab
       v-for="(child, index) in stack.children"
       :stack="child"
@@ -57,7 +58,6 @@
             <v-spacer></v-spacer>
             <jupyter-widget class='jdaviz-nested-toolbar' :widget="viewer.toolbar"></jupyter-widget>
           </v-row>
-
         </div>
 
         <v-card tile flat style="flex: 1; margin-top: -2px; overflow: hidden;">
@@ -82,13 +82,15 @@
             </div>
           </div>
 
-          <jupyter-widget
-            :widget="viewer.widget"
+          <jupyter-widget 
+            :widget="viewer.widget" 
             :ref="'viewer-widget-'+viewer.id"
             :style="'width: 100%; height: 100%; overflow: hidden; transform: rotateY('+viewer_rotateY(viewer.canvas_flip_horizontal)+') rotate('+viewer.canvas_angle+'deg)'"
-          ></jupyter-widget>
+            ></jupyter-widget>
         </v-card>
-    </gl-component>
+        <div ref="menuAttachTarget" :id="'target-' + viewer.id" style="position: absolute;"></div>
+      </gl-component>
+    </div>
   </component>
 </template>
 
@@ -114,7 +116,7 @@
 .viewer-label:hover {
   background-color: #e5e5e5;
   width: auto;
-  border-bottom-left-radius: 4px; 
+  border-bottom-left-radius: 4px;
   border-top-left-radius: 4px;
 }
 .imviz div.v-card.v-card--flat.v-sheet.v-sheet--tile {
@@ -137,7 +139,29 @@ module.exports = {
       this.$emit('resize')
     }
   },
+  mounted() {
+    let menuAttachTarget = this.$refs.menuAttachTarget[0]
+    while (menuAttachTarget && menuAttachTarget.className !== "lm_items") {
+      if (["auto"].includes(window.getComputedStyle(menuAttachTarget).overflowY)) {
+        menuAttachTarget.addEventListener("scroll", this.onScroll);
+      }
+      menuAttachTarget = menuAttachTarget.parentElement;
+    }
+  },
+
+  beforeDestroy() {
+    let menuAttachTarget = this.$refs.menuAttachTarget[0]
+    while (menuAttachTarget && menuAttachTarget.className !== "lm_items") {
+      if (["auto"].includes(window.getComputedStyle(menuAttachTarget).overflowY)) {
+        menuAttachTarget.removeEventListener("scroll", this.onScroll);
+      }
+      menuAttachTarget = menuAttachTarget.parentElement;
+    }
+  },
   methods: {
+    onScroll(e) {
+      // TODO: Complete scroll logic for the menu
+    },
     computeChildrenPath() {
       return this.$parent.computeChildrenPath();
     },

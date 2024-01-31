@@ -1,6 +1,6 @@
 <template>
   <j-tooltip v-if="menuButtonAvailable()" tipid="viewer-toolbar-data">
-    <v-menu attach offset-y :close-on-content-click="false" v-model="data_menu_open">
+    <v-menu :attach="'#target-' + viewer.id" offset-y :close-on-content-click="false" v-model="viewer.data_open">
       <template v-slot:activator="{ on, attrs }">
         <v-btn
           text 
@@ -58,24 +58,7 @@
           ></j-viewer-data-select-item>
         </v-row>
 
-        <div v-if="linkedByWcs()">
-          <j-plugin-section-header style="margin-top: 0px">Orientation</j-plugin-section-header>
-          <v-row v-for="item in wcsOnlyItems" :key="item.id" style="padding-left: 25px; margin-right: -8px; margin-top: 4px; margin-bottom: 4px">
-            <j-viewer-data-select-item
-              :item="item"
-              :icon="layer_icons[item.name]"
-              :icons="icons"
-              :viewer="viewer"
-              :multi_select="multi_select"
-              :is_wcs_only="true"
-              @data-item-remove="$emit('data-item-remove', $event)"
-              @change-reference-data="$emit('change-reference-data', $event)"
-            ></j-viewer-data-select-item>
-          </v-row>
-        </div>
-
-        <div v-if="extraDataItems.length > 0" style="margin-bottom: -8px;">
-        <div v-if="extraDataItems.length" style="margin-bottom: -100px; height: 200px">
+        <div v-if="extraDataItems.length" style="margin-bottom: -8px">
           <v-row key="extra-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
             <span 
               @click="toggleShowExtraItems"
