@@ -363,11 +363,18 @@ def test_annulus_background(imviz_helper):
         PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
     imviz_helper.load_regions([ellipse_1, annulus_2])
 
-    # Subset 4 (annulus) should be available for the background but not the aperture
-    assert 'Subset 4' not in phot_plugin.aperture.choices
+    # Subset 4 (annulus) should be available in both sets of choices, but invalid for selection as
+    # aperture
+    assert 'Subset 4' in phot_plugin.aperture.choices
     assert 'Subset 4' in phot_plugin.background.choices
 
+    phot_plugin.aperture_selected = 'Subset 4'
+    assert not phot_plugin.aperture.selected_validity.get('is_aperture', True)
+    with pytest.raises(ValueError, match="Selected aperture is not valid"):
+        phot_plugin.calculate_photometry()
+
     phot_plugin.aperture_selected = 'Subset 3'
+    assert phot_plugin.aperture.selected_validity.get('is_aperture', False)
     phot_plugin.background_selected = 'Subset 4'
 
     # Check new annulus for four_gaussians

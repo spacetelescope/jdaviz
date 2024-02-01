@@ -411,6 +411,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                     dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
         else:
             # use the pre-cached value
+            if not self.aperture.selected_validity.get('is_aperture'):
+                raise ValueError(f"Selected aperture is not valid: {self.aperture.selected_validity.get('aperture_message')}")  # noqa
             reg = self.aperture.selected_spatial_region
 
         # Reset last fitted model
