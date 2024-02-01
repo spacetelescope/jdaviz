@@ -134,12 +134,15 @@
                  && (bg_selected === 'None' || bg_selected_validity.is_aperture)
                  && dev_subpixel_support">
         <v-row>
-          <v-switch
-            v-model="subpixel"
-            label="Subpixel"
-            hint="Extract spectrum using a subpixel aperture in place of the subset mask"
-            persistent-hint>
-          </v-switch>
+          <v-select
+            :menu-props="{ left: true }"
+            attach
+            :items="aperture_method_items"
+            v-model="aperture_method_selected"
+            label="Aperture masking method"
+            hint="Extract spectrum using an aperture masking method in place of the subset mask."
+            persistent-hint
+            ></v-select>
         </v-row>
       </div>
 
