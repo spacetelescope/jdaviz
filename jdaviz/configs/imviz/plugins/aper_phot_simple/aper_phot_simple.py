@@ -404,11 +404,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # we can use the pre-cached value
             data = self.dataset.selected_dc_item
 
-        if aperture is not None and aperture not in self.aperture.choices:
-            raise ValueError(f"aperture must be one of {self.aperture.choices}")
+        if aperture is not None:
+            if aperture not in self.aperture.choices:
+                raise ValueError(f"aperture must be one of {self.aperture.choices}")
+
         if aperture is not None or dataset is not None:
             reg = self.aperture._get_spatial_region(subset=aperture if aperture is not None else self.aperture.selected,  # noqa
                                                     dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
+            # determine if a valid aperture (since selected_validity only applies to selected entry)
+            _, _, validity = self.aperture._get_mark_coords_and_validate(selected=aperture)
+            if not validity.get('is_aperture'):
+                raise ValueError(f"Selected aperture {aperture} is not valid: {validity.get('aperture_message')}")  # noqa
         else:
             # use the pre-cached value
             if not self.aperture.selected_validity.get('is_aperture'):

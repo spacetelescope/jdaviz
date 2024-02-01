@@ -2031,7 +2031,7 @@ class ApertureSubsetSelect(SubsetSelect):
             the reference names or ids of the viewer to extract the subregion.  If not provided or
             None, will loop through all references.
         """
-        # NOTE: is_not_composite is assumed in _get_mark_coords
+        # NOTE: is_not_composite is assumed in _get_mark_coords_and_validate
         super().__init__(plugin,
                          items=items,
                          selected=selected,
@@ -2086,7 +2086,7 @@ class ApertureSubsetSelect(SubsetSelect):
                 all_aperture_marks += matches
                 continue
 
-            x_coords, y_coords = self._get_mark_coords(viewer)
+            x_coords, y_coords, self.selected_validity = self._get_mark_coords_and_validate(viewer)
 
             mark = ApertureMark(
                 viewer,
@@ -2100,32 +2100,42 @@ class ApertureSubsetSelect(SubsetSelect):
             viewer.figure.marks = viewer.figure.marks + [mark]
         return all_aperture_marks
 
-    def _get_mark_coords(self, viewer):
-        if not len(self.selected) or not len(self.dataset.selected):
-            self.selected_validity = {'is_aperture': False,
-                                      'aperture_message': 'no subset selected'}
-            return [], []
-        if self.selected in self._manual_options:
-            self.selected_validity = {'is_aperture': False,
-                                      'aperture_message': 'no subset selected'}
-            return [], []
-
+    def _get_mark_coords_and_validate(self, viewer=None, selected=None):
         multiselect = getattr(self, 'multiselect', False)
+
+        if viewer is None:
+            viewer = self.app._jdaviz_helper.default_viewer._obj
+        if selected is None:
+            selected = self.selected
+            objs = self.selected_obj if multiselect else [self.selected_obj]
+        else:
+            objs = self._get_selected_obj(selected)
+            if isinstance(selected, str):
+                selected = [selected]
+                objs = [objs]
+
+        if not len(selected) or not len(self.dataset.selected):
+            validity = {'is_aperture': False,
+                        'aperture_message': 'no subset selected'}
+            return [], [], validity
+        if selected in self._manual_options:
+            validity = {'is_aperture': False,
+                        'aperture_message': 'no subset selected'}
+            return [], [], validity
 
         # if any of the selected entries are composite, then _get_spatial_region
         # (or selected_spatial_region) will fail.
-        objs = self.selected_obj if multiselect else [self.selected_obj]
         if np.any([len(obj) > 1 for obj in objs]):
-            self.selected_validity = {'is_aperture': False,
-                                      'aperture_message': 'composite subsets are not supported',
-                                      'is_composite': True}
-            return [], []
+            validity = {'is_aperture': False,
+                        'aperture_message': 'composite subsets are not supported',
+                        'is_composite': True}
+            return [], [], validity
 
-        if multiselect:
+        if multiselect or selected != self.selected:
             # assume first dataset (for retrieving the region object)
             # but iterate over all subsets
             spatial_regions = [self._get_spatial_region(dataset=self.dataset.selected[0], subset=subset)  # noqa
-                               for subset in self.selected if subset != self._manual_options]
+                               for subset in selected if subset != self._manual_options]
         else:
             # use cached version
             spatial_regions = [self.selected_spatial_region]
@@ -2140,9 +2150,9 @@ class ApertureSubsetSelect(SubsetSelect):
             else:
                 wcs = getattr(viewer.state.reference_data, 'coords', None)
                 if wcs is None:
-                    self.selected_validity = {'is_aperture': False,
-                                              'aperture_message': 'invalid wcs'}
-                    return [], []
+                    validity = {'is_aperture': False,
+                                'aperture_message': 'invalid wcs'}
+                    return [], [], validity
                 pixel_region = spatial_region.to_pixel(wcs)
             roi = regions2roi(pixel_region)
 
@@ -2164,15 +2174,15 @@ class ApertureSubsetSelect(SubsetSelect):
                 roi.ymin = center[1] - half_height
                 roi.ymax = center[1] + half_height
             elif isinstance(roi, CircularAnnulusROI):
-                self.selected_validity = {'is_aperture': False,
-                                          'aperture_message': 'annulus is not a supported aperture'}
-                return [], []
+                validity = {'is_aperture': False,
+                            'aperture_message': 'annulus is not a supported aperture'}
+                return [], [], validity
             else:  # pragma: no cover
                 # known unsupported shapes: annulus
                 # TODO: specific case for annulus
-                self.selected_validity = {'is_aperture': False,
-                                          'aperture_message': 'shape does not support scale factor'}
-                return [], []
+                validity = {'is_aperture': False,
+                            'aperture_message': 'shape does not support scale factor'}
+                return [], [], validity
 
             if hasattr(roi, 'to_polygon'):
                 x, y = roi.to_polygon()
@@ -2181,16 +2191,16 @@ class ApertureSubsetSelect(SubsetSelect):
                 x_coords = np.concatenate((x_coords, np.array([np.nan]), x))
                 y_coords = np.concatenate((y_coords, np.array([np.nan]), y))
             else:
-                self.selected_validity = {'is_aperture': False,
-                                          'aperture_message': 'could not convert roi to polygon'}
-                return [], []
+                validity = {'is_aperture': False,
+                            'aperture_message': 'could not convert roi to polygon'}
+                return [], [], validity
 
-        self.selected_validity = {'is_aperture': True}
-        return x_coords, y_coords
+        validity = {'is_aperture': True}
+        return x_coords, y_coords, validity
 
     def _update_mark_coords(self, *args):
         for viewer in self.image_viewers:
-            x_coords, y_coords = self._get_mark_coords(viewer)
+            x_coords, y_coords, self.selected_validity = self._get_mark_coords_and_validate(viewer)
             for mark in self.marks:
                 if mark.viewer != viewer:
                     continue
