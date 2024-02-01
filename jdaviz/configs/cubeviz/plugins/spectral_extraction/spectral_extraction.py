@@ -311,7 +311,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         masks_boolean_values = np.zeros_like(mask_cube.flux.value)
 
         # Center is reverse coordinates
-        center = (self.aperture.selected_spatial_region.center.y, self.aperture.selected_spatial_region.center.x)
+        center = (self.aperture.selected_spatial_region.center.y,
+                  self.aperture.selected_spatial_region.center.x)
         # Replace with code for retrieving display_unit in cubeviz when it is available
         display_unit = u.um
 
