@@ -564,30 +564,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             else:
                 tmp.append({'function': key, 'result': str(x)})
 
-            # Parse results for GUI.
-            tmp = []
-            for key in phot_table.colnames:
-                if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
-                           'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
-                    continue
-                x = phot_table[key][0]
-                if (isinstance(x, (int, float, u.Quantity)) and
-                        key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
-                                    'aperture_sum_counts', 'aperture_sum_mag')):
-                    tmp.append({'function': key, 'result': f'{x:.4e}'})
-                elif key == 'sky_center' and x is not None:
-                    tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
-                    tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f} deg'})
-                elif key in ('xcenter', 'ycenter', 'sum_aper_area'):
-                    tmp.append({'function': key, 'result': f'{x:.1f}'})
-                elif key == 'aperture_sum_counts' and x is not None:
-                    tmp.append({'function': key, 'result':
-                                f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
-                elif key == 'aperture_sum_mag' and x is not None:
-                    tmp.append({'function': key, 'result': f'{x:.3f}'})
-                else:
-                    tmp.append({'function': key, 'result': str(x)})
-
         if update_plots:
             # Also display fit results
             fit_tmp = []
