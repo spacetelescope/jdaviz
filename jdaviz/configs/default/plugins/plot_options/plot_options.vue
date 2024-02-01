@@ -113,12 +113,14 @@
                 :step="0.1"
               />
             </glue-state-sync-wrapper>
-            <plugin-action-button
-              :results_isolated_to_plugin="false"
-              @click="reset_viewer_bounds"
-            >
-              Reset viewer bounds
-            </plugin-action-button>
+            <v-row justify="end">
+              <plugin-action-button
+                :results_isolated_to_plugin="false"
+                @click="reset_viewer_bounds"
+              >
+                Reset viewer bounds
+              </plugin-action-button>
+            </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
