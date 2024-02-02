@@ -102,10 +102,11 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         # update limits
 
         with self.during_zoom_sync():
-            self.x_min = center_x - radius
-            self.x_max = center_x + radius
-            self.y_min = center_y - radius
-            self.y_max = center_y + radius
+            x_min = center_x - radius
+            x_max = center_x + radius
+            y_min = center_y - radius
+            y_max = center_y + radius
+            self.x_min, self.x_max, self.y_min, self.y_max = x_min, x_max, y_min, y_max
 
             self._adjust_limits_aspect()
 
@@ -138,14 +139,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             self.zoom_center_x = 0.5 * (x_max + x_min)
             self.zoom_center_y = 0.5 * (y_max + y_min)
 
-    def reset_limits(self, *event):
-        # TODO: use consistent logic for all image viewers by removing this if-statement
-        # if/when WCS linking is supported (i.e. in cubeviz)
-        if getattr(self, '_viewer', None) is not None and self._viewer.jdaviz_app.config != 'imviz':
-            return super().reset_limits(*event)
-        if self.reference_data is None:  # Nothing to do
-            return
-
+    def _get_reset_limits(self, return_as_world=False):
         wcs_success = False
         if self.linked_by_wcs and self.reference_data.coords is not None:
             x_min, x_max = np.inf, -np.inf
@@ -166,13 +160,19 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 world_top_right = data.coords.pixel_to_world(layer.layer.data[pixel_ids[1]].max(),
                                                              layer.layer.data[pixel_ids[0]].max())
 
-                pixel_bottom_left = self.reference_data.coords.world_to_pixel(world_bottom_left)
-                pixel_top_right = self.reference_data.coords.world_to_pixel(world_top_right)
+                if return_as_world:
+                    x_min = min(x_min, world_bottom_left.ra.value)
+                    x_max = max(x_max, world_top_right.ra.value)
+                    y_min = min(y_min, world_bottom_left.dec.value)
+                    y_max = max(y_max, world_top_right.dec.value)
+                else:
+                    pixel_bottom_left = self.reference_data.coords.world_to_pixel(world_bottom_left)
+                    pixel_top_right = self.reference_data.coords.world_to_pixel(world_top_right)
 
-                x_min = min(x_min, pixel_bottom_left[0] - 0.5)
-                x_max = max(x_max, pixel_top_right[0] + 0.5)
-                y_min = min(y_min, pixel_bottom_left[1] - 0.5)
-                y_max = max(y_max, pixel_top_right[1] + 0.5)
+                    x_min = min(x_min, pixel_bottom_left[0] - 0.5)
+                    x_max = max(x_max, pixel_top_right[0] + 0.5)
+                    y_min = min(y_min, pixel_bottom_left[1] - 0.5)
+                    y_max = max(y_max, pixel_top_right[1] + 0.5)
                 wcs_success = True
 
         if not wcs_success:
@@ -188,11 +188,20 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                 x_max = max(x_max, layer.layer.data[pixel_id_x].max() + 0.5)
                 y_max = max(y_max, layer.layer.data[pixel_id_y].max() + 0.5)
 
+        return x_min, x_max, y_min, y_max
+
+    def reset_limits(self, *event):
+        # TODO: use consistent logic for all image viewers by removing this if-statement
+        # if/when WCS linking is supported (i.e. in cubeviz)
+        if getattr(self, '_viewer', None) is not None and self._viewer.jdaviz_app.config != 'imviz':
+            return super().reset_limits(*event)
+        if self.reference_data is None:  # Nothing to do
+            return
+
+        x_min, x_max, y_min, y_max = self._get_reset_limits()
+
         with delay_callback(self, 'x_min', 'x_max', 'y_min', 'y_max'):
-            self.x_min = x_min
-            self.x_max = x_max
-            self.y_min = y_min
-            self.y_max = y_max
+            self.x_min, self.x_max, self.y_min, self.y_max = x_min, x_max, y_min, y_max
             # We need to adjust the limits in here to avoid triggering all
             # the update events then changing the limits again.
             self._adjust_limits_aspect()

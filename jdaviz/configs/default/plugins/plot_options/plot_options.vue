@@ -89,19 +89,21 @@
             <glue-state-sync-wrapper :sync="zoom_center_x_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_center_x')">
               <glue-float-field
                 ref="zoom_center_x"
-                label="Center (x)"
+                label="X Center"
                 :value.sync="zoom_center_x_value"
                 type="number"
-                :step="0.1"
+                :step="zoom_step"
+                :suffix="display_units['image'] || 'pix'"
               />
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="zoom_center_y_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_center_y')">
               <glue-float-field
                 ref="zoom_center_y"
-                label="Center (y)"
+                label="Y Center"
                 :value.sync="zoom_center_y_value"
                 type="number"
-                :step="0.1"
+                :step="zoom_step"
+                :suffix="display_units['image'] || 'pix'"
               />
             </glue-state-sync-wrapper>
             <glue-state-sync-wrapper :sync="zoom_radius_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_radius')">
@@ -110,7 +112,8 @@
                 label="Zoom-radius"
                 :value.sync="zoom_radius_value"
                 type="number"
-                :step="0.1"
+                :step="zoom_step"
+                :suffix="display_units['image'] || 'pix'"
               />
             </glue-state-sync-wrapper>
             <v-row justify="end">

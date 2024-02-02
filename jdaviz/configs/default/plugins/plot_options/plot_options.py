@@ -24,6 +24,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
                                         PlotOptionsSyncState, Plot,
                                         skip_if_no_updates_since_last_active, with_spinner)
+from jdaviz.core.events import ChangeRefDataMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
@@ -91,6 +92,16 @@ class SplineStretch:
 # Add the spline stretch to the glue stretch registry if not registered
 if "spline" not in stretches:
     stretches.add("spline", SplineStretch, display="Spline")
+
+
+def _round_step(step):
+    # round the step for a float input
+    if step <= 0:
+        return 1e-6, 6
+    decimals = -int(np.log10(abs(step))) + 1 if step != 0 else 6
+    if decimals < 0:
+        decimals = 0
+    return np.round(step, decimals), decimals
 
 
 @tray_registry('g-plot-options', label="Plot Options")
@@ -233,6 +244,8 @@ class PlotOptions(PluginTemplateMixin):
 
     zoom_radius_value = Float().tag(sync=True)
     zoom_radius_sync = Dict().tag(sync=True)
+
+    zoom_step = Float(1).tag(sync=True)
 
     # scatter/marker options
     marker_visible_value = Bool().tag(sync=True)
@@ -633,6 +646,9 @@ class PlotOptions(PluginTemplateMixin):
             sv.state.add_callback('y_display_unit',
                                   self._on_global_display_unit_changed)
 
+        self.hub.subscribe(self, ChangeRefDataMessage,
+                           handler=self._on_refdata_change)
+
         # give UI access to sampled version of the available colormap choices
         def hex_for_cmap(cmap):
             N = 50
@@ -706,6 +722,14 @@ class PlotOptions(PluginTemplateMixin):
         self.display_units['spectral'] = sv.state.x_display_unit
         self.display_units['flux'] = sv.state.y_display_unit
         self.send_state('display_units')
+
+    def _on_refdata_change(self, *args):
+        if self.app._link_type.lower() == 'wcs':
+            self.display_units['image'] = 'deg'
+        else:
+            self.display_units['image'] = 'pix'
+        self.send_state('display_units')
+        self._update_viewer_zoom_steps()
 
     def vue_unmix_state(self, names):
         if isinstance(names, str):
@@ -785,20 +809,36 @@ class PlotOptions(PluginTemplateMixin):
             # plugin hasn't been fully initialized yet
             return
 
-        if not self.viewer.selected:  # pragma: no cover
+        if not self.viewer.selected or not self.x_min_sync['in_subscribed_states']:
             # nothing selected yet
             return
 
         for ax in ('x', 'y'):
             ax_min = getattr(self, f'{ax}_min_value')
             ax_max = getattr(self, f'{ax}_max_value')
-            bound_step = (ax_max - ax_min) / 100.  # noqa
+            bound_step, decimals = _round_step((ax_max - ax_min) / 100.)
             decimals = -int(np.log10(abs(bound_step))) + 1 if bound_step != 0 else 6
-            if decimals < 0:
-                decimals = 0
-            setattr(self, f'{ax}_bound_step', np.round(bound_step, decimals=decimals))
+            setattr(self, f'{ax}_bound_step', bound_step)
             setattr(self, f'{ax}_min_value', np.round(ax_min, decimals=decimals))
             setattr(self, f'{ax}_max_value', np.round(ax_max, decimals=decimals))
+
+    @observe('viewer_selected',
+             'zoom_center_x_value', 'zoom_center_y_value',
+             'zoom_radius_value')
+    def _update_viewer_zoom_steps(self, msg={}):
+        if not hasattr(self, 'viewer'):  # pragma: no cover
+            # plugin hasn't been fully initialized yet
+            return
+
+        if not self.viewer.selected or not self.zoom_radius_sync['in_subscribed_states']:
+            # nothing selected yet
+            return
+
+        # in the case of multiple viewers, calculate based on the first
+        # alternatively, we could find the most extreme by looping over all selected viewers
+        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj  # noqa
+        x_min, x_max, y_min, y_max = viewer.state._get_reset_limits(return_as_world=True)
+        self.zoom_step, _ = _round_step(max(x_max-x_min, y_max-y_min) / 100.)
 
     def vue_reset_viewer_bounds(self, _):
         # This button is currently only exposed if only the spectrum viewer is selected
