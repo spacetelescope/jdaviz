@@ -84,8 +84,6 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
     def _set_zoom_radius_center(self, *args):
         if self._during_zoom_sync or not hasattr(self, '_viewer') or self._viewer.shape is None:
             return
-        if self.zoom_radius <= 0.0:
-            raise ValueError("zoom_radius must be positive")
 
         # When WCS-linked (displayed on the sky): zoom_center_x/y and zoom_radius are in sky units,
         # x/y_min/max are in pixels of the WCS-only layer
@@ -93,11 +91,11 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             image, i_ref = get_reference_image_data(self._viewer.jdaviz_app, self._viewer.reference)
             ref_wcs = image.coords
             center_x, center_y = ref_wcs.world_to_pixel_values(self.zoom_center_x, self.zoom_center_y)  # noqa
-            center_xr, center_yr = ref_wcs.world_to_pixel_values(self.zoom_center_x+self.zoom_radius, self.zoom_center_y)  # noqa
+            center_xr, center_yr = ref_wcs.world_to_pixel_values(self.zoom_center_x+abs(self.zoom_radius), self.zoom_center_y)  # noqa
             radius = abs(center_xr - center_x)
         else:
             center_x, center_y = self.zoom_center_x, self.zoom_center_y
-            radius = self.zoom_radius
+            radius = abs(self.zoom_radius)
         # now center_x/y and radius are in pixel units of the reference data, so can be used to
         # update limits
 
