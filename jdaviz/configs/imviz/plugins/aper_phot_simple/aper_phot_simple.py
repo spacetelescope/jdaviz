@@ -559,7 +559,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Plots.
         if update_plots:
             if self.current_plot_type == "Curve of Growth":
-                self.plot.figure.title = 'Curve of growth from aperture center'
+                if self.config == "cubeviz" and data.ndim > 2:
+                    self.plot.figure.title = f'Curve of growth from aperture center at {slice_val:.4e}'  # noqa: E501
+                else:
+                    self.plot.figure.title = 'Curve of growth from aperture center'
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
                     comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
                     wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
@@ -574,7 +577,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 self.plot.figure.axes[1].label = comp.units or 'Value'
 
                 if self.current_plot_type == "Radial Profile":
-                    self.plot.figure.title = 'Radial profile from aperture center'
+                    if self.config == "cubeviz" and data.ndim > 2:
+                        self.plot.figure.title = f'Radial profile from aperture center at {slice_val:.4e}'  # noqa: E501
+                    else:
+                        self.plot.figure.title = 'Radial profile from aperture center'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=False)
@@ -582,7 +588,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     self.plot.update_style('profile', line_visible=True, color='gray', size=32)
 
                 else:  # Radial Profile (Raw)
-                    self.plot.figure.title = 'Raw radial profile from aperture center'
+                    if self.config == "cubeviz" and data.ndim > 2:
+                        self.plot.figure.title = f'Raw radial profile from aperture center at {slice_val:.4e}'  # noqa: E501
+                    else:
+                        self.plot.figure.title = 'Raw radial profile from aperture center'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=True)
@@ -629,7 +638,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             x = phot_table[key][0]
             if (isinstance(x, (int, float, u.Quantity)) and
                     key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
-                                'aperture_sum_counts', 'aperture_sum_mag')):
+                                'aperture_sum_counts', 'aperture_sum_mag', 'slice_wave')):
                 tmp.append({'function': key, 'result': f'{x:.4e}'})
             elif key == 'sky_center' and x is not None:
                 tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
@@ -641,6 +650,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                             f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
             elif key == 'aperture_sum_mag' and x is not None:
                 tmp.append({'function': key, 'result': f'{x:.3f}'})
+            elif key == 'slice_wave':
+                if data.ndim > 2:
+                    tmp.append({'function': key, 'result': f'{slice_val:.4e}'})
             else:
                 tmp.append({'function': key, 'result': str(x)})
 
