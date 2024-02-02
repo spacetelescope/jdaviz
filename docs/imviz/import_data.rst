@@ -135,7 +135,7 @@ data entries into the viewer until after the parsing is complete::
     imviz = Imviz()
     with imviz.batch_load():
         for filepath in filepaths:
-            imviz.load_data(filepaths)
+            imviz.load_data(filepath)
     imviz.show()
 
 
@@ -150,6 +150,7 @@ Loading markers can be done with the following commands:
 
 .. code-block:: python
 
+    viewer = imviz.default_viewer
     viewer.marker = {'color': 'green', 'alpha': 0.8, 'markersize': 10, 'fill': False}
     my_markers = Table.read('my_catalog.ecsv')
     coord_i2d = Table({'coord': [SkyCoord(ra=my_catalog['sky_centroid'].ra.degree,

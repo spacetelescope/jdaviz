@@ -18,7 +18,7 @@ Windows-Specific Dependencies
 Some of our dependencies require C++ compilers to install properly. These are usually
 included with macOS and most Linux distributions, but are not included by default in
 Windows. Microsoft provides these tools as part of their
-`Build Tools for Visual Studio <https://visualstudio.microsoft.com/downloads>`_, 
+`Build Tools for Visual Studio <https://visualstudio.microsoft.com/downloads>`_,
 which can be found under "Tools for Visual Studio" towards the bottom of the page.
 
 Create Your Local Environment
@@ -35,7 +35,7 @@ to avoid version conflicts with other packages you may have installed, for examp
 
 .. code-block:: bash
 
-    conda create -n jdaviz-env python=3.9
+    conda create -n jdaviz-env python=3.11
     conda activate jdaviz-env
 
 Pip Install
