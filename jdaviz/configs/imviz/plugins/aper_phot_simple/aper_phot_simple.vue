@@ -32,6 +32,20 @@
       hint="Select the data for photometry."
     />
 
+    <div v-if='config == "cubeviz" && is_cube'>
+      <v-row class="row-no-outside-padding row-min-bottom-padding">
+        <v-col>
+          <v-text-field
+            :value="cube_slice"
+            class="mt-0 pt-0"
+            label="Slice wavelength"
+            hint="Extracts photometry from currently selected cube slice"
+            disabled
+          ></v-text-field>
+        </v-col>
+      </v-row>
+    </div>
+
     <div v-if='dataset_selected.length > 0'>
       <plugin-subset-select
         :items="aperture_items"

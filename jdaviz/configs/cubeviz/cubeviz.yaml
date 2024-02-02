@@ -30,6 +30,7 @@ tray:
   - specviz-line-analysis
   - cubeviz-moment-maps
   - cubeviz-spectral-extraction
+  - imviz-aper-phot-simple
   - g-export-plot
 viewer_area:
   - container: col

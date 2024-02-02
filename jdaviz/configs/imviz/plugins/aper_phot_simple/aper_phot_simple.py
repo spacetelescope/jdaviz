@@ -18,7 +18,7 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage
+from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage, SliceWavelengthUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
@@ -70,6 +70,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     fit_radial_profile = Bool(False).tag(sync=True)
     fit_results = List().tag(sync=True)
 
+    # Cubeviz only
+    cube_slice = Unicode("").tag(sync=True)
+    is_cube = Bool(False).tag(sync=True)
+
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
@@ -107,6 +111,23 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SubsetUpdateMessage, handler=self._on_subset_update)
         self.session.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_update)
 
+        # Custom dataset filters for Cubeviz
+        if self.config == "cubeviz":
+            def valid_cubeviz_datasets(data):
+                comp = data.get_component(data.main_components[0])
+                img_unit = u.Unit(comp.units) if comp.units else u.dimensionless_unscaled
+                acceptable_types = ['spectral flux density wav',
+                                    'photon flux density wav',
+                                    'spectral flux density',
+                                    'photon flux density']
+                return ((data.ndim in (2, 3)) and
+                        ((img_unit == (u.MJy / u.sr)) or
+                         (img_unit.physical_type in acceptable_types)))
+
+            self.dataset.add_filter(valid_cubeviz_datasets)
+            self.session.hub.subscribe(self, SliceWavelengthUpdatedMessage,
+                                       handler=self._on_slice_changed)
+
 # TODO: expose public API once finalized
 #    @property
 #    def user_api(self):
@@ -115,6 +136,23 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 #                                           'pixel_area', 'counts_factor', 'flux_scaling',
 #                                           'calculate_photometry',
 #                                           'unpack_batch_options', 'calculate_batch_photometry'))
+
+    def _on_slice_changed(self, msg):
+        if self.config != "cubeviz":
+            return
+        self.cube_slice = f"{msg.wavelength:.3e} {msg.wavelength_unit}"
+        self._cube_wave = u.Quantity(msg.wavelength, msg.wavelength_unit)
+        self._cube_idx = int(msg.slice)
+
+    @observe("dataset_selected")
+    def _on_dataset_selected_changed(self, event={}):
+        if self.config != "cubeviz":
+            return
+        # self.dataset might not exist when app is setting itself up.
+        if hasattr(self, "dataset") and self.dataset.selected_dc_item.ndim > 2:
+            self.is_cube = True
+        else:
+            self.is_cube = False
 
     def _get_defaults_from_metadata(self, dataset=None):
         defaults = {}
@@ -132,11 +170,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             telescope = meta.get('TELESCOP', '')
         if telescope == 'JWST':
+            # Hardcode the flux conversion factor from MJy to ABmag
+            mjy2abmag = 0.003631
             if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
                 defaults['pixel_area'] = meta['photometry']['pixelarea_arcsecsq']
                 if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
-                    # Hardcode the flux conversion factor from MJy to ABmag
-                    defaults['flux_scaling'] = 0.003631
+                    defaults['flux_scaling'] = mjy2abmag
+            elif 'PIXAR_A2' in meta:
+                defaults['pixel_area'] = meta['PIXAR_A2']
+                if 'BUNIT' in meta and meta['BUNIT'] == u.Unit("MJy/sr"):
+                    defaults['flux_scaling'] = mjy2abmag
+
         elif telescope == 'HST':
             # TODO: Add more HST support, as needed.
             # HST pixel scales are from instrument handbooks.
@@ -269,11 +313,24 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     raise ValueError("cannot calculate background median in multiselect")
             else:
                 data = self.dataset.selected_dc_item
+
         comp = data.get_component(data.main_components[0])
+
+        if self.config == "cubeviz" and data.ndim > 2:
+            comp_data = comp.data[:, :, self._cube_idx].T  # nx, ny --> ny, nx
+            # Similar to coords_info logic.
+            if '_orig_spec' in getattr(data, 'meta', {}):
+                w = data.meta['_orig_spec'].wcs.celestial
+            else:
+                w = data.coords.celestial
+        else:  # "imviz"
+            comp_data = comp.data  # ny, nx
+            w = data.coords
+
         if hasattr(reg, 'to_pixel'):
-            reg = reg.to_pixel(data.coords)
+            reg = reg.to_pixel(w)
         aper_mask_stat = reg.to_mask(mode='center')
-        img_stat = aper_mask_stat.get_values(comp.data, mask=None)
+        img_stat = aper_mask_stat.get_values(comp_data, mask=None)
 
         # photutils/background/_utils.py --> nanmedian()
         return np.nanmedian(img_stat)  # Naturally in data unit
@@ -380,14 +437,31 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         except ValueError:  # Clearer error message
             raise ValueError('Missing or invalid background value')
 
+        if self.config == "cubeviz" and data.ndim > 2:
+            comp_data = comp.data[:, :, self._cube_idx].T  # nx, ny --> ny, nx
+            # Similar to coords_info logic.
+            if '_orig_spec' in getattr(data, 'meta', {}):
+                w = data.meta['_orig_spec'].wcs
+            else:
+                w = data.coords
+        else:  # "imviz"
+            comp_data = comp.data  # ny, nx
+            w = data.coords
+
         if hasattr(reg, 'to_pixel'):
             sky_center = reg.center
-            xcenter, ycenter = data.coords.world_to_pixel(sky_center)
+            if self.config == "cubeviz" and data.ndim > 2:
+                ycenter, xcenter = w.world_to_pixel(self._cube_wave, sky_center)[1]
+            else:  # "imviz"
+                xcenter, ycenter = w.world_to_pixel(sky_center)
         else:
             xcenter = reg.center.x
             ycenter = reg.center.y
             if data.coords is not None:
-                sky_center = data.coords.pixel_to_world(xcenter, ycenter)
+                if self.config == "cubeviz" and data.ndim > 2:
+                    sky_center = w.pixel_to_world(self._cube_idx, ycenter, xcenter)[1]
+                else:  # "imviz"
+                    sky_center = w.pixel_to_world(xcenter, ycenter)
             else:
                 sky_center = None
 
@@ -395,7 +469,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         include_pixarea_fac = False
         include_counts_fac = False
         include_flux_scale = False
-        comp_data = comp.data
         if comp.units:
             img_unit = u.Unit(comp.units)
             bg = bg * img_unit
@@ -464,6 +537,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                    'data_label', 'subset_label', 'timestamp'],
             indexes=[1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 18, 18, 18])
 
+        if self.config == "cubeviz":
+            if data.ndim > 2:
+                slice_val = self._cube_wave
+            else:
+                slice_val = u.Quantity(np.nan, self._cube_wave.unit)
+            phot_table.add_column(slice_val, name="slice_wave", index=29)
+
         if add_to_table:
             try:
                 phot_table['id'][0] = self.table._qtable['id'].max() + 1
@@ -479,7 +559,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Plots.
         if update_plots:
             if self.current_plot_type == "Curve of Growth":
-                self.plot.figure.title = 'Curve of growth from aperture center'
+                if self.config == "cubeviz" and data.ndim > 2:
+                    self.plot.figure.title = f'Curve of growth from aperture center at {slice_val:.4e}'  # noqa: E501
+                else:
+                    self.plot.figure.title = 'Curve of growth from aperture center'
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
                     comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
                     wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
@@ -494,7 +577,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 self.plot.figure.axes[1].label = comp.units or 'Value'
 
                 if self.current_plot_type == "Radial Profile":
-                    self.plot.figure.title = 'Radial profile from aperture center'
+                    if self.config == "cubeviz" and data.ndim > 2:
+                        self.plot.figure.title = f'Radial profile from aperture center at {slice_val:.4e}'  # noqa: E501
+                    else:
+                        self.plot.figure.title = 'Radial profile from aperture center'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=False)
@@ -502,7 +588,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     self.plot.update_style('profile', line_visible=True, color='gray', size=32)
 
                 else:  # Radial Profile (Raw)
-                    self.plot.figure.title = 'Raw radial profile from aperture center'
+                    if self.config == "cubeviz" and data.ndim > 2:
+                        self.plot.figure.title = f'Raw radial profile from aperture center at {slice_val:.4e}'  # noqa: E501
+                    else:
+                        self.plot.figure.title = 'Raw radial profile from aperture center'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
                         raw=True)
@@ -549,7 +638,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             x = phot_table[key][0]
             if (isinstance(x, (int, float, u.Quantity)) and
                     key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
-                                'aperture_sum_counts', 'aperture_sum_mag')):
+                                'aperture_sum_counts', 'aperture_sum_mag', 'slice_wave')):
                 tmp.append({'function': key, 'result': f'{x:.4e}'})
             elif key == 'sky_center' and x is not None:
                 tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
@@ -561,6 +650,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                             f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
             elif key == 'aperture_sum_mag' and x is not None:
                 tmp.append({'function': key, 'result': f'{x:.3f}'})
+            elif key == 'slice_wave':
+                if data.ndim > 2:
+                    tmp.append({'function': key, 'result': f'{slice_val:.4e}'})
             else:
                 tmp.append({'function': key, 'result': str(x)})
 

@@ -168,6 +168,20 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
                               spectral_subset=spectral_subset, function=function,
                               cls=cls, use_display_units=use_display_units)
 
+    # Need this method for Imviz Aperture Photometry plugin.
+
+    def get_aperture_photometry_results(self):
+        """Return aperture photometry results, if any.
+        Results are calculated using :ref:`cubeviz-aper-phot` plugin.
+
+        Returns
+        -------
+        results : `~astropy.table.QTable` or `None`
+            Photometry results if available or `None` otherwise.
+
+        """
+        return self.plugins['Aperture Photometry']._obj.export_table()
+
 
 def layer_is_cube_image_data(layer):
     return isinstance(layer, BaseData) and layer.ndim in (2, 3)

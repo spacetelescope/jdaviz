@@ -220,6 +220,7 @@ class Slice(PluginTemplateMixin):
 
         self.hub.broadcast(SliceWavelengthUpdatedMessage(slice=value,
                                                          wavelength=self.wavelength,
+                                                         wavelength_unit=self.wavelength_unit,
                                                          sender=self))
 
     def vue_goto_first(self, *args):

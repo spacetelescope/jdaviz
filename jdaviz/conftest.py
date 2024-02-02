@@ -99,7 +99,11 @@ def image_cube_hdu_obj():
 
 @pytest.fixture
 def image_cube_hdu_obj_microns():
-    flux_hdu = fits.ImageHDU(np.ones((8, 9, 10)).astype(np.float32))
+    # Basic rectangle ramp for aperture photometry test.
+    a = np.zeros((8, 9, 10)).astype(np.float32)  # (nz, ny, nx)
+    for i in range(8):
+        a[i, :5, :3] = i + 1
+    flux_hdu = fits.ImageHDU(a)
     flux_hdu.name = 'FLUX'
 
     uncert_hdu = fits.ImageHDU(np.zeros((8, 9, 10)).astype(np.float32))
@@ -204,16 +208,19 @@ def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4), with_u
     wcs_dict = {"CTYPE1": "RA---TAN", "CTYPE2": "DEC--TAN", "CTYPE3": "WAVE-LOG",
                 "CRVAL1": 205, "CRVAL2": 27, "CRVAL3": 4.622e-7,
                 "CDELT1": -0.0001, "CDELT2": 0.0001, "CDELT3": 8e-11,
-                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0,
+                # Need these for aperture photometry test.
+                "TELESCOP": "JWST", "BUNIT": fluxunit.to_string(), "PIXAR_A2": 0.01}
     w = WCS(wcs_dict)
     if with_uncerts:
         uncert = StdDevUncertainty(np.abs(np.random.normal(flux) * u.Jy))
 
         return Spectrum1D(flux=flux,
                           uncertainty=uncert,
-                          wcs=w)
+                          wcs=w,
+                          meta=wcs_dict)
     else:
-        return Spectrum1D(flux=flux, wcs=w)
+        return Spectrum1D(flux=flux, wcs=w, meta=wcs_dict)
 
 
 @pytest.fixture

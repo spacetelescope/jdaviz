@@ -214,12 +214,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         cube : `~specutils.Spectrum1D`
             The smoothed cube
         """
-        # Get information from the flux component
-        attribute = self.dataset.selected_dc_item.main_components[0]
-
-        cube = self.dataset.get_object(cls=Spectrum1D,
-                                       attribute=attribute,
-                                       statistic=None)
+        cube = self.dataset.selected_obj
         flux_unit = cube.flux.unit
 
         # Extend the 2D kernel to have a length 1 spectral dimension, so that
@@ -228,8 +223,16 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         convolved_data = convolve(cube, kernel)
 
+        # Copy 3D WCS from input cube.
+        data = self.dataset.selected_dc_item
+        # Similar to coords_info logic.
+        if '_orig_spec' in getattr(data, 'meta', {}):
+            w = data.meta['_orig_spec'].wcs
+        else:
+            w = data.coords
+
         # Create a new cube with the old metadata. Note that astropy
         # convolution generates values for masked (NaN) data.
-        newcube = Spectrum1D(flux=convolved_data * flux_unit, wcs=cube.wcs)
+        newcube = Spectrum1D(flux=convolved_data * flux_unit, wcs=w)
 
         return newcube

@@ -291,6 +291,19 @@ Click :guilabel:`EXTRACT` to produce a new 1D spectrum dataset
 from the spectral cube, which has uncertainties propagated by
 `astropy.nddata <https://docs.astropy.org/en/stable/nddata/nddata.html>`_.
 
+.. _cubeviz-aper-phot:
+
+Aperture Photometry
+===================
+
+Cubeviz allows aperture photometry on some 3D and 2D data, as long as they
+have valid flux units. For 3D data, the current :ref:`slice` is used.
+
+.. seealso::
+
+    :ref:`Imviz Aperture Photometry <aper-phot-simple>`
+        Imviz documentation describing the concept of aperture photometry in Jdaviz.
+
 .. _cubeviz-export-plot:
 
 Export Plot
