@@ -266,8 +266,10 @@ class TestParseImage:
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.data_selected = 'contents[DATA]'
         phot_plugin.aperture_selected = 'Subset 1'
+        assert phot_plugin.aperture.selected_validity.get('is_aperture')
         assert_allclose(phot_plugin.background_value, 0)
         phot_plugin.background_selected = 'Subset 2'
+        assert phot_plugin.aperture.selected_validity.get('is_aperture')
         assert_allclose(phot_plugin.background_value, 0.1741226315498352)  # Subset 2 median
         # NOTE: jwst.datamodels.find_fits_keyword("PHOTMJSR")
         phot_plugin.counts_factor = (data.meta['photometry']['conversion_megajanskys'] /
@@ -396,6 +398,7 @@ class TestParseImage:
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.data_selected = 'contents[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 1'
+        assert phot_plugin.aperture.selected_validity.get('is_aperture')
         phot_plugin.background_value = 0.0014  # Manual entry: Median on whole array
         assert_allclose(phot_plugin.pixel_area, 0.0025)  # Not used but still auto-populated
         phot_plugin.vue_do_aper_phot()
