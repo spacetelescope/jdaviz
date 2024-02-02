@@ -235,8 +235,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # but we still need to update the flux-scaling warning
             self._multiselect_flux_scaling_warning()
             return
-        if not self.aperture_selected_validity.get('is_aperture'):
-            return
 
         try:
             defaults = self._get_defaults_from_metadata()
