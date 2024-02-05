@@ -3721,6 +3721,11 @@ class PlotOptionsSyncState(BasePluginComponent):
                 helper = getattr(glue_state, f'{glue_name}_helper')
                 value = [choice for choice in helper.choices if str(choice) == msg['new']][0]
                 setattr(glue_state, glue_name, value)
+            elif glue_name in ('zoom_level') and msg['new'] <= 0:
+                # ignore if negative number (otherwise would fail)
+                self.value = msg['old']
+                self._processing_change_to_glue = False
+                return
             else:
                 setattr(glue_state, glue_name, msg['new'])
 
