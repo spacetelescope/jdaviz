@@ -6,7 +6,6 @@ import astropy.units as u
 from specutils import Spectrum1D
 from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe
-from glue.core.data import Data
 
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
@@ -947,17 +946,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 temp_label = "{} ({}, {})".format(self.results_label, m["x"], m["y"])
                 self.app.fitted_models[temp_label] = m["model"]
 
-        count = max(map(lambda s: int(next(iter(re.findall(r"\d$", s)), 0)),
-                        self.data_collection.labels)) + 1
+        output_cube = Spectrum1D(flux=fitted_spectrum.flux, wcs=fitted_spectrum.wcs)
 
-        label = self.app.return_data_label(f"{self.results_label}[Cube]", ext=count)
-
-        # Create new glue data object
-        output_cube = Data(label=label,
-                           coords=fitted_spectrum.wcs,
-                           flux=fitted_spectrum.flux.value)
-        output_cube.get_component('flux').units = fitted_spectrum.flux.unit.to_string()
-
+        # Create new data entry for glue
         if add_data:
             self.add_results.add_results_from_plugin(output_cube)
             self._set_default_results_label()
