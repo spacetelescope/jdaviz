@@ -121,6 +121,9 @@ Cubeviz
 - Fixes Spectral Extraction's assumptions of one data per viewer, and flux data only in
   flux-viewer/uncertainty data only in uncert-viewer. [#2646]
 
+- Fixed a bug where cube model fitting could fail (endless spinner) if input cube
+  has invalid 3D WCS. [#2685]
+
 Imviz
 ^^^^^
 
