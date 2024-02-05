@@ -12,7 +12,7 @@ from astropy.nddata import (
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, SliceWavelengthUpdatedMessage
+from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
@@ -116,7 +116,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_spectrum_viewer']
 
-        self.session.hub.subscribe(self, SliceWavelengthUpdatedMessage,
+        self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
         if ASTROPY_LT_5_3_2:
@@ -170,13 +170,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self._update_mark_scale()
 
     def _on_slice_changed(self, msg):
-        self.slice_wavelength = msg.wavelength
+        self.slice_wavelength = msg.value
 
     def vue_goto_reference_wavelength(self, *args):
         self.slice_plugin.wavelength = self.reference_wavelength
 
     def vue_adopt_slice_as_reference(self, *args):
-        self.reference_wavelength = self.slice_plugin.wavelength
+        self.reference_wavelength = self.slice_plugin.value
 
     @observe('reference_wavelength', 'slice_wavelength')
     def _update_mark_scale(self, *args):
