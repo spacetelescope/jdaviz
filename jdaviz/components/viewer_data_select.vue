@@ -108,7 +108,7 @@
         </div>
       </v-list>
     </v-menu>
-    <div ref="placeholder" :id="'target-' + viewer.id"></div>
+    <div :id="'target-' + viewer.id"></div>
   </j-tooltip>
 </template>
 <script>
