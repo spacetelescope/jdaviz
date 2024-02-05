@@ -1,26 +1,38 @@
 <template>
   <j-tooltip v-if="menuButtonAvailable()" tipid="viewer-toolbar-data">
-    <v-menu offset-y :close-on-content-click="false" v-model="viewer.data_open">
+    <v-menu attach offset-y :close-on-content-click="false" v-model="data_menu_open">
       <template v-slot:activator="{ on, attrs }">
-        <v-btn text elevation="3" v-bind="attrs" v-on="on" color="white" tile icon outlined
-          :class="{ active: data_menu_open }" style="height: 42px; width: 42px">
+        <v-btn
+          text 
+          elevation="3" 
+          v-bind="attrs" 
+          v-on="on" 
+          color="white"
+          tile
+          icon
+          outlined
+          :class="{active: data_menu_open}"
+          style="height: 42px; width: 42px">
           <v-icon>mdi-format-list-bulleted-square</v-icon>
         </v-btn>
       </template>
-      <v-list :id="'menu-content- '+ viewer.id" style="max-height: 500px; width: 465px; padding-top: 0px" class="overflow-y-auto">
+      <v-list style="max-height: 500px; width: 465px; padding-top: 0px" class="overflow-y-auto">
         <v-row key="title" style="padding-left: 25px; margin-right: 0px; background-color: #E3F2FD">
-          <span
-            style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
-            {{ viewerTitleCase }}
-          </span>
+            <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
+              {{viewerTitleCase}}
+            </span>
 
-          <span style="position: absolute; right: 5px">
-            <j-tooltip :tipid="multi_select ? 'viewer-data-select-enabled' : 'viewer-data-radio-enabled'">
-              <v-btn icon @click="toggleMultiSelect" style="opacity: 0.7">
-                <img :src="multi_select ? icons.checktoradial : icons.radialtocheck" width="24" />
-              </v-btn>
-            </j-tooltip>
-          </span>
+            <span style="position: absolute; right: 5px">
+              <j-tooltip :tipid="multi_select ? 'viewer-data-select-enabled' : 'viewer-data-radio-enabled'">
+                <v-btn
+                  icon
+                  @click="toggleMultiSelect"
+                  style="opacity: 0.7"
+                  >
+                    <img :src="multi_select ? icons.checktoradial : icons.radialtocheck" width="24"/>
+                </v-btn>
+              </j-tooltip>
+            </span>
         </v-row>
 
         <v-row style="padding-left: 32px; margin-right: 0px; padding-right: 10px;
@@ -31,43 +43,70 @@
           </span>
         </v-row>
 
-        <v-row v-for="item in filteredDataItems" :key="item.id"
-          style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
-          <j-viewer-data-select-item :item="item" :icon="layer_icons[item.name]" :icons="icons" :viewer="viewer"
-            :multi_select="multi_select" :is_wcs_only="false" :n_data_entries="nDataEntries"
+        <v-row v-for="item in filteredDataItems" :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
+          <j-viewer-data-select-item
+            :item="item"
+            :icon="layer_icons[item.name]"
+            :icons="icons"
+            :viewer="viewer"
+            :multi_select="multi_select"
+            :is_wcs_only="false"
+            :n_data_entries="nDataEntries"
             @data-item-visibility="$emit('data-item-visibility', $event)"
             @data-item-unload="$emit('data-item-unload', $event)"
-            @data-item-remove="$emit('data-item-remove', $event)"></j-viewer-data-select-item>
+            @data-item-remove="$emit('data-item-remove', $event)"
+          ></j-viewer-data-select-item>
         </v-row>
 
-        <div v-if="extraDataItems.length" style="margin-bottom: -8px">
-          <v-row key="extra-items-expand"
-            style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD">
-            <span @click="toggleShowExtraItems" class='text--primary'
-              style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; cursor: pointer">
-              <v-icon class='invert-if-dark'>{{ showExtraItems ? 'mdi-chevron-double-up' :
-                'mdi-chevron-double-down' }}</v-icon>
+        <div v-if="linkedByWcs()">
+          <j-plugin-section-header style="margin-top: 0px">Orientation</j-plugin-section-header>
+          <v-row v-for="item in wcsOnlyItems" :key="item.id" style="padding-left: 25px; margin-right: -8px; margin-top: 4px; margin-bottom: 4px">
+            <j-viewer-data-select-item
+              :item="item"
+              :icon="layer_icons[item.name]"
+              :icons="icons"
+              :viewer="viewer"
+              :multi_select="multi_select"
+              :is_wcs_only="true"
+              @data-item-remove="$emit('data-item-remove', $event)"
+              @change-reference-data="$emit('change-reference-data', $event)"
+            ></j-viewer-data-select-item>
+          </v-row>
+        </div>
+
+        <div v-if="extraDataItems.length > 0" style="margin-bottom: -8px;">
+          <v-row key="extra-items-expand" style="padding-left: 25px; margin-right: 0px; padding-bottom: 4px; background-color: #E3F2FD"> 
+            <span 
+              @click="toggleShowExtraItems"
+              class='text--primary'
+              style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; cursor: pointer"
+            >
+              <v-icon class='invert-if-dark'>{{showExtraItems ? 'mdi-chevron-double-up' : 'mdi-chevron-double-down'}}</v-icon>
               <span v-if="viewer.config === 'mosviz'">
-                {{ showExtraItems ? 'hide other row data not in viewer' : 'show other row data not in viewer' }}
+                {{showExtraItems ? 'hide other row data not in viewer' : 'show other row data not in viewer'}}
               </span>
               <span v-else>
-                {{ showExtraItems ? 'hide data not in viewer' : 'show data not in viewer' }}
+                {{showExtraItems ? 'hide data not in viewer' : 'show data not in viewer'}}
               </span>
             </span>
           </v-row>
 
-          <v-row v-if="showExtraItems" v-for="item in extraDataItems" :key="item.id"
-            style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
-            <j-viewer-data-select-item :item="item" :icon="layer_icons[item.name]" :icons="icons" :viewer="viewer"
-              :multi_select="multi_select" :is_wcs_only="false" :n_data_entries="nDataEntries"
+          <v-row v-if="showExtraItems" v-for="item in extraDataItems" :key="item.id" style="padding-left: 25px; margin-right: 0px; margin-top: 4px; margin-bottom: 4px">
+            <j-viewer-data-select-item
+              :item="item"
+              :icon="layer_icons[item.name]"
+              :icons="icons"
+              :viewer="viewer"
+              :multi_select="multi_select"
+              :is_wcs_only="false"
+              :n_data_entries="nDataEntries"
               @data-item-visibility="$emit('data-item-visibility', $event)"
-              @data-item-remove="$emit('data-item-remove', $event)"></j-viewer-data-select-item>
+              @data-item-remove="$emit('data-item-remove', $event)"
+            ></j-viewer-data-select-item>
           </v-row>
         </div>
       </v-list>
     </v-menu>
-    <div ref="placeholder" :id="'target-' + viewer.id"></div>
-    <div style="height: 100px"></div>
   </j-tooltip>
 </template>
 <script>
@@ -103,32 +142,7 @@ module.exports = {
       uncertTrunc: this.uncertainty,
     }
   },
-  mounted() {
-    let element = document.getElementById(`target-${this.viewer.id}`).parentElement
-    while (element["tagName"] !== "BODY") {
-      if (["auto","scroll"].includes(window.getComputedStyle(element).overflowY)) {
-        element.addEventListener("scroll", this.onScroll);
-      }
-      element = element.parentElement;
-    }
-  },
-  beforeDestroy() {
-    let element = document.getElementById(`target-${this.viewer.id}`).parentElement
-    while (element["tagName"] !== "BODY") {
-      if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
-        element.removeEventListener("scroll", this.onScroll);
-      }
-      element = element.parentElement;
-    }
-  },
   methods: {
-    onScroll(e) {
-      const top = document.getElementById(`target-${this.viewer.id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop;
-      if (this.viewer.data_open && document.getElementById(`target-${this.viewer.id}`)) {
-        const menuContent = document.getElementById(`menu-content- ${this.viewer.id}`);
-        menuContent.parentElement.style.top = top + "px";
-      }
-    },
     menuButtonAvailable() {
       if (this.$props.viewer.reference === 'table-viewer') {
         return false
@@ -177,9 +191,9 @@ module.exports = {
         }
       } else if (this.$props.viewer.config === 'specviz2d') {
         if (this.$props.viewer.reference === 'spectrum-viewer') {
-          return item.ndims === 1 && item.type !== 'trace' && this.dataItemInViewer(item, returnExtraItems)
+          return item.ndims === 1 && item.type!=='trace' && this.dataItemInViewer(item, returnExtraItems)
         } else if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
-          return (item.ndims === 2 || item.type === 'trace') && this.dataItemInViewer(item, returnExtraItems)
+          return (item.ndims === 2 || item.type==='trace') && this.dataItemInViewer(item, returnExtraItems)
         }
       } else if (this.$props.viewer.config === 'lcviz') {
         // TODO: generalize itemIsVisible so downstream apps can provide their own customized filters
@@ -240,7 +254,7 @@ module.exports = {
       var title = this.$props.viewer.reference || this.$props.viewer.id
       // this translates from kebab-case to human readable (individual words, in title case)
       // each word that should NOT be capitalized needs to explicitly be set here
-      return title.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => { if (['vs'].indexOf(word) !== -1) { return word } else { return word.charAt(0).toUpperCase() + word.slice(1) } }).join(' ');
+      return title.toLowerCase().replaceAll('-', ' ').split(' ').map((word) => {if (['vs'].indexOf(word) !== -1) {return word} else {return word.charAt(0).toUpperCase() + word.slice(1)}}).join(' ');
     },
     showModeToggle() {
       if (this.$props.viewer.config === 'cubeviz') {
