@@ -836,7 +836,13 @@ class PlotOptions(PluginTemplateMixin):
 
         # in the case of multiple viewers, calculate based on the first
         # alternatively, we could find the most extreme by looping over all selected viewers
-        viewer = self.viewer.selected_obj[0] if self.viewer_multiselect else self.viewer.selected_obj  # noqa
+        viewers = self.viewer.selected_obj if self.viewer_multiselect else [self.viewer.selected_obj]  # noqa
+        for viewer in viewers:
+            if hasattr(viewer.state, '_get_reset_limits'):
+                break
+        else:
+            # no image viewer
+            return
         x_min, x_max, y_min, y_max = viewer.state._get_reset_limits(return_as_world=True)
         self.zoom_step, _ = _round_step(max(x_max-x_min, y_max-y_min) / 100.)
 
