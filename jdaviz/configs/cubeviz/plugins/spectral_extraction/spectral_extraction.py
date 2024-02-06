@@ -71,10 +71,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     bg_scale_factor = Float(1).tag(sync=True)
     bg_wavelength_dependent = Bool(False).tag(sync=True)
 
-    # subpixel = Bool(False).tag(sync=True)
-    # aperture_masking_methods = List(['exact', 'subpixel', 'center']).tag(sync=True)
-    # aperture_masking_method_selected = Unicode('exact').tag(sync=True)
-
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
@@ -83,9 +79,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     aperture_method_items = List(['exact', 'subpixel', 'center']).tag(sync=True)
     aperture_method_selected = Unicode('exact').tag(sync=True)
-    # cone_aperture_slope = Float().tag(sync=True)
-    # cone_aperture_intercept = Float().tag(sync=True)
-    # cone_aperture_center = Any().tag(sync=True)
 
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
@@ -308,13 +301,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Retrieve mask cube and create array to represent the cone mask
         mask_cube = self._app._jdaviz_helper._loaded_mask_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)
+        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
+                                                                          statistic=None)
         masks_boolean_values = np.zeros_like(mask_cube.flux.value)
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
                   self.aperture.selected_spatial_region.center.x)
-        # Replace with code for retrieving display_unit in cubeviz when it is available
-        display_unit = u.um
+        # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
+        display_unit = flux_cube.spectral_axis.unit
 
         # Loop through cube and create cone aperture at each wavelength. Then convert that to a
         # mask using the selected aperture method and add that to a mask cube.

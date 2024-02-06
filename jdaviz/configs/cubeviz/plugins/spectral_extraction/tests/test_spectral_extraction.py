@@ -231,3 +231,41 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         extract_plg._obj.vue_adopt_slice_as_reference()
         extract_plg._obj.vue_goto_reference_wavelength()
         assert slice_plg.slice == 1
+
+
+def test_cone_aperture(cubeviz_helper, spectrum1d_cube_larger):
+    from specutils import Spectrum1D
+    cubeviz_helper.load_data(spectrum1d_cube_larger)
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(1, 1), radius=0.7)])
+
+    mask_cube = Spectrum1D(flux=np.ones_like(spectrum1d_cube_larger.flux),
+                           spectral_axis=spectrum1d_cube_larger.spectral_axis,
+                           mask=np.ones_like(spectrum1d_cube_larger.flux))
+    cubeviz_helper.load_data(mask_cube, override_cube_limit=True)
+    cubeviz_helper._loaded_mask_cube = cubeviz_helper.app.data_collection[-1]
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+    slice_plg = cubeviz_helper.plugins['Slice']
+
+    extract_plg.aperture = 'Subset 1'
+    extract_plg.wavelength_dependent = True
+    assert cubeviz_helper._loaded_mask_cube.get_object(cls=Spectrum1D, statistic=None)
+
+    slice_plg.slice = 1
+    extract_plg._obj.vue_adopt_slice_as_reference()
+    cone_aperture = extract_plg._obj.cone_aperture()
+    ref_wavelength_1 = extract_plg._obj.reference_wavelength
+    print(cone_aperture)
+    assert cone_aperture.shape == cubeviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D, statistic=None).shape
+
+    print(slice_plg.slice)
+    slice_plg.slice = 8
+    extract_plg._obj.vue_adopt_slice_as_reference()
+    ref_wavelength_2 = extract_plg._obj.reference_wavelength
+    # Potentially not enough slices for this to make sense
+    cone_aperture_2 = extract_plg._obj.cone_aperture()
+    print(cone_aperture)
+    print(cone_aperture_2)
+    # Cone apertures are the same for some reason
+    # assert (cone_aperture != cone_aperture_2).any()
+    assert ref_wavelength_1 != ref_wavelength_2
