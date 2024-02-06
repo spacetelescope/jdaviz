@@ -476,7 +476,7 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     elif data_type == 'uncert':
         app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
         app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
-    if data_type == 'mask':
+    elif data_type == 'mask':
         app._jdaviz_helper._loaded_mask_cube = app.data_collection[data_label]
 
 

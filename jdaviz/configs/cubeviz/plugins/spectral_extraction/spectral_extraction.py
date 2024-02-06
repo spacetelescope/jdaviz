@@ -50,13 +50,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
       Subset to use for the spectral extraction, or ``Entire Cube``.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`collapse`
+    * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      Method used to create a cone aperture in spectral extraction.
     """
     template_file = __file__, "spectral_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)
 
     # feature flag for cone support
     dev_cone_support = Bool(True).tag(sync=True)  # when enabling: add entries to docstring
-    dev_bg_support = Bool(True).tag(sync=True)  # when enabling: add entries to docstring
+    dev_bg_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_subpixel_support = Bool(True).tag(sync=True)  # when enabling: add entries to docstring
 
     active_step = Unicode().tag(sync=True)
@@ -116,6 +118,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             selected='function_selected',
             manual_options=['Mean', 'Min', 'Max', 'Sum']
         )
+        self.aperture_method = SelectPluginComponent(
+            self,
+            items='aperture_method_items',
+            selected='aperture_method_selected',
+            manual_options=['exact', 'subpixel', 'center']
+        )
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_spectrum_viewer']
 
@@ -144,7 +152,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.dev_bg_support:
             expose += ['background', 'bg_wavelength_dependent']
         if self.dev_subpixel_support:
-            expose += ['aperture_method_items', 'aperture_method_selected']
+            expose += ['aperture_method']
 
         return PluginUserApi(self, expose=expose)
 
@@ -296,7 +304,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         return collapsed_spec
 
-    @with_spinner()
     def cone_aperture(self):
         # Retrieve mask cube and create array to represent the cone mask
         mask_cube = self._app._jdaviz_helper._loaded_mask_cube.get_object(cls=Spectrum1D,
