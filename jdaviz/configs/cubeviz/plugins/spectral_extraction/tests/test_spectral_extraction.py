@@ -255,7 +255,8 @@ def test_cone_aperture(cubeviz_helper, spectrum1d_cube_larger):
     extract_plg._obj.vue_adopt_slice_as_reference()
     cone_aperture = extract_plg._obj.cone_aperture()
     ref_wavelength_1 = extract_plg._obj.reference_wavelength
-    assert cone_aperture.shape == cubeviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D, statistic=None).shape
+    assert (cone_aperture.shape ==
+            cubeviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D, statistic=None).shape)
 
     slice_plg.slice = 8
     extract_plg._obj.vue_adopt_slice_as_reference()
