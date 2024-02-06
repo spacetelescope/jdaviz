@@ -267,6 +267,8 @@ def _parse_hdulist(app, hdulist, file_name=None,
             app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
             app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
 
+        metadata['_parsed_before'] = True
+
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
                     viewer_name=None, flux_viewer_reference_name=None,
@@ -315,10 +317,7 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     if viewer_name == flux_viewer_reference_name:
         app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
-    if data_type == 'flux':
-        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
-    elif data_type == 'uncert':
-        app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
+    metadata['_parsed_before'] = True
 
 
 def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None,
@@ -366,10 +365,7 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
     app.add_data_to_viewer(flux_viewer_reference_name, data_label)
     app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
-    if data_type == 'flux':
-        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
-    if data_type == 'uncert':
-        app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
+    metadata['_parsed_before'] = True
 
 
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,
@@ -395,13 +391,14 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         else:
             flux = val
 
-        flux = np.moveaxis(flux, 1, 0)
-
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 'ignore', message='Input WCS indicates that the spectral axis is not last',
                 category=UserWarning)
             meta = standardize_metadata(file_obj.meta)
+
+            if '_parsed_before' in meta and meta['_parsed_before']:
+                flux = np.moveaxis(flux, 1, 0)
 
             # store original WCS in metadata. this is a hacky workaround for
             # converting subsets to sky regions, where the parent data of the
@@ -423,6 +420,8 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             app.add_data_to_viewer(uncert_viewer_reference_name, cur_data_label)
             app._jdaviz_helper._loaded_uncert_cube = app.data_collection[cur_data_label]
         # We no longer auto-populate the mask cube into a viewer
+
+        meta['_parsed_before'] = True
 
 
 def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_name=None):
@@ -470,6 +469,8 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     elif data_type == 'uncert':
         app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
         app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
+
+    meta['_parsed_before'] = True
 
 
 def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None,
