@@ -36,6 +36,8 @@ class Slice(PluginTemplateMixin):
     * ``wavelength``
       Wavelength of the current slice.  When setting this directly, it will update automatically to
       the wavelength corresponding to the nearest slice.
+    * ``stretch_per_slice``
+      Whether the stretch percentile is applied for only the active slice or the entire cube.
     * ``show_indicator``
       Whether to show indicator in spectral viewer when slice tool is inactive.
     * ``show_wavelength``
@@ -43,6 +45,7 @@ class Slice(PluginTemplateMixin):
     """
     template_file = __file__, "slice.vue"
     slice = Any(0).tag(sync=True)
+    stretch_per_slice = Bool(False).tag(sync=True)
     wavelength = Any(-1).tag(sync=True)
     wavelength_unit = Any("").tag(sync=True)
     min_value = Int(0).tag(sync=True)
@@ -96,6 +99,7 @@ class Slice(PluginTemplateMixin):
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('slice', 'wavelength',
+                                           'stretch_per_slice',
                                            'show_indicator', 'show_wavelength'))
 
     @property
@@ -204,6 +208,18 @@ class Slice(PluginTemplateMixin):
         msg = SliceToolStateMessage({event['name']: event['new']}, sender=self)
         self.session.hub.broadcast(msg)
 
+    @observe('stretch_per_slice')
+    def _update_stretch_per_slice(self, *args):
+        # TODO: move this toggle to plot options (near stretch options) and have as a per-viewer
+        # setting?
+        for viewer in self._watched_viewers:
+            for layer in viewer.state.layers:
+                if len(layer.layer.shape) == 3:
+                    if self.stretch_per_slice:
+                        layer.set_slice([slice(None), slice(None), int(self.slice)])
+                    else:
+                        layer.set_slice(None)
+
     @observe('slice')
     def _on_slider_updated(self, event):
         if self._x_all is None:
@@ -215,8 +231,11 @@ class Slice(PluginTemplateMixin):
 
         for viewer in self._watched_viewers:
             viewer.state.slices = (0, 0, value)
+
         for viewer in self._indicator_viewers:
             viewer._update_slice_indicator(value)
+
+        self._update_stretch_per_slice()
 
         self.hub.broadcast(SliceWavelengthUpdatedMessage(slice=value,
                                                          wavelength=self.wavelength,
