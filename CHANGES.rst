@@ -9,6 +9,8 @@ Bug Fixes
 * Viewer data-menu is no-longer synced between different instances of the app to avoid recursion
   between click events. [#2670]
 
+* Fix data-menu cutoff in smaller viewers, ensuring full visibility regardless of viewer dimensions. [#2630]
+
 Cubeviz
 ^^^^^^^
 - Fixes Spectral Extraction's assumptions of one data per viewer, and flux data only in
