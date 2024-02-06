@@ -1,8 +1,9 @@
 <template>
   <j-tooltip v-if="menuButtonAvailable()" tipid="viewer-toolbar-data">
-    <v-menu attach offset-y :close-on-content-click="false" v-model="data_menu_open">
+    <v-menu offset-y :close-on-content-click="false" v-model="data_menu_open">
       <template v-slot:activator="{ on, attrs }">
         <v-btn
+          :id="'menu-button-'+ viewer.id"
           text 
           elevation="3" 
           v-bind="attrs" 
@@ -16,7 +17,7 @@
           <v-icon>mdi-format-list-bulleted-square</v-icon>
         </v-btn>
       </template>
-      <v-list style="max-height: 500px; width: 465px; padding-top: 0px" class="overflow-y-auto">
+      <v-list :id="'menu-content-' + viewer.id" style="max-height: 500px; width: 465px; padding-top: 0px" class="overflow-y-auto">
         <v-row key="title" style="padding-left: 25px; margin-right: 0px; background-color: #E3F2FD">
             <span style="overflow-wrap: anywhere; font-size: 12pt; padding-top: 6px; padding-left: 6px; font-weight: bold; color: black">
               {{viewerTitleCase}}
@@ -107,6 +108,7 @@
         </div>
       </v-list>
     </v-menu>
+    <div :id="'target-' + viewer.id"></div>
   </j-tooltip>
 </template>
 <script>
@@ -142,7 +144,33 @@ module.exports = {
       uncertTrunc: this.uncertainty,
     }
   },
+  mounted() {
+    let element = document.getElementById(`target-${this.viewer.id}`).parentElement
+    while (element["tagName"] !== "BODY") {
+      if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
+        element.addEventListener("scroll", this.onScroll);
+      }
+      element = element.parentElement;
+    }
+  },
+  beforeDestroy() {
+    let element = document.getElementById(`target-${this.viewer.id}`).parentElement
+    while (element["tagName"] !== "BODY") {
+      if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
+        element.removeEventListener("scroll", this.onScroll);
+      }
+      element = element.parentElement;
+    }
+  },
   methods: {
+    onScroll(e) {
+      const dataMenuHeight = document.getElementById(`menu-button-${this.viewer.id}`).parentElement.getBoundingClientRect().height
+      const top = document.getElementById(`target-${this.viewer.id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
+      if (this.data_menu_open && document.getElementById(`target-${this.viewer.id}`)) {
+        const menuContent = document.getElementById(`menu-content-${this.viewer.id}`);
+        menuContent.parentElement.style.top = top + "px";
+      }
+    },
     menuButtonAvailable() {
       if (this.$props.viewer.reference === 'table-viewer') {
         return false
