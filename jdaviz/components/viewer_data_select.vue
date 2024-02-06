@@ -3,7 +3,7 @@
     <v-menu offset-y :close-on-content-click="false" v-model="data_menu_open">
       <template v-slot:activator="{ on, attrs }">
         <v-btn
-          id="menu-button"
+          :id="'menu-button-'+ viewer.id"
           text 
           elevation="3" 
           v-bind="attrs" 
@@ -164,7 +164,7 @@ module.exports = {
   },
   methods: {
     onScroll(e) {
-      const dataMenuHeight = document.getElementById("menu-button").parentElement.getBoundingClientRect().height
+      const dataMenuHeight = document.getElementById(`menu-button-${this.viewer.id}`).parentElement.getBoundingClientRect().height
       const top = document.getElementById(`target-${this.viewer.id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
       if (this.data_menu_open && document.getElementById(`target-${this.viewer.id}`)) {
         const menuContent = document.getElementById(`menu-content-${this.viewer.id}`);
