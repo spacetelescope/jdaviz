@@ -50,16 +50,18 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
       Subset to use for the spectral extraction, or ``Entire Cube``.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`collapse`
+    * ``wavelength_dependent``:
+      When true, the cone_aperture method will be used to determine the mask.
+    * ``reference_wavelength``:
+      The wavelength that will be used to calculate the radius of the cone through the cube.
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      Method used to create a cone aperture in spectral extraction.
+      Extract spectrum using an aperture masking method in place of the subset mask.
     """
     template_file = __file__, "spectral_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)
 
-    # feature flag for cone support
-    dev_cone_support = Bool(True).tag(sync=True)  # when enabling: add entries to docstring
+    # feature flag for background cone support
     dev_bg_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
-    dev_subpixel_support = Bool(True).tag(sync=True)  # when enabling: add entries to docstring
 
     active_step = Unicode().tag(sync=True)
 
@@ -146,13 +148,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def user_api(self):
         expose = ['function', 'spatial_subset', 'aperture',
-                  'add_results', 'collapse_to_spectrum']
-        if self.dev_cone_support:
-            expose += ['wavelength_dependent', 'reference_wavelength']
+                  'add_results', 'collapse_to_spectrum',
+                  'wavelength_dependent', 'reference_wavelength',
+                  'aperture_method']
         if self.dev_bg_support:
             expose += ['background', 'bg_wavelength_dependent']
-        if self.dev_subpixel_support:
-            expose += ['aperture_method']
 
         return PluginUserApi(self, expose=expose)
 
@@ -216,6 +216,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         """
         spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
         uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
+        uncertainties = None
 
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
@@ -225,22 +226,25 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             nddata = spectral_cube.get_subset_object(
                 subset_id=self.aperture.selected, cls=NDDataArray
             )
-            uncertainties = uncert_cube.get_subset_object(
-                subset_id=self.aperture.selected, cls=StdDevUncertainty
-            )
+            if uncert_cube:
+                uncertainties = uncert_cube.get_subset_object(
+                    subset_id=self.aperture.selected, cls=StdDevUncertainty
+                )
             mask = self.cone_aperture()
 
         elif self.aperture.selected != self.aperture.default_text:
             nddata = spectral_cube.get_subset_object(
                 subset_id=self.aperture.selected, cls=NDDataArray
             )
-            uncertainties = uncert_cube.get_subset_object(
-                subset_id=self.aperture.selected, cls=StdDevUncertainty
-            )
+            if uncert_cube:
+                uncertainties = uncert_cube.get_subset_object(
+                    subset_id=self.aperture.selected, cls=StdDevUncertainty
+                )
             mask = nddata.mask
         else:
             nddata = spectral_cube.get_object(cls=NDDataArray)
-            uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
+            if uncert_cube:
+                uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
             mask = nddata.mask
         # Use the spectral coordinate from the WCS:
         if '_orig_spec' in spectral_cube.meta:
@@ -305,6 +309,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return collapsed_spec
 
     def cone_aperture(self):
+        if not self._app._jdaviz_helper._loaded_mask_cube:
+            snackbar_message = SnackbarMessage(
+                "Cannot create cone aperture without valid mask cube loaded.",
+                color="error",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+            return
         # Retrieve mask cube and create array to represent the cone mask
         mask_cube = self._app._jdaviz_helper._loaded_mask_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)

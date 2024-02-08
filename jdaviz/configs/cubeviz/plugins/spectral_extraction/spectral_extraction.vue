@@ -19,13 +19,13 @@
         hint="Select a spatial region to extract its spectrum."
       />
 
-      <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture && dev_cone_support">
+      <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             {{aperture_selected}} does not support wavelength dependence (cone support): {{aperture_selected_validity.aperture_message}}.
         </span>
       </v-row>
 
-      <div v-if="aperture_selected_validity.is_aperture && dev_cone_support">
+      <div v-if="aperture_selected_validity.is_aperture">
         <v-row>
           <v-switch
             v-model="wavelength_dependent"
@@ -80,7 +80,7 @@
         </span>
       </v-row>
 
-      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture && dev_cone_support">
+      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             {{bg_selected}} does not support wavelength dependence (cone support): {{bg_selected_validity.aperture_message}}.
         </span>
@@ -88,8 +88,7 @@
 
       <div v-if="aperture_selected_validity.is_aperture
                  && bg_selected_validity.is_aperture
-                 && wavelength_dependent
-                 && dev_cone_support">
+                 && wavelength_dependent">
         <v-row>
           <v-switch
             v-model="bg_wavelength_dependent"
@@ -118,12 +117,12 @@
     <div @mouseover="() => active_step='ext'">
       <j-plugin-section-header :active="active_step==='ext'">Extract</j-plugin-section-header>
 
-      <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture && dev_subpixel_support">
+      <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Aperture: {{aperture_selected}} does not support subpixel: {{aperture_selected_validity.aperture_message}}.
         </span>
       </v-row>
-      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture && dev_subpixel_support">
+      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Background: {{bg_selected}} does not support subpixel: {{bg_selected_validity.aperture_message}}.
         </span>
@@ -131,13 +130,12 @@
 
 
       <div v-if="(aperture_selected === 'Entire Cube' || aperture_selected_validity.is_aperture)
-                 && (bg_selected === 'None' || bg_selected_validity.is_aperture)
-                 && dev_subpixel_support">
+                 && (bg_selected === 'None' || bg_selected_validity.is_aperture)">
         <v-row>
           <v-select
             :menu-props="{ left: true }"
             attach
-            :items="aperture_method_items"
+            :items="aperture_method_items.map(i => i.label)"
             v-model="aperture_method_selected"
             label="Aperture masking method"
             hint="Extract spectrum using an aperture masking method in place of the subset mask."
