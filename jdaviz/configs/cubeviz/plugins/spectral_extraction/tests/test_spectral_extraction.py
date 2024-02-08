@@ -233,14 +233,12 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         assert slice_plg.slice == 1
 
 
-def test_cone_aperture(cubeviz_helper, spectrum1d_cube_larger):
-    from specutils import Spectrum1D
-    cubeviz_helper.load_data(spectrum1d_cube_larger)
+def test_cone_aperture(cubeviz_helper, spectrum1d_cube_largest):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
     cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(1, 1), radius=0.5)])
 
-    mask_cube = Spectrum1D(flux=np.ones_like(spectrum1d_cube_larger.flux),
-                           spectral_axis=spectrum1d_cube_larger.spectral_axis,
-                           mask=np.ones_like(spectrum1d_cube_larger.flux))
+    mask_cube = Spectrum1D(flux=np.ones_like(spectrum1d_cube_largest.flux),
+                           spectral_axis=spectrum1d_cube_largest.spectral_axis)
     cubeviz_helper.load_data(mask_cube, override_cube_limit=True)
     cubeviz_helper._loaded_mask_cube = cubeviz_helper.app.data_collection[-1]
 
@@ -254,28 +252,13 @@ def test_cone_aperture(cubeviz_helper, spectrum1d_cube_larger):
     slice_plg.slice = 1
     extract_plg._obj.vue_adopt_slice_as_reference()
     cone_aperture = extract_plg._obj.cone_aperture()
-    ref_wavelength_1 = extract_plg._obj.reference_wavelength
     assert (cone_aperture.shape ==
             cubeviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D, statistic=None).shape)
 
-    slice_plg.slice = 8
+    # Make sure that the cone created when the reference slice is 988 is different
+    # to the cone made at reference slice 1.
+    slice_plg.slice = 988
     extract_plg._obj.vue_adopt_slice_as_reference()
-    ref_wavelength_2 = extract_plg._obj.reference_wavelength
-    # Not enough slices for the cone to develop
     cone_aperture_2 = extract_plg._obj.cone_aperture()
 
-    cone_result = [[[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]],
-                   [[1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]]
-
-    # Cone apertures are the same because the radius and wavelength values do not grow
-    # fast enough to create different sized apertures. This functionality is more apparent
-    # data cubes with longer spectral axes.
-    assert (cone_aperture == cone_result).any()
-    assert (cone_aperture_2 == cone_result).any()
-    assert ref_wavelength_1 != ref_wavelength_2
+    assert not (cone_aperture == cone_aperture_2).all()

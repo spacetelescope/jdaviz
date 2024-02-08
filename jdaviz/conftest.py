@@ -21,7 +21,7 @@ from jdaviz.utils import NUMPY_LT_2_0
 if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
 
-SPECTRUM_SIZE = 10  # length of spectrum
+SPECTRUM_SIZE = 1000  # length of spectrum
 
 
 @pytest.fixture
@@ -236,6 +236,11 @@ def spectrum1d_cube_with_uncerts():
 @pytest.fixture
 def spectrum1d_cube_larger():
     return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(SPECTRUM_SIZE, 2, 4))
+
+
+@pytest.fixture
+def spectrum1d_cube_largest():
+    return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(1000, 2, 4))
 
 
 @pytest.fixture
