@@ -21,7 +21,7 @@ from jdaviz.utils import NUMPY_LT_2_0
 if not NUMPY_LT_2_0:
     np.set_printoptions(legacy="1.25")
 
-SPECTRUM_SIZE = 1000  # length of spectrum
+SPECTRUM_SIZE = 10  # length of spectrum
 
 
 @pytest.fixture
