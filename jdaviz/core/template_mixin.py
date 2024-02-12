@@ -3776,7 +3776,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             value = value.name
         elif self._glue_name in GLUE_STATES_WITH_HELPERS:
             value = str(value)
-        elif isinstance(self.value, (int, float)) and self._glue_name != 'percentile':
+        elif self._glue_name != 'percentile' and isinstance(self.value, (int, float)):
             # glue might pass us ints for float or vice versa, but our traitlets care
             # so let's cast to the type expected by the traitlet to avoid having to
             # use Any traitlets for all of these.  We skip percentile as that needs
