@@ -33,6 +33,15 @@
     </v-row>
 
     <v-row>
+      <v-switch
+        label="Stretch-per-slice"
+        hint="Whether the stretch percentile is applied per slice or across the entire cube."
+        v-model="stretch_per_slice"
+        persistent-hint>
+      </v-switch>
+    </v-row>
+
+    <v-row>
       <v-slider
         :value="slice"
         @input="throttledSetValue"
