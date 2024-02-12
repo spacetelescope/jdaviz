@@ -22,6 +22,7 @@ from jdaviz.core.template_mixin import (
     PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
 )
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.utils import _wcs_only_label
 
 __all__ = ['Orientation']
 
@@ -230,7 +231,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         data_in_viewer = self.app.get_viewer(viewer_selected.reference).data()
 
         for data in self.app.data_collection:
-            is_wcs_only = data.meta.get(self.app._wcs_only_label, False)
+            is_wcs_only = data.meta.get(_wcs_only_label, False)
             has_wcs = hasattr(data.coords, 'pixel_to_world')
             if not is_wcs_only:
                 if data in data_in_viewer and wcs_linked and not has_wcs:
@@ -395,11 +396,11 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def _on_data_add_to_viewer(self, msg):
         all_wcs_only_layers = all(
-            layer.layer.meta.get(self.app._wcs_only_label)
+            layer.layer.meta.get(_wcs_only_label)
             for layer in self.viewer.selected_obj.layers
             if hasattr(layer.layer, "meta")
         )
-        if all_wcs_only_layers and msg.data.meta.get(self.app._wcs_only_label, False):
+        if all_wcs_only_layers and msg.data.meta.get(_wcs_only_label, False):
             # on adding first data layer, reset the limits:
             self.viewer.selected_obj.state.reset_limits()
 

@@ -14,7 +14,7 @@ from stdatamodels import asdf_in_fits
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY, _wcs_only_label
 
 try:
     from roman_datamodels import datamodels as rdd
@@ -146,7 +146,7 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
         data_iter = _hdu_to_glue_data(file_obj, data_label)
 
     elif isinstance(file_obj, NDData):
-        if file_obj.meta.get(app._wcs_only_label, False):
+        if file_obj.meta.get(_wcs_only_label, False):
             data_iter = _wcsonly_to_glue_data(file_obj, data_label)
         else:
             data_iter = _nddata_to_glue_data(file_obj, data_label)
@@ -184,7 +184,7 @@ def _parse_image(app, file_obj, data_label, ext=None):
             # for outside_*_bounding_box should also be updated.
             data.coords._orig_bounding_box = data.coords.bounding_box
             data.coords.bounding_box = None
-        if not data.meta.get(app._wcs_only_label, False):
+        if not data.meta.get(_wcs_only_label, False):
             data_label = app.return_data_label(data_label, alt_name="image_data")
         app.add_data(data, data_label)
 

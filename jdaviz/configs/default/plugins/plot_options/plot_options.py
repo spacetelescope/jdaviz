@@ -28,6 +28,8 @@ from jdaviz.core.events import ChangeRefDataMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
+from jdaviz.utils import is_not_wcs_only
+
 
 from scipy.interpolate import PchipInterpolator
 
@@ -388,10 +390,6 @@ class PlotOptions(PluginTemplateMixin):
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
 
-        def is_not_wcs_only(layer):
-            # exclude WCS-only layers from the layer choices:
-            return not getattr(layer.layer, 'meta', {}).get(self.app._wcs_only_label, False)
-
         self.layer.filters += [is_not_wcs_only]
 
         self.swatches_palette = [
@@ -427,7 +425,7 @@ class PlotOptions(PluginTemplateMixin):
             return not is_image(state) and not is_spatial_subset(state)
 
         def is_spatial_subset(state):
-            return isinstance(state, ImageSubsetLayerState)
+            return isinstance(state, ImageSubsetLayerState) and is_not_wcs_only(state.layer)
 
         def is_not_subset(state):
             return not is_spatial_subset(state)
