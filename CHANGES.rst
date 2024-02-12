@@ -16,7 +16,7 @@ New Features
 Cubeviz
 ^^^^^^^
 
-- Calculated moments can now be output in velocity units. [#2584, #2588, #2665]
+- Calculated moments can now be output in velocity units. [#2584, #2588, #2665, #2697]
 
 - Added functionality to Collapse and Spectral Extraction plugins to save results to FITS file. [#2586]
 
@@ -125,8 +125,6 @@ Cubeviz
 
 - Fixed a bug where cube model fitting could fail (endless spinner) if input cube
   has invalid 3D WCS. [#2685]
-
-- Clarifies the hint-text for the reference_wavelength input in the moment map plugin. [#2697]
 
 Imviz
 ^^^^^
