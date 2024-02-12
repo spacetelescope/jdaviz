@@ -110,7 +110,7 @@
         label="Reference Wavelength"
         v-model.number="reference_wavelength"
         :suffix="dataset_spectral_unit.replace('Angstrom', 'A')"
-        hint="Rest wavelength of the line of interest"
+        hint="Central wavelength of the line of interest"
         persistent-hint
         :rules="[() => reference_wavelength !== '' || 'This field is required',
                  () => reference_wavelength > 0 || 'Wavelength must be positive']"
