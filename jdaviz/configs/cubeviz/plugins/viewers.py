@@ -1,3 +1,4 @@
+from functools import cached_property
 from glue.core import BaseData
 
 from glue.core.subset_group import GroupedSubset
@@ -14,6 +15,15 @@ from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.utils import get_subset_type
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
+
+
+class WithSliceIndicator:
+    @cached_property
+    def slice_indicator(self):
+        # SliceIndicatorMarks does not yet exist
+        slice_indicator = SliceIndicatorMarks(self)
+        self.figure.marks = self.figure.marks + slice_indicator.marks
+        return slice_indicator
 
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
@@ -100,7 +110,7 @@ class CubevizImageView(JdavizViewerMixin, BqplotImageView):
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
-class CubevizProfileView(SpecvizProfileView):
+class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
@@ -273,17 +283,3 @@ class CubevizProfileView(SpecvizProfileView):
             return
         # NOTE: += or append won't pick up on change
         self.figure.marks = self.figure.marks + new_marks
-
-    @property
-    def slice_indicator(self):
-        for mark in self.figure.marks:
-            if isinstance(mark, SliceIndicatorMarks):
-                return mark
-
-        # SliceIndicatorMarks does not yet exist
-        slice_indicator = SliceIndicatorMarks(self)
-        self.figure.marks = self.figure.marks + slice_indicator.marks
-        return slice_indicator
-
-    def _update_slice_indicator(self, slice):
-        self.slice_indicator.slice = slice

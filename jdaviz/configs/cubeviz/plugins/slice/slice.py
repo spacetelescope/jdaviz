@@ -120,7 +120,7 @@ class Slice(PluginTemplateMixin):
                 self._watched_viewers.remove(viewer)
         elif isinstance(viewer, BqplotProfileView) and watch:
             if self._x_all is None and len(viewer.data()):
-                # cache values (wavelengths/freqs) so that value <> slice conversion can efficient
+                # cache values (wavelengths/freqs) so that value <> slice conversion is efficient
                 self._update_data(viewer.data()[0].spectral_axis)
 
             if viewer not in self._indicator_viewers:
@@ -232,7 +232,8 @@ class Slice(PluginTemplateMixin):
         for viewer in self._watched_viewers:
             self._set_viewer_to_slice(viewer, value)
         for viewer in self._indicator_viewers:
-            viewer._update_slice_indicator(value)
+            if hasattr(viewer, 'slice_indicator'):
+                viewer.slice_indicator.slice = value
 
         self.hub.broadcast(SliceValueUpdatedMessage(slice=value,
                                                     value=self.value,
