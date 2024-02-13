@@ -10,7 +10,6 @@ from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
 from astropy.time import Time
 from glue.core.message import SubsetUpdateMessage
-from glue_jupyter.common.toolbar_vuetify import read_icon
 from ipywidgets import widget_serialization
 from packaging.version import Version
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
@@ -23,8 +22,7 @@ from jdaviz.core.region_translators import regions2aperture, _get_region_from_sp
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
                                         SubsetSelect, ApertureSubsetSelectMixin,
-                                        TableMixin, PlotMixin, with_spinner)
-from jdaviz.core.tools import ICON_DIR
+                                        TableMixin, PlotMixin, MultiselectMixin, with_spinner)
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
@@ -34,7 +32,7 @@ ASTROPY_LT_5_2 = Version(astropy.__version__) < Version('5.2')
 
 @tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")
 class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
-                               DatasetMultiSelectMixin, TableMixin, PlotMixin):
+                               DatasetMultiSelectMixin, TableMixin, PlotMixin, MultiselectMixin):
     """
     The Aperture Photometry plugin performs aperture photometry for drawn regions.
     See the :ref:`Aperture Photometry Plugin Documentation <aper-phot-simple>` for more details.
@@ -48,7 +46,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     """
     template_file = __file__, "aper_phot_simple.vue"
     uses_active_status = Bool(True).tag(sync=True)
-    multiselect = Bool(False).tag(sync=True)
 
     aperture_area = Integer().tag(sync=True)
     background_items = List().tag(sync=True)
@@ -73,9 +70,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     # Cubeviz only
     cube_slice = Unicode("").tag(sync=True)
     is_cube = Bool(False).tag(sync=True)
-
-    icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
-    icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

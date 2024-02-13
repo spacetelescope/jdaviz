@@ -24,6 +24,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
 from glue_jupyter import jglue
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
@@ -49,6 +50,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumRight,
                                ShadowLine, ApertureMark)
 from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial_subset
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import get_subset_type, is_wcs_only, is_not_wcs_only, _wcs_only_label
@@ -58,6 +60,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_no_updates_since_last_active', 'with_spinner', 'with_temp_disable',
            'ViewerPropertiesMixin',
            'BasePluginComponent',
+           'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
            'PluginSubcomponent',
            'SubsetSelect',
@@ -609,6 +612,12 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin):
         return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid))
                 for vid, viewer in self.app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
+
+
+class MultiselectMixin(VuetifyTemplate):
+    icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    multiselect = Bool(False).tag(sync=True)
 
 
 class SelectPluginComponent(BasePluginComponent, HasTraits):
@@ -2602,9 +2611,7 @@ class ViewerSelect(SelectPluginComponent):
     * :meth:`~SelectPluginComponent.select_default`
     * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
     * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
-    """
 
-    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``items`` (list of dicts with keys: id, reference, label)

@@ -402,7 +402,7 @@ Due to browser limitations, Canvas Rotation is only available on Chromium-based 
 
 .. _imviz-export-plot:
 
-Export Plot
-===========
+Export
+======
 
 This plugin allows exporting the plot in a given viewer to a PNG or SVG file.

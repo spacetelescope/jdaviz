@@ -7,21 +7,12 @@
     :keep_active.sync="keep_active"
     :popout_button="popout_button">
 
-    <v-row>
-      <div style="width: calc(100% - 32px)">
-      </div>
-      <div style="width: 32px">
-        <j-tooltip tooltipcontent="Toggle batch mode">
-          <v-btn
-            icon
-            style="opacity: 0.7"
-            @click="() => {multiselect = !multiselect}"
-          >
-            <img :src="multiselect ? icon_checktoradial : icon_radialtocheck" width="24" class="invert-if-dark"/>
-          </v-btn>
-        </j-tooltip>
-      </div>
-    </v-row>
+    <j-multiselect-toggle
+      :multiselect.sync="multiselect"
+      :icon_checktoradial="icon_checktoradial"
+      :icon_radialtocheck="icon_radialtocheck"
+      tooltip="Toggle batch mode"
+    ></j-multiselect-toggle>
 
     <plugin-dataset-select
       :items="dataset_items"

@@ -140,6 +140,9 @@ class ConfigHelper(HubListener):
             plugins['Links Control']._deprecation_msg = 'in the future, the formerly named \"Links Control\" plugin will only be available by its new name: \"Orientation\".'  # noqa
         if 'Canvas Rotation' in plugins:
             plugins['Canvas Rotation']._deprecation_msg = 'this functionality will be removed in favor of the implementation for rotation in the \"Orientation\" plugin.'  # noqa
+        if 'Export' in plugins:
+            plugins['Export Plot'] = plugins['Export']._obj.user_api
+            plugins['Export Plot']._deprecation_msg = 'in the future, the formerly named \"Export Plot\" plugin will only be available by its new name: \"Export\".'  # noqa
 
         return plugins
 

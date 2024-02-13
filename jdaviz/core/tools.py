@@ -484,12 +484,14 @@ class SidebarShortcutPlotOptions(_BaseSidebarShortcut):
 
 @viewer_tool
 class SidebarShortcutExportPlot(_BaseSidebarShortcut):
-    plugin_name = 'g-export-plot'
+    plugin_name = 'export'
 
     icon = os.path.join(ICON_DIR, 'image.svg')
     tool_id = 'jdaviz:sidebar_export'
     action_text = 'Export plot'
     tool_tip = 'Open export plot plugin in sidebar'
+
+    # TODO: select this plot
 
 
 @viewer_tool

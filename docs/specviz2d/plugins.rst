@@ -250,7 +250,7 @@ Line Analysis
 
 .. _specviz2d-export-plot:
 
-Export Plot
-===========
+Export
+======
 
 This plugin allows exporting the plot in a given viewer to various image formats.

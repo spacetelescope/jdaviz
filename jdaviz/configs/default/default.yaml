@@ -16,3 +16,4 @@ tray:
   - g-subset-plugin
   - g-gaussian-smooth
   - g-export-plot
+  - export
