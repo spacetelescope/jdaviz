@@ -71,9 +71,11 @@ class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
         if cid.label == "flux":
             flux_per_steradian = False
-            if 'sr' in units:
+            if 'sr' in str(units):
+                # If flux units contain per steradian, find equivalencies without
+                # that and add it back in afterward
                 flux_per_steradian = True
-                units = str(u.Unit(units) * u.sr)
+                units = u.Unit(units) * u.sr
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
             list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
                 include_prefix_units=True, equivalencies=eqv))) + [
@@ -87,8 +89,7 @@ class UnitConverterWithSpectral:
                     'ph / (s cm2 Hz)', 'ph / (Hz s cm2)'
                 ])
             if flux_per_steradian:
-                temp = [str(u.Unit(x)/u.sr) for x in list_of_units]
-                list_of_units = temp
+                list_of_units = [str(u.Unit(x)/u.sr) for x in list_of_units]
         else:  # spectral axis
             # prefer Hz over Bq and um over micron
             exclude = {'Bq', 'micron'}

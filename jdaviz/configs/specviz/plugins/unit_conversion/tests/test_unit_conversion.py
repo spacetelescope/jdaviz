@@ -122,3 +122,44 @@ def test_non_stddev_uncertainty(specviz_helper):
         np.abs(viewer.figure.marks[-1].y - viewer.figure.marks[-1].y.mean(0)),
         stddev
     )
+
+
+def test_convert_per_steradian(specviz_helper):
+    flux = np.ones(10) * u.MJy / u.sr
+    stddev = 0.1
+    var = stddev ** 2
+    inv_var = np.ones(len(flux)) / var
+    wavelength = np.linspace(1, 5, len(flux)) * u.um
+    spec = Spectrum1D(
+        flux,
+        uncertainty=InverseVariance(inv_var),
+        spectral_axis=wavelength
+    )
+
+    specviz_helper.load_data(spec)
+
+    viewer = specviz_helper.app.get_viewer("spectrum-viewer")
+    plg = specviz_helper.plugins["Unit Conversion"]
+    new_spectral_axis = "micron"
+    new_flux = "Jy / sr"
+    plg.spectral_unit = new_spectral_axis
+    plg.flux_unit = new_flux
+
+    assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
+    assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
+
+    new_spectral_axis = "micron"
+    new_flux = "eV / (Hz s sr m2)"
+    plg.spectral_unit = new_spectral_axis
+    plg.flux_unit = new_flux
+
+    assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
+    assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
+
+    new_spectral_axis = "micron"
+    new_flux = "erg / (Angstrom s sr cm2)"
+    plg.spectral_unit = new_spectral_axis
+    plg.flux_unit = new_flux
+
+    assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
+    assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
