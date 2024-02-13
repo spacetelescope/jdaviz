@@ -2153,6 +2153,7 @@ class Application(VuetifyTemplate, HubListener):
             'locked': False,
             'ndims': data.ndim,
             'type': typ,
+            'y_physical_type': str(u.Unit(data.get_component(data.main_components[0]).units).physical_type),  # noqa
             'has_wcs': data_has_valid_wcs(data),
             'is_astrowidgets_markers_table': (self.config == "imviz") and layer_is_table_data(data),
             'meta': {k: v for k, v in data.meta.items() if _expose_meta(k)},
