@@ -99,6 +99,10 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Check unit type (e.g., flux density, surface brightness, counts, etc) for generating
+  display label for the y axis in spectral viewer. Previously it was hard coded
+  to always display ``flux density`` no matter the input unit. [#2703]
+
 Specviz2d
 ^^^^^^^^^
 
