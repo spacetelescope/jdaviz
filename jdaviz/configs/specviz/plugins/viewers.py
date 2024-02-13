@@ -373,15 +373,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             try:
                 uc.to_unit(data, data.find_component_id("flux"), [1, 1],
                            u.Unit(self.state.y_display_unit))  # Error if incompatible
-            except Exception as err:
-                # Raising exception here introduces a dirty state that messes up next load_data
-                # but not raising exception also causes weird behavior unless we remove the data
-                # completely.
-                self.session.hub.broadcast(SnackbarMessage(
-                    f"Failed to load {data.label}, so removed it: {repr(err)}",
-                    sender=self, color='error'))
-                self.jdaviz_app.data_collection.remove(data)
-                return False
+            except Exception:
+                pass
+
             reset_plot_axes = False
 
         # The base class handles the plotting of the main
