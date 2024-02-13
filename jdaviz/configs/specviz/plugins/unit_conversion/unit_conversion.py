@@ -17,6 +17,8 @@ def _valid_glue_display_unit(unit_str, sv, axis='x'):
     # astropy)
     if not unit_str:
         return unit_str
+    elif 'sr' in unit_str:
+        return str(unit_str)
     unit_u = u.Unit(unit_str)
     choices_str = getattr(sv.state.__class__, f'{axis}_display_unit').get_choices(sv.state)
     choices_str = [choice for choice in choices_str if choice is not None]
