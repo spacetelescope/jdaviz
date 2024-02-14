@@ -21,7 +21,7 @@
             </v-row>
             <v-row>
               <v-switch
-                label="Show Wavelength"
+                label="Show Value"
                 hint="Show slice value in label to right of indicator."
                 v-model="show_value"
                 persistent-hint>

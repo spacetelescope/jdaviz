@@ -100,6 +100,11 @@ class Slice(PluginTemplateMixin):
         return self.user_api.value_unit
 
     @property
+    @deprecated(since="3.9", alternative="show_value")
+    def show_wavelength(self):
+        return self.user_api.show_value
+
+    @property
     def user_api(self):
         return PluginUserApi(self, expose=('slice', 'wavelength', 'value',
                                            'show_indicator', 'show_wavelength', 'show_value'))
