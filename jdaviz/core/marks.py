@@ -275,8 +275,6 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         data = viewer.data()[0]
         if hasattr(data, 'spectral_axis'):
             x_all = data.spectral_axis
-        elif hasattr(data, 'time'):
-            x_all = data.time.value * u.d
         else:
             x_all = []
         # _update_data will set self._x_all, self._x_unit, self.x
