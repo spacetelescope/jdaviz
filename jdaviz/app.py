@@ -2293,13 +2293,15 @@ class Application(VuetifyTemplate, HubListener):
             orientation_plugin = self._jdaviz_helper.plugins.get('Orientation', None)
             if orientation_plugin is not None:
                 linked_by_wcs = orientation_plugin.link_type.selected == 'WCS'
-            elif len(self._viewer_store):
+            elif len(self._viewer_store) and hasattr(self._jdaviz_helper, 'default_viewer'):
                 # The plugin would only not exist for instances of Imviz where the user has
                 # intentionally removed the Orientation plugin, but in that case we will
                 # adopt "linked_by_wcs" from the first (assuming all are the same)
                 # NOTE: deleting the default viewer is forbidden both by API and UI, but if
                 # for some reason that was the case here, linked_by_wcs will default to False
                 linked_by_wcs = self._jdaviz_helper.default_viewer._obj.state.linked_by_wcs
+            else:
+                linked_by_wcs = False
             viewer.state.linked_by_wcs = linked_by_wcs
 
         if linked_by_wcs:
