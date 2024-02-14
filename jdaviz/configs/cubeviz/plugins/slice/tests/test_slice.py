@@ -43,13 +43,13 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert sl.slice == 1
 
     # from the widget this logic is duplicated (to avoid sending logic through messages)
-    sl._on_wavelength_updated({'new': '4.62e-07'})
+    sl._on_value_updated({'new': '4.62e-07'})
     assert sl.slice == 0
     assert np.allclose(sl.wavelength, 4.62280007e-07)
 
     # make sure that passing an invalid value from the UI would revert to the previous value
     # JS strips invalid characters, but doesn't ensure its float-compatible
-    sl._on_wavelength_updated({'new': '1.2.3'})
+    sl._on_value_updated({'new': '1.2.3'})
     assert sl.slice == 0
 
     assert len(sl._watched_viewers) == 2  # flux-viewer, uncert-viewer

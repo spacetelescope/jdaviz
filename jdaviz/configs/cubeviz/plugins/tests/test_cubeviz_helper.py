@@ -30,6 +30,9 @@ def test_plugin_user_apis(cubeviz_helper):
             if plugin_name == 'Spectral Extraction' and attr == 'spatial_subset':
                 # deprecated, so would raise a deprecation warning
                 continue
+            if plugin_name == 'Slice' and attr in ('wavelength', 'wavelength_unit', 'show_wavelength'):  # noqa
+                # deprecated, so would raise a deprecation warning
+                continue
             assert hasattr(plugin, attr)
 
 

@@ -173,7 +173,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.slice_wavelength = msg.value
 
     def vue_goto_reference_wavelength(self, *args):
-        self.slice_plugin.wavelength = self.reference_wavelength
+        self.slice_plugin.value = self.reference_wavelength
 
     def vue_adopt_slice_as_reference(self, *args):
         self.reference_wavelength = self.slice_plugin.value
