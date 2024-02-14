@@ -162,7 +162,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe('wavelength_dependent', 'bg_wavelength_dependent')
     def _wavelength_dependent_changed(self, *args):
         if self.wavelength_dependent:
-            self.reference_wavelength = self.slice_plugin.wavelength
+            self.reference_wavelength = self.slice_plugin.value
         else:
             self.bg_wavelength_dependent = False
         # NOTE: this can be redundant in the case where reference_wavelength changed and triggers

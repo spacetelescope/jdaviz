@@ -45,7 +45,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     # from the widget this logic is duplicated (to avoid sending logic through messages)
     sl._on_value_updated({'new': '4.62e-07'})
     assert sl.slice == 0
-    assert np.allclose(sl.wavelength, 4.62280007e-07)
+    assert np.allclose(sl.value, 4.62280007e-07)
 
     # make sure that passing an invalid value from the UI would revert to the previous value
     # JS strips invalid characters, but doesn't ensure its float-compatible
@@ -81,7 +81,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert sl.slice == 0
 
     sl.vue_goto_last()
-    assert sl.slice == sl.max_value
+    assert sl.slice == sl.max_slice
 
     sl.vue_play_next()  # Should automatically wrap to beginning
     assert sl.slice == 0
