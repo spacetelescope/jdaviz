@@ -60,6 +60,9 @@ Cubeviz
 - ``spatial_subset`` in the spectral extraction plugin is now renamed to ``aperture`` and the deprecated name will
   be removed in a future release. [#2664]
 
+- Slice plugin's ``wavelength``, ``wavelength_unit``, and ``show_wavelength`` are deprecated in favor
+  of ``value``, ``value_unit``, and ``show_value``, respectively. [#2706]
+
 Imviz
 ^^^^^
 
