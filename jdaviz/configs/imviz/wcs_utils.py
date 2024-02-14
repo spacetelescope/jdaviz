@@ -21,6 +21,7 @@ from gwcs import coordinate_frames as cf
 from gwcs.wcs import WCS as GWCS
 
 from matplotlib.patches import Polygon
+from jdaviz.utils import _wcs_only_label
 
 __all__ = ['get_compass_info', 'draw_compass_mpl']
 
@@ -530,7 +531,7 @@ def _get_rotated_nddata_from_label(
         data.coords,
         rotation_angle,
         refdata_shape,
-        wcs_only_key=app._wcs_only_label,
+        wcs_only_key=_wcs_only_label,
         data=data,
         cdelt_signs=cdelt_signs
     )

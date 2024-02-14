@@ -229,6 +229,26 @@ def layer_is_table_data(layer):
     return isinstance(layer, BaseData) and layer.ndim == 1
 
 
+_wcs_only_label = "_WCS_ONLY"
+
+
+def is_wcs_only(layer):
+    # exclude WCS-only layers from the layer choices:
+    if hasattr(layer, 'layer'):
+        state = layer.layer
+    elif hasattr(layer, 'data'):
+        state = layer.data
+    elif hasattr(layer, 'meta'):
+        state = layer
+    else:
+        raise NotImplementedError
+    return getattr(state, 'meta', {}).get(_wcs_only_label, False)
+
+
+def is_not_wcs_only(layer):
+    return not is_wcs_only(layer)
+
+
 def standardize_metadata(metadata):
     """Standardize given metadata so it can be viewed in
     Metadata Viewer plugin. The input can be plain

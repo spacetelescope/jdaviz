@@ -11,7 +11,7 @@ from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.user_api import ViewerUserApi
-from jdaviz.utils import ColorCycler, get_subset_type
+from jdaviz.utils import ColorCycler, get_subset_type, _wcs_only_label
 
 __all__ = ['JdavizViewerMixin']
 
@@ -215,7 +215,7 @@ class JdavizViewerMixin:
         for layer in self.state.layers[::-1]:
             layer_is_wcs_only = (
                     hasattr(layer.layer, 'meta') and
-                    layer.layer.meta.get(self.jdaviz_app._wcs_only_label, False)
+                    layer.layer.meta.get(_wcs_only_label, False)
             )
             if layer.visible and not layer_is_wcs_only:
                 prefix_icon, suffix = _get_layer_info(layer)

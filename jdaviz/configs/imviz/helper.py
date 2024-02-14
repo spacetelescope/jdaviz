@@ -15,7 +15,7 @@ from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.configs.imviz.wcs_utils import (
     _get_rotated_nddata_from_label, get_compass_info
 )
-from jdaviz.utils import data_has_valid_wcs
+from jdaviz.utils import data_has_valid_wcs, _wcs_only_label
 
 __all__ = ['Imviz']
 
@@ -191,7 +191,7 @@ class Imviz(ImageConfigHelper):
             if label not in prev_data_labels:
                 applied_labels.append(label)
                 applied_visible.append(True)
-                layer_is_wcs_only.append(data.meta.get(self.app._wcs_only_label, False))
+                layer_is_wcs_only.append(data.meta.get(_wcs_only_label, False))
                 layer_has_wcs.append(data_has_valid_wcs(data))
 
         if show_in_viewer is True:
@@ -404,14 +404,12 @@ def layer_is_2d(layer):
     return isinstance(layer, BaseData) and layer.ndim == 2
 
 
-# NOTE: Sync with app._wcs_only_label as needed.
 def layer_is_image_data(layer):
-    return layer_is_2d(layer) and not layer.meta.get("_WCS_ONLY", False)
+    return layer_is_2d(layer) and not layer.meta.get(_wcs_only_label, False)
 
 
-# NOTE: Sync with app._wcs_only_label as needed.
 def layer_is_wcs_only(layer):
-    return layer_is_2d(layer) and layer.meta.get("_WCS_ONLY", False)
+    return layer_is_2d(layer) and layer.meta.get(_wcs_only_label, False)
 
 
 def get_wcs_only_layer_labels(app):
@@ -549,7 +547,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     data_already_linked = []
     if link_type == app._link_type and wcs_use_affine == app._wcs_use_affine:
         for link in app.data_collection.external_links:
-            if link.data1.label != app._wcs_only_label:
+            if link.data1.label != _wcs_only_label:
                 data_already_linked.append(link.data2)
     else:
         for viewer in app._viewer_store.values():

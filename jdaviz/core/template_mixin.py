@@ -51,7 +51,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
 from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial_subset
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
-from jdaviz.utils import get_subset_type
+from jdaviz.utils import get_subset_type, is_wcs_only, is_not_wcs_only, _wcs_only_label
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
@@ -1343,7 +1343,7 @@ class LayerSelect(SelectPluginComponent):
         visibilities = []
         for viewer in self.viewer_objs:
             for layer in viewer.layers:
-                if layer.layer.label == layer_label:
+                if layer.layer.label == layer_label and is_not_wcs_only(layer.layer):
                     if is_subset is None:
                         is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or  # noqa
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
@@ -1384,6 +1384,8 @@ class LayerSelect(SelectPluginComponent):
                 # we call _update_layer_items in the PlotOptionsSyncState for color_mode
                 # old_viewer.state.remove_callback('color_mode', self._update_layer_items)
                 for layer in old_viewer.state.layers:
+                    if is_wcs_only(layer.layer):
+                        continue
                     layer.remove_callback('color', self._update_layer_items)
                     if hasattr(layer, 'cmap'):
                         layer.remove_callback('cmap', self._update_layer_items)
@@ -1400,6 +1402,8 @@ class LayerSelect(SelectPluginComponent):
                 # we call _update_layer_items in the PlotOptionsSyncState for color_mode
                 # new_viewer.state.add_callback('color_mode', self._update_layer_items)
                 for layer in new_viewer.state.layers:
+                    if is_wcs_only(layer.layer):
+                        continue
                     layer.add_callback('color', self._update_layer_items)
                     if hasattr(layer, 'cmap'):
                         layer.add_callback('cmap', self._update_layer_items)
@@ -1413,11 +1417,9 @@ class LayerSelect(SelectPluginComponent):
         viewer = self.viewer if isinstance(self.viewer, list) else [self.viewer]
         for current_viewer in viewer:
             for layer in self._get_viewer(current_viewer).state.layers:
-                if layer.layer.label == new_subset_label:
-                    # Is it ok if only one subset layer has this callback?
+                if layer.layer.label == new_subset_label and is_not_wcs_only(layer.layer):
                     layer.add_callback('color', self._update_layer_items)
                     layer.add_callback('visible', self._update_layer_items)
-                    break
                     # TODO: Add ability to add new item to self.items instead of recompiling
         self._update_layer_items({'source': 'subset_added'})
 
@@ -1429,6 +1431,8 @@ class LayerSelect(SelectPluginComponent):
         for current_viewer in viewer:
             for layer in self._get_viewer(current_viewer).state.layers:
                 if layer.layer.label == new_data_label and not hasattr(layer.layer, 'subset_state'):
+                    if is_wcs_only(layer.layer):
+                        continue
                     # Add a callback to the layer's color attribute to call
                     # _on_layers_changed whenever the color changes
                     # TODO: find out if this conflicts with another color change event
@@ -1454,7 +1458,7 @@ class LayerSelect(SelectPluginComponent):
         all_layers = [
             layer for viewer in self.viewer_objs
             for layer in getattr(viewer, 'layers', [])
-            if self._is_valid_item(layer)
+            if self._is_valid_item(layer.layer)
         ]
 
         # remove duplicates - we'll loop back through all selected viewers to get a list of colors
@@ -1491,8 +1495,6 @@ class LayerSelect(SelectPluginComponent):
             `True` will filter only the WCS-only layers, `False` will
             give the non-WCS-only layers.
         """
-        def is_wcs_only(layer):
-            return getattr(layer.layer, 'meta', {}).get(self.app._wcs_only_label, False)
 
         filter_names = [getattr(filt, '__name__', '') for filt in self.filters]
 
@@ -1520,7 +1522,7 @@ class LayerSelect(SelectPluginComponent):
         viewers = [self._get_viewer(viewer_name) for viewer_name in viewer_names]
 
         layers = [[layer for layer in viewer.layers
-                   if layer.layer.label in selected]
+                   if layer.layer.label in selected and self._is_valid_item(layer.layer)]
                   for viewer in viewers]
 
         if not self.is_multiselect and len(layers) == 1:
@@ -2961,7 +2963,7 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 3
 
         def is_not_wcs_only(data):
-            return not data.meta.get(self.app._wcs_only_label, False)
+            return not data.meta.get(_wcs_only_label, False)
 
         return super()._is_valid_item(data, locals())
 
@@ -3774,7 +3776,7 @@ class PlotOptionsSyncState(BasePluginComponent):
             value = value.name
         elif self._glue_name in GLUE_STATES_WITH_HELPERS:
             value = str(value)
-        elif isinstance(self.value, (int, float)) and self._glue_name != 'percentile':
+        elif self._glue_name != 'percentile' and isinstance(self.value, (int, float)):
             # glue might pass us ints for float or vice versa, but our traitlets care
             # so let's cast to the type expected by the traitlet to avoid having to
             # use Any traitlets for all of these.  We skip percentile as that needs

@@ -51,7 +51,7 @@ from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registr
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
-                          MultiMaskSubsetState)
+                          MultiMaskSubsetState, _wcs_only_label)
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS']
 
@@ -306,7 +306,6 @@ class Application(VuetifyTemplate, HubListener):
         self.auto_link = kwargs.pop('auto_link', True)
 
         # Imviz linking
-        self._wcs_only_label = "_WCS_ONLY"
         self._link_type = 'pixels'
         if self.config == "imviz":
             self._wcs_use_affine = None
@@ -470,7 +469,7 @@ class Application(VuetifyTemplate, HubListener):
     def _on_layers_changed(self, msg):
         if hasattr(msg, 'data'):
             layer_name = msg.data.label
-            is_wcs_only = msg.data.meta.get(self._wcs_only_label, False)
+            is_wcs_only = msg.data.meta.get(_wcs_only_label, False)
         elif hasattr(msg, 'subset'):
             layer_name = msg.subset.label
             is_wcs_only = False
@@ -1947,7 +1946,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # set visibility state of all applicable layers
         for layer in viewer.layers:
-            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
+            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(_wcs_only_label, False)
             if layer.layer.data.label == data_label:
                 if layer_is_wcs_only:
                     layer.visible = False
@@ -1976,7 +1975,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # remove WCS-only data from selected items, add to wcs_only_layers:
         for layer in viewer.layers:
-            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(self._wcs_only_label, False)
+            layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(_wcs_only_label, False)
             if layer.layer.data.label == data_label and layer_is_wcs_only:
                 layer.visible = False
                 if data_label not in viewer.state.wcs_only_layers:
@@ -2100,7 +2099,7 @@ class Application(VuetifyTemplate, HubListener):
     def _create_data_item(self, data):
         ndims = len(data.shape)
         wcsaxes = data.meta.get('WCSAXES', None)
-        wcs_only = data.meta.get(self._wcs_only_label, False)
+        wcs_only = data.meta.get(_wcs_only_label, False)
         if wcsaxes is None:
             # then we'll need to determine type another way, we want to avoid
             # this when we can though since its not as cheap
