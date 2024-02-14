@@ -22,7 +22,7 @@
             <v-row>
               <v-switch
                 label="Show Value"
-                hint="Show slice value in label to right of indicator."
+                :hint="'Show slice '+value_label.toLowerCase()+' in label to right of indicator.'"
                 v-model="show_value"
                 persistent-hint>
               </v-switch>
