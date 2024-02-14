@@ -558,9 +558,9 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             flux_unit_type = "Counts"
         elif y_unit.is_equivalent(u.W):
             flux_unit_type = "Luminosity"
-
-        # default to Flux Density for flux density or uncaught types
-        flux_unit_type = "Flux density"
+        else:
+            # default to Flux Density for flux density or uncaught types
+            flux_unit_type = "Flux density"
 
         # Set x axes labels for the spectrum viewer
         x_disp_unit = self.state.x_display_unit
