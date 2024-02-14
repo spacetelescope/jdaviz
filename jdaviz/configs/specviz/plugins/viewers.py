@@ -545,8 +545,24 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 self.figure.marks = list(self.figure.marks) + [error_line_mark]
 
     def set_plot_axes(self):
-        # Set axes labels for the spectrum viewer
-        flux_unit_type = "Flux density"
+        # Set y axes labels for the spectrum viewer
+        y_display_unit = self.state.y_display_unit
+        y_unit = u.Unit(y_display_unit) if y_display_unit else u.dimensionless_unscaled
+
+        if y_unit.is_equivalent(u.Jy / u.sr):
+            flux_unit_type = "Surface brightness"
+        elif y_unit.is_equivalent(u.erg / (u.s * u.cm**2)):
+            flux_unit_type = 'Flux'
+        elif y_unit.is_equivalent(u.electron / u.s) or y_unit.physical_type == 'dimensionless':
+            # electron / s or 'dimensionless_unscaled' should be labeled counts
+            flux_unit_type = "Counts"
+        elif y_unit.is_equivalent(u.W):
+            flux_unit_type = "Luminosity"
+        else:
+            # default to Flux Density for flux density or uncaught types
+            flux_unit_type = "Flux density"
+
+        # Set x axes labels for the spectrum viewer
         x_disp_unit = self.state.x_display_unit
         x_unit = u.Unit(x_disp_unit) if x_disp_unit else u.dimensionless_unscaled
         if x_unit.is_equivalent(u.m):
