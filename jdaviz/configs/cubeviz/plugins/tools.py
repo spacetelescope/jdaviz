@@ -52,8 +52,8 @@ class PixelMatchBoxZoom(_PixelMatchedZoomMixin, BoxZoom):
 class SelectSlice(CheckableTool):
     icon = os.path.join(ICON_DIR, 'slice.svg')
     tool_id = 'jdaviz:selectslice'
-    action_text = 'Select cube slice (spectral axis)'
-    tool_tip = 'Select cube slice (spectral axis)'
+    action_text = 'Select cube slice'
+    tool_tip = 'Select cube slice'
 
     def __init__(self, viewer, **kwargs):
         self._time_last = 0
