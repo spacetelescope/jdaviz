@@ -14,7 +14,7 @@ from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.utils import get_subset_type
 
-__all__ = ['CubevizImageView', 'CubevizProfileView']
+__all__ = ['CubevizImageView', 'CubevizProfileView', 'WithSliceIndicator']
 
 
 class WithSliceIndicator:
