@@ -73,6 +73,8 @@ Imviz
 
 - ``imviz.link_data()`` inputs and behaviors are now consistent with the Orientation plugin. [#2179]
 
+- Single-pixel tool is no longer available. To mark a single-pixel area, use Markers plugin. [#2710]
+
 Mosviz
 ^^^^^^
 
