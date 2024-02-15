@@ -204,31 +204,7 @@ to make subsets visible or invisible, to change their color, and to change their
 Single-Pixel Selection
 ----------------------
 
-This tool allows the user to create a single-pixel spatial region
-in an image viewer. Activate this tool and then left-click to create
-the new region. Click again to move the region to a new location under
-the cursor. Holding down the alt key (Alt key on Windows, Option key
-on Mac) while clicking pixels creates a new region at each point instead
-of moving the previously created region. You can also use the subset
-modes that are explained in the
-:ref:`Spatial Regions <imviz_defining_spatial_regions>`
-section above in the same way you would with the other subset selection
-tools.
-
-When you have multiple images loaded and linked by WCS
-(see :ref:`imviz-orientation`), the region defined is with respect to
-the reference image, which might not be the image you are viewing.
-
-.. warning::
-
-    Region created might not accurately represent area you think you are
-    clicking under the mouse if you click on an image that is zoomed out
-    too much. It is recommended that you zoom in sufficiently to see the
-    individual pixels to use this feature.
-
-.. note::
-
-    Creating too many single-pixel regions may affect performance.
+This tool is no longer available as of Jdaviz v3.9; use :ref:`markers-plugin` plugin instead.
 
 Blinking
 ========
