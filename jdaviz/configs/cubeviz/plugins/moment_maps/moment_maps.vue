@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='Create a 2D image from a data cube.'
+    :description="docs_description || 'Create a 2D image from a data cube.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"

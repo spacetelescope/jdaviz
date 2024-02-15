@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    :description="config==='cubeviz' ? 'Smooth data cube spatially or spectrally with a Gaussian kernel.' : 'Smooth data with a Gaussian kernel.'"
+    :description="docs_description || 'Smooth data with a Gaussian kernel.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
     :popout_button="popout_button">
 

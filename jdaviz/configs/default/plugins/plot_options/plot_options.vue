@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='Viewer and data/layer options.'
+    :description="docs_description || 'Viewer and data/layer options.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"

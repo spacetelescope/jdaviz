@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='Collapse a spectral cube along one axis.'
+    :description="docs_description || 'Collapse a spectral cube along one axis.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'"
     :popout_button="popout_button">
 

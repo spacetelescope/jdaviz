@@ -69,8 +69,8 @@ try to adhere to the following principles:
 
     <template>
       <j-tray-plugin
-        description='Plugin description.'
-        :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plugin-name'"
+        :description="docs_description || 'Plugin description.'"
+        :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plugin-name'"
         :popout_button="popout_button">
 
         <v-row>

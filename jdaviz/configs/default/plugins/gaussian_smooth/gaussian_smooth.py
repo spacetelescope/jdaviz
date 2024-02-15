@@ -53,6 +53,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         super().__init__(*args, **kwargs)
 
         if self.config == "cubeviz":
+            self.docs_description = 'Smooth data cube spatially or spectrally with a Gaussian kernel.'  # noqa
             self.show_modes = True
             # retrieve the data from the cube, not the collapsed 1d spectrum
             self.dataset._viewers = [
