@@ -124,6 +124,9 @@ module.exports = {
   },
   mounted() {
     let element = document.getElementById(`target-${this.viewer.id}`).parentElement
+    if (element === null) {
+      return
+    }
     while (element["tagName"] !== "BODY") {
       if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
         element.addEventListener("scroll", this.onScroll);
@@ -133,6 +136,9 @@ module.exports = {
   },
   beforeDestroy() {
     let element = document.getElementById(`target-${this.viewer.id}`).parentElement
+    if (element === null) {
+      return
+    }
     while (element["tagName"] !== "BODY") {
       if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
         element.removeEventListener("scroll", this.onScroll);
