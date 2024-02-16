@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='Plot lines from preset or custom line lists.'
+    :description="docs_description || 'Plot lines from preset or custom line lists.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button">

@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description='View metadata.'
+    :description="docs_description || 'View metadata.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#metadata-viewer'"
     :popout_button="popout_button">
 

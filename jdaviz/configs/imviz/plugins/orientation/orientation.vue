@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    description="Rotate the viewer orientation or choose to align images by pixels."
+    :description="docs_description" || 'Rotate the viewer orientation or choose to align images by pixels.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#imviz-orientation'"
     :popout_button="popout_button"
     :disabled_msg='disabled_msg'>

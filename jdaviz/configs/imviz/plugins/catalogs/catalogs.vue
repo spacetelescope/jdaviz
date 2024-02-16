@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-     description='Queries an area encompassed by the viewer using a specified catalog and marks all the objects found within the area.'
+    :description="docs_description || 'Queries an area encompassed by the viewer using a specified catalog and marks all the objects found within the area.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#catalog-search'"
     :popout_button="popout_button">
 
