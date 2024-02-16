@@ -296,8 +296,10 @@ class Imviz(ImageConfigHelper):
                 break  # Might have duplicate, just grab first match
 
         if link_type is None:
+            avail_links = [f"({elink.data1.label}, {elink.data2.label})"
+                           for elink in self.app.data_collection.external_links]
             raise ValueError(f'{data_label_1} and {data_label_2} combo not found '
-                             'in data collection external links')
+                             f'in data collection external links: {avail_links}')
 
         return link_type
 
