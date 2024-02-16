@@ -85,7 +85,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         # NOTE: This needs revising if we allow loading more than one cube.
         if isinstance(msg.viewer, BqplotImageView):
             if len(msg.data.shape) == 3:
-                self.i_end = msg.data.shape[-1] - 1  # Same as max_value in Slice plugin
+                self.i_end = msg.data.shape[-1] - 1  # Same as max_slice in Slice plugin
 
     def save_figure(self, filename=None, filetype=None):
         """
@@ -297,8 +297,8 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
         slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
         if i_start < 0:  # pragma: no cover
             i_start = 0
-        if i_end > slice_plg.max_value:  # pragma: no cover
-            i_end = slice_plg.max_value
+        if i_end > slice_plg.max_slice:  # pragma: no cover
+            i_end = slice_plg.max_slice
         if i_end <= i_start:
             raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
 

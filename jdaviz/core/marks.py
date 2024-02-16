@@ -269,10 +269,14 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         self._oob = False  # out-of-bounds, either False, 'left', or 'right'
         self._active = False
         self._show_if_inactive = True
-        self._show_wavelength = True
+        self._show_value = True
 
         self.slice = slice
-        x_all = viewer.data()[0].spectral_axis
+        data = viewer.data()[0]
+        if hasattr(data, 'spectral_axis'):
+            x_all = data.spectral_axis
+        else:
+            x_all = []
         # _update_data will set self._x_all, self._x_unit, self.x
         self._update_data(x_all)
 
@@ -347,7 +351,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
             return
 
         self.visible = True
-        self.label.visible = self._show_wavelength
+        self.label.visible = self._show_value
         self.colors = ["#c75109" if self._active else "#007BA1"]
         self.opacities = [1.0 if self._active else 0.9]
 
@@ -362,8 +366,8 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
                 self._active = v
             elif k == 'show_indicator':
                 self._show_if_inactive = v
-            elif k == 'show_wavelength':
-                self._show_wavelength = v
+            elif k == 'show_value':
+                self._show_value = v
 
         self._update_colors_opacities()
 

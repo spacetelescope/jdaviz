@@ -9,7 +9,7 @@ import numpy as np
 from specutils import Spectrum1D
 
 from jdaviz.configs.imviz.plugins.tools import _MatchedZoomMixin
-from jdaviz.core.events import SliceToolStateMessage
+from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion
 from jdaviz.core.marks import PluginLine
 
@@ -52,8 +52,8 @@ class PixelMatchBoxZoom(_PixelMatchedZoomMixin, BoxZoom):
 class SelectSlice(CheckableTool):
     icon = os.path.join(ICON_DIR, 'slice.svg')
     tool_id = 'jdaviz:selectslice'
-    action_text = 'Select cube slice (spectral axis)'
-    tool_tip = 'Select cube slice (spectral axis)'
+    action_text = 'Select cube slice'
+    tool_tip = 'Select cube slice'
 
     def __init__(self, viewer, **kwargs):
         self._time_last = 0
@@ -75,7 +75,8 @@ class SelectSlice(CheckableTool):
             # throttle to 200ms
             return
 
-        self.viewer.jdaviz_helper.select_wavelength(data['domain']['x'])
+        msg = SliceSelectSliceMessage(value=data['domain']['x'], sender=self)
+        self.viewer.session.hub.broadcast(msg)
 
         self._time_last = time.time()
 

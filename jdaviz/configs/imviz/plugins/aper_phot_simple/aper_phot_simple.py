@@ -18,7 +18,7 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage, SliceWavelengthUpdatedMessage
+from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage, SliceValueUpdatedMessage
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
@@ -125,7 +125,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                          (img_unit.physical_type in acceptable_types)))
 
             self.dataset.add_filter(valid_cubeviz_datasets)
-            self.session.hub.subscribe(self, SliceWavelengthUpdatedMessage,
+            self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                        handler=self._on_slice_changed)
 
 # TODO: expose public API once finalized
@@ -140,8 +140,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _on_slice_changed(self, msg):
         if self.config != "cubeviz":
             return
-        self.cube_slice = f"{msg.wavelength:.3e} {msg.wavelength_unit}"
-        self._cube_wave = u.Quantity(msg.wavelength, msg.wavelength_unit)
+        self.cube_slice = f"{msg.value:.3e} {msg.value_unit}"
+        self._cube_wave = u.Quantity(msg.value, msg.value_unit)
         self._cube_idx = int(msg.slice)
 
     @observe("dataset_selected")

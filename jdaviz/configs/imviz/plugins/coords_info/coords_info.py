@@ -342,8 +342,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             if slice_plugin is not None and len(image.shape) == 3:
                 # float to be compatible with default value of nan
                 self._dict['slice'] = float(slice_plugin.slice)
-                self._dict['spectral_axis'] = slice_plugin.wavelength
-                self._dict['spectral_axis:unit'] = slice_plugin._obj.wavelength_unit
+                self._dict['spectral_axis'] = slice_plugin.value
+                self._dict['spectral_axis:unit'] = slice_plugin._obj.value_unit
 
         elif isinstance(viewer, MosvizImageView):
 

@@ -5,13 +5,14 @@ import warnings
 import numpy as np
 import astropy.units as u
 from astropy.units import UnitsWarning
+from astropy.utils.decorators import deprecated
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
-from traitlets import Bool, observe, Any, Int
+from traitlets import Any, Bool, Int, Unicode, observe
 from specutils.spectra.spectrum1d import Spectrum1D
 
 from jdaviz.core.events import (AddDataMessage, SliceToolStateMessage,
-                                SliceSelectSliceMessage, SliceWavelengthUpdatedMessage,
+                                SliceSelectSliceMessage, SliceValueUpdatedMessage,
                                 GlobalDisplayUnitChanged)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
@@ -33,24 +34,26 @@ class Slice(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``slice``
       Current slice number.
-    * ``wavelength``
-      Wavelength of the current slice.  When setting this directly, it will update automatically to
-      the wavelength corresponding to the nearest slice.
+    * ``value``
+      Value (wavelength or frequency) of the current slice.  When setting this directly, it will
+      update automatically to the value corresponding to the nearest slice.
     * ``show_indicator``
       Whether to show indicator in spectral viewer when slice tool is inactive.
-    * ``show_wavelength``
-      Whether to show slice wavelength in label to right of indicator.
+    * ``show_value``
+      Whether to show slice value in label to right of indicator.
     """
     template_file = __file__, "slice.vue"
     slice = Any(0).tag(sync=True)
-    wavelength = Any(-1).tag(sync=True)
-    wavelength_unit = Any("").tag(sync=True)
-    min_value = Int(0).tag(sync=True)
-    max_value = Int(100).tag(sync=True)
+    value = Any(-1).tag(sync=True)
+    value_label = Unicode("Wavelength").tag(sync=True)
+    value_unit = Any("").tag(sync=True)
+
+    min_slice = Int(0).tag(sync=True)
+    max_slice = Int(100).tag(sync=True)
     wait = Int(200).tag(sync=True)
 
     show_indicator = Bool(True).tag(sync=True)
-    show_wavelength = Bool(True).tag(sync=True)
+    show_value = Bool(True).tag(sync=True)
 
     is_playing = Bool(False).tag(sync=True)
     play_interval = Int(200).tag(sync=True)  # milliseconds
@@ -81,22 +84,30 @@ class Slice(PluginTemplateMixin):
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_data_added)
 
-        # update internal wavelength when x display unit is changed (preserving slice)
+        # update internal value (wavelength/frequency) when x display unit is changed
+        # so that the current slice number is preserved
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_global_display_unit_changed)
 
     @property
-    def _default_spectrum_viewer_reference_name(self):
-        return self.app._jdaviz_helper_default_spectrum_viewer_reference_name
+    @deprecated(since="3.9", alternative="value")
+    def wavelength(self):
+        return self.user_api.value
 
     @property
-    def _default_image_viewer_reference_name(self):
-        return self.app._jdaviz_helper._default_image_viewer_reference_name
+    @deprecated(since="3.9", alternative="value_unit")
+    def wavelength_unit(self):
+        return self.user_api.value_unit
+
+    @property
+    @deprecated(since="3.9", alternative="show_value")
+    def show_wavelength(self):
+        return self.user_api.show_value
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('slice', 'wavelength',
-                                           'show_indicator', 'show_wavelength'))
+        return PluginUserApi(self, expose=('slice', 'wavelength', 'value',
+                                           'show_indicator', 'show_wavelength', 'show_value'))
 
     @property
     def slice_indicator(self):
@@ -114,7 +125,7 @@ class Slice(PluginTemplateMixin):
                 self._watched_viewers.remove(viewer)
         elif isinstance(viewer, BqplotProfileView) and watch:
             if self._x_all is None and len(viewer.data()):
-                # cache wavelengths so that wavelength <> slice conversion can be done efficiently
+                # cache values (wavelengths/freqs) so that value <> slice conversion is efficient
                 self._update_data(viewer.data()[0].spectral_axis)
 
             if viewer not in self._indicator_viewers:
@@ -126,9 +137,9 @@ class Slice(PluginTemplateMixin):
     def _on_data_added(self, msg):
         if isinstance(msg.viewer, BqplotImageView):
             if len(msg.data.shape) == 3:
-                self.max_value = msg.data.shape[-1] - 1  # Same as i_end in Export Plot plugin
+                self.max_slice = msg.data.shape[-1] - 1  # Same as i_end in Export Plot plugin
                 self._watch_viewer(msg.viewer, True)
-                msg.viewer.state.slices = (0, 0, int(self.slice))
+                self._set_viewer_to_slice(msg.viewer, int(self.slice))
 
         elif isinstance(msg.viewer, BqplotProfileView):
             self._watch_viewer(msg.viewer, True)
@@ -141,18 +152,18 @@ class Slice(PluginTemplateMixin):
     def _update_data(self, x_all):
         self._x_all = x_all.value
 
-        if self.wavelength == -1:
+        if self.value == -1:
             if len(x_all):
                 # initialize at middle of cube
                 self.slice = int(len(x_all)/2)
             else:
-                # leave in the pre-init state and don't update the wavelength/slice
+                # leave in the pre-init state and don't update the value/slice
                 return
 
         # Also update unit when data is updated
-        self.wavelength_unit = x_all.unit.to_string()
+        self.value_unit = x_all.unit.to_string()
 
-        # force wavelength to update from the current slider value
+        # force value (wavelength/frequency) to update from the current slider slice
         self._on_slider_updated({'new': self.slice})
 
         # update data held inside slice indicator and force reverting to original active status
@@ -168,70 +179,81 @@ class Slice(PluginTemplateMixin):
 
     def _on_select_slice_message(self, msg):
         # NOTE: by setting the slice index, the observer (_on_slider_updated)
-        # will sync across all viewers and update the wavelength
+        # will sync across all viewers and update the value (wavelength/frequency)
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UnitsWarning)
-            self.slice = msg.slice
+            if msg.slice is not None:
+                self.slice = msg.slice
+            elif msg.value is not None:
+                self.value = msg.value
+
+    @property
+    def slice_axis(self):
+        return 'spectral'
 
     def _on_global_display_unit_changed(self, msg):
-        if msg.axis != 'spectral':
+        if msg.axis != self.slice_axis:
             return
-        prev_unit = self.wavelength_unit
+        prev_unit = self.value_unit
         # original unit during init can be blank or deg (before axis is set correctly)
         if self._x_all is None or prev_unit in ('deg', ''):
             return
         self._update_data((self._x_all * u.Unit(prev_unit)).to(msg.unit, u.spectral()))
 
-    @observe('wavelength')
-    def _on_wavelength_updated(self, event):
+    @observe('value')
+    def _on_value_updated(self, event):
         # convert to float (JS handles stripping any invalid characters)
         try:
             value = float(event.get('new'))
         except ValueError:
             # do not accept changes, we'll revert via the slider
             # since this @change event doesn't have access to
-            # the old value, and self.wavelength already updated
+            # the old value, and self.value already updated
             # via the v-model
             self._on_slider_updated({'new': self.slice})
             return
 
         # NOTE: by setting the index, this should recursively update the
-        # wavelength to the nearest applicable value in _on_slider_updated
+        # value (wavelength/frequency) to the nearest applicable value in _on_slider_updated
         self.slice = int(np.argmin(abs(value - self._x_all)))
 
-    @observe('show_indicator', 'show_wavelength')
+    @observe('show_indicator', 'show_value')
     def _on_setting_changed(self, event):
         msg = SliceToolStateMessage({event['name']: event['new']}, sender=self)
         self.session.hub.broadcast(msg)
+
+    def _set_viewer_to_slice(self, viewer, value):
+        viewer.state.slices = (0, 0, value)
 
     @observe('slice')
     def _on_slider_updated(self, event):
         if self._x_all is None:
             return
 
-        value = int(event.get('new', int(len(self._x_all)/2))) % (int(self.max_value) + 1)
+        value = int(event.get('new', int(len(self._x_all)/2))) % (int(self.max_slice) + 1)
 
-        self.wavelength = self._x_all[value]
+        self.value = self._x_all[value]
 
         for viewer in self._watched_viewers:
-            viewer.state.slices = (0, 0, value)
+            self._set_viewer_to_slice(viewer, value)
         for viewer in self._indicator_viewers:
-            viewer._update_slice_indicator(value)
+            if hasattr(viewer, 'slice_indicator'):
+                viewer.slice_indicator.slice = value
 
-        self.hub.broadcast(SliceWavelengthUpdatedMessage(slice=value,
-                                                         wavelength=self.wavelength,
-                                                         wavelength_unit=self.wavelength_unit,
-                                                         sender=self))
+        self.hub.broadcast(SliceValueUpdatedMessage(slice=value,
+                                                    value=self.value,
+                                                    value_unit=self.value_unit,
+                                                    sender=self))
 
     def vue_goto_first(self, *args):
         if self.is_playing:
             return
-        self._on_slider_updated({'new': self.min_value})
+        self._on_slider_updated({'new': self.min_slice})
 
     def vue_goto_last(self, *args):
         if self.is_playing:
             return
-        self._on_slider_updated({'new': self.max_value})
+        self._on_slider_updated({'new': self.max_slice})
 
     def vue_play_next(self, *args):
         if self.is_playing:
