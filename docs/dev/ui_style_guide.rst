@@ -69,8 +69,13 @@ try to adhere to the following principles:
 
     <template>
       <j-tray-plugin
-        :description="docs_description || 'Plugin description.'"
-        :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plugin-name'"
+        description='Plugin description.'
+        :link="'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plugin-name'"
+        :irrelevant_msg="irrelevant_msg"
+        :disabled_msg="disabled_msg"
+        :uses_active_status="uses_active_status"
+        @plugin-ping="plugin_ping($event)"
+        :keep_active.sync="keep_active"
         :popout_button="popout_button">
 
         <v-row>

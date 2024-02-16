@@ -111,7 +111,7 @@
               ></v-text-field>
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
-                  <div v-if="trayItemVisible(trayItem, state.tray_items_filter)">
+                  <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter)">
                     <v-expansion-panel-header >
                       <j-tooltip :tipid="trayItem.name">
                         {{ trayItem.label == 'Orientation' ? 'Orientation (prev. Links Control)' : trayItem.label }}

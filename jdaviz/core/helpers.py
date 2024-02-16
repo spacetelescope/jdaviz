@@ -132,7 +132,7 @@ class ConfigHelper(HubListener):
             dict of plugin objects
         """
         plugins = {item['label']: widget_serialization['from_json'](item['widget'], None).user_api
-                   for item in self.app.state.tray_items}
+                   for item in self.app.state.tray_items if item['is_relevant']}
 
         # handle renamed plugins during deprecation
         if 'Orientation' in plugins:

@@ -29,14 +29,14 @@
 
 <script>
 module.exports = {
-  props: ['disabled_msg', 'description', 'link', 'popout_button',
+  props: ['irrelevant_msg', 'disabled_msg', 'description', 'link', 'popout_button',
           'uses_active_status', 'keep_active'],
   methods: {
     isDisabled() {
       return this.getDisabledMsg().length > 0
     },
     getDisabledMsg() {
-      return this.disabled_msg || ''
+      return this.irrelevant_msg || this.disabled_msg || ''
     },
     sendPing(recursive) {
       if (!this.$el.isConnected) {
