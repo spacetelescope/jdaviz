@@ -294,11 +294,19 @@ from the spectral cube, which has uncertainties propagated by
 If using a simple subset for the spatial aperture, an option to
 make the aperture wavelength dependent will appear. If checked, this will
 create a cone aperture that increases linearly with wavelength.
+The formula for that is::
+
+    radius = ((slice_wavelength / reference_wavelength) *
+        aperture.selected_spatial_region.radius)
+
 The reference wavelength for the cone can be changed using the
 :guilabel:`Adopt Current Slice` button.
 
 The method of aperture masking can also be changed using the
-:guilabel:`Aperture masking method` dropdown.
+:guilabel:`Aperture masking method` dropdown. To see a description
+for each of these options, please see
+`Aperture and Pixel Overlap <https://photutils.readthedocs.io/en/stable/aperture.html#aperture-and-pixel-overlap>`_.
+
 
 .. _cubeviz-aper-phot:
 
