@@ -13,6 +13,8 @@ New Features
 
 - Live-preview of aperture selection in plugins. [#2664, #2684]
 
+- Add conical aperture support to cubeviz in the spectral extraction plugin [#2679]
+
 Cubeviz
 ^^^^^^^
 
