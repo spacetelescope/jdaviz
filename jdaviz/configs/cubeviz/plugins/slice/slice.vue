@@ -13,6 +13,14 @@
           <v-expansion-panel-content class="plugin-expansion-panel-content">
             <v-row>
               <v-switch
+                label="Snap to Slice"
+                hint="Snap indicator (and value) to the nearest slice in the cube."
+                v-model="snap_to_slice"
+                persistent-hint>
+              </v-switch>
+            </v-row>
+            <v-row>
+              <v-switch
                 label="Show Indicator"
                 hint="Show slice indicator even when slice tool is inactive."
                 v-model="show_indicator"
@@ -32,31 +40,16 @@
       </v-expansion-panels>
     </v-row>
 
-    <v-row>
-      <v-slider
-        :value="slice"
-        @input="throttledSetValue"
-        class="align-center"
-        :max="max_slice"
-        :min="min_slice"
-        hide-details
-      />
+    <v-row justify="end">
+      <v-btn color="primary" text v-if="!cube_viewer_exists" @click="create_cube_viewer">
+        Show Cube Viewer
+      </v-btn>
     </v-row>
 
     <v-row>
       <v-text-field
-        v-model.number="slice"
-        class="mt-0 pt-0"
         type="number"
-        label="Slice"
-        hint="Slice number"
-        :suffix="'/'+max_slice"
-      ></v-text-field>
-    </v-row>
-
-    <v-row>
-      <v-text-field
-        v-model="value"
+        v-model.number="value"
         class="mt-0 pt-0"
         :label="value_label"
         :hint="value_label+' corresponding to slice'"
@@ -108,7 +101,7 @@
     created() {
       this.throttledSetValue = _.throttle(
         (v) => { this.slice = v; },
-        this.wait);
+        this.slider_throttle);
     },
   }
 </script>

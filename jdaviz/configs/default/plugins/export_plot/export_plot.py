@@ -154,7 +154,7 @@ class ExportViewer(PluginTemplateMixin, ViewerSelectMixin):
 
         viewer = self.viewer.selected_obj
         slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
-        orig_slice = slice_plg.slice
+        orig_slice = viewer.slice
         temp_png_files = []
         i = i_start
         video = None

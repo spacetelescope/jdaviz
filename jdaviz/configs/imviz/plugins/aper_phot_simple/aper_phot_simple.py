@@ -142,7 +142,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
         self.cube_slice = f"{msg.value:.3e} {msg.value_unit}"
         self._cube_wave = u.Quantity(msg.value, msg.value_unit)
-        self._cube_idx = int(msg.slice)
+        # TODO: need a way to get from slide value > cube index for the *selected* cube
+#        self._cube_idx = int(msg.slice)
 
     @observe("dataset_selected")
     def _on_dataset_selected_changed(self, event={}):

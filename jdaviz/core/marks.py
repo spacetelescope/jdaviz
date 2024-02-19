@@ -144,8 +144,9 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
 
         # the location of the marker will need to update automatically if the
         # underlying data changes (through a unit conversion, for example)
-        viewer.state.add_callback("reference_data",
-                                  self._update_reference_data)
+        if hasattr(viewer.state, 'reference_data'):
+            viewer.state.add_callback("reference_data",
+                                      self._update_reference_data)
 
         scales = viewer.scales
 
@@ -157,16 +158,18 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
     def _update_reference_data(self, reference_data):
         if reference_data is None:
             return
-        self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
+        self._update_unit(reference_data.get_object(cls=Spectrum1D).spectral_axis.unit)
 
-    def _update_data(self, x_all):
+    def _update_unit(self, new_unit):
         # the x-units may have changed.  We want to convert the internal self.x
         # from self.xunit to the new units (x_all.unit)
-        new_unit = x_all.unit
+        if self.xunit is None:
+            self.xunit = new_unit
+            return
         if new_unit == self.xunit:
             return
         old_quant = self.x[0]*self.xunit
-        x = old_quant.to_value(x_all.unit, equivalencies=u.spectral())
+        x = old_quant.to_value(new_unit, equivalencies=u.spectral())
         self.x = [x, x]
         self.xunit = new_unit
 
@@ -249,8 +252,10 @@ class SpectralLine(BaseSpectrumVerticalLine):
     def _process_identify_change(self, msg):
         self.identify = msg.name_rest == self.table_index
 
-    def _update_data(self, x_all):
-        new_unit = x_all.unit
+    def _update_unit(self, new_unit):
+        if self.xunit is None:
+            self.xunit = new_unit
+            return
         if new_unit == self.xunit:
             return
 
@@ -264,21 +269,13 @@ class SpectralLine(BaseSpectrumVerticalLine):
 class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     """Subclass on bqplot Lines to handle slice/wavelength indicator.
     """
-    def __init__(self, viewer, slice=0, **kwargs):
+    def __init__(self, viewer, value=0, **kwargs):
         self._viewer = viewer
         self._oob = False  # out-of-bounds, either False, 'left', or 'right'
         self._active = False
+        # TODO: new viewers need to respect plugin settings
         self._show_if_inactive = True
         self._show_value = True
-
-        self.slice = slice
-        data = viewer.data()[0]
-        if hasattr(data, 'spectral_axis'):
-            x_all = data.spectral_axis
-        else:
-            x_all = []
-        # _update_data will set self._x_all, self._x_unit, self.x
-        self._update_data(x_all)
 
         viewer.state.add_callback("x_min", lambda x_min: self._handle_oob(update_label=True))
         viewer.state.add_callback("x_max", lambda x_max: self._handle_oob(update_label=True))
@@ -286,13 +283,13 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
                                      handler=self._on_change_state)
 
         super().__init__(viewer=viewer,
-                         x=self.x[0],
+                         x=[value, value],
                          stroke_width=2,
                          marker='diamond',
                          fill='none', close_path=False,
                          labels=['slice'], labels_visibility='none', **kwargs)
 
-        self._handle_oob()
+        self._handle_oob(value)
 
         # instead of using the Lines label which is limited, we'll use a Label object which
         # will follow the x-coordinate of the slice indicator line, with a fixed y-value
@@ -302,46 +299,45 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
 
         # default to the initial state of the tool since we can't control if this will
         # happen before or after the initialization of the tool
-        self._on_change_state({'active': True})
+        tool_active = self.viewer.toolbar.active_tool_id == 'jdaviz:selectslice'
+        self._on_change_state({'active': tool_active})
 
     @property
     def marks(self):
         return [self, self.label]
 
-    def _handle_oob(self, x_coord=None, update_label=False):
-        if x_coord is None:
-            x_coord = self._slice_to_x(self.slice)
+    def _handle_oob(self, x=None, update_label=False):
+        if x is None:
+            x = self.x[0]
         x_min, x_max = self._viewer.state.x_min, self._viewer.state.x_max
         if x_min is None or x_max is None:
-            self.x = [x_coord, x_coord]
+            self.x = [x, x]
             return
         x_range = x_max - x_min
         padding_fig = 0.01
         padding = padding_fig * x_range
         x_min += padding
         x_max -= padding
-        if x_coord < x_min:
+        # ensure y-scale has been set (we'll only be overriding x, but scatter viewers complain
+        # if y-scale is not set)
+        self.scales.setdefault('y', LinearScale(min=0, max=1))
+        if x < x_min:
             self.x = [padding_fig, padding_fig]
             self.scales = {**self.scales, 'x': LinearScale(min=0, max=1)}
             self.line_style = 'dashed'
             self._oob = 'left'
-        elif x_coord > x_max:
+        elif x > x_max:
             self.x = [1-padding_fig, 1-padding_fig]
             self.scales = {**self.scales, 'x': LinearScale(min=0, max=1)}
             self.line_style = 'dashed'
             self._oob = 'right'
         else:
-            self.x = [x_coord, x_coord]
+            self.x = [x, x]
             self.scales = {**self.scales, 'x': self._viewer.scales['x']}
             self.line_style = 'solid'
             self._oob = False
         if update_label:
             self._update_label()
-
-    def _slice_to_x(self, slice=0):
-        if not isinstance(slice, int):
-            raise TypeError(f"slice must be of type int, not {type(slice)}")
-        return self._x_all[slice]
 
     def _update_colors_opacities(self):
         # orange (accent) if active, import button blue otherwise (see css in main_styles.vue)
@@ -359,6 +355,8 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         if isinstance(msg, dict):
             changes = msg
         else:
+            if msg.viewer is not None and msg.viewer != self.viewer:
+                return
             changes = msg.change
 
         for k, v in changes.items():
@@ -372,39 +370,24 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         self._update_colors_opacities()
 
     def _update_label(self):
+        xunit = str(self.xunit) if self.xunit is not None else ''
         # U+00A0 is a blank space, U+25C0 a left arrow triangle, and U+25B6 a right arrow triangle
         if self._oob == 'left':
-            self.labels = [f'\u00A0 \u25c0 {self._slice_to_x(self.slice):0.4e} {self._x_unit} \u00A0']  # noqa
+            self.labels = [f'\u00A0 \u25c0 {self.value:0.4e} {xunit} \u00A0']  # noqa
         elif self._oob == 'right':
-            self.labels = [f'{self._slice_to_x(self.slice):0.4e} {self._x_unit} \u25b6 \u00A0']
+            self.labels = [f'{self.value:0.4e} {xunit} \u25b6 \u00A0']
         else:
-            self.labels = [f'\u00A0 {self._slice_to_x(self.slice):0.4e} {self._x_unit} \u00A0']
+            self.labels = [f'\u00A0 {self.value:0.4e} {xunit} \u00A0']
 
     @property
-    def slice(self):
-        return self._slice
+    def value(self):
+        return self.x[0]
 
-    @slice.setter
-    def slice(self, slice):
-        self._slice = slice
-        # if this is within the init, the data may not have been set yet,
-        # in which case we'll just set self._slice for the first time, but
-        # do not need to update self.x or label (yet)
-        if hasattr(self, '_x_all'):
-            x_coord = self._slice_to_x(slice)
-            self._handle_oob(x_coord)
-            self._update_label()
-
-    def _update_data(self, x_all):
-        # we want to preserve slice number, so we'll do a bit more than the
-        # default unit-conversion in the base class
-        self._x_all = x_all.value
-        self._x_unit = str(x_all.unit)
-        x_coord = self._slice_to_x(self.slice)
-        self._handle_oob(x_coord)
-        if self.labels_visibility == 'label':
-            # update label with new value/unit
-            self._update_label()
+    @value.setter
+    def value(self, value):
+        self.x = [value, value]
+        self._handle_oob(value)
+        self._update_label()
 
 
 class ShadowMixin:
