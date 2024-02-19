@@ -69,6 +69,14 @@
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="play_prev" v-bind="attrs" v-on="on" :disabled="is_playing">
+              <v-icon>exposure_minus_1</v-icon>
+            </v-btn>
+          </template>
+          <span>Previous</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
             <v-btn color="primary" icon @click="play_start_stop" v-bind="attrs" v-on="on">
               <v-icon>mdi-play-pause</v-icon>
             </v-btn>
@@ -81,7 +89,7 @@
               <v-icon>exposure_plus_1</v-icon>
             </v-btn>
           </template>
-          <span>Next slice</span>
+          <span>Next</span>
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">

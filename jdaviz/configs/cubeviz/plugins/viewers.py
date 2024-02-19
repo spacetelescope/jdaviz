@@ -34,6 +34,11 @@ class WithSliceIndicator:
         self.figure.marks = self.figure.marks + slice_indicator.marks
         return slice_indicator
 
+    @property
+    def slice_values(self):
+        return np.unique(np.concatenate([layer.layer.get_component(self.slice_component_label).data
+                                         for layer in self.layers]))
+
     def _set_slice_indicator_value(self, value):
         # this is a separate method so that viewers can override and map value if necessary
         # NOTE: on first call, this will initialize the indicator itself
@@ -61,6 +66,7 @@ class WithSliceSelection:
         # if slice_index is 2, then we want the equivalent of [0, 0, :]
         take_inds = [2, 1, 0]
         take_inds.remove(self.slice_index)
+        # TODO: rewrite this to act on layers instead of data()
         data = self.data()
         if not len(data):
             return np.array([])

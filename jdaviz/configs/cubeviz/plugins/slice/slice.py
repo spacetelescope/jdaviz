@@ -201,6 +201,39 @@ class Slice(PluginTemplateMixin):
         prev_unit = self.value_unit
         # TODO: update self.value and self.value_unit and ensure that updates all indicator labels
 
+    @property
+    def valid_selection_values(self):
+        # all available slice values from cubes (unsorted)
+        viewers = self.slice_selection_viewers
+        if not len(viewers):
+            return np.array([])
+        return np.unique(np.concatenate([viewer.slice_values for viewer in viewers]))
+
+    @property
+    def valid_selection_values_sorted(self):
+        # all available slice values from cubes (sorted)
+        return np.sort(self.valid_selection_values)
+
+    @property
+    def valid_indicator_values(self):
+        # all x-values in indicator viewers (unsorted)
+        viewers = self.slice_indicator_viewers
+        if not len(viewers):
+            return np.array([])
+        return np.unique(np.concatenate([viewer.slice_values for viewer in viewers]))
+
+    @property
+    def valid_indicator_values_sorted(self):
+        return np.sort(self.valid_indicator_values)
+
+    @property
+    def valid_values(self):
+        return self.valid_selection_values if self.cube_viewer_exists else self.valid_indicator_values  # noqa
+
+    @property
+    def valid_values_sorted(self):
+        return self.valid_selection_values_sorted if self.cube_viewer_exists else self.valid_indicator_values_sorted  # noqa
+
     @observe('value')
     def _on_value_updated(self, event):
         # convert to float (JS handles stripping any invalid characters)
@@ -210,8 +243,8 @@ class Slice(PluginTemplateMixin):
             # TODO: do we need to revert?
             return
 
-        if self.snap_to_slice and len(self.slice_selection_viewers):
-            valid_values = np.concatenate([viewer.slice_values for viewer in self.slice_selection_viewers])
+        if self.snap_to_slice:
+            valid_values = self.valid_selection_values
             if len(valid_values):
                 closest_ind = np.argmin(abs(valid_values - value))
                 closest_value = valid_values[closest_ind]
@@ -223,7 +256,6 @@ class Slice(PluginTemplateMixin):
         for viewer in self.slice_indicator_viewers:
             viewer._set_slice_indicator_value(value)
         for viewer in self.slice_selection_viewers:
-            # TODO: map value > slice either here or in the following method
             viewer.slice_value = value
 
         self.hub.broadcast(SliceValueUpdatedMessage(value=self.value,
@@ -243,24 +275,34 @@ class Slice(PluginTemplateMixin):
     def vue_goto_first(self, *args):
         if self.is_playing:
             return
-        self._on_slider_updated({'new': self.min_slice})
+        self.value = np.nanmin(self.valid_values)
 
     def vue_goto_last(self, *args):
         if self.is_playing:
             return
-        self._on_slider_updated({'new': self.max_slice})
+        self.value = np.nanmax(self.valid_values)
+
+    def vue_play_prev(self, *args):
+        if self.is_playing:
+            return
+        valid_values = self.valid_values_sorted
+        current_ind = np.argmin(abs(valid_values - self.value))
+        self.value = valid_values[current_ind - 1]
 
     def vue_play_next(self, *args):
         if self.is_playing:
             return
-        # TODO: update to not rely on self.slice
-        self._on_slider_updated({'new': self.slice + 1})
+        valid_values = self.valid_values_sorted
+        current_ind = np.argmin(abs(valid_values - self.value))
+        self.value = valid_values[current_ind + 1]
 
     def _player_worker(self):
         ts = float(self.play_interval) * 1e-3  # ms to s
+        valid_values = self.valid_values_sorted
         while self.is_playing:
-            # TODO: update to not rely on self.slice
-            self._on_slider_updated({'new': self.slice + 1})
+            # recompute current_ind in case user has moved slider
+            current_ind = np.argmin(abs(valid_values - self.value))
+            self.value = valid_values[current_ind + 1]
             time.sleep(ts)
 
     def vue_play_start_stop(self, *args):
