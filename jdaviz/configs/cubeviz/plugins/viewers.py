@@ -21,6 +21,12 @@ __all__ = ['CubevizImageView', 'CubevizProfileView',
 
 
 class WithSliceIndicator:
+    @property
+    def slice_component_label(self):
+        # label of the component in the cubes corresponding to the slice axis
+        # calling data_collection_item.get_component(slice_component_label) must work
+        return 'Wavelength'
+
     @cached_property
     def slice_indicator(self):
         # SliceIndicatorMarks does not yet exist

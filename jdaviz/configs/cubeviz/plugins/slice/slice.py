@@ -65,17 +65,21 @@ class Slice(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._indicator_initialized = False
         self._player = None
 
         # Subscribe to requests from the helper to change the slice across all viewers
         self.session.hub.subscribe(self, SliceSelectSliceMessage,
                                    handler=self._on_select_slice_message)
 
-        # Listen for new viewers.
+        # Listen for new viewers/data.
         self.session.hub.subscribe(self, ViewerAddedMessage,
                                    handler=self._on_viewer_added)
         self.session.hub.subscribe(self, ViewerRemovedMessage,
                                    handler=self._on_viewer_removed)
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_add_data)
+
         # connect any pre-existing viewers
         for viewer in self.app._viewer_store.values():
             self._connect_viewer(viewer)
@@ -86,6 +90,24 @@ class Slice(PluginTemplateMixin):
         # so that the current slice number is preserved
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_global_display_unit_changed)
+
+        self._initialize_location()
+
+    def _initialize_location(self):
+        if self._indicator_initialized:
+            return
+        # set initial value (and snap to nearest point, if enabled)
+        # we'll loop over all viewers and layers, preferring slice_selection viewers
+        # and just use the first layer with data.  Once initialized, this logic will be
+        # skipped going forward to not change any user selection (so will default to the
+        # middle of the first found layer)
+        for viewer in self.slice_selection_viewers + self.slice_indicator_viewers:
+            for layer in viewer.layers:
+                xdata = layer.layer.data.get_component(viewer.slice_component_label).data
+                if len(xdata):
+                    self.value = np.nanmedian(xdata)
+                    self._indicator_initialized = True
+                    return
 
     @property
     def slice_axis(self):
@@ -147,11 +169,6 @@ class Slice(PluginTemplateMixin):
                 break
 
     def _connect_viewer(self, viewer):
-        if isinstance(viewer, WithSliceSelection):
-            # instead of just setting viewer.slice_value, we'll make sure the "snapping" logic
-            # is updated (if enabled)
-            self._on_value_updated({'new': self.value})
-
         if isinstance(viewer, WithSliceIndicator):
             # NOTE: on first call, this will initialize the indicator itself
             viewer._set_slice_indicator_value(self.value)
@@ -163,6 +180,13 @@ class Slice(PluginTemplateMixin):
 
     def _on_viewer_removed(self, msg):
         self._check_if_cube_viewer_exists()
+
+    def _on_add_data(self, msg):
+        self._initialize_location()
+        if isinstance(msg.viewer, WithSliceSelection):
+            # instead of just setting viewer.slice_value, we'll make sure the "snapping" logic
+            # is updated (if enabled)
+            self._on_value_updated({'new': self.value})
 
     def _on_select_slice_message(self, msg):
         # NOTE: by setting the slice index, the observer (_on_slider_updated)
