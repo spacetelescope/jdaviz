@@ -261,4 +261,4 @@ def test_cone_aperture(cubeviz_helper, spectrum1d_cube_largest):
     extract_plg._obj.vue_adopt_slice_as_reference()
     cone_aperture_2 = extract_plg._obj.cone_aperture()
 
-    assert np.testing.assert_array_equal(cone_aperture, cone_aperture_2)
+    assert np.testing.assert_array_equal(cone_aperture, cone_aperture_2) is False
