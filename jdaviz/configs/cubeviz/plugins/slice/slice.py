@@ -151,7 +151,15 @@ class Slice(PluginTemplateMixin):
     @property
     @deprecated(since="3.9", alternative="value")
     def slice(self):
+        # this assumes the first slice_selection_viewer (and layer)
         return self.slice_selection_viewers[0].slice
+
+    @slice.setter
+    @deprecated(since="3.9", alternative="value")
+    def slice(self, slice):
+        # this assumes the first slice_selection_viewer (and layer)
+        value = self.slice_selection_viewers[0].slice_values[slice]
+        self.value = value
 
     @property
     def user_api(self):

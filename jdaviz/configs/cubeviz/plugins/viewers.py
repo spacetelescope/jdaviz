@@ -79,6 +79,8 @@ class WithSliceSelection:
 
     @slice.setter
     def slice(self, slice):
+        # NOTE: not intended for user-access - this should be controlled through the slice plugin
+        # in order to sync with all other viewers/slice indicators
         slices = [0, 0, 0]
         slices[self.slice_index] = slice
         self.state.slices = tuple(slices)
@@ -89,6 +91,8 @@ class WithSliceSelection:
 
     @slice_value.setter
     def slice_value(self, slice_value):
+        # NOTE: not intended for user-access - this should be controlled through the slice plugin
+        # in order to sync with all other viewers/slice indicators
         # find the slice nearest slice_value
         slice_values = self.slice_values
         if not len(slice_values):
