@@ -39,7 +39,8 @@ class Slice(PluginTemplateMixin):
       update automatically to the value corresponding to the nearest slice, if ``snap_to_slice`` is
       enabled.
     * ``snap_to_slice``
-      Whether the indicator (and ``value``) should snap to the value of the nearest slice in the cube.
+      Whether the indicator (and ``value``) should snap to the value of the nearest slice in the
+      cube.
     * ``show_indicator``
       Whether to show indicator in spectral viewer when slice tool is inactive.
     * ``show_value``
