@@ -1,6 +1,7 @@
 import numpy as np
 from astropy.io import fits
 from astropy.io import registry as io_registry
+from astropy.utils.decorators import deprecated
 from glue.core import BaseData
 from specutils import Spectrum1D
 from specutils.io.registers import _astropy_has_priorities
@@ -76,6 +77,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
 
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
+    @deprecated(since="3.9", alternative="select_wavelength")
     def select_slice(self, slice):
         """
         Select a slice by index.
@@ -89,8 +91,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             raise TypeError("slice must be an integer")
         if slice < 0:
             raise ValueError("slice must be positive")
-        msg = SliceSelectSliceMessage(slice=slice, sender=self)
-        self.app.hub.broadcast(msg)
+        self.plugins['Slice'].slice = slice
 
     def select_wavelength(self, wavelength):
         """
@@ -100,7 +101,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         ----------
         wavelength : float
             Wavelength to select in units of the x-axis of the spectrum.  The nearest slice will
-            be selected.
+            be selected if "snap to slice" is enabled in the slice plugin.
         """
         if not isinstance(wavelength, (int, float)):
             raise TypeError("wavelength must be a float or int")
