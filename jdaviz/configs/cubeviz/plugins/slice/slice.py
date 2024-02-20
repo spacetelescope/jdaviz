@@ -52,6 +52,7 @@ class Slice(PluginTemplateMixin):
     value = FloatHandleEmpty().tag(sync=True)
     value_label = Unicode("Wavelength").tag(sync=True)
     value_unit = Unicode("").tag(sync=True)
+    value_editing = Bool(False).tag(sync=True)  # whether the value input is actively being edited
 
     slider_throttle = Int(200).tag(sync=True)  # milliseconds
 
@@ -257,7 +258,7 @@ class Slice(PluginTemplateMixin):
             # TODO: do we need to revert?
             return
 
-        if self.snap_to_slice:
+        if self.snap_to_slice and not self.value_editing:
             valid_values = self.valid_selection_values
             if len(valid_values):
                 closest_ind = np.argmin(abs(valid_values - value))
@@ -276,9 +277,9 @@ class Slice(PluginTemplateMixin):
                                                     value_unit=self.value_unit,
                                                     sender=self))
 
-    @observe('snap_to_slice')
+    @observe('snap_to_slice', 'value_editing')
     def _on_snap_to_slice_changed(self, event):
-        if self.snap_to_slice:
+        if self.snap_to_slice and not self.value_editing:
             self._on_value_updated({'new': self.value})
 
     @observe('show_indicator', 'show_value')

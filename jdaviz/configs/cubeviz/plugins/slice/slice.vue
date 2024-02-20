@@ -50,9 +50,11 @@
       <v-text-field
         type="number"
         v-model.number="value"
+        @focus="(e) => value_editing = true"
+        @blur="(e) => value_editing = false"
         class="mt-0 pt-0"
         :label="value_label"
-        :hint="value_label+' corresponding to slice'"
+        :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
         :suffix="value_unit"
       ></v-text-field>
     </v-row>
