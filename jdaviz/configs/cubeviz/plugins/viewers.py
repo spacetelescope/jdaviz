@@ -41,7 +41,10 @@ class WithSliceIndicator:
                 return layer.layer.get_component(self.slice_component_label).data
             except KeyError:
                 return []
-        return np.unique(np.concatenate([_get_component(layer) for layer in self.layers]))
+        try:
+            return np.unique(np.concatenate([_get_component(layer) for layer in self.layers]))
+        except ValueError:
+            return np.array([])
 
     def _set_slice_indicator_value(self, value):
         # this is a separate method so that viewers can override and map value if necessary
@@ -82,7 +85,7 @@ class WithSliceSelection:
             else:
                 break
         else:
-            return []
+            return np.array([])
         return data_obj.take(0, take_inds[0]).take(0, take_inds[1])
 
     @property

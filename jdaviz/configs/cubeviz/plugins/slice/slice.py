@@ -316,25 +316,44 @@ class Slice(PluginTemplateMixin):
         if self.is_playing:
             return
         valid_values = self.valid_values_sorted
+        if not len(valid_values):
+            return
         current_ind = np.argmin(abs(valid_values - self.value))
-        self.value = valid_values[current_ind - 1]
+        if current_ind == 0:
+            # wrap
+            self.value = valid_values[len(valid_values) - 1]
+        else:
+            self.value = valid_values[current_ind - 1]
 
     def vue_play_next(self, *args):
         if self.is_playing:
             return
         valid_values = self.valid_values_sorted
+        if not len(valid_values):
+            return
         current_ind = np.argmin(abs(valid_values - self.value))
-        self.value = valid_values[current_ind + 1]
+        if len(valid_values) <= current_ind + 1:
+            # wrap
+            self.value = valid_values[0]
+        else:
+            self.value = valid_values[current_ind + 1]
 
     def _player_worker(self):
         ts = float(self.play_interval) * 1e-3  # ms to s
         valid_values = self.valid_values_sorted
+        if not len(valid_values):
+            self.is_playing = False
+            return
         while self.is_playing:
             # recompute current_ind in case user has moved slider
             # could optimize this by only recomputing after a select slice message
             # (will only make a difference if argmin becomes approaches play_interval)
             current_ind = np.argmin(abs(valid_values - self.value))
-            self.value = valid_values[current_ind + 1]
+            if len(valid_values) <= current_ind + 1:
+                # wrap
+                self.value = valid_values[0]
+            else:
+                self.value = valid_values[current_ind + 1]
             time.sleep(ts)
 
     def vue_play_start_stop(self, *args):
