@@ -326,6 +326,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                   self.aperture.selected_spatial_region.center.x)
         # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
         display_unit = flux_cube.spectral_axis.unit
+        if display_unit.physical_type != 'length':
+            error_msg = (f'Spectral axis unit physical type is '
+                         f'{display_unit.physical_type}, must be length')
+            snackbar_message = SnackbarMessage(error_msg, color="error", sender=self)
+            self.hub.broadcast(snackbar_message)
+            raise AttributeError(error_msg)
 
         # Loop through cube and create cone aperture at each wavelength. Then convert that to a
         # mask using the selected aperture method and add that to a mask cube.
