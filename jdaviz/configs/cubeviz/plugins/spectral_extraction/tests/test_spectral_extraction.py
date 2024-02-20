@@ -246,6 +246,7 @@ def test_cone_aperture(cubeviz_helper, spectrum1d_cube_largest):
     slice_plg = cubeviz_helper.plugins['Slice']
 
     extract_plg.aperture = 'Subset 1'
+    extract_plg.aperture_method.selected = "Exact"
     extract_plg.wavelength_dependent = True
     assert cubeviz_helper._loaded_mask_cube.get_object(cls=Spectrum1D, statistic=None)
 
