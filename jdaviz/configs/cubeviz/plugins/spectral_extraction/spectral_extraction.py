@@ -82,7 +82,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     overwrite_warn = Bool(False).tag(sync=True)
 
     aperture_method_items = List().tag(sync=True)
-    aperture_method_selected = Unicode('Exact').tag(sync=True)
+    aperture_method_selected = Unicode('Center').tag(sync=True)
 
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
