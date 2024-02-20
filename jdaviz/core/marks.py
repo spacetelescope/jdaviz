@@ -271,14 +271,15 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     """
     def __init__(self, viewer, value=0, **kwargs):
         self._viewer = viewer
+        self._value = None
         self._oob = False  # out-of-bounds, either False, 'left', or 'right'
         self._active = False
         # TODO: new viewers need to respect plugin settings
         self._show_if_inactive = True
         self._show_value = True
 
-        viewer.state.add_callback("x_min", lambda x_min: self._handle_oob(update_label=True))
-        viewer.state.add_callback("x_max", lambda x_max: self._handle_oob(update_label=True))
+        viewer.state.add_callback("x_min", lambda x_min: self._value_handle_oob(update_label=True))
+        viewer.state.add_callback("x_max", lambda x_max: self._value_handle_oob(update_label=True))
         viewer.session.hub.subscribe(self, SliceToolStateMessage,
                                      handler=self._on_change_state)
 
@@ -289,7 +290,7 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
                          fill='none', close_path=False,
                          labels=['slice'], labels_visibility='none', **kwargs)
 
-        self._handle_oob(value)
+        self.value = value
 
         # instead of using the Lines label which is limited, we'll use a Label object which
         # will follow the x-coordinate of the slice indicator line, with a fixed y-value
@@ -306,9 +307,11 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     def marks(self):
         return [self, self.label]
 
-    def _handle_oob(self, x=None, update_label=False):
+    def _value_handle_oob(self, x=None, update_label=False):
         if x is None:
-            x = self.x[0]
+            x = self.value
+        else:
+            self._value = x
         x_min, x_max = self._viewer.state.x_min, self._viewer.state.x_max
         if x_min is None or x_max is None:
             self.x = [x, x]
@@ -390,13 +393,11 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
 
     @property
     def value(self):
-        return self.x[0]
+        return self._value
 
     @value.setter
     def value(self, value):
-        self.x = [value, value]
-        self._handle_oob(value)
-        self._update_label()
+        self._value_handle_oob(value, update_label=True)
 
 
 class ShadowMixin:
