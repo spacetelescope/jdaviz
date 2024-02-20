@@ -3,10 +3,10 @@ import time
 import warnings
 
 import numpy as np
-import astropy.units as u
+from astropy import units as u
 from astropy.units import UnitsWarning
 from astropy.utils.decorators import deprecated
-from traitlets import Any, Bool, Float, Int, Unicode, observe
+from traitlets import Bool, Int, Unicode, observe
 
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator, WithSliceSelection,
                                                     CubevizImageView)
@@ -83,6 +83,7 @@ class Slice(PluginTemplateMixin):
         # connect any pre-existing viewers
         for viewer in self.app._viewer_store.values():
             self._connect_viewer(viewer)
+
         # initialize if cube viewer exists
         self._check_if_cube_viewer_exists()
 
@@ -90,12 +91,21 @@ class Slice(PluginTemplateMixin):
         # so that the current slice number is preserved
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_global_display_unit_changed)
-
         self._initialize_location()
 
     def _initialize_location(self):
+        # intitialize value_unit (this has to wait until data is loaded to an existing
+        # slice_indicator_viewer, so we'll keep trying until it is set - after that, changes
+        # will be handled by a change to global display units)
+        if not self.value_unit:
+            for viewer in self.slice_indicator_viewers:
+                if getattr(viewer.state, 'x_display_unit', None) is not None:
+                    self.value_unit = viewer.state.x_display_unit
+                    break
+
         if self._indicator_initialized:
             return
+
         # set initial value (and snap to nearest point, if enabled)
         # we'll loop over all viewers and layers, preferring slice_selection viewers
         # and just use the first layer with data.  Once initialized, this logic will be
@@ -198,8 +208,12 @@ class Slice(PluginTemplateMixin):
     def _on_global_display_unit_changed(self, msg):
         if msg.axis != self.slice_axis:
             return
-        prev_unit = self.value_unit
-        # TODO: update self.value and self.value_unit and ensure that updates all indicator labels
+        if not self.value_unit:
+            self.value_unit = str(msg.unit)
+            return
+        prev_unit = u.Unit(self.value_unit)
+        self.value_unit = str(msg.unit)
+        self.value = (self.value * prev_unit).to_value(msg.unit)
 
     @property
     def valid_selection_values(self):
@@ -301,6 +315,8 @@ class Slice(PluginTemplateMixin):
         valid_values = self.valid_values_sorted
         while self.is_playing:
             # recompute current_ind in case user has moved slider
+            # could optimize this by only recomputing after a select slice message
+            # (will only make a difference if argmin becomes approaches play_interval)
             current_ind = np.argmin(abs(valid_values - self.value))
             self.value = valid_values[current_ind + 1]
             time.sleep(ts)
