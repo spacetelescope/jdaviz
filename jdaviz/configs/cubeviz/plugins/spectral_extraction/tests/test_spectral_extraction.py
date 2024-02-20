@@ -253,7 +253,7 @@ def test_cone_aperture(cubeviz_helper, spectrum1d_cube_largest):
     slice_plg.slice = 1
     extract_plg._obj.vue_adopt_slice_as_reference()
     cone_aperture = extract_plg._obj.cone_aperture()
-    assert cone_aperture.shape == spectrum1d_cube_largest.shape
+    assert cone_aperture.shape == (2, 4, 1000)
 
     # Make sure that the cone created when the reference slice is 988 is different
     # to the cone made at reference slice 1.
