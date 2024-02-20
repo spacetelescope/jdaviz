@@ -56,7 +56,7 @@
           <v-row justify="end">
             <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
               <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_wavelength">
-                Slice to Reference Wavelength
+                Slice to Wavelength
               </plugin-action-button>
             </j-tooltip>
           </v-row>
