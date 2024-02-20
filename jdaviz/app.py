@@ -427,7 +427,7 @@ class Application(VuetifyTemplate, HubListener):
         path : str or tuple
             Path to a ``.vue`` file containing style rules to inject into the app.
         """
-        style_registry.instance.add(path)
+        style_registry.add(path)
 
     def _on_snackbar_message(self, msg):
         """
