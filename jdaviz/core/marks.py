@@ -370,14 +370,23 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
         self._update_colors_opacities()
 
     def _update_label(self):
+        def _formatted_value(value):
+            power = abs(np.log10(value))
+            if power >= 3:
+                # use scientific notation
+                return f'{value:0.4e}'
+            else:
+                return f'{value:0.4f}'
+
+        valuestr = _formatted_value(self.value)
         xunit = str(self.xunit) if self.xunit is not None else ''
         # U+00A0 is a blank space, U+25C0 a left arrow triangle, and U+25B6 a right arrow triangle
         if self._oob == 'left':
-            self.labels = [f'\u00A0 \u25c0 {self.value:0.4e} {xunit} \u00A0']  # noqa
+            self.labels = [f'\u00A0 \u25c0 {valuestr} {xunit} \u00A0']  # noqa
         elif self._oob == 'right':
-            self.labels = [f'{self.value:0.4e} {xunit} \u25b6 \u00A0']
+            self.labels = [f'{valuestr} {xunit} \u25b6 \u00A0']
         else:
-            self.labels = [f'\u00A0 {self.value:0.4e} {xunit} \u00A0']
+            self.labels = [f'\u00A0 {valuestr} {xunit} \u00A0']
 
     @property
     def value(self):
