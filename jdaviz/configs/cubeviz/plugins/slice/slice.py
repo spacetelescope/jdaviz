@@ -36,9 +36,10 @@ class Slice(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``value``
       Value (wavelength or frequency) of the current slice.  When setting this directly, it will
-      update automatically to the value corresponding to the nearest slice.
+      update automatically to the value corresponding to the nearest slice, if ``snap_to_slice`` is
+      enabled.
     * ``snap_to_slice``
-      Whether the indicator should snap to the value of the nearest slice in the cube.
+      Whether the indicator (and ``value``) should snap to the value of the nearest slice in the cube.
     * ``show_indicator``
       Whether to show indicator in spectral viewer when slice tool is inactive.
     * ``show_value``

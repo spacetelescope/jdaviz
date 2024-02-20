@@ -32,6 +32,9 @@ Cubeviz
 
 - Live previews in spectral extraction plugin. [#2733]
 
+- Slice plugin is refactored to rely on the spectral value instead of the slice index.  This removes
+  both the slider and slice-index input. [#2715]
+
 Imviz
 ^^^^^
 
@@ -67,7 +70,8 @@ Cubeviz
   be removed in a future release. [#2664]
 
 - Slice plugin's ``wavelength``, ``wavelength_unit``, and ``show_wavelength`` are deprecated in favor
-  of ``value``, ``value_unit``, and ``show_value``, respectively. [#2706]
+  of ``value``, ``value_unit``, and ``show_value``, respectively.  ``slice`` is also deprecated
+  and should be replaced with accessing/setting ``value`` directly. [#2706, #2715]
 
 Imviz
 ^^^^^
