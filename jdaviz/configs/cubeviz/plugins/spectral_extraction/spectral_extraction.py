@@ -319,7 +319,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Retrieve flux cube and create an array to represent the cone mask
         flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)
-        masks_boolean_values = np.zeros_like(flux_cube.flux.value)
+        masks_boolean_values = np.zeros_like(flux_cube.flux.value,  dtype=bool)
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
