@@ -305,7 +305,7 @@ The reference wavelength for the cone can be changed using the
 The method of aperture masking can also be changed using the
 :guilabel:`Aperture masking method` dropdown. To see a description
 for each of these options, please see
-`Aperture and Pixel Overlap <https://photutils.readthedocs.io/en/stable/aperture.html#aperture-and-pixel-overlap>`_.
+:ref:`photutils:photutils-aperture-overlap`.
 
 
 .. _cubeviz-aper-phot:
