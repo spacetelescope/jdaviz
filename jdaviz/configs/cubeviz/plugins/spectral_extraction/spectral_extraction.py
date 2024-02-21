@@ -328,12 +328,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Loop through cube and create cone aperture at each wavelength. Then convert that to a
         # mask using the selected aperture method and add that to a mask cube.
-        for index, wavelength in enumerate(flux_cube.spectral_axis):
-            radius = ((wavelength.to(display_unit).value / self.reference_wavelength) *
-                      self.aperture.selected_spatial_region.radius)
+        # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
+        radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
+                 self.aperture.selected_spatial_region.radius)
+        im_shape = (flux_cube.shape[1], flux_cube.shape[0])  # Reversed like center
+        aper_method = self.aperture_method_selected.lower()
+        for index, radius in enumerate(radii):
             aperture = CircularAperture(center, r=radius)
-            slice_mask = aperture.to_mask(method=self.aperture_method_selected.lower()).to_image(
-                (len(flux_cube.flux), len(flux_cube.flux[0])))
+            slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
             masks_float_values[:, :, index] = ~(slice_mask > 0)
         return masks_float_values
 
