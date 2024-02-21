@@ -331,11 +331,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
         radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
                  self.aperture.selected_spatial_region.radius)
-        im_shape = (flux_cube.shape[1], flux_cube.shape[0])  # Reversed like center
+        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
         aper_method = self.aperture_method_selected.lower()
         for index, radius in enumerate(radii):
             aperture = CircularAperture(center, r=radius)
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
+            # FIXME: ~(slice_mask > 0) changes the float values to boolean
+            # but looks like you need zeroes to indicate "good" pixels, so not
+            # sure how you want to do this with "fractional" coverage from photutils.
             masks_float_values[:, :, index] = ~(slice_mask > 0)
         return masks_float_values
 
