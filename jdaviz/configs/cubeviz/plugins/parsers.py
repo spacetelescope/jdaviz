@@ -254,7 +254,7 @@ def _parse_hdulist(app, hdulist, file_name=None,
 
         if data_type == 'mask':
             # We no longer auto-populate the mask cube into a viewer
-            app._jdaviz_helper._loaded_mask_cube = app.data_collection[data_label]
+            pass
 
         elif data_type == 'uncert':
             app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
@@ -319,8 +319,6 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
         app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
     elif data_type == 'uncert':
         app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
-    elif data_type == 'mask':
-        app._jdaviz_helper._loaded_mask_cube = app.data_collection[data_label]
 
 
 def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None,
@@ -370,10 +368,8 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
 
     if data_type == 'flux':
         app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
-    elif data_type == 'uncert':
+    if data_type == 'uncert':
         app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
-    elif data_type == 'mask':
-        app._jdaviz_helper._loaded_mask_cube = app.data_collection[data_label]
 
 
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,
@@ -426,9 +422,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         elif attr == 'uncertainty':
             app.add_data_to_viewer(uncert_viewer_reference_name, cur_data_label)
             app._jdaviz_helper._loaded_uncert_cube = app.data_collection[cur_data_label]
-        elif attr == 'mask':
-            # We no longer auto-populate the mask cube into a viewer
-            app._jdaviz_helper._loaded_mask_cube = app.data_collection[cur_data_label]
+        # We no longer auto-populate the mask cube into a viewer
 
 
 def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_name=None):
@@ -476,8 +470,6 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     elif data_type == 'uncert':
         app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
         app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
-    elif data_type == 'mask':
-        app._jdaviz_helper._loaded_mask_cube = app.data_collection[data_label]
 
 
 def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None,
