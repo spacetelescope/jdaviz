@@ -89,7 +89,8 @@ def test_nirspec_level2_parser(mosviz_helper, tmp_path):
     Also tests no instrument keyword fallback, and IntraRow linking
     '''
 
-    test_data = 'https://stsci.box.com/shared/static/mytqf082lpbfia7wlwjq6p1h5cggd9h6.zip'
+    # nirspec_level2_test_data.zip
+    test_data = 'https://stsci.box.com/shared/static/4hgfhul8el3ciu3p59aqb1m0dk3b0v8y.zip'
     fn = download_file(test_data, cache=True, timeout=100)
     with ZipFile(fn, 'r') as sample_data_zip:
         sample_data_zip.extractall(tmp_path)
@@ -179,8 +180,8 @@ def test_nircam_parser(mosviz_helper, tmp_path):
     Tests loading a NIRCam dataset
     '''
 
-    # Download data
-    test_data = 'https://stsci.box.com/shared/static/itk7pav073nubwn58pig002m9796qzpw.zip'
+    # Download data (nircam_parser_test_data.zip)
+    test_data = 'https://stsci.box.com/shared/static/g3tymg7c1yj67gy0hpfreo80inqdm1ps.zip'
     fn = download_file(test_data, cache=True, timeout=100)
 
     # Extract to a known, temporary folder
@@ -214,8 +215,8 @@ def test_missing_srctype(mosviz_helper, tmp_path):
 
     '''
 
-    # Download data
-    test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
+    # Download data (niriss_parser_test_data.zip)
+    test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
     fn = download_file(test_data, cache=True, timeout=30)
 
     # Extract to a known, temporary folder
