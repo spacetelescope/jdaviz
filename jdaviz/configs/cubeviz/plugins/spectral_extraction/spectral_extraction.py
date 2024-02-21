@@ -312,7 +312,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Retrieve flux cube and create an array to represent the cone mask
         flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)
-        masks_boolean_values = np.zeros_like(flux_cube.flux.value, dtype=bool)
+        masks_float_values = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
@@ -334,8 +334,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             aperture = CircularAperture(center, r=radius)
             slice_mask = aperture.to_mask(method=self.aperture_method_selected.lower()).to_image(
                 (len(flux_cube.flux), len(flux_cube.flux[0])))
-            masks_boolean_values[:, :, index] = ~(slice_mask > 0)
-        return masks_boolean_values
+            masks_float_values[:, :, index] = ~(slice_mask > 0)
+        return masks_float_values
 
     def vue_spectral_extraction(self, *args, **kwargs):
         self.collapse_to_spectrum(add_data=True)
