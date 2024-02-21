@@ -237,18 +237,12 @@ def test_cone_aperture(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(1, 1), radius=0.5)])
 
-    mask_cube = Spectrum1D(flux=np.ones_like(spectrum1d_cube_largest.flux),
-                           spectral_axis=spectrum1d_cube_largest.spectral_axis)
-    cubeviz_helper.load_data(mask_cube, override_cube_limit=True)
-    cubeviz_helper._loaded_mask_cube = cubeviz_helper.app.data_collection[-1]
-
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
     slice_plg = cubeviz_helper.plugins['Slice']
 
     extract_plg.aperture = 'Subset 1'
     extract_plg.aperture_method.selected = "Exact"
     extract_plg.wavelength_dependent = True
-    assert cubeviz_helper._loaded_mask_cube.get_object(cls=Spectrum1D, statistic=None)
 
     slice_plg.slice = 1
     extract_plg._obj.vue_adopt_slice_as_reference()
@@ -262,4 +256,4 @@ def test_cone_aperture(cubeviz_helper, spectrum1d_cube_largest):
     cone_aperture_2 = extract_plg._obj.cone_aperture()
 
     with pytest.raises(AssertionError, match="Arrays are not equal"):
-        assert np.testing.assert_array_equal(cone_aperture, cone_aperture_2)
+        np.testing.assert_array_equal(cone_aperture, cone_aperture_2)
