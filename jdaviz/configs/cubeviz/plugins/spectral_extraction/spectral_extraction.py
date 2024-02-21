@@ -312,19 +312,19 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Retrieve flux cube and create an array to represent the cone mask
         flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)
+        # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
+        display_unit = flux_cube.spectral_axis.unit
+        if display_unit.physical_type != 'length':
+            self.hub.broadcast(SnackbarMessage('Spectral axis unit physical type is '
+                                               f'{display_unit.physical_type}, must be length',
+                                               color="error", sender=self))
+            return
+
         masks_float_values = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
                   self.aperture.selected_spatial_region.center.x)
-        # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
-        display_unit = flux_cube.spectral_axis.unit
-        if display_unit.physical_type != 'length':
-            error_msg = (f'Spectral axis unit physical type is '
-                         f'{display_unit.physical_type}, must be length')
-            snackbar_message = SnackbarMessage(error_msg, color="error", sender=self)
-            self.hub.broadcast(snackbar_message)
-            return
 
         # Loop through cube and create cone aperture at each wavelength. Then convert that to a
         # mask using the selected aperture method and add that to a mask cube.
