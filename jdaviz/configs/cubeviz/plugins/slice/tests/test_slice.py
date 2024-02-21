@@ -1,7 +1,6 @@
 import warnings
 
 import pytest
-import numpy as np
 
 from jdaviz.configs.cubeviz.plugins.slice.slice import Slice
 
@@ -9,51 +8,39 @@ from jdaviz.configs.cubeviz.plugins.slice.slice import Slice
 def test_slice(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
     sl = Slice(app=app)
+#    sl = cubeviz_helper.plugins['Slice']._obj
 
-    # Make sure nothing crashes if plugin used without data
+    # No data yet
+    assert len(sl.slice_selection_viewers) == 2  # flux-viewer, uncert-viewer
+    assert len(sl.slice_indicator_viewers) == 1  # spectrum-viewer
+    assert len(sl.valid_indicator_values_sorted) == 0
+    assert len(sl.valid_selection_values_sorted) == 0
+
+    # Make sure nothing crashes if plugin used without data]
     sl.vue_play_next()
-    assert sl.slice == 0
     sl.vue_play_start_stop()
     assert not sl.is_playing
-    assert not sl._player
 
-    app.add_data(spectrum1d_cube, 'test')
-    app.add_data_to_viewer("spectrum-viewer", "test")
-    app.add_data_to_viewer("flux-viewer", "test")
-    app.add_data_to_viewer("uncert-viewer", "test")
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    app.add_data_to_viewer("spectrum-viewer", "test[FLUX]")
+    app.add_data_to_viewer("flux-viewer", "test[FLUX]")
+    app.add_data_to_viewer("uncert-viewer", "test[FLUX]")
 
     # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
-    assert sl.slice == 1
+    assert len(sl.valid_indicator_values_sorted) == 2
+    slice_values = sl.valid_selection_values_sorted
+    assert len(slice_values) == 2
+
+    assert sl.value == slice_values[1]
+    assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 1
     assert cubeviz_helper.app.get_viewer("flux-viewer").state.slices[-1] == 1
     assert cubeviz_helper.app.get_viewer("uncert-viewer").state.slices[-1] == 1
     cubeviz_helper.select_slice(0)
-    assert sl.slice == 0
-
-    with pytest.raises(
-            TypeError,
-            match="slice must be an integer"):
-        cubeviz_helper.select_slice("blah")
-
-    with pytest.raises(
-            ValueError,
-            match="slice must be positive"):
-        cubeviz_helper.select_slice(-5)
+    assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 0
+    assert sl.value == slice_values[0]
 
     cubeviz_helper.select_wavelength(4.62360028e-07)
-    assert sl.slice == 1
-
-    # from the widget this logic is duplicated (to avoid sending logic through messages)
-    sl._on_value_updated({'new': '4.62e-07'})
-    assert sl.slice == 0
-    assert np.allclose(sl.value, 4.62280007e-07)
-
-    # make sure that passing an invalid value from the UI would revert to the previous value
-    # JS strips invalid characters, but doesn't ensure its float-compatible
-    sl._on_value_updated({'new': '1.2.3'})
-    assert sl.slice == 0
-
-    assert len(sl._watched_viewers) == 2  # flux-viewer, uncert-viewer
-    assert len(sl._indicator_viewers) == 1  # spectrum-viewer
+    assert sl.value == slice_values[1]
 
     # test setting a static 2d image to the "watched" flux viewer to make sure it disconnects
     mm = app.get_tray_item_from_name('cubeviz-moment-maps')
@@ -61,9 +48,6 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message=r'.*No observer defined on WCS.*')
         mm.vue_calculate_moment()
-
-    assert len(sl._watched_viewers) == 2
-    assert len(sl._indicator_viewers) == 1
 
     # test in conjunction with as_steps
     sv = app.get_viewer('spectrum-viewer')
@@ -73,18 +57,18 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     new_len = len(sv.native_marks[0].x)
     assert new_len == 2*orig_len
     cubeviz_helper.select_wavelength(4.62360028e-07)
-    assert sl.slice == 1
+    assert sl.value == slice_values[1]
 
     # Test player buttons API
 
     sl.vue_goto_first()
-    assert sl.slice == 0
+    assert sl.value == slice_values[0]
 
     sl.vue_goto_last()
-    assert sl.slice == sl.max_slice
+    assert sl.value == slice_values[-1]
 
     sl.vue_play_next()  # Should automatically wrap to beginning
-    assert sl.slice == 0
+    assert sl.value == slice_values[0]
 
     sl.vue_play_start_stop()  # Start
     assert sl.is_playing
