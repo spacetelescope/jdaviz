@@ -362,7 +362,8 @@ def test_app_links(specviz_helper, spectrum1d):
 
 @pytest.mark.remote_data
 def test_load_spectrum_list_directory(tmpdir, specviz_helper):
-    test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
+    # niriss_parser_test_data.zip
+    test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
     fn = download_file(test_data, cache=True, timeout=30)
     with ZipFile(fn, 'r') as sample_data_zip:
         sample_data_zip.extractall(tmpdir.strpath)
@@ -387,7 +388,8 @@ def test_load_spectrum_list_directory(tmpdir, specviz_helper):
 
 @pytest.mark.remote_data
 def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
-    test_data = 'https://stsci.box.com/shared/static/l2azhcqd3tvzhybdlpx2j2qlutkaro3z.zip'
+    # niriss_parser_test_data.zip
+    test_data = 'https://stsci.box.com/shared/static/7ndets0vjjsa97la2hvjvm6xvnu5b594.zip'
     fn = download_file(test_data, cache=True, timeout=30)
     with ZipFile(fn, 'r') as sample_data_zip:
         sample_data_zip.extractall(tmpdir.strpath)
