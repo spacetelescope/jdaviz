@@ -180,7 +180,7 @@ def test_nircam_parser(mosviz_helper, tmp_path):
     Tests loading a NIRCam dataset
     '''
 
-    # Download data
+    # Download data (nircam_parser_test_data.zip)
     test_data = 'https://stsci.box.com/shared/static/g3tymg7c1yj67gy0hpfreo80inqdm1ps.zip'
     fn = download_file(test_data, cache=True, timeout=100)
 
