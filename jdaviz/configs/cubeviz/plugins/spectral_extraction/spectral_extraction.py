@@ -309,13 +309,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return collapsed_spec
 
     def cone_aperture(self):
-        if not self._app._jdaviz_helper._loaded_mask_cube:
-            snackbar_message = SnackbarMessage(
-                "Cannot create cone aperture without valid mask cube loaded.",
-                color="error",
-                sender=self)
-            self.hub.broadcast(snackbar_message)
-            return
         # Retrieve flux cube and create an array to represent the cone mask
         flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)
@@ -331,7 +324,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                          f'{display_unit.physical_type}, must be length')
             snackbar_message = SnackbarMessage(error_msg, color="error", sender=self)
             self.hub.broadcast(snackbar_message)
-            raise AttributeError(error_msg)
+            return
 
         # Loop through cube and create cone aperture at each wavelength. Then convert that to a
         # mask using the selected aperture method and add that to a mask cube.
