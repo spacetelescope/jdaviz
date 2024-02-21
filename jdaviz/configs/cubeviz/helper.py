@@ -104,8 +104,14 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         """
         if not isinstance(wavelength, (int, float)):
             raise TypeError("wavelength must be a float or int")
-        msg = SliceSelectSliceMessage(value=wavelength, sender=self)
-        self.app.hub.broadcast(msg)
+        # Retrieve the x slices from the spectrum viewer's marks
+        sv = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
+        x_all = sv.native_marks[0].x
+        if sv.state.layers[0].as_steps:
+            # then the marks have been doubled in length (each point duplicated)
+            x_all = x_all[::2]
+        index = np.argmin(abs(x_all - wavelength))
+        return self.select_slice(int(index))
 
     @property
     def specviz(self):
