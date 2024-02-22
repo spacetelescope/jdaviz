@@ -1,9 +1,12 @@
 import numpy as np
+from astropy.coordinates import Angle
 from astropy.nddata import NDData
+from astropy.tests.helper import assert_quantity_allclose
+from glue.core.message import DataCollectionDeleteMessage
 from numpy.testing import assert_allclose
-from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion
+from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_GWCS
 
 
 class TestDeleteData(BaseImviz_WCS_WCS):
@@ -71,3 +74,34 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         assert_allclose(subset2.subset_state.roi.ymin, 0, atol=1e-6)
         assert_allclose(subset2.subset_state.roi.xmax, 3)
         assert_allclose(subset2.subset_state.roi.ymax, 2)
+
+
+class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
+    """Regression test for https://jira.stsci.edu/browse/JDAT-3958"""
+    def test_delete_wcs_layer_with_subset(self):
+        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin.link_type = 'WCS'
+
+        # Should automatically be applied as reference to first viewer.
+        lc_plugin._obj.create_north_up_east_left(set_on_create=True)
+
+        # Create a rotated ellipse.
+        reg = EllipsePixelRegion(
+            PixCoord(3.5, 4.5), width=2, height=5, angle=Angle(30, 'deg')).to_sky(self.wcs_1)
+        self.imviz.load_regions(reg)
+
+        # Switch back to Default Orientation.
+        self.imviz.app._change_reference_data("Default orientation")
+
+        # Delete N-up E-left reference data.
+        self.imviz.app._on_data_deleted(DataCollectionDeleteMessage(
+            data=self.imviz.app.data_collection["North-up, East-left"],
+            sender=self.imviz.app.data_collection))
+
+        # Make sure rotated ellipse is still the same as before.
+        out_reg_d = self.imviz.app.get_subsets(include_sky_region=True)['Subset 1'][0]['sky_region']
+        assert_allclose(reg.center.ra.deg, out_reg_d.center.ra.deg)
+        assert_allclose(reg.center.dec.deg, out_reg_d.center.dec.deg)
+        assert_quantity_allclose(reg.height, out_reg_d.height)
+        assert_quantity_allclose(reg.width, out_reg_d.width)
+        assert_quantity_allclose(reg.angle, out_reg_d.angle)

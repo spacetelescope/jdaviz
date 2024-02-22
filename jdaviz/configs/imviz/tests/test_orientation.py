@@ -131,8 +131,7 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
         assert self.viewer.state.reference_data.label == "has_wcs_1[SCI,1]"
         assert viewer_2.state.reference_data.label == "has_wcs_1[SCI,1]"
 
-        # FIXME: Brett, this seems wrong. I thought it would go back either
-        # to previous fake WCS layers or Default Orientation, but it is neither.
+        # FIXME: https://github.com/spacetelescope/jdaviz/issues/2724
         lc_plugin.link_type = 'WCS'
         assert self.viewer.state.reference_data.label == "has_wcs_1[SCI,1]"
         assert viewer_2.state.reference_data.label == "has_wcs_1[SCI,1]"
