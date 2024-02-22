@@ -39,8 +39,11 @@ class WithSliceIndicator:
         def _get_component(layer):
             try:
                 return layer.layer.get_component(self.slice_component_label).data
-            except KeyError:
-                return []
+            except (AttributeError, KeyError):
+                # layer either does not have get_component (because its a subset)
+                # or slice_component_label is not a component in this layer
+                # either way, return an empty array and skip this layer
+                return np.array([])
         try:
             return np.unique(np.concatenate([_get_component(layer) for layer in self.layers]))
         except ValueError:
@@ -73,14 +76,10 @@ class WithSliceSelection:
         # if slice_index is 2, then we want the equivalent of [0, 0, :]
         take_inds = [2, 1, 0]
         take_inds.remove(self.slice_index)
-        # TODO: rewrite this to act on layers instead of data()
-        data = self.data()
-        if not len(data):
-            return np.array([])
-        for d in data:
+        for layer in self.layers:
             try:
-                data_obj = d.get_component(self.slice_component_label).data
-            except KeyError:
+                data_obj = layer.layer.data.get_component(self.slice_component_label).data
+            except (AttributeError, KeyError):
                 continue
             else:
                 break
