@@ -112,20 +112,16 @@ class Slice(PluginTemplateMixin):
             return
 
         # set initial value (and snap to nearest point, if enabled)
-        # we'll loop over all viewers and layers, preferring slice_selection viewers
+        # we'll loop over all slice indicator viewers and their layers
         # and just use the first layer with data.  Once initialized, this logic will be
         # skipped going forward to not change any user selection (so will default to the
         # middle of the first found layer)
-        for viewer in self.slice_selection_viewers + self.slice_indicator_viewers:
-            for layer in viewer.layers:
-                try:
-                    xdata = layer.layer.data.get_component(viewer.slice_component_label).data
-                except KeyError:
-                    continue
-                if len(xdata):
-                    self.value = np.nanmedian(xdata)
-                    self._indicator_initialized = True
-                    return
+        for viewer in self.slice_indicator_viewers:
+            slice_values = viewer.slice_values
+            if len(slice_values):
+                self.value = slice_values[int(len(slice_values)/2)]
+                self._indicator_initialized = True
+                return
 
     @property
     def slice_axis(self):
