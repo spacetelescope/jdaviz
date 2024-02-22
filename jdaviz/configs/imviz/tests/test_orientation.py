@@ -52,29 +52,28 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
 
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
         mp = self.imviz.plugins['Markers']
-        mp._obj.plugin_opened = True
 
-        # (0, 0) on second image.
-        label_mouseover._viewer_mouse_event(
-            self.viewer, {'event': 'mousemove', 'domain': {'x': 1, 'y': 0}})
-        mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
+        with mp.as_active():
+            # (0, 0) on second image.
+            label_mouseover._viewer_mouse_event(
+                self.viewer, {'event': 'mousemove', 'domain': {'x': 1, 'y': 0}})
+            mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
 
-        # (0, 0) on first image.
-        self.viewer.blink_once()
-        label_mouseover._viewer_mouse_event(
-            self.viewer, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
+            # (0, 0) on first image.
+            self.viewer.blink_once()
+            label_mouseover._viewer_mouse_event(
+                self.viewer, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+            mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
 
-        lc_plugin.link_type = 'WCS'
+            lc_plugin.link_type = 'WCS'
 
-        # Both marks stay the same in sky, so this means X and Y w.r.t. reference
-        # same on both entries.
-        # 0.25 offset probably introduced by fake WCS layer.
-        assert_allclose(mp._obj.marks["imviz-0"].x, -0.25)
-        assert_allclose(mp._obj.marks["imviz-0"].y, -0.25)
+            # Both marks stay the same in sky, so this means X and Y w.r.t. reference
+            # same on both entries.
+            # 0.25 offset probably introduced by fake WCS layer.
+            assert_allclose(mp._obj.marks["imviz-0"].x, -0.25)
+            assert_allclose(mp._obj.marks["imviz-0"].y, -0.25)
 
-        mp.clear_table()
-        mp._obj.plugin_opened = False
+            mp.clear_table()
 
     def test_markers_plugin_recompute_positions_wcs_to_pixels(self):
         lc_plugin = self.imviz.plugins['Orientation']
@@ -86,29 +85,28 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
 
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
         mp = self.imviz.plugins['Markers']
-        mp._obj.plugin_opened = True
 
-        # (0, 0) on second image, but linked by WCS.
-        label_mouseover._viewer_mouse_event(
-            self.viewer, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
+        with mp.as_active():
+            # (0, 0) on second image, but linked by WCS.
+            label_mouseover._viewer_mouse_event(
+                self.viewer, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+            mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
 
-        # (0, 0) on first image.
-        self.viewer.blink_once()
-        label_mouseover._viewer_mouse_event(
-            self.viewer, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-        mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
+            # (0, 0) on first image.
+            self.viewer.blink_once()
+            label_mouseover._viewer_mouse_event(
+                self.viewer, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+            mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
 
-        lc_plugin.link_type = 'Pixels'
+            lc_plugin.link_type = 'Pixels'
 
-        # Both marks now get separated, so this means X and Y w.r.t. reference
-        # are different on both entries.
-        # 0.25 offset probably introduced by fake WCS layer.
-        assert_allclose(mp._obj.marks["imviz-0"].x, [1.25, 0.25])
-        assert_allclose(mp._obj.marks["imviz-0"].y, 0.25)
+            # Both marks now get separated, so this means X and Y w.r.t. reference
+            # are different on both entries.
+            # 0.25 offset probably introduced by fake WCS layer.
+            assert_allclose(mp._obj.marks["imviz-0"].x, [1.25, 0.25])
+            assert_allclose(mp._obj.marks["imviz-0"].y, 0.25)
 
-        mp.clear_table()
-        mp._obj.plugin_opened = False
+            mp.clear_table()
 
 
 class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
