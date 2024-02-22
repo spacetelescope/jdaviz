@@ -233,27 +233,28 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         assert slice_plg.slice == 1
 
 
-def test_cone_aperture(cubeviz_helper, spectrum1d_cube_largest):
+@pytest.mark.parametrize(
+    ('aperture_method', 'expected_flux_1000', 'expected_flux_2400'),
+    [('Exact', [16.51429064, 16.52000853, 16.52572818, 16.53145005, 16.53717344, 16.54289928,
+                16.54862712, 16.55435647, 16.56008781, 16.56582186],
+      [26.812409, 26.821692, 26.830979, 26.840268, 26.849561, 26.858857,
+       26.868156, 26.877459, 26.886765, 26.896074]),
+     ('Subpixel', [16.84000006] * 10, [26.92] * 10),
+     ('Center', [21] * 10, [25] * 10)]
+)
+def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
+                                              aperture_method, expected_flux_1000,
+                                              expected_flux_2400):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(1, 1), radius=0.5)])
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
-    slice_plg = cubeviz_helper.plugins['Slice']
 
     extract_plg.aperture = 'Subset 1'
-    extract_plg.aperture_method.selected = "Exact"
+    extract_plg.aperture_method.selected = aperture_method
     extract_plg.wavelength_dependent = True
 
-    slice_plg.slice = 1
-    extract_plg._obj.vue_adopt_slice_as_reference()
-    cone_aperture = extract_plg._obj.cone_aperture()
-    assert cone_aperture.shape == (2, 4, 1000)
+    collapsed_spec_2 = extract_plg.collapse_to_spectrum()
 
-    # Make sure that the cone created when the reference slice is 988 is different
-    # to the cone made at reference slice 1.
-    slice_plg.slice = 988
-    extract_plg._obj.vue_adopt_slice_as_reference()
-    cone_aperture_2 = extract_plg._obj.cone_aperture()
-
-    with pytest.raises(AssertionError, match="Arrays are not equal"):
-        np.testing.assert_array_equal(cone_aperture, cone_aperture_2)
+    np.testing.assert_allclose(collapsed_spec_2.flux.value[1000:1010], expected_flux_1000, atol=1e-9)
+    np.testing.assert_allclose(collapsed_spec_2.flux.value[2400:2410], expected_flux_2400, atol=1e-9)

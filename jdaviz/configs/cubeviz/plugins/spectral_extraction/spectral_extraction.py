@@ -7,7 +7,7 @@ import astropy
 import astropy.units as u
 from astropy.utils.decorators import deprecated
 from astropy.nddata import (
-    NDDataArray, StdDevUncertainty, NDUncertainty
+    NDDataArray, StdDevUncertainty, NDUncertainty, NDData, NDDataRef
 )
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 from photutils.aperture import CircularAperture
@@ -230,7 +230,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 uncertainties = uncert_cube.get_subset_object(
                     subset_id=self.aperture.selected, cls=StdDevUncertainty
                 )
-            mask = self.cone_aperture()
+            # Returns an NDDataArray cube with the exact slice mask
+            # in the `data` attribute and the boolean version of the mask
+            # in the `mask` attribute
+            cone_mask = self.cone_aperture()
+            if self.aperture_method_selected.lower() == 'center':
+                flux = nddata.data << nddata.unit
+            else:
+                # Apply the fractional pixel array to the flux cube
+                flux = (cone_mask.data * nddata.data) << nddata.unit
+            mask = cone_mask.mask
 
         elif self.aperture.selected != self.aperture.default_text:
             nddata = spectral_cube.get_subset_object(
@@ -240,11 +249,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 uncertainties = uncert_cube.get_subset_object(
                     subset_id=self.aperture.selected, cls=StdDevUncertainty
                 )
+            flux = nddata.data << nddata.unit
             mask = nddata.mask
         else:
             nddata = spectral_cube.get_object(cls=NDDataArray)
             if uncert_cube:
                 uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
+            flux = nddata.data << nddata.unit
             mask = nddata.mask
         # Use the spectral coordinate from the WCS:
         if '_orig_spec' in spectral_cube.meta:
@@ -252,12 +263,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             wcs = spectral_cube.coords.spectral
 
-        flux = nddata.data << nddata.unit
-
         nddata_reshaped = NDDataArray(
             flux, mask=mask, uncertainty=uncertainties, wcs=wcs, meta=nddata.meta
         )
-
         # by default we want to use operation_ignores_mask=True in nddata:
         kwargs.setdefault("operation_ignores_mask", True)
         # by default we want to propagate uncertainties:
@@ -288,7 +296,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             uncertainty=uncertainty,
             mask=mask
         )
-
         # stuff for exporting to file
         self.extracted_spec = collapsed_spec
         self.extracted_spec_available = True
@@ -320,7 +327,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                color="error", sender=self))
             return
 
-        masks_float_values = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
+        masks_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
+        masks_bool_values = np.ones_like(flux_cube.flux.value, dtype=bool)
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
@@ -336,11 +344,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         for index, radius in enumerate(radii):
             aperture = CircularAperture(center, r=radius)
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
-            # FIXME: ~(slice_mask > 0) changes the float values to boolean
-            # but looks like you need zeroes to indicate "good" pixels, so not
-            # sure how you want to do this with "fractional" coverage from photutils.
-            masks_float_values[:, :, index] = ~(slice_mask > 0)
-        return masks_float_values
+            # Send exact fractional pixel array in the `data` attribute
+            # and the boolean mask in the `mask` attribute
+            masks_bool_values[:, :, index] = ~(slice_mask > 0)
+            masks_weights[:, :, index] = slice_mask
+        return NDDataArray(data=masks_weights, mask=masks_bool_values)
 
     def vue_spectral_extraction(self, *args, **kwargs):
         self.collapse_to_spectrum(add_data=True)
