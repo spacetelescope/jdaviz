@@ -1,8 +1,14 @@
 <template>
   <v-btn :disabled="spinner || disabled"
     text
-    :color="results_isolated_to_plugin ? 'primary' : 'accent'"
-    @click="$emit('click')"
+      :color="results_isolated_to_plugin
+        ? (this.$vuetify.theme.dark
+          ? this.$vuetify.theme.themes.dark.primary
+          : this.$vuetify.theme.themes.light.primary)
+        : (this.$vuetify.theme.dark
+          ? this.$vuetify.theme.themes.dark.accent
+          : this.$vuetify.theme.themes.light.accent)"
+      @click="$emit('click')"
   >
     <v-progress-circular
       v-if="spinner"
