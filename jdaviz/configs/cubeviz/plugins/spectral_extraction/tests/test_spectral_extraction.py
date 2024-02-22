@@ -256,5 +256,7 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
 
     collapsed_spec_2 = extract_plg.collapse_to_spectrum()
 
-    np.testing.assert_allclose(collapsed_spec_2.flux.value[1000:1010], expected_flux_1000, atol=1e-9)
-    np.testing.assert_allclose(collapsed_spec_2.flux.value[2400:2410], expected_flux_2400, atol=1e-9)
+    np.testing.assert_allclose(collapsed_spec_2.flux.value[1000:1010], expected_flux_1000,
+                               atol=1e-9)
+    np.testing.assert_allclose(collapsed_spec_2.flux.value[2400:2410], expected_flux_2400,
+                               atol=1e-9)

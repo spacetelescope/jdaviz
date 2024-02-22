@@ -7,7 +7,7 @@ import astropy
 import astropy.units as u
 from astropy.utils.decorators import deprecated
 from astropy.nddata import (
-    NDDataArray, StdDevUncertainty, NDUncertainty, NDData, NDDataRef
+    NDDataArray, StdDevUncertainty, NDUncertainty
 )
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 from photutils.aperture import CircularAperture
