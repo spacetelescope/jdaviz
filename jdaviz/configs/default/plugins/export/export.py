@@ -35,7 +35,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, DatasetMultiSelectMixin, Mu
     viewer_format_items = List().tag(sync=True)
     viewer_format_selected = Unicode().tag(sync=True)
 
-    # For Cubeviz movie.
+    filename = Unicode().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

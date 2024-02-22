@@ -12,7 +12,7 @@
     ></j-multiselect-toggle>
 
     <div v-if="dev_dataset_support">
-      <j-plugin-section-header>Data</j-plugin-section-header>
+      <j-plugin-section-header style="margin-top: 12px">Data</j-plugin-section-header>
       <plugin-inline-select
       :items="dataset_items"
       :selected.sync="dataset_selected"
@@ -53,7 +53,17 @@
       >
       </plugin-inline-select>
     </div>
-    
+
+    <v-row>
+        <v-text-field
+        v-model="filename"
+        label="Filename"
+        hint="Export to a file on disk"
+        :rules="[() => !!filename || 'This field is required']"
+        persistent-hint>
+        </v-text-field>
+    </v-row>
+
     <v-row justify="end">
       <plugin-action-button :results_isolated_to_plugin="true">
         Export
