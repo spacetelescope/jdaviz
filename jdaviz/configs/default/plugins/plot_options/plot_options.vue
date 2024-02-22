@@ -472,10 +472,20 @@
             label="Colormap"
             dense
           ></v-select>
-              <v-alert v-if="image_colormap_value == 'Random'" type='warning' style="margin-left: -12px; margin-right: -12px">
-                Note: on selecting the "Random" colormap, the stretch percentile preset
-                is set to min/max and the stretch function is set to linear.
+              <v-alert v-if="image_colormap_value == 'Random' && (stretch_function_value !== 'linear' || stretch_preset_value !== 100)" type='warning' style="margin-left: -12px; margin-right: -12px">
+                Note for image segmentation maps: "Random" gives unique colors when
+                the stretch percentile preset is min/max and the stretch function is
+                linear. Click below to choose these settings.
+                <v-row justify='end'>
+                <plugin-action-button
+                  :results_isolated_to_plugin="true"
+                  @click="random_cmap_limit_update"
+                >
+                  Image segmentation map
+                </plugin-action-button>
+                </v-row>
               </v-alert>
+
         </glue-state-sync-wrapper>
         <glue-state-sync-wrapper v-if="image_color_mode_value !== 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_color')">
           <div>

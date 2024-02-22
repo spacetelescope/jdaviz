@@ -410,7 +410,9 @@ def test_segmentation_image(imviz_helper):
     plot_opts = imviz_helper.plugins['Plot Options']
     plot_opts.image_colormap = 'Random'
 
-    # ensure that stretch preset is listening to the update to the
-    # random colormap so that all colors are uniquely displayed:
+    # ensure that stretch preset is adjusted when the image segmentaiton
+    # option is selected for the "Random" colormap, so that all colors
+    # are uniquely displayed:
+    plot_opts._obj._random_cmap_limit_update()
     assert plot_opts.stretch_preset.value == 100
     assert plot_opts.stretch_function.value == 'linear'
