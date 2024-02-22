@@ -38,9 +38,6 @@ class Slice(PluginTemplateMixin):
       Value (wavelength or frequency) of the current slice.  When setting this directly, it will
       update automatically to the value corresponding to the nearest slice, if ``snap_to_slice`` is
       enabled.
-    * ``snap_to_slice``
-      Whether the indicator (and ``value``) should snap to the value of the nearest slice in the
-      cube.
     * ``show_indicator``
       Whether to show indicator in spectral viewer when slice tool is inactive.
     * ``show_value``
@@ -49,6 +46,8 @@ class Slice(PluginTemplateMixin):
     _cube_viewer_cls = CubevizImageView
     _cube_viewer_default_label = 'flux-viewer'
     cube_viewer_exists = Bool(True).tag(sync=True)
+
+    allow_disable_snapping = Bool(False).tag(sync=True)  # noqa internal use to show and allow disabling snap-to-slice
 
     template_file = __file__, "slice.vue"
     value = FloatHandleEmpty().tag(sync=True)
@@ -167,9 +166,12 @@ class Slice(PluginTemplateMixin):
     @property
     def user_api(self):
         # NOTE: remove slice, wavelength, show_wavelength after deprecation period
-        return PluginUserApi(self, expose=('slice', 'wavelength', 'show_wavelength',
-                                           'value',
-                                           'snap_to_slice', 'show_indicator', 'show_value'))
+        expose = ['slice', 'wavelength', 'show_wavelength',
+                  'value',
+                  'show_indicator', 'show_value']
+        if self.allow_disable_snapping:
+            expose += ['snap_to_slice']
+        return PluginUserApi(self, expose=expose)
 
     def _check_if_cube_viewer_exists(self, *args):
         for viewer in self.app._viewer_store.values():

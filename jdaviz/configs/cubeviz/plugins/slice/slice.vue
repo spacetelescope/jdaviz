@@ -11,7 +11,7 @@
             <span style="padding: 6px">Indicator Settings</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row>
+            <v-row v-if="allow_disable_snapping">
               <v-switch
                 label="Snap to Slice"
                 hint="Snap indicator (and value) to the nearest slice in the cube."
