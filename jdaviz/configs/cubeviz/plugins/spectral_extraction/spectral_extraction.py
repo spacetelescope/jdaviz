@@ -230,15 +230,18 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 uncertainties = uncert_cube.get_subset_object(
                     subset_id=self.aperture.selected, cls=StdDevUncertainty
                 )
-            # Exact slice mask of cone aperture through the cube
+            # Exact slice mask of cone aperture through the cube. `cone_mask` is
+            # a 3D array with fractions of each pixel within an aperture at each 
+            # wavelength, on the range [0, 1].
             cone_mask = self.cone_aperture()
             if self.aperture_method_selected.lower() == 'center':
                 flux = nddata.data << nddata.unit
             else:
                 # Apply the fractional pixel array to the flux cube
                 flux = (cone_mask * nddata.data) << nddata.unit
-            # Boolean mask cube that represents the cone aperture
-            mask = ~(cone_mask > 0)
+            # Boolean cube which is True outside of the aperture
+            # (i.e., the numpy boolean mask convention)
+            mask = np.isclose(cone_mask, 0)
 
         elif self.aperture.selected != self.aperture.default_text:
             nddata = spectral_cube.get_subset_object(
@@ -333,7 +336,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                   self.aperture.selected_spatial_region.center.x)
 
         # Loop through cube and create cone aperture at each wavelength. Then convert that to a
-        # mask using the selected aperture method and add that to a mask cube.
+        # weight array using the selected aperture method, and add it to a weight cube.
         # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
         radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
                  self.aperture.selected_spatial_region.radius)
