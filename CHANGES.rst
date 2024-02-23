@@ -116,7 +116,28 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-3.8.2 (unreleased)
+3.8.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.8.2 (2024-02-23)
 ==================
 
 Bug Fixes
@@ -136,18 +157,6 @@ Cubeviz
 
 - Fixed a bug where cube model fitting could fail (endless spinner) if input cube
   has invalid 3D WCS. [#2685]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.8.1 (2023-12-21)
 ==================
