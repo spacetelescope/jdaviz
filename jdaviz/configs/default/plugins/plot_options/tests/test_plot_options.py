@@ -413,6 +413,8 @@ def test_segmentation_image(imviz_helper):
     # ensure that stretch preset is adjusted when the image segmentaiton
     # option is selected for the "Random" colormap, so that all colors
     # are uniquely displayed:
-    plot_opts._obj._random_cmap_limit_update()
+    plot_opts._obj.image_segmentation_map_presets()
     assert plot_opts.stretch_preset.value == 100
     assert plot_opts.stretch_function.value == 'linear'
+    assert plot_opts.image_bias.value == 0.5
+    assert plot_opts.image_contrast.value == 1.0

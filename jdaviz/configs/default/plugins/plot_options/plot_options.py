@@ -1166,15 +1166,18 @@ class PlotOptions(PluginTemplateMixin):
 
         return np.all([_is_image_viewer(viewer) for viewer in viewers])
 
-    def _random_cmap_limit_update(self, *args, **kwargs):
+    def image_segmentation_map_presets(self, *args, **kwargs):
         # if 'Random' colormap is used for visualizing image segmentation,
-        # ensure the stretch limits are the min and max, so all label colors
-        # are unique:
+        # ensure the stretch limits are the min and max, the stretch function
+        # is linear, the contrast is 1.0, and the bias is 0.5. This ensures
+        # that all label colors are unique:
         if self.image_colormap_value != 'Random':
             return
 
         self.stretch_preset.value = 100
         self.stretch_function.value = 'linear'
+        self.image_contrast_value = 1
+        self.image_bias_value = 0.5
 
-    def vue_random_cmap_limit_update(self, *args, **kwargs):
-        self._random_cmap_limit_update(*args, **kwargs)
+    def vue_image_segmentation_map_presets(self, *args, **kwargs):
+        self.image_segmentation_map_presets(*args, **kwargs)
