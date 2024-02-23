@@ -245,9 +245,13 @@ Plot uncertainties
 Toggle on to view uncertainties attached to the spectrum, if any.
 
 From the API
-^^^^^^^^^^^^
+------------
+
+Here is an example on how to set the plot options from the API.
 
 .. code-block:: python
 
     plot_options = specviz.plugins['Plot Options']
+    plotopt.line_color = 'blue'
+    plotopt.line_width = 3
     plot_options.uncertainty_visible = True
