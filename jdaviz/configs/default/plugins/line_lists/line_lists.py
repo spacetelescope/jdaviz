@@ -524,7 +524,8 @@ class LineListTool(PluginTemplateMixin):
         self.send_state('loaded_lists')
         self.send_state('list_contents')
 
-        self._viewer.plot_spectral_lines(tmp_names_rest)
+        self._viewer.plot_spectral_lines(tmp_names_rest, global_redshift=self._global_redshift
+                                         if self._global_redshift != 0 else None)
         self.update_line_mark_dict()
 
         msg_text = ("Spectral lines loaded from notebook. Lines can be hidden"
@@ -664,7 +665,8 @@ class LineListTool(PluginTemplateMixin):
         self.list_contents = lc
         self.send_state('list_contents')
 
-        self._viewer.plot_spectral_lines()
+        self._viewer.plot_spectral_lines(global_redshift=self._global_redshift
+                                         if self._global_redshift != 0 else None)
         self.update_line_mark_dict()
 
     def vue_hide_all_in_list(self, listname):
@@ -697,7 +699,8 @@ class LineListTool(PluginTemplateMixin):
 
         self.send_state('list_contents')
 
-        self._viewer.plot_spectral_lines()
+        self._viewer.plot_spectral_lines(global_redshift=self._global_redshift
+                                         if self._global_redshift != 0 else None)
         self.update_line_mark_dict()
 
     def vue_erase_all_lines(self, event):
@@ -735,7 +738,8 @@ class LineListTool(PluginTemplateMixin):
         self.list_contents = list_contents
 
         if show:
-            self._viewer.plot_spectral_line(name_rest)
+            self._viewer.plot_spectral_line(name_rest, global_redshift=self._global_redshift
+                                            if self._global_redshift != 0 else None)
         else:
             self._viewer.erase_spectral_lines(name_rest=name_rest)
 

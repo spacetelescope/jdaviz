@@ -42,17 +42,17 @@ class LineListMixin:
             self._default_spectrum_viewer_reference_name
         ).erase_spectral_lines(name=name)
 
-    def plot_spectral_line(self, line):
+    def plot_spectral_line(self, line, global_redshift=None):
         """Convenience function to get to the viewer function"""
         self.app.get_viewer(
             self._default_spectrum_viewer_reference_name
-        ).plot_spectral_line(line)
+        ).plot_spectral_line(line, global_redshift)
 
-    def plot_spectral_lines(self):
+    def plot_spectral_lines(self, global_redshift=None):
         """Convenience function to get to the viewer function"""
         self.app.get_viewer(
             self._default_spectrum_viewer_reference_name
-        ).plot_spectral_lines()
+        ).plot_spectral_lines(global_redshift)
 
     @property
     def spectral_lines(self):
