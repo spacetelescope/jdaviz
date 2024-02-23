@@ -29,8 +29,8 @@ for each button.
 Selecting/Showing Data Sets
 ===========================
 
-Data can be selected and de-selected in each viewer's data menu, opened by clicking the 
-|icon-viewer-data-select| button in the top left of the viewer. Here, you can click a 
+Data can be selected and de-selected in each viewer's data menu, opened by clicking the
+|icon-viewer-data-select| button in the top left of the viewer. Here, you can click a
 checkbox next to the listed data to make the data visible (checked) or invisible (unchecked).
 
 .. image:: img/data_tab.png
@@ -62,6 +62,10 @@ Home
 
 This button will reset your zoom and panning to display the entire image.
 
+Previous zoom is also available by right-clicking on the home icon and selecting
+the previous zoom icon.  This will revert to the last saved zoom state.  Zoom states
+are saved when beginning a zoom selection or when activating a pan/zoom tool.
+
 .. _box-zoom:
 
 Box Zoom
@@ -90,16 +94,6 @@ Interactive Pan/Zoom (Desktop or Notebook Interface)
 You can find the following Pan/Zoom tools available in the viewer toolbar
 on the top right of the viewer.
 
-
-Home
-^^^^
-
-This button will reset your zoom and panning to display the spectrum.
-
-Previous zoom is also available by right-clicking on the home icon and selecting
-the previous zoom icon.  This will revert to the last saved zoom state.  Zoom states
-are saved when beginning a zoom selection or when activating a pan/zoom tool.
-
 .. _image-pan-zoom:
 
 2D Bidirectional Pan/Zoom
@@ -112,6 +106,13 @@ To pan, simply click and drag the window.
 Horizontal/Vertical Zoom
 ^^^^^^^^^^^^^^^^^^^^^^^^
 The |icon-zoom-pan-horiz| (horizontal) and |icon-zoom-pan-vert| (vertical) Zoom tools allow you to zoom along each axis, while locking the other.  You can also zoom by scrolling.
+
+Setting Viewer Bounds
+^^^^^^^^^^^^^^^^^^^^^
+The limits of the x and y axes can be set in the Plot Option plugin using the
+expandable menu "Viewer bounds".
+
+.. image:: img/specviz_plotopt_viewerbounds.png
 
 From the API
 ------------
@@ -173,7 +174,21 @@ and the spectral trace in color, coded to subset number and listed under the sub
 
 Clicking on that selector, you can add more regions by selecting the "create new" entry.
 
-From the API, you can use the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.get_spectral_regions` method:
+From the API
+------------
+You can define a spectral region programmatically, by using the Glue XRangeROI method
+and specifying the bounds of the spectral region (xmin, xmax).
+
+.. code-block:: python
+
+    from glue.core.roi import XRangeROI
+    sv = specviz.app.get_viewer('spectrum-viewer')
+    sv.toolbar_active_subset.selected = []
+    sv.apply_roi(XRangeROI(xmin, xmax))
+
+
+To extract the properties of the defined spectral regions, you can use
+the :py:meth:`~jdaviz.configs.specviz.helper.Specviz.get_spectral_regions` method:
 
 .. image:: img/spectral_region_5.png
 
@@ -183,7 +198,7 @@ Line Selection
 ==============
 
 This button will allow you to click and select a vertical line when multiple
-lines from a line list are over-plotted. Futher analysis can be performed on this
+lines from a line list are over-plotted. Further analysis can be performed on this
 line of interest.
 
 .. seealso::
