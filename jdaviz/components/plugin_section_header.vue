@@ -1,5 +1,5 @@
 <template>
-  <div :class="active ? 'strike strike-active text--secondary': 'strike text--secondary'">
+  <div :class="active ? 'strike strike-active': 'strike'">
      <span>
        <slot></slot>
      </span>
@@ -37,7 +37,7 @@ module.exports = {
     top: 50%;
     width: 9999px;
     height: 1px;
-    background: rgba(0, 0, 0, 0.15);
+    background: gray;
 }
 
 .strike-active > span:before,
