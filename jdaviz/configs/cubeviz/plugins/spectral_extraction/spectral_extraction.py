@@ -277,10 +277,21 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # is always wavelength. This may need adjustment after the following
         # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
         spatial_axes = (0, 1)
-
-        collapsed_nddata = getattr(nddata_reshaped, self.function_selected.lower())(
-            axis=spatial_axes, **kwargs
-        )  # returns an NDDataArray
+        if self.wavelength_dependent and self.function_selected.lower() == 'mean':
+            # Use built-in sum function to collapse NDDataArray
+            collapsed_for_mean = nddata_reshaped.sum(axis=spatial_axes, **kwargs)
+            # Then normalize the flux based on the fractional pixel array
+            flux_for_mean = (collapsed_for_mean.data /
+                             np.sum(cone_mask, axis=spatial_axes)) << nddata_reshaped.unit
+            # Combine that information into a new NDDataArray
+            collapsed_nddata = NDDataArray(flux_for_mean, mask=collapsed_for_mean.mask,
+                                           uncertainty=collapsed_for_mean.uncertainty,
+                                           wcs=collapsed_for_mean.wcs,
+                                           meta=collapsed_for_mean.meta)
+        else:
+            collapsed_nddata = getattr(nddata_reshaped, self.function_selected.lower())(
+                axis=spatial_axes, **kwargs
+            )  # returns an NDDataArray
 
         # Convert to Spectrum1D, with the spectral axis in correct units:
         if hasattr(spectral_cube.coords, 'spectral_wcs'):

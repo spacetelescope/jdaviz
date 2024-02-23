@@ -234,17 +234,19 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
 
 
 @pytest.mark.parametrize(
-    ('aperture_method', 'expected_flux_1000', 'expected_flux_2400'),
+    ('aperture_method', 'expected_flux_1000', 'expected_flux_2400', 'expected_flux_mean'),
     [('Exact', [16.51429064, 16.52000853, 16.52572818, 16.53145005, 16.53717344, 16.54289928,
                 16.54862712, 16.55435647, 16.56008781, 16.56582186],
       [26.812409, 26.821692, 26.830979, 26.840268, 26.849561, 26.858857,
-       26.868156, 26.877459, 26.886765, 26.896074]),
-     ('Subpixel', [16.84000006] * 10, [26.92] * 10),
-     ('Center', [21] * 10, [25] * 10)]
+       26.868156, 26.877459, 26.886765, 26.896074],
+      [0.99999993, 1.00000014, 1.00000011, 0.99999987, 0.99999995, 0.99999995,
+       1.00000007, 1.00000005, 0.99999992, 0.99999996]),
+     ('Subpixel', [16.84000006] * 10, [26.92] * 10, [0.99999988] * 10),
+     ('Center', [21] * 10, [25] * 10, [1] * 10)]
 )
 def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
                                               aperture_method, expected_flux_1000,
-                                              expected_flux_2400):
+                                              expected_flux_2400, expected_flux_mean):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
 
@@ -253,10 +255,17 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
     extract_plg.aperture = 'Subset 1'
     extract_plg.aperture_method.selected = aperture_method
     extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Sum'
 
-    collapsed_spec_2 = extract_plg.collapse_to_spectrum()
+    collapsed_spec = extract_plg.collapse_to_spectrum()
 
-    np.testing.assert_allclose(collapsed_spec_2.flux.value[1000:1010], expected_flux_1000,
+    np.testing.assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000,
                                atol=1e-9)
-    np.testing.assert_allclose(collapsed_spec_2.flux.value[2400:2410], expected_flux_2400,
+    np.testing.assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400,
+                               atol=1e-9)
+
+    extract_plg.function = 'Mean'
+    collapsed_spec_mean = extract_plg.collapse_to_spectrum()
+
+    np.testing.assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean,
                                atol=1e-9)
