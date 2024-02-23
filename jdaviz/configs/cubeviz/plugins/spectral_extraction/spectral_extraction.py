@@ -231,7 +231,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     subset_id=self.aperture.selected, cls=StdDevUncertainty
                 )
             # Exact slice mask of cone aperture through the cube. `cone_mask` is
-            # a 3D array with fractions of each pixel within an aperture at each 
+            # a 3D array with fractions of each pixel within an aperture at each
             # wavelength, on the range [0, 1].
             cone_mask = self.cone_aperture()
             if self.aperture_method_selected.lower() == 'center':
