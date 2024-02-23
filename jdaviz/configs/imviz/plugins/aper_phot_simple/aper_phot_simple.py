@@ -142,8 +142,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
         self.cube_slice = f"{msg.value:.3e} {msg.value_unit}"
         self._cube_wave = u.Quantity(msg.value, msg.value_unit)
-        # TODO: need a way to get from slide value > cube index for the *selected* cube
-#        self._cube_idx = int(msg.slice)
 
     @observe("dataset_selected")
     def _on_dataset_selected_changed(self, event={}):
@@ -306,6 +304,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self._background_selected_changed()
 
+    @property
+    def _cubeviz_slice_ind(self):
+        fv = self.app.get_viewer(self.app._jdaviz_helper._default_flux_viewer_reference_name)
+        return fv.slice
+
     def _calc_background_median(self, reg, data=None):
         # Basically same way image stats are calculated in vue_do_aper_phot()
         # except here we only care about one stat for the background.
@@ -321,7 +324,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         comp = data.get_component(data.main_components[0])
 
         if self.config == "cubeviz" and data.ndim > 2:
-            comp_data = comp.data[:, :, self._cube_idx].T  # nx, ny --> ny, nx
+            comp_data = comp.data[:, :, self._cubeviz_slice_ind].T  # nx, ny --> ny, nx
             # Similar to coords_info logic.
             if '_orig_spec' in getattr(data, 'meta', {}):
                 w = data.meta['_orig_spec'].wcs.celestial
@@ -450,7 +453,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError('Missing or invalid background value')
 
         if self.config == "cubeviz" and data.ndim > 2:
-            comp_data = comp.data[:, :, self._cube_idx].T  # nx, ny --> ny, nx
+            comp_data = comp.data[:, :, self._cubeviz_slice_ind].T  # nx, ny --> ny, nx
             # Similar to coords_info logic.
             if '_orig_spec' in getattr(data, 'meta', {}):
                 w = data.meta['_orig_spec'].wcs
@@ -471,7 +474,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             ycenter = reg.center.y
             if data.coords is not None:
                 if self.config == "cubeviz" and data.ndim > 2:
-                    sky_center = w.pixel_to_world(self._cube_idx, ycenter, xcenter)[1]
+                    sky_center = w.pixel_to_world(self._cubeviz_slice_ind, ycenter, xcenter)[1]
                 else:  # "imviz"
                     sky_center = w.pixel_to_world(xcenter, ycenter)
             else:
