@@ -211,7 +211,7 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         extract_plg._obj.wavelength_dependent = True
         assert mark.x[1] == before_x[1]
 
-        slice_plg.slice = slice_values[1]
+        slice_plg.value = slice_values[1]
         assert mark.x[1] != before_x[1]
 
         extract_plg._obj.vue_goto_reference_wavelength()
