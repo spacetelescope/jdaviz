@@ -81,6 +81,7 @@ Model Fitting
 =============
 
 .. image:: ../img/model_fitting_components.png
+    :alt: Model Fitting plugin
 
 Astropy models can be fit to a spectrum via the Model Fitting plugin.
 Model components are selected via the :guilabel:`Model Component` pulldown menu.
@@ -105,8 +106,34 @@ show the fitted value of each parameter rather than the initial value, and
 will additionally show the standard deviation uncertainty of the fitted
 parameter value if the parameter was not set to be fixed to the initial value.
 
+Form the API
+------------
+
+The model fitting plugin can be run from the API. Here is an example.
+
+.. code-block:: python
+
+    # Open model fitting plugin
+    plugin_mf = specviz.plugins['Model Fitting']
+    plugin_mf.open_in_tray()
+    # Input the appropriate dataset and subset
+    plugin_mf.dataset = 'my spectrum'
+    plugin_mf.spectral_subset = 'Subset 1'
+    # Input the model components
+    plugin_mf.create_model_component(model_component='Linear1D',
+                                     model_component_label='L')
+    plugin_mf.create_model_component(model_component='Gaussian1D',
+                                     model_component_label='G')
+    # Set the initial guess of some model parameters
+    plugin_mf.set_model_component('G', 'stddev', 0.002)
+    plugin_mf.set_model_component('G', 'mean', 2.2729)
+    # Model equation gets populated automatically, but can be overwritten
+    plugin_mf.equation = 'L+G'
+    # Calculate fit
+    plugin_mf.calculate_fit()
+
 Parameter values for each fitting run are stored in the plugin table.
-To export the table into the notebook via the API, call
+To export the table into the notebook, call
 :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
 (see :ref:`plugin-apis`).
 
