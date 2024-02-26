@@ -6,6 +6,7 @@ import astropy.units as u
 from astropy.table import QTable
 from specutils import Spectrum1D
 
+from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import get_available_linelists
 
 
@@ -123,8 +124,7 @@ def test_load_available_preset_lists(specviz_helper, spectrum1d):
 
 
 def test_line_identify(specviz_helper, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d)
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
@@ -141,3 +141,52 @@ def test_line_identify(specviz_helper, spectrum1d):
     ll_plugin.vue_change_visible(('Test List', line, 0))
     assert line.get('show') is False
     assert line.get('identify', False) is False
+
+
+def test_global_redshift_applied(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+
+    # Create a table with redshift included
+    lt = QTable({'linename': ['O III', 'Halpha'],
+                 'rest': [5007, 6563] * u.AA,
+                 'redshift': u.Quantity([0, 0])})
+
+    with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
+        specviz_helper.load_line_list(lt)
+
+    # Load a line, and apply redshift globally
+    specviz_helper.plot_spectral_line("Halpha")
+    specviz_helper.set_redshift(0.01)
+    # Load second line, redshift should also be applied to it
+    specviz_helper.plot_spectral_line("O III")
+
+    viewer_lines = [mark for mark in specviz_helper.app.get_viewer(
+        specviz_helper._default_spectrum_viewer_reference_name).figure.marks
+        if isinstance(mark, SpectralLine)]
+
+    assert np.allclose([line.redshift for line in viewer_lines], 0.01)
+
+
+def test_global_redshift_applied_to_all(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+
+    # Create a table with redshift included
+    lt = QTable({'linename': ['O III', 'Halpha', 'O I'],
+                 'rest': [5007, 6563, 6300] * u.AA,
+                 'redshift': u.Quantity([0, 0, 0])})
+
+    with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
+        specviz_helper.load_line_list(lt)
+
+    # Load a line, so we can apply redshift
+    specviz_helper.plot_spectral_line("Halpha")
+    global_redshift = 0.01
+    specviz_helper.set_redshift(global_redshift)
+    # Load remaining lines
+    specviz_helper.plot_spectral_lines(global_redshift)
+
+    viewer_lines = [mark for mark in specviz_helper.app.get_viewer(
+        specviz_helper._default_spectrum_viewer_reference_name).figure.marks
+        if isinstance(mark, SpectralLine)]
+
+    assert np.allclose([line.redshift for line in viewer_lines], 0.01)
