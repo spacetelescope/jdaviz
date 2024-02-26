@@ -160,6 +160,12 @@
           persistent-hint
         ></v-select>
       </v-row>
+      <v-row v-if="conflicting_aperture_and_function">
+        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          Aperture method Exact cannot be selected along with Min or Max.
+        </span>
+      </v-row>
+
 
 
       <plugin-add-results
@@ -174,7 +180,7 @@
         action_label="Extract"
         action_tooltip="Run spectral extraction with error and mask propagation"
         :action_spinner="spinner"
-        :action_disabled="aperture_selected === bg_selected"
+        :action_disabled="aperture_selected === bg_selected || conflicting_aperture_and_function"
         @click:action="spectral_extraction"
       ></plugin-add-results>
 

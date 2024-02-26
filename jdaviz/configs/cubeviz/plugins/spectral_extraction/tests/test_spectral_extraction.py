@@ -241,7 +241,6 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
        26.868156, 26.877459, 26.886765, 26.896074],
       [0.99999993, 1.00000014, 1.00000011, 0.99999987, 0.99999995, 0.99999995,
        1.00000007, 1.00000005, 0.99999992, 0.99999996]),
-     ('Subpixel', [16.84000006] * 10, [26.92] * 10, [0.99999988] * 10),
      ('Center', [21] * 10, [25] * 10, [1] * 10)]
 )
 def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,

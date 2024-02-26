@@ -84,6 +84,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     aperture_method_items = List().tag(sync=True)
     aperture_method_selected = Unicode('Center').tag(sync=True)
 
+    conflicting_aperture_and_function = Bool(False).tag(sync=True)
+
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported
@@ -120,11 +122,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             selected='function_selected',
             manual_options=['Mean', 'Min', 'Max', 'Sum']
         )
+        self.aperture_method_manual_options = ['Exact', 'Center']
         self.aperture_method = SelectPluginComponent(
             self,
             items='aperture_method_items',
             selected='aperture_method_selected',
-            manual_options=['Exact', 'Subpixel', 'Center']
+            manual_options=self.aperture_method_manual_options
         )
         self._set_default_results_label()
         self.add_results.viewer.filters = ['is_spectrum_viewer']
@@ -200,6 +203,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.background.scale_factor = self.slice_wavelength/self.reference_wavelength
 
+    @observe('function_selected', 'aperture_method_selected')
+    def _update_aperture_method_on_function_change(self, *args):
+        if (self.function_selected.lower() in ['min', 'max'] and
+                self.aperture_method_selected.lower() != 'center'):
+            self.conflicting_aperture_and_function = True
+        else:
+            self.conflicting_aperture_and_function = False
+
     @with_spinner()
     def collapse_to_spectrum(self, add_data=True, **kwargs):
         """
@@ -214,6 +225,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             Additional keyword arguments passed to the NDDataArray collapse operation.
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
+        if self.conflicting_aperture_and_function:
+            self.hub.broadcast(SnackbarMessage("Aperture method Exact cannot be selected"
+                                               " along with Min or Max.",
+                                               color="error", sender=self))
+            return
+
         spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
         uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
         uncertainties = None
@@ -233,7 +250,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Exact slice mask of cone aperture through the cube. `cone_mask` is
             # a 3D array with fractions of each pixel within an aperture at each
             # wavelength, on the range [0, 1].
-            cone_mask = self.cone_aperture()
+            if self.function_selected.lower() in ['min', 'max']:
+                cone_mask = self.cone_aperture().astype(int)
+            else:
+                cone_mask = self.cone_aperture()
             if self.aperture_method_selected.lower() == 'center':
                 flux = nddata.data << nddata.unit
             else:
