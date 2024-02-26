@@ -131,10 +131,12 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
         assert self.viewer.state.reference_data.label == "has_wcs_1[SCI,1]"
         assert viewer_2.state.reference_data.label == "has_wcs_1[SCI,1]"
 
-        # FIXME: https://github.com/spacetelescope/jdaviz/issues/2724
+        # FIXME: spacetelescope/jdaviz#2724 (remove AssertionError)
         lc_plugin.link_type = 'WCS'
-        assert self.viewer.state.reference_data.label == "has_wcs_1[SCI,1]"
-        assert viewer_2.state.reference_data.label == "has_wcs_1[SCI,1]"
+        with pytest.raises(AssertionError):
+            assert self.viewer.state.reference_data.label == "Default orientation"
+        with pytest.raises(AssertionError):
+            assert viewer_2.state.reference_data.label == "Default orientation"
 
     def test_custom_orientation(self):
         lc_plugin = self.imviz.plugins['Orientation']
