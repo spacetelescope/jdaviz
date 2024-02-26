@@ -113,11 +113,15 @@ The limits of the x and y axes can be set in the Plot Option plugin using the
 expandable menu "Viewer bounds".
 
 .. image:: img/specviz_plotopt_viewerbounds.png
+    :alt: Imviz Plot Options viewer bounds
+    :width: 200px
 
 From the API
 ------------
 
 The Specviz helper contains a set of convenience methods to programmatically define the view of the spectrum viewer. You may instantiate a Specviz Helper via::
+
+.. code-block:: python
 
     from jdaviz import Specviz
     # Instantiate an instance of Specviz
