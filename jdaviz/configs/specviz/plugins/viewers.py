@@ -261,7 +261,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             self.toolbar.active_tool = None
         return {'x': fig.interaction.x_scale, 'y': fig.interaction.y_scale}
 
-    def plot_spectral_line(self, line, plot_units=None, **kwargs):
+    def plot_spectral_line(self, line, global_redshift=None, plot_units=None, **kwargs):
         if isinstance(line, str):
             # Try the full index first (for backend calls), otherwise name only
             try:
@@ -271,9 +271,14 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         if plot_units is None:
             plot_units = self.data()[0].spectral_axis.unit
 
+        if global_redshift is None:
+            redshift = self.redshift
+        else:
+            redshift = global_redshift
+
         line_mark = SpectralLine(self,
                                  line['rest'].to_value(plot_units),
-                                 self.redshift,
+                                 redshift,
                                  name=line["linename"],
                                  table_index=line["name_rest"],
                                  colors=[line["colors"]], **kwargs)
@@ -285,7 +290,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         line["show"] = True
         self._broadcast_plotted_lines()
 
-    def plot_spectral_lines(self, colors=["blue"], **kwargs):
+    def plot_spectral_lines(self, colors=["blue"], global_redshift=None, **kwargs):
         """
         Plots a user-provided astropy table of spectral lines in the viewer.
         """
@@ -301,13 +306,18 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         lines = self.spectral_lines
         plot_units = self.data()[0].spectral_axis.unit
 
+        if global_redshift is None:
+            redshift = self.redshift
+        else:
+            redshift = global_redshift
+
         marks = []
         for line, color in zip(lines, colors):
             if not line["show"]:
                 continue
             line = SpectralLine(self,
                                 line['rest'].to_value(plot_units),
-                                redshift=self.redshift,
+                                redshift,
                                 name=line["linename"],
                                 table_index=line["name_rest"],
                                 colors=[color], **kwargs)
