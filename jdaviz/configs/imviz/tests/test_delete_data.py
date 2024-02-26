@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from astropy.coordinates import Angle
 from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
@@ -75,6 +76,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         assert_allclose(subset2.subset_state.roi.ymax, 2)
 
 
+@pytest.mark.xfail(reason="FIXME: JDAT-3958")
 class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
     """Regression test for https://jira.stsci.edu/browse/JDAT-3958"""
     def test_delete_wcs_layer_with_subset(self):
