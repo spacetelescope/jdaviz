@@ -3,7 +3,7 @@ from traitlets import Any, Bool, List, Unicode, observe
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginComponent,
                                         ViewerSelectMixin, DatasetMultiSelectMixin,
-                                        MultiselectMixin)
+                                        SubsetSelectMixin, MultiselectMixin)
 from jdaviz.core.user_api import PluginUserApi
 
 
@@ -11,7 +11,8 @@ __all__ = ['Export']
 
 
 @tray_registry('export', label="Export")
-class Export(PluginTemplateMixin, ViewerSelectMixin, DatasetMultiSelectMixin, MultiselectMixin):
+class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
+             DatasetMultiSelectMixin, MultiselectMixin):
     """
     See the :ref:`Export Plugin Documentation <export>` for more details.
 
@@ -26,11 +27,16 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, DatasetMultiSelectMixin, Mu
 
     # feature flag for cone support
     dev_dataset_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
-    dev_multi_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
+    dev_subset_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_table_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
+    dev_plot_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
+    dev_multi_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
 
     table_items = List().tag(sync=True)
     table_selected = Any().tag(sync=True)
+
+    plot_items = List().tag(sync=True)
+    plot_selected = Any().tag(sync=True)
 
     viewer_format_items = List().tag(sync=True)
     viewer_format_selected = Unicode().tag(sync=True)
@@ -45,6 +51,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, DatasetMultiSelectMixin, Mu
                                            selected='table_selected',
                                            multiselect='multiselect',
                                            manual_options=['table-tst1', 'table-tst2'])
+
+        self.plot = SelectPluginComponent(self,
+                                          items='plot_items',
+                                          selected='plot_selected',
+                                          multiselect='multiselect',
+                                          manual_options=['plot-tst1', 'plot-tst2'])
 
         self.viewer_format = SelectPluginComponent(self,
                                                    items='viewer_format_items',
@@ -63,10 +75,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, DatasetMultiSelectMixin, Mu
 
         if self.dev_dataset_support:
             expose += ['dataset']
-        if self.dev_multi_support:
-            expose += ['multiselect']
+        if self.dev_subset_support:
+            expose += ['subset']
         if self.dev_table_support:
             expose += ['table']
+        if self.dev_plot_support:
+            expose += ['plot']
+        if self.dev_multi_support:
+            expose += ['multiselect']
 
         return PluginUserApi(self, expose=expose)
 
@@ -81,7 +97,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, DatasetMultiSelectMixin, Mu
             # default to just a single viewer
             self._sync_singleselect({'name': 'viewer', 'new': self.viewer_selected})
 
-    @observe('viewer_selected', 'dataset_selected', 'table_selected')
+    @observe('viewer_selected', 'dataset_selected', 'subset_selected',
+             'table_selected', 'plot_selected')
     def _sync_singleselect(self, event):
         if not hasattr(self, 'dataset') or not hasattr(self, 'viewer'):
             # plugin not fully intialized
@@ -92,6 +109,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, DatasetMultiSelectMixin, Mu
         if event.get('new') in ('', []):
             return
         name = event.get('name')
-        for attr in ('viewer_selected', 'dataset_selected', 'table_selected'):
+        for attr in ('viewer_selected', 'dataset_selected', 'subset_selected',
+                     'table_selected', 'plot_selected'):
             if name != attr:
                 setattr(self, attr, '')

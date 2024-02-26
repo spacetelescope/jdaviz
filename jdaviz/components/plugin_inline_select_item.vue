@@ -10,6 +10,9 @@
     </v-btn>
     <span>
       <j-layer-viewer-icon v-if="item.icon" :icon="item.icon" :prevent_invert_if_dark="false"></j-layer-viewer-icon>
+      <v-icon v-else-if="item.color && item.type" left :color="item.color">
+        {{ item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
+      </v-icon>
       {{ item.label }}
     </span>
   </div>

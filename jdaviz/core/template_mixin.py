@@ -63,7 +63,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
            'PluginSubcomponent',
-           'SubsetSelect',
+           'SubsetSelect', 'SubsetSelectMixin',
            'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ApertureSubsetSelect', 'ApertureSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
@@ -1913,6 +1913,42 @@ class SubsetSelect(SelectPluginComponent):
             raise TypeError("This action is only supported on spectral-type subsets")
         else:
             return self.selected_obj.lower, self.selected_obj.upper
+
+
+class SubsetSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the SubsetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``SubsetSelectMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.subset``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-subset-select
+        :items="subset_items"
+        :selected.sync="subset_selected"
+        :show_if_single_entry="true"
+        label="Subset"
+        hint="Select subset."
+      />
+
+    """
+    subset_items = List().tag(sync=True)
+    subset_selected = Any().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subset = SubsetSelect(self,
+                                   'subset_items',
+                                   'subset_selected',
+                                   dataset='dataset' if hasattr(self, 'dataset') else None,
+                                   multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
 
 class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
