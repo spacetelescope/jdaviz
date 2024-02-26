@@ -104,7 +104,8 @@ or to change to subtraction, for example.
 After fitting, the expandable menu for each component model will update to
 show the fitted value of each parameter rather than the initial value, and
 will additionally show the standard deviation uncertainty of the fitted
-parameter value if the parameter was not set to be fixed to the initial value.
+parameter value if the parameter was not set to be fixed to the initial value
+and if the spectrum uncertainty was loaded.
 
 Form the API
 ------------
@@ -159,6 +160,16 @@ Select the flux density unit in the :guilabel:`New Flux Unit` pulldown
 
 Note that this affects the default units in all viewers and plugins, where applicable,
 but does not affect the underlying data.
+
+From the API
+------------
+
+The Unit Conversion plugin can be called from the API:
+
+.. code-block:: python
+
+    unitconv_pl = specviz.plugins['Unit Conversion']
+    unitconv_pl.spectral_unit = 'Angstrom'
 
 .. _line-lists:
 
@@ -253,6 +264,9 @@ will return the data as originally loaded, with the redshift unchanged.
 Line Analysis
 =============
 
+.. image:: ./img/line_analysis_plugin.png
+    :alt: Line Analysis plugin
+
 The Line Analysis plugin returns
 `specutils analysis <https://specutils.readthedocs.io/en/stable/analysis.html>`_
 for a single spectral line.
@@ -272,6 +286,24 @@ The statistics returned include the line centroid, gaussian sigma width, gaussia
 total flux, and equivalent width.
 
 The line flux results are automatically converted to Watts/meter^2, when appropriate.
+
+From the API
+------------
+
+The Line Analysis plugin can be run from the API:
+
+.. code-block:: python
+
+    # Open line analysis plugin
+    plugin_la = specviz.plugins['Line Analysis']
+    plugin_la.open_in_tray()
+    # Input the appropriate spectrum and region
+    plugin_la.dataset = 'my spectrum'
+    plugin_la.spectral_subset = 'Subset 2'
+    # Input the values for the continuum
+    plugin_la.continuum = 'Subset 3'
+    # Return line analysis results
+    plugin_la.get_results()
 
 Redshift from Centroid
 ----------------------
