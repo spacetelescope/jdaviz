@@ -282,8 +282,10 @@ in the spectrum plot while the plugin is open.  The thick line shows the linear 
 is then interpolated into the line region as shown by a thin line.  Alternatively, a custom
 secondary region can be created and selected as the region to fit the linear continuum.
 
-The statistics returned include the line centroid, gaussian sigma width, gaussian FWHM,
-total flux, and equivalent width.
+The properties returned include the line centroid, gaussian sigma width, gaussian FWHM,
+total flux, and equivalent width. Uncertainties on the derived properties are also
+returned. For more information on the algorithms used, refer to the `specutils documentation
+<https://specutils.readthedocs.io/en/stable/analysis.html>`_.
 
 The line flux results are automatically converted to Watts/meter^2, when appropriate.
 
