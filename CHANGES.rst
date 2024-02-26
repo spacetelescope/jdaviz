@@ -122,8 +122,7 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
-- Fix redshifted line lists that were displaying at rest wavelengths. Global redshift
-  used, this will be refactored in the future when setting redshift per-line or per-list. [#2726]
+- Fix redshifted line lists that were displaying at rest wavelengths, by assuming a global redshift. [#2726]
 
 Cubeviz
 ^^^^^^^
