@@ -124,8 +124,7 @@ def test_load_available_preset_lists(specviz_helper, spectrum1d):
 
 
 def test_line_identify(specviz_helper, spectrum1d):
-    label = "Test 1D Spectrum"
-    specviz_helper.load_data(spectrum1d, data_label=label)
+    specviz_helper.load_data(spectrum1d)
 
     lt = QTable()
     lt['linename'] = ['O III', 'Halpha']
@@ -145,15 +144,12 @@ def test_line_identify(specviz_helper, spectrum1d):
 
 
 def test_global_redshift_applied(specviz_helper, spectrum1d):
-    spec = Spectrum1D(flux=np.random.rand(100)*u.Jy,
-                      spectral_axis=np.arange(6000, 7000, 10)*u.AA)
-    specviz_helper.load_data(spec)
+    specviz_helper.load_data(spectrum1d)
 
     # Create a table with redshift included
-    lt = QTable()
-    lt['linename'] = ['O III', 'Halpha']
-    lt['rest'] = [5000., 6000.]*u.AA
-    lt['redshift'] = u.Quantity([0.0, 0.0])
+    lt = QTable({'linename': ['O III', 'Halpha'],
+                 'rest': [5007, 6563] * u.AA,
+                 'redshift': u.Quantity([0, 0])})
 
     with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
         specviz_helper.load_line_list(lt)
@@ -168,20 +164,16 @@ def test_global_redshift_applied(specviz_helper, spectrum1d):
         specviz_helper._default_spectrum_viewer_reference_name).figure.marks
         if isinstance(mark, SpectralLine)]
 
-    assert viewer_lines[0].redshift == 0.01
-    assert viewer_lines[1].redshift == 0.01
+    assert np.allclose([line.redshift for line in viewer_lines], 0.01)
 
 
 def test_global_redshift_applied_to_all(specviz_helper, spectrum1d):
-    spec = Spectrum1D(flux=np.random.rand(100)*u.Jy,
-                      spectral_axis=np.arange(6000, 7000, 10)*u.AA)
-    specviz_helper.load_data(spec)
+    specviz_helper.load_data(spectrum1d)
 
     # Create a table with redshift included
-    lt = QTable()
-    lt['linename'] = ['O III', 'Halpha', 'O III']
-    lt['rest'] = [5000., 6000., 7000.]*u.AA
-    lt['redshift'] = u.Quantity([0.0, 0.0, 0.0])
+    lt = QTable({'linename': ['O III', 'Halpha', 'O I'],
+                 'rest': [5007, 6563, 6300] * u.AA,
+                 'redshift': u.Quantity([0, 0, 0])})
 
     with pytest.warns(UserWarning, match='per line/list redshifts not supported, use viz.set_redshift'):  # noqa
         specviz_helper.load_line_list(lt)
@@ -197,6 +189,4 @@ def test_global_redshift_applied_to_all(specviz_helper, spectrum1d):
         specviz_helper._default_spectrum_viewer_reference_name).figure.marks
         if isinstance(mark, SpectralLine)]
 
-    assert viewer_lines[0].redshift == 0.01
-    assert viewer_lines[1].redshift == 0.01
-    assert viewer_lines[2].redshift == 0.01
+    assert np.allclose([line.redshift for line in viewer_lines], 0.01)

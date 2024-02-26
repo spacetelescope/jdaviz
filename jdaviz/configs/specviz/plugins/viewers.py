@@ -271,7 +271,10 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         if plot_units is None:
             plot_units = self.data()[0].spectral_axis.unit
 
-        redshift = self.redshift if global_redshift is None else global_redshift
+        if global_redshift is None:
+            redshift = self.redshift
+        else:
+            redshift = global_redshift
 
         line_mark = SpectralLine(self,
                                  line['rest'].to_value(plot_units),
@@ -303,7 +306,10 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         lines = self.spectral_lines
         plot_units = self.data()[0].spectral_axis.unit
 
-        redshift = self.redshift if global_redshift is None else global_redshift
+        if global_redshift is None:
+            redshift = self.redshift
+        else:
+            redshift = global_redshift
 
         marks = []
         for line, color in zip(lines, colors):
