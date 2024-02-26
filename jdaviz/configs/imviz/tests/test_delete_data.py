@@ -2,7 +2,6 @@ import numpy as np
 from astropy.coordinates import Angle
 from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
-from glue.core.message import DataCollectionDeleteMessage
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion, EllipsePixelRegion
 
@@ -93,10 +92,8 @@ class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
         # Switch back to Default Orientation.
         self.imviz.app._change_reference_data("Default orientation")
 
-        # Delete N-up E-left reference data.
-        self.imviz.app._on_data_deleted(DataCollectionDeleteMessage(
-            data=self.imviz.app.data_collection["North-up, East-left"],
-            sender=self.imviz.app.data_collection))
+        # Delete N-up E-left reference data from GUI.
+        self.imviz.app.vue_data_item_remove({"item_name": "North-up, East-left"})
 
         # Make sure rotated ellipse is still the same as before.
         out_reg_d = self.imviz.app.get_subsets(include_sky_region=True)['Subset 1'][0]['sky_region']
