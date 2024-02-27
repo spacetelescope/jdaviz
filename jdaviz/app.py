@@ -1993,9 +1993,14 @@ class Application(VuetifyTemplate, HubListener):
 
     def vue_data_item_remove(self, event):
 
+        print(event)
         data_label = event['item_name']
         data = self.data_collection[data_label]
-        self._reparent_subsets(data)
+        if self.config == "imviz":
+            orient = self._jdaviz_helper.plugins["Orientation"].orientation.selected
+            self._reparent_subsets(data, new_parent=orient)
+        else:
+            self._reparent_subsets(data)
 
         # Make sure the data isn't loaded in any viewers
         for viewer_id in self._viewer_store:
