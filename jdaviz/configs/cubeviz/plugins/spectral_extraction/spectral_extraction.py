@@ -346,13 +346,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                                           statistic=None)
         # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
         display_unit = flux_cube.spectral_axis.unit
-        if display_unit.physical_type != 'length':
-            self.hub.broadcast(SnackbarMessage('Spectral axis unit physical type is '
-                                               f'{display_unit.physical_type}, must be length',
-                                               color="error", sender=self))
-            return
-
-        mask_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
@@ -365,6 +358,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         aper_method = self.aperture_method_selected.lower()
         if self.wavelength_dependent:
             # Cone aperture
+            if display_unit.physical_type != 'length':
+                error_msg = (f'Spectral axis unit physical type is {display_unit.physical_type},'
+                             f' must be length for cone aperture')
+                self.hub.broadcast(SnackbarMessage(error_msg, color="error", sender=self))
+                raise ValueError(error_msg)
+            mask_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
             radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
                      self.aperture.selected_spatial_region.radius)
             for index, radius in enumerate(radii):
