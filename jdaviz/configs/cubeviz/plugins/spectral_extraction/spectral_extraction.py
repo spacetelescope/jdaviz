@@ -353,6 +353,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         im_shape = (flux_cube.shape[0], flux_cube.shape[1])
         aper_method = self.aperture_method_selected.lower()
+        radius = self.aperture.selected_spatial_region.radius
         if self.wavelength_dependent:
             # Cone aperture
             if display_unit.physical_type != 'length':
@@ -363,18 +364,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
             # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit
             #  conversion.
-            radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
-                     self.aperture.selected_spatial_region.radius)
+            radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) * radius)
             # Loop through cube and create cone aperture at each wavelength. Then convert that to a
             # weight array using the selected aperture method, and add it to a weight cube.
-            for index, radius in enumerate(radii):
-                aperture = CircularAperture(center, r=radius)
+            for index, cone_radius in enumerate(radii):
+                aperture = CircularAperture(center, r=cone_radius)
                 slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
                 # Add slice mask to fractional pixel array
                 mask_weights[:, :, index] = slice_mask
         else:
             # Cylindrical aperture
-            radius = self.aperture.selected_spatial_region.radius
             aperture = CircularAperture(center, r=radius)
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
