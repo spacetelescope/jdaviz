@@ -231,7 +231,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.hub.broadcast(SnackbarMessage(self.conflicting_aperture_error_message,
                                                color="error", sender=self))
             raise ValueError(self.conflicting_aperture_error_message)
-            return
 
         spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
         uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
@@ -252,14 +251,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Exact slice mask of cone or cylindrical aperture through the cube. `shape_mask` is
             # a 3D array with fractions of each pixel within an aperture at each
             # wavelength, on the range [0, 1].
-            if self.function_selected.lower() in ['min', 'max'] and self.wavelength_dependent:
-                shape_mask = self.cone_aperture().astype(int)
-            elif self.function_selected.lower() in ['min', 'max']:
-                shape_mask = self.cylindrical_aperture().astype(int)
-            elif self.wavelength_dependent:
-                shape_mask = self.cone_aperture()
-            else:
-                shape_mask = self.cylindrical_aperture()
+            shape_mask = self.get_aperture()
+
+            if self.function_selected.lower() in ['min', 'max']:
+                shape_mask = shape_mask.astype(int)
 
             if self.aperture_method_selected.lower() == 'center':
                 flux = nddata.data << nddata.unit
@@ -269,17 +264,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Boolean cube which is True outside of the aperture
             # (i.e., the numpy boolean mask convention)
             mask = np.isclose(shape_mask, 0)
-
-        elif self.aperture.selected != self.aperture.default_text:
-            nddata = spectral_cube.get_subset_object(
-                subset_id=self.aperture.selected, cls=NDDataArray
-            )
-            if uncert_cube:
-                uncertainties = uncert_cube.get_subset_object(
-                    subset_id=self.aperture.selected, cls=StdDevUncertainty
-                )
-            flux = nddata.data << nddata.unit
-            mask = nddata.mask
         else:
             nddata = spectral_cube.get_object(cls=NDDataArray)
             if uncert_cube:
@@ -306,12 +290,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         spatial_axes = (0, 1)
         if self.function_selected.lower() == 'mean':
             # Use built-in sum function to collapse NDDataArray
-            collapsed_for_mean = nddata_reshaped.sum(axis=spatial_axes, **kwargs)
+            collapsed_sum_for_mean = nddata_reshaped.sum(axis=spatial_axes, **kwargs)
             # But we still need the mean function for everything except flux
             collapsed_as_mean = nddata_reshaped.mean(axis=spatial_axes, **kwargs)
 
             # Then normalize the flux based on the fractional pixel array
-            flux_for_mean = (collapsed_for_mean.data /
+            flux_for_mean = (collapsed_sum_for_mean.data /
                              np.sum(shape_mask, axis=spatial_axes)) << nddata_reshaped.unit
             # Combine that information into a new NDDataArray
             collapsed_nddata = NDDataArray(flux_for_mean, mask=collapsed_as_mean.mask,
@@ -357,6 +341,47 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.hub.broadcast(snackbar_message)
 
         return collapsed_spec
+
+    def get_aperture(self):
+        # Retrieve flux cube and create an array to represent the cone mask
+        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
+                                                                          statistic=None)
+        # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
+        display_unit = flux_cube.spectral_axis.unit
+        if display_unit.physical_type != 'length':
+            self.hub.broadcast(SnackbarMessage('Spectral axis unit physical type is '
+                                               f'{display_unit.physical_type}, must be length',
+                                               color="error", sender=self))
+            return
+
+        mask_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
+
+        # Center is reverse coordinates
+        center = (self.aperture.selected_spatial_region.center.y,
+                  self.aperture.selected_spatial_region.center.x)
+
+        # Loop through cube and create cone aperture at each wavelength. Then convert that to a
+        # weight array using the selected aperture method, and add it to a weight cube.
+        # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
+        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
+        aper_method = self.aperture_method_selected.lower()
+        if self.wavelength_dependent:
+            # Cone aperture
+            radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
+                     self.aperture.selected_spatial_region.radius)
+            for index, radius in enumerate(radii):
+                aperture = CircularAperture(center, r=radius)
+                slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
+                # Add slice mask to fractional pixel array
+                mask_weights[:, :, index] = slice_mask
+        else:
+            # Cylindrical aperture
+            radius = self.aperture.selected_spatial_region.radius
+            aperture = CircularAperture(center, r=radius)
+            slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
+            # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
+            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=2)
+        return mask_weights
 
     def cone_aperture(self):
         # Retrieve flux cube and create an array to represent the cone mask

@@ -240,7 +240,7 @@ def spectrum1d_cube_larger():
 
 @pytest.fixture
 def spectrum1d_cube_largest():
-    flux = np.ones((30, 30, 3001)).astype(int)
+    flux = np.ones((30, 30, 3001))
 
     wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
                 "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
