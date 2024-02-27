@@ -54,7 +54,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
         mp = self.imviz.plugins['Markers']
 
         with mp.as_active():
-            # (0, 0) on second image.
+            # (1, 0) on second image but same sky coordinates as (0, 0) on first.
             label_mouseover._viewer_mouse_event(
                 self.viewer, {'event': 'mousemove', 'domain': {'x': 1, 'y': 0}})
             mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
