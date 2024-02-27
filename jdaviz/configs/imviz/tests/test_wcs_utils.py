@@ -10,7 +10,7 @@ from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz import wcs_utils
 from jdaviz.configs.imviz.helper import base_wcs_layer_label
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_GWCS
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_GWCS, create_example_gwcs
 
 
 def test_simple_fits_wcs():
@@ -161,3 +161,15 @@ def test_get_rotated_nddata_from_label_no_wcs(imviz_helper):
     imviz_helper.load_data(a, data_label="no_wcs")
     with pytest.raises(ValueError, match=r".*has no WCS for rotation"):
         wcs_utils._get_rotated_nddata_from_label(imviz_helper.app, "no_wcs", 0 * u.deg)
+
+
+def test_compute_scale():
+    # NOTE: compute_scale does not work with FITS WCS.
+    image_gwcs = create_example_gwcs((10, 10))
+    fiducial = [197.8925, -1.36555556] * u.deg
+
+    pixscale = wcs_utils.compute_scale(image_gwcs, fiducial, None)
+    assert_allclose(pixscale, 3.0555555555555554e-05)
+
+    pixscale = wcs_utils.compute_scale(image_gwcs, fiducial, None, pscale_ratio=1e+5)
+    assert_allclose(pixscale, 3.0555555555555554)

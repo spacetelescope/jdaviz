@@ -564,7 +564,7 @@ def compute_scale(wcs, fiducial, disp_axis, pscale_ratio=1):
     """
     spectral = 'SPECTRAL' in wcs.output_frame.axes_type
 
-    if spectral and disp_axis is None:
+    if spectral and disp_axis is None:  # pragma: no cover
         raise ValueError('If input WCS is spectral, a disp_axis must be given')
 
     crpix = np.array(wcs.invert(*fiducial))
@@ -588,7 +588,7 @@ def compute_scale(wcs, fiducial, disp_axis, pscale_ratio=1):
         xscale *= pscale_ratio
         yscale *= pscale_ratio
 
-    if spectral:
+    if spectral:  # pragma: no cover
         # Assuming scale doesn't change with wavelength
         # Assuming disp_axis is consistent with DataModel.meta.wcsinfo.dispersion.direction
         return yscale if disp_axis == 1 else xscale
