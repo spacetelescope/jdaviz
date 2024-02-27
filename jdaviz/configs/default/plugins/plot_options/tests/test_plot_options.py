@@ -288,8 +288,16 @@ def test_apply_presets(imviz_helper):
     po.apply_RGB_presets()
 
     assert po.layer.selected == "array_3"
+    assert po.stretch_function.value == "arcsinh"
+    po.layer = "array_5"
+    # Make sure this one didn't change
+    assert po.stretch_function.value == "linear"
 
-    colorbar_colors = matplotlib.colormaps['gist_rainbow'].resampled(7)
+    # Turn layer 5 back on
+    po.image_visible = True
+    po.apply_RGB_presets()
+
+    colorbar_colors = matplotlib.colormaps['gist_rainbow'].resampled(8)
     color_ind = 0
 
     def _rgb_to_hex(rgb):
@@ -298,15 +306,11 @@ def test_apply_presets(imviz_helper):
 
     for i in range(8):
         po.layer = f"array_{i}"
-        if i == 5:
-            # Make sure this one didn't change
-            assert po.stretch_function.value == "linear"
-        else:
-            assert po.stretch_function.value == "arcsinh"
-            assert po.stretch_preset.value == 99
-            assert po.image_color.value == matplotlib.colors.to_hex(colorbar_colors(color_ind),
-                                                                    keep_alpha=True)
-            color_ind += 1
+        assert po.stretch_function.value == "arcsinh"
+        assert po.stretch_preset.value == 99
+        assert po.image_color.value == matplotlib.colors.to_hex(colorbar_colors(7-color_ind),
+                                                                keep_alpha=True)
+        color_ind += 1
 
 
 def test_track_mixed_states(imviz_helper):
