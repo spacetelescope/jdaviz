@@ -319,3 +319,19 @@ def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
     extract_plg.function = 'Max'
     with pytest.raises(ValueError, match=extract_plg._obj.conflicting_aperture_error_message):
         extract_plg.collapse_to_spectrum()
+
+
+def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
+    data = Spectrum1D(flux=np.ones((128, 129, 256)) * astropy.units.nJy, wcs=spectral_cube_wcs)
+    cubeviz_helper.load_data(data, data_label="Test Flux")
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = 'Subset 1'
+    extract_plg.aperture_method.selected = 'Exact'
+    extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Sum'
+
+    with pytest.raises(ValueError, match="Spectral axis unit physical type is"):
+        extract_plg.collapse_to_spectrum()
