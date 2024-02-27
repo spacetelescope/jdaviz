@@ -1,6 +1,8 @@
+import os
 from pathlib import Path
 from traitlets import Any, Bool, List, Unicode, observe
 
+from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginComponent,
                                         ViewerSelectMixin, DatasetMultiSelectMixin,
@@ -8,6 +10,14 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginCompone
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 
+try:
+    import cv2
+except ImportError:
+    HAS_OPENCV = False
+else:
+    import threading
+    import time
+    HAS_OPENCV = True
 
 __all__ = ['Export']
 
@@ -45,6 +55,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     filename = Unicode().tag(sync=True)
 
+    # For Cubeviz movie.
+    i_start = IntHandleEmpty(0).tag(sync=True)
+    i_end = IntHandleEmpty(0).tag(sync=True)
+    movie_fps = FloatHandleEmpty(5.0).tag(sync=True)
+    movie_recording = Bool(False).tag(sync=True)
+    movie_interrupt = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -63,9 +80,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                           manual_options=['plot-tst1', 'plot-tst2'])
 
         viewer_format_options = ['png', 'svg']
-        if self.app.config == 'cubeviz' and not self.app.state.settings.get('server_is_remote', False):
+        if (self.app.config == 'cubeviz'
+                and not self.app.state.settings.get('server_is_remote', False)
+                and HAS_OPENCV):
             # when the server is remote, saving the movie in python would save on the server, not
-            # on the user's machine, so movie support in cubeviz should be disabled
+            # on the user's machine, so movie support in cubeviz is not exposed
             viewer_format_options += ['mp4']
 
         self.viewer_format = SelectPluginComponent(self,
@@ -155,6 +174,20 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             filename = None
 
+        if filetype == "mp4":
+            self.save_movie(viewer, filename, filetype)
+        else:
+            self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+
+    def vue_export_from_ui(self, *args, **kwargs):
+        try:
+            self.export(show_dialog=True)
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(
+                f"Export failed with: {e}", sender=self, color="error"))
+            raise# for debugging only
+
+    def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
         if filetype == "png":
             if filename is None or show_dialog:
                 viewer.figure.save_png(str(filename) if filename is not None else None)
@@ -186,13 +219,149 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         elif filetype == "svg":
             viewer.figure.save_svg(str(filename) if filename is not None else None)
 
-        else:  # pragma: no cover
+    @with_spinner('movie_recording')
+    def _save_movie(self, viewer, i_start, i_end, fps, filename, rm_temp_files):
+        # NOTE: All the stuff here has to be in the same thread but
+        #       separate from main app thread to work.
+
+        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+        orig_slice = slice_plg.slice
+        temp_png_files = []
+        i = i_start
+        video = None
+
+        # TODO: Expose to users?
+        i_step = 1  # Need n_frames check if we allow tweaking
+
+        try:
+            while i <= i_end:
+                if self.movie_interrupt:
+                    break
+
+                slice_plg._on_slider_updated({'new': i})
+                cur_pngfile = Path(f"._cubeviz_movie_frame_{i}.png")
+                # TODO: skip success snackbars when exporting temp movie frames?
+                self.save_figure(viewer, filename=cur_pngfile, filetype="png", show_dialog=False)
+                temp_png_files.append(cur_pngfile)
+                i += i_step
+
+                # Wait for the roundtrip to the frontend to complete.
+                while viewer.figure._upload_png_callback is not None:
+                    time.sleep(0.05)
+
+            if not self.movie_interrupt:
+                # Grab frame size.
+                frame_shape = cv2.imread(temp_png_files[0]).shape
+                frame_size = (frame_shape[1], frame_shape[0])
+
+                video = cv2.VideoWriter(filename, cv2.VideoWriter_fourcc(*'mp4v'), fps, frame_size, True)  # noqa: E501
+                for cur_pngfile in temp_png_files:
+                    video.write(cv2.imread(cur_pngfile))
+        except Exception as err:
+            self.hub.broadcast(SnackbarMessage(
+                f"Error saving {filename}: {err!r}", sender=self, color="error"))
+        finally:
+            cv2.destroyAllWindows()
+            if video:
+                video.release()
+            slice_plg._on_slider_updated({'new': orig_slice})
+
+        if rm_temp_files or self.movie_interrupt:
+            for cur_pngfile in temp_png_files:
+                if os.path.exists(cur_pngfile):
+                    os.remove(cur_pngfile)
+
+        if self.movie_interrupt:
+            if os.path.exists(filename):
+                os.remove(filename)
+            self.movie_interrupt = False
+
+    def save_movie(self, viewer, filename, filetype, i_start=None, i_end=None, fps=None,
+                   rm_temp_files=True):
+        """Save selected slices as a movie.
+
+        This method creates a PNG file per frame (``._cubeviz_movie_frame_<n>.png``)
+        in the working directory before stitching all the frames into a movie.
+        Please make sure you have sufficient memory for this operation.
+        PNG files are deleted after the movie is created unless otherwise specified.
+        If another PNG file with the same name already exists, it will be silently replaced.
+
+        Parameters
+        ----------
+        i_start, i_end : int or `None`
+            Slices to record; each slice will be a frame in the movie.
+            If not given, it is obtained from plugin inputs.
+            Unlike Python indexing, ``i_end`` is inclusive.
+            Wrapping and reverse indexing are not supported.
+
+        fps : float or `None`
+            Frame rate in frames per second (FPS).
+            If not given, it is obtained from plugin inputs.
+
+        filename : str or `None`
+            Filename for the movie to be recorded. Include path if necessary.
+            If not given, it is obtained from plugin inputs.
+            If another file with the same name already exists, it will be silently replaced.
+
+        filetype : {'mp4', `None`}
+            Currently only MPEG-4 is supported. This keyword is reserved for future support
+            of other format(s).
+
+        rm_temp_files : bool
+            Remove temporary PNG files after movie creation. Default is `True`.
+
+        Returns
+        -------
+        out_filename : str
+            The absolute path to the actual output file.
+
+        """
+        if self.config != "cubeviz":
+            raise NotImplementedError(f"save_movie is not available for config={self.config}")
+
+        if not HAS_OPENCV:
+            raise ImportError("Please install opencv-python to save cube as movie.")
+
+        if filetype != "mp4":
             raise NotImplementedError(f"filetype={filetype} not supported")
 
-    def vue_export_from_ui(self, *args, **kwargs):
-        try:
-            self.export(show_dialog=True)
-        except Exception as e:
-            self.hub.broadcast(SnackbarMessage(
-                f"Export failed with: {e}", sender=self, color="error"))
-            raise# for debugging only
+        if fps is None:
+            fps = float(self.movie_fps)
+        if fps <= 0:
+            raise ValueError("Invalid frame rate, must be positive non-zero value.")
+
+        # Make sure file does not end up in weird places in standalone mode.
+        path = filename.parent
+        if path and not path.exists():
+            raise ValueError(f"Invalid path={path}")
+        elif (not path or str(path).startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
+            filename = os.environ["JDAVIZ_START_DIR"] / filename
+
+        if i_start is None:
+            i_start = int(self.i_start)
+
+        if i_end is None:
+            i_end = int(self.i_end)
+
+        # No wrapping. Forward only.
+        slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
+        if i_start < 0:  # pragma: no cover
+            i_start = 0
+        if i_end > slice_plg.max_slice:  # pragma: no cover
+            i_end = slice_plg.max_slice
+        if i_end <= i_start:
+            raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
+
+        filename = str(filename.resolve())
+        threading.Thread(
+            target=lambda: self._save_movie(viewer, i_start, i_end, fps, filename, rm_temp_files)
+        ).start()
+
+        return filename
+
+    def vue_interrupt_recording(self, *args):  # pragma: no cover
+        self.movie_interrupt = True
+        # TODO: this will need updating when batch/multiselect support is added
+        self.hub.broadcast(SnackbarMessage(
+            f"Movie recording interrupted by user, {self.filename} will be deleted.",
+            sender=self, color="warning"))

@@ -31,6 +31,45 @@
       >
       </v-select>
     </v-row>
+    <div v-if="viewer_selected.length > 0 && viewer_format_selected === 'mp4'" class="row-min-bottom-padding">
+      <v-row class="row-min-bottom-padding">
+        <v-col>
+          <v-text-field
+            v-model.number="i_start"
+            class="mt-0 pt-0"
+            type="number"
+            :rules="[() => i_start>=0 || 'Must be at least zero.']"
+            label="Start"
+            hint="Start Slice"
+            persistent-hint
+          ></v-text-field>
+        </v-col>
+        <v-col>
+          <v-text-field
+            v-model.number="i_end"
+            class="mt-0 pt-0"
+            type="number"
+            :rules="[() => i_end>i_start || 'Must be larger than Start Slice.']"
+            label="End"
+            hint="End Slice"
+             persistent-hint
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <v-row class="row-min-bottom-padding">
+        <v-col>
+          <v-text-field
+            v-model.number="movie_fps"
+            class="mt-0 pt-0"
+            type="number"
+            :rules="[() => movie_fps>0 || 'Must be positive.']"
+            label="FPS"
+            hint="Frame rate"
+             persistent-hint
+          ></v-text-field>
+        </v-col>
+      </v-row>
+    </div>
 
     <div v-if="dev_dataset_support && dataset_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Data</j-plugin-section-header>
@@ -87,11 +126,21 @@
     </v-row>
 
     <v-row justify="end">
+      <j-tooltip v-if="movie_recording" tooltipcontent="Interrupt recording and delete movie file">
+          <plugin-action-button
+             :results_isolated_to_plugin="true"
+             @click="interrupt_recording"
+             :disabled="!movie_recording"
+          >
+            <v-icon>stop</v-icon>
+          </plugin-action-button>
+      </j-tooltip>
+
       <plugin-action-button
         :results_isolated_to_plugin="true"
         @click="export_from_ui"
         :spinner="spinner"
-        :disabled="filename.length === 0"
+        :disabled="filename.length === 0 || movie_recording"
       >
         Export
       </plugin-action-button>
