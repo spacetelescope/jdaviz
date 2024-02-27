@@ -1,3 +1,4 @@
+import math
 import operator
 import os
 import pathlib
@@ -1763,6 +1764,7 @@ class Application(VuetifyTemplate, HubListener):
             item in the data collection that doesn't match ``old_parent`` will be chosen.
         '''
         from astropy.wcs.utils import pixel_to_pixel
+        from jdaviz.configs.imviz.wcs_utils import get_compass_info
 
         if isinstance(old_parent, str):
             old_parent = self.data_collection[old_parent]
@@ -1796,6 +1798,14 @@ class Application(VuetifyTemplate, HubListener):
                     # Translate bounds through WCS if needed
                     if (self.config == "imviz" and
                             self._jdaviz_helper.plugins["Orientation"].link_type == "WCS"):
+
+                        old_angle, _,  old_flip = get_compass_info(old_parent.coords, (10, 10))[-3:]
+                        new_angle, _, new_flip = get_compass_info(new_parent.coords, (10, 10))[-3:]
+                        relative_angle = new_angle - old_angle
+                        print(old_angle, new_angle, relative_angle)
+                        if old_flip != new_flip:
+                            relative_angle += 180
+
                         # Get the correct link to use for translation
                         roi = subset_state.roi
                         if type(roi) in (CircularROI, CircularAnnulusROI,
@@ -1816,8 +1826,14 @@ class Application(VuetifyTemplate, HubListener):
                                     dummy_x = old_xc + r
                                     x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                                             dummy_x, old_yc)
-                                    new_radius = np.abs(x2 - x)
+                                    # Need to use x and y in this radius calculation because the
+                                    # new orientation is likely rotated compared to the original.
+                                    new_radius = np.sqrt((x2 - x)**2 + (y2 - y)**2)
                                     setattr(roi, att, new_radius)
+
+                            if hasattr(roi, "angle"):
+                                angle = getattr(roi, "angle")
+                                setattr(roi, "angle", angle + relative_angle)
 
                         elif type(roi) is RectangularROI:
                             x_min, y_min = pixel_to_pixel(old_parent.coords, new_parent.coords,
