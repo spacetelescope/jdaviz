@@ -380,68 +380,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=2)
         return mask_weights
 
-    def cone_aperture(self):
-        # Retrieve flux cube and create an array to represent the cone mask
-        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
-                                                                          statistic=None)
-        # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
-        display_unit = flux_cube.spectral_axis.unit
-        if display_unit.physical_type != 'length':
-            self.hub.broadcast(SnackbarMessage('Spectral axis unit physical type is '
-                                               f'{display_unit.physical_type}, must be length',
-                                               color="error", sender=self))
-            return
-
-        masks_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
-
-        # Center is reverse coordinates
-        center = (self.aperture.selected_spatial_region.center.y,
-                  self.aperture.selected_spatial_region.center.x)
-
-        # Loop through cube and create cone aperture at each wavelength. Then convert that to a
-        # weight array using the selected aperture method, and add it to a weight cube.
-        # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
-        radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
-                 self.aperture.selected_spatial_region.radius)
-        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
-        aper_method = self.aperture_method_selected.lower()
-        for index, radius in enumerate(radii):
-            aperture = CircularAperture(center, r=radius)
-            slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
-            # Add slice mask to fractional pixel array
-            masks_weights[:, :, index] = slice_mask
-        return masks_weights
-
-    def cylindrical_aperture(self):
-        # Retrieve flux cube and create an array to represent the cone mask
-        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
-                                                                          statistic=None)
-        # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
-        display_unit = flux_cube.spectral_axis.unit
-        if display_unit.physical_type != 'length':
-            self.hub.broadcast(SnackbarMessage('Spectral axis unit physical type is '
-                                               f'{display_unit.physical_type}, must be length',
-                                               color="error", sender=self))
-            return
-
-        masks_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
-
-        # Center is reverse coordinates
-        center = (self.aperture.selected_spatial_region.center.y,
-                  self.aperture.selected_spatial_region.center.x)
-
-        # Create a slice_mask and set each slice of a numpy cube to that mask
-        # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
-        radius = self.aperture.selected_spatial_region.radius
-        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
-        aper_method = self.aperture_method_selected.lower()
-        aperture = CircularAperture(center, r=radius)
-        slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
-        for index in range(0, len(flux_cube.spectral_axis)):
-            # Add slice mask to fractional pixel array
-            masks_weights[:, :, index] = slice_mask
-        return masks_weights
-
     def vue_spectral_extraction(self, *args, **kwargs):
         self.collapse_to_spectrum(add_data=True)
 
