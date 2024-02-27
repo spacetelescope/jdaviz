@@ -31,7 +31,6 @@ tray:
   - cubeviz-moment-maps
   - cubeviz-spectral-extraction
   - imviz-aper-phot-simple
-  - g-export-plot
   - export
 viewer_area:
   - container: col

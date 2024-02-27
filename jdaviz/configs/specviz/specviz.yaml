@@ -26,7 +26,6 @@ tray:
   - g-unit-conversion
   - g-line-list
   - specviz-line-analysis
-  - g-export-plot
   - export
 viewer_area:
   - container: col
