@@ -6,6 +6,8 @@ Bug Fixes
 
 - Fix redshifted line lists that were displaying at rest wavelengths, by assuming a global redshift. [#2726]
 
+- Order of RGB preset colors now matches for less than and greater than 5 layers. [#2731]
+
 Cubeviz
 ^^^^^^^
 
