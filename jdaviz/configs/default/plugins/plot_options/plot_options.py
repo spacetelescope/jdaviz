@@ -808,6 +808,7 @@ class PlotOptions(PluginTemplateMixin):
             cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
             preset_colors = [matplotlib.colors.to_hex(cmap(i), keep_alpha=True) for
                              i in range(n_visible)]
+            preset_colors.reverse()
         elif n_visible >= 2 and n_visible < len(preset_colors):
             preset_colors = [preset_colors[i] for i in preset_inds[n_visible]]
 
