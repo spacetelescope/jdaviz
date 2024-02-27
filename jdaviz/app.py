@@ -1831,9 +1831,9 @@ class Application(VuetifyTemplate, HubListener):
                                     new_radius = np.sqrt((x2 - x)**2 + (y2 - y)**2)
                                     setattr(roi, att, new_radius)
 
-                            if hasattr(roi, "angle"):
-                                angle = getattr(roi, "angle")
-                                setattr(roi, "angle", angle + relative_angle)
+                            if hasattr(roi, "theta"):
+                                angle = getattr(roi, "theta")
+                                setattr(roi, "theta", angle - np.deg2rad(relative_angle))
 
                         elif type(roi) is RectangularROI:
                             x_min, y_min = pixel_to_pixel(old_parent.coords, new_parent.coords,
