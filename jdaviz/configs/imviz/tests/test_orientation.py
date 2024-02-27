@@ -69,9 +69,12 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
 
             # Both marks stay the same in sky, so this means X and Y w.r.t. reference
             # same on both entries.
-            # 0.25 offset probably introduced by fake WCS layer.
-            assert_allclose(mp._obj.marks["imviz-0"].x, -0.25)
-            assert_allclose(mp._obj.marks["imviz-0"].y, -0.25)
+            # FIXME: 0.25 offset introduced by fake WCS layer (remove AssertionError).
+            #        https://jira.stsci.edu/browse/JDAT-4256
+            with pytest.raises(AssertionError):
+                assert_allclose(mp._obj.marks["imviz-0"].x, 0)
+            with pytest.raises(AssertionError):
+                assert_allclose(mp._obj.marks["imviz-0"].y, 0)
 
             mp.clear_table()
 
@@ -102,9 +105,12 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
 
             # Both marks now get separated, so this means X and Y w.r.t. reference
             # are different on both entries.
-            # 0.25 offset probably introduced by fake WCS layer.
-            assert_allclose(mp._obj.marks["imviz-0"].x, [1.25, 0.25])
-            assert_allclose(mp._obj.marks["imviz-0"].y, 0.25)
+            # FIXME: 0.25 offset introduced by fake WCS layer (remove AssertionError).
+            #        https://jira.stsci.edu/browse/JDAT-4256
+            with pytest.raises(AssertionError):
+                assert_allclose(mp._obj.marks["imviz-0"].x, [1, 0])
+            with pytest.raises(AssertionError):
+                assert_allclose(mp._obj.marks["imviz-0"].y, 0)
 
             mp.clear_table()
 
