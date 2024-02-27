@@ -275,9 +275,9 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
     [('Exact', [19.6349540849] * 10, [19.6349540849] * 10, [1] * 10),
      ('Center', [21] * 10, [21] * 10, [1] * 10)]
 )
-def test_circular_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
-                                                  aperture_method, expected_flux_1000,
-                                                  expected_flux_2400, expected_flux_mean):
+def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
+                                                     aperture_method, expected_flux_1000,
+                                                     expected_flux_2400, expected_flux_mean):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
 
