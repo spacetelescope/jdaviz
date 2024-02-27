@@ -806,8 +806,10 @@ class PlotOptions(PluginTemplateMixin):
         # Sample along a colormap if we have too many layers
         if n_visible > len(preset_colors):
             cmap = matplotlib.colormaps['gist_rainbow'].resampled(n_visible)
+            # Have to reverse the order of the cmap to make physical sense with
+            # assumed wavelength order of layers.
             preset_colors = [matplotlib.colors.to_hex(cmap(i), keep_alpha=True) for
-                             i in range(n_visible)]
+                             i in range(n_visible - 1, -1, -1)]
         elif n_visible >= 2 and n_visible < len(preset_colors):
             preset_colors = [preset_colors[i] for i in preset_inds[n_visible]]
 
