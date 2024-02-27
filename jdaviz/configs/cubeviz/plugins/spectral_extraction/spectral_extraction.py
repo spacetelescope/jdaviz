@@ -85,6 +85,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     aperture_method_selected = Unicode('Center').tag(sync=True)
 
     conflicting_aperture_and_function = Bool(False).tag(sync=True)
+    conflicting_aperture_error_message = Unicode('Aperture method Exact cannot be selected along'
+                                                 ' with Min or Max.').tag(sync=True)
 
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
@@ -226,9 +228,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
         if self.conflicting_aperture_and_function:
-            self.hub.broadcast(SnackbarMessage("Aperture method Exact cannot be selected"
-                                               " along with Min or Max.",
+            self.hub.broadcast(SnackbarMessage(self.conflicting_aperture_error_message,
                                                color="error", sender=self))
+            raise ValueError(self.conflicting_aperture_error_message)
             return
 
         spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
@@ -239,7 +241,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
         # and uncertainties in different glue Data objects, we translate the spectral
         # cube and its uncertainties into separate NDDataArrays, then combine them:
-        if self.aperture.selected != self.aperture.default_text and self.wavelength_dependent:
+        if self.aperture.selected != self.aperture.default_text:
             nddata = spectral_cube.get_subset_object(
                 subset_id=self.aperture.selected, cls=NDDataArray
             )
@@ -247,21 +249,26 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 uncertainties = uncert_cube.get_subset_object(
                     subset_id=self.aperture.selected, cls=StdDevUncertainty
                 )
-            # Exact slice mask of cone aperture through the cube. `cone_mask` is
+            # Exact slice mask of cone or cylindrical aperture through the cube. `shape_mask` is
             # a 3D array with fractions of each pixel within an aperture at each
             # wavelength, on the range [0, 1].
-            if self.function_selected.lower() in ['min', 'max']:
-                cone_mask = self.cone_aperture().astype(int)
+            if self.function_selected.lower() in ['min', 'max'] and self.wavelength_dependent:
+                shape_mask = self.cone_aperture().astype(int)
+            elif self.function_selected.lower() in ['min', 'max']:
+                shape_mask = self.cylindrical_aperture().astype(int)
+            elif self.wavelength_dependent:
+                shape_mask = self.cone_aperture()
             else:
-                cone_mask = self.cone_aperture()
+                shape_mask = self.cylindrical_aperture()
+
             if self.aperture_method_selected.lower() == 'center':
                 flux = nddata.data << nddata.unit
             else:
                 # Apply the fractional pixel array to the flux cube
-                flux = (cone_mask * nddata.data) << nddata.unit
+                flux = (shape_mask * nddata.data) << nddata.unit
             # Boolean cube which is True outside of the aperture
             # (i.e., the numpy boolean mask convention)
-            mask = np.isclose(cone_mask, 0)
+            mask = np.isclose(shape_mask, 0)
 
         elif self.aperture.selected != self.aperture.default_text:
             nddata = spectral_cube.get_subset_object(
@@ -297,17 +304,20 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # is always wavelength. This may need adjustment after the following
         # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
         spatial_axes = (0, 1)
-        if self.wavelength_dependent and self.function_selected.lower() == 'mean':
+        if self.function_selected.lower() == 'mean':
             # Use built-in sum function to collapse NDDataArray
             collapsed_for_mean = nddata_reshaped.sum(axis=spatial_axes, **kwargs)
+            # But we still need the mean function for everything except flux
+            collapsed_as_mean = nddata_reshaped.mean(axis=spatial_axes, **kwargs)
+
             # Then normalize the flux based on the fractional pixel array
             flux_for_mean = (collapsed_for_mean.data /
-                             np.sum(cone_mask, axis=spatial_axes)) << nddata_reshaped.unit
+                             np.sum(shape_mask, axis=spatial_axes)) << nddata_reshaped.unit
             # Combine that information into a new NDDataArray
-            collapsed_nddata = NDDataArray(flux_for_mean, mask=collapsed_for_mean.mask,
-                                           uncertainty=collapsed_for_mean.uncertainty,
-                                           wcs=collapsed_for_mean.wcs,
-                                           meta=collapsed_for_mean.meta)
+            collapsed_nddata = NDDataArray(flux_for_mean, mask=collapsed_as_mean.mask,
+                                           uncertainty=collapsed_as_mean.uncertainty,
+                                           wcs=collapsed_as_mean.wcs,
+                                           meta=collapsed_as_mean.meta)
         else:
             collapsed_nddata = getattr(nddata_reshaped, self.function_selected.lower())(
                 axis=spatial_axes, **kwargs
@@ -376,6 +386,36 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         for index, radius in enumerate(radii):
             aperture = CircularAperture(center, r=radius)
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
+            # Add slice mask to fractional pixel array
+            masks_weights[:, :, index] = slice_mask
+        return masks_weights
+
+    def cylindrical_aperture(self):
+        # Retrieve flux cube and create an array to represent the cone mask
+        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
+                                                                          statistic=None)
+        # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
+        display_unit = flux_cube.spectral_axis.unit
+        if display_unit.physical_type != 'length':
+            self.hub.broadcast(SnackbarMessage('Spectral axis unit physical type is '
+                                               f'{display_unit.physical_type}, must be length',
+                                               color="error", sender=self))
+            return
+
+        masks_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
+
+        # Center is reverse coordinates
+        center = (self.aperture.selected_spatial_region.center.y,
+                  self.aperture.selected_spatial_region.center.x)
+
+        # Create a slice_mask and set each slice of a numpy cube to that mask
+        # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
+        radius = self.aperture.selected_spatial_region.radius
+        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
+        aper_method = self.aperture_method_selected.lower()
+        aperture = CircularAperture(center, r=radius)
+        slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
+        for index in range(0, len(flux_cube.spectral_axis)):
             # Add slice mask to fractional pixel array
             masks_weights[:, :, index] = slice_mask
         return masks_weights

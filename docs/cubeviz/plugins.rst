@@ -291,7 +291,8 @@ Click :guilabel:`EXTRACT` to produce a new 1D spectrum dataset
 from the spectral cube, which has uncertainties propagated by
 `astropy.nddata <https://docs.astropy.org/en/stable/nddata/nddata.html>`_.
 
-If using a simple subset for the spatial aperture, an option to
+If using a simple subset (currently only a circular subset works for this)
+for the spatial aperture, an option to
 make the aperture wavelength dependent will appear. If checked, this will
 create a cone aperture that increases linearly with wavelength.
 The formula for that is::
@@ -305,7 +306,9 @@ The reference wavelength for the cone can be changed using the
 The method of aperture masking can also be changed using the
 :guilabel:`Aperture masking method` dropdown. To see a description
 for each of these options, please see
-:ref:`photutils:photutils-aperture-overlap`.
+:ref:`photutils:photutils-aperture-overlap`. Using the exact aperture
+method with the min or max functions is not supported. Spatial axes not in
+wavelength are also not supported.
 
 
 .. _cubeviz-aper-phot:

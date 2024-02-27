@@ -268,3 +268,54 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
 
     np.testing.assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean,
                                atol=1e-9)
+
+
+@pytest.mark.parametrize(
+    ('aperture_method', 'expected_flux_1000', 'expected_flux_2400', 'expected_flux_mean'),
+    [('Exact', [19.6349540849] * 10, [19.6349540849] * 10, [1] * 10),
+     ('Center', [21] * 10, [21] * 10, [1] * 10)]
+)
+def test_circular_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
+                                              aperture_method, expected_flux_1000,
+                                              expected_flux_2400, expected_flux_mean):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = 'Subset 1'
+    extract_plg.aperture_method.selected = aperture_method
+    extract_plg.wavelength_dependent = False
+    extract_plg.function = 'Sum'
+
+    collapsed_spec = extract_plg.collapse_to_spectrum()
+
+    np.testing.assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000,
+                               atol=1e-9)
+    np.testing.assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400,
+                               atol=1e-9)
+
+    extract_plg.function = 'Mean'
+    collapsed_spec_mean = extract_plg.collapse_to_spectrum()
+
+    np.testing.assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean,
+                               atol=1e-9)
+
+
+def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = 'Subset 1'
+    extract_plg.aperture_method.selected = 'Exact'
+    extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Min'
+
+    with pytest.raises(ValueError, match=extract_plg._obj.conflicting_aperture_error_message):
+        extract_plg.collapse_to_spectrum()
+
+    extract_plg.function = 'Max'
+    with pytest.raises(ValueError, match=extract_plg._obj.conflicting_aperture_error_message):
+        extract_plg.collapse_to_spectrum()

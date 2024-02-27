@@ -162,7 +162,7 @@
       </v-row>
       <v-row v-if="conflicting_aperture_and_function">
         <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-          Aperture method Exact cannot be selected along with Min or Max.
+          {{conflicting_aperture_error_message}}
         </span>
       </v-row>
 
