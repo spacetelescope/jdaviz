@@ -351,9 +351,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         center = (self.aperture.selected_spatial_region.center.y,
                   self.aperture.selected_spatial_region.center.x)
 
-        # Loop through cube and create cone aperture at each wavelength. Then convert that to a
-        # weight array using the selected aperture method, and add it to a weight cube.
-        # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
         im_shape = (flux_cube.shape[0], flux_cube.shape[1])
         aper_method = self.aperture_method_selected.lower()
         if self.wavelength_dependent:
@@ -364,8 +361,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 self.hub.broadcast(SnackbarMessage(error_msg, color="error", sender=self))
                 raise ValueError(error_msg)
             mask_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
+            # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit
+            #  conversion.
             radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
                      self.aperture.selected_spatial_region.radius)
+            # Loop through cube and create cone aperture at each wavelength. Then convert that to a
+            # weight array using the selected aperture method, and add it to a weight cube.
             for index, radius in enumerate(radii):
                 aperture = CircularAperture(center, r=radius)
                 slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
