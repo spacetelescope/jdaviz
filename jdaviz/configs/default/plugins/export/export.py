@@ -57,6 +57,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     # For Cubeviz movie.
     i_start = IntHandleEmpty(0).tag(sync=True)
+    # TODO: re-implement auto setting of i_end based on cube data
     i_end = IntHandleEmpty(0).tag(sync=True)
     movie_fps = FloatHandleEmpty(5.0).tag(sync=True)
     movie_recording = Bool(False).tag(sync=True)
@@ -186,7 +187,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export failed with: {e}", sender=self, color="error"))
-            raise# for debugging only
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
         if filetype == "png":
