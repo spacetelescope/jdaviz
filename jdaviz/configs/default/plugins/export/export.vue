@@ -87,7 +87,12 @@
     </v-row>
 
     <v-row justify="end">
-      <plugin-action-button :results_isolated_to_plugin="true">
+      <plugin-action-button
+        :results_isolated_to_plugin="true"
+        @click="export_from_ui"
+        :spinner="spinner"
+        :disabled="filename.length === 0"
+      >
         Export
       </plugin-action-button>
     </v-row>
