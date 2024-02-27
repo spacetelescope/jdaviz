@@ -228,8 +228,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
         if self.conflicting_aperture_and_function:
-            self.hub.broadcast(SnackbarMessage(self.conflicting_aperture_error_message,
-                                               color="error", sender=self))
             raise ValueError(self.conflicting_aperture_error_message)
 
         spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
