@@ -1,15 +1,14 @@
 import os
 from pathlib import Path
 
-from packaging.version import Version
 import numpy as np
 import astropy
-import astropy.units as u
 from astropy.utils.decorators import deprecated
 from astropy.nddata import (
-    NDDataArray, StdDevUncertainty, NDUncertainty
+    NDDataArray, StdDevUncertainty
 )
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
+from packaging.version import Version
 from photutils.aperture import CircularAperture
 from specutils import Spectrum1D
 
@@ -207,7 +206,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @observe('function_selected', 'aperture_method_selected')
     def _update_aperture_method_on_function_change(self, *args):
-        if (self.function_selected.lower() in ['min', 'max'] and
+        if (self.function_selected.lower() in ('min', 'max') and
                 self.aperture_method_selected.lower() != 'center'):
             self.conflicting_aperture_and_function = True
         else:
@@ -233,6 +232,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
         uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
         uncertainties = None
+        selected_func = self.function_selected.lower()
 
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
@@ -251,12 +251,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # wavelength, on the range [0, 1].
             shape_mask = self.get_aperture()
 
-            if self.function_selected.lower() in ['min', 'max']:
-                shape_mask = shape_mask.astype(int)
-
             if self.aperture_method_selected.lower() == 'center':
                 flux = nddata.data << nddata.unit
-            else:
+            else:  # exact (min/max not allowed here)
                 # Apply the fractional pixel array to the flux cube
                 flux = (shape_mask * nddata.data) << nddata.unit
             # Boolean cube which is True outside of the aperture
@@ -286,7 +283,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # is always wavelength. This may need adjustment after the following
         # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
         spatial_axes = (0, 1)
-        if self.function_selected.lower() == 'mean':
+        if selected_func == 'mean':
             # Use built-in sum function to collapse NDDataArray
             collapsed_sum_for_mean = nddata_reshaped.sum(axis=spatial_axes, **kwargs)
             # But we still need the mean function for everything except flux
@@ -301,7 +298,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                            wcs=collapsed_as_mean.wcs,
                                            meta=collapsed_as_mean.meta)
         else:
-            collapsed_nddata = getattr(nddata_reshaped, self.function_selected.lower())(
+            collapsed_nddata = getattr(nddata_reshaped, selected_func)(
                 axis=spatial_axes, **kwargs
             )  # returns an NDDataArray
 
@@ -325,7 +322,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.extracted_spec = collapsed_spec
         self.extracted_spec_available = True
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
-        self.filename = f"extracted_{self.function_selected.lower()}_{fname_label}.fits"
+        self.filename = f"extracted_{selected_func}_{fname_label}.fits"
 
         if add_data:
             self.add_results.add_results_from_plugin(
@@ -358,12 +355,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Cone aperture
             if display_unit.physical_type != 'length':
                 error_msg = (f'Spectral axis unit physical type is {display_unit.physical_type},'
-                             f' must be length for cone aperture')
+                             ' must be length for cone aperture')
                 self.hub.broadcast(SnackbarMessage(error_msg, color="error", sender=self))
                 raise ValueError(error_msg)
             mask_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
-            # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit
-            #  conversion.
+            # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
             radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) * radius)
             # Loop through cube and create cone aperture at each wavelength. Then convert that to a
             # weight array using the selected aperture method, and add it to a weight cube.
@@ -437,47 +433,3 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         ):
             label += f' ({self.aperture_selected})'
         self.results_label_default = label
-
-
-def _move_spectral_axis(wcs, flux, mask=None, uncertainty=None):
-    """
-    Move spectral axis last to match specutils convention. This
-    function borrows from:
-        https://github.com/astropy/specutils/blob/
-        6eb7f96498072882c97763d4cd10e07cf81b6d33/specutils/spectra/spectrum1d.py#L185-L225
-    """
-    naxis = getattr(wcs, 'naxis', len(wcs.world_axis_physical_types))
-    if naxis > 1:
-        temp_axes = []
-        phys_axes = wcs.world_axis_physical_types
-        for i in range(len(phys_axes)):
-            if phys_axes[i] is None:
-                continue
-            if phys_axes[i][0:2] == "em" or phys_axes[i][0:5] == "spect":
-                temp_axes.append(i)
-        if len(temp_axes) != 1:
-            raise ValueError("Input WCS must have exactly one axis with "
-                             "spectral units, found {}".format(len(temp_axes)))
-
-        # Due to FITS conventions, a WCS with spectral axis first corresponds
-        # to a flux array with spectral axis last.
-        if temp_axes[0] != 0:
-            wcs = wcs.swapaxes(0, temp_axes[0])
-            if flux is not None:
-                flux = np.swapaxes(flux, len(flux.shape) - temp_axes[0] - 1, -1)
-            if mask is not None:
-                mask = np.swapaxes(mask, len(mask.shape) - temp_axes[0] - 1, -1)
-            if uncertainty is not None:
-                if isinstance(uncertainty, NDUncertainty):
-                    # Account for Astropy uncertainty types
-                    unc_len = len(uncertainty.array.shape)
-                    temp_unc = np.swapaxes(uncertainty.array,
-                                           unc_len - temp_axes[0] - 1, -1)
-                    if uncertainty.unit is not None:
-                        temp_unc = temp_unc * u.Unit(uncertainty.unit)
-                    uncertainty = type(uncertainty)(temp_unc)
-                else:
-                    uncertainty = np.swapaxes(uncertainty,
-                                              len(uncertainty.shape) -
-                                              temp_axes[0] - 1, -1)
-    return wcs, flux, mask, uncertainty

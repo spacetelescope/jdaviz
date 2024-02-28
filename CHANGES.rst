@@ -13,8 +13,6 @@ New Features
 
 - Live-preview of aperture selection in plugins. [#2664, #2684]
 
-- Add conical aperture support to cubeviz in the spectral extraction plugin. [#2679]
-
 Cubeviz
 ^^^^^^^
 
@@ -27,6 +25,8 @@ Cubeviz
 - Single-pixel subset tool now shows spectrum-at-spaxel on hover. [#2647]
 
 - Spectral extraction plugin re-organized into subsections to be more consistent with specviz2d. [#2676]
+
+- Add conical aperture support to cubeviz in the spectral extraction plugin. [#2679]
 
 - New aperture photometry plugin that can perform aperture photometry on selected cube slice. [#2666]
 
