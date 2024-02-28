@@ -9,7 +9,7 @@ from astropy.nddata import (
 )
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 from packaging.version import Version
-from photutils.aperture import CircularAperture
+from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
 from specutils import Spectrum1D
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -348,6 +348,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
                   self.aperture.selected_spatial_region.center.x)
+        aperture = regions2aperture(self.aperture.selected_spatial_region)
+        aperture.positions = center
 
         im_shape = (flux_cube.shape[0], flux_cube.shape[1])
         aper_method = self.aperture_method_selected.lower()
@@ -358,26 +360,39 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     f'Spectral axis unit physical type is {display_unit.physical_type}, '
                     'must be length for cone aperture')
 
-            # TODO: Remove when cone support is extended to other shapes
-            if not hasattr(self.aperture.selected_spatial_region, 'radius'):
-                raise NotImplementedError(
-                    f"{self.aperture.selected_spatial_region.__class__.__name__} is not supported")
-
-            mask_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
+            fac = flux_cube.spectral_axis.value / self.reference_wavelength
 
             # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
-            radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
-                     self.aperture.selected_spatial_region.radius)
+            if isinstance(aperture, CircularAperture):
+                radii = fac * aperture.r  # radius
+            elif isinstance(aperture, EllipticalAperture):
+                radii = fac * aperture.a  # semimajor axis
+                radii_b = fac * aperture.b  # semiminor axis
+            elif isinstance(aperture, RectangularAperture):
+                radii = fac * aperture.w  # full width
+                radii_h = fac * aperture.h  # full height
+            else:
+                raise NotImplementedError(f"{aperture.__class__.__name__} is not supported")
+
+            mask_weights = np.zeros(flux_cube.shape, dtype=np.float32)
+
             # Loop through cube and create cone aperture at each wavelength. Then convert that to a
             # weight array using the selected aperture method, and add it to a weight cube.
-            for index, cone_radius in enumerate(radii):
-                aperture = CircularAperture(center, r=cone_radius)
+            for index, cone_r in enumerate(radii):
+                if isinstance(aperture, CircularAperture):
+                    aperture.r = cone_r
+                elif isinstance(aperture, EllipticalAperture):
+                    aperture.a = cone_r
+                    aperture.b = radii_b[index]
+                else:  # RectangularAperture
+                    aperture.w = cone_r
+                    aperture.h = radii_h[index]
+
                 slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
                 # Add slice mask to fractional pixel array
                 mask_weights[:, :, index] = slice_mask
         else:
             # Cylindrical aperture
-            aperture = regions2aperture(self.aperture.selected_spatial_region)
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
             mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=2)

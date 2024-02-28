@@ -7,7 +7,8 @@ from astropy import units as u
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose, assert_array_equal
-from regions import CirclePixelRegion, EllipsePixelRegion, PixCoord
+from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
+                     RectanglePixelRegion, PixCoord)
 from specutils import Spectrum1D
 
 
@@ -221,25 +222,28 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         assert slice_plg.slice == 1
 
 
+@pytest.mark.parametrize('subset', ['Subset 1', 'Subset 2'])
 @pytest.mark.parametrize(
-    ('aperture_method', 'expected_flux_1000', 'expected_flux_2400', 'expected_flux_mean'),
-    [('Exact', [16.51429064, 16.52000853, 16.52572818, 16.53145005, 16.53717344, 16.54289928,
-                16.54862712, 16.55435647, 16.56008781, 16.56582186],
+    ('aperture_method', 'expected_flux_1000', 'expected_flux_2400'),
+    [('Exact',
+      [16.51429064, 16.52000853, 16.52572818, 16.53145005, 16.53717344, 16.54289928,
+       16.54862712, 16.55435647, 16.56008781, 16.56582186],
       [26.812409, 26.821692, 26.830979, 26.840268, 26.849561, 26.858857,
-       26.868156, 26.877459, 26.886765, 26.896074],
-      [0.99999993, 1.00000014, 1.00000011, 0.99999987, 0.99999995, 0.99999995,
-       1.00000007, 1.00000005, 0.99999992, 0.99999996]),
-     ('Center', [21] * 10, [25] * 10, [1] * 10)]
+       26.868156, 26.877459, 26.886765, 26.896074]),
+     ('Center', 21, 25)]
 )
 def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
-                                              aperture_method, expected_flux_1000,
-                                              expected_flux_2400, expected_flux_mean):
+                                              subset, aperture_method, expected_flux_1000,
+                                              expected_flux_2400):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(5, 10), radius=2.5)])
+    center = PixCoord(5, 10)
+    cubeviz_helper.load_regions([
+        CirclePixelRegion(center, radius=2.5),
+        EllipsePixelRegion(center, width=5, height=5)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
-    extract_plg.aperture = 'Subset 1'
+    extract_plg.aperture = subset
     extract_plg.aperture_method.selected = aperture_method
     extract_plg.wavelength_dependent = True
     extract_plg.function = 'Sum'
@@ -252,43 +256,71 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
     extract_plg.function = 'Mean'
     collapsed_spec_mean = extract_plg.collapse_to_spectrum()
 
-    assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean, rtol=1e-6)
+    assert_allclose(collapsed_spec_mean.flux.value, 1)
 
 
+@pytest.mark.parametrize('subset', ['Subset 1', 'Subset 2'])
 @pytest.mark.parametrize(
-    ('aperture_method', 'expected_flux_1000', 'expected_flux_2400', 'expected_flux_mean'),
-    [('Exact', [19.6349540849] * 10, [19.6349540849] * 10, [1] * 10),
-     ('Center', [21] * 10, [21] * 10, [1] * 10)]
+    ('aperture_method', 'expected_flux_wav'),
+    [('Exact', 19.6349540849),
+     ('Center', 21)]
 )
 def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
-                                                     aperture_method, expected_flux_1000,
-                                                     expected_flux_2400, expected_flux_mean):
+                                                     subset, aperture_method, expected_flux_wav):
     cubeviz_helper.load_data(spectrum1d_cube_largest, data_label="test")
-    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(5, 10), radius=2.5)])
+    center = PixCoord(5, 10)
+    cubeviz_helper.load_regions([
+        CirclePixelRegion(center, radius=2.5),
+        EllipsePixelRegion(center, width=5, height=5)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
-    extract_plg.aperture = 'Subset 1'
+    extract_plg.aperture = subset
     extract_plg.aperture_method.selected = aperture_method
     extract_plg.wavelength_dependent = False
     extract_plg.function = 'Sum'
 
     collapsed_spec = extract_plg.collapse_to_spectrum()
 
-    assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000)
-    assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400)
+    assert_allclose(collapsed_spec.flux.value, expected_flux_wav)
 
     extract_plg.function = 'Mean'
     collapsed_spec_mean = extract_plg.collapse_to_spectrum()
 
-    assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean)
+    assert_allclose(collapsed_spec_mean.flux.value, 1)
+
+
+# NOTE: Not as thorough as circle and ellipse above but good enough.
+def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
+    cubeviz_helper.load_regions(RectanglePixelRegion(PixCoord(5, 10), width=4, height=4))
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = "Subset 1"
+    extract_plg.aperture_method.selected = "Exact"
+    extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Sum'
+    collapsed_spec = extract_plg.collapse_to_spectrum()
+
+    # The extracted spectrum has "steps" (aliased) but perhaps that is due to
+    # how photutils is extracting a boxy aperture. There is still a slope.
+    expected_flux_step = [9.378906, 10.5625, 11.816406, 13.140625, 14.535156,
+                          16, 17.535156, 19.691406, 21.972656, 24.378906]
+    assert_allclose(collapsed_spec.flux.value[::301], expected_flux_step)
+
+    extract_plg.wavelength_dependent = False
+    collapsed_spec = extract_plg.collapse_to_spectrum()
+
+    assert_allclose(collapsed_spec.flux.value, 16)  # 4 x 4
 
 
 def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
+    center = PixCoord(5, 10)
     cubeviz_helper.load_regions([
-        CirclePixelRegion(PixCoord(5, 10), radius=2.5),
-        EllipsePixelRegion(center=PixCoord(x=7, y=12), width=5, height=3)])
+        CirclePixelRegion(center, radius=2.5),
+        CircleAnnulusPixelRegion(center, inner_radius=2.5, outer_radius=4)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
@@ -306,7 +338,6 @@ def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
 
     extract_plg.function = 'Sum'
     extract_plg.aperture = 'Subset 2'
-    # FIXME: https://jira.stsci.edu/browse/JDAT-4268
     with pytest.raises(NotImplementedError, match=".* is not supported"):
         extract_plg.collapse_to_spectrum()
 

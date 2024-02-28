@@ -295,7 +295,8 @@ If using a simple subset (currently only works for a circular subset applied to 
 with spatial axis units in wavelength) for the spatial aperture, an option to
 make the aperture wavelength dependent will appear. If checked, this will
 create a cone aperture that increases linearly with wavelength.
-The formula for that is::
+The formula for a circular aperture is (for other shapes, radius is
+replaced by appropriate shape attributes)::
 
     radii = ((all_wavelengths / reference_wavelength) *
         aperture.selected_spatial_region.radius)
