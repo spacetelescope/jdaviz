@@ -1801,15 +1801,14 @@ class Application(VuetifyTemplate, HubListener):
                         old_angle, _, old_flip = get_compass_info(old_parent.coords, (10, 10))[-3:]
                         new_angle, _, new_flip = get_compass_info(new_parent.coords, (10, 10))[-3:]
                         relative_angle = new_angle - old_angle
-                        print(old_angle, new_angle, relative_angle)
                         if old_flip != new_flip:
                             relative_angle += 180
 
                         # Get the correct link to use for translation
                         roi = subset_state.roi
+                        old_xc, old_yc = subset_state.center()
                         if type(roi) in (CircularROI, CircularAnnulusROI,
                                          EllipticalROI, TrueCircularROI):
-                            old_xc, old_yc = subset_state.center()
                             # Convert center
                             x, y = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                                   roi.xc, roi.yc)
@@ -1830,19 +1829,34 @@ class Application(VuetifyTemplate, HubListener):
                                     new_radius = np.sqrt((x2 - x)**2 + (y2 - y)**2)
                                     setattr(roi, att, new_radius)
 
-                            if hasattr(roi, "theta"):
+                        elif type(roi) is RectangularROI:
+                            x1, y1 = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                          roi.xmin, roi.ymin)
+                            x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                          roi.xmin, roi.ymax)
+                            x3, y3 = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                          roi.xmax, roi.ymax)
+                            x3, y3 = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                          roi.xmax, roi.ymin)
+
+                            # Calculate new width and height from possibly rotated result
+                            new_width = np.sqrt((x3-x1)**2 + (y3-y1)**2)
+                            new_height = np.sqrt((x2-x1)**2 + (y2-y1)**2)
+
+                            # Convert center
+                            new_center = pixel_to_pixel(old_parent.coords, new_parent.coords,
+                                                        old_xc, old_yc)
+
+                            # New min/max before applying theta
+                            roi.xmin = new_center[0] - new_width/2
+                            roi.xmax = new_center[0] + new_width/2
+                            roi.ymin = new_center[1] - new_height/2
+                            roi.ymax = new_center[1] + new_height/2
+
+                        # Account for rotation between orientations
+                        if hasattr(roi, "theta"):
                                 angle = getattr(roi, "theta")
                                 setattr(roi, "theta", angle - np.deg2rad(relative_angle))
-
-                        elif type(roi) is RectangularROI:
-                            x_min, y_min = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                          roi.xmin, roi.ymin)
-                            x_max, y_max = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                          roi.xmax, roi.ymax)
-                            roi.xmin = x_min
-                            roi.xmax = x_max
-                            roi.ymin = y_min
-                            roi.ymax = y_max
 
                     elif type(subset_group.subset_state) is RangeSubsetState:
                         range_state = subset_group.subset_state
@@ -2008,7 +2022,6 @@ class Application(VuetifyTemplate, HubListener):
 
     def vue_data_item_remove(self, event):
 
-        print(event)
         data_label = event['item_name']
         data = self.data_collection[data_label]
         if self.config == "imviz":
