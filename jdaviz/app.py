@@ -1,4 +1,3 @@
-import math
 import operator
 import os
 import pathlib
@@ -1799,7 +1798,7 @@ class Application(VuetifyTemplate, HubListener):
                     if (self.config == "imviz" and
                             self._jdaviz_helper.plugins["Orientation"].link_type == "WCS"):
 
-                        old_angle, _,  old_flip = get_compass_info(old_parent.coords, (10, 10))[-3:]
+                        old_angle, _, old_flip = get_compass_info(old_parent.coords, (10, 10))[-3:]
                         new_angle, _, new_flip = get_compass_info(new_parent.coords, (10, 10))[-3:]
                         relative_angle = new_angle - old_angle
                         print(old_angle, new_angle, relative_angle)
