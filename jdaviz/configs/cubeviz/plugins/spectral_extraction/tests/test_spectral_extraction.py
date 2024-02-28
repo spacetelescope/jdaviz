@@ -1,24 +1,17 @@
-import os
 import pytest
-from packaging.version import Version
+
+pytest.importorskip("astropy", minversion="5.3.2")
+
 import numpy as np
-import astropy
+from astropy import units as u
 from astropy.nddata import NDDataArray, StdDevUncertainty
-from specutils import Spectrum1D
-from regions import CirclePixelRegion, PixCoord
 from astropy.utils.exceptions import AstropyUserWarning
-
-ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
-
-
-@pytest.mark.skipif(not ASTROPY_LT_5_3_2, reason='Needs astropy <5.3.2')
-def test_version_before_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
-    # Also test that plugin is disabled before data is loaded.
-    plg = cubeviz_helper.plugins['Spectral Extraction']
-    assert plg._obj.disabled_msg != ''
+from numpy.testing import assert_allclose, assert_array_equal
+from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
+                     RectanglePixelRegion, PixCoord)
+from specutils import Spectrum1D
 
 
-@pytest.mark.skipif(ASTROPY_LT_5_3_2, reason='Needs astropy 5.3.2 or later')
 def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
     # Also test that plugin is disabled before data is loaded.
     plg = cubeviz_helper.plugins['Spectral Extraction']
@@ -41,13 +34,12 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     assert isinstance(spectral_cube, NDDataArray)
     assert isinstance(collapsed_cube_s1d, Spectrum1D)
 
-    np.testing.assert_allclose(
+    assert_allclose(
         collapsed_cube_nddata.data,
         collapsed_cube_s1d.flux.to_value(collapsed_cube_nddata.unit)
     )
 
 
-@pytest.mark.skipif(ASTROPY_LT_5_3_2, reason='Needs astropy 5.3.2 or later')
 def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_uncerts):
     # Also test if gaussian smooth plugin is run before spec extract
     # that spec extract yields results of correct cube data
@@ -91,21 +83,17 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
     # this single pixel has two wavelengths, and all uncertainties are unity
     # irrespective of which collapse function is applied:
     assert len(collapsed_spec.flux) == 2
-    assert np.all(np.equal(collapsed_spec.uncertainty.array, 1))
+    assert_array_equal(collapsed_spec.uncertainty.array, 1)
 
     # this two-pixel region has four unmasked data points per wavelength:
     extract_plugin.aperture = 'Subset 2'
     collapsed_spec_2 = extract_plugin.collapse_to_spectrum()
-    assert np.all(np.equal(collapsed_spec_2.uncertainty.array, expected_uncert))
+    assert_array_equal(collapsed_spec_2.uncertainty.array, expected_uncert)
 
 
-@pytest.mark.skipif(ASTROPY_LT_5_3_2, reason='Needs astropy 5.3.2 or later')
 @pytest.mark.parametrize(
-    "function, expected_uncert",
-    zip(
-        ["Sum", "Mean", "Min", "Max"],
-        [2, 0.5, 1, 1]
-    )
+    ("function, expected_uncert"),
+    [("Sum", 2), ("Mean", 0.5), ("Min", 1), ("Max", 1)]
 )
 def test_subset(
     cubeviz_helper, spectrum1d_cube_with_uncerts, function, expected_uncert
@@ -135,16 +123,16 @@ def test_subset(
     # this single pixel has two wavelengths, and all uncertainties are unity
     # irrespective of which collapse function is applied:
     assert len(collapsed_spec_1.flux) == 2
-    assert np.all(np.equal(collapsed_spec_1.uncertainty.array, 1))
+    assert_array_equal(collapsed_spec_1.uncertainty.array, 1)
 
     # this two-pixel region has four unmasked data points per wavelength:
     plg.aperture = 'Subset 2'
     collapsed_spec_2 = plg.collapse_to_spectrum()
 
-    assert np.all(np.equal(collapsed_spec_2.uncertainty.array, expected_uncert))
+    assert_array_equal(collapsed_spec_2.uncertainty.array, expected_uncert)
 
 
-def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tmpdir):
+def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tmp_path):
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
 
@@ -161,23 +149,24 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tm
 
     # check that default filename is correct, then change path
     fname = 'extracted_sum_Unknown spectrum object_FLUX.fits'
+    fname_path = tmp_path / fname
     assert extract_plugin._obj.filename == fname
-    extract_plugin._obj.filename = os.path.join(tmpdir, fname)
+    extract_plugin._obj.filename = str(fname_path)
 
     # save output file with default name, make sure it exists
     extract_plugin._obj.vue_save_as_fits()
-    assert os.path.isfile(os.path.join(tmpdir, fname))
+    assert fname_path.is_file()
 
     # read file back in, make sure it matches
-    dat = Spectrum1D.read(os.path.join(tmpdir, fname))
-    assert np.all(dat.data == extract_plugin._obj.extracted_spec.data)
+    dat = Spectrum1D.read(fname_path)
+    assert_array_equal(dat.data, extract_plugin._obj.extracted_spec.data)
     assert dat.unit == extract_plugin._obj.extracted_spec.unit
 
     # make sure correct error message is raised when export_enabled is False
     # this won't appear in UI, but just to be safe.
     extract_plugin._obj.export_enabled = False
-    msg = "Writing out extracted spectrum to file is currently disabled"
-    with pytest.raises(ValueError, match=msg):
+    with pytest.raises(
+            ValueError, match="Writing out extracted spectrum to file is currently disabled"):
         extract_plugin._obj.vue_save_as_fits()
     extract_plugin._obj.export_enabled = True  # set back to True
 
@@ -231,3 +220,139 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         extract_plg._obj.vue_adopt_slice_as_reference()
         extract_plg._obj.vue_goto_reference_wavelength()
         assert slice_plg.slice == 1
+
+
+@pytest.mark.parametrize('subset', ['Subset 1', 'Subset 2'])
+@pytest.mark.parametrize(
+    ('aperture_method', 'expected_flux_1000', 'expected_flux_2400'),
+    [('Exact',
+      [16.51429064, 16.52000853, 16.52572818, 16.53145005, 16.53717344, 16.54289928,
+       16.54862712, 16.55435647, 16.56008781, 16.56582186],
+      [26.812409, 26.821692, 26.830979, 26.840268, 26.849561, 26.858857,
+       26.868156, 26.877459, 26.886765, 26.896074]),
+     ('Center', 21, 25)]
+)
+def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
+                                              subset, aperture_method, expected_flux_1000,
+                                              expected_flux_2400):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
+    center = PixCoord(5, 10)
+    cubeviz_helper.load_regions([
+        CirclePixelRegion(center, radius=2.5),
+        EllipsePixelRegion(center, width=5, height=5)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = subset
+    extract_plg.aperture_method.selected = aperture_method
+    extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Sum'
+
+    collapsed_spec = extract_plg.collapse_to_spectrum()
+
+    assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000, rtol=1e-6)
+    assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400, rtol=1e-6)
+
+    extract_plg.function = 'Mean'
+    collapsed_spec_mean = extract_plg.collapse_to_spectrum()
+
+    assert_allclose(collapsed_spec_mean.flux.value, 1)
+
+
+@pytest.mark.parametrize('subset', ['Subset 1', 'Subset 2'])
+@pytest.mark.parametrize(
+    ('aperture_method', 'expected_flux_wav'),
+    [('Exact', 19.6349540849),
+     ('Center', 21)]
+)
+def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
+                                                     subset, aperture_method, expected_flux_wav):
+    cubeviz_helper.load_data(spectrum1d_cube_largest, data_label="test")
+    center = PixCoord(5, 10)
+    cubeviz_helper.load_regions([
+        CirclePixelRegion(center, radius=2.5),
+        EllipsePixelRegion(center, width=5, height=5)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = subset
+    extract_plg.aperture_method.selected = aperture_method
+    extract_plg.wavelength_dependent = False
+    extract_plg.function = 'Sum'
+
+    collapsed_spec = extract_plg.collapse_to_spectrum()
+
+    assert_allclose(collapsed_spec.flux.value, expected_flux_wav)
+
+    extract_plg.function = 'Mean'
+    collapsed_spec_mean = extract_plg.collapse_to_spectrum()
+
+    assert_allclose(collapsed_spec_mean.flux.value, 1)
+
+
+# NOTE: Not as thorough as circle and ellipse above but good enough.
+def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
+    cubeviz_helper.load_regions(RectanglePixelRegion(PixCoord(5, 10), width=4, height=4))
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = "Subset 1"
+    extract_plg.aperture_method.selected = "Exact"
+    extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Sum'
+    collapsed_spec = extract_plg.collapse_to_spectrum()
+
+    # The extracted spectrum has "steps" (aliased) but perhaps that is due to
+    # how photutils is extracting a boxy aperture. There is still a slope.
+    expected_flux_step = [9.378906, 10.5625, 11.816406, 13.140625, 14.535156,
+                          16, 17.535156, 19.691406, 21.972656, 24.378906]
+    assert_allclose(collapsed_spec.flux.value[::301], expected_flux_step)
+
+    extract_plg.wavelength_dependent = False
+    collapsed_spec = extract_plg.collapse_to_spectrum()
+
+    assert_allclose(collapsed_spec.flux.value, 16)  # 4 x 4
+
+
+def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
+    center = PixCoord(5, 10)
+    cubeviz_helper.load_regions([
+        CirclePixelRegion(center, radius=2.5),
+        CircleAnnulusPixelRegion(center, inner_radius=2.5, outer_radius=4)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = 'Subset 1'
+    extract_plg.aperture_method.selected = 'Exact'
+    extract_plg.wavelength_dependent = True
+
+    extract_plg.function = 'Min'
+    with pytest.raises(ValueError, match=extract_plg._obj.conflicting_aperture_error_message):
+        extract_plg.collapse_to_spectrum()
+
+    extract_plg.function = 'Max'
+    with pytest.raises(ValueError, match=extract_plg._obj.conflicting_aperture_error_message):
+        extract_plg.collapse_to_spectrum()
+
+    extract_plg.function = 'Sum'
+    extract_plg.aperture = 'Subset 2'
+    with pytest.raises(NotImplementedError, match=".* is not supported"):
+        extract_plg.collapse_to_spectrum()
+
+
+def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
+    data = Spectrum1D(flux=np.ones((128, 129, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    cubeviz_helper.load_data(data, data_label="Test Flux")
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = 'Subset 1'
+    extract_plg.aperture_method.selected = 'Exact'
+    extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Sum'
+
+    with pytest.raises(ValueError, match="Spectral axis unit physical type is"):
+        extract_plg.collapse_to_spectrum()

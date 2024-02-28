@@ -19,13 +19,13 @@
         hint="Select a spatial region to extract its spectrum."
       />
 
-      <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture && dev_cone_support">
+      <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             {{aperture_selected}} does not support wavelength dependence (cone support): {{aperture_selected_validity.aperture_message}}.
         </span>
       </v-row>
 
-      <div v-if="aperture_selected_validity.is_aperture && dev_cone_support">
+      <div v-if="aperture_selected_validity.is_aperture">
         <v-row>
           <v-switch
             v-model="wavelength_dependent"
@@ -56,7 +56,7 @@
           <v-row justify="end">
             <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
               <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_wavelength">
-                Slice to Reference Wavelength
+                Slice to Wavelength
               </plugin-action-button>
             </j-tooltip>
           </v-row>
@@ -80,7 +80,7 @@
         </span>
       </v-row>
 
-      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture && dev_cone_support">
+      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             {{bg_selected}} does not support wavelength dependence (cone support): {{bg_selected_validity.aperture_message}}.
         </span>
@@ -88,8 +88,7 @@
 
       <div v-if="aperture_selected_validity.is_aperture
                  && bg_selected_validity.is_aperture
-                 && wavelength_dependent
-                 && dev_cone_support">
+                 && wavelength_dependent">
         <v-row>
           <v-switch
             v-model="bg_wavelength_dependent"
@@ -118,12 +117,12 @@
     <div @mouseover="() => active_step='ext'">
       <j-plugin-section-header :active="active_step==='ext'">Extract</j-plugin-section-header>
 
-      <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture && dev_subpixel_support">
+      <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Aperture: {{aperture_selected}} does not support subpixel: {{aperture_selected_validity.aperture_message}}.
         </span>
       </v-row>
-      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture && dev_subpixel_support">
+      <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Background: {{bg_selected}} does not support subpixel: {{bg_selected_validity.aperture_message}}.
         </span>
@@ -131,15 +130,22 @@
 
 
       <div v-if="(aperture_selected === 'Entire Cube' || aperture_selected_validity.is_aperture)
-                 && (bg_selected === 'None' || bg_selected_validity.is_aperture)
-                 && dev_subpixel_support">
+                 && (bg_selected === 'None' || bg_selected_validity.is_aperture)">
         <v-row>
-          <v-switch
-            v-model="subpixel"
-            label="Subpixel"
-            hint="Extract spectrum using a subpixel aperture in place of the subset mask"
-            persistent-hint>
-          </v-switch>
+          <v-select
+            :menu-props="{ left: true }"
+            attach
+            :items="aperture_method_items.map(i => i.label)"
+            v-model="aperture_method_selected"
+            label="Aperture masking method"
+            hint="Extract spectrum using an aperture masking method in place of the subset mask."
+            persistent-hint
+            ></v-select>
+          <j-docs-link>
+            See the <j-external-link link='https://photutils.readthedocs.io/en/stable/aperture.html#aperture-and-pixel-overlap'
+            linktext='photutils docs'></j-external-link>
+            for more details on aperture masking methods.
+          </j-docs-link>
         </v-row>
       </div>
 
@@ -154,6 +160,12 @@
           persistent-hint
         ></v-select>
       </v-row>
+      <v-row v-if="conflicting_aperture_and_function">
+        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          {{conflicting_aperture_error_message}}
+        </span>
+      </v-row>
+
 
 
       <plugin-add-results
@@ -168,7 +180,7 @@
         action_label="Extract"
         action_tooltip="Run spectral extraction with error and mask propagation"
         :action_spinner="spinner"
-        :action_disabled="aperture_selected === bg_selected"
+        :action_disabled="aperture_selected === bg_selected || conflicting_aperture_and_function"
         @click:action="spectral_extraction"
       ></plugin-add-results>
 
