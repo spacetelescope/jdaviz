@@ -8,7 +8,7 @@ The Imviz data analysis plugins are meant to aid quick-look analysis
 of 2D image data. All plugins are accessed via the :guilabel:`plugin`
 icon in the upper right corner of the Imviz application.
 
-.. image:: ../img/plugins.jpg
+.. image:: ./img/plugins.jpg
     :alt: Imviz Plugins
     :width: 200px
 
