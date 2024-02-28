@@ -307,7 +307,7 @@ def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
     extract_plg.function = 'Sum'
     extract_plg.aperture = 'Subset 2'
     # FIXME: https://jira.stsci.edu/browse/JDAT-4268
-    with pytest.raises(AttributeError, match=".* object has no attribute 'radius'"):
+    with pytest.raises(NotImplementedError, match=".* is not supported"):
         extract_plg.collapse_to_spectrum()
 
 

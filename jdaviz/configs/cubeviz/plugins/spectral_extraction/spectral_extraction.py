@@ -354,16 +354,17 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.wavelength_dependent:
             # Cone aperture
             if display_unit.physical_type != 'length':
-                error_msg = (f'Spectral axis unit physical type is {display_unit.physical_type},'
-                             ' must be length for cone aperture')
-                self.hub.broadcast(SnackbarMessage(error_msg, color="error", sender=self))
-                raise ValueError(error_msg)
+                raise ValueError(
+                    f'Spectral axis unit physical type is {display_unit.physical_type}, '
+                    'must be length for cone aperture')
+
+            # TODO: Remove when cone support is extended to other shapes
+            if not hasattr(self.aperture.selected_spatial_region, 'radius'):
+                raise NotImplementedError(
+                    f"{self.aperture.selected_spatial_region.__class__.__name__} is not supported")
 
             mask_weights = np.zeros_like(flux_cube.flux.value, dtype=np.float32)
-            # Remove when cone support is extended to other shapes
-            if not hasattr(self.aperture.selected_spatial_region, 'radius'):
-                raise AttributeError(f"{self.aperture.selected_spatial_region.__str__()} object has"
-                                     " no attribute 'radius'")
+
             # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
             radii = ((flux_cube.spectral_axis.value / self.reference_wavelength) *
                      self.aperture.selected_spatial_region.radius)
@@ -376,7 +377,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 mask_weights[:, :, index] = slice_mask
         else:
             # Cylindrical aperture
-            # aperture = CircularAperture(center, r=self.aperture.selected_spatial_region.radius)
             aperture = regions2aperture(self.aperture.selected_spatial_region)
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
