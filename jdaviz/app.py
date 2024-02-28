@@ -1831,13 +1831,13 @@ class Application(VuetifyTemplate, HubListener):
 
                         elif type(roi) is RectangularROI:
                             x1, y1 = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                          roi.xmin, roi.ymin)
+                                                    roi.xmin, roi.ymin)
                             x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                          roi.xmin, roi.ymax)
+                                                    roi.xmin, roi.ymax)
                             x3, y3 = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                          roi.xmax, roi.ymax)
+                                                    roi.xmax, roi.ymax)
                             x3, y3 = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                          roi.xmax, roi.ymin)
+                                                    roi.xmax, roi.ymin)
 
                             # Calculate new width and height from possibly rotated result
                             new_width = np.sqrt((x3-x1)**2 + (y3-y1)**2)
@@ -1855,8 +1855,8 @@ class Application(VuetifyTemplate, HubListener):
 
                         # Account for rotation between orientations
                         if hasattr(roi, "theta"):
-                                angle = getattr(roi, "theta")
-                                setattr(roi, "theta", angle - np.deg2rad(relative_angle))
+                            angle = getattr(roi, "theta")
+                            setattr(roi, "theta", angle - np.deg2rad(relative_angle))
 
                     elif type(subset_group.subset_state) is RangeSubsetState:
                         range_state = subset_group.subset_state
