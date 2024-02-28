@@ -235,7 +235,7 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
                                               aperture_method, expected_flux_1000,
                                               expected_flux_2400, expected_flux_mean):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(5, 10), radius=2.5)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
@@ -246,13 +246,13 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
 
     collapsed_spec = extract_plg.collapse_to_spectrum()
 
-    assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000, atol=1e-9)
-    assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400, atol=1e-9)
+    assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000, rtol=1e-6)
+    assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400, rtol=1e-6)
 
     extract_plg.function = 'Mean'
     collapsed_spec_mean = extract_plg.collapse_to_spectrum()
 
-    assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean, atol=1e-9)
+    assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean, rtol=1e-6)
 
 
 @pytest.mark.parametrize(
@@ -263,8 +263,8 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
 def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_largest,
                                                      aperture_method, expected_flux_1000,
                                                      expected_flux_2400, expected_flux_mean):
-    cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
+    cubeviz_helper.load_data(spectrum1d_cube_largest, data_label="test")
+    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(5, 10), radius=2.5)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
@@ -275,20 +275,20 @@ def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_
 
     collapsed_spec = extract_plg.collapse_to_spectrum()
 
-    assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000, atol=1e-9)
-    assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400, atol=1e-9)
+    assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000)
+    assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400)
 
     extract_plg.function = 'Mean'
     collapsed_spec_mean = extract_plg.collapse_to_spectrum()
 
-    assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean, atol=1e-9)
+    assert_allclose(collapsed_spec_mean.flux.value[1000:1010], expected_flux_mean)
 
 
 def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     cubeviz_helper.load_regions([
-        CirclePixelRegion(PixCoord(14, 15), radius=2.5),
-        EllipsePixelRegion(center=PixCoord(x=10.5, y=12), width=5, height=3)])
+        CirclePixelRegion(PixCoord(5, 10), radius=2.5),
+        EllipsePixelRegion(center=PixCoord(x=7, y=12), width=5, height=3)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 

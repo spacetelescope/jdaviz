@@ -240,17 +240,14 @@ def spectrum1d_cube_larger():
 
 @pytest.fixture
 def spectrum1d_cube_largest():
-    flux = np.ones((30, 29, 3001))
-
     wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
                 "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
                 "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
                 "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
-
     w = WCS(wcs_dict)
-
-    spec3d = Spectrum1D(flux=flux * u.Jy, wcs=w)
-    return spec3d
+    flux = np.zeros((30, 20, 3001), dtype=np.float32)  # nx=20 ny=30 nz=3001
+    flux[5:15, 1:11, :] = 1  # Bright corner
+    return Spectrum1D(flux=flux * u.Jy, wcs=w, meta=wcs_dict)
 
 
 @pytest.fixture
