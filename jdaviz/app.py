@@ -1835,8 +1835,6 @@ class Application(VuetifyTemplate, HubListener):
                             x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                                     roi.xmin, roi.ymax)
                             x3, y3 = pixel_to_pixel(old_parent.coords, new_parent.coords,
-                                                    roi.xmax, roi.ymax)
-                            x3, y3 = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                                     roi.xmax, roi.ymin)
 
                             # Calculate new width and height from possibly rotated result
