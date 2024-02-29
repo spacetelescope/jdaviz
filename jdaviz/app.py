@@ -766,8 +766,13 @@ class Application(VuetifyTemplate, HubListener):
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
                  ref_data.ndim < 3)
               ):
-            links = [LinkSame(linked_data.components[0], ref_data.components[0]),
-                     LinkSame(linked_data.components[1], ref_data.components[1])]
+            if self.config == 'specviz2d':
+                links = [LinkSameWithUnits(linked_data.components[0], ref_data.components[1]),
+                         LinkSameWithUnits(linked_data.components[1], ref_data.components[3])]
+            else:
+                links = [LinkSame(linked_data.components[0], ref_data.components[0]),
+                         LinkSame(linked_data.components[1], ref_data.components[1])]
+
             dc.add_link(links)
             return
 
