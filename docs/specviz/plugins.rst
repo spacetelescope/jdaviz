@@ -110,7 +110,7 @@ and if the spectrum uncertainty was loaded.
 From the API
 ------------
 
-The model fitting plugin can be run from the API. Here is an example.
+The model fitting plugin can be run from the API:
 
 .. code-block:: python
 
