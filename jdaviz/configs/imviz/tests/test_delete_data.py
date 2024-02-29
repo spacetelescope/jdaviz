@@ -70,7 +70,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
 
         assert subset2.subset_state.xatt.parent.label == "Default orientation"
         assert_allclose(subset2.subset_state.roi.xmin, -0.25)
-        assert_allclose(subset2.subset_state.roi.ymin, -0.25, atol=1e-6)
+        assert_allclose(subset2.subset_state.roi.ymin, -0.25)
         assert_allclose(subset2.subset_state.roi.xmax, 1.75)
         assert_allclose(subset2.subset_state.roi.ymax, 1.75)
 
