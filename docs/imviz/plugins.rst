@@ -8,7 +8,7 @@ The Imviz data analysis plugins are meant to aid quick-look analysis
 of 2D image data. All plugins are accessed via the :guilabel:`plugin`
 icon in the upper right corner of the Imviz application.
 
-.. image:: ../img/plugins.jpg
+.. image:: ./img/plugins.jpg
     :alt: Imviz Plugins
     :width: 200px
 
@@ -95,9 +95,16 @@ In Imviz, the table also exposed columns labeled "pixel:unreliable", "world:unre
 the bounds of the reference image's WCS (noted in the mouseover display by the information showing
 as grayed).
 
-To export the table into the notebook via the API, call
-:meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
-(see :ref:`plugin-apis`).
+From the API
+------------
+
+To export the table into the notebook via the API:
+
+.. code-block:: python
+
+    markersplugin = imviz.plugins['Markers']
+    markersplugin.export_table()
+
 
 .. _imviz-orientation:
 
@@ -378,7 +385,7 @@ Canvas Rotation
     This plugin is deprecated in favor of rotation via :ref:`imviz-orientation` and will be removed
     in a future release.
 
-The canvas rotation plugin allows rotating and horizontally flipping the image to any arbitrary 
+The canvas rotation plugin allows rotating and horizontally flipping the image to any arbitrary
 value by rotating the canvas axes themselves.  Note that this does not affect the underlying data, and
 exporting data to the notebook via the API will therefore not exhibit the same rotation.
 

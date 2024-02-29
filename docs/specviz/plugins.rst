@@ -48,7 +48,9 @@ Subset Tools
 .. seealso::
 
     :ref:`Subset Tools <imviz-subset-plugin>`
-        Imviz documentation describing the concept of subsets in Jdaviz.
+        Imviz documentation describing the concept of subsets in Jdaviz. Subsets
+        in Specviz are strictly spectral subsets and do not support rotation or
+        recentering.
 
 Markers
 =======
@@ -79,6 +81,7 @@ Model Fitting
 =============
 
 .. image:: ../img/model_fitting_components.png
+    :alt: Model Fitting plugin
 
 Astropy models can be fit to a spectrum via the Model Fitting plugin.
 Model components are selected via the :guilabel:`Model Component` pulldown menu.
@@ -101,10 +104,37 @@ or to change to subtraction, for example.
 After fitting, the expandable menu for each component model will update to
 show the fitted value of each parameter rather than the initial value, and
 will additionally show the standard deviation uncertainty of the fitted
-parameter value if the parameter was not set to be fixed to the initial value.
+parameter value if the parameter was not set to be fixed to the initial value
+and if the spectrum uncertainty was loaded.
 
-Parameter values for each fitting run are stored in the plugin table.  
-To export the table into the notebook via the API, call
+From the API
+------------
+
+The model fitting plugin can be run from the API:
+
+.. code-block:: python
+
+    # Open model fitting plugin
+    plugin_mf = specviz.plugins['Model Fitting']
+    plugin_mf.open_in_tray()
+    # Input the appropriate dataset and subset
+    plugin_mf.dataset = 'my spectrum'
+    plugin_mf.spectral_subset = 'Subset 1'
+    # Input the model components
+    plugin_mf.create_model_component(model_component='Linear1D',
+                                     model_component_label='L')
+    plugin_mf.create_model_component(model_component='Gaussian1D',
+                                     model_component_label='G')
+    # Set the initial guess of some model parameters
+    plugin_mf.set_model_component('G', 'stddev', 0.002)
+    plugin_mf.set_model_component('G', 'mean', 2.2729)
+    # Model equation gets populated automatically, but can be overwritten
+    plugin_mf.equation = 'L+G'
+    # Calculate fit
+    plugin_mf.calculate_fit()
+
+Parameter values for each fitting run are stored in the plugin table.
+To export the table into the notebook, call
 :meth:`~jdaviz.core.template_mixin.TableMixin.export_table`
 (see :ref:`plugin-apis`).
 
@@ -130,6 +160,16 @@ Select the flux density unit in the :guilabel:`New Flux Unit` pulldown
 
 Note that this affects the default units in all viewers and plugins, where applicable,
 but does not affect the underlying data.
+
+From the API
+------------
+
+The Unit Conversion plugin can be called from the API:
+
+.. code-block:: python
+
+    unitconv_pl = specviz.plugins['Unit Conversion']
+    unitconv_pl.spectral_unit = 'Angstrom'
 
 .. _line-lists:
 
@@ -224,6 +264,9 @@ will return the data as originally loaded, with the redshift unchanged.
 Line Analysis
 =============
 
+.. image:: ./img/line_analysis_plugin.png
+    :alt: Line Analysis plugin
+
 The Line Analysis plugin returns
 `specutils analysis <https://specutils.readthedocs.io/en/stable/analysis.html>`_
 for a single spectral line.
@@ -239,10 +282,30 @@ in the spectrum plot while the plugin is open.  The thick line shows the linear 
 is then interpolated into the line region as shown by a thin line.  Alternatively, a custom
 secondary region can be created and selected as the region to fit the linear continuum.
 
-The statistics returned include the line centroid, gaussian sigma width, gaussian FWHM,
-total flux, and equivalent width.
+The properties returned include the line centroid, gaussian sigma width, gaussian FWHM,
+total flux, and equivalent width. Uncertainties on the derived properties are also
+returned. For more information on the algorithms used, refer to the `specutils documentation
+<https://specutils.readthedocs.io/en/stable/analysis.html>`_.
 
 The line flux results are automatically converted to Watts/meter^2, when appropriate.
+
+From the API
+------------
+
+The Line Analysis plugin can be run from the API:
+
+.. code-block:: python
+
+    # Open line analysis plugin
+    plugin_la = specviz.plugins['Line Analysis']
+    plugin_la.open_in_tray()
+    # Input the appropriate spectrum and region
+    plugin_la.dataset = 'my spectrum'
+    plugin_la.spectral_subset = 'Subset 2'
+    # Input the values for the continuum
+    plugin_la.continuum = 'Subset 3'
+    # Return line analysis results
+    plugin_la.get_results()
 
 Redshift from Centroid
 ----------------------
