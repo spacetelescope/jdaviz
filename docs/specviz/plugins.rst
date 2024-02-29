@@ -107,7 +107,7 @@ will additionally show the standard deviation uncertainty of the fitted
 parameter value if the parameter was not set to be fixed to the initial value
 and if the spectrum uncertainty was loaded.
 
-Form the API
+From the API
 ------------
 
 The model fitting plugin can be run from the API. Here is an example.
