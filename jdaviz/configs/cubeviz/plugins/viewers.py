@@ -23,9 +23,7 @@ __all__ = ['CubevizImageView', 'CubevizProfileView',
 class WithSliceIndicator:
     @property
     def slice_component_label(self):
-        # label of the component in the cubes corresponding to the slice axis
-        # calling data_collection_item.get_component(slice_component_label) must work
-        return 'Wavelength'
+        return str(self.state.x_att)
 
     @cached_property
     def slice_indicator(self):
@@ -63,9 +61,10 @@ class WithSliceSelection:
 
     @property
     def slice_component_label(self):
-        # label of the component in the cubes corresponding to the slice axis
-        # calling data_collection_item.get_component(slice_component_label) must work
-        return 'Wavelength'
+        slice_plg = self.jdaviz_helper.plugins.get('Slice', None)
+        if slice_plg is None:  # pragma: no cover
+            raise ValueError("slice plugin must be activated to access slice_component_label")
+        return slice_plg._obj.slice_indicator_viewers[0].slice_component_label
 
     @property
     def slice_values(self):
