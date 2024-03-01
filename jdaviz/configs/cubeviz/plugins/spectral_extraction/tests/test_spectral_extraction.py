@@ -356,3 +356,11 @@ def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
 
     with pytest.raises(ValueError, match="Spectral axis unit physical type is"):
         extract_plg.collapse_to_spectrum()
+
+
+def test_allcube_with_nan(cubeviz_helper, image_cube_hdu_obj):
+    image_cube_hdu_obj[1].data[:, :2, :2] = np.nan
+    cubeviz_helper.load_data(image_cube_hdu_obj, data_label="with_nan")
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+    sp = extract_plg.collapse_to_spectrum()  # Default settings
+    assert_allclose(sp.flux.value, 1)
