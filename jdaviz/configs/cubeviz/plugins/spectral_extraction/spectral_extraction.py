@@ -272,6 +272,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             wcs = spectral_cube.coords.spectral
 
+        # Filter out NaNs (False = good)
+        mask = np.logical_or(mask, np.isnan(flux))
+
         nddata_reshaped = NDDataArray(
             flux, mask=mask, uncertainty=uncertainties, wcs=wcs, meta=nddata.meta
         )
