@@ -31,4 +31,4 @@ class FloatHandleEmpty(HandleEmptyMixin, Float):
     def validate(self, obj, value):
         if value == '.':
             return value
-        return super().validate(obj, value)
+        return super().validate(obj, float(value))
