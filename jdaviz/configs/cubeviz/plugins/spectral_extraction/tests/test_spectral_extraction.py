@@ -215,12 +215,12 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         assert mark.x[1] != before_x[1]
 
         extract_plg._obj.vue_goto_reference_wavelength()
-        assert slice_plg.value == slice_values[0]
+        assert_allclose(slice_plg.value, slice_values[0])
 
         slice_plg.value = slice_values[1]
         extract_plg._obj.vue_adopt_slice_as_reference()
         extract_plg._obj.vue_goto_reference_wavelength()
-        assert slice_plg.value == slice_values[1]
+        assert_allclose(slice_plg.value, slice_values[1])
 
 
 @pytest.mark.parametrize('subset', ['Subset 1', 'Subset 2'])

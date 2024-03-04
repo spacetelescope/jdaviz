@@ -224,8 +224,6 @@ class Slice(PluginTemplateMixin):
             self._on_value_updated({'new': self.value})
 
     def _on_select_slice_message(self, msg):
-        # NOTE: by setting the slice index, the observer (_on_slider_updated)
-        # will sync across all viewers and update the value (wavelength/frequency)
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UnitsWarning)
             self.value = msg.value
