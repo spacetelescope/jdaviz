@@ -37,7 +37,7 @@
     </v-overlay>
     <v-app-bar color="toolbar" dark :dense="state.settings.dense_toolbar" flat app absolute clipped-right :style="checkNotebookContext() ? 'margin-left: 1px; margin-right: 1px' : ''">
       <v-toolbar-items v-for="item in state.tool_items">
-        <v-divider v-if="['g-data-tools', 'g-subset-tools'].indexOf(item.name) === -1" vertical style="margin: 0px 10px"></v-divider>
+        <v-divider v-if="['data-tools', 'viewer-creator', 'subset-tools'].indexOf(item.name.split('-').slice(1).join('-')) === -1" vertical style="margin: 0px 10px"></v-divider>
         <v-divider v-else-if="item.name === 'g-subset-tools'" vertical style="margin: 0px 10px; border-width: 0"></v-divider>
         <j-tooltip v-if="['cubeviz', 'mosviz'].indexOf(config) !== -1 && item.name == 'g-data-tools' && state.data_items.length !== 0"></j-tooltip>
         <j-tooltip v-else :tipid="item.name">
