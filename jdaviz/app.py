@@ -1800,9 +1800,10 @@ class Application(VuetifyTemplate, HubListener):
 
                         old_angle, _, old_flip = get_compass_info(old_parent.coords, (10, 10))[-3:]
                         new_angle, _, new_flip = get_compass_info(new_parent.coords, (10, 10))[-3:]
-                        relative_angle = new_angle - old_angle
                         if old_flip != new_flip:
-                            relative_angle += 180
+                            relative_angle = new_angle + old_angle - 180
+                        else:
+                            relative_angle = new_angle - old_angle
 
                         # Get the correct link to use for translation
                         roi = subset_state.roi
@@ -1854,7 +1855,11 @@ class Application(VuetifyTemplate, HubListener):
                         # Account for rotation between orientations
                         if hasattr(roi, "theta"):
                             angle = getattr(roi, "theta")
-                            setattr(roi, "theta", angle - np.deg2rad(relative_angle))
+                            if old_flip != new_flip:
+                                new_angle = np.deg2rad(relative_angle) - angle
+                            else:
+                                new_angle = angle - np.deg2rad(relative_angle)
+                            setattr(roi, "theta", new_angle)
 
                     elif type(subset_group.subset_state) is RangeSubsetState:
                         range_state = subset_group.subset_state
@@ -2022,8 +2027,9 @@ class Application(VuetifyTemplate, HubListener):
 
         data_label = event['item_name']
         data = self.data_collection[data_label]
-        if self.config == "imviz":
-            orient = self._jdaviz_helper.plugins["Orientation"].orientation.selected
+        orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
+        if orientation_plugin is not None:
+            orient = orientation_plugin.orientation.selected
             self._reparent_subsets(data, new_parent=orient)
         else:
             self._reparent_subsets(data)
@@ -2032,27 +2038,20 @@ class Application(VuetifyTemplate, HubListener):
         for viewer_id in self._viewer_store:
             self.remove_data_from_viewer(viewer_id, data_label)
 
-        # Imviz has some extra logic below that can be skipped after data removal if we're not
-        # removing the reference data, so we check that here.
-        if self.config == "imviz":
-            imviz_refdata = False
-            ref_data, iref = self._jdaviz_helper.get_ref_data()
-            if data is ref_data:
-                imviz_refdata = True
-
         self.data_collection.remove(self.data_collection[data_label])
 
-        # If there are two or more datasets left we need to link them back together after removing
-        # the reference data (which would leave 0 external_links).
-        if len(self.data_collection) > 1 and len(self.data_collection.external_links) == 0:
-            if self.config == "imviz" and imviz_refdata:
-                link_type = self._jdaviz_helper.plugins["Orientation"].link_type.selected.lower()
-                self._jdaviz_helper.link_data(link_type=link_type)
+        # If there are two or more datasets left we need to link them back together if anything
+        # was linked only through the removed data.
+        if (len(self.data_collection) > 1 and
+                len(self.data_collection.external_links) < len(self.data_collection) - 1):
+            if orientation_plugin is not None:
+                orientation_plugin._obj._link_image_data()
                 # Hack to restore responsiveness to imviz layers
                 for viewer_ref in self.get_viewer_reference_names():
                     viewer = self.get_viewer(viewer_ref)
                     loaded_layers = [layer.layer.label for layer in viewer.layers if
-                                     "Subset" not in layer.layer.label]
+                                     "Subset" not in layer.layer.label and layer.layer.label
+                                     not in orientation_plugin.orientation.labels]
                     if len(loaded_layers):
                         self.remove_data_from_viewer(viewer_ref, loaded_layers[-1])
                         self.add_data_to_viewer(viewer_ref, loaded_layers[-1])
