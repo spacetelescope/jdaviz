@@ -10,6 +10,7 @@ from traitlets import Bool, Int, Unicode, observe
 
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator, WithSliceSelection,
                                                     CubevizImageView)
+from jdaviz.configs.cubeviz.helper import _spectral_axis_names
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
@@ -95,7 +96,7 @@ class Slice(PluginTemplateMixin):
                                    handler=self._on_global_display_unit_changed)
         self._initialize_location()
 
-    def _initialize_location(self):
+    def _initialize_location(self, *args):
         # intitialize value_unit (this has to wait until data is loaded to an existing
         # slice_indicator_viewer, so we'll keep trying until it is set - after that, changes
         # will be handled by a change to global display units)
@@ -116,6 +117,9 @@ class Slice(PluginTemplateMixin):
         # skipped going forward to not change any user selection (so will default to the
         # middle of the first found layer)
         for viewer in self.slice_indicator_viewers:
+            if str(viewer.state.x_att) not in self.valid_slice_att_names:
+                # avoid setting value to degs, before x_att is changed to wavelength, for example
+                continue
             slice_values = viewer.slice_values
             if len(slice_values):
                 self.value = slice_values[int(len(slice_values)/2)]
@@ -126,6 +130,10 @@ class Slice(PluginTemplateMixin):
     def slice_axis(self):
         # global display unit "axis" corresponding to the slice axis
         return 'spectral'
+
+    @property
+    def valid_slice_att_names(self):
+        return _spectral_axis_names
 
     @property
     def slice_selection_viewers(self):
@@ -196,6 +204,9 @@ class Slice(PluginTemplateMixin):
         if isinstance(viewer, WithSliceIndicator):
             # NOTE: on first call, this will initialize the indicator itself
             viewer._set_slice_indicator_value(self.value)
+        # in the case where x_att is changed after the viewer is added or data is loaded, we
+        # may still need to initialize the location to a valid value (with a valid x_att)
+        viewer.state.add_callback('x_att', self._initialize_location)
 
     def _on_viewer_added(self, msg):
         viewer = self.app.get_viewer(msg.viewer_id)

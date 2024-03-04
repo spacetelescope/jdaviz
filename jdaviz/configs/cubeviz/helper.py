@@ -15,6 +15,10 @@ from jdaviz.core.events import (AddDataMessage,
 __all__ = ['Cubeviz']
 
 
+_spectral_axis_names = ["Wave", "Wavelength", "Freq", "Frequency",
+                        "Wavenumber", "Velocity", "Energy"]
+
+
 class Cubeviz(ImageConfigHelper, LineListMixin):
     """Cubeviz Helper class"""
     _default_configuration = 'cubeviz'
@@ -37,8 +41,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             return
         ref_data = viewer.state.reference_data
         if ref_data and ref_data.ndim == 3:
-            for att_name in ["Wave", "Wavelength", "Freq", "Frequency",
-                             "Wavenumber", "Velocity", "Energy"]:
+            for att_name in _spectral_axis_names:
                 if att_name in ref_data.component_ids():
                     if viewer.state.x_att != ref_data.id[att_name]:
                         viewer.state.x_att = ref_data.id[att_name]

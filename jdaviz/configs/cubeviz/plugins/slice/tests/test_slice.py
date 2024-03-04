@@ -35,11 +35,11 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 1
     assert cubeviz_helper.app.get_viewer("flux-viewer").state.slices[-1] == 1
     assert cubeviz_helper.app.get_viewer("uncert-viewer").state.slices[-1] == 1
-    cubeviz_helper.select_slice(0)
+    cubeviz_helper.select_wavelength(slice_values[0])
     assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 0
     assert sl.value == slice_values[0]
 
-    cubeviz_helper.select_wavelength(4.62360028e-07)
+    cubeviz_helper.select_wavelength(slice_values[1])
     assert sl.value == slice_values[1]
 
     # test setting a static 2d image to the "watched" flux viewer to make sure it disconnects
