@@ -36,7 +36,7 @@ class UniqueDictRegistry(DictRegistry):
     """Base registry class that handles hashmap-like associations between a string
     representation of a plugin and the class to be instantiated.
     """
-    def add(self, name, cls):
+    def add(self, name, cls, overwrite=False):
         """Add an item to the registry.
 
         Parameters
@@ -46,23 +46,25 @@ class UniqueDictRegistry(DictRegistry):
         cls : type
             The class definition (not instance) associated with the name given
             in the first parameter.
+        overwrite : bool, optional
+            Whether to overwrite an existing entry with the same ``label``.
         """
-        if name in self.members:
+        if name in self.members and not overwrite:
             raise ValueError(f"Viewer with the name {name} already exists, "
-                             f"please choose a different name.")
+                             f"please choose a different name or pass overwrite=True.")
         else:
             self.members[name] = cls
 
 
 class ViewerRegistry(UniqueDictRegistry):
     """Registry containing references to custom viewers."""
-    def __call__(self, name=None, label=None):
+    def __call__(self, name=None, label=None, overwrite=False):
         def decorator(cls):
-            self.add(name, cls, label)
+            self.add(name, cls, label, overwrite=overwrite)
             return cls
         return decorator
 
-    def add(self, name, cls, label=None):
+    def add(self, name, cls, label=None, overwrite=False):
         """Add an item to the registry.
 
         Parameters
@@ -75,10 +77,12 @@ class ViewerRegistry(UniqueDictRegistry):
             in the first parameter.
         label : str, optional
             The label displayed in the tooltip when hovering over the tray tab.
+        overwrite : bool, optional
+            Whether to overwrite an existing entry with the same ``label``.
         """
-        if name in self.members:
+        if name in self.members and not overwrite:
             raise ValueError(f"Viewer with the name {name} already exists, "
-                             f"please choose a different name.")
+                             f"please choose a different name or pass overwrite=True.")
         else:
             self.members[name] = {'label': label, 'cls': cls}
 
@@ -100,7 +104,7 @@ class TrayRegistry(UniqueDictRegistry):
     }
 
     def __call__(self, name=None, label=None, icon=None,
-                 viewer_requirements=[]):
+                 viewer_requirements=[], overwrite=False):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -110,12 +114,12 @@ class TrayRegistry(UniqueDictRegistry):
                     f"registered components must inherit from "
                     f"`ipyvuetify.VuetifyTemplate`.")
 
-            self.add(name, cls, label, icon, viewer_requirements)
+            self.add(name, cls, label, icon, viewer_requirements, overwrite)
             return cls
         return decorator
 
     def add(self, name, cls, label=None, icon=None,
-            viewer_requirements=[]):
+            viewer_requirements=[], overwrite=False):
         """Add an item to the registry.
 
         Parameters
@@ -132,10 +136,12 @@ class TrayRegistry(UniqueDictRegistry):
             The name of the icon to render in the tray tab.
         viewer_requirements : str, list of str
             Required viewers for this plugin.
+        overwrite : bool, optional
+            Whether to overwrite an existing entry with the same ``label``.
         """
-        if name in self.members:
+        if name in self.members and not overwrite:
             raise ValueError(f"Viewer with the name {name} already exists, "
-                             f"please choose a different name.")
+                             f"please choose a different name or pass overwrite=True.")
         else:
             # store the registry name/label so we can access them from the instantiated
             # objects (when determining if a specific plugin is open, for example)
@@ -170,7 +176,7 @@ class ToolRegistry(UniqueDictRegistry):
     """Registry containing references to plugins which will populate the
     application-level toolbar.
     """
-    def __call__(self, name=None):
+    def __call__(self, name=None, overwrite=False):
         def decorator(cls):
             # The class must inherit from `Widget` in order to be
             # ingestible by the component initialization.
@@ -180,7 +186,7 @@ class ToolRegistry(UniqueDictRegistry):
                     f"registered tools must inherit from "
                     f"`ipywidgets.Widget`.")
 
-            self.add(name, cls)
+            self.add(name, cls, overwrite)
             return cls
         return decorator
 
@@ -189,7 +195,7 @@ class MenuRegistry(UniqueDictRegistry):
     """Registry containing references to plugins that will populate the
     application-level menu bar.
     """
-    def __call__(self, name=None):
+    def __call__(self, name=None, overwrite=False):
         def decorator(cls):
             # The class must inherit from `VuetifyTemplate` in order to be
             # ingestible by the component initialization.
@@ -199,7 +205,7 @@ class MenuRegistry(UniqueDictRegistry):
                     f"registered tools must inherit from "
                     f"`ipywidgets.Widget`.")
 
-            self.add(name, cls)
+            self.add(name, cls, overwrite)
             return cls
         return decorator
 
