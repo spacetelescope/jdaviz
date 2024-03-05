@@ -2,6 +2,8 @@ import pytest
 from astropy.table import Table
 from numpy.testing import assert_allclose
 
+from glue.core.roi import EllipticalROI
+
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
 
@@ -152,3 +154,29 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
         lc_plugin._obj.add_orientation(rotation_angle=None, east_left=True, label=None,
                                        set_on_create=True, wrt_data=None)
         assert self.viewer.state.reference_data.label == "CCW 42.00 deg (E-left)"
+
+    def test_delete_orientation_with_subset(self):
+        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin.link_type = 'WCS'
+
+        # Should automatically be applied as reference to first viewer.
+        lc_plugin._obj.create_north_up_east_left(set_on_create=True)
+
+        # Create rotated ellipse
+        self.imviz.app.get_viewer("imviz-0").apply_roi(EllipticalROI(3, 5, 1.2, 0.6, 0.5))
+
+        # Switch to N-up E-right
+        lc_plugin._obj.create_north_up_east_right(set_on_create=True)
+
+        self.imviz.app.vue_data_item_remove({"item_name": "North-up, East-left"})
+
+        # Check that E-right still linked to default
+        assert len(self.imviz.app.data_collection.external_links) == 3
+        assert self.imviz.app.data_collection.external_links[2].data1.label == "North-up, East-right"  # noqa
+        assert self.imviz.app.data_collection.external_links[2].data2.label == "Default orientation"
+
+        # Check that the subset got reparented and the angle is correct
+        subset_group = self.imviz.app.data_collection.subset_groups[0]
+        nuer_data = self.imviz.app.data_collection['North-up, East-right']
+        assert subset_group.subset_state.xatt in nuer_data.components
+        assert_allclose(subset_group.subset_state.roi.theta, 2.641593, rtol=1e-5)
