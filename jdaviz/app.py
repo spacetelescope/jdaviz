@@ -1,4 +1,3 @@
-import math
 import operator
 import os
 import pathlib
@@ -1857,11 +1856,12 @@ class Application(VuetifyTemplate, HubListener):
 
                         # Account for rotation between orientations
                         if hasattr(roi, "theta"):
-                            angle = getattr(roi, "theta")
+                            angle = roi.theta
                             if old_flip != new_flip:
-                                new_angle = (np.deg2rad(relative_angle) - angle) % (2 * math.pi)
+                                fac = 1.0
                             else:
-                                new_angle = (angle - np.deg2rad(relative_angle)) % (2 * math.pi)
+                                fac = -1.0
+                            new_angle = (fac * (np.deg2rad(relative_angle) - angle)) % (2 * np.pi)
                             roi.theta = new_angle
 
                     elif type(subset_group.subset_state) is RangeSubsetState:
