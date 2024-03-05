@@ -286,7 +286,9 @@ class Slice(PluginTemplateMixin):
                 closest_ind = np.argmin(abs(valid_values - value))
                 closest_value = valid_values[closest_ind]
                 if self.value != closest_value:
-                    self.value = closest_value
+                    # cast to float in case closest_value is an integer (which would otherwise
+                    # raise an error with setting to the float traitlet)
+                    self.value = float(closest_value)
                     # will trigger another call to this method
                     return
 
