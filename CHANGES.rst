@@ -97,6 +97,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Spectral extraction now ignores NaNs. [#2737]
+
 Imviz
 ^^^^^
 
