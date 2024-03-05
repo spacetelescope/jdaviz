@@ -58,10 +58,20 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         return '', {path: table}
 
     @with_spinner()
-    def search(self):
-        """
-        Search the catalog, display markers on the viewer, and return a table of results (or None
-        if no results available)
+    def search(self, error_on_fail=False):
+        """Search the catalog, display markers on the viewer, and return results if available.
+
+        Parameters
+        ----------
+        error_on_fail : bool
+            Throw exception when query fails instead of a red snackbar message.
+            This is useful for debugging.
+
+        Returns
+        -------
+        skycoord_table : `~astropy.coordinates.SkyCoord` or `None`
+            Sky coordinates (or None if no results available).
+
         """
         # calling clear in the case the user forgot after searching
         self.clear()
@@ -111,9 +121,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
                                                         data_release=17)
             except Exception as e:  # nosec
-                self.hub.broadcast(SnackbarMessage(
-                    f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
-                    f"r={zoom_radius}: {repr(e)}", color='error', sender=self))
+                errmsg = (f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
+                          f"r={zoom_radius}: {repr(e)}")
+                if error_on_fail:
+                    raise Exception(errmsg) from e
+                self.hub.broadcast(SnackbarMessage(errmsg, color='error', sender=self))
                 query_region_result = None
 
             if query_region_result is None:

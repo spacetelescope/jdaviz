@@ -35,9 +35,7 @@ class TestCatalogs:
 
     # testing that the plugin search does not crash when no data/image is provided
     def test_plugin_no_image(self, imviz_helper):
-        self.imviz = imviz_helper
-
-        catalogs_plugin = self.imviz.app.get_tray_item_from_name('imviz-catalogs')
+        catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
         # running the search without any data loaded into Imviz
         catalogs_plugin.vue_do_search()
@@ -51,9 +49,7 @@ class TestCatalogs:
 
         imviz_helper.load_data(ndd, data_label='no_results_data')
 
-        self.imviz = imviz_helper
-
-        catalogs_plugin = self.imviz.app.get_tray_item_from_name('imviz-catalogs')
+        catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
         catalogs_plugin.vue_do_search()
 
@@ -88,15 +84,13 @@ class TestCatalogs:
                             'NAXIS2': 1489})
         imviz_helper.load_data(hdu1, data_label='has_wcs')
 
-        self.imviz = imviz_helper
-
-        catalogs_plugin = self.imviz.app.get_tray_item_from_name('imviz-catalogs')
+        catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
         catalogs_plugin.plugin_opened = True
         # This basically calls the following under the hood:
         #   skycoord_center = SkyCoord(6.62754354, 1.54466139, unit="deg")
         #   zoom_radius = r_max = 3 * u.arcmin
         #   query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius, ...)
-        catalogs_plugin.vue_do_search()
+        catalogs_plugin.search(error_on_fail=True)
 
         # number of results should be > 500 or so
         # Answer was determined by running the search with the image in the notebook.
@@ -111,9 +105,7 @@ class TestCatalogs:
 
         # test loading from file
         table = imviz_helper.app._catalog_source_table
-        skycoord_table = SkyCoord(table['ra'],
-                                  table['dec'],
-                                  unit='deg')
+        skycoord_table = SkyCoord(table['ra'], table['dec'], unit='deg')
         qtable = QTable({'sky_centroid': skycoord_table})
         tmp_file = tmp_path / 'test.ecsv'
         qtable.write(tmp_file, overwrite=True)
@@ -127,7 +119,7 @@ class TestCatalogs:
 
 
 def test_from_file_parsing(imviz_helper, tmp_path):
-    catalogs_plugin = imviz_helper.app.get_tray_item_from_name('imviz-catalogs')
+    catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
 
     # _on_file_path_changed is fired when changing the selection in the file dialog
     catalogs_plugin.catalog._on_file_path_changed({'new': './invalid_path'})
@@ -167,18 +159,18 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     imviz_helper.load_data(ndd, data_label='data_with_wcs')
     assert len(imviz_helper.app.data_collection) == 1
 
-    catalogs_plugin = imviz_helper.plugins['Catalog Search']
-    catalogs_plugin._obj.from_file = tbl_file
-    catalogs_plugin._obj.catalog_selected = 'From File...'
-    out_tbl = catalogs_plugin._obj.search()
+    catalogs_plugin = imviz_helper.plugins['Catalog Search']._obj
+    catalogs_plugin.from_file = tbl_file
+    catalogs_plugin.catalog_selected = 'From File...'
+    out_tbl = catalogs_plugin.search(error_on_fail=True)
     assert len(out_tbl) == n_entries
-    assert catalogs_plugin._obj.number_of_results == n_entries
+    assert catalogs_plugin.number_of_results == n_entries
     assert len(imviz_helper.app.data_collection) == 2  # image + markers
 
-    catalogs_plugin._obj.clear()
-    assert not catalogs_plugin._obj.results_available
+    catalogs_plugin.clear()
+    assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 2  # markers still there, just hidden
 
-    catalogs_plugin._obj.clear(hide_only=False)
-    assert not catalogs_plugin._obj.results_available
+    catalogs_plugin.clear(hide_only=False)
+    assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
