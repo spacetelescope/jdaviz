@@ -1,3 +1,4 @@
+import math
 import operator
 import os
 import pathlib
@@ -1858,9 +1859,9 @@ class Application(VuetifyTemplate, HubListener):
                         if hasattr(roi, "theta"):
                             angle = getattr(roi, "theta")
                             if old_flip != new_flip:
-                                new_angle = (np.deg2rad(relative_angle) - angle) % 360
+                                new_angle = (np.deg2rad(relative_angle) - angle) % (2 * math.pi)
                             else:
-                                new_angle = (angle - np.deg2rad(relative_angle)) % 360
+                                new_angle = (angle - np.deg2rad(relative_angle)) % (2 * math.pi)
                             roi.theta = new_angle
 
                     elif type(subset_group.subset_state) is RangeSubsetState:
