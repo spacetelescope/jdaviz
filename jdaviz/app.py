@@ -1798,6 +1798,8 @@ class Application(VuetifyTemplate, HubListener):
                     if (self.config == "imviz" and
                             self._jdaviz_helper.plugins["Orientation"].link_type == "WCS"):
 
+                        # Default shape for WCS-only layers is 10x10, but it doesn't really matter
+                        # since we only need the angles.
                         old_angle, _, old_flip = get_compass_info(old_parent.coords, (10, 10))[-3:]
                         new_angle, _, new_flip = get_compass_info(new_parent.coords, (10, 10))[-3:]
                         if old_flip != new_flip:
@@ -1859,7 +1861,7 @@ class Application(VuetifyTemplate, HubListener):
                                 new_angle = (np.deg2rad(relative_angle) - angle) % 360
                             else:
                                 new_angle = (angle - np.deg2rad(relative_angle)) % 360
-                            setattr(roi, "theta", new_angle)
+                            roi.theta = new_angle
 
                     elif type(subset_group.subset_state) is RangeSubsetState:
                         range_state = subset_group.subset_state
