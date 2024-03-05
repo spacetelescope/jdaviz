@@ -1801,7 +1801,7 @@ class Application(VuetifyTemplate, HubListener):
                         old_angle, _, old_flip = get_compass_info(old_parent.coords, (10, 10))[-3:]
                         new_angle, _, new_flip = get_compass_info(new_parent.coords, (10, 10))[-3:]
                         if old_flip != new_flip:
-                            relative_angle = new_angle + old_angle - 180
+                            relative_angle = 180 - new_angle - old_angle
                         else:
                             relative_angle = new_angle - old_angle
 
@@ -1856,9 +1856,9 @@ class Application(VuetifyTemplate, HubListener):
                         if hasattr(roi, "theta"):
                             angle = getattr(roi, "theta")
                             if old_flip != new_flip:
-                                new_angle = np.deg2rad(relative_angle) - angle
+                                new_angle = (np.deg2rad(relative_angle) - angle) % 360
                             else:
-                                new_angle = angle - np.deg2rad(relative_angle)
+                                new_angle = (angle - np.deg2rad(relative_angle)) % 360
                             setattr(roi, "theta", new_angle)
 
                     elif type(subset_group.subset_state) is RangeSubsetState:
