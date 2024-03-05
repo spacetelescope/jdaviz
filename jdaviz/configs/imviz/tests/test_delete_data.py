@@ -64,6 +64,9 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         # Make sure we re-linked images 2 and 3 (plus WCS-only reference data layer)
         assert len(self.imviz.app.data_collection.external_links) == 2
 
+        # FIXME: 0.25 offset introduced by fake WCS layer, see
+        # https://jira.stsci.edu/browse/JDAT-4256
+
         # Check that the reparenting and coordinate recalculations happened
         assert subset1.subset_state.xatt.parent.label == "Default orientation"
         assert_allclose(subset1.subset_state.center(), (1.75, 1.75))

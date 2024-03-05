@@ -1,8 +1,10 @@
 import pytest
+from astropy import units as u
+from astropy.coordinates import SkyCoord
 from astropy.table import Table
+from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
-
-from glue.core.roi import EllipticalROI
+from regions import EllipseSkyRegion, RectangleSkyRegion
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 
@@ -155,15 +157,25 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
                                        set_on_create=True, wrt_data=None)
         assert self.viewer.state.reference_data.label == "CCW 42.00 deg (E-left)"
 
-    def test_delete_orientation_with_subset(self):
+
+class TestDeleteOrientation(BaseImviz_WCS_WCS):
+
+    @pytest.mark.parametrize("klass", [EllipseSkyRegion, RectangleSkyRegion])
+    @pytest.mark.parametrize(
+        ("angle", "sbst_theta"),
+        [(0.5 * u.rad, 2.641593),
+         (-0.5 * u.rad, 3.641589)])
+    def test_delete_orientation_with_subset(self, klass, angle, sbst_theta):
         lc_plugin = self.imviz.plugins['Orientation']
         lc_plugin.link_type = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
         lc_plugin._obj.create_north_up_east_left(set_on_create=True)
 
-        # Create rotated ellipse
-        self.imviz.app.get_viewer("imviz-0").apply_roi(EllipticalROI(3, 5, 1.2, 0.6, 0.5))
+        # Create rotated shape
+        reg = klass(center=SkyCoord(ra=337.51931488, dec=-20.83187472, unit="deg"),
+                    width=2.4 * u.arcsec, height=1.2 * u.arcsec, angle=angle)
+        self.imviz.load_regions(reg)
 
         # Switch to N-up E-right
         lc_plugin._obj.create_north_up_east_right(set_on_create=True)
@@ -172,11 +184,20 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
 
         # Check that E-right still linked to default
         assert len(self.imviz.app.data_collection.external_links) == 3
-        assert self.imviz.app.data_collection.external_links[2].data1.label == "North-up, East-right"  # noqa
+        assert self.imviz.app.data_collection.external_links[2].data1.label == "North-up, East-right"  # noqa: E501
         assert self.imviz.app.data_collection.external_links[2].data2.label == "Default orientation"
 
-        # Check that the subset got reparented and the angle is correct
+        # Check that the subset got reparented and the angle is correct in the display
         subset_group = self.imviz.app.data_collection.subset_groups[0]
         nuer_data = self.imviz.app.data_collection['North-up, East-right']
         assert subset_group.subset_state.xatt in nuer_data.components
-        assert_allclose(subset_group.subset_state.roi.theta, 2.641593, rtol=1e-5)
+        assert_allclose(subset_group.subset_state.roi.theta, sbst_theta, rtol=1e-5)
+
+        out_reg = self.imviz.app.get_subsets(include_sky_region=True)["Subset 1"][0]["sky_region"]
+        assert_allclose(out_reg.center.ra.deg, reg.center.ra.deg)
+        assert_allclose(out_reg.center.dec.deg, reg.center.dec.deg)
+        assert_quantity_allclose(out_reg.width, reg.width)
+        assert_quantity_allclose(out_reg.height, reg.height)
+        # FIXME: However, sky angle has to stay the same as per regions convention.
+        with pytest.raises(AssertionError, match="Not equal to tolerance"):
+            assert_quantity_allclose(out_reg.angle, reg.angle)

@@ -30,7 +30,6 @@ from glue.core.units import unit_converter
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_astronomy.translators.regions import roi_subset_state_to_region
 from glue_jupyter.app import JupyterApplication
-from glue_jupyter.bqplot.common.tools import TrueCircularROI
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.state_traitlets_helpers import GlueState
 from ipypopout import PopoutButton
@@ -1810,8 +1809,7 @@ class Application(VuetifyTemplate, HubListener):
                         # Get the correct link to use for translation
                         roi = subset_state.roi
                         old_xc, old_yc = subset_state.center()
-                        if type(roi) in (CircularROI, CircularAnnulusROI,
-                                         EllipticalROI, TrueCircularROI):
+                        if isinstance(roi, (CircularROI, CircularAnnulusROI, EllipticalROI)):
                             # Convert center
                             x, y = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                                   roi.xc, roi.yc)
@@ -1832,7 +1830,7 @@ class Application(VuetifyTemplate, HubListener):
                                     new_radius = np.sqrt((x2 - x)**2 + (y2 - y)**2)
                                     setattr(roi, att, new_radius)
 
-                        elif type(roi) is RectangularROI:
+                        elif isinstance(roi, RectangularROI):
                             x1, y1 = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                                     roi.xmin, roi.ymin)
                             x2, y2 = pixel_to_pixel(old_parent.coords, new_parent.coords,
@@ -1841,30 +1839,25 @@ class Application(VuetifyTemplate, HubListener):
                                                     roi.xmax, roi.ymin)
 
                             # Calculate new width and height from possibly rotated result
-                            new_width = np.sqrt((x3-x1)**2 + (y3-y1)**2)
-                            new_height = np.sqrt((x2-x1)**2 + (y2-y1)**2)
+                            new_half_width = np.sqrt((x3-x1)**2 + (y3-y1)**2) * 0.5
+                            new_half_height = np.sqrt((x2-x1)**2 + (y2-y1)**2) * 0.5
 
                             # Convert center
                             new_center = pixel_to_pixel(old_parent.coords, new_parent.coords,
                                                         old_xc, old_yc)
 
                             # New min/max before applying theta
-                            roi.xmin = new_center[0] - new_width/2
-                            roi.xmax = new_center[0] + new_width/2
-                            roi.ymin = new_center[1] - new_height/2
-                            roi.ymax = new_center[1] + new_height/2
+                            roi.xmin = new_center[0] - new_half_width
+                            roi.xmax = new_center[0] + new_half_width
+                            roi.ymin = new_center[1] - new_half_height
+                            roi.ymax = new_center[1] + new_half_height
 
                         # Account for rotation between orientations
                         if hasattr(roi, "theta"):
-                            angle = roi.theta
-                            if old_flip != new_flip:
-                                fac = 1.0
-                            else:
-                                fac = -1.0
-                            new_angle = (fac * (np.deg2rad(relative_angle) - angle)) % (2 * np.pi)
-                            roi.theta = new_angle
+                            fac = 1.0 if (old_flip != new_flip) else -1.0
+                            roi.theta = (fac * (np.deg2rad(relative_angle) - roi.theta)) % (2 * np.pi)  # noqa: E501
 
-                    elif type(subset_group.subset_state) is RangeSubsetState:
+                    elif isinstance(subset_group.subset_state, RangeSubsetState):
                         range_state = subset_group.subset_state
                         cur_unit = old_parent.coords.spectral_axis.unit
                         new_unit = new_parent.coords.spectral_axis.unit
