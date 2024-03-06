@@ -27,7 +27,7 @@ __all__ = ['Export']
 class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
              DatasetMultiSelectMixin, MultiselectMixin):
     """
-    See the :ref:`Export Plugin Documentation <export>` for more details.
+    See the :ref:`Export Plugin Documentation <imviz-export-plot>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
@@ -35,6 +35,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`)
+    * ``viewer_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``filename``
+    * :meth:`export`
     """
     template_file = __file__, "export.vue"
 
