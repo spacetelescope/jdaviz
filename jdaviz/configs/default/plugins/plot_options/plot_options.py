@@ -780,8 +780,12 @@ class PlotOptions(PluginTemplateMixin):
                 x_max = x_limits.max()
                 y_min = max(y_limits.min(), 0)
                 y_max = y_limits.max()
-
                 arr = comp.data[y_min:y_max, x_min:x_max]
+                if self.config == "imviz":
+                    # Downsample input data to about 400px (as per compass.vue) for performance.
+                    xstep = max(1, round(arr.shape[1] / 400))
+                    ystep = max(1, round(arr.shape[0] / 400))
+                    arr = arr[::ystep, ::xstep]
                 sub_data = arr.ravel()
 
             else:
@@ -802,8 +806,14 @@ class PlotOptions(PluginTemplateMixin):
                 sub_data = comp.data[inds].ravel()
 
         else:
-            # include all data, regardless of zoom limits
-            arr = comp.data
+            if self.config == "imviz":
+                # Downsample input data to about 400px (as per compass.vue) for performance.
+                xstep = max(1, round(data.shape[1] / 400))
+                ystep = max(1, round(data.shape[0] / 400))
+                arr = comp[::ystep, ::xstep]
+            else:
+                # include all data, regardless of zoom limits
+                arr = comp.data
             sub_data = arr.ravel()
 
         # filter out nans (or else bqplot will fail)
