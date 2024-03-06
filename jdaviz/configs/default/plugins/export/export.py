@@ -1,13 +1,14 @@
 import os
 from pathlib import Path
 from traitlets import Any, Bool, List, Unicode, observe
+from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginComponent,
                                         ViewerSelectMixin, DatasetMultiSelectMixin,
                                         SubsetSelectMixin, MultiselectMixin, with_spinner)
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 
 try:
@@ -57,7 +58,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     # For Cubeviz movie.
     i_start = IntHandleEmpty(0).tag(sync=True)
-    # TODO: re-implement auto setting of i_end based on cube data
     i_end = IntHandleEmpty(0).tag(sync=True)
     movie_fps = FloatHandleEmpty(5.0).tag(sync=True)
     movie_recording = Bool(False).tag(sync=True)
@@ -81,7 +81,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                           manual_options=['plot-tst1', 'plot-tst2'])
 
         viewer_format_options = ['png', 'svg']
-        if (self.app.config == 'cubeviz'
+        if (self.config == 'cubeviz'
                 and not self.app.state.settings.get('server_is_remote', False)
                 and HAS_OPENCV):
             # when the server is remote, saving the movie in python would save on the server, not
@@ -98,12 +98,15 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.viewer.select_default()
         self.filename = f"{self.app.config}_export"
 
+        if self.config == "cubeviz":
+            self.session.hub.subscribe(self, AddDataMessage, handler=self._on_cubeviz_data_added)  # noqa: E501
+
     @property
     def user_api(self):
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
-        expose = ['viewer', 'viewer_format', 'filename']
+        expose = ['viewer', 'viewer_format', 'filename', 'export']
 
         if self.dev_dataset_support:
             expose += ['dataset']
@@ -117,6 +120,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             expose += ['multiselect']
 
         return PluginUserApi(self, expose=expose)
+
+    def _on_cubeviz_data_added(self, msg):
+        # NOTE: This needs revising if we allow loading more than one cube.
+        if isinstance(msg.viewer, BqplotImageView):
+            if len(msg.data.shape) == 3:
+                self.i_end = msg.data.shape[-1] - 1  # Same as max_slice in Slice plugin
 
     @observe('multiselect', 'viewer_multiselect')
     def _sync_multiselect_traitlets(self, event):
@@ -149,6 +158,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     @with_spinner()
     def export(self, filename=None, show_dialog=None):
         """
+        Export selected item(s)
+
+        Parameters
+        ----------
+        filename : str, optional
+            If not provided, plugin value will be used.
         """
         if self.dataset.selected is not None and len(self.dataset.selected):
             raise NotImplementedError("dataset export not yet supported")
@@ -326,12 +341,17 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if filetype != "mp4":
             raise NotImplementedError(f"filetype={filetype} not supported")
 
+        if viewer.shape is None:
+            raise ValueError("Selected viewer has no display shape.")
+
         if fps is None:
             fps = float(self.movie_fps)
         if fps <= 0:
             raise ValueError("Invalid frame rate, must be positive non-zero value.")
 
         # Make sure file does not end up in weird places in standalone mode.
+        if filename is None:
+            raise ValueError("Invalid filename")
         path = filename.parent
         if path and not path.exists():
             raise ValueError(f"Invalid path={path}")

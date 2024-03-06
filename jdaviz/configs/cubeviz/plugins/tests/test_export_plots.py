@@ -56,11 +56,10 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
     with pytest.raises(ValueError, match="Invalid frame rate"):
         plugin.export()
 
+    plugin._obj.movie_fps = 5
     plugin.filename = "fake_path/mymovie.mp4"
     with pytest.raises(ValueError, match="Invalid path"):
         plugin.export()
-
-    plugin.filename = "mymovie.mp4"
 
     plugin.filename = ""
     plugin.viewer = 'uncert-viewer'
@@ -74,6 +73,7 @@ def test_export_movie_cubeviz_empty(cubeviz_helper):
     assert plugin._obj.i_start == 0
     assert plugin._obj.i_end == 0
 
+    plugin.viewer_format = 'mp4'
     with pytest.raises(ValueError, match="Selected viewer has no display shape"):
         plugin.export()
 
