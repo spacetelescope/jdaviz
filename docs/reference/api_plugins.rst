@@ -9,7 +9,7 @@ Plugins API
 .. automodapi:: jdaviz.configs.default.plugins.data_tools.data_tools
    :no-inheritance-diagram:
 
-.. automodapi:: jdaviz.configs.default.plugins.export_plot.export_plot
+.. automodapi:: jdaviz.configs.default.plugins.export.export
    :no-inheritance-diagram:
 
 .. automodapi:: jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth
