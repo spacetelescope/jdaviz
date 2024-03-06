@@ -103,7 +103,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
-        expose = ['viewer', 'viewer_format']
+        expose = ['viewer', 'viewer_format', 'filename']
 
         if self.dev_dataset_support:
             expose += ['dataset']

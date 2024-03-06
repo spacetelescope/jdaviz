@@ -86,8 +86,8 @@ def test_remote_server_disable_save_serverside():
 
     cubeviz_app = Application(config)
     cubeviz_helper = Cubeviz(cubeviz_app)
-    ep = cubeviz_helper.plugins['Export Plot']
-    assert ep._obj.movie_enabled is False
+    exp = cubeviz_helper.plugins['Export']
+    assert 'mp4' not in exp.viewer_format.choices
 
     mm = cubeviz_helper.plugins['Moment Maps']
     assert mm._obj.export_enabled is False

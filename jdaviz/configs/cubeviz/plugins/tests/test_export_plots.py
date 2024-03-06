@@ -28,15 +28,12 @@ def test_export_movie(cubeviz_helper, spectrum1d_cube, tmp_path):
 def test_no_opencv(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
     plugin = cubeviz_helper.plugins["Export"]
-    plugin.viewer_format = 'mp4'
-    with pytest.raises(ImportError, match="Please install opencv-python"):
-        plugin.export()
+    assert 'mp4' not in plugin.viewer_format.choices
 
 
 @pytest.mark.skipif(not HAS_OPENCV, reason="opencv-python is not installed")
 def test_export_movie_not_cubeviz(imviz_helper):
     plugin = imviz_helper.plugins["Export"]
-
     assert 'mp4' not in plugin.viewer_format.choices
 
 

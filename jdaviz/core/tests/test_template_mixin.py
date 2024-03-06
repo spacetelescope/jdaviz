@@ -111,16 +111,16 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     sv = app.get_viewer("spectrum-viewer")
 
     # export plot uses the mixin
-    p = app.get_tray_item_from_name('g-export-plot')
+    p = cubeviz_helper.plugins['Export']
     assert len(p.viewer.ids) == 3
     assert len(p.viewer.references) == 3
     assert len(p.viewer.labels) == 3
     assert p.viewer.selected_obj == fv
 
     # set by reference
-    p.viewer_selected = 'spectrum-viewer'
+    p.viewer = 'spectrum-viewer'
     assert p.viewer.selected_obj == sv
 
     # try setting based on id instead of reference
-    p.viewer_selected = p.viewer.ids[0]
-    assert p.viewer_selected == p.viewer.labels[0]
+    p.viewer = p.viewer.ids[0]
+    assert p.viewer.selected == p.viewer.labels[0]
