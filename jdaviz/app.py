@@ -1802,6 +1802,8 @@ class Application(VuetifyTemplate, HubListener):
                         old_angle, _, old_flip = get_compass_info(old_parent.coords, (10, 10))[-3:]
                         new_angle, _, new_flip = get_compass_info(new_parent.coords, (10, 10))[-3:]
                         if old_flip != new_flip:
+                            # Note that this won't work for an irregular/assymetric region if we
+                            # ever implement those.
                             relative_angle = 180 - new_angle - old_angle
                         else:
                             relative_angle = new_angle - old_angle
