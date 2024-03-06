@@ -2,7 +2,7 @@ import numpy as np
 from astropy import units as u
 from traitlets import List, Unicode, observe
 
-from jdaviz.core.events import GlobalDisplayUnitChanged
+from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataToViewerMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, UnitSelectPluginComponent, PluginUserApi
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
@@ -71,6 +71,9 @@ class UnitConversion(PluginTemplateMixin):
                                                 self._on_glue_x_display_unit_changed)
         self.spectrum_viewer.state.add_callback('y_display_unit',
                                                 self._on_glue_y_display_unit_changed)
+
+        self.session.hub.subscribe(self, AddDataToViewerMessage,
+                                   handler=self._find_and_convert_contour_units)
 
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
@@ -144,3 +147,12 @@ class UnitConversion(PluginTemplateMixin):
         yunit = _valid_glue_display_unit(self.flux_unit.selected, self.spectrum_viewer, 'y')
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
+        self._find_and_convert_contour_units(yunit)
+
+    def _find_and_convert_contour_units(self, yunit=None):
+        if not yunit:
+            yunit = _valid_glue_display_unit(self.flux_unit.selected, self.spectrum_viewer, 'y')
+        for name, viewer in self._app._jdaviz_helper.viewers.items():
+            for layer in viewer._obj.state.layers:
+                if hasattr(layer, 'c_display_unit'):
+                    layer.c_display_unit = yunit
