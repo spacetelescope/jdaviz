@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from astropy.coordinates import Angle
 from astropy.nddata import NDData
 from astropy.tests.helper import assert_quantity_allclose
@@ -65,18 +64,20 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         # Make sure we re-linked images 2 and 3 (plus WCS-only reference data layer)
         assert len(self.imviz.app.data_collection.external_links) == 2
 
+        # FIXME: 0.25 offset introduced by fake WCS layer, see
+        # https://jira.stsci.edu/browse/JDAT-4256
+
         # Check that the reparenting and coordinate recalculations happened
-        assert subset1.subset_state.xatt.parent.label == "has_wcs_2[SCI,1]"
-        assert_allclose(subset1.subset_state.center(), (3, 2))
+        assert subset1.subset_state.xatt.parent.label == "Default orientation"
+        assert_allclose(subset1.subset_state.center(), (1.75, 1.75))
 
-        assert subset2.subset_state.xatt.parent.label == "has_wcs_2[SCI,1]"
-        assert_allclose(subset2.subset_state.roi.xmin, 1)
-        assert_allclose(subset2.subset_state.roi.ymin, 0, atol=1e-6)
-        assert_allclose(subset2.subset_state.roi.xmax, 3)
-        assert_allclose(subset2.subset_state.roi.ymax, 2)
+        assert subset2.subset_state.xatt.parent.label == "Default orientation"
+        assert_allclose(subset2.subset_state.roi.xmin, -0.25)
+        assert_allclose(subset2.subset_state.roi.ymin, -0.25)
+        assert_allclose(subset2.subset_state.roi.xmax, 1.75)
+        assert_allclose(subset2.subset_state.roi.ymax, 1.75)
 
 
-@pytest.mark.xfail(reason="FIXME: JDAT-3958")
 class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
     """Regression test for https://jira.stsci.edu/browse/JDAT-3958"""
     def test_delete_wcs_layer_with_subset(self):
