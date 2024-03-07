@@ -55,7 +55,7 @@ from jdaviz.utils import get_subset_type, is_wcs_only, is_not_wcs_only, _wcs_onl
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
-           'skip_if_no_updates_since_last_active', 'with_spinner',
+           'skip_if_no_updates_since_last_active', 'with_spinner', 'with_temp_disable',
            'ViewerPropertiesMixin',
            'BasePluginComponent',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
@@ -307,6 +307,37 @@ def with_spinner(spinner_traitlet='spinner'):
     return decorator
 
 
+def with_temp_disable(timeout=0.3,
+                      disable_traitlet='previews_temp_disabled',
+                      time_traitlet='previews_last_time'):
+    """
+    decorator on a plugin method to track the amount of time the wrapped method takes, and disable
+    live plugin-previews if it takes longer than ``timeout`` seconds.  The wrapped method should
+    also observe ``disable_traitlet`` ('previews_temp_disabled', by default).
+
+    This should be used with::
+
+        <plugin-previews-temp-disabled
+          :previews_temp_disabled.sync="previews_temp_disabled"
+          :previews_last_time="previews_last_time"
+          :show_live_preview.sync="show_live_preview"
+        />
+    """
+    def decorator(meth):
+        def wrapper(self, *args, **kwargs):
+            if getattr(self, disable_traitlet):
+                return
+            start = time.time()
+            ret_ = meth(self, *args, **kwargs)
+            exec_time = np.round(time.time() - start, 2)
+            setattr(self, time_traitlet, exec_time)
+            if exec_time > timeout:
+                setattr(self, disable_traitlet, True)
+            return ret_
+        return wrapper
+    return decorator
+
+
 class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
@@ -319,6 +350,8 @@ class PluginTemplateMixin(TemplateMixin):
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
     is_active = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to plugin_opened and keep_active
     spinner = Bool(False).tag(sync=True)  # noqa use along-side @with_spinner() and <plugin-add-results :action_spinner="spinner">
+    previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
+    previews_last_time = Float(0).tag(sync=True)
 
     def __init__(self, **kwargs):
         self._viewer_callbacks = {}

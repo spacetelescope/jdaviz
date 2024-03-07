@@ -14,6 +14,7 @@ from specutils import Spectrum1D
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
+from jdaviz.core.marks import SpectralExtractionPreview
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
@@ -21,10 +22,12 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelectMixin,
                                         ApertureSubsetSelect,
                                         AddResultsMixin,
-                                        with_spinner)
+                                        skip_if_no_updates_since_last_active,
+                                        with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.region_translators import regions2aperture
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
+from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView
 
 
 __all__ = ['SpectralExtraction']
@@ -59,6 +62,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     """
     template_file = __file__, "spectral_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)
+    show_live_preview = Bool(True).tag(sync=True)
 
     # feature flag for background cone support
     dev_bg_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
@@ -458,3 +462,60 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         ):
             label += f' ({self.aperture_selected})'
         self.results_label_default = label
+
+    @property
+    def marks(self):
+        marks = {}
+        for id, viewer in self.app._viewer_store.items():
+            if not isinstance(viewer, CubevizProfileView):
+                continue
+            for mark in viewer.figure.marks:
+                if isinstance(mark, SpectralExtractionPreview):
+                    marks[id] = mark
+                    break
+            else:
+                mark = SpectralExtractionPreview(viewer, visible=self.is_active)
+                viewer.figure.marks = viewer.figure.marks + [mark]
+                marks[id] = mark
+        return marks
+
+    def _clear_marks(self):
+        for mark in self.marks.values():
+            if mark.visible:
+                mark.clear()
+                mark.visible = False
+
+    @observe('is_active', 'show_live_preview')
+    def _toggle_marks(self, event={}):
+        visible = self.show_live_preview and self.is_active
+
+        if not visible:
+            self._clear_marks()
+        elif event.get('name', '') in ('is_active', 'show_live_preview'):
+            # then the marks themselves need to be updated
+            self._live_update(event)
+
+    @observe('aperture_selected', 'function_selected',
+             'wavelength_dependent', 'reference_wavelength',
+             'aperture_method_selected',
+             'previews_temp_disabled')
+    @skip_if_no_updates_since_last_active()
+    @with_temp_disable(timeout=0.3)
+    def _live_update(self, event={}):
+        if not self.show_live_preview or not self.is_active:
+            self._clear_marks()
+            return
+
+        if event.get('name', '') not in ('is_active', 'show_live_preview'):
+            # mark visibility hasn't been handled yet
+            self._toggle_marks()
+
+        try:
+            sp = self.collapse_to_spectrum(add_data=False)
+        except Exception:
+            self._clear_marks()
+            return
+
+        for mark in self.marks.values():
+            mark.update_xy(sp.spectral_axis.value, sp.flux.value)
+            mark.visible = True

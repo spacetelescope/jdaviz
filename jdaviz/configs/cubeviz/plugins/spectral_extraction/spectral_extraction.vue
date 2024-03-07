@@ -8,6 +8,26 @@
     :popout_button="popout_button"
     :disabled_msg="disabled_msg">
 
+    <v-row>
+      <v-expansion-panels popout>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Settings</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content class="plugin-expansion-panel-content">
+            <v-row>
+              <v-switch
+                v-model="show_live_preview"
+                label="Show live-extraction"
+                hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
+                persistent-hint
+              ></v-switch>
+            </v-row>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </v-row>
+
     <div @mouseover="() => active_step='ap'">
       <j-plugin-section-header :active="active_step==='ap'">Aperture</j-plugin-section-header>
 
@@ -166,7 +186,11 @@
         </span>
       </v-row>
 
-
+      <plugin-previews-temp-disabled
+        :previews_temp_disabled.sync="previews_temp_disabled"
+        :previews_last_time="previews_last_time"
+        :show_live_preview.sync="show_live_preview"
+      />
 
       <plugin-add-results
         :label.sync="results_label"

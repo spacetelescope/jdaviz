@@ -18,7 +18,7 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark', 'FootprintOverlay',
-           'ApertureMark']
+           'ApertureMark', 'SpectralExtractionPreview']
 
 accent_color = "#c75d2c"
 
@@ -660,6 +660,11 @@ class FootprintOverlay(PluginLine):
 class ApertureMark(PluginLine):
     def __init__(self, viewer, id, **kwargs):
         self._id = id
+        super().__init__(viewer, **kwargs)
+
+
+class SpectralExtractionPreview(PluginLine):
+    def __init__(self, viewer, **kwargs):
         super().__init__(viewer, **kwargs)
 
 

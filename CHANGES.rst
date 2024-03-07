@@ -30,6 +30,8 @@ Cubeviz
 
 - New aperture photometry plugin that can perform aperture photometry on selected cube slice. [#2666]
 
+- Live previews in spectral extraction plugin. [#2733]
+
 Imviz
 ^^^^^
 
