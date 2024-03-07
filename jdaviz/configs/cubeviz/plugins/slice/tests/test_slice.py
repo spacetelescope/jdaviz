@@ -8,7 +8,6 @@ from jdaviz.configs.cubeviz.plugins.slice.slice import Slice
 def test_slice(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
     sl = Slice(app=app)
-#    sl = cubeviz_helper.plugins['Slice']._obj
 
     # No data yet
     assert len(sl.slice_selection_viewers) == 2  # flux-viewer, uncert-viewer
