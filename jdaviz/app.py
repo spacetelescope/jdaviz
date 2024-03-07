@@ -1283,6 +1283,47 @@ class Application(VuetifyTemplate, HubListener):
                 f"Data '{data_label}' successfully added.", sender=self, color="success")
             self.hub.broadcast(snackbar_message)
 
+    def check_valid_subset_label(self, subset_name):
+        """Check that `subset_name` is a valid choice for a subset name. This
+        check is run when renaming subsets.
+
+        A valid subset name must not be the name of another subset in the data
+        collection (case insensitive? there cant be a subset 1 and a Subset 1.)
+        The name may match a subset in the data collection if it the current
+        active selection (i.e the renaming is not really a renaming, it is
+        just keeping the old name, which is valid).
+
+        Unlike dataset names, the attempted renaming of a subset to an existing
+        subset label will not append a number (e.g Subset 1 repeated because
+        Subset 1(1)). If the name exists, a warning will be raised and the
+        original subset name will be returned.
+
+        """
+
+        # get all existing subset labels
+        dc = self.data_collection
+        subsets = dc.subset_groups
+        existing_labels = [subset.label.lower() for subset in subsets]
+
+        # get active selection, if there is one
+        if self.session.edit_subset_mode.edit_subset == []:
+            subset_selected = None
+        else:
+            subset_selected = self.session.edit_subset_mode.edit_subset[0].label
+
+        # remove the current selection label from the set of labels, because its ok
+        # if the new subset shares the name of the current selection (renaming to current name)
+        if subset_selected.lower() in existing_labels:
+            existing_labels.remove(subset_selected.lower())
+
+        # now check `subset_name` against list of non-active current subset labels
+        # and warn and return if it is
+        if subset_name.lower() in existing_labels:
+            warnings.warn(f"Can not rename subset to name of another existing subset ({subset_name}).")
+            return subset_selected
+
+        return subset_name
+
     def return_data_label(self, loaded_object, ext=None, alt_name=None, check_unique=True):
         """
         Returns a unique data label that can be safely used to load data into data collection.
