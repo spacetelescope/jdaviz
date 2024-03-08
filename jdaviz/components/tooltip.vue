@@ -40,6 +40,8 @@ const tooltips = {
 
   'g-data-tools': 
     'Load data from file',
+  'g-viewer-creator':
+     'Create a new viewer',
   'g-subset-tools': 
     'Select, create, and delete subsets',
   'g-subset-mode':
