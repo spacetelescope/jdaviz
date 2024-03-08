@@ -740,6 +740,76 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
 
 
+def test_subset_linking_specviz2d(specviz2d_helper, mos_spectrum2d):
+    specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
+    viewer_1d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_viewer_reference_name)
+    viewer_2d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
+
+    print(np.min(mos_spectrum2d.data))
+    print(np.max(mos_spectrum2d.data))
+
+    # appear to be in meters
+    viewer_2d.apply_roi(XRangeROI(6400, 6800))
+
+    # reg1 = specviz2d_helper.app.get_subsets("Subset 1")
+    # print(reg1)
+
+    # subset drawn in 2d viewer, want data in the 1d viewer
+    subset_drawn_2d = viewer_1d.native_marks[-1]
+
+    # get x and y components to compute subset mask
+    y1 = subset_drawn_2d.y
+    x1 = subset_drawn_2d.x
+
+    # print(len(y1))
+    # print(len(x1))
+
+    sub_highlighted1 = x1[np.isfinite(y1)]
+    min_sub1 = np.min(sub_highlighted1)
+    max_sub1 = np.max(sub_highlighted1)
+
+    # print(min_sub1)
+    # print(max_sub1)
+
+    '''
+    Need to update asserts with pixel to wavelength science case
+    '''
+
+    assert min_sub1 == 1
+    assert max_sub1 == 1
+
+    # appear to be in meters
+    viewer_1d.apply_roi(XRangeROI(6000, 6400))
+
+    # reg2 = specviz2d_helper.app.get_subsets("Subset 1")
+
+    # subset drawn in 1d viewer, want data in 2d viewer
+    subset_drawn_1d = viewer_1d.native_marks[-1]
+
+    # get x and y components to compute subset mask
+    y2 = subset_drawn_1d.y
+    x2 = subset_drawn_1d.x
+
+    sub_highlighted2 = x2[np.isfinite(y2)]
+    min_sub2 = np.min(sub_highlighted2)
+    max_sub2 = np.max(sub_highlighted2)
+
+    # print(len(y2))
+    # print(len(x2))
+
+    # reg2 = specviz2d_helper.app.get_subsets("Subset 1")
+    # print(reg2)
+
+    '''
+    Need to update asserts with wavelength to pixel science case
+    '''
+
+    assert min_sub2 == 1
+    assert max_sub2 == 1
+
+
 def test_multi_mask_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     subset_plugin = specviz_helper.plugins['Subset Tools']._obj
