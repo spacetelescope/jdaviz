@@ -2680,6 +2680,8 @@ class ViewerSelect(SelectPluginComponent):
 
     @property
     def selected_id(self):
+        if self.selected_item is None:
+            return None
         return self.selected_item.get('id', None)
 
     @property
@@ -3582,6 +3584,8 @@ class PlotOptionsSyncState(BasePluginComponent):
     @cached_property
     def subscribed_icons(self):
         # dictionary items giving information about the entries in subscribed_states
+        if self._viewer_select.selected_item is None:
+            return []
         viewer_icons = self._viewer_select.selected_item.get('icon', [])
         if not isinstance(viewer_icons, list):
             viewer_icons = [viewer_icons]
