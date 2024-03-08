@@ -52,7 +52,7 @@ class Slice(PluginTemplateMixin):
 
     template_file = __file__, "slice.vue"
     value = FloatHandleEmpty().tag(sync=True)
-    value_label = Unicode("Wavelength").tag(sync=True)
+    value_label = Unicode("Value").tag(sync=True)
     value_unit = Unicode("").tag(sync=True)
     value_editing = Bool(False).tag(sync=True)  # whether the value input is actively being edited
 
