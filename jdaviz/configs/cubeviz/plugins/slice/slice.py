@@ -97,7 +97,7 @@ class Slice(PluginTemplateMixin):
         self._initialize_location()
 
     def _initialize_location(self, *args):
-        # intitialize value_unit (this has to wait until data is loaded to an existing
+        # initialize value_unit (this has to wait until data is loaded to an existing
         # slice_indicator_viewer, so we'll keep trying until it is set - after that, changes
         # will be handled by a change to global display units)
         if not self.value_unit:
@@ -133,7 +133,7 @@ class Slice(PluginTemplateMixin):
 
     @property
     def valid_slice_att_names(self):
-        return _spectral_axis_names
+        return _spectral_axis_names + ['Pixel Axis 2 [x]']
 
     @property
     def slice_selection_viewers(self):
