@@ -138,6 +138,8 @@ Bug Fixes
 
 - Order of RGB preset colors now matches for less than and greater than 5 layers. [#2731]
 
+- Fix subset linking/displaying between pixel/wavelength in Specviz2d viewers. [#2736]
+
 Cubeviz
 ^^^^^^^
 
