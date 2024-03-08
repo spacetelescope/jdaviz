@@ -110,7 +110,7 @@ def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     fv = app.get_viewer("flux-viewer")
     sv = app.get_viewer("spectrum-viewer")
 
-    # export plot uses the mixin
+    # export plugin uses the mixin
     p = cubeviz_helper.plugins['Export']
     assert len(p.viewer.ids) == 3
     assert len(p.viewer.references) == 3
