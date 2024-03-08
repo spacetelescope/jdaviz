@@ -377,6 +377,8 @@ class Slice(PluginTemplateMixin):
 
         if len(self.slice_indicator_viewers) == 0 and len(self.slice_selection_viewers) == 0:
             return
+        if not len(self.valid_values_sorted):
+            return
 
         # Start
         self.is_playing = True
