@@ -317,7 +317,7 @@ using the |icon-line-select| (line selector) tool in the spectrum viewer.
 
 .. _specviz-export-plot:
 
-Export Plot
-===========
+Export
+======
 
 This plugin allows a given viewer's plot to be exported to various image formats.

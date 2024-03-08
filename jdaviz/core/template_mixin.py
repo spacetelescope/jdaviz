@@ -24,6 +24,7 @@ from glue.core.message import (DataCollectionAddMessage,
                                SubsetUpdateMessage)
 from glue.core.roi import CircularAnnulusROI
 from glue_jupyter import jglue
+from glue_jupyter.common.toolbar_vuetify import read_icon
 from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
@@ -49,6 +50,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumRight,
                                ShadowLine, ApertureMark)
 from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial_subset
+from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import get_subset_type, is_wcs_only, is_not_wcs_only, _wcs_only_label
@@ -58,9 +60,10 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_no_updates_since_last_active', 'with_spinner', 'with_temp_disable',
            'ViewerPropertiesMixin',
            'BasePluginComponent',
+           'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
            'PluginSubcomponent',
-           'SubsetSelect',
+           'SubsetSelect', 'SubsetSelectMixin',
            'SpatialSubsetSelectMixin', 'SpectralSubsetSelectMixin',
            'ApertureSubsetSelect', 'ApertureSubsetSelectMixin',
            'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
@@ -609,6 +612,12 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin):
         return [_dict_from_viewer(viewer, self.app._viewer_item_by_id(vid))
                 for vid, viewer in self.app._viewer_store.items()
                 if viewer.__class__.__name__ != 'MosvizTableViewer']
+
+
+class MultiselectMixin(VuetifyTemplate):
+    icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
+    multiselect = Bool(False).tag(sync=True)
 
 
 class SelectPluginComponent(BasePluginComponent, HasTraits):
@@ -1906,6 +1915,42 @@ class SubsetSelect(SelectPluginComponent):
             return self.selected_obj.lower, self.selected_obj.upper
 
 
+class SubsetSelectMixin(VuetifyTemplate, HubListener):
+    """
+    Applies the SubsetSelect component as a mixin in the base plugin.  This
+    automatically adds traitlets as well as new properties to the plugin with minimal
+    extra code.  For multiple instances or custom traitlet names/defaults, use the
+    component instead.
+
+    To use in a plugin:
+
+    * add ``SubsetSelectMixin`` as a mixin to the class
+    * use the traitlets available from the plugin or properties/methods available from
+      ``plugin.subset``.
+
+    Example template (label and hint are optional)::
+
+      <plugin-subset-select
+        :items="subset_items"
+        :selected.sync="subset_selected"
+        :show_if_single_entry="true"
+        label="Subset"
+        hint="Select subset."
+      />
+
+    """
+    subset_items = List().tag(sync=True)
+    subset_selected = Any().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.subset = SubsetSelect(self,
+                                   'subset_items',
+                                   'subset_selected',
+                                   dataset='dataset' if hasattr(self, 'dataset') else None,
+                                   multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
+
+
 class SpectralSubsetSelectMixin(VuetifyTemplate, HubListener):
     """
     Applies the SubsetSelect component as a mixin in the base plugin.  This
@@ -2602,9 +2647,7 @@ class ViewerSelect(SelectPluginComponent):
     * :meth:`~SelectPluginComponent.select_default`
     * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
     * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
-    """
 
-    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``items`` (list of dicts with keys: id, reference, label)

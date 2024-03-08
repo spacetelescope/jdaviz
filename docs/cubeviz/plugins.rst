@@ -327,8 +327,8 @@ have valid flux units. For 3D data, the current :ref:`slice` is used.
 
 .. _cubeviz-export-plot:
 
-Export Plot
-===========
+Export
+======
 
 This plugin allows exporting the plot in a given viewer to various image formats.
 

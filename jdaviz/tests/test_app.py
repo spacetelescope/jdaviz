@@ -36,7 +36,7 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
                        'g-unit-conversion',
                        'g-line-list',
                        'specviz-line-analysis',
-                       'g-export-plot'],
+                       'export'],
               'viewer_area': [{'container': 'col',
                                'children': [{'container': 'row',
                                              'viewers': [{'name': 'H',

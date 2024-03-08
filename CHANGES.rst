@@ -13,6 +13,8 @@ New Features
 
 - Live-preview of aperture selection in plugins. [#2664, #2684]
 
+- "Export Plot" plugin is now replaced with the more general "Export" plugin. [#2722]
+
 Cubeviz
 ^^^^^^^
 
