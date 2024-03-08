@@ -247,7 +247,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         if not self.movie_enabled:
             if not HAS_OPENCV:
-                raise ValueError("opencv-python required to export movies")
+                raise ImportError("Please install opencv-python")
             raise ValueError("movie support disabled")
 
         slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
