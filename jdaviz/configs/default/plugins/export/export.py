@@ -61,6 +61,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     filename = Unicode().tag(sync=True)
 
     # For Cubeviz movie.
+    movie_enabled = Bool(False).tag(sync=True)
     i_start = IntHandleEmpty(0).tag(sync=True)
     i_end = IntHandleEmpty(0).tag(sync=True)
     movie_fps = FloatHandleEmpty(5.0).tag(sync=True)
@@ -85,12 +86,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                           manual_options=['plot-tst1', 'plot-tst2'])
 
         viewer_format_options = ['png', 'svg']
-        if (self.config == 'cubeviz'
-                and not self.app.state.settings.get('server_is_remote', False)
-                and HAS_OPENCV):
-            # when the server is remote, saving the movie in python would save on the server, not
-            # on the user's machine, so movie support in cubeviz is not exposed
-            viewer_format_options += ['mp4']
+        if self.config == 'cubeviz':
+            if not self.app.state.settings.get('server_is_remote'):
+                viewer_format_options += ['mp4']
+                # still list mp4 as an option, but display a message (and raise an error) if
+                # opencv is not available
+                self.movie_enabled = HAS_OPENCV
 
         self.viewer_format = SelectPluginComponent(self,
                                                    items='viewer_format_items',
@@ -243,6 +244,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def _save_movie(self, viewer, i_start, i_end, fps, filename, rm_temp_files):
         # NOTE: All the stuff here has to be in the same thread but
         #       separate from main app thread to work.
+
+        if not self.movie_enabled:
+            if not HAS_OPENCV:
+                raise ValueError("opencv-python required to export movies")
+            raise ValueError("movie support disabled")
 
         slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
         orig_slice = slice_plg.slice
