@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.wcs import WCS
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
@@ -740,74 +741,92 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
 
 
-def test_subset_linking_specviz2d(specviz2d_helper, mos_spectrum2d):
-    specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
+def test_draw2d_linking_specviz2d(specviz2d_helper):
+    # custom test data to predict values for different viewers
+    header = {
+              'WCSAXES': 2,
+              'CRPIX1': 0.0, 'CRPIX2': 8.5,
+              'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
+              'CUNIT1': 'm', 'CUNIT2': 'deg',
+              'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
+              'CRVAL1': 0.0, 'CRVAL2': 5.0,
+              'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+    wcs = WCS(header)
+
+    x_values = np.linspace(0, 10, 128)
+    y_values = np.linspace(0, 5, 256)
+
+    # Create a continuous 2D
+    data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
+    spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
+
+    specviz2d_helper.load_data(spectrum_2d=spectrum_data)
     viewer_1d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_viewer_reference_name)
     viewer_2d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
-    print(np.min(mos_spectrum2d.data))
-    print(np.max(mos_spectrum2d.data))
-
-    # appear to be in meters
-    viewer_2d.apply_roi(XRangeROI(6400, 6800))
-
-    # reg1 = specviz2d_helper.app.get_subsets("Subset 1")
-    # print(reg1)
-
-    # subset drawn in 2d viewer, want data in the 1d viewer
+    # create subset in 2d viewer,  want data in 1d viewer
+    viewer_2d.apply_roi(XRangeROI(60, 80))
     subset_drawn_2d = viewer_1d.native_marks[-1]
 
     # get x and y components to compute subset mask
     y1 = subset_drawn_2d.y
     x1 = subset_drawn_2d.x
 
-    # print(len(y1))
-    # print(len(x1))
+    subset_highlighted_region1 = x1[np.isfinite(y1)]
+    min_value_subset1 = np.min(subset_highlighted_region1)
+    max_value_subset1 = np.max(subset_highlighted_region1)
 
-    sub_highlighted1 = x1[np.isfinite(y1)]
-    min_sub1 = np.min(sub_highlighted1)
-    max_sub1 = np.max(sub_highlighted1)
+    tolerance1 = 1e-6
+    expected_min1 = 6.e-5
+    expected_max1 = 8.e-05
 
-    # print(min_sub1)
-    # print(max_sub1)
+    assert np.allclose(min_value_subset1, expected_min1, atol=tolerance1)
+    assert np.allclose(max_value_subset1, expected_max1, atol=tolerance1)
 
-    '''
-    Need to update asserts with pixel to wavelength science case
-    '''
 
-    assert min_sub1 == 1
-    assert max_sub1 == 1
+def test_draw1d_linking_specviz2d(specviz2d_helper):
+    # custom test data to predict values for different viewers
+    header = {
+        'WCSAXES': 2,
+        'CRPIX1': 0.0, 'CRPIX2': 8.5,
+        'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
+        'CUNIT1': 'm', 'CUNIT2': 'deg',
+        'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
+        'CRVAL1': 0.0, 'CRVAL2': 5.0,
+        'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+    wcs = WCS(header)
 
-    # appear to be in meters
-    viewer_1d.apply_roi(XRangeROI(6000, 6400))
+    x_values = np.linspace(0, 10, 128)
+    y_values = np.linspace(0, 5, 256)
 
-    # reg2 = specviz2d_helper.app.get_subsets("Subset 1")
+    # Create a continuous 2D image
+    data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
+    spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
+
+    specviz2d_helper.load_data(spectrum_2d=spectrum_data)
+    viewer_1d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_viewer_reference_name)
+    viewer_2d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
     # subset drawn in 1d viewer, want data in 2d viewer
-    subset_drawn_1d = viewer_1d.native_marks[-1]
+    viewer_1d.apply_roi(XRangeROI(.0001, .0002))
+    subset_drawn_1d = viewer_2d.native_marks[-1].image
 
-    # get x and y components to compute subset mask
-    y2 = subset_drawn_1d.y
-    x2 = subset_drawn_1d.x
+    subset_highlighted_region2 = np.atleast_1d(np.nonzero(subset_drawn_1d))[1]
 
-    sub_highlighted2 = x2[np.isfinite(y2)]
-    min_sub2 = np.min(sub_highlighted2)
-    max_sub2 = np.max(sub_highlighted2)
+    # Get the start and stop indices
+    min_value_subset2 = np.min(subset_highlighted_region2)
+    max_value_subset2 = np.max(subset_highlighted_region2)
 
-    # print(len(y2))
-    # print(len(x2))
+    tolerance2 = 2
+    expected_min2 = 338
+    expected_max2 = 674
 
-    # reg2 = specviz2d_helper.app.get_subsets("Subset 1")
-    # print(reg2)
-
-    '''
-    Need to update asserts with wavelength to pixel science case
-    '''
-
-    assert min_sub2 == 1
-    assert max_sub2 == 1
+    assert np.allclose(min_value_subset2, expected_min2, atol=tolerance2)
+    assert np.allclose(max_value_subset2, expected_max2, atol=tolerance2)
 
 
 def test_multi_mask_subset(specviz_helper, spectrum1d):
