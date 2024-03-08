@@ -327,7 +327,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             if data_wcs:
                 try:
                     if wcs_ndim == 3:
-                        sky = data_wcs.pixel_to_world(viewer.state.slices[-1], y, x)[1].icrs
+                        sky = data_wcs.pixel_to_world(viewer.slice, y, x)[1].icrs
                     else:  # wcs_ndim == 2
                         sky = data_wcs.pixel_to_world(x, y).icrs
                 except Exception:
@@ -341,7 +341,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
             if slice_plugin is not None and len(image.shape) == 3:
                 # float to be compatible with default value of nan
-                self._dict['slice'] = float(slice_plugin.slice)
+                self._dict['slice'] = float(viewer.slice)
                 self._dict['spectral_axis'] = slice_plugin.value
                 self._dict['spectral_axis:unit'] = slice_plugin._obj.value_unit
 

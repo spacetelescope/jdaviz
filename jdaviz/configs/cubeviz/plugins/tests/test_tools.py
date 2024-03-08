@@ -77,12 +77,14 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
 
     # Set the active tool to spectrumperspaxel
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
-    x = 1
-    y = 1
+
     assert len(flux_viewer.native_marks) == 2
     assert len(spectrum_viewer.data()) == 1
 
     # Check coordinate info panel
+    sl = cubeviz_helper.plugins['Slice']
+    sl.value = sl._obj.valid_indicator_values_sorted[1]
+    assert flux_viewer.slice == 1
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
@@ -91,6 +93,8 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
                                          '204.9997755344 27.0001999998 (deg)')
 
     # Click on spaxel location
+    x = 1
+    y = 1
     flux_viewer.toolbar.active_tool.on_mouse_event(
         {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert len(flux_viewer.native_marks) == 3

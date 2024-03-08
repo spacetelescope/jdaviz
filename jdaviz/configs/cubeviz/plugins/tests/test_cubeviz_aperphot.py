@@ -39,7 +39,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
 
     # Move slider and make sure it recomputes for a new slice automatically.
     cube_slice_plg = cubeviz_helper.plugins["Slice"]._obj
-    cube_slice_plg.slice = 0
+    cube_slice_plg.vue_goto_first()
     plg.vue_do_aper_phot()
     row = cubeviz_helper.get_aperture_photometry_results()[1]
 
@@ -181,4 +181,5 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
     assert_allclose(row["pixarea_tot"], 2.350443053909789e-13 * u.sr)
     assert_allclose(row["aperture_sum_mag"], 23.72476627732448 * u.mag)
     assert_allclose(row["mean"], 5 * (u.MJy / u.sr))
+    # TODO: check if slice plugin has value_unit set correctly
     assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)

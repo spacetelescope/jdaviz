@@ -74,10 +74,10 @@ The slice plugin provides the ability to select the slice
 of the cube currently visible in the image viewers, with the
 corresponding wavelength highlighted in the spectrum viewer.
 
-The slider can be grabbed to scrub through the cube.  To choose
-a specific slice, enter a slice number (integer) or an approximate
-wavelength (in which case the nearest slice will be selected and
-the wavelength entry will update to the exact value of that slice).
+To choose a specific slice, enter an approximate wavelength (in which case the nearest slice will 
+be selected and the wavelength entry will "span" to the exact value of that slice).  The snapping
+behavior can be disabled in the plugin settings to allow for smooth scrubbing, in which case the
+closest slice will still be displayed in the cube viewer.
 
 The spectrum viewer also contains a tool to allow clicking and
 dragging in the spectrum plot to choose the currently selected slice.
@@ -89,6 +89,7 @@ For your convenience, there are also player-style buttons with
 the following functionality:
 
 * Jump to first
+* Previous slice
 * Play/Pause
 * Next slice
 * Jump to last

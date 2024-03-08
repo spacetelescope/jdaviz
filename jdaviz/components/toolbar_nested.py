@@ -53,17 +53,17 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
                               primary=i == 0,
                               visible=True)
 
-        # handle logic for tool visibilities (which will also handle setting the primary
-        # to something other than the first entry, if necessary)
-        self._update_tool_visibilities()
-
         # default_tool_priority allows falling back on an existing tool
         # if its the primary tool.  If no items in default_tool_priority
         # are currently "primary", then either no tool will be selected
         # or will fallback on BasicJupyterToolbar's handling of
         # viewer._default_mouse_mode_cls (which will not show that tool as active).
         self.default_tool_priority = default_tool_priority
-        self._handle_default_tool()
+
+        # handle logic for tool visibilities (which will also handle setting the primary
+        # to something other than the first entry, if necessary)
+        # NOTE: this will also call _handle_default_tool
+        self._update_tool_visibilities()
 
         # toolbars in the main app viewers need to respond to the data-collection, etc,
         # but those in plugins do not
@@ -132,6 +132,7 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         self.send_state("tools_data")
         if needs_deactivate_active:
             self.active_tool_id = None
+        self._handle_default_tool()
 
     def _handle_default_tool(self):
         # default to the first item in the default_tool_priority list that is currently

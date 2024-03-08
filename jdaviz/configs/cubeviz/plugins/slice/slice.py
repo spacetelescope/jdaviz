@@ -3,20 +3,23 @@ import time
 import warnings
 
 import numpy as np
-import astropy.units as u
+from astropy import units as u
 from astropy.units import UnitsWarning
 from astropy.utils.decorators import deprecated
-from glue_jupyter.bqplot.image import BqplotImageView
-from glue_jupyter.bqplot.profile import BqplotProfileView
-from traitlets import Any, Bool, Int, Unicode, observe
-from specutils.spectra.spectrum1d import Spectrum1D
+from traitlets import Bool, Int, Unicode, observe
 
+from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator, WithSliceSelection,
+                                                    CubevizImageView)
+from jdaviz.configs.cubeviz.helper import _spectral_axis_names
+from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
+                                NewViewerMessage, ViewerAddedMessage, ViewerRemovedMessage,
                                 GlobalDisplayUnitChanged)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.user_api import PluginUserApi
+
 
 __all__ = ['Slice']
 
@@ -32,26 +35,30 @@ class Slice(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * ``slice``
-      Current slice number.
     * ``value``
       Value (wavelength or frequency) of the current slice.  When setting this directly, it will
-      update automatically to the value corresponding to the nearest slice.
+      update automatically to the value corresponding to the nearest slice, if ``snap_to_slice`` is
+      enabled.
     * ``show_indicator``
       Whether to show indicator in spectral viewer when slice tool is inactive.
     * ``show_value``
       Whether to show slice value in label to right of indicator.
     """
+    _cube_viewer_cls = CubevizImageView
+    _cube_viewer_default_label = 'flux-viewer'
+    cube_viewer_exists = Bool(True).tag(sync=True)
+
+    allow_disable_snapping = Bool(False).tag(sync=True)  # noqa internal use to show and allow disabling snap-to-slice
+
     template_file = __file__, "slice.vue"
-    slice = Any(0).tag(sync=True)
-    value = Any(-1).tag(sync=True)
-    value_label = Unicode("Wavelength").tag(sync=True)
-    value_unit = Any("").tag(sync=True)
+    value = FloatHandleEmpty().tag(sync=True)
+    value_label = Unicode("Value").tag(sync=True)
+    value_unit = Unicode("").tag(sync=True)
+    value_editing = Bool(False).tag(sync=True)  # whether the value input is actively being edited
 
-    min_slice = Int(0).tag(sync=True)
-    max_slice = Int(100).tag(sync=True)
-    wait = Int(200).tag(sync=True)
+    slider_throttle = Int(200).tag(sync=True)  # milliseconds
 
+    snap_to_slice = Bool(True).tag(sync=True)
     show_indicator = Bool(True).tag(sync=True)
     show_value = Bool(True).tag(sync=True)
 
@@ -61,33 +68,80 @@ class Slice(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self._watched_viewers = []
-        self._indicator_viewers = []
-        self._x_all = None
+        self._indicator_initialized = False
         self._player = None
-
-        # initialize watching existing viewers WITH data (if initializing the plugin after data
-        # already exists - otherwise the AddDataMessage will handle watching image viewers once
-        # data is available)
-        for id, viewer in self.app._viewer_store.items():
-            if isinstance(viewer, BqplotProfileView) or len(viewer.data()):
-                self._watch_viewer(viewer, True)
 
         # Subscribe to requests from the helper to change the slice across all viewers
         self.session.hub.subscribe(self, SliceSelectSliceMessage,
                                    handler=self._on_select_slice_message)
 
-        # Listen for add data events. **Note** this should only be used in
-        #  cases where there is a specific type of data expected and arbitrary
-        #  viewers are not expected to be created. That is, the expected data
-        #  in _all_ viewers should be uniform.
-        self.session.hub.subscribe(self, AddDataMessage,
-                                   handler=self._on_data_added)
+        # Listen for new viewers/data.
+        self.session.hub.subscribe(self, ViewerAddedMessage,
+                                   handler=self._on_viewer_added)
+        self.session.hub.subscribe(self, ViewerRemovedMessage,
+                                   handler=self._on_viewer_removed)
+        self.hub.subscribe(self, AddDataMessage,
+                           handler=self._on_add_data)
+
+        # connect any pre-existing viewers
+        for viewer in self.app._viewer_store.values():
+            self._connect_viewer(viewer)
+
+        # initialize if cube viewer exists
+        self._check_if_cube_viewer_exists()
 
         # update internal value (wavelength/frequency) when x display unit is changed
         # so that the current slice number is preserved
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_global_display_unit_changed)
+        self._initialize_location()
+
+    def _initialize_location(self, *args):
+        # initialize value_unit (this has to wait until data is loaded to an existing
+        # slice_indicator_viewer, so we'll keep trying until it is set - after that, changes
+        # will be handled by a change to global display units)
+        if not self.value_unit:
+            for viewer in self.slice_indicator_viewers:
+                # ignore while x_display_unit is unset or still degrees (before data transpose)
+                # if we ever need the slice axis to be degrees, this will need to be loosened
+                if getattr(viewer.state, 'x_display_unit', None) not in (None, 'deg'):
+                    self.value_unit = viewer.state.x_display_unit
+                    break
+
+        if self._indicator_initialized:
+            return
+
+        # set initial value (and snap to nearest point, if enabled)
+        # we'll loop over all slice indicator viewers and their layers
+        # and just use the first layer with data.  Once initialized, this logic will be
+        # skipped going forward to not change any user selection (so will default to the
+        # middle of the first found layer)
+        for viewer in self.slice_indicator_viewers:
+            if str(viewer.state.x_att) not in self.valid_slice_att_names:
+                # avoid setting value to degs, before x_att is changed to wavelength, for example
+                continue
+            slice_values = viewer.slice_values
+            if len(slice_values):
+                self.value = slice_values[int(len(slice_values)/2)]
+                self._indicator_initialized = True
+                return
+
+    @property
+    def slice_axis(self):
+        # global display unit "axis" corresponding to the slice axis
+        return 'spectral'
+
+    @property
+    def valid_slice_att_names(self):
+        return _spectral_axis_names + ['Pixel Axis 2 [x]']
+
+    @property
+    def slice_selection_viewers(self):
+        return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceSelection)]
+
+    @property
+    def slice_indicator_viewers(self):
+        return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
 
     @property
     @deprecated(since="3.9", alternative="value")
@@ -105,165 +159,211 @@ class Slice(PluginTemplateMixin):
         return self.user_api.show_value
 
     @property
-    def user_api(self):
-        return PluginUserApi(self, expose=('slice', 'wavelength', 'value',
-                                           'show_indicator', 'show_wavelength', 'show_value'))
+    @deprecated(since="3.9", alternative="value")
+    def slice(self):
+        # this assumes the first slice_selection_viewer (and layer)
+        return self.slice_selection_viewers[0].slice
+
+    @slice.setter
+    @deprecated(since="3.9", alternative="value")
+    def slice(self, slice):
+        # this assumes the first slice_selection_viewer (and layer)
+        value = self.slice_selection_viewers[0].slice_values[slice]
+        self.value = value
 
     @property
-    def slice_indicator(self):
-        return self.spectrum_viewer.slice_indicator
+    def user_api(self):
+        # NOTE: remove slice, wavelength, show_wavelength after deprecation period
+        expose = ['slice', 'wavelength', 'show_wavelength',
+                  'value',
+                  'show_indicator', 'show_value']
+        if self.allow_disable_snapping:
+            expose += ['snap_to_slice']
+        return PluginUserApi(self, expose=expose)
 
-    def _watch_viewer(self, viewer, watch=True):
-        if isinstance(viewer, BqplotImageView):
-            if watch and viewer not in self._watched_viewers:
-                self._watched_viewers.append(viewer)
-                viewer.state.add_callback('slices',
-                                          self._viewer_slices_changed)
-            elif not watch and viewer in self._watched_viewers:
-                viewer.state.remove_callback('slices',
-                                             self._viewer_slices_changed)
-                self._watched_viewers.remove(viewer)
-        elif isinstance(viewer, BqplotProfileView) and watch:
-            if self._x_all is None and len(viewer.data()):
-                # cache values (wavelengths/freqs) so that value <> slice conversion is efficient
-                self._update_data(viewer.data()[0].spectral_axis)
-
-            if viewer not in self._indicator_viewers:
-                self._indicator_viewers.append(viewer)
-                # if the units (or data) change, we need to update internally
-                viewer.state.add_callback("reference_data",
-                                          self._update_reference_data)
-
-    def _on_data_added(self, msg):
-        if isinstance(msg.viewer, BqplotImageView):
-            if len(msg.data.shape) == 3:
-                self.max_slice = msg.data.shape[-1] - 1  # Same as i_end in Export Plot plugin
-                self._watch_viewer(msg.viewer, True)
-                self._set_viewer_to_slice(msg.viewer, int(self.slice))
-
-        elif isinstance(msg.viewer, BqplotProfileView):
-            self._watch_viewer(msg.viewer, True)
-
-    def _update_reference_data(self, reference_data):
-        if reference_data is None:
-            return  # pragma: no cover
-        self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
-
-    def _update_data(self, x_all):
-        self._x_all = x_all.value
-
-        if self.value == -1:
-            if len(x_all):
-                # initialize at middle of cube
-                self.slice = int(len(x_all)/2)
-            else:
-                # leave in the pre-init state and don't update the value/slice
+    def _check_if_cube_viewer_exists(self, *args):
+        for viewer in self.app._viewer_store.values():
+            if isinstance(viewer, self._cube_viewer_cls):
+                self.cube_viewer_exists = True
                 return
+        self.cube_viewer_exists = False
 
-        # Also update unit when data is updated
-        self.value_unit = x_all.unit.to_string()
+    def vue_create_cube_viewer(self, *args):
+        self.app._on_new_viewer(NewViewerMessage(self._cube_viewer_cls, data=None, sender=self.app),
+                                vid=self._cube_viewer_default_label,
+                                name=self._cube_viewer_default_label)
 
-        # force value (wavelength/frequency) to update from the current slider slice
-        self._on_slider_updated({'new': self.slice})
+        dc = self.app.data_collection
+        for data in dc:
+            if data.ndim == 3:
+                # only load the first cube-like data
+                self.app.set_data_visibility(self._cube_viewer_default_label, data.label, True)
+                break
 
-        # update data held inside slice indicator and force reverting to original active status
-        self.slice_indicator._update_data(x_all)
+    def _connect_viewer(self, viewer):
+        if isinstance(viewer, WithSliceIndicator):
+            # NOTE: on first call, this will initialize the indicator itself
+            viewer._set_slice_indicator_value(self.value)
+        # in the case where x_att is changed after the viewer is added or data is loaded, we
+        # may still need to initialize the location to a valid value (with a valid x_att)
+        viewer.state.add_callback('x_att', self._initialize_location)
 
-    def _viewer_slices_changed(self, value):
-        # the slices attribute on the viewer state was changed,
-        # so we'll update the slider to match which will trigger
-        # the slider observer (_on_slider_updated) and sync across
-        # any other applicable viewers
-        if len(value) == 3:
-            self.slice = float(value[-1])
+    def _on_viewer_added(self, msg):
+        viewer = self.app.get_viewer(msg.viewer_id)
+        self._connect_viewer(viewer)
+        self._check_if_cube_viewer_exists()
+
+    def _on_viewer_removed(self, msg):
+        self._check_if_cube_viewer_exists()
+
+    def _on_add_data(self, msg):
+        self._initialize_location()
+        if isinstance(msg.viewer, WithSliceSelection):
+            # instead of just setting viewer.slice_value, we'll make sure the "snapping" logic
+            # is updated (if enabled)
+            self._on_value_updated({'new': self.value})
 
     def _on_select_slice_message(self, msg):
-        # NOTE: by setting the slice index, the observer (_on_slider_updated)
-        # will sync across all viewers and update the value (wavelength/frequency)
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UnitsWarning)
-            if msg.slice is not None:
-                self.slice = msg.slice
-            elif msg.value is not None:
-                self.value = msg.value
-
-    @property
-    def slice_axis(self):
-        return 'spectral'
+            self.value = msg.value
 
     def _on_global_display_unit_changed(self, msg):
         if msg.axis != self.slice_axis:
             return
-        prev_unit = self.value_unit
-        # original unit during init can be blank or deg (before axis is set correctly)
-        if self._x_all is None or prev_unit in ('deg', ''):
+        if not self.value_unit:
+            self.value_unit = str(msg.unit)
             return
-        self._update_data((self._x_all * u.Unit(prev_unit)).to(msg.unit, u.spectral()))
+        prev_unit = u.Unit(self.value_unit)
+        self.value_unit = str(msg.unit)
+        self.value = (self.value * prev_unit).to_value(msg.unit)
+
+    @property
+    def valid_selection_values(self):
+        # all available slice values from cubes (unsorted)
+        viewers = self.slice_selection_viewers
+        if not len(viewers):
+            return np.array([])
+        return np.unique(np.concatenate([viewer.slice_values for viewer in viewers]))
+
+    @property
+    def valid_selection_values_sorted(self):
+        # all available slice values from cubes (sorted)
+        return np.sort(self.valid_selection_values)
+
+    @property
+    def valid_indicator_values(self):
+        # all x-values in indicator viewers (unsorted)
+        viewers = self.slice_indicator_viewers
+        if not len(viewers):
+            return np.array([])
+        return np.unique(np.concatenate([viewer.slice_values for viewer in viewers]))
+
+    @property
+    def valid_indicator_values_sorted(self):
+        return np.sort(self.valid_indicator_values)
+
+    @property
+    def valid_values(self):
+        return self.valid_selection_values if self.cube_viewer_exists else self.valid_indicator_values  # noqa
+
+    @property
+    def valid_values_sorted(self):
+        return self.valid_selection_values_sorted if self.cube_viewer_exists else self.valid_indicator_values_sorted  # noqa
 
     @observe('value')
     def _on_value_updated(self, event):
         # convert to float (JS handles stripping any invalid characters)
-        try:
-            value = float(event.get('new'))
-        except ValueError:
-            # do not accept changes, we'll revert via the slider
-            # since this @change event doesn't have access to
-            # the old value, and self.value already updated
-            # via the v-model
-            self._on_slider_updated({'new': self.slice})
+        if not isinstance(event.get('new'), float):
+            try:
+                self.value = float(event.get('new'))
+            except ValueError:
+                return
             return
 
-        # NOTE: by setting the index, this should recursively update the
-        # value (wavelength/frequency) to the nearest applicable value in _on_slider_updated
-        self.slice = int(np.argmin(abs(value - self._x_all)))
+        if self.snap_to_slice and not self.value_editing:
+            valid_values = self.valid_selection_values
+            if len(valid_values):
+                closest_ind = np.argmin(abs(valid_values - self.value))
+                closest_value = valid_values[closest_ind]
+                if self.value != closest_value:
+                    # cast to float in case closest_value is an integer (which would otherwise
+                    # raise an error with setting to the float traitlet)
+                    self.value = float(closest_value)
+                    # will trigger another call to this method
+                    return
+
+        for viewer in self.slice_indicator_viewers:
+            viewer._set_slice_indicator_value(self.value)
+        for viewer in self.slice_selection_viewers:
+            viewer.slice_value = self.value
+
+        self.hub.broadcast(SliceValueUpdatedMessage(value=self.value,
+                                                    value_unit=self.value_unit,
+                                                    sender=self))
+
+    @observe('snap_to_slice', 'value_editing')
+    def _on_snap_to_slice_changed(self, event):
+        if self.snap_to_slice and not self.value_editing:
+            self._on_value_updated({'new': self.value})
 
     @observe('show_indicator', 'show_value')
     def _on_setting_changed(self, event):
-        msg = SliceToolStateMessage({event['name']: event['new']}, sender=self)
+        msg = SliceToolStateMessage({event['name']: event['new']}, viewer=None, sender=self)
         self.session.hub.broadcast(msg)
-
-    def _set_viewer_to_slice(self, viewer, value):
-        viewer.state.slices = (0, 0, value)
-
-    @observe('slice')
-    def _on_slider_updated(self, event):
-        if self._x_all is None:
-            return
-
-        value = int(event.get('new', int(len(self._x_all)/2))) % (int(self.max_slice) + 1)
-
-        self.value = self._x_all[value]
-
-        for viewer in self._watched_viewers:
-            self._set_viewer_to_slice(viewer, value)
-        for viewer in self._indicator_viewers:
-            if hasattr(viewer, 'slice_indicator'):
-                viewer.slice_indicator.slice = value
-
-        self.hub.broadcast(SliceValueUpdatedMessage(slice=value,
-                                                    value=self.value,
-                                                    value_unit=self.value_unit,
-                                                    sender=self))
 
     def vue_goto_first(self, *args):
         if self.is_playing:
             return
-        self._on_slider_updated({'new': self.min_slice})
+        self.value = np.nanmin(self.valid_values)
 
     def vue_goto_last(self, *args):
         if self.is_playing:
             return
-        self._on_slider_updated({'new': self.max_slice})
+        self.value = np.nanmax(self.valid_values)
+
+    def vue_play_prev(self, *args):
+        if self.is_playing:
+            return
+        valid_values = self.valid_values_sorted
+        if not len(valid_values):
+            return
+        current_ind = np.argmin(abs(valid_values - self.value))
+        if current_ind == 0:
+            # wrap
+            self.value = valid_values[len(valid_values) - 1]
+        else:
+            self.value = valid_values[current_ind - 1]
 
     def vue_play_next(self, *args):
         if self.is_playing:
             return
-        self._on_slider_updated({'new': self.slice + 1})
+        valid_values = self.valid_values_sorted
+        if not len(valid_values):
+            return
+        current_ind = np.argmin(abs(valid_values - self.value))
+        if len(valid_values) <= current_ind + 1:
+            # wrap
+            self.value = valid_values[0]
+        else:
+            self.value = valid_values[current_ind + 1]
 
     def _player_worker(self):
         ts = float(self.play_interval) * 1e-3  # ms to s
+        valid_values = self.valid_values_sorted
+        if not len(valid_values):
+            self.is_playing = False
+            return
         while self.is_playing:
-            self._on_slider_updated({'new': self.slice + 1})
+            # recompute current_ind in case user has moved slider
+            # could optimize this by only recomputing after a select slice message
+            # (will only make a difference if argmin becomes approaches play_interval)
+            current_ind = np.argmin(abs(valid_values - self.value))
+            if len(valid_values) <= current_ind + 1:
+                # wrap
+                self.value = valid_values[0]
+            else:
+                self.value = valid_values[current_ind + 1]
             time.sleep(ts)
 
     def vue_play_start_stop(self, *args):
@@ -275,7 +375,9 @@ class Slice(PluginTemplateMixin):
             self.is_playing = False
             return
 
-        if self._x_all is None:
+        if len(self.slice_indicator_viewers) == 0 and len(self.slice_selection_viewers) == 0:
+            return
+        if not len(self.valid_values_sorted):
             return
 
         # Start

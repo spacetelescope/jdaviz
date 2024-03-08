@@ -11,6 +11,14 @@
             <span style="padding: 6px">Indicator Settings</span>
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
+            <v-row v-if="allow_disable_snapping">
+              <v-switch
+                label="Snap to Slice"
+                hint="Snap indicator (and value) to the nearest slice in the cube."
+                v-model="snap_to_slice"
+                persistent-hint>
+              </v-switch>
+            </v-row>
             <v-row>
               <v-switch
                 label="Show Indicator"
@@ -32,34 +40,21 @@
       </v-expansion-panels>
     </v-row>
 
-    <v-row>
-      <v-slider
-        :value="slice"
-        @input="throttledSetValue"
-        class="align-center"
-        :max="max_slice"
-        :min="min_slice"
-        hide-details
-      />
+    <v-row justify="end">
+      <v-btn color="primary" text v-if="!cube_viewer_exists" @click="create_cube_viewer">
+        Show Cube Viewer
+      </v-btn>
     </v-row>
 
     <v-row>
       <v-text-field
-        v-model.number="slice"
-        class="mt-0 pt-0"
         type="number"
-        label="Slice"
-        hint="Slice number"
-        :suffix="'/'+max_slice"
-      ></v-text-field>
-    </v-row>
-
-    <v-row>
-      <v-text-field
-        v-model="value"
+        v-model.number="value"
+        @focus="(e) => value_editing = true"
+        @blur="(e) => value_editing = false"
         class="mt-0 pt-0"
         :label="value_label"
-        :hint="value_label+' corresponding to slice'"
+        :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
         :suffix="value_unit"
       ></v-text-field>
     </v-row>
@@ -76,6 +71,14 @@
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
+            <v-btn color="primary" icon @click="play_prev" v-bind="attrs" v-on="on" :disabled="is_playing">
+              <v-icon>exposure_minus_1</v-icon>
+            </v-btn>
+          </template>
+          <span>Previous</span>
+        </v-tooltip>
+        <v-tooltip top>
+          <template v-slot:activator="{ on, attrs }">
             <v-btn color="primary" icon @click="play_start_stop" v-bind="attrs" v-on="on">
               <v-icon>mdi-play-pause</v-icon>
             </v-btn>
@@ -88,7 +91,7 @@
               <v-icon>exposure_plus_1</v-icon>
             </v-btn>
           </template>
-          <span>Next slice</span>
+          <span>Next</span>
         </v-tooltip>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">
@@ -108,7 +111,7 @@
     created() {
       this.throttledSetValue = _.throttle(
         (v) => { this.slice = v; },
-        this.wait);
+        this.slider_throttle);
     },
   }
 </script>

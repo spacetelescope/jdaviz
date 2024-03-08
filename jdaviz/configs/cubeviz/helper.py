@@ -1,6 +1,7 @@
 import numpy as np
 from astropy.io import fits
 from astropy.io import registry as io_registry
+from astropy.utils.decorators import deprecated
 from glue.core import BaseData
 from specutils import Spectrum1D
 from specutils.io.registers import _astropy_has_priorities
@@ -12,6 +13,10 @@ from jdaviz.core.events import (AddDataMessage,
                                 SliceSelectSliceMessage)
 
 __all__ = ['Cubeviz']
+
+
+_spectral_axis_names = ["Wave", "Wavelength", "Freq", "Frequency",
+                        "Wavenumber", "Velocity", "Energy"]
 
 
 class Cubeviz(ImageConfigHelper, LineListMixin):
@@ -36,8 +41,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             return
         ref_data = viewer.state.reference_data
         if ref_data and ref_data.ndim == 3:
-            for att_name in ["Wave", "Wavelength", "Freq", "Frequency",
-                             "Wavenumber", "Velocity", "Energy"]:
+            for att_name in _spectral_axis_names:
                 if att_name in ref_data.component_ids():
                     if viewer.state.x_att != ref_data.id[att_name]:
                         viewer.state.x_att = ref_data.id[att_name]
@@ -76,6 +80,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
 
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
+    @deprecated(since="3.9", alternative="select_wavelength")
     def select_slice(self, slice):
         """
         Select a slice by index.
@@ -89,8 +94,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             raise TypeError("slice must be an integer")
         if slice < 0:
             raise ValueError("slice must be positive")
-        msg = SliceSelectSliceMessage(slice=slice, sender=self)
-        self.app.hub.broadcast(msg)
+        self.plugins['Slice'].slice = slice
 
     def select_wavelength(self, wavelength):
         """
@@ -100,7 +104,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         ----------
         wavelength : float
             Wavelength to select in units of the x-axis of the spectrum.  The nearest slice will
-            be selected.
+            be selected if "snap to slice" is enabled in the slice plugin.
         """
         if not isinstance(wavelength, (int, float)):
             raise TypeError("wavelength must be a float or int")

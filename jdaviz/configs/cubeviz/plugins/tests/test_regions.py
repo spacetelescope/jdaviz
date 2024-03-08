@@ -16,8 +16,8 @@ from jdaviz.configs.imviz.tests.test_regions import BaseRegionHandler
 class TestLoadRegions(BaseRegionHandler):
     @pytest.fixture(autouse=True)
     def setup_class(self, cubeviz_helper, image_cube_hdu_obj_microns):
-        cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label='has_microns')
         self.cubeviz = cubeviz_helper
+        cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label='has_microns')
         self.viewer = cubeviz_helper.default_viewer._obj  # This is used in BaseRegionHandler
         self.spectrum_viewer = cubeviz_helper.app.get_viewer(
             cubeviz_helper._default_spectrum_viewer_reference_name

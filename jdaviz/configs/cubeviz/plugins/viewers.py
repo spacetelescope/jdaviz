@@ -1,3 +1,5 @@
+import numpy as np
+
 from functools import cached_property
 from glue.core import BaseData
 
@@ -14,10 +16,15 @@ from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.utils import get_subset_type
 
-__all__ = ['CubevizImageView', 'CubevizProfileView', 'WithSliceIndicator']
+__all__ = ['CubevizImageView', 'CubevizProfileView',
+           'WithSliceIndicator', 'WithSliceSelection']
 
 
 class WithSliceIndicator:
+    @property
+    def slice_component_label(self):
+        return str(self.state.x_att)
+
     @cached_property
     def slice_indicator(self):
         # SliceIndicatorMarks does not yet exist
@@ -25,9 +32,90 @@ class WithSliceIndicator:
         self.figure.marks = self.figure.marks + slice_indicator.marks
         return slice_indicator
 
+    @property
+    def slice_values(self):
+        def _get_component(layer):
+            try:
+                return layer.layer.get_component(self.slice_component_label).data
+            except (AttributeError, KeyError):
+                # layer either does not have get_component (because its a subset)
+                # or slice_component_label is not a component in this layer
+                # either way, return an empty array and skip this layer
+                return np.array([])
+        try:
+            return np.asarray(np.unique(np.concatenate([_get_component(layer) for layer in self.layers])),  # noqa
+                              dtype=float)
+        except ValueError:
+            return np.array([])
+
+    def _set_slice_indicator_value(self, value):
+        # this is a separate method so that viewers can override and map value if necessary
+        # NOTE: on first call, this will initialize the indicator itself
+        self.slice_indicator.value = value
+
+
+class WithSliceSelection:
+    @property
+    def slice_index(self):
+        # index in state.slices corresponding to the slice axis
+        return 2
+
+    @property
+    def slice_component_label(self):
+        slice_plg = self.jdaviz_helper.plugins.get('Slice', None)
+        if slice_plg is None:  # pragma: no cover
+            raise ValueError("slice plugin must be activated to access slice_component_label")
+        return slice_plg._obj.slice_indicator_viewers[0].slice_component_label
+
+    @property
+    def slice_values(self):
+        # TODO: make a cached property and invalidate cache on add/remove data
+        # TODO: add support for multiple cubes (but then slice selection needs to be more complex)
+        # if slice_index is 0, then we want the equivalent of [:, 0, 0]
+        # if slice_index is 1, then we want the equivalent of [0, :, 0]
+        # if slice_index is 2, then we want the equivalent of [0, 0, :]
+        take_inds = [2, 1, 0]
+        take_inds.remove(self.slice_index)
+        for layer in self.layers:
+            try:
+                data_obj = layer.layer.data.get_component(self.slice_component_label).data
+            except (AttributeError, KeyError):
+                continue
+            else:
+                break
+        else:
+            return np.array([])
+        return np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]), dtype=float)
+
+    @property
+    def slice(self):
+        return self.state.slices[self.slice_index]
+
+    @slice.setter
+    def slice(self, slice):
+        # NOTE: not intended for user-access - this should be controlled through the slice plugin
+        # in order to sync with all other viewers/slice indicators
+        slices = [0, 0, 0]
+        slices[self.slice_index] = slice
+        self.state.slices = tuple(slices)
+
+    @property
+    def slice_value(self):
+        return self.slice_values[self.slice]
+
+    @slice_value.setter
+    def slice_value(self, slice_value):
+        # NOTE: not intended for user-access - this should be controlled through the slice plugin
+        # in order to sync with all other viewers/slice indicators
+        # find the slice nearest slice_value
+        slice_values = self.slice_values
+        if not len(slice_values):
+            return
+        self.slice = np.argmin(abs(slice_values - slice_value))
+
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
-class CubevizImageView(JdavizViewerMixin, BqplotImageView):
+class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
     # NOTE: zoom and pan are merged here for space consideration and to avoid
     # overflow to second row when opening the tray
