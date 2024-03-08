@@ -43,7 +43,7 @@ class WithSliceIndicator:
                 # either way, return an empty array and skip this layer
                 return np.array([])
         try:
-            return np.unique(np.concatenate([_get_component(layer) for layer in self.layers]))
+            return np.asarray(np.unique(np.concatenate([_get_component(layer) for layer in self.layers])), dtype=float)
         except ValueError:
             return np.array([])
 
@@ -84,7 +84,7 @@ class WithSliceSelection:
                 break
         else:
             return np.array([])
-        return data_obj.take(0, take_inds[0]).take(0, take_inds[1])
+        return np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]), dtype=float)
 
     @property
     def slice(self):

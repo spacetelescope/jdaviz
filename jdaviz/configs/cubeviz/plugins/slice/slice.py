@@ -274,16 +274,17 @@ class Slice(PluginTemplateMixin):
     @observe('value')
     def _on_value_updated(self, event):
         # convert to float (JS handles stripping any invalid characters)
-        try:
-            value = float(event.get('new'))
-        except ValueError:
-            # TODO: do we need to revert?
+        if not isinstance(event.get('new'), float):
+            try:
+                self.value = float(event.get('new'))
+            except ValueError:
+                return
             return
 
         if self.snap_to_slice and not self.value_editing:
             valid_values = self.valid_selection_values
             if len(valid_values):
-                closest_ind = np.argmin(abs(valid_values - value))
+                closest_ind = np.argmin(abs(valid_values - self.value))
                 closest_value = valid_values[closest_ind]
                 if self.value != closest_value:
                     # cast to float in case closest_value is an integer (which would otherwise
@@ -293,9 +294,9 @@ class Slice(PluginTemplateMixin):
                     return
 
         for viewer in self.slice_indicator_viewers:
-            viewer._set_slice_indicator_value(value)
+            viewer._set_slice_indicator_value(self.value)
         for viewer in self.slice_selection_viewers:
-            viewer.slice_value = value
+            viewer.slice_value = self.value
 
         self.hub.broadcast(SliceValueUpdatedMessage(value=self.value,
                                                     value_unit=self.value_unit,
