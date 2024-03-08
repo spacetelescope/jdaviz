@@ -749,6 +749,40 @@ Specviz
   display label for the y axis in spectral viewer. Previously it was hard coded
   to always display ``flux density`` no matter the input unit. [#2703]
 
+Specviz2d
+^^^^^^^^^
+
+Other Changes and Additions
+---------------------------
+
+3.8.3 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+- Fix redshifted line lists that were displaying at rest wavelengths, by assuming a global redshift. [#2726]
+
+- Order of RGB preset colors now matches for less than and greater than 5 layers. [#2731]
+
+- Fix subset linking/displaying between pixel/wavelength in Specviz2d viewers. [#2736]
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+- Histogram in Plot Options no longer stalls for a very large image. [#2735]
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
 
 3.8.2 (2024-02-23)
 ==================
