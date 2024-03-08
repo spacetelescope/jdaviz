@@ -130,7 +130,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # NOTE: This needs revising if we allow loading more than one cube.
         if isinstance(msg.viewer, BqplotImageView):
             if len(msg.data.shape) == 3:
-                self.i_end = msg.data.shape[-1] - 1  # Same as max_slice in Slice plugin
+                self.i_end = msg.data.shape[-1] - 1
 
     @observe('multiselect', 'viewer_multiselect')
     def _sync_multiselect_traitlets(self, event):
@@ -251,7 +251,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             raise ValueError("movie support disabled")
 
         slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
-        orig_slice = slice_plg.slice
+        orig_slice = viewer.slice
         temp_png_files = []
         i = i_start
         video = None
@@ -264,7 +264,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if self.movie_interrupt:
                     break
 
-                slice_plg._on_slider_updated({'new': i})
+                slice_plg.vue_play_next()
                 cur_pngfile = Path(f"._cubeviz_movie_frame_{i}.png")
                 # TODO: skip success snackbars when exporting temp movie frames?
                 self.save_figure(viewer, filename=cur_pngfile, filetype="png", show_dialog=False)
@@ -378,8 +378,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         slice_plg = self.app._jdaviz_helper.plugins["Slice"]._obj
         if i_start < 0:  # pragma: no cover
             i_start = 0
-        if i_end > slice_plg.max_slice:  # pragma: no cover
-            i_end = slice_plg.max_slice
+        max_slice = len(slice_plg.valid_values_sorted) - 1
+        if i_end > max_slice:  # pragma: no cover
+            i_end = max_slice
         if i_end <= i_start:
             raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
 
