@@ -103,28 +103,14 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
             if telescop == 'jwst' and ('ifu' in exptype or
                                        'mrs' in exptype or
                                        filetype == '3d ifu cube'):
-                for ext, viewer_name in (('SCI', flux_viewer_reference_name),
-                                         ('ERR', uncert_viewer_reference_name),
-                                         ('DQ', None)):
-                    data_label = app.return_data_label(file_name, ext)
-
-                    if ext == 'SCI':
-                        sci_ext = data_label
-
-                    # TODO: generalize/centralize this for use in other configs too
-
-                    if parent is not None:
-                        parent_data_label = parent
-                    elif ext == 'DQ':
-                        parent_data_label = sci_ext
-                    else:
-                        parent_data_label = None
-
-                    _parse_jwst_s3d(
-                        app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
-                        flux_viewer_reference_name=flux_viewer_reference_name,
-                        parent=parent_data_label
-                    )
+                sc = Spectrum1D.read(file_obj)
+                data_label = app.return_data_label(file_name)
+                _parse_spectrum1d_3d(
+                                    app, sc, data_label=data_label,
+                                    flux_viewer_reference_name=flux_viewer_reference_name,
+                                    spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+                                    uncert_viewer_reference_name=uncert_viewer_reference_name
+                                    )
             elif telescop == 'jwst' and filetype == 'r3d' and system == 'esa-pipeline':
                 for ext, viewer_name in (('DATA', flux_viewer_reference_name),
                                          ('ERR', uncert_viewer_reference_name),
@@ -153,6 +139,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
     #  into something glue can understand.
     elif isinstance(file_obj, Spectrum1D) and file_obj.flux.ndim in (1, 3):
         if file_obj.flux.ndim == 3:
+            print("Parsing 3D Spectrum1D")
             _parse_spectrum1d_3d(
                 app, file_obj, data_label=data_label,
                 flux_viewer_reference_name=flux_viewer_reference_name,
@@ -323,70 +310,8 @@ def _parse_hdulist(app, hdulist, file_name=None,
             app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
 
 
-def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
-                    viewer_name=None, flux_viewer_reference_name=None,
-                    parent=None):
-    hdu = hdulist[ext]
-    data_type = _get_data_type_by_hdu(hdu)
-
-    # Manually inject MJD-OBS until we can support GWCS, see
-    # https://github.com/spacetelescope/jdaviz/issues/690 and
-    # https://github.com/glue-viz/glue-astronomy/issues/59
-    if ext == 'SCI' and 'MJD-OBS' not in hdu.header:
-        for key in ('MJD-BEG', 'DATE-OBS'):  # Possible alternatives
-            if key in hdu.header:
-                if key.startswith('MJD'):
-                    hdu.header['MJD-OBS'] = hdu.header[key]
-                    break
-                else:
-                    t = Time(hdu.header[key])
-                    hdu.header['MJD-OBS'] = t.mjd
-                    break
-
-    if ext == 'DQ':  # DQ flags have no unit
-        flux = hdu.data << u.dimensionless_unscaled
-    else:
-        unit = u.Unit(hdu.header.get('BUNIT', 'count'))
-        flux = hdu.data << unit
-    wcs = WCS(hdulist['SCI'].header, hdulist)  # Everything uses SCI WCS
-
-    metadata = standardize_metadata(hdu.header)
-
-    # store original WCS in metadata. this is a hacky workaround for converting subsets
-    # to sky regions, where the parent data of the subset might have dropped spatial WCS info
-    metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
-
-    if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-        metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
-
-    data = _return_spectrum_with_correct_units(
-        flux, wcs, metadata, data_type=data_type, hdulist=hdulist)
-    app.add_data(data, data_label, parent=parent)
-
-    # get glue data and update if DQ:
-    if ext == 'DQ':
-        # prevent circular import:
-        from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
-
-        data = app.data_collection[-1]
-        prep_data_layer_as_dq(data)
-
-    if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
-        app.data_collection[-1].get_component("flux").units = flux.unit
-
-    if viewer_name is not None:
-        app.add_data_to_viewer(viewer_name, data_label)
-
-    if ext == 'DQ':
-        app.add_data_to_viewer(flux_viewer_reference_name, data_label, visible=False)
-
-    if data_type == 'flux':
-        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
-    elif data_type == 'uncert':
-        app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
-
-
-def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None):
+def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None,
+                   spectrum_viewer_reference_name=None):
     hdu = hdulist[ext]
     data_type = _get_data_type_by_hdu(hdu)
 
@@ -440,7 +365,8 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
 
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,
                          flux_viewer_reference_name=None,
-                         uncert_viewer_reference_name=None):
+                         uncert_viewer_reference_name=None,
+                         parent=None):
     """Load spectrum1d as a cube."""
 
     if data_label is None:
@@ -458,6 +384,13 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             flux[np.isinf(flux)] = np.nan  # Avoid INF from IVAR conversion
         else:
             flux = val
+
+        if parent is not None:
+            parent_data_label = parent
+        elif ext == 'DQ':
+            parent_data_label = app.return_data_label(data_label, "FLUX")
+        else:
+            parent_data_label = None
 
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -478,7 +411,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
                 flux, file_obj.wcs, meta, data_type=attr, apply_pix2=True)
 
         cur_data_label = app.return_data_label(data_label, attr.upper())
-        app.add_data(s1d, cur_data_label)
+        app.add_data(s1d, cur_data_label, parent=parent_data_label)
 
         if attr == 'flux':
             app.add_data_to_viewer(flux_viewer_reference_name, cur_data_label)
