@@ -26,21 +26,45 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
     assert (y_axis_label in label)
 
 
-def test_reset_limits(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d)
-    sv = specviz_helper.app.get_viewer("spectrum-viewer")
+class TestResetLimitsTwoTests:
+    """See https://github.com/spacetelescope/lcviz/pull/93"""
 
-    orig_xlims = (sv.state.x_min, sv.state.x_max)
-    orig_ylims = (sv.state.y_min, sv.state.y_max)
-    # set xmin and ymin to midpoints
-    new_xmin = (sv.state.x_min + sv.state.x_max) * 0.5
-    new_ymin = (sv.state.y_min + sv.state.y_max) * 0.5
-    sv.state.x_min = new_xmin
-    sv.state.y_min = new_ymin
+    def test_reset_limits_01(self, specviz_helper, spectrum1d):
+        """This should run first."""
+        specviz_helper.load_data(spectrum1d)
+        sv = specviz_helper.app.get_viewer("spectrum-viewer")
 
-    sv.state._reset_x_limits()
-    assert sv.state.x_min == orig_xlims[0]
-    assert sv.state.y_min == new_ymin
+        orig_xlims = (sv.state.x_min, sv.state.x_max)
+        orig_ylims = (sv.state.y_min, sv.state.y_max)
+        # set xmin and ymin to midpoints
+        new_xmin = (sv.state.x_min + sv.state.x_max) * 0.5
+        new_ymin = (sv.state.y_min + sv.state.y_max) * 0.5
+        sv.state.x_min = new_xmin
+        sv.state.y_min = new_ymin
 
-    sv.state._reset_y_limits()
-    assert sv.state.y_min == orig_ylims[0]
+        sv.state._reset_x_limits()
+        assert sv.state.x_min == orig_xlims[0]
+        assert sv.state.y_min == new_ymin
+
+        sv.state._reset_y_limits()
+        assert sv.state.y_min == orig_ylims[0]
+
+    def test_reset_limits_02(self, specviz_helper, spectrum1d_nm):
+        """This should run second and see if first polutes it."""
+        specviz_helper.load_data(spectrum1d_nm)
+        sv = specviz_helper.app.get_viewer("spectrum-viewer")
+
+        orig_xlims = (sv.state.x_min, sv.state.x_max)
+        orig_ylims = (sv.state.y_min, sv.state.y_max)
+        # set xmin and ymin to midpoints
+        new_xmin = (sv.state.x_min + sv.state.x_max) * 0.5
+        new_ymin = (sv.state.y_min + sv.state.y_max) * 0.5
+        sv.state.x_min = new_xmin
+        sv.state.y_min = new_ymin
+
+        sv.state._reset_x_limits()
+        assert sv.state.x_min == orig_xlims[0]
+        assert sv.state.y_min == new_ymin
+
+        sv.state._reset_y_limits()
+        assert sv.state.y_min == orig_ylims[0]
