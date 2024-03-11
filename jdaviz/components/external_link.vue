@@ -1,9 +1,9 @@
 <template>
   <span>
-    <a :href="link" target="__blank" style="color: #A75000">
+    <a :href="link" target="__blank" :style="{color: themeAccentColor}">
       <b>{{ linktext || "Learn More" }}</b>
-      <v-icon x-small color="#A75000">mdi-open-in-new</v-icon>
-    </a> 
+      <v-icon x-small :color="themeAccentColor">mdi-open-in-new</v-icon>
+    </a>
     
   </span>
 </template>
@@ -13,5 +13,10 @@ module.exports = {
   props: {link: String, 
           linktext: String
         },
+  computed: {
+    themeAccentColor() {
+      return this.$vuetify.theme.dark ? this.$vuetify.theme.themes.dark.accent : this.$vuetify.theme.themes.light.accent;
+    }
+  }
 };
 </script>
