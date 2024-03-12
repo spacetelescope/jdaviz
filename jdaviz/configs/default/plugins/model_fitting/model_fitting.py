@@ -315,7 +315,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
     def _get_1d_spectrum(self):
         # retrieves the 1d spectrum (accounting for spatial subset for cubeviz, if necessary)
-        return self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected)  # noqa
+        return self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected,
+                                                                 use_display_units=True)
 
     @observe("dataset_selected", "spatial_subset_selected")
     def _dataset_selected_changed(self, event=None):
@@ -343,7 +344,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Replace NaNs from collapsed Spectrum1D in Cubeviz
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
-
         # TODO: can we simplify this logic?
         self._units["x"] = str(
             selected_spec.spectral_axis.unit)
@@ -508,7 +508,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                             "value": param_quant.value,
                                             "unit": str(param_quant.unit),
                                             "fixed": False})
-
         self._initialized_models[comp_label] = initialized_model
 
         new_model["Initialized"] = True
@@ -841,7 +840,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         models_to_fit = self._reinitialize_with_fixed()
 
         masked_spectrum = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
-
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 masked_spectrum,

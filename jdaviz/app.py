@@ -653,7 +653,7 @@ class Application(VuetifyTemplate, HubListener):
             linked_flux_component = dc[-1].components[-1]
 
             links = [
-                LinkSame(ref_wavelength_component, linked_wavelength_component),
+                LinkSameWithUnits(ref_wavelength_component, linked_wavelength_component),
                 LinkSame(ref_flux_component, linked_flux_component)
             ]
 

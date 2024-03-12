@@ -355,8 +355,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Retrieve flux cube and create an array to represent the cone mask
         flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)
-        # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
-        display_unit = flux_cube.spectral_axis.unit
+        display_unit = astropy.units.Unit(self.app._get_display_unit('spectral'))
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
@@ -373,7 +372,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     f'Spectral axis unit physical type is {display_unit.physical_type}, '
                     'must be length for cone aperture')
 
-            fac = flux_cube.spectral_axis.value / self.reference_spectral_value
+            fac = flux_cube.spectral_axis.to_value(display_unit) / self.reference_spectral_value
 
             # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
             if isinstance(aperture, CircularAperture):
