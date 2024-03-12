@@ -6,7 +6,7 @@ import numpy as np
 from astropy.io.registry import IORegistryError
 from astropy.nddata import StdDevUncertainty
 from astropy.io import fits
-from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specutils import Spectrum, SpectrumList, SpectrumCollection
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import data_parser_registry
@@ -21,17 +21,17 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                               concat_by_file=False, cache=None, local_path=os.curdir, timeout=None,
                               load_as_list=False):
     """
-    Loads a data file or `~specutils.Spectrum1D` object into Specviz.
+    Loads a data file or `~specutils.Spectrum` object into Specviz.
 
     Parameters
     ----------
-    data : str, `~specutils.Spectrum1D`, or `~specutils.SpectrumList`
-        Spectrum1D, SpectrumList, or path to compatible data file.
+    data : str, `~specutils.Spectrum`, or `~specutils.SpectrumList`
+        Spectrum, SpectrumList, or path to compatible data file.
     data_label : str
         The Glue data label found in the ``DataCollection``.
     format : str
         Loader format specification used to indicate data format in
-        `~specutils.Spectrum1D.read` io method.
+        `~specutils.Spectrum.read` io method.
     concat_by_file : bool
         If True and there is more than one available extension, concatenate
         the extensions within each spectrum file passed to the parser and
@@ -65,7 +65,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     if isinstance(data, SpectrumCollection):
         raise TypeError("SpectrumCollection detected."
                         " Please provide a Spectrum1D or SpectrumList")
-    elif isinstance(data, Spectrum1D):
+    elif isinstance(data, Spectrum):
         # Handle the possibility of 2D spectra by splitting into separate spectra
         if data.flux.ndim == 1:
             data_label = [data_label]
@@ -79,7 +79,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     elif isinstance(data, list):
         # special processing for HDUList
         if isinstance(data, fits.HDUList):
-            data = [Spectrum1D.read(data)]
+            data = [Spectrum.read(data)]
             data_label = [data_label]
         else:
             # list treated as SpectrumList if not an HDUList
@@ -235,7 +235,7 @@ def group_spectra_by_filename(datasets):
 
 def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     """
-    Combine lists of 1D spectra into a composite `~specutils.Spectrum1D` object.
+    Combine lists of 1D spectra into a composite `~specutils.Spectrum` object.
 
     Parameters
     ----------
@@ -248,7 +248,7 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
     Returns
     -------
-    spec : `~specutils.Spectrum1D`
+    spec : `~specutils.Spectrum`
         Composite 1D spectrum.
     """
     wlallarr = np.array(wl)
@@ -266,8 +266,8 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     else:
         unc = None
 
-    spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
-                      uncertainty=unc)
+    spec = Spectrum(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
+                    uncertainty=unc)
     return spec
 
 
