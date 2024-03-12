@@ -1,7 +1,10 @@
 import numpy as np
+import pytest
+from astropy.coordinates import SkyCoord
+from astropy.nddata import NDData
 from numpy.testing import assert_allclose
 
-from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
+from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, create_example_gwcs
 
 
 class TestPanZoomTools(BaseImviz_WCS_WCS):
@@ -62,6 +65,46 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
         assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-1.5, 5.5, -1.5, 5.5))  # noqa
         assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-1.5, 5.5, -1.5, 5.5))  # noqa
         t_linkedpan.deactivate()
+
+
+@pytest.mark.parametrize("link_type", ["Pixels", "WCS"])
+def test_panzoom_click_center_linking(imviz_helper, link_type):
+    """https://github.com/spacetelescope/jdaviz/issues/2749"""
+    v = imviz_helper.default_viewer._obj
+
+    # Since we are not really displaying, need this to test pan/zoom.
+    v.shape = (100, 100)
+    v.state._set_axes_aspect_ratio(1)
+
+    arr_big = np.ones((40, 30), dtype=int)
+    w_big = create_example_gwcs(arr_big.shape)
+    arr_small = np.ones((20, 15), dtype=int)
+    w_small = create_example_gwcs(arr_small.shape)
+
+    imviz_helper.load_data(NDData(arr_big, wcs=w_big), data_label="big")
+    imviz_helper.load_data(NDData(arr_small, wcs=w_small), data_label="small")
+
+    lc_plugin = imviz_helper.plugins['Orientation']
+    lc_plugin.link_type = link_type
+
+    coo = SkyCoord(ra=197.89262754541807, dec=-1.3644568140486624, unit="deg")
+
+    if link_type == "WCS":
+        mouseover_loc = v.state.reference_data.coords.world_to_pixel(coo)
+    else:  # Pixels
+        mouseover_loc = w_small.world_to_pixel(coo)
+
+    t = v.toolbar.tools['jdaviz:imagepanzoom']
+    t.activate()
+    t.on_click({'event': 'click', 'domain': {'x': mouseover_loc[0], 'y': mouseover_loc[1]}})
+    t.deactivate()
+
+    # We want to make sure click centers viewer to where it is supposed to be.
+    cur_cen = v._get_center_skycoord()
+    v.center_on(coo)
+    real_cen = v._get_center_skycoord()
+    assert_allclose(cur_cen.ra.deg, real_cen.ra.deg)
+    assert_allclose(cur_cen.dec.deg, real_cen.dec.deg)
 
 
 def test_blink(imviz_helper):
