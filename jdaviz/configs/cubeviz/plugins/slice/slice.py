@@ -223,6 +223,24 @@ class Slice(PluginTemplateMixin):
             # is updated (if enabled)
             self._on_value_updated({'new': self.value})
 
+    def _update_slice(self, x_all):
+        # Also update unit when data is updated
+        self.value_unit = x_all.unit.to_string()
+
+        # force value (wavelength/frequency) to update from the current slider slice
+        self._on_slider_updated({'new': self.slice})
+
+        # update data held inside slice indicator and force reverting to original active status
+        self.slice_indicator._update_data(x_all)
+
+    def _viewer_slices_changed(self, value):
+        # the slices attribute on the viewer state was changed,
+        # so we'll update the slider to match which will trigger
+        # the slider observer (_on_slider_updated) and sync across
+        # any other applicable viewers
+        if len(value) == 3:
+            self.slice = float(value[-1])
+
     def _on_select_slice_message(self, msg):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UnitsWarning)

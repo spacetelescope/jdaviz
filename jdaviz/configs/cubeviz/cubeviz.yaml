@@ -23,6 +23,7 @@ tray:
   - g-subset-plugin
   - g-markers
   - cubeviz-slice
+  - g-unit-conversion
   - g-gaussian-smooth
   - g-collapse
   - g-model-fitting

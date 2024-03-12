@@ -2632,7 +2632,8 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         if spatial_subset == 'per-pixel':
             if self.app.config != 'cubeviz':
                 raise ValueError("per-pixel only supported for cubeviz")
-            full_spectrum = self.dataset.selected_obj
+            full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
+                                                             use_display_units=True)
         else:
             full_spectrum = dataset.selected_spectrum_for_spatial_subset(spatial_subset.selected if spatial_subset is not None else None,  # noqa
                                                                          use_display_units=True)
@@ -2719,7 +2720,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             continuum_mask = ~self._specviz_helper.get_data(
                 dataset.selected,
                 spectral_subset=self.continuum_subset_selected,
-                use_display_units=False).mask
+                use_display_units=True).mask
             spectral_axis_nanmasked = spectral_axis.value.copy()
             spectral_axis_nanmasked[~continuum_mask] = np.nan
             if not update_marks:
