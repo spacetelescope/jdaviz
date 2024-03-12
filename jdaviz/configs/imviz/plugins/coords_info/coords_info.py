@@ -337,7 +337,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             if data_wcs:
                 try:
                     if wcs_ndim == 3:
-                        sky = data_wcs.pixel_to_world(viewer.slice, y, x)[1].icrs
+                        sky = data_wcs.pixel_to_world(viewer.slice, y, x)
+                        sky = [coord for coord in sky if hasattr(coord, "icrs")][0].icrs
                     else:  # wcs_ndim == 2
                         sky = data_wcs.pixel_to_world(x, y).icrs
                 except Exception:
