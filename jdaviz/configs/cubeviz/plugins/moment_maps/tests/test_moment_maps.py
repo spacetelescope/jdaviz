@@ -32,6 +32,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
     mm = cubeviz_helper.plugins['Moment Maps']
     cmc = mm._obj.continuum_marks['center']
     assert len(cmc.marks) == 0
+    assert not cmc.visible
     with mm.as_active():
         mm.n_moment = 0
         # no continuum so marks should be empty
@@ -88,6 +89,9 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
 
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
 
+    print(spectrum1d_cube.shape, spectrum1d_cube.spectral_axis_index)
+    print(flux_viewer.layers[0].layer.data.meta['spectral_axis_index'])
+
     # Since we are not really displaying, need this to trigger GUI stuff.
     flux_viewer.shape = (100, 100)
     flux_viewer.state._set_axes_aspect_ratio(1)
@@ -113,7 +117,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
 
-    assert len(dc.links) == 19
+    assert len(dc.links) == 17
 
     # label should remain unchanged but raise overwrite warnings
     assert mm._obj.results_label == 'moment 0'
@@ -123,7 +127,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     label_mouseover = cubeviz_helper._coords_info
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
-    assert flux_viewer.state.slices == (0, 0, 1)
+    assert flux_viewer.state.slices == (1, 0, 0)
     # Slice 0 has 8 pixels, this is Slice 1
     assert label_mouseover.as_text() == (f"Pixel x=00.0 y=00.0 Value +8.00000e+00 {cube_unit}",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
