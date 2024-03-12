@@ -22,7 +22,7 @@ from astropy.nddata import NDDataArray, CCDData, StdDevUncertainty
 import astropy.units as u
 from astropy.utils.decorators import deprecated
 from regions.core.core import Region
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum, SpectralRegion
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
@@ -434,7 +434,7 @@ class ConfigHelper(HubListener):
 
     def _handle_display_units(self, data, use_display_units=True):
         if use_display_units:
-            if isinstance(data, Spectrum1D):
+            if isinstance(data, Spectrum):
                 spectral_unit = self.app._get_display_unit('spectral')
                 if not spectral_unit:
                     return data
@@ -502,10 +502,11 @@ class ConfigHelper(HubListener):
                                                      spectral_unit)
                             * u.Unit(spectral_unit))
 
-                data = Spectrum1D(spectral_axis=new_spec,
-                                  flux=new_y,
-                                  uncertainty=new_uncert,
-                                  mask=data.mask)
+                data = Spectrum(spectral_axis=new_spec,
+                                flux=new_y,
+                                uncertainty=new_uncert,
+                                mask=data.mask,
+                                spectral_axis_index=data.meta['spectral_axis_index'])
             else:  # pragma: nocover
                 raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
         return data
@@ -550,7 +551,7 @@ class ConfigHelper(HubListener):
             if 'Trace' in data.meta:
                 cls = None
             elif data.ndim == 2 and self.app.config == "specviz2d":
-                cls = Spectrum1D
+                cls = Spectrum
             elif data.ndim == 2:
                 cls = CCDData
             elif data.ndim in [1, 3]:
@@ -558,11 +559,13 @@ class ConfigHelper(HubListener):
                     cls = NDDataArray
                 else:
                     # for cubeviz, specviz, mosviz, this must be a spectrum:
-                    cls = Spectrum1D
+                    cls = Spectrum
 
         object_kwargs = {}
-        if cls == Spectrum1D:
+        if cls == Spectrum:
             object_kwargs['statistic'] = None
+            if 'spectral_axis_index' in data.meta:
+                object_kwargs['spectral_axis_index'] = data.meta['spectral_axis_index']
 
         if not spatial_subset and not mask_subset:
             if 'Trace' in data.meta:
@@ -619,7 +622,7 @@ class ConfigHelper(HubListener):
                               f" subset {mask_subset} applied of type {cls}."
                               f" Exception: {e}")
             if spatial_subset:
-                # Return collapsed Spectrum1D object with spectral subset mask applied
+                # Return collapsed Spectrum object with spectral subset mask applied
                 data.mask = spec_subset.mask
             else:
                 data = spec_subset
@@ -634,7 +637,7 @@ class ConfigHelper(HubListener):
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+        cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
         use_display_units : bool, optional
             Whether to convert to the display units defined in the <unit-conversion> plugin.

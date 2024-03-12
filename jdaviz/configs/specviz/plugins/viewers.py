@@ -5,7 +5,7 @@ from astropy import table
 from astropy import units as u
 from functools import cached_property
 from matplotlib.colors import cnames
-from specutils import Spectrum1D
+from specutils import Spectrum
 from scipy.interpolate import interp1d
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
@@ -39,7 +39,7 @@ class Spectrum1DViewer(JdavizProfileView):
                     ['jdaviz:viewer_clone', 'jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
-    default_class = Spectrum1D
+    default_class = Spectrum
     spectral_lines = None
     _state_cls = FreezableProfileViewerState
     _default_profile_subset_type = 'spectral'
@@ -291,7 +291,7 @@ class Spectrum1DViewer(JdavizProfileView):
 class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
-    default_class = Spectrum1D
+    default_class = Spectrum
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
@@ -442,7 +442,7 @@ class Spectrum2DViewer(JdavizViewerMixin, BqplotImageView):
         self.figure.axes[1].tick_format = None
         self.figure.axes[1].label_location = "middle"
 
-        # Sync with Spectrum1D viewer (that is also used by other viz).
+        # Sync with Spectrum viewer (that is also used by other viz).
         # Make it so y axis label is not covering tick numbers.
         self.figure.fig_margin["left"] = 95
         self.figure.fig_margin["bottom"] = 60

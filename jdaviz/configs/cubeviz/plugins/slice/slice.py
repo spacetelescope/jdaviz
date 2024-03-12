@@ -166,7 +166,7 @@ class Slice(PluginTemplateMixin):
     @property
     def valid_slice_att_names(self):
         if self.app.config == 'cubeviz':
-            return _spectral_axis_names + ['Pixel Axis 2 [x]', 'World 0']
+            return _spectral_axis_names + ['Pixel Axis 2 [x]']
         elif self.app.config == 'rampviz':
             return _temporal_axis_names + ['Pixel Axis 2 [x]']
 

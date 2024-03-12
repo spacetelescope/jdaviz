@@ -65,12 +65,12 @@ Markers
 Gaussian Smooth
 ===============
 
-Gaussian Smooth is performed on a Spectrum1D data object.
+Gaussian Smooth is performed on a Spectrum data object.
 The spectrum is convolved with a Gaussian function.
 The Gaussian standard deviation in pixels must be entered into the
 :guilabel:`Standard deviation` field in the plugin.
 
-A new Spectrum1D object is generated and is added to the spectrum
+A new Spectrum object is generated and is added to the spectrum
 viewer.
 It can be selected and shown in the viewer via the
 :guilabel:`Data` icon in the viewer toolbar.
