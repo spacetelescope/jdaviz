@@ -792,7 +792,7 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
 
 
-def test_draw2d_linking_specviz2d(specviz2d_helper):
+def test_draw_2D_subset_specviz2d(specviz2d_helper):
     # custom test data to predict values for different viewers
     header = {
               'WCSAXES': 2,
@@ -807,21 +807,20 @@ def test_draw2d_linking_specviz2d(specviz2d_helper):
     x_values = np.linspace(0, 10, 128)
     y_values = np.linspace(0, 5, 256)
 
-    # Create a continuous 2D
     data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
     spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
-
     specviz2d_helper.load_data(spectrum_2d=spectrum_data)
+
     viewer_1d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_viewer_reference_name)
     viewer_2d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
-    # create subset in 2d viewer,  want data in 1d viewer
+    # create subset in 2d-viewer, want data in 1d-viewer
     viewer_2d.apply_roi(XRangeROI(60, 80))
     subset_drawn_2d = viewer_1d.native_marks[-1]
 
-    # get x and y components to compute subset mask
+    # get x and y components of 1D subset created to compute mask
     y1 = subset_drawn_2d.y
     x1 = subset_drawn_2d.x
 
@@ -837,7 +836,16 @@ def test_draw2d_linking_specviz2d(specviz2d_helper):
     assert np.allclose(max_value_subset1, expected_max1, atol=tolerance1)
 
 
-def test_draw1d_linking_specviz2d(specviz2d_helper):
+def test_draw_1D_subset_specviz2d(specviz2d_helper):
+    viewer_1d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_viewer_reference_name)
+    viewer_2d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
+
+    # similiar to Imviz, without show(), need to manually set limits
+    # of 2D-viewer so the subset mask can be applied to it
+    viewer_2d.jdaviz_helper.viewers['spectrum-2d-viewer']._obj.shape = (155, 864)
+
     # custom test data to predict values for different viewers
     header = {
         'WCSAXES': 2,
@@ -852,23 +860,15 @@ def test_draw1d_linking_specviz2d(specviz2d_helper):
     x_values = np.linspace(0, 10, 128)
     y_values = np.linspace(0, 5, 256)
 
-    # Create a continuous 2D image
     data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
     spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
-
     specviz2d_helper.load_data(spectrum_2d=spectrum_data)
-    viewer_1d = specviz2d_helper.app.get_viewer(
-        specviz2d_helper._default_spectrum_viewer_reference_name)
-    viewer_2d = specviz2d_helper.app.get_viewer(
-        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
-    # subset drawn in 1d viewer, want data in 2d viewer
+    # subset drawn in 1d-viewer, want data in 2d-viewer
     viewer_1d.apply_roi(XRangeROI(.0001, .0002))
     subset_drawn_1d = viewer_2d.native_marks[-1].image
 
     subset_highlighted_region2 = np.atleast_1d(np.nonzero(subset_drawn_1d))[1]
-
-    # Get the start and stop indices
     min_value_subset2 = np.min(subset_highlighted_region2)
     max_value_subset2 = np.max(subset_highlighted_region2)
 
