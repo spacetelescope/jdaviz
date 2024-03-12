@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.nddata import NDData
 from glue.core.roi import CircularROI, EllipticalROI
 from regions import Regions, CircleSkyRegion
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum, SpectralRegion
 from pathlib import Path
 from astropy.wcs import WCS
 
@@ -89,8 +89,8 @@ class TestExportSubsets:
         the correct warning message to display in UI).
         """
 
-        data = Spectrum1D(flux=np.ones((500, 500, 2)) * u.nJy,
-                          wcs=spectral_cube_wcs)
+        data = Spectrum(flux=np.ones((500, 500, 2)) * u.nJy,
+                        wcs=spectral_cube_wcs)
         cubeviz_helper.load_data(data)
         subset_plugin = cubeviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(xc=255, yc=255, radius=50))
@@ -133,7 +133,7 @@ class TestExportSubsets:
 
     def test_basic_export_subsets_cubeviz(self, cubeviz_helper, spectral_cube_wcs):
 
-        data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+        data = Spectrum(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
 
         # Subset 1, Spatial Subset
         cubeviz_helper.load_data(data)
@@ -357,7 +357,7 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     dn_per_s = u.DN / u.s
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
-    data = Spectrum1D(flux=data*dn_per_s, spectral_axis=data[3]*u.um)
+    data = Spectrum(flux=data*dn_per_s, spectral_axis=data[3]*u.um)
     specviz2d_helper.load_data(data)
 
     gs = specviz2d_helper.plugins["Gaussian Smooth"]

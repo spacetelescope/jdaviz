@@ -12,7 +12,7 @@ from glue.core.roi import CircularROI, RectangularROI
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
-from specutils import Spectrum1D
+from specutils import Spectrum
 from specutils.manipulation import FluxConservingResampler
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
@@ -43,11 +43,11 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     collapsed_cube_nddata = collapsed_cube_nddata * (u.pix ** 2)
 
     # Collapse the spectral cube using the methods in jdaviz:
-    collapsed_cube_s1d = plg.extract(add_data=False)  # returns Spectrum1D
+    collapsed_cube_s1d = plg.extract(add_data=False)  # returns Spectrum
 
     assert plg._obj.disabled_msg == ''
     assert isinstance(spectral_cube, NDDataArray)
-    assert isinstance(collapsed_cube_s1d, Spectrum1D)
+    assert isinstance(collapsed_cube_s1d, Spectrum)
 
     assert_allclose(
         collapsed_cube_nddata.data,
@@ -392,7 +392,7 @@ def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
 
 
 def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
-    data = Spectrum1D(flux=np.ones((128, 129, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    data = Spectrum(flux=np.ones((128, 129, 256)) * u.nJy, wcs=spectral_cube_wcs)
     cubeviz_helper.load_data(data, data_label="Test Flux")
     cubeviz_helper.plugins['Subset Tools'].import_region(
         [CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
@@ -612,11 +612,11 @@ def test_spectral_extraction_scientific_validation(
     evolve with time. For the latest updates on MIRI flux calibration, see:
     https://jwst-docs.stsci.edu/jwst-calibration-status/miri-calibration-status/
     """
-    # Download CALSPEC model spectrum, initialize Spectrum1D.
+    # Download CALSPEC model spectrum, initialize Spectrum.
     calspec_fitsrec = fits.getdata(calspec_url)
     column_units = [u.AA] + 2 * [u.Unit('erg s-1 cm-2 AA-1')]
     spectra_table = QTable(calspec_fitsrec, units=column_units)
-    model_spectrum = Spectrum1D(
+    model_spectrum = Spectrum(
         flux=spectra_table['FLUX'],
         spectral_axis=spectra_table['WAVELENGTH']
     )

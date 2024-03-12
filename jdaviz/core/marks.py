@@ -4,7 +4,7 @@ from astropy import units as u
 from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
 from glue.core import HubListener
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
@@ -214,10 +214,10 @@ class PluginMark:
             return
 
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):  # noqa
-            if self.viewer.default_class is Spectrum1D:
+            if self.viewer.default_class is Spectrum:
                 if self.xunit is None:
                     return
-                spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
+                spec = self.viewer.state.reference_data.get_object(cls=Spectrum)
 
                 pixar_sr = spec.meta.get('PIXAR_SR', None)
                 # if x is all the same value, then we either have a vertical line mark or
@@ -290,7 +290,7 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
         if reference_data is None or self.viewer.jdaviz_app.config == 'rampviz':
             return
 
-        self._update_unit(reference_data.get_object(cls=Spectrum1D).spectral_axis.unit)
+        self._update_unit(reference_data.get_object(cls=Spectrum).spectral_axis.unit)
 
     def _update_unit(self, new_unit):
         # the x-units may have changed.  We want to convert the internal self.x

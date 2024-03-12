@@ -10,7 +10,7 @@ from astropy.io.registry import IORegistryError
 from astropy.wcs import WCS
 from glue.core.data import Data
 from glue.core.link_helpers import LinkSameWithUnits
-from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specutils import Spectrum, SpectrumList, SpectrumCollection
 from specutils.io.default_loaders.jwst_reader import identify_jwst_s2d_multi_fits
 
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
@@ -226,10 +226,10 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
     if not isinstance(data_obj, (list, tuple, SpectrumCollection)):
         data_obj = [data_obj]
 
-    # If the file has multiple objects in it, the Spectrum1D read machinery
+    # If the file has multiple objects in it, the Spectrum read machinery
     # will fail to find a reader for it, and we fall back on SpectrumList
     try:
-        data_obj = [Spectrum1D.read(x) if _check_is_file(x) else x for x in data_obj]
+        data_obj = [Spectrum.read(x) if _check_is_file(x) else x for x in data_obj]
     except IORegistryError:
         if len(data_obj) == 1:
             if _check_is_file(data_obj[0]):
@@ -330,7 +330,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         else:
             kw = {'wcs': wcs}
 
-        return Spectrum1D(flux=data * data_unit, meta=metadata, **kw)
+        return Spectrum(flux=data * data_unit, meta=metadata, **kw)
 
     # Coerce into list-like object
     if (not isinstance(data_obj, (list, tuple, SpectrumCollection)) or
@@ -356,7 +356,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
 
     with app.data_collection.delay_link_manager_update():
         for index, data in enumerate(data_obj):
-            # If we got a filepath, first try and parse using the Spectrum1D and
+            # If we got a filepath, first try and parse using the Spectrum and
             # SpectrumList parsers, and then fall back to parsing it as a generic
             # FITS file.
 
@@ -369,7 +369,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                         with fits.open(data) as hdulist:
                             data = _parse_as_spectrum1d(hdulist, ext, transpose)
                     else:
-                        data = Spectrum1D.read(data)
+                        data = Spectrum.read(data)
                 except IORegistryError:
                     with fits.open(data) as hdulist:
                         data = _parse_as_spectrum1d(hdulist, ext, transpose)
@@ -903,7 +903,7 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                         meta[PRIHDR_KEY] = standardize_metadata(temp[0].header)
 
                         # The wavelength is stored in a WAVELENGTH HDU. This is
-                        # a 2D array, but in order to be able to use Spectrum1D
+                        # a 2D array, but in order to be able to use Spectrum
                         # we use the average wavelength for all image rows
 
                         if data.shape[0] > data.shape[1]:
@@ -914,7 +914,7 @@ def mos_niriss_parser(app, data_dir, instrument=None,
                         else:
                             wav = temp[wav_hdus[sci]].data.mean(axis=0) * u.micron
 
-                        spec2d = Spectrum1D(data * u.one, spectral_axis=wav, meta=meta)
+                        spec2d = Spectrum(data * u.one, spectral_axis=wav, meta=meta)
                         spec2d.meta['INSTRUME'] = instrument.upper()
                         spec2d.meta['mosviz_row'] = len(spec_labels_2d)
 

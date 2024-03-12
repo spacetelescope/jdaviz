@@ -20,7 +20,7 @@ from astropy import units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty, VarianceUncertainty, InverseVariance
 )
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
@@ -586,7 +586,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                             layer_data = self.jdaviz_app._get_object_cache[cache_key]
                         else:
                             # If spectrum, collapse via the defined statistic
-                            if _class == Spectrum1D:
+                            if _class == Spectrum:
                                 layer_data = lyr.get_object(cls=_class, statistic=statistic)
                             else:
                                 layer_data = lyr.get_object(cls=_class)
@@ -745,7 +745,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
                 data_obj = lyr.data.get_object(cls=self.default_class)
 
-                if self.default_class == Spectrum1D:
+                if self.default_class == Spectrum:
                     data_x = data_obj.spectral_axis.value
                     data_y = data_obj.flux.value
                 else:

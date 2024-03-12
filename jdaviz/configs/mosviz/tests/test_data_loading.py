@@ -5,7 +5,7 @@ from zipfile import ZipFile
 import numpy as np
 import pytest
 from astropy.nddata import CCDData
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.utils import PRIHDR_KEY
 
@@ -27,7 +27,7 @@ def test_load_spectrum1d(mosviz_helper, spectrum1d):
                                         ).data()
 
     assert len(data) == 1
-    assert isinstance(data[0], Spectrum1D)
+    assert isinstance(data[0], Spectrum)
 
     with pytest.raises(AttributeError):
         mosviz_helper.load_1d_spectra([1, 2, 3])
@@ -74,7 +74,7 @@ def test_load_spectrum_collection(mosviz_helper, spectrum_collection):
                                         ).data()
 
     assert len(data) == 1
-    assert isinstance(data[0], Spectrum1D)
+    assert isinstance(data[0], Spectrum)
 
 
 def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
@@ -96,7 +96,7 @@ def test_load_list_of_spectrum1d(mosviz_helper, spectrum1d):
                                         ).data()
 
     assert len(data) == 1
-    assert isinstance(data[0], Spectrum1D)
+    assert isinstance(data[0], Spectrum)
 
 
 def test_load_mos_spectrum2d(mosviz_helper, mos_spectrum2d):

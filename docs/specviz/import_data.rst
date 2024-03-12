@@ -4,17 +4,17 @@
 Importing Data Into Specviz
 ***************************
 
-By design, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum1D` objects,
+By design, Specviz only supports data that can be parsed as :class:`~specutils.Spectrum` objects,
 as that allows the Python-level interface and parsing tools to be defined in ``specutils``
 instead of being duplicated in Jdaviz.
-:class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however,
+:class:`~specutils.Spectrum` objects are very flexible in their capabilities, however,
 and hence should address most astronomical spectrum use cases.
 If you are creating your own data products, please read the page :ref:`create_products`.
 
 .. seealso::
 
     `Reading from a File <https://specutils.readthedocs.io/en/stable/spectrum1d.html#reading-from-a-file>`_
-        Specutils documentation on loading data as :class:`~specutils.Spectrum1D` objects.
+        Specutils documentation on loading data as :class:`~specutils.Spectrum` objects.
 
 .. _specviz-import-commandline:
 
@@ -36,7 +36,7 @@ Importing data through the GUI
 You can load your data into the Specviz application
 by clicking the :guilabel:`Import Data` button at the top left of the application's
 user interface. This opens a dialogue where the user can select a file
-that can be parsed as a :class:`~specutils.Spectrum1D`.
+that can be parsed as a :class:`~specutils.Spectrum`.
 
 After clicking :guilabel:`Import`, the data file will be parsed and loaded into the
 application. A notification will appear to let users know if the data import
@@ -52,7 +52,7 @@ Alternatively, users who work in a coding environment like a Jupyter
 notebook can access the Specviz helper class API. Using this API, users can
 load data into the application through code with the
 :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data`
-method, which takes as input a :class:`~specutils.Spectrum1D` object.
+method, which takes as input a :class:`~specutils.Spectrum` object.
 
 FITS Files
 ----------
@@ -61,13 +61,13 @@ The example below loads a FITS file into Specviz:
 
 .. code-block:: python
 
-    from specutils import Spectrum1D
-    spec1d = Spectrum1D.read("/path/to/data/file")
+    from specutils import Spectrum
+    spec1d = Spectrum.read("/path/to/data/file")
     specviz = Specviz()
     specviz.load_data(spec1d, data_label="my_spec")
     specviz.show()
 
-You can also pass the path to a file that `~specutils.Spectrum1D` understands directly to the
+You can also pass the path to a file that `~specutils.Spectrum` understands directly to the
 :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data` method:
 
 .. code-block:: python
@@ -83,12 +83,12 @@ You can create your own array to load into Specviz:
 
     import numpy as np
     import astropy.units as u
-    from specutils import Spectrum1D
+    from specutils import Spectrum
     from jdaviz import Specviz
 
     flux = np.random.randn(200) * u.Jy
     wavelength = np.arange(5100, 5300) * u.AA
-    spec1d = Spectrum1D(spectral_axis=wavelength, flux=flux)
+    spec1d = Spectrum(spectral_axis=wavelength, flux=flux)
     specviz = Specviz()
     specviz.load_data(spec1d, data_label="my_spec")
     specviz.show()
@@ -101,7 +101,7 @@ object, you can load it into Specviz as follows:
 
 .. code-block:: python
 
-    from specutils import Spectrum1D
+    from specutils import Spectrum
     from jdaviz import Specviz
 
     # mydatamodel is a jwst.datamodels.MultiSpecModel object
@@ -109,7 +109,7 @@ object, you can load it into Specviz as follows:
     flux = a.spec_table['FLUX']
     wave = a.spec_table['WAVELENGTH']
 
-    spec1d = Spectrum1D(flux=flux, spectral_axis=wave)
+    spec1d = Spectrum(flux=flux, spectral_axis=wave)
     specviz = Specviz()
     specviz.load_data(spec1d, data_label="MultiSpecModel")
     specviz.show()
@@ -124,7 +124,7 @@ Importing a SpectrumList
 
 The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data` also accepts
 a `~specutils.SpectrumList` object, in which case it will both load the
-individual `~specutils.Spectrum1D` objects in the list and additionally attempt
+individual `~specutils.Spectrum` objects in the list and additionally attempt
 to stitch together the spectra into a single data object so that
 they can be manipulated and analyzed in the application as a single entity:
 

@@ -36,7 +36,7 @@ from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
 from traitlets import Dict, Bool, List, Unicode, Any
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum, SpectralRegion
 
 from jdaviz import __version__
 from jdaviz import style_registry
@@ -127,10 +127,10 @@ class UnitConverterWithSpectral:
             return (values * u.Unit(original_units)).to_value(target_units)
         elif cid.label in ("flux"):
             try:
-                spec = data.get_object(cls=Spectrum1D)
+                spec = data.get_object(cls=Spectrum)
             except RuntimeError:
                 data = data.get_object(cls=NDDataArray)
-                spec = Spectrum1D(flux=data.data * u.Unit(original_units))
+                spec = Spectrum(flux=data.data * u.Unit(original_units))
             # equivalencies for flux/surface brightness conversions
             viewer_equivs = viewer_flux_conversion_equivalencies(values, spec)
             return flux_conversion_general(values, original_units,
@@ -814,17 +814,12 @@ class Application(VuetifyTemplate, HubListener):
 
         elif self.config == 'cubeviz' and linked_data.ndim == 1:
             # Don't want to use negative indices in case there are extra components like a mask
-            ref_wavelength_component = dc[0].components[5]
-            ref_flux_component = dc[0].components[6]
+            spectral_axis_index = dc[0].meta['spectral_axis_index']
+            ref_wavelength_component = dc[0].components[spectral_axis_index]
+            # May need to update this for specutils 2
             linked_wavelength_component = dc[-1].components[1]
-            linked_flux_component = dc[-1].components[-1]
 
-            links = [
-                LinkSameWithUnits(ref_wavelength_component, linked_wavelength_component),
-                LinkSame(ref_flux_component, linked_flux_component)
-            ]
-
-            dc.add_link(links)
+            dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
 
         elif (linked_data.meta.get('Plugin', None) == 'Spectral Extraction' or
@@ -1164,7 +1159,7 @@ class Application(VuetifyTemplate, HubListener):
         if not hasattr(subset_state.att, "parent"):  # e.g., Cubeviz
             viewer = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
             data = viewer.data()
-            if data and len(data) > 0 and isinstance(data[0], Spectrum1D):
+            if data and len(data) > 0 and isinstance(data[0], Spectrum):
                 units = data[0].spectral_axis.unit
             else:
                 raise ValueError("Unable to find spectral axis units")
@@ -1174,7 +1169,7 @@ class Application(VuetifyTemplate, HubListener):
             if ndim == 2:
                 units = u.pix
             else:
-                handler, _ = data_translator.get_handler_for(Spectrum1D)
+                handler, _ = data_translator.get_handler_for(Spectrum)
                 spec = handler.to_object(data)
                 units = spec.spectral_axis.unit
 
@@ -1680,7 +1675,7 @@ class Application(VuetifyTemplate, HubListener):
         Parameters
         ----------
         loaded_object : str or object
-            The path to a data file or FITS HDUList or image object or Spectrum1D or
+            The path to a data file or FITS HDUList or image object or Spectrum or
             NDData array or numpy.ndarray.
         ext : str, optional
             The extension (or other distinguishing feature) of data used to identify it.
@@ -1718,8 +1713,8 @@ class Application(VuetifyTemplate, HubListener):
                 data_label = f"{loaded_object.file_name}[HDU object]"
             else:
                 data_label = "Unknown HDU object"
-        elif isinstance(loaded_object, Spectrum1D):
-            data_label = "Spectrum1D"
+        elif isinstance(loaded_object, Spectrum):
+            data_label = "Spectrum"
         elif isinstance(loaded_object, NDData):
             data_label = "NDData"
         elif isinstance(loaded_object, np.ndarray):
