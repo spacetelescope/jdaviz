@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.nddata import InverseVariance
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 
@@ -36,7 +36,7 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
 
 
 def test_initialize_specviz_sb(specviz_helper, spectrum1d):
-    spec_sb = Spectrum1D(spectrum1d.flux/u.sr, spectrum1d.spectral_axis)
+    spec_sb = Spectrum(spectrum1d.flux/u.sr, spectrum1d.spectral_axis)
     specviz_helper.load_data(spec_sb, data_label="Test 1D Spectrum")
     plg = specviz_helper.plugins["Unit Conversion"]
     assert plg._obj.flux_unit == "Jy"
@@ -118,7 +118,7 @@ def test_non_stddev_uncertainty(specviz_helper):
     var = stddev ** 2
     inv_var = np.ones(len(flux)) / var
     wavelength = np.linspace(1, 5, len(flux)) * u.um
-    spec = Spectrum1D(
+    spec = Spectrum(
         flux,
         uncertainty=InverseVariance(inv_var),
         spectral_axis=wavelength
@@ -147,7 +147,7 @@ def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
     convertable flux units in the dropdown is correct.
     """
 
-    spec = Spectrum1D([1, 2, 3] * flux_unit, [4, 5, 6] * u.um)
+    spec = Spectrum([1, 2, 3] * flux_unit, [4, 5, 6] * u.um)
     specviz_helper.load_data(spec)
 
     uc_plg = specviz_helper.plugins['Unit Conversion']
