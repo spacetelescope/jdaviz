@@ -3,6 +3,7 @@ from astropy.table import QTable
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
+from specutils import Spectrum
 
 from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,

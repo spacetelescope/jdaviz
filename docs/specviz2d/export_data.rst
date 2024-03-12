@@ -9,7 +9,7 @@ Exporting Data From Specviz2D
 2D Spectra
 ==========
 
-Images in the 2D spectrum viewer can be exported as `specutils.Spectrum1D` objects into
+Images in the 2D spectrum viewer can be exported as `specutils.Spectrum` objects into
 the notebook (replace "2D data" with the label of the desired data):
 
 .. code-block:: python
