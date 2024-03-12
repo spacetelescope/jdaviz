@@ -5,7 +5,7 @@ from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum, SpectralRegion
 from glue.core.roi import XRangeROI
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
@@ -521,8 +521,8 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="right_spectrum")
 
     # 5000-7000
-    sp2 = Spectrum1D(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
-                     flux=spectrum1d.flux * 1.25)
+    sp2 = Spectrum(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
+                   flux=spectrum1d.flux * 1.25)
     specviz_helper.load_data(sp2, data_label="left_spectrum")
 
     # apply subset that overlaps on left_spectrum, but not right_spectrum
