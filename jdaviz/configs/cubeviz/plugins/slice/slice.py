@@ -136,7 +136,7 @@ class Slice(PluginTemplateMixin):
 
     @property
     def valid_slice_att_names(self):
-        return _spectral_axis_names + ['Pixel Axis 2 [x]']
+        return _spectral_axis_names + ['Pixel Axis 0 [z]']
 
     @property
     def slice_selection_viewers(self):
@@ -317,6 +317,7 @@ class Slice(PluginTemplateMixin):
     @observe('show_indicator', 'show_value')
     def _on_setting_changed(self, event):
         msg = SliceToolStateMessage({event['name']: event['new']}, viewer=None, sender=self)
+        print(msg)
         self.session.hub.broadcast(msg)
 
     def vue_goto_first(self, *args):
