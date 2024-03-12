@@ -384,37 +384,41 @@ class Application(VuetifyTemplate, HubListener):
         key = f"{msg.plugin._plugin_name}: {msg.table._table_name}"
         self._plugin_tables.setdefault(key, msg.table.user_api)
 
-    def _update_live_plugin_results(self, trigger_data=None, trigger_subset=None):
-        # print("*** _update_live_plugin_results", trigger_data, trigger_subset)
+    def _update_live_plugin_results(self, trigger_data_lbl=None, trigger_subset=None):
+        trigger_subset_lbl = trigger_subset.label if trigger_subset is not None else None
+        trigger_subset_hash = hash(trigger_subset) if trigger_subset is not None else None
         for data in self.data_collection:
             plugin_inputs = data.meta.get('_update_live_plugin_results', None)
             if plugin_inputs is None:
                 continue
-            # print(f"*** {data.label}, {trigger_data}, {trigger_subset}")
-            # TODO: generalize to any data input (not just dataset)
-            if trigger_data is not None and plugin_inputs.get('dataset') != trigger_data:
+            data_subs = plugin_inputs.get('_subscriptions', {}).get('data', [])
+            subset_subs = plugin_inputs.get('_subscriptions', {}).get('subset', [])
+            print(f"*** {data.label}: {trigger_data_lbl} {data_subs} {[plugin_inputs.get(attr) == trigger_data_lbl for attr in data_subs]}, {trigger_subset_lbl} {subset_subs} {[plugin_inputs.get(attr) == trigger_subset_lbl for attr in subset_subs]}")
+            if (trigger_data_lbl is not None and
+                    not np.any([plugin_inputs.get(attr) == trigger_data_lbl for attr in data_subs])):
                 continue
-            # TODO: generalize to any subset input (not just spectral_subset)
-            if trigger_subset is not None and plugin_inputs.get('spectral_subset') != trigger_subset:
+            if (trigger_subset_lbl is not None and
+                    not np.any([plugin_inputs.get(attr) == trigger_subset_lbl for attr in subset_subs])):
                 continue
             # update and overwrite data
-            print("*** UPDATING LIVE PLUGIN RESULTS FOR", data.label)
+            print("*** UPDATING LIVE PLUGIN RESULTS FOR", data.label, trigger_subset_hash)
             # make a new instance of the plugin to avoid changing any UI settings
+            print("*** PLUGIN", data.meta.get('Plugin'))
             plg = self._jdaviz_helper.plugins.get(data.meta.get('Plugin'))._obj.new()
+            if not plg.supports_auto_update:
+                raise NotImplementedError(f"{data.meta.get('Plugin')} does not support live-updates")  # noqa
             plg.user_api.from_dict(plugin_inputs)
-            # still need to know the method to call to add the results...
-            if data.meta.get('Plugin') != 'Collapse':
-                raise NotImplementedError("currently hardcocded for collapse case")
-            plg.collapse(add_data=True)
+            plg()
 
     def _on_add_data_message(self, msg):
         self._on_layers_changed(msg)
-        self._update_live_plugin_results(trigger_data=msg.data.label)
+        self._update_live_plugin_results(trigger_data_lbl=msg.data.label)
 
     def _on_subset_update_message(self, msg):
         # NOTE: print statements in here will require the viewer output_widget
         self._clear_object_cache(msg.subset.label)
-        self._update_live_plugin_results(trigger_subset=msg.subset.label)
+        if msg.attribute == 'subset_state':
+            self._update_live_plugin_results(trigger_subset=msg.subset)
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:

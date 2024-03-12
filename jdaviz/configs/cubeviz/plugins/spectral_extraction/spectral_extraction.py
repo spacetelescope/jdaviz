@@ -167,6 +167,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return PluginUserApi(self, expose=expose)
 
     @property
+    def live_update_subscriptions(self):
+        return {'data': ('dataset',), 'subset': ('aperture', 'background')}
+
+    def __call__(self, add_data=True):
+        self.collapse_to_spectrum(add_data=add_data)
+
+    @property
     def slice_display_unit_name(self):
         return 'spectral'
 

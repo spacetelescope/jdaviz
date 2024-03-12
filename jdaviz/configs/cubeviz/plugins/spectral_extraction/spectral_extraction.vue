@@ -202,6 +202,7 @@
         label_hint="Label for the extracted spectrum"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        :auto_update_result.sync="auto_update_result"
         action_label="Extract"
         action_tooltip="Run spectral extraction with error and mask propagation"
         :action_spinner="spinner"

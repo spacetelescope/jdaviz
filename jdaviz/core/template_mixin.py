@@ -369,6 +369,7 @@ class PluginTemplateMixin(TemplateMixin):
     spinner = Bool(False).tag(sync=True)  # noqa use along-side @with_spinner() and <plugin-add-results :action_spinner="spinner">
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
+    supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
 
     def __init__(self, app, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
@@ -406,6 +407,10 @@ class PluginTemplateMixin(TemplateMixin):
                     kwargs.setdefault(opt_kwarg, opt_value)
 
                 break
+
+        # requirements for auto-updating plugin results:
+        # * call method that can be run with no input arguments
+        self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
 
@@ -3773,12 +3778,16 @@ class AddResults(BasePluginComponent):
 
         if not hasattr(data_item, 'meta'):
             data_item.meta = {}
-        data_item.meta['Plugin'] = self._plugin.__class__.__name__
+        data_item.meta['Plugin'] = self.plugin._plugin_name
         if self.app.config == 'mosviz':
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
 
         if self.auto_update_result:
             data_item.meta['_update_live_plugin_results'] = self.plugin.user_api.to_dict()
+            def_subs = {'data': ('dataset',),
+                        'subset': ('spectral_subset', 'spatial_subset', 'subset', 'aperture')}
+            subscriptions = getattr(self.plugin, 'live_update_subscriptions', def_subs)
+            data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
 
         self.app.add_data(data_item, label)
 
