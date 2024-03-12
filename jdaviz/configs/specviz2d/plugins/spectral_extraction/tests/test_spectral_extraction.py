@@ -8,7 +8,7 @@ from astropy.utils.data import download_file
 import numpy as np
 from packaging.version import Version
 from specreduce import tracing, background, extract
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 GWCS_LT_0_18_1 = Version(gwcs.__version__) < Version('0.18.1')
 
@@ -109,11 +109,11 @@ def test_plugin(specviz2d_helper):
     pext.import_bg(bg)
     assert pext.bg_width == 4
     bg_img = pext.export_bg_img()
-    assert isinstance(bg_img, Spectrum1D)
+    assert isinstance(bg_img, Spectrum)
     bg_spec = pext.export_bg_spectrum()
-    assert isinstance(bg_spec, Spectrum1D)
+    assert isinstance(bg_spec, Spectrum)
     bg_sub = pext.export_bg_sub()
-    assert isinstance(bg_sub, Spectrum1D)
+    assert isinstance(bg_sub, Spectrum)
 
     # interact with extraction section, check marks
     pext.ext_width = 1
@@ -131,11 +131,11 @@ def test_plugin(specviz2d_helper):
     pext.import_extract(ext)
     assert pext.ext_width == 2
     sp_ext = pext.export_extract_spectrum()
-    assert isinstance(sp_ext, Spectrum1D)
+    assert isinstance(sp_ext, Spectrum)
 
     pext.ext_type_selected = 'Horne'
     sp_ext = pext.export_extract_spectrum()
-    assert isinstance(sp_ext, Spectrum1D)
+    assert isinstance(sp_ext, Spectrum)
 
     # test API calls
     for step in ['trace', 'bg', 'ext']:
