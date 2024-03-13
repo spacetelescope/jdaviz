@@ -1,5 +1,5 @@
 <template>
-  <div :class="active ? 'strike strike-active': 'strike'">
+    <div :class="['strike', active ? ($vuetify.theme.dark ? 'strike-active-dark' : 'strike-active-light') : '']">
      <span>
        <slot></slot>
      </span>
