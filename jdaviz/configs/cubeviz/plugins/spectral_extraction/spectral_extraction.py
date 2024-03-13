@@ -349,9 +349,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.filename = f"extracted_{selected_func}_{fname_label}.fits"
 
         if add_data:
-            self.add_results.add_results_from_plugin(
-                collapsed_spec, label=self.results_label, replace=False
-            )
+            self.add_results.add_results_from_plugin(collapsed_spec)
 
             snackbar_message = SnackbarMessage(
                 "Spectrum extracted successfully.",
