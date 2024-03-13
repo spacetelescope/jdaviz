@@ -39,6 +39,9 @@ Cubeviz
 - Slice plugin is refactored to rely on the spectral value instead of the slice index.  This removes
   both the slider and slice-index input. [#2715]
 
+- Store pixel scale factor and add API functionality for unit translation between surface
+  brightness and flux. [#2752] 
+
 Imviz
 ^^^^^
 
