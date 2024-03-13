@@ -1817,6 +1817,9 @@ class SubsetSelect(SelectPluginComponent):
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda msg: self._delete_subset(msg.subset))
 
+        self._initialize_choices()
+
+    def _initialize_choices(self):
         # intialize any subsets that have already been created
         for lyr in self.app.data_collection.subset_groups:
             self._update_subset(lyr)
