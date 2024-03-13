@@ -7,7 +7,8 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginComponent,
                                         ViewerSelectMixin, DatasetMultiSelectMixin,
-                                        SubsetSelectMixin, MultiselectMixin, with_spinner)
+                                        SubsetSelectMixin, PluginTableSelectMixin,
+                                        MultiselectMixin, with_spinner)
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 
@@ -25,7 +26,7 @@ __all__ = ['Export']
 
 @tray_registry('export', label="Export")
 class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
-             DatasetMultiSelectMixin, MultiselectMixin):
+             DatasetMultiSelectMixin, PluginTableSelectMixin, MultiselectMixin):
     """
     See the :ref:`Export Plugin Documentation <imviz-export-plot>` for more details.
 
@@ -37,6 +38,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`)
     * ``viewer_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``table`` (:class:`~jdaviz.core.template_mixin.PluginTableSelect`)
     * ``filename``
     * :meth:`export`
     """
@@ -45,12 +47,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # feature flag for cone support
     dev_dataset_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_subset_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
-    dev_table_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_plot_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_multi_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
-
-    table_items = List().tag(sync=True)
-    table_selected = Any().tag(sync=True)
 
     plot_items = List().tag(sync=True)
     plot_selected = Any().tag(sync=True)
@@ -70,13 +68,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.table = SelectPluginComponent(self,
-                                           items='table_items',
-                                           selected='table_selected',
-                                           multiselect='multiselect',
-                                           default_mode='empty',
-                                           manual_options=['table-tst1', 'table-tst2'])
 
         self.plot = SelectPluginComponent(self,
                                           items='plot_items',
@@ -100,6 +91,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         # default selection:
         self.dataset._default_mode = 'empty'
+        self.table._default_mode = 'empty'
+        self.table.select_default()
         self.viewer.select_default()
         self.filename = f"{self.app.config}_export"
 
@@ -111,14 +104,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
-        expose = ['viewer', 'viewer_format', 'filename', 'export']
+        expose = ['viewer', 'viewer_format', 'table', 'filename', 'export']
 
         if self.dev_dataset_support:
             expose += ['dataset']
         if self.dev_subset_support:
             expose += ['subset']
-        if self.dev_table_support:
-            expose += ['table']
         if self.dev_plot_support:
             expose += ['plot']
         if self.dev_multi_support:

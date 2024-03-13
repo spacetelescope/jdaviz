@@ -100,7 +100,7 @@
       </plugin-inline-select>
     </div>
 
-    <div v-if="dev_table_support && table_items.length > 0">
+    <div v-if="table_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Plugin Tables</j-plugin-section-header>
       <plugin-inline-select
         :items="table_items"
@@ -121,6 +121,8 @@
       >
       </plugin-inline-select>
     </div>
+
+    <j-plugin-section-header style="margin-top: 12px">Export To</j-plugin-section-header>
 
     <v-row>
         <v-text-field

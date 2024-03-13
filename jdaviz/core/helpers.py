@@ -147,6 +147,10 @@ class ConfigHelper(HubListener):
         return plugins
 
     @property
+    def plugin_tables(self):
+        return self.app._plugin_tables
+
+    @property
     def viewers(self):
         """
         Access API objects for any viewer.
