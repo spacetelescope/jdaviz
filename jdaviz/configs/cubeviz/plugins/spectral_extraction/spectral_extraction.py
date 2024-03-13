@@ -204,6 +204,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.aperture.scale_factor = 1.0
         else:
             self.aperture.scale_factor = self.slice_wavelength/self.reference_wavelength
+
+        self.app._metadata['_pixel_scale_factor'] = self.aperture.scale_factor
+
         if not self.bg_wavelength_dependent:
             self.background.scale_factor = 1.0
         else:
