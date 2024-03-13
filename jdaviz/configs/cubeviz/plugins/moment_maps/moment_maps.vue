@@ -36,14 +36,14 @@
         Choose whether and how to compute the continuum for continuum subtraction.
       </j-docs-link>
       <j-docs-link v-else>
-        {{continuum_subset_selected=='Surrounding' && spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
+        {{continuum_subset_selected=='Surrounding' && spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}
         {{continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
         When this plugin is opened, a visual indicator will show on the spectrum plot showing the continuum fitted as a thick line, and interpolated into the line region as a thin line.
         When computing the moment map, these same input options will be used to compute and subtract a linear continuum for each spaxel, independently.
       </j-docs-link>
     </v-row>
 
-    <plugin-subset-select 
+    <plugin-subset-select
       :items="continuum_subset_items"
       :selected.sync="continuum_subset_selected"
       :show_if_single_entry="true"
@@ -110,7 +110,7 @@
         label="Reference Wavelength"
         v-model.number="reference_wavelength"
         :suffix="dataset_spectral_unit.replace('Angstrom', 'A')"
-        hint="Rest wavelength of the line of interest"
+        hint="Observed wavelength of the line of interest"
         persistent-hint
         :rules="[() => reference_wavelength !== '' || 'This field is required',
                  () => reference_wavelength > 0 || 'Wavelength must be positive']"
