@@ -209,7 +209,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
 
     def new(self):
-        return self.__class__(app=self.app)
+        new = self.__class__(app=self.app)
+        new._plugin_name = self._plugin_name
+        return new
 
     @property
     def app(self):
@@ -357,6 +359,7 @@ class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
+    _plugin_name = None  # noqa overwritten by the registry - won't be populated by plugins instantiated directly
     disabled_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will show this message in place of plugin content
     irrelevant_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will exclude from the tray, and show this message in place of any content in other instances
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
@@ -3341,7 +3344,7 @@ class DatasetSelect(SelectPluginComponent):
             return data.meta.get('Plugin', None) is None
 
         def not_from_this_plugin(data):
-            return data.meta.get('Plugin', None) != self.plugin.__class__.__name__
+            return data.meta.get('Plugin', None) != self.plugin._plugin_name
 
         def not_from_plugin_model_fitting(data):
             return data.meta.get('Plugin', None) != 'ModelFitting'
@@ -3713,7 +3716,7 @@ class AddResults(BasePluginComponent):
 
         for data in self.app.data_collection:
             if self.label == data.label:
-                if data.meta.get('Plugin', None) == self._plugin.__class__.__name__ or\
+                if data.meta.get('Plugin', None) == self._plugin._plugin_name or\
                         data.label in self.label_whitelist_overwrite:
                     self.label_invalid_msg = ''
                     self.label_overwrite = True
