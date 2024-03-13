@@ -165,32 +165,34 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             raise NotImplementedError("dataset export not yet supported")
         if self.subset.selected is not None and len(self.subset.selected):
             raise NotImplementedError("subset export not yet supported")
-        if self.table.selected is not None and len(self.table.selected):
-            raise NotImplementedError("table export not yet supported")
         if self.plot.selected is not None and len(self.plot.selected):
             raise NotImplementedError("plot export not yet supported")
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
 
-        if not len(self.viewer.selected):
-            raise ValueError("no viewers selected to export")
-
-        viewer = self.viewer.selected_obj
         filename = filename if filename is not None else self.filename
-        filetype = self.viewer_format.selected
 
-        # at this point, we can assume only a single figure is selected
-        if len(filename):
-            if not filename.endswith(filetype):
-                filename += f".{filetype}"
-            filename = Path(filename).expanduser()
-        else:
-            filename = None
+        # at this point, we can assume only a single export is selected
+        if len(self.viewer.selected):
+            viewer = self.viewer.selected_obj
+            filetype = self.viewer_format.selected
+            if len(filename):
+                if not filename.endswith(filetype):
+                    filename += f".{filetype}"
+                filename = Path(filename).expanduser()
+            else:
+                filename = None
 
-        if filetype == "mp4":
-            self.save_movie(viewer, filename, filetype)
+            if filetype == "mp4":
+                self.save_movie(viewer, filename, filetype)
+            else:
+                self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+        elif len(self.table.selected):
+            if not filename.endswith("csv"):
+                filename += ".csv"
+            self.table.selected_obj.export_table(filename)
         else:
-            self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+            raise ValueError("nothing selected for export")
 
     def vue_export_from_ui(self, *args, **kwargs):
         try:

@@ -4196,10 +4196,18 @@ class Table(PluginSubcomponent):
         # call that, otherwise call the one defined here
         getattr(self._plugin, 'clear_table', self.clear_table)()
 
-    def export_table(self):
+    def export_table(self, filename=None):
         """
         Export the QTable representation of the table.
+
+        Parameters
+        ----------
+        filename : str, optional
+            If provided, will write to the file, otherwise will just return the QTable
+            object.
         """
+        if filename is not None:
+            self._qtable.write(filename)
         # TODO: default to only showing selected columns?
         return self._qtable
 
@@ -4236,11 +4244,17 @@ class TableMixin(VuetifyTemplate, HubListener):
         # (to also clear markers, etc)
         self.clear_table()
 
-    def export_table(self):
+    def export_table(self, filename=None):
         """
         Export the QTable representation of the table.
+
+        Parameters
+        ----------
+        filename : str, optional
+            If provided, will write to the file, otherwise will just return the QTable
+            object.
         """
-        return self.table.export_table()
+        return self.table.export_table(filename=filename)
 
 
 class Plot(PluginSubcomponent):
