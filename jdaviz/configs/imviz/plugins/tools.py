@@ -8,6 +8,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.utils import debounced
 
 from jdaviz.core.tools import BoxZoom, PanZoom, _MatchedZoomMixin
+from jdaviz.configs.imviz.helper import get_top_layer_index
 
 __all__ = []
 
@@ -37,15 +38,18 @@ class ImagePanZoom(PanZoom):
 
     def on_click(self, data):
         # Find visible layers
-        visible_layers = [layer for layer in self.viewer.state.layers if layer.visible]
-        if len(visible_layers) == 0:
+        try:
+            i = get_top_layer_index(self.viewer)
+        except IndexError:
+            return
+        if i is None:
             return
 
         # Same data as mousemove event in Imviz viewer.
         # Any other config that wants this functionality has to have the following:
         #   viewer._get_real_xy()
         #   viewer.center_on() --> inherited from AstrowidgetsImageViewerMixin
-        image = visible_layers[0].layer
+        image = self.viewer.state.layers[i].layer
         x = data['domain']['x']
         y = data['domain']['y']
         if x is None or y is None:  # Out of bounds

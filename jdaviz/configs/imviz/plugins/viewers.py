@@ -135,11 +135,11 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
     def on_limits_change(self, *args):
         try:
             i = get_top_layer_index(self)
-            if i is None:
-                return
         except IndexError:
             if self.compass is not None:
                 self.compass.clear_compass()
+            return
+        if i is None:
             return
         self.set_compass(self.state.layers[i].layer)
 
