@@ -205,7 +205,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.aperture.scale_factor = self.slice_wavelength/self.reference_wavelength
 
-        self.app._metadata['_pixel_scale_factor'] = self.aperture.scale_factor
+        spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
+
+        if spectral_cube:
+            spectral_cube.meta['_pixel_scale_factor'] = self.aperture.scale_factor
 
         if not self.bg_wavelength_dependent:
             self.background.scale_factor = 1.0
