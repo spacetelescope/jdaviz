@@ -103,6 +103,7 @@ class Slice(PluginTemplateMixin):
         # initialize value_unit (this has to wait until data is loaded to an existing
         # slice_indicator_viewer, so we'll keep trying until it is set - after that, changes
         # will be handled by a change to global display units)
+        print("Initializing slice location")
         if not self.value_unit:
             for viewer in self.slice_indicator_viewers:
                 # ignore while x_display_unit is unset or still degrees (before data transpose)
@@ -136,7 +137,7 @@ class Slice(PluginTemplateMixin):
 
     @property
     def valid_slice_att_names(self):
-        return _spectral_axis_names + ['Pixel Axis 0 [z]']
+        return _spectral_axis_names + ['Pixel Axis 2 [x]']
 
     @property
     def slice_selection_viewers(self):
