@@ -89,16 +89,37 @@
       </plugin-inline-select>
     </div>
 
-    <div v-if="dev_subset_support && subset_items.length > 0">
-      <j-plugin-section-header style="margin-top: 12px">Subsets</j-plugin-section-header>
-      <plugin-inline-select
-        :items="subset_items"
-        :selected.sync="subset_selected"
-        :multiselect="multiselect"
-        :single_select_allow_blank="true"
-      >
-      </plugin-inline-select>
-    </div>
+      <div v-if="subset_items.length > 0">
+        <j-plugin-section-header style="margin-top: 12px">Subsets</j-plugin-section-header>
+          <v-subheader style="font-size: 10px; padding-top: 3px; padding-bottom: 3px;">Export subset as astropy region.</v-subheader>
+        <div class="section-description">
+        <plugin-inline-select
+          :items="subset_items"
+          :selected.sync="subset_selected"
+          :multiselect="multiselect"
+          :single_select_allow_blank="true"
+        >
+        </plugin-inline-select>
+      </div>
+
+    <v-row v-if="subset_invalid_msg.length > 0">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                {{subset_invalid_msg}}
+      </span>
+    </v-row>
+
+      <v-row v-if="subset_selected" class="row-min-bottom-padding">
+        <v-select
+          :menu-props="{ left: true }"
+          attach
+          v-model="subset_format_selected"
+          :items="subset_format_items.map(i => i.label)"
+          label="Format"
+          hint="Format for exporting subsets."
+          persistent-hint
+        >
+        </v-select>
+      </v-row>
 
     <div v-if="table_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Plugin Tables</j-plugin-section-header>
@@ -152,7 +173,6 @@
              :results_isolated_to_plugin="true"
              @click="interrupt_recording"
              :disabled="!movie_recording"
-          >
             <v-icon>stop</v-icon>
           </plugin-action-button>
       </j-tooltip>
@@ -162,13 +182,13 @@
         @click="export_from_ui"
         :spinner="spinner"
         :disabled="filename.length === 0 || 
-                   movie_recording || 
+                   movie_recording ||
+                   subset_invalid_msg.length > 0 || 
                    (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
       >
         Export
       </plugin-action-button>
     </v-row>
-
 
   </j-tray-plugin>
 </template>

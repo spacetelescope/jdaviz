@@ -330,7 +330,11 @@ have valid flux units. For 3D data, the current :ref:`slice` is used.
 Export
 ======
 
-This plugin allows exporting the plot in a given viewer to various image formats.
+This plugin allows exporting:
+
+* the plot in a given viewer to a PNG or SVG file,
+* a table in a plugin to ecsv
+* subsets as a region to .fits or .reg file.
 
 .. _cubeviz-export-video:
 
