@@ -38,7 +38,6 @@ dependencies = [
     "sidecar>=0.5.2",
     "ipypopout>=0.0.11",
     "astroquery",
-    "y_py<0.5.5;python_version=='3.9'",
 ]
 dynamic = [
     "version",
