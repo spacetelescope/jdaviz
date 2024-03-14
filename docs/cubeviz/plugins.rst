@@ -34,7 +34,7 @@ Plot Options
 ============
 
 This plugin gives access to per-viewer and per-layer plotting options.
-To show axes on image viewers, toggle on the "Show Axes" option at the bottom of the plugin.
+To show axes on image viewers, toggle on the "Show axes" option at the bottom of the plugin.
 
 .. seealso::
 

@@ -17,8 +17,8 @@
         <v-switch
           v-model="keep_active"
           @change="$emit('update:keep_active', $event)"
-          label="keep active"
-          hint="consider plugin active (showing any previews and enabling all keypress events) even when not opened"
+          label="Keep active"
+          hint="Consider plugin active (showing any previews and enabling all keypress events) even when not opened"
           persistent-hint>
         </v-switch>
       </v-row>
