@@ -842,8 +842,9 @@ def test_draw_1D_subset_specviz2d(specviz2d_helper):
     viewer_2d = specviz2d_helper.app.get_viewer(
         specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
-    # similiar to Imviz, without show(), need to manually set limits
-    # of 2D-viewer so the subset mask can be applied to it
+    # Note/TO DO: 2d-viewer does not display subset if it is drawn before
+    # specviz2d.show() is called. Work around for this test case,
+    # similiar to Imviz, 2d-viewer limits set so subset mask can be applied to viewer.
     viewer_2d.jdaviz_helper.viewers['spectrum-2d-viewer']._obj.shape = (155, 864)
 
     # custom test data to predict values for different viewers
