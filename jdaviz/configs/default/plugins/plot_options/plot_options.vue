@@ -162,7 +162,7 @@
     <glue-state-sync-wrapper v-if="axes_visible_sync.in_subscribed_states && viewer_selected.length > 0 && config !== 'imviz'" :sync="axes_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('axes_visible')">
       <v-switch
         v-model="axes_visible_value"
-        label="Show Axes"
+        label="Show axes"
         />
     </glue-state-sync-wrapper>
 
