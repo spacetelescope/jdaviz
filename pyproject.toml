@@ -1,7 +1,7 @@
 [project]
 name = "jdaviz"
 description = "Astronomical data analysis development leveraging the Jupyter platform"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "JDADF Developers", email = "help@stsci.edu" },
 ]
@@ -38,7 +38,6 @@ dependencies = [
     "sidecar>=0.5.2",
     "ipypopout>=0.0.11",
     "astroquery",
-    "y_py<0.5.5;python_version=='3.9'",
 ]
 dynamic = [
     "version",
