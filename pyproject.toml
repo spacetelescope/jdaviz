@@ -1,7 +1,7 @@
 [project]
 name = "jdaviz"
 description = "Astronomical data analysis development leveraging the Jupyter platform"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "JDADF Developers", email = "help@stsci.edu" },
 ]
@@ -68,16 +68,16 @@ imviz = "jdaviz.configs.imviz"
 [project.optional-dependencies]
 all = [
     "opencv-python",
-    "pysiaf"
+    "pysiaf",
 ]
 test = [
     "pytest",
     "pytest-astropy",
-    "pytest-tornasync"
+    "pytest-tornasync",
 ]
 docs = [
     "sphinx-astropy[confv2]>=1.9.1",
-    "sphinx_design"
+    "sphinx_design",
 ]
 roman = [
     "roman_datamodels>=0.17.1",
@@ -86,7 +86,7 @@ roman = [
 [build-system]
 requires = [
     "setuptools>=61.2",
-    "setuptools_scm"
+    "setuptools_scm",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -133,12 +133,10 @@ filterwarnings = [
     "ignore:.*With traitlets 4\\.1, metadata should be set using the \\.tag\\(\\) method:DeprecationWarning",
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
-    "ignore:datetime\\.datetime\\.utcfromtimestamp:DeprecationWarning",  # asdf + dateutil<=2.8.2 + Python 3.12
+    "ignore:datetime\\.datetime\\.utcfromtimestamp:DeprecationWarning",
     "ignore::DeprecationWarning:glue",
     "ignore::DeprecationWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
-    # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
-    # and https://github.com/scipy/scipy/pull/19275
     "ignore:.*numpy\\.core.*:DeprecationWarning",
 ]
 
