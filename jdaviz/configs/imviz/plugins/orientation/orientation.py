@@ -327,6 +327,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             wrt_data = self.viewer.selected_obj.first_loaded_data
             if wrt_data is None:  # Nothing in viewer
                 return
+            else:
+                print(wrt_data)
 
         rotation_angle = self.rotation_angle_deg(rotation_angle)
         if east_left is None:
@@ -356,9 +358,15 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         # add orientation layer to all viewers:
         for viewer_ref in self.app._viewer_store:
+            print(f"Adding {label} to {viewer_ref}")
             self._add_data_to_viewer(label, viewer_ref)
 
         if set_on_create:
+            # Not sure why this is sometimes missing, but we can add it here
+            print("Running set on create")
+            if label not in self.orientation.choices:
+                print(f"Trying to add {label} to choices")
+                self.orientation.choices += [label]
             self.orientation.selected = label
 
     def _add_data_to_viewer(self, data_label, viewer_id):
@@ -366,6 +374,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         wcs_only_layers = viewer.state.wcs_only_layers
         if data_label not in wcs_only_layers:
+            print(f"Adding {data_label} to {viewer_id}")
             self.app.add_data_to_viewer(viewer_id, data_label)
 
     def _on_viewer_added(self, msg):
@@ -393,6 +402,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                     self.link_type_selected == 'WCS'
             ):
                 self.orientation.selected = base_wcs_layer_label
+                print(f"Changed selected in _send_wcs_layers for {viewer_ref}")
+            else:
+                print("Did _send_wcs_layers but didn't change orientation.selected")
 
     def _on_data_add_to_viewer(self, msg):
         all_wcs_only_layers = all(
@@ -409,7 +421,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     @observe('orientation_layer_selected')
     def _change_reference_data(self, *args, **kwargs):
+        print("Running _change_reference_data")
         if self._refdata_change_available:
+            print("refdata change is available")
             self.app._change_reference_data(
                 self.orientation.selected, viewer_id=self.viewer.selected
             )
@@ -473,8 +487,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # don't update choices until viewer is available:
         ref_data = self.ref_data
         if hasattr(self, 'viewer') and ref_data is not None:
+            print(f"Triggered viewer_selected with ref_data {ref_data.label}")
             if ref_data.label in self.orientation.choices:
                 self.orientation.selected = ref_data.label
+            else:
+                print(f"{ref_data.label} not in {self.orientation.choices}!")
+                #self.orientation.selected = "Default orientation"
 
     def create_north_up_east_left(self, label="North-up, East-left", set_on_create=False):
         """

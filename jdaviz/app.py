@@ -2033,11 +2033,21 @@ class Application(VuetifyTemplate, HubListener):
         if orientation_plugin is not None:
             orient = orientation_plugin.orientation.selected
             self._reparent_subsets(data, new_parent=orient)
+            print(f"Removing item, have {orient} selected")
         else:
             self._reparent_subsets(data)
 
-        # Make sure the data isn't loaded in any viewers
+        # Make sure the data isn't loaded in any viewers and isn't the selected orientation
         for viewer_id in self._viewer_store:
+            print(f"Checking {viewer_id}")
+            if orientation_plugin is not None:
+                orientation_plugin.viewer.selected = viewer_id
+                print(f"Choices are {orientation_plugin.orientation.choices}")
+                orient = orientation_plugin.orientation.selected
+                print(f"{orient} is currently selected, data_label is {data_label}")
+                if orient == data_label:
+                    print(f"Changing selected orientation for {viewer_id}")
+                    orientation_plugin.orientation.selected = "Default orientation"
             self.remove_data_from_viewer(viewer_id, data_label)
 
         self.data_collection.remove(self.data_collection[data_label])
