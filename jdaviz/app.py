@@ -507,9 +507,11 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         if viewer_id is None:
+            print("Viewer ID is None")
             viewer = self._jdaviz_helper.default_viewer._obj
         else:
             viewer = self.get_viewer(viewer_id)
+            print(f"Viewer ID is {viewer_id}")
 
         old_refdata = viewer.state.reference_data
 
@@ -2032,8 +2034,10 @@ class Application(VuetifyTemplate, HubListener):
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
         if orientation_plugin is not None:
             orient = orientation_plugin.orientation.selected
+            print(f"Removing {data_label}, have {orient} selected")
+            if orient == data_label:
+                orient = "Default orientation"
             self._reparent_subsets(data, new_parent=orient)
-            print(f"Removing item, have {orient} selected")
         else:
             self._reparent_subsets(data)
 
