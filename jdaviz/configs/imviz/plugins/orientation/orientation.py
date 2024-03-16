@@ -1,22 +1,25 @@
-from traitlets import List, Unicode, Bool, Dict, observe
-
+from astropy import units as u
+from astropy.wcs.wcsapi import BaseHighLevelWCS
+from glue.core.link_helpers import LinkSame
 from glue.core.message import (
     DataCollectionAddMessage, SubsetCreateMessage, SubsetDeleteMessage
 )
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
+from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
+from traitlets import List, Unicode, Bool, Dict, observe
 
-import astropy.units as u
-from jdaviz.configs.imviz.helper import link_image_data, base_wcs_layer_label
+from jdaviz.configs.imviz.helper import get_reference_image_data, layer_is_2d
 from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
-from jdaviz.core.events import (
-    LinkUpdatedMessage, ExitBatchLoadMessage, ChangeRefDataMessage,
-    AstrowidgetMarkersChangedMessage, MarkersPluginUpdate,
-    SnackbarMessage, ViewerAddedMessage, AddDataMessage
-)
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.events import (
+    ExitBatchLoadMessage, ChangeRefDataMessage,
+    AstrowidgetMarkersChangedMessage, MarkersPluginUpdate,
+    SnackbarMessage, ViewerAddedMessage, AddDataMessage, LinkUpdatedMessage
+)
+
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
     PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
@@ -26,6 +29,7 @@ from jdaviz.utils import _wcs_only_label
 
 __all__ = ['Orientation']
 
+base_wcs_layer_label = 'Default orientation'
 link_type_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
@@ -104,9 +108,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self, 'new_layer_label', 'new_layer_label_default', 'new_layer_label_auto', None
         )
 
-        self.hub.subscribe(self, LinkUpdatedMessage,
-                           handler=self._on_link_updated)
-
         self.hub.subscribe(self, DataCollectionAddMessage,
                            handler=self._on_new_app_data)
 
@@ -147,20 +148,24 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             )
         )
 
-    def _on_link_updated(self, msg):
-        self.link_type.selected = link_type_msg_to_trait[msg.link_type]
-        self.linking_in_progress = True
-        self.wcs_use_fallback = msg.wcs_use_fallback
-        self.wcs_use_affine = msg.wcs_use_affine
-
     def _link_image_data(self):
-        link_image_data(
-            self.app,
-            link_type=self.link_type.selected.lower(),
-            wcs_fallback_scheme='pixels' if self.wcs_use_fallback else None,
-            wcs_use_affine=self.wcs_use_affine,
-            error_on_fail=False,
-            update_plugin=False)
+        self.linking_in_progress = True
+        try:
+            link_type = self.link_type.selected.lower()
+            link_image_data(
+                self.app,
+                link_type=link_type,
+                wcs_fallback_scheme='pixels' if self.wcs_use_fallback else None,
+                wcs_use_affine=self.wcs_use_affine,
+                error_on_fail=False)
+        except Exception:
+            raise
+        else:
+            # Only broadcast after success.
+            self.app.hub.broadcast(LinkUpdatedMessage(
+                link_type, self.wcs_use_fallback, self.wcs_use_affine, sender=self.app))
+        finally:
+            self.linking_in_progress = False
 
     def _check_if_data_with_wcs_exists(self):
         for data in self.app.data_collection:
@@ -203,13 +208,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.linking_in_progress:
             return
 
+        self.linking_in_progress = True  # Prevent recursion
+
         if self.need_clear_subsets:
+            self.linking_in_progress = False
             raise ValueError("Link type can only be changed after existing subsets "
                              f"are deleted, but {len(self.app.data_collection.subset_groups)} "
                              f"subset(s) still exist. To delete them, you can use "
                              f"`delete_subsets()` from the plugin API.")
-
-        self.linking_in_progress = True
 
         if self.need_clear_astrowidget_markers:
             setattr(self, msg.get('name'), msg.get('old'))
@@ -220,6 +226,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.link_type.selected == 'Pixels':
             self.wcs_use_affine = True
 
+        self.linking_in_progress = False
         self._link_image_data()
 
         # load data into the viewer that are now compatible with the
@@ -244,7 +251,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if wcs_linked:
             self._send_wcs_layers_to_all_viewers()
 
-        self.linking_in_progress = False
         self._update_layer_label_default()
 
         # Clear previous zoom limits because they no longer mean anything.
@@ -519,3 +525,222 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             f'CCW {self.rotation_angle_deg():.2f} ' +
             ('(E-left)' if self.east_left else '(E-right)')
         )
+
+
+def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_affine=True,
+                    error_on_fail=False):
+    """(Re)link loaded data in Imviz with the desired link type.
+
+    .. note::
+
+        Any markers added in Imviz will need to be removed manually before changing linking type.
+        You can add back the markers using
+        :meth:`~jdaviz.core.astrowidgets_api.AstrowidgetsImageViewerMixin.add_markers`
+        for the relevant viewer(s).
+
+    Parameters
+    ----------
+    app : `~jdaviz.app.Application`
+        Application associated with Imviz, e.g., ``imviz.app``.
+
+    link_type : {'pixels', 'wcs'}
+        Choose to link by pixels or WCS.
+
+    wcs_fallback_scheme : {None, 'pixels'}
+        If WCS linking failed, choose to fall back to linking by pixels or not at all.
+        This is only used when ``link_type='wcs'``.
+        Choosing `None` may result in some Imviz functionality not working properly.
+
+    wcs_use_affine : bool
+        Use an affine transform to represent the offset between images if possible
+        (requires that the approximation is accurate to within 1 pixel with the
+        full WCS transformations). If approximation fails, it will automatically
+        fall back to full WCS transformation. This is only used when ``link_type='wcs'``.
+        Affine approximation is much more performant at the cost of accuracy.
+
+    error_on_fail : bool
+        If `True`, any failure in linking will raise an exception.
+        If `False`, warnings will be emitted as snackbar messages.
+        When only warnings are emitted and no links are assigned,
+        some Imviz functionality may not work properly.
+
+    Raises
+    ------
+    ValueError
+        Invalid inputs or reference data.
+
+    """
+    if len(app.data_collection) <= 1 and link_type != 'wcs':  # No need to link, we are done.
+        return
+
+    if link_type not in ('pixels', 'wcs'):
+        raise ValueError(f"link_type must be 'pixels' or 'wcs', got {link_type}")
+    if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):
+        raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
+                         f"got {wcs_fallback_scheme}")
+    if link_type == 'wcs':
+        at_least_one_data_have_wcs = len([
+            hasattr(d, 'coords') and isinstance(d.coords, BaseHighLevelWCS)
+            for d in app.data_collection
+        ]) > 0
+        if not at_least_one_data_have_wcs:
+            if wcs_fallback_scheme is None:
+                if error_on_fail:
+                    raise ValueError("link_type can only be 'wcs' when wcs_fallback_scheme "
+                                     "is 'None' if all data have valid WCS.")
+                else:
+                    return
+            else:
+                # fall back on pixel linking
+                link_type = 'pixels'
+
+    old_link_type = getattr(app, '_link_type', None)
+
+    # In WCS linking, changing orientation layer is done within Orientation plugin,
+    # so here we assume viewer.state.reference_data is already the desired
+    # orientation by the time this function is called.
+    #
+    # In pixels linking, Affine approximation does not matter.
+    #
+    # data1 = reference, data2 = actual data
+    data_already_linked = []
+    if (link_type == old_link_type and
+            (link_type == "pixels" or wcs_use_affine == app._wcs_use_affine)):
+        # We are only here to link new data with existing configuration,
+        # so no need to relink existing data.
+        for link in app.data_collection.external_links:
+            data_already_linked.append(link.data2)
+    else:
+        # Everything has to be relinked.
+        for viewer in app._viewer_store.values():
+            if len(viewer._marktags):
+                raise ValueError(f"cannot change link_type (from '{app._link_type}' to "
+                                 f"'{link_type}') when markers are present. "
+                                 f" Clear markers with viewer.reset_markers() first")
+
+    # set internal tracking of link_type before changing reference data for anything that is
+    # subscribed to a change in reference data
+    app._link_type = link_type
+    app._wcs_use_affine = wcs_use_affine
+
+    # wcs -> pixels: First loaded real data will be reference.
+    if link_type == 'pixels' and old_link_type == 'wcs':
+        # default reference layer is the first-loaded image in default viewer:
+        refdata = app._jdaviz_helper.default_viewer._obj.first_loaded_data
+        if refdata is None:  # No data in viewer, just use first in collection
+            iref = 0
+            refdata = app.data_collection[iref]
+        else:
+            iref = app.data_collection.index(refdata)
+
+        # set default layer to reference data in all viewers:
+        for viewer_id in app.get_viewer_ids():
+            app._change_reference_data(refdata.label, viewer_id=viewer_id)
+
+    # pixels -> wcs: Always the default orientation
+    elif link_type == 'wcs' and old_link_type == 'pixels':
+        # Have to create the default orientation first.
+        if base_wcs_layer_label not in app.data_collection.labels:
+            default_reference_layer = (app._jdaviz_helper.default_viewer._obj.first_loaded_data
+                                       or app.data_collection[0])
+            degn = get_compass_info(default_reference_layer.coords, default_reference_layer.shape)[-3]  # noqa: E501
+            # Default rotation is the same orientation as the original reference data:
+            rotation_angle = -degn * u.deg
+            ndd = _get_rotated_nddata_from_label(app, default_reference_layer.label, rotation_angle)
+            app._jdaviz_helper.load_data(ndd, base_wcs_layer_label)
+
+        # set default layer to reference data in all viewers:
+        for viewer_id in app.get_viewer_ids():
+            app._change_reference_data(base_wcs_layer_label, viewer_id=viewer_id)
+
+        refdata = app.data_collection[base_wcs_layer_label]
+        iref = app.data_collection.index(refdata)
+
+    # Re-use current reference data.
+    else:
+        refdata, iref = get_reference_image_data(app)
+        # App just loaded, nothing yet, so take first image.
+        if refdata is None:
+            refdata = app._jdaviz_helper.default_viewer._obj.first_loaded_data
+            if refdata is None:  # No data in viewer, just use first in collection
+                iref = 0
+                refdata = app.data_collection[iref]
+            else:
+                iref = app.data_collection.index(refdata)
+
+    # With reference data changed, if needed, now we relink as needed.
+
+    links_list = []
+    ids0 = refdata.pixel_component_ids
+    ndim_range = range(2)  # We only support 2D
+
+    for i, data in enumerate(app.data_collection):
+        # 1. Do not link with self.
+        # 2. We are not touching any existing Subsets or Table. They keep their own links.
+        # 3. Links already exist for this entry and we're not changing the type.
+        # 4. We are not touching fake WCS layers in pixel linking.
+        # 5. We are not touching data without WCS in WCS linking.
+        if ((i == iref) or (not layer_is_2d(data)) or (data in data_already_linked) or
+                (link_type == "pixels" and data.meta.get(_wcs_only_label)) or
+                (link_type == "wcs" and not hasattr(data.coords, 'pixel_to_world'))):
+            continue
+
+        ids1 = data.pixel_component_ids
+        new_links = []
+        try:
+            if link_type == 'pixels':
+                new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+            else:  # wcs
+                wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
+                if wcs_use_affine:
+                    try:
+                        new_links = [wcslink.as_affine_link()]
+                    except NoAffineApproximation:  # pragma: no cover
+                        new_links = [wcslink]
+                else:
+                    new_links = [wcslink]
+        except Exception as e:
+            if link_type == 'wcs' and wcs_fallback_scheme == 'pixels':
+                try:
+                    new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
+                except Exception as e:  # pragma: no cover
+                    if error_on_fail:
+                        raise
+                    else:
+                        app.hub.broadcast(SnackbarMessage(
+                            f"Error linking '{data.label}' to '{refdata.label}': "
+                            f"{repr(e)}", color="warning", timeout=8000, sender=app))
+                        continue
+            else:
+                if error_on_fail:
+                    raise
+                else:
+                    app.hub.broadcast(SnackbarMessage(
+                        f"Error linking '{data.label}' to '{refdata.label}': "
+                        f"{repr(e)}", color="warning", timeout=8000, sender=app))
+                    continue
+        links_list += new_links
+
+    if len(links_list) > 0:
+        with app.data_collection.delay_link_manager_update():
+            if len(data_already_linked):
+                app.data_collection.add_link(links_list)  # Add to existing
+            else:
+                app.data_collection.set_links(links_list)  # Redo all links
+
+        app.hub.broadcast(SnackbarMessage(
+            'Images successfully relinked', color='success', timeout=8000, sender=app))
+
+    for viewer in app._viewer_store.values():
+        wcs_linked = link_type == 'wcs'
+        # viewer-state needs to know link type for reset_limits behavior
+        viewer.state.linked_by_wcs = wcs_linked
+        # also need to store a copy in the viewer item for the data dropdown to access
+        viewer_item = app._get_viewer_item(viewer.reference)
+
+        viewer_item['reference_data_label'] = refdata.label
+        viewer_item['linked_by_wcs'] = wcs_linked
+
+        # if changing from one link type to another, reset the limits:
+        if link_type != old_link_type:
+            viewer.state.reset_limits()
