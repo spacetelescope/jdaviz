@@ -130,7 +130,8 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
         # This would set a different reference to second viewer.
         viewer_2 = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
-        lc_plugin.viewer.selected = "imviz-1"
+        lc_plugin.viewer = "imviz-1"
+
         lc_plugin._obj.create_north_up_east_right(set_on_create=True)
 
         assert self.viewer.state.reference_data.label == "North-up, East-left"
@@ -156,7 +157,8 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
     def test_custom_orientation(self):
         lc_plugin = self.imviz.plugins['Orientation']
         lc_plugin.link_type = 'WCS'
-        lc_plugin.viewer.selected = "imviz-0"
+        lc_plugin.viewer = "imviz-0"
+
         lc_plugin.rotation_angle = 42  # Triggers auto-label
         lc_plugin._obj.add_orientation(rotation_angle=None, east_left=True, label=None,
                                        set_on_create=True, wrt_data=None)
