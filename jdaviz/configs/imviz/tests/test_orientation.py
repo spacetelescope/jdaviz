@@ -177,8 +177,8 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         # This would set a different reference to second viewer.
         viewer_2 = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
-        lc_plugin.viewer.selected = "imviz-1"
-        lc_plugin.orientation.selected = "North-up, East-left"
+        lc_plugin.viewer = "imviz-1"
+        lc_plugin.orientation = "North-up, East-left"
 
         self.imviz.app.vue_data_item_remove({"item_name": "North-up, East-left"})
 
