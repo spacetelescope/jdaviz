@@ -165,6 +165,24 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
 
 class TestDeleteOrientation(BaseImviz_WCS_WCS):
 
+    def test_delete_orientation_multi_viewer(self):
+        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin.link_type = 'WCS'
+
+        # Should automatically be applied as reference to first viewer.
+        lc_plugin._obj.create_north_up_east_left(set_on_create=True)
+
+        # This would set a different reference to second viewer.
+        viewer_2 = self.imviz.create_image_viewer()
+        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
+        lc_plugin.viewer.selected = "imviz-1"
+        lc_plugin.orientation.selected = "North-up, East-left"
+
+        self.imviz.app.vue_data_item_remove({"item_name": "North-up, East-left"})
+
+        assert self.viewer.state.reference_data.label == "Default orientation"
+        assert viewer_2.state.reference_data.label == "Default orientation"
+
     @pytest.mark.parametrize("klass", [EllipseSkyRegion, RectangleSkyRegion])
     @pytest.mark.parametrize(
         ("angle", "sbst_theta"),
