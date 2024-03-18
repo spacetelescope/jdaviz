@@ -2040,12 +2040,10 @@ class Application(VuetifyTemplate, HubListener):
             self._reparent_subsets(data)
 
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
-        for viewer_id in self._viewer_store:
+        for viewer_id, viewer in self._viewer_store.items():
             if orientation_plugin is not None:
-                orientation_plugin.viewer.selected = viewer_id
-                orient = orientation_plugin.orientation.selected
-                if orient == data_label:
-                    orientation_plugin.orientation.selected = base_wcs_layer_label
+                if viewer.state.reference_data.label == data_label:
+                    self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
 
         self.data_collection.remove(self.data_collection[data_label])

@@ -479,10 +479,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if hasattr(self, 'viewer') and ref_data is not None:
             if ref_data.label in self.orientation.choices:
                 self.orientation.selected = ref_data.label
-            else:
-                self.orientation.selected = base_wcs_layer_label
-                # Need to manually trigger this here for...reasons
-                self._change_reference_data()
 
     def create_north_up_east_left(self, label="North-up, East-left", set_on_create=False):
         """
