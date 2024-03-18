@@ -2031,9 +2031,10 @@ class Application(VuetifyTemplate, HubListener):
         data = self.data_collection[data_label]
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
         if orientation_plugin is not None:
+            from jdaviz.configs.imviz.helper import base_wcs_layer_label
             orient = orientation_plugin.orientation.selected
             if orient == data_label:
-                orient = "Default orientation"
+                orient = base_wcs_layer_label
             self._reparent_subsets(data, new_parent=orient)
         else:
             self._reparent_subsets(data)
@@ -2044,7 +2045,7 @@ class Application(VuetifyTemplate, HubListener):
                 orientation_plugin.viewer.selected = viewer_id
                 orient = orientation_plugin.orientation.selected
                 if orient == data_label:
-                    orientation_plugin.orientation.selected = "Default orientation"
+                    orientation_plugin.orientation.selected = base_wcs_layer_label
             self.remove_data_from_viewer(viewer_id, data_label)
 
         self.data_collection.remove(self.data_collection[data_label])

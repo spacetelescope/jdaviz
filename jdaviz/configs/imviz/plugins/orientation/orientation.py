@@ -480,7 +480,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             if ref_data.label in self.orientation.choices:
                 self.orientation.selected = ref_data.label
             else:
-                self.orientation.selected = "Default orientation"
+                self.orientation.selected = base_wcs_layer_label
                 # Need to manually trigger this here for...reasons
                 self._change_reference_data()
 
