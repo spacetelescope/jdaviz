@@ -2041,7 +2041,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
         for viewer_id, viewer in self._viewer_store.items():
-            if orientation_plugin is not None:
+            if orientation_plugin is not None and self._link_type == 'wcs':
                 if viewer.state.reference_data.label == data_label:
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
