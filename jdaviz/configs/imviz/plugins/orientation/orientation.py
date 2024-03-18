@@ -587,7 +587,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
             if wcs_fallback_scheme is None:
                 if error_on_fail:
                     raise ValueError("link_type can only be 'wcs' when wcs_fallback_scheme "
-                                     "is 'None' if all data have valid WCS.")
+                                     "is 'None' if at least one image has a valid WCS.")
                 else:
                     return
             else:
