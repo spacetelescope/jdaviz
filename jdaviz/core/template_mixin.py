@@ -1365,6 +1365,12 @@ class LayerSelect(SelectPluginComponent):
         self._update_layer_items()
         self.update_wcs_only_filter(only_wcs_layers)
 
+        # ignore layers that are children in associations:
+        def is_parent(data):
+            return self.app._get_assoc_data_parent(data.label) is None
+
+        self.add_filter(is_parent)
+
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
         # of additional viewers in imviz.
@@ -2922,6 +2928,12 @@ class DatasetSelect(SelectPluginComponent):
         self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
         # initialize items from original viewers
         self._on_data_changed()
+
+        # ignore layers that are children in associations:
+        def is_parent(data):
+            return self.app._get_assoc_data_parent(data.label) is None
+
+        self.add_filter(is_parent)
 
     def _cubeviz_include_spatial_subsets(self):
         """

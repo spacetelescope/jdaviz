@@ -356,6 +356,9 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=lambda msg: self._clear_object_cache(msg.subset.label))
 
+        # Store for associations between Data entries:
+        self._data_associations = self._init_data_associations()
+
         # Subscribe to messages that result in changes to the layers
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_layers_changed)
@@ -473,9 +476,11 @@ class Application(VuetifyTemplate, HubListener):
         if hasattr(msg, 'data'):
             layer_name = msg.data.label
             is_wcs_only = msg.data.meta.get(_wcs_only_label, False)
+            is_not_child = self._get_assoc_data_parent(layer_name) is None
         elif hasattr(msg, 'subset'):
             layer_name = msg.subset.label
             is_wcs_only = False
+            is_not_child = True
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
@@ -490,12 +495,24 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.layer_icons = {**self.state.layer_icons,
                                           layer_name: orientation_icons.get(layer_name,
                                                                             wcs_only_refdata_icon)}
-            else:
+            elif is_not_child:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
                     layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items()
-                                                 if not ic.startswith('mdi-')]))
+                                                 if not ic.startswith('mdi-') and
+                                                 self._get_assoc_data_parent(ln) is None]))
                 }
+
+        # all remaining layers at this point have a parent:
+        for layer_name in self.state.layer_icons:
+            children_layers = self._get_assoc_data_children(layer_name)
+            if children_layers is not None:
+                parent_icon = self.state.layer_icons[layer_name]
+                for i, child_layer in enumerate(children_layers, start=1):
+                    self.state.layer_icons = {
+                        **self.state.layer_icons,
+                        child_layer: f'{parent_icon}{i}'
+                    }
 
     def _change_reference_data(self, new_refdata_label, viewer_id=None):
         """
@@ -1251,7 +1268,7 @@ class Application(VuetifyTemplate, HubListener):
 
         return new_state
 
-    def add_data(self, data, data_label=None, notify_done=True):
+    def add_data(self, data, data_label=None, notify_done=True, parent=None):
         """
         Add data to the Glue ``DataCollection``.
 
@@ -1279,6 +1296,11 @@ class Application(VuetifyTemplate, HubListener):
             warnings.warn(f"Overwriting existing data entry with label '{data_label}'")
 
         self.data_collection[data_label] = data
+
+        # manage associated Data entries:
+        self._add_assoc_data_as_parent(data_label)
+        if parent is not None:
+            self._set_assoc_data_as_child(data_label, new_parent_label=parent)
 
         # Send out a toast message
         if notify_done:
@@ -1998,6 +2020,17 @@ class Application(VuetifyTemplate, HubListener):
                 if layer.layer.data.label != data_label:
                     layer.visible = False
 
+        # if Data has children, update their visibilities to match Data:
+        assoc_children = self._get_assoc_data_children(data_label)
+        for layer in viewer.layers:
+            for data_label in assoc_children:
+                if layer.layer.data.label == data_label:
+                    if visible and not layer.visible:
+                        layer.visible = True
+                        layer.update()
+                    else:
+                        layer.visible = visible
+
         # update data menu - selected_data_items should be READ ONLY, not modified by the user/UI
         selected_items = viewer_item['selected_data_items']
         data_id = self._data_id_from_label(data_label)
@@ -2577,3 +2610,27 @@ class Application(VuetifyTemplate, HubListener):
             raise KeyError(f'{name} not found in app.state.tray_items')
 
         return tray_item
+
+    def _init_data_associations(self):
+        # assume all Data are parents:
+        data_associations = {
+            data.label: {'parent': None, 'children': []}
+            for data in self.data_collection
+        }
+        return data_associations
+
+    def _add_assoc_data_as_parent(self, data_label):
+        self._data_associations[data_label] = {'parent': None, 'children': []}
+
+    def _set_assoc_data_as_child(self, data_label, new_parent_label):
+        # Data has a new parent:
+        self._data_associations[data_label]['parent'] = new_parent_label
+        # parent has a new child:
+        self._data_associations[new_parent_label]['children'].append(data_label)
+
+    def _get_assoc_data_children(self, data_label):
+        # intentionally not recursive for now, just one generation:
+        return self._data_associations.get(data_label, {}).get('children', [])
+
+    def _get_assoc_data_parent(self, data_label):
+        return self._data_associations.get(data_label, {}).get('parent')
