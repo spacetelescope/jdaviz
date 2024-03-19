@@ -71,6 +71,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
+           'PluginTableSelect', 'PluginTableSelectMixin',
            'NonFiniteUncertaintyMismatchMixin',
            'DatasetSelect', 'DatasetSelectMixin', 'DatasetMultiSelectMixin',
            'FileImportSelectPluginComponent', 'HasFileImportSelect',
@@ -2406,7 +2407,6 @@ class PluginTableSelect(SelectPluginComponent):
                          multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
-        from jdaviz.core.events import PluginTableAddedMessage
         self.hub.subscribe(self, PluginTableAddedMessage, handler=self._on_tables_changed)
         self._on_tables_changed()
 
