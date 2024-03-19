@@ -116,6 +116,8 @@ New Features
 - Opening a plugin in the tray (from the API or the toolbar buttons) now scrolls to that plugin.
   [#2768]
 
+- Infrastructure to support auto-updating plugin results. [#2680]
+
 Cubeviz
 ^^^^^^^
 
