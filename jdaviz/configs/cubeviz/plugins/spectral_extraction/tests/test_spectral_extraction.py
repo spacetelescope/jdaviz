@@ -405,13 +405,13 @@ def test_unit_translation(cubeviz_helper):
     # store to test second time after calling translate_units
     mjy_sr_data1 = collapsed_spec._data[0]
 
-    extract_plg.translate_units(collapsed_spec)
+    extract_plg._obj.translate_units(collapsed_spec)
 
     assert collapsed_spec._unit == u.MJy / u.sr
     # some value in MJy/sr that we know the outcome after translation
     assert np.allclose(collapsed_spec._data[0], 8751.653)
 
-    extract_plg.translate_units(collapsed_spec)
+    extract_plg._obj.translate_units(collapsed_spec)
 
     # translating again returns the original units
     assert collapsed_spec._unit == u.Jy / u.pix

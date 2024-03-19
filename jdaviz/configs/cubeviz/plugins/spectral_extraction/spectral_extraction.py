@@ -160,7 +160,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         expose = ['function', 'spatial_subset', 'aperture',
                   'add_results', 'collapse_to_spectrum',
                   'wavelength_dependent', 'reference_wavelength',
-                  'aperture_method', 'translate_units']
+                  'aperture_method']
         if self.dev_bg_support:
             expose += ['background', 'bg_wavelength_dependent']
 
