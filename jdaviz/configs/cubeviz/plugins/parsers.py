@@ -6,7 +6,6 @@ import numpy as np
 from astropy import units as u
 from astropy.io import fits
 
-from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
