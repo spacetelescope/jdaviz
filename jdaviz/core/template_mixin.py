@@ -3594,9 +3594,7 @@ class AddResults(BasePluginComponent):
     * ``viewer`` (`ViewerSelect`):
         the viewer to add the results, or None to add the results to the data-collection but
         not load into a viewer.
-    """
 
-    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``label`` (string: user-provided label for the results data-entry.  If ``label_auto``, changes
@@ -3643,7 +3641,7 @@ class AddResults(BasePluginComponent):
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
                  add_to_viewer_items, add_to_viewer_selected,
-                 auto_update_result,
+                 auto_update_result=None,
                  label_whitelist_overwrite=[]):
         super().__init__(plugin, label=label,
                          label_default=label_default, label_auto=label_auto,
