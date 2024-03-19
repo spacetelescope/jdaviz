@@ -103,7 +103,6 @@ class Slice(PluginTemplateMixin):
         # initialize value_unit (this has to wait until data is loaded to an existing
         # slice_indicator_viewer, so we'll keep trying until it is set - after that, changes
         # will be handled by a change to global display units)
-        print("Initializing slice location")
         if not self.value_unit:
             for viewer in self.slice_indicator_viewers:
                 # ignore while x_display_unit is unset or still degrees (before data transpose)
@@ -318,7 +317,6 @@ class Slice(PluginTemplateMixin):
     @observe('show_indicator', 'show_value')
     def _on_setting_changed(self, event):
         msg = SliceToolStateMessage({event['name']: event['new']}, viewer=None, sender=self)
-        print(msg)
         self.session.hub.broadcast(msg)
 
     def vue_goto_first(self, *args):

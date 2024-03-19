@@ -76,10 +76,19 @@ class WithSliceIndicator:
 
 
 class WithSliceSelection:
-    @property
+    @cached_property
     def slice_index(self):
         # index in state.slices corresponding to the slice axis
-        return 2
+        for layer in self.layers:
+            try:
+                data_obj = layer.layer.data
+                return data_obj.meta['spectral_axis_index']
+            except (AttributeError, KeyError):
+                raise
+            else:
+                break
+        else:
+            return 2
 
     @property
     def slice_component_label(self):
