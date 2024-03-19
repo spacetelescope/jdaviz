@@ -22,7 +22,7 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, data_type=None, data_label=None):
+def parse_data(app, file_obj, data_type=None, data_label=None, specutils_format=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -37,6 +37,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         The data type used to explicitly differentiate parsed data.
     data_label : str, optional
         The label to be applied to the Glue data component.
+    specutils_format : str, optional
+        Optional format string to pass to Spectrum1D.read(), see
+        https://specutils.readthedocs.io/en/stable/spectrum1d.html#list-of-loaders
+        for valid format strings. Useful for processed files that may not include
+        the original headers with information used to auto-identify.
     """
 
     flux_viewer_reference_name = app._jdaviz_helper._default_flux_viewer_reference_name
@@ -65,6 +70,17 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             _parse_gif(app, file_obj, data_label,
                        flux_viewer_reference_name=flux_viewer_reference_name,
                        spectrum_viewer_reference_name=spectrum_viewer_reference_name)
+            return
+
+        elif specutils_format is not None:
+            sc = Spectrum1D.read(file_obj, format=specutils_format)
+            _parse_spectrum1d_3d(
+                app, sc, data_label=data_label,
+                flux_viewer_reference_name=flux_viewer_reference_name,
+                spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+                uncert_viewer_reference_name=uncert_viewer_reference_name
+            )
+            app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
             return
 
         file_name = os.path.basename(file_obj)
