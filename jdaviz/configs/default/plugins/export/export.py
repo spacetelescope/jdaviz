@@ -188,18 +188,23 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
         elif len(self.table.selected):
-            if not filename.endswith("csv"):
-                filename += ".csv"
-            self.table.selected_obj.export_table(filename)
+            if "." not in filename:
+                filename += ".ecsv"
+            self.table.selected_obj.export_table(filename, overwrite=True)
         else:
             raise ValueError("nothing selected for export")
+        return filename
 
     def vue_export_from_ui(self, *args, **kwargs):
         try:
-            self.export(show_dialog=True)
+            filename = self.export(show_dialog=True)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export failed with: {e}", sender=self, color="error"))
+        else:
+            if filename is not None:
+                self.hub.broadcast(SnackbarMessage(
+                    f"Exported to {filename}", sender=self, color="success"))
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
         if filetype == "png":
