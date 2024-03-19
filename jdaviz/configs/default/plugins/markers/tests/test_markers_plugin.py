@@ -29,6 +29,10 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
 
     mp = cubeviz_helper.plugins['Markers']
     mp.keep_active = True
+    exp = cubeviz_helper.plugins['Export']
+
+    # no marks yet, so table does not yet appear in export plugin
+    assert "Markers:table" not in exp.table.choices
 
     # test event in flux viewer
     label_mouseover._viewer_mouse_event(fv,
@@ -125,7 +129,6 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
     assert len(_get_markers_from_viewer(sv).x) == 2
 
     # appears as option in export plugin and exports successfully
-    exp = cubeviz_helper.plugins['Export']
     assert "Markers:table" in exp.table.choices
     exp.table = "Markers:table"
     exp.export()

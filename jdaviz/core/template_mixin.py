@@ -44,7 +44,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 AddDataToViewerMessage, ChangeRefDataMessage,
-                                PluginTableAddedMessage)
+                                PluginTableAddedMessage, PluginTableModifiedMessage)
 
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
@@ -2385,7 +2385,7 @@ class PluginTableSelect(SelectPluginComponent):
 
     def __init__(self, plugin, items, selected,
                  multiselect=None,
-                 filters=[],
+                 filters=['not_empty_table'],
                  default_text=None, manual_options=[],
                  default_mode='first'):
         """
@@ -2417,12 +2417,14 @@ class PluginTableSelect(SelectPluginComponent):
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
         self.hub.subscribe(self, PluginTableAddedMessage, handler=self._on_tables_changed)
+        self.hub.subscribe(self, PluginTableModifiedMessage, handler=self._on_tables_changed)
         self._on_tables_changed()
 
     @observe('filters')
     def _on_tables_changed(self, *args):
         manual_items = [{'label': label} for label in self.manual_options]
-        self.items = manual_items + [{'label': k} for k in self.plugin.app._plugin_tables.keys()]
+        self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_tables.items()
+                                     if self._is_valid_item(v._obj)]
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)
@@ -2430,6 +2432,12 @@ class PluginTableSelect(SelectPluginComponent):
     @cached_property
     def selected_obj(self):
         return self.plugin.app._jdaviz_helper.plugin_tables.get(self.selected)
+
+    def _is_valid_item(self, table):
+        def not_empty_table(table):
+            return len(table.items) > 0
+
+        return super()._is_valid_item(table, locals())
 
 
 class PluginTableSelectMixin(VuetifyTemplate, HubListener):
@@ -4189,6 +4197,7 @@ class Table(PluginSubcomponent):
 
         # clean data to show in the UI
         self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
+        self._plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
 
     def __len__(self):
         return len(self.items)
@@ -4199,6 +4208,7 @@ class Table(PluginSubcomponent):
         """
         self.items = []
         self._qtable = None
+        self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
     def vue_clear_table(self, data=None):
         # if the plugin (or via the TableMixin) has its own clear_table implementation,
