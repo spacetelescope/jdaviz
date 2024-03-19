@@ -282,58 +282,6 @@ def _parse_hdulist(app, hdulist, file_name=None,
             app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
             app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
 
-
-def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None,
-                   spectrum_viewer_reference_name=None):
-    hdu = hdulist[ext]
-    data_type = _get_data_type_by_hdu(hdu)
-
-    if ext == 'QUALITY':  # QUALITY flags have no unit
-        flux = hdu.data << u.dimensionless_unscaled
-    else:
-        unit = u.Unit(hdu.header.get('BUNIT', 'count'))
-        flux = hdu.data << unit
-
-    hdr = hdulist[1].header
-
-    wcs_dict = {
-        'CTYPE1': 'WAVE    ', 'CUNIT1': 'um', 'CDELT1': hdr['CDELT3'] * 1E6,
-        'CRPIX1': hdr['CRPIX3'],
-        'CRVAL1': hdr['CRVAL3'] * 1E6, 'NAXIS1': hdr['NAXIS3'],
-        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': hdr['CDELT1'], 'CRPIX2': hdr['CRPIX1'],
-        'CRVAL2': hdr['CRVAL1'], 'NAXIS2': hdr['NAXIS1'],
-        'CTYPE3': 'RA---TAN', 'CUNIT3': 'deg', 'CDELT3': hdr['CDELT2'], 'CRPIX3': hdr['CRPIX2'],
-        'CRVAL3': hdr['CRVAL2'], 'NAXIS3': hdr['NAXIS2']}
-
-    wcs = WCS(wcs_dict)
-    flux = np.moveaxis(flux, 0, -1)
-    flux = np.swapaxes(flux, 0, 1)
-
-    metadata = standardize_metadata(hdu.header)
-    metadata.update(wcs_dict)  # To be internally consistent
-    if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-        metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
-
-    # store original WCS in metadata. this is a hacky workaround for converting subsets
-    # to sky regions, where the parent data of the subset might have dropped spatial WCS info
-    metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
-
-    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
-
-    app.add_data(data, data_label)
-
-    if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
-        app.data_collection[-1].get_component("flux").units = flux.unit
-
-    app.add_data_to_viewer(flux_viewer_reference_name, data_label)
-    app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
-
-    if data_type == 'flux':
-        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
-    if data_type == 'uncert':
-        app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
-
-
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,
                          flux_viewer_reference_name=None, spectrum_viewer_reference_name=None,
                          uncert_viewer_reference_name=None):
