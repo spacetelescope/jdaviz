@@ -4196,7 +4196,7 @@ class Table(PluginSubcomponent):
         # call that, otherwise call the one defined here
         getattr(self._plugin, 'clear_table', self.clear_table)()
 
-    def export_table(self, filename=None):
+    def export_table(self, filename=None, overwrite=False):
         """
         Export the QTable representation of the table.
 
@@ -4205,9 +4205,11 @@ class Table(PluginSubcomponent):
         filename : str, optional
             If provided, will write to the file, otherwise will just return the QTable
             object.
+        overwrite : bool, optional
+            If ``filename`` already exists, should it be overwritten.
         """
         if filename is not None:
-            self._qtable.write(filename)
+            self._qtable.write(filename, overwrite=overwrite)
         # TODO: default to only showing selected columns?
         return self._qtable
 
@@ -4244,7 +4246,7 @@ class TableMixin(VuetifyTemplate, HubListener):
         # (to also clear markers, etc)
         self.clear_table()
 
-    def export_table(self, filename=None):
+    def export_table(self, filename=None, overwrite=False):
         """
         Export the QTable representation of the table.
 
@@ -4253,8 +4255,10 @@ class TableMixin(VuetifyTemplate, HubListener):
         filename : str, optional
             If provided, will write to the file, otherwise will just return the QTable
             object.
+        overwrite : bool, optional
+            If ``filename`` already exists, should it be overwritten.
         """
-        return self.table.export_table(filename=filename)
+        return self.table.export_table(filename=filename, overwrite=overwrite)
 
 
 class Plot(PluginSubcomponent):

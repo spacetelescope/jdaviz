@@ -124,6 +124,12 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
     assert len(_get_markers_from_viewer(fv).x) == 1
     assert len(_get_markers_from_viewer(sv).x) == 2
 
+    # appears as option in export plugin and exports successfully
+    exp = cubeviz_helper.plugins['Export']
+    assert "Markers:table" in exp.table.choices
+    exp.table = "Markers:table"
+    exp.export()
+
     # clearing table clears markers
     mp.clear_table()
     assert mp.export_table() is None

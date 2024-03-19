@@ -144,7 +144,7 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
     po = cubeviz_helper.plugins['Plot Options']
 
     assert po.multiselect is False
-    assert "multiselect" in po.viewer._obj.__repr__()
+    assert "multiselect" in po.viewer.__repr__()
 
     # regression test for https://github.com/spacetelescope/jdaviz/pull/1708
     # user calls to select_default should revert even if current entry is valid
