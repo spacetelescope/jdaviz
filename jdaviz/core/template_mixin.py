@@ -2369,7 +2369,7 @@ class PluginTableSelect(SelectPluginComponent):
 
     Example template (label and hint are optional)::
 
-      <plugin-table-select
+      <v-select
         :items="table_items"
         :selected.sync="table_selected"
         label="Table"
