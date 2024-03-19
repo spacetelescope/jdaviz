@@ -206,11 +206,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.aperture.scale_factor = self.slice_wavelength/self.reference_wavelength
 
-        spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
-
-        if spectral_cube:
-            spectral_cube.meta['_pixel_scale_factor'] = self.aperture.scale_factor
-
         if not self.bg_wavelength_dependent:
             self.background.scale_factor = 1.0
         else:
@@ -349,6 +344,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 color="success",
                 sender=self)
             self.hub.broadcast(snackbar_message)
+
+        # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
+        if 'PIXAR_SR' in spectral_cube.meta:
+            pix_scale_factor = self.aperture.scale_factor * 10e6 * spectral_cube.meta['PIXAR_SR']
+            collapsed_spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         return collapsed_spec
 
@@ -527,35 +527,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mark.update_xy(sp.spectral_axis.value, sp.flux.value)
             mark.visible = True
 
-    def translate_units(self, spectral_cube, collapsed_spec):
+    def translate_units(self, collapsed_spec):
+        # MJy/sr -> Jy/pix
         if collapsed_spec._unit == u.MJy / u.sr:
-            # MJy to Jy
-            collapsed_spec._data *= 10e6
-
-            # spectral_cube.meta['_pixel_scale_factor'] / 1, where 1 = default scale factor
-            collapsed_spec._data *= spectral_cube.meta['_pixel_scale_factor']
-
-            # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
-            # MJy/sr is default, to measure photometry in MJy, convert the image to units
-            # of MJy/pixel by multiplying by the average area of a pixel in sr, a constant
-            # provided in the FITS header keyword PIXAR_SR
-            collapsed_spec._data *= spectral_cube.meta['PIXAR_SR']
-
-            # manually change units
+            collapsed_spec._data *= collapsed_spec.meta['_pixel_scale_factor']
             collapsed_spec._unit = u.Jy / u.pix
-
+        # Jy/pix -> MJy/sr
         elif collapsed_spec._unit == u.Jy / u.pix:
-            # Jy to MJy
-            collapsed_spec._data /= 10e6
-
-            # 1 / spectral_cube.meta['_pixel_scale_factor'], where 1 = default scale factor
-            collapsed_spec._data /= spectral_cube.meta['_pixel_scale_factor']
-
-            # refer to above if-statement regarding meta['PIXAR_SR']
-            collapsed_spec._data /= spectral_cube.meta['PIXAR_SR']
-
-            # manually change units
+            collapsed_spec._data /= collapsed_spec.meta['_pixel_scale_factor']
             collapsed_spec._unit = u.MJy / u.sr
-
-        elif collapsed_spec._unit != u.Jy / u.pix and collapsed_spec._unit != u.MJy / u.sr:
+        else:
             raise ValueError(f"Units '{collapsed_spec._unit}' are not MJy/sr nor Jy/pix.")
