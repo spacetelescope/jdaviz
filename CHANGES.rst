@@ -15,6 +15,8 @@ New Features
 
 - "Export Plot" plugin is now replaced with the more general "Export" plugin. [#2722]
 
+- Infrastructure to support auto-updating plugin results. [#2680]
+
 Cubeviz
 ^^^^^^^
 
