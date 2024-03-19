@@ -1335,10 +1335,13 @@ class LayerSelect(SelectPluginComponent):
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
-        manual_options: list
+        manual_options : list
             list of options to provide that are not automatically populated by subsets.  If
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
+        default_mode : str, optional
+            What mode to use when making the default selection.  Valid options: first, default_text,
+            empty.
         """
         super().__init__(plugin,
                          items=items,
@@ -1700,6 +1703,9 @@ class SubsetSelect(SelectPluginComponent):
             the first item in the list.
         filters : list
             list of strings (for built-in filters) or callables to filter to only valid options.
+        default_mode : str, optional
+            What mode to use when making the default selection.  Valid options: first, default_text,
+            empty.
         """
         super().__init__(plugin,
                          items=items,
@@ -2402,6 +2408,9 @@ class PluginTableSelect(SelectPluginComponent):
             list of options to provide that are not automatically populated by datasets.  If
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
+        default_mode : str, optional
+            What mode to use when making the default selection.  Valid options: first, default_text,
+            empty.
         """
         super().__init__(plugin, items=items, selected=selected,
                          multiselect=multiselect, filters=filters,
