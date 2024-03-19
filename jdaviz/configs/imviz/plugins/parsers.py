@@ -186,6 +186,16 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
             data.coords.bounding_box = None
         if not data.meta.get(_wcs_only_label, False):
             data_label = app.return_data_label(data_label, alt_name="image_data")
+
+        # TODO: generalize/centralize this for use in other configs too
+        if parent is not None and ext == 'DQ':
+            print('data', data.main_components)
+            # nans are used to mark "good" flags in the DQ colormap, so
+            # convert DQ array to float to support nans:
+            cid = data.get_component("DQ")
+            data_arr = np.float32(cid.data)
+            data_arr[data_arr == 0] = np.nan
+            data.update_components({cid: data_arr})
         app.add_data(data, data_label, parent=parent)
 
     # Do not link image data here. We do it at the end in Imviz.load_data()

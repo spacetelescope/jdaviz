@@ -184,4 +184,3 @@ def test_data_associations(imviz_helper):
 
     assert imviz_helper.app._get_assoc_data_children('parent_data') == ['child_data']
     assert imviz_helper.app._get_assoc_data_parent('child_data') == 'parent_data'
-
