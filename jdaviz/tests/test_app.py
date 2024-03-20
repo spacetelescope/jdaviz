@@ -188,3 +188,7 @@ def test_data_associations(imviz_helper):
     with pytest.raises(NotImplementedError):
         # we don't (yet) allow children of children:
         imviz_helper.load_data(data_child, data_label='grandchild_data', parent='child_data')
+
+    with pytest.raises(ValueError):
+        # ensure the parent actually exists:
+        imviz_helper.load_data(data_child, data_label='child_data', parent='absent parent')

@@ -1302,6 +1302,11 @@ class Application(VuetifyTemplate, HubListener):
         # manage associated Data entries:
         self._add_assoc_data_as_parent(data_label)
         if parent is not None:
+            data_collection_labels = [data.label for data in self.data_collection]
+            if parent not in data_collection_labels:
+                raise ValueError(f'parent "{parent}" is not a valid data label in '
+                                 f'the data collection: {data_collection_labels}.')
+
             # Does the parent Data have a parent? If so, raise error:
             parent_of_parent = self._get_assoc_data_parent(parent)
             if parent_of_parent is not None:
