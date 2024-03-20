@@ -359,6 +359,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self._add_data_to_viewer(label, viewer_ref)
 
         if set_on_create:
+            # Not sure why this is sometimes missing, but we can add it here
+            if label not in self.orientation.choices:
+                self.orientation.choices += [label]
             self.orientation.selected = label
 
     def _add_data_to_viewer(self, data_label, viewer_id):
@@ -414,7 +417,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 self.orientation.selected, viewer_id=self.viewer.selected
             )
             viewer_item = self.app._viewer_item_by_id(self.viewer.selected)
-            if viewer_item != self.orientation.selected:
+            if viewer_item['reference_data_label'] != self.orientation.selected:
                 viewer_item['reference_data_label'] = self.orientation.selected
 
     def _on_refdata_change(self, msg):
@@ -434,7 +437,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             if msg.data.label not in self.orientation.choices:
                 return
 
-            self.orientation.selected = msg.data.label
+            if msg.viewer_id == self.viewer.selected:
+                self.orientation.selected = msg.data.label
 
             # we never want to highlight subsets of pixels within WCS-only layers,
             # so if this layer is an ImageSubsetLayerState on a WCS-only layer,

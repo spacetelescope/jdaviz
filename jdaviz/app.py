@@ -2043,13 +2043,19 @@ class Application(VuetifyTemplate, HubListener):
         data = self.data_collection[data_label]
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
         if orientation_plugin is not None:
+            from jdaviz.configs.imviz.helper import base_wcs_layer_label
             orient = orientation_plugin.orientation.selected
+            if orient == data_label:
+                orient = base_wcs_layer_label
             self._reparent_subsets(data, new_parent=orient)
         else:
             self._reparent_subsets(data)
 
-        # Make sure the data isn't loaded in any viewers
-        for viewer_id in self._viewer_store:
+        # Make sure the data isn't loaded in any viewers and isn't the selected orientation
+        for viewer_id, viewer in self._viewer_store.items():
+            if orientation_plugin is not None and self._link_type == 'wcs':
+                if viewer.state.reference_data.label == data_label:
+                    self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
 
         self.data_collection.remove(self.data_collection[data_label])
