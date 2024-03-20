@@ -56,6 +56,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     viewer_format_items = List().tag(sync=True)
     viewer_format_selected = Unicode().tag(sync=True)
 
+    table_format_items = List().tag(sync=True)
+    table_format_selected = Unicode().tag(sync=True)
+
     filename = Unicode().tag(sync=True)
 
     # For Cubeviz movie.
@@ -89,6 +92,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    selected='viewer_format_selected',
                                                    manual_options=viewer_format_options)
 
+        # NOTE: see self.table.selected_obj.write.list_formats() for full list of options,
+        # although not all support passing overwrite
+        table_format_options = ['ecsv', 'csv', 'fits']
+        self.table_format = SelectPluginComponent(self,
+                                                  items='table_format_items',
+                                                  selected='table_format_selected',
+                                                  manual_options=table_format_options)
+
         # default selection:
         self.dataset._default_mode = 'empty'
         self.table._default_mode = 'empty'
@@ -104,7 +115,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
-        expose = ['viewer', 'viewer_format', 'table', 'filename', 'export']
+        expose = ['viewer', 'viewer_format',
+                  'table', 'table_format',
+                  'filename', 'export']
 
         if self.dev_dataset_support:
             expose += ['dataset']
@@ -188,8 +201,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
         elif len(self.table.selected):
-            if "." not in filename:
-                filename += ".ecsv"
+            filetype = self.table_format.selected
+            if not filename.endswith(filetype):
+                filename += f".{filetype}"
             self.table.selected_obj.export_table(filename, overwrite=True)
         else:
             raise ValueError("nothing selected for export")
