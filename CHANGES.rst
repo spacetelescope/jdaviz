@@ -47,6 +47,9 @@ Imviz
 
 - Add "Random" colormap for visualizing image segmentation maps. [#2671]
 
+- Enabling any matched zoom tool in a viewer disables other matched zoom tools in other viewers
+  to avoid recursion. [#2764]
+
 Mosviz
 ^^^^^^
 
