@@ -100,7 +100,7 @@
       </plugin-inline-select>
     </div>
 
-    <div v-if="dev_table_support && table_items.length > 0">
+    <div v-if="table_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Plugin Tables</j-plugin-section-header>
       <plugin-inline-select
         :items="table_items"
@@ -109,6 +109,18 @@
         :single_select_allow_blank="true"
       >
       </plugin-inline-select>
+      <v-row v-if="table_selected.length > 0" class="row-min-bottom-padding">
+        <v-select
+          :menu-props="{ left: true }"
+          attach
+          v-model="table_format_selected"
+          :items="table_format_items.map(i => i.label)"
+          label="Format"
+          hint="File format for exporting plugin tables."
+          persistent-hint
+        >
+        </v-select>
+      </v-row>
     </div>
 
     <div v-if="dev_plot_support && plot_items.length > 0">
@@ -121,6 +133,8 @@
       >
       </plugin-inline-select>
     </div>
+
+    <j-plugin-section-header style="margin-top: 12px">Export To</j-plugin-section-header>
 
     <v-row>
         <v-text-field

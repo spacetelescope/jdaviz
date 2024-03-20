@@ -177,9 +177,9 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
     # check a plot option with and without choices
     assert hasattr(po.stretch_preset, 'choices')
     assert len(po.stretch_preset.choices) > 1
-    assert "choices" in po.stretch_preset.__repr__()
+    assert "choices" in po.stretch_preset._obj.__repr__()
     assert not hasattr(po.image_contrast, 'choices')
-    assert "choices" not in po.image_contrast.__repr__()
+    assert "choices" not in po.image_contrast._obj.__repr__()
 
     # try setting with both label and value
     po.stretch_preset = 90

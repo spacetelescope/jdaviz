@@ -301,6 +301,11 @@ class Application(VuetifyTemplate, HubListener):
             if cur_cm not in colormaps.members:
                 colormaps.add(*cur_cm)
 
+        from jdaviz.core.events import PluginTableAddedMessage
+        self._plugin_tables = {}
+        self.hub.subscribe(self, PluginTableAddedMessage,
+                           handler=self._on_plugin_table_added)
+
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
 
@@ -365,6 +370,13 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_layers_changed)
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=self._on_layers_changed)
+
+    def _on_plugin_table_added(self, msg):
+        if msg.plugin._plugin_name is None:
+            # plugin was instantiated after the app was created, ignore
+            return
+        key = f"{msg.plugin._plugin_name}:{msg.table._table_name}"
+        self._plugin_tables.setdefault(key, msg.table.user_api)
 
     @property
     def hub(self):
@@ -2497,13 +2509,13 @@ class Application(VuetifyTemplate, HubListener):
 
                 optional_tray_kwargs[opt_kwarg] = opt_value
 
-            tray_item_instance = tray.get('cls')(
-                app=self, **optional_tray_kwargs
-            )
             # store a copy of the tray name in the instance so it can be accessed by the
             # plugin itself
             tray_item_label = tray.get('label')
-            tray_item_instance._plugin_name = tray_item_label
+
+            tray_item_instance = tray.get('cls')(
+                app=self, plugin_name=tray_item_label, **optional_tray_kwargs
+            )
 
             self.state.tray_items.append({
                 'name': name,

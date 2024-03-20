@@ -3,7 +3,7 @@ import astropy.units as u
 
 __all__ = ['UserApiWrapper', 'PluginUserApi', 'ViewerUserApi']
 
-_internal_attrs = ('_obj', '_expose', '_readonly', '__doc__', '_deprecation_msg')
+_internal_attrs = ('_obj', '_expose', '_items', '_readonly', '__doc__', '_deprecation_msg')
 
 
 class UserApiWrapper:
@@ -23,7 +23,7 @@ class UserApiWrapper:
         return self._expose
 
     def __repr__(self):
-        return self._obj.__repr__()
+        return f'<{self._obj.__class__.__name__} API>'
 
     def __eq__(self, other):
         return self._obj.__eq__(other)
@@ -81,6 +81,13 @@ class UserApiWrapper:
             return
 
         return setattr(self._obj, attr, value)
+
+    def _items(self):
+        for attr in self._expose:
+            try:
+                yield attr, self.__getattr__(attr)
+            except AttributeError:
+                continue
 
 
 class PluginUserApi(UserApiWrapper):

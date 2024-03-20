@@ -43,7 +43,9 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
-                                AddDataToViewerMessage, ChangeRefDataMessage)
+                                AddDataToViewerMessage, ChangeRefDataMessage,
+                                PluginTableAddedMessage, PluginTableModifiedMessage)
+
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
@@ -69,6 +71,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'DatasetSpectralSubsetValidMixin', 'SpectralContinuumMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
+           'PluginTableSelect', 'PluginTableSelectMixin',
            'NonFiniteUncertaintyMismatchMixin',
            'DatasetSelect', 'DatasetSelectMixin', 'DatasetMultiSelectMixin',
            'FileImportSelectPluginComponent', 'HasFileImportSelect',
@@ -357,6 +360,7 @@ class PluginTemplateMixin(TemplateMixin):
     previews_last_time = Float(0).tag(sync=True)
 
     def __init__(self, **kwargs):
+        self._plugin_name = kwargs.pop('plugin_name', None)
         self._viewer_callbacks = {}
         # _inactive_thread: thread checking for alive pings to control plugin_opened
         self._inactive_thread = None
@@ -1331,10 +1335,13 @@ class LayerSelect(SelectPluginComponent):
         default_text : str or None
             the text to show for no selection.  If not provided or None, no entry will be provided
             in the dropdown for no selection.
-        manual_options: list
+        manual_options : list
             list of options to provide that are not automatically populated by subsets.  If
             ``default`` text is provided but not in ``manual_options`` it will still be included as
             the first item in the list.
+        default_mode : str, optional
+            What mode to use when making the default selection.  Valid options: first, default_text,
+            empty.
         """
         super().__init__(plugin,
                          items=items,
@@ -1696,6 +1703,9 @@ class SubsetSelect(SelectPluginComponent):
             the first item in the list.
         filters : list
             list of strings (for built-in filters) or callables to filter to only valid options.
+        default_mode : str, optional
+            What mode to use when making the default selection.  Valid options: first, default_text,
+            empty.
         """
         super().__init__(plugin,
                          items=items,
@@ -2327,6 +2337,121 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
                                              multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
 
+class PluginTableSelect(SelectPluginComponent):
+    """
+    Plugin select for plugin table entries, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :attr:`selected_obj`
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``items`` (list of dicts with keys: label)
+    * ``selected`` (string)
+
+    Properties (in the object only):
+
+    * ``selected_obj``
+
+    Methods (in the object only):
+
+    * ``get_object``
+
+    To use in a plugin:
+
+    * create traitlets with default values
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+
+    Example template (label and hint are optional)::
+
+      <v-select
+        :items="table_items"
+        :selected.sync="table_selected"
+        label="Table"
+        hint="Select table."
+      />
+    """
+
+    def __init__(self, plugin, items, selected,
+                 multiselect=None,
+                 filters=['not_empty_table'],
+                 default_text=None, manual_options=[],
+                 default_mode='first'):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        multiselect : str
+            the name of the traitlet defining whether the dropdown should accept multiple selections
+        filters : list
+            list of strings (for built-in filters) or callables to filter to only valid options.
+        default_text : str or None
+            the text to show for no selection.  If not provided or None, no entry will be provided
+            in the dropdown for no selection.
+        manual_options: list
+            list of options to provide that are not automatically populated by datasets.  If
+            ``default`` text is provided but not in ``manual_options`` it will still be included as
+            the first item in the list.
+        default_mode : str, optional
+            What mode to use when making the default selection.  Valid options: first, default_text,
+            empty.
+        """
+        super().__init__(plugin, items=items, selected=selected,
+                         multiselect=multiselect, filters=filters,
+                         default_text=default_text, manual_options=manual_options,
+                         default_mode=default_mode)
+        self.hub.subscribe(self, PluginTableAddedMessage, handler=self._on_tables_changed)
+        self.hub.subscribe(self, PluginTableModifiedMessage, handler=self._on_tables_changed)
+        self._on_tables_changed()
+
+    @observe('filters')
+    def _on_tables_changed(self, *args):
+        manual_items = [{'label': label} for label in self.manual_options]
+        self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_tables.items()
+                                     if self._is_valid_item(v._obj)]
+        self._apply_default_selection()
+        # future improvement: only clear cache if the selected data entry was changed?
+        self._clear_cache(*self._cached_properties)
+
+    @cached_property
+    def selected_obj(self):
+        return self.plugin.app._jdaviz_helper.plugin_tables.get(self.selected)
+
+    def _is_valid_item(self, table):
+        def not_empty_table(table):
+            return len(table.items) > 0
+
+        return super()._is_valid_item(table, locals())
+
+
+class PluginTableSelectMixin(VuetifyTemplate, HubListener):
+    table_items = List().tag(sync=True)
+    table_selected = Any().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.table = PluginTableSelect(self,
+                                       'table_items',
+                                       'table_selected',
+                                        multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
+
+
 class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
     """
     Adds a traitlet tracking whether self.dataset and self.spectral_subset
@@ -2844,9 +2969,7 @@ class DatasetSelect(SelectPluginComponent):
     * :meth:`~SelectPluginComponent.select_default`
     * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
     * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
-    """
 
-    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``items`` (list of dicts with keys: label)
@@ -3977,9 +4100,16 @@ class Table(PluginSubcomponent):
     headers_avail = List([]).tag(sync=True)   # list of strings
     items = List().tag(sync=True)  # list of dictionaries, pass single dict to add_row
 
-    def __init__(self, plugin, *args, **kwargs):
+    def __init__(self, plugin, name='table', *args, **kwargs):
         self._qtable = None
+        self._table_name = name
         super().__init__(plugin, 'Table', *args, **kwargs)
+
+        plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
+
+    @property
+    def user_api(self):
+        return UserApiWrapper(self, ('clear_table', 'export_table'))
 
     def default_value_for_column(self, colname=None, value=None):
         if colname in self._default_values_by_colname:
@@ -4067,6 +4197,7 @@ class Table(PluginSubcomponent):
 
         # clean data to show in the UI
         self.items = self.items + [{k: json_safe(k, v) for k, v in item.items()}]
+        self._plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
 
     def __len__(self):
         return len(self.items)
@@ -4077,16 +4208,27 @@ class Table(PluginSubcomponent):
         """
         self.items = []
         self._qtable = None
+        self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
     def vue_clear_table(self, data=None):
         # if the plugin (or via the TableMixin) has its own clear_table implementation,
         # call that, otherwise call the one defined here
         getattr(self._plugin, 'clear_table', self.clear_table)()
 
-    def export_table(self):
+    def export_table(self, filename=None, overwrite=False):
         """
         Export the QTable representation of the table.
+
+        Parameters
+        ----------
+        filename : str, optional
+            If provided, will write to the file, otherwise will just return the QTable
+            object.
+        overwrite : bool, optional
+            If ``filename`` already exists, should it be overwritten.
         """
+        if filename is not None:
+            self._qtable.write(filename, overwrite=overwrite)
         # TODO: default to only showing selected columns?
         return self._qtable
 
@@ -4109,7 +4251,7 @@ class TableMixin(VuetifyTemplate, HubListener):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.table = Table(self)
+        self.table = Table(self, name='table')
         self.table_widget = 'IPY_MODEL_'+self.table.model_id
 
     def clear_table(self):
@@ -4123,11 +4265,19 @@ class TableMixin(VuetifyTemplate, HubListener):
         # (to also clear markers, etc)
         self.clear_table()
 
-    def export_table(self):
+    def export_table(self, filename=None, overwrite=False):
         """
         Export the QTable representation of the table.
+
+        Parameters
+        ----------
+        filename : str, optional
+            If provided, will write to the file, otherwise will just return the QTable
+            object.
+        overwrite : bool, optional
+            If ``filename`` already exists, should it be overwritten.
         """
-        return self.table.export_table()
+        return self.table.export_table(filename=filename, overwrite=overwrite)
 
 
 class Plot(PluginSubcomponent):

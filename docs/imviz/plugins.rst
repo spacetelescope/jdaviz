@@ -405,4 +405,7 @@ Due to browser limitations, Canvas Rotation is only available on Chromium-based 
 Export
 ======
 
-This plugin allows exporting the plot in a given viewer to a PNG or SVG file.
+This plugin allows exporting:
+
+* the plot in a given viewer to a PNG or SVG file,
+* a table in a plugin to ecsv

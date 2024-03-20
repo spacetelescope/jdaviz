@@ -7,7 +7,8 @@ from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginComponent,
                                         ViewerSelectMixin, DatasetMultiSelectMixin,
-                                        SubsetSelectMixin, MultiselectMixin, with_spinner)
+                                        SubsetSelectMixin, PluginTableSelectMixin,
+                                        MultiselectMixin, with_spinner)
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 
@@ -25,7 +26,7 @@ __all__ = ['Export']
 
 @tray_registry('export', label="Export")
 class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
-             DatasetMultiSelectMixin, MultiselectMixin):
+             DatasetMultiSelectMixin, PluginTableSelectMixin, MultiselectMixin):
     """
     See the :ref:`Export Plugin Documentation <imviz-export-plot>` for more details.
 
@@ -37,6 +38,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``viewer`` (:class:`~jdaviz.core.template_mixin.ViewerSelect`)
     * ``viewer_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``table`` (:class:`~jdaviz.core.template_mixin.PluginTableSelect`)
     * ``filename``
     * :meth:`export`
     """
@@ -45,18 +47,17 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # feature flag for cone support
     dev_dataset_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_subset_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
-    dev_table_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_plot_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_multi_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
-
-    table_items = List().tag(sync=True)
-    table_selected = Any().tag(sync=True)
 
     plot_items = List().tag(sync=True)
     plot_selected = Any().tag(sync=True)
 
     viewer_format_items = List().tag(sync=True)
     viewer_format_selected = Unicode().tag(sync=True)
+
+    table_format_items = List().tag(sync=True)
+    table_format_selected = Unicode().tag(sync=True)
 
     filename = Unicode().tag(sync=True)
 
@@ -70,13 +71,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.table = SelectPluginComponent(self,
-                                           items='table_items',
-                                           selected='table_selected',
-                                           multiselect='multiselect',
-                                           default_mode='empty',
-                                           manual_options=['table-tst1', 'table-tst2'])
 
         self.plot = SelectPluginComponent(self,
                                           items='plot_items',
@@ -98,8 +92,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    selected='viewer_format_selected',
                                                    manual_options=viewer_format_options)
 
+        # NOTE: see self.table.selected_obj.write.list_formats() for full list of options,
+        # although not all support passing overwrite
+        table_format_options = ['ecsv', 'csv', 'fits']
+        self.table_format = SelectPluginComponent(self,
+                                                  items='table_format_items',
+                                                  selected='table_format_selected',
+                                                  manual_options=table_format_options)
+
         # default selection:
         self.dataset._default_mode = 'empty'
+        self.table._default_mode = 'empty'
+        self.table.select_default()
         self.viewer.select_default()
         self.filename = f"{self.app.config}_export"
 
@@ -111,14 +115,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
-        expose = ['viewer', 'viewer_format', 'filename', 'export']
+        expose = ['viewer', 'viewer_format',
+                  'table', 'table_format',
+                  'filename', 'export']
 
         if self.dev_dataset_support:
             expose += ['dataset']
         if self.dev_subset_support:
             expose += ['subset']
-        if self.dev_table_support:
-            expose += ['table']
         if self.dev_plot_support:
             expose += ['plot']
         if self.dev_multi_support:
@@ -174,39 +178,47 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             raise NotImplementedError("dataset export not yet supported")
         if self.subset.selected is not None and len(self.subset.selected):
             raise NotImplementedError("subset export not yet supported")
-        if self.table.selected is not None and len(self.table.selected):
-            raise NotImplementedError("table export not yet supported")
         if self.plot.selected is not None and len(self.plot.selected):
             raise NotImplementedError("plot export not yet supported")
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
 
-        if not len(self.viewer.selected):
-            raise ValueError("no viewers selected to export")
-
-        viewer = self.viewer.selected_obj
         filename = filename if filename is not None else self.filename
-        filetype = self.viewer_format.selected
 
-        # at this point, we can assume only a single figure is selected
-        if len(filename):
+        # at this point, we can assume only a single export is selected
+        if len(self.viewer.selected):
+            viewer = self.viewer.selected_obj
+            filetype = self.viewer_format.selected
+            if len(filename):
+                if not filename.endswith(filetype):
+                    filename += f".{filetype}"
+                filename = Path(filename).expanduser()
+            else:
+                filename = None
+
+            if filetype == "mp4":
+                self.save_movie(viewer, filename, filetype)
+            else:
+                self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+        elif len(self.table.selected):
+            filetype = self.table_format.selected
             if not filename.endswith(filetype):
                 filename += f".{filetype}"
-            filename = Path(filename).expanduser()
+            self.table.selected_obj.export_table(filename, overwrite=True)
         else:
-            filename = None
-
-        if filetype == "mp4":
-            self.save_movie(viewer, filename, filetype)
-        else:
-            self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+            raise ValueError("nothing selected for export")
+        return filename
 
     def vue_export_from_ui(self, *args, **kwargs):
         try:
-            self.export(show_dialog=True)
+            filename = self.export(show_dialog=True)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export failed with: {e}", sender=self, color="error"))
+        else:
+            if filename is not None:
+                self.hub.broadcast(SnackbarMessage(
+                    f"Exported to {filename}", sender=self, color="success"))
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
         if filetype == "png":

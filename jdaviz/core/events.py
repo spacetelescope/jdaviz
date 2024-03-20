@@ -9,7 +9,8 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'TableClickMessage', 'LinkUpdatedMessage', 'ExitBatchLoadMessage',
            'AstrowidgetMarkersChangedMessage', 'MarkersPluginUpdate',
            'CanvasRotationChangedMessage',
-           'GlobalDisplayUnitChanged', 'ChangeRefDataMessage']
+           'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
+           'PluginTableAddedMessage', 'PluginTableModifiedMessage']
 
 
 class NewViewerMessage(Message):
@@ -419,3 +420,31 @@ class GlobalDisplayUnitChanged(Message):
     @property
     def unit(self):
         return u.Unit(self._unit)
+
+
+class PluginTableAddedMessage(Message):
+    '''Message generated when a plugin table is initialized'''
+    def __init__(self, sender):
+        super().__init__(sender)
+
+    @property
+    def table(self):
+        return self.sender
+
+    @property
+    def plugin(self):
+        return self.sender._plugin
+
+
+class PluginTableModifiedMessage(Message):
+    '''Message generated when the items in a plugin table are changed'''
+    def __init__(self, sender):
+        super().__init__(sender)
+
+    @property
+    def table(self):
+        return self.sender
+
+    @property
+    def plugin(self):
+        return self.sender._plugin

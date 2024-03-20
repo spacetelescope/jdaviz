@@ -164,7 +164,7 @@ def test_user_api(specviz2d_helper):
     pext.bg_sub_add_results = 'override label'
     assert pext.bg_sub_add_results.label == 'override label'
     pext.bg_sub_add_results.label = 'override label 2'
-    assert "override label 2" in pext.bg_sub_add_results.__repr__()
+    assert "override label 2" in pext.bg_sub_add_results._obj.__repr__()
     assert "override label 2" in pext.bg_sub_add_results._obj.auto_label.__repr__()
 
     pext.export_bg_sub(add_data=True)
