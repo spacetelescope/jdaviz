@@ -52,6 +52,7 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
 from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial_subset
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
+from jdaviz.core.registries import tray_registry
 from jdaviz.style_registry import PopoutStyleWrapper
 from jdaviz.utils import get_subset_type, is_wcs_only, is_not_wcs_only, _wcs_only_label
 
@@ -199,6 +200,11 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
 
+    def new(self):
+        new = self.__class__(app=self.app)
+        new._plugin_name = self._plugin_name
+        return new
+
     @property
     def app(self):
         """
@@ -345,6 +351,7 @@ class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
+    _plugin_name = None  # noqa overwritten by the registry - won't be populated by plugins instantiated directly
     disabled_msg = Unicode("").tag(sync=True)
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     docs_description = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
@@ -355,8 +362,9 @@ class PluginTemplateMixin(TemplateMixin):
     spinner = Bool(False).tag(sync=True)  # noqa use along-side @with_spinner() and <plugin-add-results :action_spinner="spinner">
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
+    supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
 
-    def __init__(self, **kwargs):
+    def __init__(self, app, **kwargs):
         self._viewer_callbacks = {}
         # _inactive_thread: thread checking for alive pings to control plugin_opened
         self._inactive_thread = None
@@ -372,7 +380,31 @@ class PluginTemplateMixin(TemplateMixin):
         # in repeated toggling of is_active.  To use, decorate any method that observes traitlet
         # changes (including is_active) with @skip_if_no_updates_since_last_active()
         self._methods_skip_since_last_active = []
-        super().__init__(**kwargs)
+
+        # get default viewer names from the helper, according to the requirements of the plugin
+        for registry_name, tray_item in tray_registry.members.items():
+            if tray_item['cls'] == self.__class__:
+                # If viewer reference names need to be passed to the tray item
+                # constructor, pass the names into the constructor in the format
+                # that the tray items expect.
+                tray_registry_options = tray_item.get('viewer_reference_name_kwargs', {})
+                for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
+                    opt_value = getattr(
+                        self, opt_attr, app._get_first_viewer_reference_name(**get_name_kwargs)
+                    )
+
+                    if opt_value is None:
+                        continue
+
+                    kwargs.setdefault(opt_kwarg, opt_value)
+
+                break
+
+        # requirements for auto-updating plugin results:
+        # * call method that can be run with no input arguments
+        self.supports_auto_update = hasattr(self, '__call__')
+
+        super().__init__(app=app, **kwargs)
 
     @property
     def user_api(self):
@@ -1725,6 +1757,9 @@ class SubsetSelect(SelectPluginComponent):
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda msg: self._delete_subset(msg.subset))
 
+        self._initialize_choices()
+
+    def _initialize_choices(self):
         # intialize any subsets that have already been created
         for lyr in self.app.data_collection.subset_groups:
             self._update_subset(lyr)
@@ -3000,7 +3035,7 @@ class DatasetSelect(SelectPluginComponent):
             return data.meta.get('Plugin', None) is None
 
         def not_from_this_plugin(data):
-            return data.meta.get('Plugin', None) != self.plugin.__class__.__name__
+            return data.meta.get('Plugin', None) != self.plugin._plugin_name
 
         def not_from_plugin_model_fitting(data):
             return data.meta.get('Plugin', None) != 'ModelFitting'
@@ -3244,9 +3279,7 @@ class AddResults(BasePluginComponent):
     * ``viewer`` (`ViewerSelect`):
         the viewer to add the results, or None to add the results to the data-collection but
         not load into a viewer.
-    """
 
-    """
     Traitlets (in the object, custom traitlets in the plugin):
 
     * ``label`` (string: user-provided label for the results data-entry.  If ``label_auto``, changes
@@ -3262,6 +3295,8 @@ class AddResults(BasePluginComponent):
     * ``add_to_viewer_items`` (list of dicts: see ``ViewerSelect``)
     * ``add_to_viewer_selected`` (string: name of the viewer to add the results,
         see ``ViewerSelect``)
+    * ``auto_update_result`` (bool: whether the resulting data-product should be regenerated when
+        any input arguments are changed)
 
 
     Methods:
@@ -3280,6 +3315,7 @@ class AddResults(BasePluginComponent):
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        :auto_update_result.sync="auto_update_result"
         action_label="Apply"
         action_tooltip="Apply the action to the data"
         @click:action="apply"
@@ -3290,12 +3326,14 @@ class AddResults(BasePluginComponent):
     def __init__(self, plugin, label, label_default, label_auto,
                  label_invalid_msg, label_overwrite,
                  add_to_viewer_items, add_to_viewer_selected,
+                 auto_update_result=None,
                  label_whitelist_overwrite=[]):
         super().__init__(plugin, label=label,
                          label_default=label_default, label_auto=label_auto,
                          label_invalid_msg=label_invalid_msg, label_overwrite=label_overwrite,
                          add_to_viewer_items=add_to_viewer_items,
-                         add_to_viewer_selected=add_to_viewer_selected)
+                         add_to_viewer_selected=add_to_viewer_selected,
+                         auto_update_result=auto_update_result)
 
         # DataCollectionAdd/Delete are fired even if remain unchecked in all viewers
         self.hub.subscribe(self, DataCollectionAddMessage,
@@ -3315,11 +3353,11 @@ class AddResults(BasePluginComponent):
         self.add_observe(label, self._on_label_changed)
 
     def __repr__(self):
-        return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}>"
+        return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}, auto_update_result={self.auto_update_result}>"  # noqa
 
     @property
     def user_api(self):
-        return UserApiWrapper(self, ('label', 'auto', 'viewer'))
+        return UserApiWrapper(self, ('label', 'auto', 'viewer', 'auto_update_result'))
 
     @property
     def label(self):
@@ -3361,7 +3399,7 @@ class AddResults(BasePluginComponent):
 
         for data in self.app.data_collection:
             if self.label == data.label:
-                if data.meta.get('Plugin', None) == self._plugin.__class__.__name__ or\
+                if data.meta.get('Plugin', None) == self._plugin._plugin_name or\
                         data.label in self.label_whitelist_overwrite:
                     self.label_invalid_msg = ''
                     self.label_overwrite = True
@@ -3429,9 +3467,17 @@ class AddResults(BasePluginComponent):
 
         if not hasattr(data_item, 'meta'):
             data_item.meta = {}
-        data_item.meta['Plugin'] = self._plugin.__class__.__name__
+        data_item.meta['Plugin'] = self.plugin._plugin_name
         if self.app.config == 'mosviz':
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
+
+        if self.auto_update_result:
+            data_item.meta['_update_live_plugin_results'] = self.plugin.user_api.to_dict()
+            def_subs = {'data': ('dataset',),
+                        'subset': ('spectral_subset', 'spatial_subset', 'subset', 'aperture')}
+            subscriptions = getattr(self.plugin, 'live_update_subscriptions', def_subs)
+            data_item.meta['_update_live_plugin_results']['_subscriptions'] = subscriptions
+
         self.app.add_data(data_item, label)
 
         for viewer_ref, visible, preserved in zip(add_to_viewer_refs, add_to_viewer_vis,
@@ -3481,6 +3527,7 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
         label_hint="Label for the smoothed data"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
+        :auto_update_result.sync="auto_update_result"
         action_label="Apply"
         action_tooltip="Apply the action to the data"
         @click:action="apply"
@@ -3496,12 +3543,15 @@ class AddResultsMixin(VuetifyTemplate, HubListener):
     add_to_viewer_items = List().tag(sync=True)
     add_to_viewer_selected = Unicode().tag(sync=True)
 
+    auto_update_result = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_results = AddResults(self, 'results_label',
                                       'results_label_default', 'results_label_auto',
                                       'results_label_invalid_msg', 'results_label_overwrite',
-                                      'add_to_viewer_items', 'add_to_viewer_selected')
+                                      'add_to_viewer_items', 'add_to_viewer_selected',
+                                      'auto_update_result')
 
 
 class PlotOptionsSyncState(BasePluginComponent):

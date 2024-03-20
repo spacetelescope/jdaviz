@@ -82,6 +82,31 @@ class UserApiWrapper:
 
         return setattr(self._obj, attr, value)
 
+    def to_dict(self):
+        def _value(item):
+            if hasattr(item, 'to_dict'):
+                return _value(item.to_dict())
+            if hasattr(item, 'selected'):
+                return item.selected
+            return item
+
+        return {k: _value(getattr(self, k)) for k in self._expose
+                if not hasattr(getattr(self, k), '__call__')
+                and k not in ('show_api_hints', 'keep_active')}
+
+    def from_dict(self, d):
+        # loop through expose so that plugins can dictate the order that items should be populated
+        for k in self._expose:
+            if k not in d:
+                continue
+            v = d.get(k)
+            if hasattr(getattr(self, k), '__call__'):
+                raise ValueError(f"cannot overwrite callable {k}")
+            if hasattr(getattr(self, k), 'from_dict') and isinstance(v, dict):
+                getattr(self, k).from_dict(v)
+            else:
+                setattr(self, k, v)
+
 
 class PluginUserApi(UserApiWrapper):
     """
