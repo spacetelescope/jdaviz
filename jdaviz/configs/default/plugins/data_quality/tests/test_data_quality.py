@@ -1,6 +1,11 @@
 import os
 import tempfile
 import pytest
+import numpy as np
+
+from stdatamodels.jwst.datamodels.dqflags import pixel as pixel_jwst
+
+from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.configs.default.plugins.data_quality.dq_utils import (
     load_flag_map, write_flag_map
 )
@@ -34,3 +39,38 @@ def test_load_write_load():
         # confirm all values round-trip successfully:
         for flag, orig_value in flag_map.items():
             assert orig_value == reloaded_flag_map[flag]
+
+
+def test_jwst_against_stdatamodels():
+    # compare our flag map against the flag map dictionary in `stdatamodels`:
+    flag_map_loaded = load_flag_map('jwst')
+
+    flag_map_expected = {
+        int(np.log2(flag)): {'name': name}
+        for name, flag in pixel_jwst.items() if flag > 0
+    }
+
+    # check no keys are missing in either flag map:
+    assert len(set(flag_map_loaded.keys()) - set(flag_map_expected.keys())) == 0
+
+    for flag in flag_map_expected:
+        assert flag_map_loaded[flag]['name'] == flag_map_expected[flag]['name']
+
+
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
+def test_roman_against_rdm():
+    # compare our flag map against the flag map dictionary in `roman_datamodels`:
+    from roman_datamodels.dqflags import pixel as pixel_roman
+
+    flag_map_loaded = load_flag_map('roman')
+
+    flag_map_expected = {
+        int(np.log2(p.value)): {'name': p.name}
+        for p in pixel_roman if p.value > 0
+    }
+
+    # check no keys are missing in either flag map:
+    assert len(set(flag_map_loaded.keys()) - set(flag_map_expected.keys())) == 0
+
+    for flag in flag_map_expected:
+        assert flag_map_loaded[flag]['name'] == flag_map_expected[flag]['name']
