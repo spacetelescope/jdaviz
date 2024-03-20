@@ -79,13 +79,6 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
         return PluginUserApi(self, expose=('dataset', 'function', 'spectral_subset',
                                            'add_results', 'collapse'))
 
-    @property
-    def live_update_subscriptions(self):
-        return {'data': ('dataset',), 'subset': ('spectral_subset',)}
-
-    def __call__(self, add_data=True):
-        return self.collapse(add_data=add_data)
-
     @observe("dataset_selected", "dataset_items")
     def _set_default_results_label(self, event={}):
         label_comps = []
