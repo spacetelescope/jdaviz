@@ -477,10 +477,13 @@ class Application(VuetifyTemplate, HubListener):
             layer_name = msg.data.label
             is_wcs_only = msg.data.meta.get(_wcs_only_label, False)
             is_not_child = self._get_assoc_data_parent(layer_name) is None
+            children_layers = self._get_assoc_data_children(layer_name)
+
         elif hasattr(msg, 'subset'):
             layer_name = msg.subset.label
             is_wcs_only = False
             is_not_child = True
+            children_layers = []
         else:
             raise NotImplementedError(f"cannot recognize new layer from {msg}")
 
@@ -504,15 +507,18 @@ class Application(VuetifyTemplate, HubListener):
                 }
 
         # all remaining layers at this point have a parent:
+        child_layer_icons = {}
         for layer_name in self.state.layer_icons:
             children_layers = self._get_assoc_data_children(layer_name)
             if children_layers is not None:
                 parent_icon = self.state.layer_icons[layer_name]
                 for i, child_layer in enumerate(children_layers, start=1):
-                    self.state.layer_icons = {
-                        **self.state.layer_icons,
-                        child_layer: f'{parent_icon}{i}'
-                    }
+                    child_layer_icons[child_layer] = f'{parent_icon}{i}'
+
+        self.state.layer_icons = {
+            **self.state.layer_icons,
+            **child_layer_icons
+        }
 
     def _change_reference_data(self, new_refdata_label, viewer_id=None):
         """
