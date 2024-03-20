@@ -52,7 +52,7 @@
 
     <slot></slot>
 
-    <v-row>
+    <v-row v-if="auto_update_result !== undefined">
       <v-switch
         v-model="auto_update_result"
         @change="(e) => {$emit('update:auto_update_result', auto_update_result)}"
