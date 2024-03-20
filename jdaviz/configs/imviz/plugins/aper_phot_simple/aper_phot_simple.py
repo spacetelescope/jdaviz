@@ -316,11 +316,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 data = self.dataset.selected_dc_item
 
         comp = data.get_component(data.main_components[0])
+        if self.config == "cubeviz" and data.ndim > 2:
+            if "spectral_axis_index" in getattr(data, "meta", {}) :
+                spectral_axis_index = data.meta["spectral_axis_index"]
+            else:
+                spectral_axis_index = 0
 
         if self.config == "cubeviz" and data.ndim > 2:
-            if ("spectral_axis_index" in getattr(comp.data, "meta", {}) and
-                    comp.data.meta["spectral_axis_index"] == 0):
-                print("Got here")
+            if spectral_axis_index == 0:
                 comp_data = comp.data[self._cubeviz_slice_ind, :, :]
             else:
                 comp_data = comp.data[:, :, self._cubeviz_slice_ind].T  # nx, ny --> ny, nx
@@ -405,6 +408,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # we can use the pre-cached value
             data = self.dataset.selected_dc_item
 
+        if self.config == "cubeviz" and data.ndim > 2:
+            if "spectral_axis_index" in getattr(data, "meta", {}) :
+                spectral_axis_index = data.meta["spectral_axis_index"]
+            else:
+                spectral_axis_index = 0
+
         if aperture is not None:
             if aperture not in self.aperture.choices:
                 raise ValueError(f"aperture must be one of {self.aperture.choices}")
@@ -452,8 +461,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError('Missing or invalid background value')
 
         if self.config == "cubeviz" and data.ndim > 2:
-            if ("spectral_axis_index" in getattr(comp.data, "meta", {}) and
-                    comp.data.meta["spectral_axis_index"] == 0):
+            if spectral_axis_index == 0:
                 comp_data = comp.data[self._cubeviz_slice_ind, :, :]
             else:
                 comp_data = comp.data[:, :, self._cubeviz_slice_ind].T  # nx, ny --> ny, nx
