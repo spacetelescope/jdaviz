@@ -960,7 +960,8 @@ class PlotOptions(PluginTemplateMixin):
             # don't update histogram for subsets:
             return
 
-        comp = data.get_component(layer.state.attribute)
+        # Integer giving the max number of values to use for the randomized statistics.
+        random_subset = 160_000
 
         # TODO: further optimization could be done by caching sub_data
         if self.stretch_hist_zoom_limits and (not self.layer_multiselect or len(self.layer_selected) == 1):  # noqa
@@ -974,8 +975,7 @@ class PlotOptions(PluginTemplateMixin):
                 y_min = max(y_limits.min(), 0)
                 y_max = y_limits.max()
 
-                arr = comp.data[y_min:y_max, x_min:x_max]
-                sub_data = arr.ravel()
+                inds = np.s_[y_min:y_max, x_min:x_max]
 
             else:
                 # spectrum-2d-viewer, for example.  We'll assume the viewer
@@ -992,12 +992,19 @@ class PlotOptions(PluginTemplateMixin):
                                 (y_data >= viewer.state.y_min) &
                                 (y_data <= viewer.state.y_max))
 
-                sub_data = comp.data[inds].ravel()
-
         else:
             # include all data, regardless of zoom limits
-            arr = comp.data
-            sub_data = arr.ravel()
+            inds = np.s_[None]
+
+        comp = data.get_data(layer.state.attribute, view=inds)
+        arr_size = comp.size
+
+        if arr_size > random_subset:
+            # FIXME: Does not work. Takes too long on 8GB data.
+            random_subset_histogram_indices = np.random.randint(0, arr_size, random_subset)
+            sub_data = comp.ravel(order="K")[random_subset_histogram_indices]
+        else:
+            sub_data = comp.ravel()
 
         # filter out nans (or else bqplot will fail)
         if np.any(np.isnan(sub_data)):
