@@ -318,7 +318,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         comp = data.get_component(data.main_components[0])
 
         if self.config == "cubeviz" and data.ndim > 2:
-            comp_data = comp.data[:, :, self._cubeviz_slice_ind].T  # nx, ny --> ny, nx
+            if ("spectral_axis_index" in getattr(comp.data, "meta", {}) and
+                    comp.data.meta["spectral_axis_index"] == 0):
+                print("Got here")
+                comp_data = comp.data[self._cubeviz_slice_ind, :, :]
+            else:
+                comp_data = comp.data[:, :, self._cubeviz_slice_ind].T  # nx, ny --> ny, nx
             # Similar to coords_info logic.
             if '_orig_spec' in getattr(data, 'meta', {}):
                 w = data.meta['_orig_spec'].wcs.celestial
@@ -447,7 +452,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError('Missing or invalid background value')
 
         if self.config == "cubeviz" and data.ndim > 2:
-            comp_data = comp.data[:, :, self._cubeviz_slice_ind].T  # nx, ny --> ny, nx
+            if ("spectral_axis_index" in getattr(comp.data, "meta", {}) and
+                    comp.data.meta["spectral_axis_index"] == 0):
+                comp_data = comp.data[self._cubeviz_slice_ind, :, :]
+            else:
+                comp_data = comp.data[:, :, self._cubeviz_slice_ind].T  # nx, ny --> ny, nx
             # Similar to coords_info logic.
             if '_orig_spec' in getattr(data, 'meta', {}):
                 w = data.meta['_orig_spec'].wcs
