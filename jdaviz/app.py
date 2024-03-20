@@ -1283,10 +1283,12 @@ class Application(VuetifyTemplate, HubListener):
             The name associated with this data. If none is given, label is pulled
             from the input data (if `~glue.core.data.Data`) or a generic name is
             generated.
-        notify_done: bool
+        notify_done : bool
             Flag controlling whether a snackbar message is set when the data is
             added to the app. Set to False to avoid overwhelming the user if
             lots of data is getting loaded at once.
+        parent : str, optional
+            Associate the added Data entry as the child of layer ``parent``.
         """
 
         if not data_label and hasattr(data, "label"):
@@ -1300,6 +1302,13 @@ class Application(VuetifyTemplate, HubListener):
         # manage associated Data entries:
         self._add_assoc_data_as_parent(data_label)
         if parent is not None:
+            # Does the parent Data have a parent? If so, raise error:
+            parent_of_parent = self._get_assoc_data_parent(parent)
+            if parent_of_parent is not None:
+                raise NotImplementedError('Data associations are currently supported '
+                                          'between root layers (without parents) and their '
+                                          f'children, but the proposed parent "{parent}" has '
+                                          f'parent "{parent_of_parent}".')
             self._set_assoc_data_as_child(data_label, new_parent_label=parent)
 
         # Send out a toast message

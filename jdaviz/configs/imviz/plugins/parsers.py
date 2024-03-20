@@ -189,7 +189,6 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
 
         # TODO: generalize/centralize this for use in other configs too
         if parent is not None and ext == 'DQ':
-            print('data', data.main_components)
             # nans are used to mark "good" flags in the DQ colormap, so
             # convert DQ array to float to support nans:
             cid = data.get_component("DQ")

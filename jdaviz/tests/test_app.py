@@ -184,3 +184,7 @@ def test_data_associations(imviz_helper):
 
     assert imviz_helper.app._get_assoc_data_children('parent_data') == ['child_data']
     assert imviz_helper.app._get_assoc_data_parent('child_data') == 'parent_data'
+
+    with pytest.raises(NotImplementedError):
+        # we don't (yet) allow children of children:
+        imviz_helper.load_data(data_child, data_label='grandchild_data', parent='child_data')
