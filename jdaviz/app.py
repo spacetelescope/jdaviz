@@ -2604,6 +2604,10 @@ class Application(VuetifyTemplate, HubListener):
 
             tray_item_instance = tray.get('cls')(app=self)
 
+            # store a copy of the tray name in the instance so it can be accessed by the
+            # plugin itself
+            tray_item_label = tray.get('label')
+
             # NOTE: is_relevant is later updated by observing irrelevant_msg traitlet
             self.state.tray_items.append({
                 'name': name,

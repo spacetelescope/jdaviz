@@ -395,6 +395,7 @@ class PluginTemplateMixin(TemplateMixin):
         # get default viewer names from the helper, according to the requirements of the plugin
         for registry_name, tray_item in tray_registry.members.items():
             if tray_item['cls'] == self.__class__:
+                self._plugin_name = tray_item['label']
                 # If viewer reference names need to be passed to the tray item
                 # constructor, pass the names into the constructor in the format
                 # that the tray items expect.
@@ -3344,6 +3345,8 @@ class DatasetSelect(SelectPluginComponent):
             return data.meta.get('Plugin', None) is None
 
         def not_from_this_plugin(data):
+            if self.plugin._plugin_name is None:
+                return True
             return data.meta.get('Plugin', None) != self.plugin._plugin_name
 
         def not_from_plugin_model_fitting(data):
@@ -3786,7 +3789,7 @@ class AddResults(BasePluginComponent):
         if self.app.config == 'mosviz':
             data_item.meta['mosviz_row'] = self.app.state.settings['mosviz_row']
 
-        if self.auto_update_result:
+        if getattr(self, 'auto_update_result', False):
             data_item.meta['_update_live_plugin_results'] = self.plugin.user_api.to_dict()
             def_subs = {'data': ('dataset',),
                         'subset': ('spectral_subset', 'spatial_subset', 'subset', 'aperture')}

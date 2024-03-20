@@ -4,15 +4,14 @@ from astropy.nddata import CCDData
 from astropy import units as u
 from specutils import Spectrum1D
 
-from jdaviz.configs.default.plugins.collapse.collapse import Collapse
-
 
 @pytest.mark.filterwarnings('ignore')
 def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
     dc = cubeviz_helper.app.data_collection
 
-    coll = Collapse(app=cubeviz_helper.app)
+    # TODO: this now fails when instantiating Collapse after initialization
+    coll = cubeviz_helper.plugins['Collapse']._obj
 
     coll.selected_data_item = 'Unknown spectrum object[FLUX]'
     coll.dataset_selected = 'Unknown spectrum object[FLUX]'
