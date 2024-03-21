@@ -382,7 +382,7 @@ def test_unit_translation(cubeviz_helper):
     w = WCS(wcs_dict)
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.Jy / u.pix, wcs=w, meta=wcs_dict)
+    cube = Spectrum1D(flux=flux * u.MJy / u.pix, wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     center = PixCoord(5, 10)
@@ -409,12 +409,12 @@ def test_unit_translation(cubeviz_helper):
 
     assert collapsed_spec._unit == u.MJy / u.sr
     # some value in MJy/sr that we know the outcome after translation
-    assert np.allclose(collapsed_spec._data[0], 8751.653)
+    assert np.allclose(collapsed_spec._data[0], 8.7516529e10)
 
     extract_plg._obj.translate_units(collapsed_spec)
 
     # translating again returns the original units
-    assert collapsed_spec._unit == u.Jy / u.pix
+    assert collapsed_spec._unit == u.MJy / u.pix
     # returns to the original values
     # which is a value in Jy/pix that we know the outcome after translation
     assert np.allclose(collapsed_spec._data[0], mjy_sr_data1)

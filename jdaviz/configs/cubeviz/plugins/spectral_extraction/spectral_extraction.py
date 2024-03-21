@@ -347,7 +347,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
         if 'PIXAR_SR' in spectral_cube.meta:
-            pix_scale_factor = self.aperture.scale_factor * 10e6 * spectral_cube.meta['PIXAR_SR']
+            pix_scale_factor = self.aperture.scale_factor * spectral_cube.meta['PIXAR_SR']
             collapsed_spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         return collapsed_spec
@@ -528,13 +528,24 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mark.visible = True
 
     def translate_units(self, collapsed_spec):
-        # MJy/sr -> Jy/pix
-        if collapsed_spec._unit == u.MJy / u.sr:
+        sb_to_flux = {
+            u.MJy / u.sr: u.MJy / u.pix,
+            u.Jy / u.sr: u.Jy / u.pix,
+            u.erg / (u.cm**2*u.s*u.AA*u.sr): u.erg / (u.cm**2*u.s*u.AA),
+            u.erg / (u.s*u.cm**2*u.sr): u.erg / (u.s*u.cm**2),
+            u.W / (u.m**2*u.Hz*u.sr): u.W / (u.m**2*u.Hz)
+        }
+
+        flux_to_sb = {value: key for key, value in sb_to_flux.items()}
+
+        # remove sr
+        if collapsed_spec._unit in sb_to_flux:
             collapsed_spec._data *= collapsed_spec.meta['_pixel_scale_factor']
-            collapsed_spec._unit = u.Jy / u.pix
-        # Jy/pix -> MJy/sr
-        elif collapsed_spec._unit == u.Jy / u.pix:
+            collapsed_spec._unit = sb_to_flux[collapsed_spec._unit]
+        # add sr
+        elif collapsed_spec._unit in flux_to_sb:
             collapsed_spec._data /= collapsed_spec.meta['_pixel_scale_factor']
-            collapsed_spec._unit = u.MJy / u.sr
+            collapsed_spec._unit = flux_to_sb[collapsed_spec._unit]
         else:
-            raise ValueError(f"Units '{collapsed_spec._unit}' are not MJy/sr nor Jy/pix.")
+            raise ValueError(f"Units '{collapsed_spec._unit}'"
+                             f"are unrecognized surface brightness or flux units.")
