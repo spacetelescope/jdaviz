@@ -45,7 +45,7 @@ def load_flag_map(mission_or_instrument=None, path=None):
 
     flag_mapping = {}
     for flag, name, desc in flag_table.iterrows():
-        flag_mapping[flag] = dict(name=name, description=desc)
+        flag_mapping[int(flag)] = dict(name=name, description=desc)
 
     return flag_mapping
 
@@ -77,7 +77,7 @@ def write_flag_map(flag_mapping, csv_path, **kwargs):
     table.write(csv_path, format='ascii.csv', **kwargs)
 
 
-def generate_listed_colormap(n_flags, seed=42):
+def generate_listed_colormap(n_flags=None, seed=3):
     """
     Generate a list of random "light" colors of length ``n_flags``.
 
@@ -103,14 +103,14 @@ def generate_listed_colormap(n_flags, seed=42):
     # Generate random colors that are generally "light", i.e. with
     # RGB values in the upper half of the interval (0, 1):
     rgba_colors = [
-        tuple(rng.uniform(low=0.5, high=1, size=3).tolist() + [default_alpha])
+        tuple(np.insert(rng.uniform(size=2), rng.integers(0, 3), 1).tolist() + [default_alpha])
         for _ in range(n_flags)
     ]
 
     cmap = ListedColormap(rgba_colors)
 
     # setting `bad` alpha=0 will make NaNs transparent:
-    cmap.set_bad(alpha=0)
+    cmap.set_bad(color='k', alpha=0)
     return cmap, rgba_colors
 
 

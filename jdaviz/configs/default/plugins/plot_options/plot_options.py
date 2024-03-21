@@ -115,9 +115,60 @@ class SplineStretch:
         self.spline = PchipInterpolator(self._x, self._y)
 
 
+class LookupStretch:
+    """
+    Stretch class specific to DQ arrays.
+
+    Attributes
+    ----------
+    flags : array-like
+        DQ flags.
+    """
+
+    def __init__(self, flags=None):
+        # Default x, y values(0-1) range chosen for a typical initial spline shape.
+        # Can be modified if required.
+        if flags is None:
+            flags = np.linspace(0, 1, 5)
+        self.flags = np.asarray(flags)
+
+    def __call__(self, values, out=None, clip=False):
+        # For our uses, we can ignore `out` and `clip`, but those would need
+        # to be implemented before contributing this class upstream.
+
+        # find closest index in `self.flags` for each value in `values`:
+        if hasattr(values, 'squeeze'):
+            values = values.squeeze()
+
+        # renormalize the flags on range (0, 1):
+        scaled_flags = self.flags / np.max(self.flags)
+
+        # `values` will have already been passed through
+        # astropy.visualization.ManualInterval and normalized on (0, 1)
+        # before they arrive here. Now find the index of the closest entry in
+        # `scaled_flags` for each of `values` using array broadcasting.
+        min_indices = np.argmin(np.abs(
+            np.nan_to_num(values, nan=-10).flatten()[None, :] - scaled_flags[:, None]
+        ), axis=0).reshape(values.shape)
+
+        # normalize by the number of flags, onto interval (0, 1):
+        renormed = min_indices / (len(self.flags) - 1)
+
+        # preserve nans in the result:
+        renormed = np.where(
+            np.isnan(values),
+            np.nan,
+            renormed
+        )
+        return renormed
+
+
 # Add the spline stretch to the glue stretch registry if not registered
 if "spline" not in stretches:
     stretches.add("spline", SplineStretch, display="Spline")
+
+if "lookup" not in stretches:
+    stretches.add("lookup", LookupStretch, display="DQ")
 
 
 def _round_step(step):
