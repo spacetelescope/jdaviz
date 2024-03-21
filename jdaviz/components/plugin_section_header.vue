@@ -1,5 +1,5 @@
 <template>
-  <div :class="active ? 'strike strike-active': 'strike'">
+    <div :class="['strike', active ? ($vuetify.theme.dark ? 'strike-active-dark' : 'strike-active-light') : '']">
      <span>
        <slot></slot>
      </span>
@@ -40,9 +40,14 @@ module.exports = {
     background: gray;
 }
 
-.strike-active > span:before,
-.strike-active > span:after {
-    background: #c75d2c;  /* active orange */
+.strike-active-light > span:before,
+.strike-active-light > span:after {
+    background: #c75d2c;  /* light mode accent orange */
+}
+
+.strike-active-dark > span:before,
+.strike-active-dark > span:after {
+    background: #FF9D42;  /* dark mode accent orange */
 }
 
 .strike > span:before {

@@ -103,8 +103,8 @@
             <j-tooltip :tooltipcontent="'specutils '+item.function+' documentation'">
               <a v-bind:href="'https://specutils.readthedocs.io/en/stable/api/specutils.analysis.'+item.function.toLowerCase().replaceAll(' ', '_')+'.html'" 
                 target="__blank" 
-                style="color: #A75000">
-                <v-icon x-small color="#A75000">mdi-open-in-new</v-icon>
+                :style="{color: themeAccentColor}">
+                <v-icon x-small :color="themeAccentColor">mdi-open-in-new</v-icon>
               </a> 
             </j-tooltip>
           </v-col>
@@ -190,3 +190,13 @@
     </div>  
   </j-tray-plugin>
 </template>
+
+<script>
+module.exports = {
+  computed: {
+    themeAccentColor() {
+      return this.$vuetify.theme.dark ? this.$vuetify.theme.themes.dark.accent : this.$vuetify.theme.themes.light.accent;
+    }
+  }
+}
+</script>

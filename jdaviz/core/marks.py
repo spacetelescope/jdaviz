@@ -6,6 +6,7 @@ from bqplot.marks import Lines, Label, Scatter
 from copy import deepcopy
 from glue.core import HubListener
 from specutils import Spectrum1D
+import ipyvuetify as v
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
@@ -20,7 +21,7 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark', 'FootprintOverlay',
            'ApertureMark', 'SpectralExtractionPreview']
 
-accent_color = "#c75d2c"
+accent_color = "#FF9D42" if v.theme.dark_effective else "#c75d2c"
 
 
 class OffscreenLinesMarks(HubListener):
@@ -343,15 +344,22 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
             self._update_label()
 
     def _update_colors_opacities(self):
+        dark_accent = "#FF9D42"
+        light_accent = "#C75109"
+        dark_primary = "#53CBFF"
+        light_primary = "#00617E"
         # orange (accent) if active, import button blue otherwise (see css in main_styles.vue)
         if not self._show_if_inactive and not self._active:
             self.label.visible = False
             self.visible = False
             return
-
         self.visible = True
         self.label.visible = self._show_value
-        self.colors = ["#c75109" if self._active else "#007BA1"]
+        if self._active:
+            self.colors = [dark_accent if v.theme.dark_effective else light_accent]
+        else:
+            self.colors = [dark_primary if v.theme.dark_effective else light_primary]
+
         self.opacities = [1.0 if self._active else 0.9]
 
     def _on_change_state(self, msg={}):

@@ -17,7 +17,7 @@
                     'width': '100%',
                     'height': !state.settings.dense_toolbar ? 'calc(100% - 64px)' : 'calc(100% - 48px)',
                     'overflow-y': 'scroll',
-                    'border-top': '6px solid #C75109',
+                    'border-top': '6px solid ${themeAccentColor}',
                     'padding-left': '15%',
                     'padding-top': '20px'}"
             @click="state.logger_overlay = false">
@@ -100,7 +100,7 @@
               </gl-row>
             </golden-layout>
           </pane>
-          <pane size="25" min-size="25" v-if="state.drawer" style="background-color: #fafbfc; border-top: 6px solid #C75109; min-width: 250px">
+          <pane size="25" min-size="25" v-if="state.drawer" :style="{'background-color': '#fafbfc', 'border-top': `6px solid ${themeAccentColor}`, 'min-width': '250px'}">
             <v-card flat tile class="overflow-y-auto fill-height" style="overflow-x: hidden" color="gray">
               <v-text-field
                 v-model='state.tray_items_filter'
@@ -187,6 +187,11 @@ export default {
     const jpOutputElem = this.$refs.mainapp.$el.closest('.jp-OutputArea-output');
     if (jpOutputElem) {
       jpOutputElem.classList.remove('jupyter-widgets');
+    }
+  },
+  computed: {
+    themeAccentColor() {
+      return this.$vuetify.theme.dark ? this.$vuetify.theme.themes.dark.accent : this.$vuetify.theme.themes.light.accent;
     }
   }
 };

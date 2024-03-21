@@ -1,8 +1,8 @@
 <template>
   <v-btn :disabled="spinner || disabled"
     text
-    :color="results_isolated_to_plugin ? 'primary' : 'accent'"
-    @click="$emit('click')"
+      :color="buttonColor"
+      @click="$emit('click')"
   >
     <v-progress-circular
       v-if="spinner"
@@ -19,6 +19,19 @@
 
 <script>
 module.exports = {
-  props: ['spinner', 'disabled', 'results_isolated_to_plugin']
+  props: ['spinner', 'disabled', 'results_isolated_to_plugin'],
+  computed: {
+    buttonColor() {
+      if (this.results_isolated_to_plugin) {
+        return this.$vuetify.theme.dark
+          ? this.$vuetify.theme.themes.dark.primary
+          : this.$vuetify.theme.themes.light.primary;
+      } else {
+        return this.$vuetify.theme.dark
+          ? this.$vuetify.theme.themes.dark.accent
+          : this.$vuetify.theme.themes.light.accent;
+      }
+    }
+  }
 };
 </script>

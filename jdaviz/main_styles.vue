@@ -19,9 +19,9 @@ export default {
     };
     this.$vuetify.theme.themes.dark = {
       toolbar: "#153A4B",
-      primary: "#00617E",
+      primary: "#53CBFF",
       secondary: "#007DA4",
-      accent: "#C75109",
+      accent: "#FF9D42",
       turquoise: "#007BA1",
       lightblue: "#E3F2FD",
       spinner: "#ACE1FF",
@@ -205,12 +205,22 @@ a:active {
 
 .jdaviz-nested-toolbar .v-btn--active, .jdaviz-nested-toolbar .v-btn:focus, .v-toolbar .active, .jdaviz-viewer-toolbar .active {
   /* active color (orange) */
-  background-color: #c75109 !important;
+  background-color: #c75109 ;
+}
+
+.theme--dark .jdaviz-nested-toolbar .v-btn--active, .theme--dark .jdaviz-nested-toolbar.theme--dark .v-btn:focus, .theme--dark .v-toolbar .active, .theme--dark .jdaviz-viewer-toolbar .active {
+  /* active color (orange) */
+  background-color: #FF9D42 !important;
 }
 
 .plugin-nested-toolbar .v-btn--active, .plugin-nested-toolbar .v-btn:focus {
   /* semi-transparent active color (orange) */
-  background-color: #c7510996 !important;
+  background-color: #c75109;
+}
+
+.theme--dark .plugin-nested-toolbar .v-btn--active, .theme--dark .plugin-nested-toolbar .v-btn:focus{
+  /* semi-transparent active color (orange) */
+  background-color: #FF9D42 !important;
 }
 
 .v-divider.theme--dark {

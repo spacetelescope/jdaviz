@@ -41,7 +41,7 @@
         :step="rs_slider_step"
         color="#00617E"
         track-color="#00617E"
-        thumb-color="#153A4B"
+        thumb-color="turquoise"
         hide-details
         :disabled="!rs_enabled"
       >
@@ -411,7 +411,7 @@
       this.throttledSetColor = _.throttle(
         (v) => { this.set_color(v) },
         100);
-    }
+  }
   }
 </script>
 
