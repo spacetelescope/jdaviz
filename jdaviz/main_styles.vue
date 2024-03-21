@@ -19,9 +19,9 @@ export default {
     };
     this.$vuetify.theme.themes.dark = {
       toolbar: "#153A4B",
-      primary: "#00617E",
+      primary: "#53CBFF",
       secondary: "#007DA4",
-      accent: "#C75109",
+      accent: "#FF9D42",
       turquoise: "#007BA1",
       lightblue: "#E3F2FD",
       spinner: "#ACE1FF",
