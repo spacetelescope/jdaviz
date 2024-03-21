@@ -16,6 +16,9 @@ try to adhere to the following principles:
   To enable the "Keep active" check, pass `` :uses_active_status="uses_active_status" @plugin-ping="plugin_ping($event)" :keep_active.sync="keep_active" ``.
   Any changes to style across all plugins should then take place in the
   ``j-tray-plugin`` stylesheet (``jdaviz/components/tray_plugin.vue``).
+* ``disabled_msg`` should be set to replace the UI with a message explaining why the plugin is disabled.
+  ``irrelevant_msg`` should be set to skip the plugin in the UI entirely where the user would not need an explanation (slice plugin not
+  relevant because cube data is not present, for example).
 * Each item should be wrapped in a ``v-row``, but avoid any unnecessary additional wrapping-components
   (``v-card-*``, ``v-container``, etc).
 * Only use ``v-col`` components (within a ``<v-row class="row-no-outside-padding">``) if multiple
@@ -71,6 +74,11 @@ try to adhere to the following principles:
       <j-tray-plugin
         :description="docs_description || 'Plugin description.'"
         :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plugin-name'"
+        :irrelevant_msg="irrelevant_msg"
+        :disabled_msg="disabled_msg"
+        :uses_active_status="uses_active_status"
+        @plugin-ping="plugin_ping($event)"
+        :keep_active.sync="keep_active"
         :popout_button="popout_button">
 
         <v-row>

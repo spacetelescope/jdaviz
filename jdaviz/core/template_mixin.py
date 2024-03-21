@@ -348,7 +348,8 @@ class PluginTemplateMixin(TemplateMixin):
     """
     This base class can be inherited by all sidebar/tray plugins to expose common functionality.
     """
-    disabled_msg = Unicode("").tag(sync=True)
+    disabled_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will show this message in place of plugin content
+    irrelevant_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will exclude from the tray, and show this message in place of any content in other instances
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     docs_description = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)
@@ -383,6 +384,14 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
+
+    @observe('irrelevant_msg')
+    def _irrelevant_msg_changed(self, *args):
+        labels = [ti['label'] for ti in self.app.state.tray_items]
+        if self._registry_label not in labels:
+            return
+        index = labels.index(self._registry_label)
+        self.app.state.tray_items[index]['is_relevant'] = len(self.irrelevant_msg) == 0
 
     def vue_plugin_ping(self, ping_timestamp):
         if isinstance(ping_timestamp, dict):
@@ -464,9 +473,10 @@ class PluginTemplateMixin(TemplateMixin):
         if close_sidebar:
             self.app.state.drawer = False
 
-    @observe('plugin_opened', 'keep_active')
+    @observe('plugin_opened', 'keep_active', 'irrelevant_msg')
     def _update_is_active(self, *args):
-        self.is_active = self.keep_active or self.plugin_opened
+        self.is_active = ((len(self.irrelevant_msg) == 0)
+                          and (self.keep_active or self.plugin_opened))
 
     @contextmanager
     def as_active(self):
