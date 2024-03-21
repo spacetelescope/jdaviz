@@ -43,7 +43,7 @@ class _BaseZoomHistory:
 
 class _MatchedZoomMixin:
     match_axes = ('x', 'y')
-    disable_matched_zoom_in_other_viewer = False
+    disable_matched_zoom_in_other_viewer = True
 
     def _is_matched_viewer(self, viewer):
         return True

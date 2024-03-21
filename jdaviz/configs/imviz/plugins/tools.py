@@ -17,7 +17,7 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'ic
 
 class _ImvizMatchedZoomMixin(_MatchedZoomMixin):
     match_keys = ('x_min', 'x_max', 'y_min', 'y_max')
-    disable_matched_zoom_in_other_viewer = False
+    disable_matched_zoom_in_other_viewer = True
 
     def _is_matched_viewer(self, viewer):
         return isinstance(viewer, BqplotImageView)
