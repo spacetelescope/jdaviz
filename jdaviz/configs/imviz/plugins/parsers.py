@@ -30,7 +30,7 @@ INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
 
 
 @data_parser_registry("imviz-data-parser")
-def parse_data(app, file_obj, ext=None, data_label=None):
+def parse_data(app, file_obj, ext=None, data_label=None, parent=None):
     """Parse a data file into Imviz.
 
     Parameters
@@ -74,17 +74,17 @@ def parse_data(app, file_obj, ext=None, data_label=None):
             else:  # Assume RGB
                 pf = rgb2gray(im)
             pf = pf[::-1, :]  # Flip it
-            _parse_image(app, pf, data_label, ext=ext)
+            _parse_image(app, pf, data_label, ext=ext, parent=parent)
 
         elif file_obj_lower.endswith('.asdf'):
             try:
                 if HAS_ROMAN_DATAMODELS:
                     with rdd.open(file_obj) as pf:
-                        _parse_image(app, pf, data_label, ext=ext)
+                        _parse_image(app, pf, data_label, ext=ext, parent=parent)
             except TypeError:
                 # if roman_datamodels cannot parse the file, load it with asdf:
                 with asdf.open(file_obj) as af:
-                    _parse_image(app, af, data_label, ext=ext)
+                    _parse_image(app, af, data_label, ext=ext, parent=parent)
 
         elif file_obj_lower.endswith('.reg'):
             # This will load DS9 regions as Subset but only if there is already data.
@@ -92,9 +92,9 @@ def parse_data(app, file_obj, ext=None, data_label=None):
 
         else:  # Assume FITS
             with fits.open(file_obj) as pf:
-                _parse_image(app, pf, data_label, ext=ext)
+                _parse_image(app, pf, data_label, ext=ext, parent=parent)
     else:
-        _parse_image(app, file_obj, data_label, ext=ext)
+        _parse_image(app, file_obj, data_label, ext=ext, parent=parent)
 
 
 def get_image_data_iterator(app, file_obj, data_label, ext=None):
@@ -168,7 +168,7 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
     return data_iter
 
 
-def _parse_image(app, file_obj, data_label, ext=None):
+def _parse_image(app, file_obj, data_label, ext=None, parent=None):
     if app is None:
         raise ValueError("app is None, cannot proceed")
     if data_label is None:
@@ -186,7 +186,16 @@ def _parse_image(app, file_obj, data_label, ext=None):
             data.coords.bounding_box = None
         if not data.meta.get(_wcs_only_label, False):
             data_label = app.return_data_label(data_label, alt_name="image_data")
-        app.add_data(data, data_label)
+
+        # TODO: generalize/centralize this for use in other configs too
+        if parent is not None and ext == 'DQ':
+            # nans are used to mark "good" flags in the DQ colormap, so
+            # convert DQ array to float to support nans:
+            cid = data.get_component("DQ")
+            data_arr = np.float32(cid.data)
+            data_arr[data_arr == 0] = np.nan
+            data.update_components({cid: data_arr})
+        app.add_data(data, data_label, parent=parent)
 
     # Do not link image data here. We do it at the end in Imviz.load_data()
 

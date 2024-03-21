@@ -1,5 +1,6 @@
 import pytest
 
+import numpy as np
 from jdaviz import Application, Specviz
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
 
@@ -170,3 +171,24 @@ def test_viewer_renaming_imviz(imviz_helper):
             old_reference='non-existent',
             new_reference='this-is-forbidden'
         )
+
+
+def test_data_associations(imviz_helper):
+    shape = (10, 10)
+
+    data_parent = np.ones(shape, dtype=float)
+    data_child = np.zeros(shape, dtype=int)
+
+    imviz_helper.load_data(data_parent, data_label='parent_data')
+    imviz_helper.load_data(data_child, data_label='child_data', parent='parent_data')
+
+    assert imviz_helper.app._get_assoc_data_children('parent_data') == ['child_data']
+    assert imviz_helper.app._get_assoc_data_parent('child_data') == 'parent_data'
+
+    with pytest.raises(NotImplementedError):
+        # we don't (yet) allow children of children:
+        imviz_helper.load_data(data_child, data_label='grandchild_data', parent='child_data')
+
+    with pytest.raises(ValueError):
+        # ensure the parent actually exists:
+        imviz_helper.load_data(data_child, data_label='child_data', parent='absent parent')

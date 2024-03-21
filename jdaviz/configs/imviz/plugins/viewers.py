@@ -86,9 +86,16 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         # Simple blinking of images - this will make it so that only one
         # layer is visible at a time and cycles through the layers.
 
-        # Exclude Subsets: They are global
+        # Exclude Subsets (they are global) and children via associated data
+
+        def is_parent(data):
+            return self.session.jdaviz_app._get_assoc_data_parent(data.label) is None
+
         valid = [ilayer for ilayer, layer in enumerate(self.state.layers)
-                 if layer_is_image_data(layer.layer)]
+                 if layer_is_image_data(layer.layer) and is_parent(layer.layer)]
+        children = [ilayer for ilayer, layer in enumerate(self.state.layers)
+                    if layer_is_image_data(layer.layer) and not is_parent(layer.layer)]
+
         n_layers = len(valid)
 
         if n_layers == 1:
@@ -116,7 +123,12 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 next_layer = valid[(valid.index(visible[-1]) + delta) % n_layers]
                 self.state.layers[next_layer].visible = True
 
-                for ilayer in (set(valid) - set([next_layer])):
+                # make invisible all parent layers other than the next layer:
+                layers_to_set_not_visible = set(valid) - set([next_layer])
+                # no child layers are visible by default:
+                layers_to_set_not_visible.update(set(children))
+
+                for ilayer in layers_to_set_not_visible:
                     self.state.layers[ilayer].visible = False
 
                 # We can display the active data label in Compass plugin.
