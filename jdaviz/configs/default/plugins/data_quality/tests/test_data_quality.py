@@ -1,5 +1,3 @@
-import os
-import tempfile
 import pytest
 import numpy as np
 
@@ -23,22 +21,20 @@ def test_flag_map_utils(mission_or_instrument, flag, name):
     assert flag_map[flag]['name'] == name
 
 
-def test_load_write_load():
+def test_load_write_load(tmp_path):
     # load the JWST flag map
     flag_map = load_flag_map('jwst')
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
+    # write out the flag map to a temporary CSV file
+    path = tmp_path / 'test_flag_map.csv'
+    write_flag_map(flag_map, path)
 
-        # write out the flag map to a temporary CSV file
-        path = os.path.join(tmp_dir, 'test_flag_map.csv')
-        write_flag_map(flag_map, path)
+    # load that temporary CSV file back in
+    reloaded_flag_map = load_flag_map(path=path)
 
-        # load that temporary CSV file back in
-        reloaded_flag_map = load_flag_map(path=path)
-
-        # confirm all values round-trip successfully:
-        for flag, orig_value in flag_map.items():
-            assert orig_value == reloaded_flag_map[flag]
+    # confirm all values round-trip successfully:
+    for flag, orig_value in flag_map.items():
+        assert orig_value == reloaded_flag_map[flag]
 
 
 def test_jwst_against_stdatamodels():
