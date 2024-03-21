@@ -32,8 +32,8 @@ jobs:
 
           - name: RC testing on OSX
             os: macos-latest
-            python: 3.9
-            toxenv: py39-test-predeps
+            python: '3.10'
+            toxenv: py310-test-predeps
 
           - name: RC testing on Windows
             os: windows-latest
