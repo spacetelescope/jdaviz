@@ -1329,7 +1329,9 @@ class LayerSelect(SelectPluginComponent):
                  multiselect=None,
                  default_text=None, manual_options=[],
                  default_mode='first',
-                 only_wcs_layers=False):
+                 only_wcs_layers=False,
+                 is_root=True,
+                 is_child_of=None):
         """
         Parameters
         ----------
@@ -1382,11 +1384,24 @@ class LayerSelect(SelectPluginComponent):
         self._update_layer_items()
         self.update_wcs_only_filter(only_wcs_layers)
 
-        # ignore layers that are children in associations:
-        def is_parent(data):
-            return self.app._get_assoc_data_parent(data.label) is None
+        self.filter_is_root = is_root
+        self.filter_is_child_of = is_child_of
 
-        self.add_filter(is_parent)
+        if self.filter_is_root:
+            # ignore layers that are children in associations:
+            def filter_is_root(data):
+                return self.app._get_assoc_data_parent(data.label) is None
+
+            self.add_filter(filter_is_root)
+
+        elif not self.filter_is_root and self.filter_is_child_of is not None:
+            # only offer layers that are children of the correct parent:
+            def has_correct_parent(data):
+                if self.filter_is_child_of == '':
+                    return False
+                return self.app._get_assoc_data_parent(data.label) == self.filter_is_child_of
+
+            self.add_filter(has_correct_parent)
 
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
