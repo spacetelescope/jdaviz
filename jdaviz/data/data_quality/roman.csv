@@ -1,0 +1,32 @@
+flag,name,description
+0,DO_NOT_USE,Bad pixel. Do not use.
+1,SATURATED,Pixel saturated during exposure
+2,JUMP_DET,Jump detected during exposure
+3,DROPOUT,Data lost in transmission
+4,GW_AFFECTED_DATA,Data affected by the GW read window
+5,PERSISTENCE,High persistence (was RESERVED_2)
+6,AD_FLOOR,Below A/D floor (0 DN; was RESERVED_3)
+7,OUTLIER,Flagged by outlier detection (was RESERVED_4)
+8,UNRELIABLE_ERROR,Uncertainty exceeds quoted error
+9,NON_SCIENCE,Pixel not on science portion of detector
+10,DEAD,Dead pixel
+11,HOT,Hot pixel
+12,WARM,Warm pixel
+13,LOW_QE,Low quantum efficiency
+15,TELEGRAPH,Telegraph pixel
+16,NONLINEAR,Pixel highly nonlinear
+17,BAD_REF_PIXEL,Reference pixel cannot be used
+18,NO_FLAT_FIELD,Flat field cannot be measured
+19,NO_GAIN_VALUE,Gain cannot be measured
+20,NO_LIN_CORR,Linearity correction not available
+21,NO_SAT_CHECK,Saturation check not available
+22,UNRELIABLE_BIAS,Bias variance large
+23,UNRELIABLE_DARK,Dark variance large
+24,UNRELIABLE_SLOPE,Slope variance large (i.e.; noisy pixel)
+25,UNRELIABLE_FLAT,Flat variance large
+26,RESERVED_5,
+27,RESERVED_6,
+28,UNRELIABLE_RESET,Sensitive to reset anomaly
+29,RESERVED_7,
+30,OTHER_BAD_PIXEL,A catch-all flag
+31,REFERENCE_PIXEL,Pixel is a reference pixel
