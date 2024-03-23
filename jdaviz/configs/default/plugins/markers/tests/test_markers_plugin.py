@@ -20,7 +20,7 @@ def _assert_dict_allclose(dict1, dict2):
             assert v == dict2.get(k)
 
 
-def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
+def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, "test")
     fv = cubeviz_helper.app.get_viewer('flux-viewer')
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
@@ -130,6 +130,7 @@ def test_markers_cubeviz(cubeviz_helper, spectrum1d_cube):
 
     # appears as option in export plugin and exports successfully
     assert "Markers:table" in exp.table.choices
+    exp.filename = str(tmp_path / "cubeviz_export.ecsv")
     exp.table = "Markers:table"
     exp.export()
 

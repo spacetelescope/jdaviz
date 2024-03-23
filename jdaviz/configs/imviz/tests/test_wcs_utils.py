@@ -9,7 +9,7 @@ from gwcs import coordinate_frames as cf
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.imviz import wcs_utils
-from jdaviz.configs.imviz.helper import base_wcs_layer_label
+from jdaviz.configs.imviz.plugins.orientation.orientation import base_wcs_layer_label
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_GWCS, create_example_gwcs
 
 

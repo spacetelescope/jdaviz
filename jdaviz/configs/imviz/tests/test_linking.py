@@ -286,8 +286,9 @@ class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
 
 
 def test_imviz_no_data(imviz_helper):
-    with pytest.raises(ValueError, match='No valid reference data'):
-        get_reference_image_data(imviz_helper.app)
+    refdata, iref = get_reference_image_data(imviz_helper.app)
+    assert refdata is None
+    assert iref == -1
 
     imviz_helper.link_data()  # Just no-op, do not crash
     links = imviz_helper.app.data_collection.external_links

@@ -2096,7 +2096,7 @@ class Application(VuetifyTemplate, HubListener):
         data = self.data_collection[data_label]
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
         if orientation_plugin is not None:
-            from jdaviz.configs.imviz.helper import base_wcs_layer_label
+            from jdaviz.configs.imviz.plugins.orientation.orientation import base_wcs_layer_label
             orient = orientation_plugin.orientation.selected
             if orient == data_label:
                 orient = base_wcs_layer_label
