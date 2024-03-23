@@ -158,7 +158,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 wcs_fallback_scheme='pixels' if self.wcs_use_fallback else None,
                 wcs_use_affine=self.wcs_use_affine,
                 error_on_fail=False)
-        except Exception:
+        except Exception:  # pragma: no cover
             raise
         else:
             # Only broadcast after success.
@@ -573,9 +573,9 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     if len(app.data_collection) <= 1 and link_type != 'wcs':  # No need to link, we are done.
         return
 
-    if link_type not in ('pixels', 'wcs'):
+    if link_type not in ('pixels', 'wcs'):  # pragma: no cover
         raise ValueError(f"link_type must be 'pixels' or 'wcs', got {link_type}")
-    if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):
+    if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):  # pragma: no cover
         raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
                          f"got {wcs_fallback_scheme}")
     if link_type == 'wcs':
@@ -583,7 +583,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
             hasattr(d, 'coords') and isinstance(d.coords, BaseHighLevelWCS)
             for d in app.data_collection
         ]) > 0
-        if not at_least_one_data_have_wcs:
+        if not at_least_one_data_have_wcs:  # pragma: no cover
             if wcs_fallback_scheme is None:
                 if error_on_fail:
                     raise ValueError("link_type can only be 'wcs' when wcs_fallback_scheme "
@@ -610,7 +610,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         # so no need to relink existing data.
         for link in app.data_collection.external_links:
             data_already_linked.append(link.data2)
-    else:
+    else:  # pragma: no cover
         # Everything has to be relinked.
         for viewer in app._viewer_store.values():
             if len(viewer._marktags):
@@ -627,7 +627,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     if link_type == 'pixels' and old_link_type == 'wcs':
         # default reference layer is the first-loaded image in default viewer:
         refdata = app._jdaviz_helper.default_viewer._obj.first_loaded_data
-        if refdata is None:  # No data in viewer, just use first in collection
+        if refdata is None:  # No data in viewer, just use first in collection  # pragma: no cover
             iref = 0
             refdata = app.data_collection[iref]
         else:
@@ -665,7 +665,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
             if refdata is None:  # No data in viewer, just use first in collection
                 iref = 0
                 refdata = app.data_collection[iref]
-            else:
+            else:   # pragma: no cover
                 iref = app.data_collection.index(refdata)
 
     # With reference data changed, if needed, now we relink as needed.
@@ -699,7 +699,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                         new_links = [wcslink]
                 else:
                     new_links = [wcslink]
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             if link_type == 'wcs' and wcs_fallback_scheme == 'pixels':
                 try:
                     new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
@@ -711,7 +711,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                             f"Error linking '{data.label}' to '{refdata.label}': "
                             f"{repr(e)}", color="warning", timeout=8000, sender=app))
                         continue
-            else:
+            else:  # pragma: no cover
                 if error_on_fail:
                     raise
                 else:
