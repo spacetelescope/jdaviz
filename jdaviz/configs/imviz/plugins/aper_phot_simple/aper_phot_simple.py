@@ -485,7 +485,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             ycenter = reg.center.y
             if data.coords is not None:
                 if self.config == "cubeviz" and data.ndim > 2:
-                    sky_center = w.pixel_to_world(self._cubeviz_slice_ind, ycenter, xcenter)[1]
+                    if spectral_axis_index == 0:
+                        sky = w.pixel_to_world(xcenter, ycenter, self._cubeviz_slice_ind)
+                    else:
+                        sky = w.pixel_to_world(self._cubeviz_slice_ind, y, x)
+                    sky_center = [coord for coord in sky if hasattr(coord, "icrs")][0]
                 else:  # "imviz"
                     sky_center = w.pixel_to_world(xcenter, ycenter)
             else:
