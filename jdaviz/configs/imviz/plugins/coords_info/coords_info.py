@@ -348,7 +348,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 try:
                     if wcs_ndim == 3:
                         if self._spectral_axis_index == 0:
-                            sky = data_wcs.pixel_to_world(y, x, viewer.slice)
+                            sky = data_wcs.pixel_to_world(x, y, viewer.slice)
                         else:
                             sky = data_wcs.pixel_to_world(viewer.slice, y, x)
                         sky = [coord for coord in sky if hasattr(coord, "icrs")][0].icrs
