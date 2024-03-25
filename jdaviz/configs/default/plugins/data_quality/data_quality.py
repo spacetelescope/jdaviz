@@ -27,6 +27,9 @@ telescope_names = {
 class DataQuality(PluginTemplateMixin):
     template_file = __file__, "data_quality.vue"
 
+    # TODO: uncomment this line before merging into main:
+    # irrelevant_msg = Unicode("Data Quality plugin is in development.").tag(sync=True)
+
     viewer_multiselect = Bool(False).tag(sync=True)
     viewer_items = List().tag(sync=True)
     viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
