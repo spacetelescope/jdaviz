@@ -56,7 +56,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         super().__init__(*args, **kwargs)
         self._marks = {}
         self._dict = {}  # dictionary representation of current mouseover info
-        self._spectral_axis_index = 2 # Needed for cube data
+        self._spectral_axis_index = 2  # Needed for cube data
         self._x, self._y = None, None  # latest known cursor positions
 
         # subscribe/unsubscribe to mouse events across all existing viewers
