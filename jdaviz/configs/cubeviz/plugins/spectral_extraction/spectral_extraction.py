@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import astropy
+from astropy import units as u
 from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
@@ -332,6 +333,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"extracted_{selected_func}_{fname_label}.fits"
 
+        # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
+        pix_scale_factor = self.aperture.scale_factor * spectral_cube.meta.get('PIXAR_SR', 1.0)
+        collapsed_spec.meta['_pixel_scale_factor'] = pix_scale_factor
+
         if add_data:
             self.add_results.add_results_from_plugin(
                 collapsed_spec, label=self.results_label, replace=False
@@ -519,3 +524,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         for mark in self.marks.values():
             mark.update_xy(sp.spectral_axis.value, sp.flux.value)
             mark.visible = True
+
+    def translate_units(self, collapsed_spec):
+        # remove sr
+        if u.sr in collapsed_spec._unit.bases:
+            collapsed_spec._data *= collapsed_spec.meta['_pixel_scale_factor']
+            collapsed_spec._unit *= u.sr
+        # add sr
+        elif u.sr not in collapsed_spec._unit.bases:
+            collapsed_spec._data /= collapsed_spec.meta['_pixel_scale_factor']
+            collapsed_spec._unit /= u.sr
