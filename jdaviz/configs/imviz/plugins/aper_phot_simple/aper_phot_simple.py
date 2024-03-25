@@ -317,7 +317,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         comp = data.get_component(data.main_components[0])
         if self.config == "cubeviz" and data.ndim > 2:
-            if "spectral_axis_index" in getattr(data, "meta", {}) :
+            if "spectral_axis_index" in getattr(data, "meta", {}):
                 spectral_axis_index = data.meta["spectral_axis_index"]
             else:
                 spectral_axis_index = 0
@@ -409,7 +409,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             data = self.dataset.selected_dc_item
 
         if self.config == "cubeviz" and data.ndim > 2:
-            if "spectral_axis_index" in getattr(data, "meta", {}) :
+            if "spectral_axis_index" in getattr(data, "meta", {}):
                 spectral_axis_index = data.meta["spectral_axis_index"]
             else:
                 spectral_axis_index = 0
@@ -488,7 +488,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     if spectral_axis_index == 0:
                         sky = w.pixel_to_world(xcenter, ycenter, self._cubeviz_slice_ind)
                     else:
-                        sky = w.pixel_to_world(self._cubeviz_slice_ind, y, x)
+                        sky = w.pixel_to_world(self._cubeviz_slice_ind, ycenter, xcenter)
                     sky_center = [coord for coord in sky if hasattr(coord, "icrs")][0]
                 else:  # "imviz"
                     sky_center = w.pixel_to_world(xcenter, ycenter)

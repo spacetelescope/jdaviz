@@ -91,7 +91,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None, specutils_format=
             # NOTE: Alerted to deprecation of FILETYPE keyword from pipeline on 2022-07-08
             # Kept for posterity in for data processed prior to this date. Use EXP_TYPE instead
             filetype = prihdr.get('FILETYPE', '').lower()
-            system = prihdr.get('SYSTEM', '').lower()
             if telescop == 'jwst' and ('ifu' in exptype or
                                        'mrs' in exptype or
                                        filetype == '3d ifu cube'):
@@ -103,16 +102,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None, specutils_format=
                                     spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                                     uncert_viewer_reference_name=uncert_viewer_reference_name
                                     )
-            elif telescop == 'jwst' and filetype == 'r3d' and system == 'esa-pipeline':
-                for ext, viewer_name in (('DATA', flux_viewer_reference_name),
-                                         ('ERR', uncert_viewer_reference_name),
-                                         ('QUALITY', None)):
-                    data_label = app.return_data_label(file_name, ext)
-                    _parse_esa_s3d(
-                        app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
-                        flux_viewer_reference_name=flux_viewer_reference_name,
-                        spectrum_viewer_reference_name=spectrum_viewer_reference_name
-                    )
             else:
                 _parse_hdulist(
                     app, hdulist, file_name=data_label or file_name,
@@ -281,6 +270,7 @@ def _parse_hdulist(app, hdulist, file_name=None,
             # Add flux to spectrum viewer
             app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
             app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
+
 
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,
                          flux_viewer_reference_name=None, spectrum_viewer_reference_name=None,
