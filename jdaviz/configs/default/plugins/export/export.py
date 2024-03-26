@@ -255,6 +255,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if len(filename):
                 if not filename.endswith(filetype):
                     filename += f".{filetype}"
+            if self.subset_invalid_msg != '':
+                raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
             self.save_subset_as_region(selected_subset_label, filename)
 
         else:
@@ -472,10 +474,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         region = self.app.get_subsets(subset_name=selected_subset_label,
                                       include_sky_region=link_type == 'wcs')
 
-        # warn when trying to export a composite subset
-        if len(region) > 1:
-            self.not_supported_warn = True
-            raise NotImplementedError("Export not yet supported for composite subsets.")
 
         region = region[0][f'{"sky_" if link_type == "wcs" else ""}region']
 

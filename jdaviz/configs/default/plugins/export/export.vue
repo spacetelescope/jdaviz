@@ -173,6 +173,7 @@
              :results_isolated_to_plugin="true"
              @click="interrupt_recording"
              :disabled="!movie_recording"
+          >
             <v-icon>stop</v-icon>
           </plugin-action-button>
       </j-tooltip>
