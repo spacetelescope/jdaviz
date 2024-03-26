@@ -63,7 +63,7 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     uc_plugin.spectral_unit.selected = 'Angstrom'
     assert sl.value_unit == 'Angstrom'
     cubeviz_helper.select_wavelength(4623.60028)
-    assert sl.slice == 1
+    assert sl.value == 1
 
     # Test player buttons API
 

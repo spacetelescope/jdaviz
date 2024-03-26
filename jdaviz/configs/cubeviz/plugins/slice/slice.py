@@ -223,14 +223,6 @@ class Slice(PluginTemplateMixin):
             # is updated (if enabled)
             self._on_value_updated({'new': self.value})
 
-    def _viewer_slices_changed(self, value):
-        # the slices attribute on the viewer state was changed,
-        # so we'll update the slider to match which will trigger
-        # the slider observer (_on_slider_updated) and sync across
-        # any other applicable viewers
-        if len(value) == 3:
-            self.slice = float(value[-1])
-
     def _on_select_slice_message(self, msg):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', category=UnitsWarning)
