@@ -181,5 +181,5 @@ class TestExportSubsets():
         cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=20, yc=25, radius=5))
 
         with pytest.raises(NotImplementedError,
-                           match='Subset can not be exported - Export for composite subsets not supported.'):
+                           match='Subset can not be exported - Export for composite subsets not supported.'):  # noqa
             export_plugin.export()

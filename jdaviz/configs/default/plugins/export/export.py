@@ -474,7 +474,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         region = self.app.get_subsets(subset_name=selected_subset_label,
                                       include_sky_region=link_type == 'wcs')
 
-
         region = region[0][f'{"sky_" if link_type == "wcs" else ""}region']
 
         region.write(filename, overwrite=True)
