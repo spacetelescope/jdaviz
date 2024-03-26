@@ -30,7 +30,7 @@
 <script>
 module.exports = {
   props: ['irrelevant_msg', 'disabled_msg', 'description', 'link', 'popout_button',
-          'uses_active_status', 'keep_active'],
+          'uses_active_status', 'keep_active', 'scroll_to'],
   methods: {
     isDisabled() {
       return this.getDisabledMsg().length > 0
@@ -44,6 +44,10 @@ module.exports = {
       }
       if (!document.hidden) {
         this.$emit('plugin-ping', Date.now())
+      }
+      if (this.scroll_to) {
+        this.$emit('update:scroll_to', false)
+        this.$el.scrollIntoView({behavior: "smooth", block: "start"});
       }
       if (!recursive) {
         return

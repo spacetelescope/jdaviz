@@ -356,6 +356,7 @@ class PluginTemplateMixin(TemplateMixin):
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
     is_active = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to plugin_opened and keep_active
+    scroll_to = Bool(False).tag(sync=True)  # noqa once set to True, vue will scroll to the element and reset to False
     spinner = Bool(False).tag(sync=True)  # noqa use along-side @with_spinner() and <plugin-add-results :action_spinner="spinner">
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
@@ -448,15 +449,24 @@ class PluginTemplateMixin(TemplateMixin):
             self._viewer_callbacks[key] = plugin_viewer_callback(viewer, plugin_method)
         return self._viewer_callbacks.get(key)
 
-    def open_in_tray(self):
+    def open_in_tray(self, scroll_to=False):
         """
         Open the plugin in the sidebar/tray (and open the sidebar if it is not already).
+
+        Parameters
+        ----------
+        scroll_to : bool, optional
+            Whether to immediately scroll to the plugin opened in the tray.
         """
         app_state = self.app.state
         app_state.drawer = True
         index = [ti['name'] for ti in app_state.tray_items].index(self._registry_name)
         if index not in app_state.tray_items_open:
             app_state.tray_items_open = app_state.tray_items_open + [index]
+        if scroll_to:
+            # sleep 0.5s to ensure plugin is intialized and user can see scrolling
+            time.sleep(0.5)
+            self.scroll_to = True
 
     def close_in_tray(self, close_sidebar=False):
         """

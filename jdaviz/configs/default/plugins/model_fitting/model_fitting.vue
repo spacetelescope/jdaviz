@@ -2,7 +2,8 @@
   <j-tray-plugin
     :description="docs_description || 'Fit an analytic model to data or a subset.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#model-fitting'"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
          to make sure that is clear -->
