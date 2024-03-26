@@ -223,16 +223,6 @@ class Slice(PluginTemplateMixin):
             # is updated (if enabled)
             self._on_value_updated({'new': self.value})
 
-    def _update_slice(self, x_all):
-        # Also update unit when data is updated
-        self.value_unit = x_all.unit.to_string()
-
-        # force value (wavelength/frequency) to update from the current slider slice
-        self._on_slider_updated({'new': self.slice})
-
-        # update data held inside slice indicator and force reverting to original active status
-        self.slice_indicator._update_data(x_all)
-
     def _viewer_slices_changed(self, value):
         # the slices attribute on the viewer state was changed,
         # so we'll update the slider to match which will trigger
@@ -254,7 +244,7 @@ class Slice(PluginTemplateMixin):
             return
         prev_unit = u.Unit(self.value_unit)
         self.value_unit = str(msg.unit)
-        self.value = (self.value * prev_unit).to_value(msg.unit)
+        self.value = (self.value * prev_unit).to_value(msg.unit, equivalencies=u.spectral())
 
     @property
     def valid_selection_values(self):

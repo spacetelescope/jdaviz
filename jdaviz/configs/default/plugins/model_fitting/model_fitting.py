@@ -316,7 +316,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _get_1d_spectrum(self):
         # retrieves the 1d spectrum (accounting for spatial subset for cubeviz, if necessary)
         return self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected,
-                                                                 use_display_units=True)  # noqa
+                                                                 use_display_units=False)  # noqa
 
     @observe("dataset_selected", "spatial_subset_selected")
     def _dataset_selected_changed(self, event=None):
@@ -518,7 +518,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         return new_model
 
     def _check_model_component_compat(self, axes=['x', 'y'], display_units=None):
-        print(display_units, self._units)
         if display_units is None:
             display_units = [u.Unit(self._units[ax]) for ax in axes]
 

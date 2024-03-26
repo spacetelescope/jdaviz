@@ -6,13 +6,14 @@ from glue.core import BaseData
 from glue.core.subset_group import GroupedSubset
 from bqplot import Lines
 from glue_jupyter.bqplot.image import BqplotImageView
+from specutils import Spectrum1D
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
 from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage, GlobalDisplayUnitChanged
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.utils import get_subset_type
 
@@ -69,6 +70,7 @@ class WithSliceSelection:
 
     @property
     def slice_values(self):
+        print("IN SLICE VALUES")
         # TODO: make a cached property and invalidate cache on add/remove data
         # TODO: add support for multiple cubes (but then slice selection needs to be more complex)
         # if slice_index is 0, then we want the equivalent of [:, 0, 0]
@@ -78,14 +80,19 @@ class WithSliceSelection:
         take_inds.remove(self.slice_index)
         for layer in self.layers:
             try:
-                data_obj = layer.layer.data.get_component(self.slice_component_label).data
+                spec_axis = layer.layer.data.get_object(cls=Spectrum1D).spectral_axis
+                display_spectral_units = self.jdaviz_app._get_display_unit('spectral')
+                if display_spectral_units is not '' and spec_axis.unit != display_spectral_units:
+                    converted_axis = spec_axis.to(display_spectral_units).value
+                else:
+                    converted_axis = spec_axis.value
             except (AttributeError, KeyError):
                 continue
             else:
                 break
         else:
             return np.array([])
-        return np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]), dtype=float)
+        return np.asarray(converted_axis)
 
     @property
     def slice(self):
