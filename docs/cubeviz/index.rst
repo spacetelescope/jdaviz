@@ -18,18 +18,17 @@ with IFU data cubes. It uses
 the `specutils <https://specutils.readthedocs.io/en/latest/>`_ package
 from `Astropy <https://www.astropy.org>`_ .
 
-Cubeviz is a tool for visualization and quick-look analysis of 3D data cubes,
-primarily from integral field units (IFUs). It incorporates visualization tools
+Cubeviz incorporates visualization tools
 with analysis capabilities, such as Astropy regions and :ref:`specutils` packages.
 Users can interact with their data from within the tool.
 Cubeviz allows spectra of regions within the cube to be easily plotted and examined,
 offering all the same capabilities as :ref:`specviz`.
 
-In addition, Cubeviz also allows users to interacting with their cube to:
+In addition, Cubeviz also allows users to interact with their cube to:
 
 * view the wavelength slices (RA, DEC),
 
-* view flux, error, and data quality cubes simultaneously,
+* view flux and error or data quality cubes simultaneously,
 
 * view spectra from selected spatial (RA, DEC) regions,
 
@@ -41,7 +40,8 @@ In addition, Cubeviz also allows users to interacting with their cube to:
 
 * fit spectral lines,
 
-* create moment maps, including line flux and kinematic maps (rotation velocity and velocity dispersion),
+* create moment maps, including line flux and kinematic maps
+(rotation velocity and velocity dispersion),
 
 * overlay spectral line lists,
 

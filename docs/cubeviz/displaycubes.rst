@@ -7,7 +7,7 @@ Displaying Cubes
 The Cubeviz layout includes two image viewers (at the top of the app)
 and one spectrum viewer (at the bottom of the app), which it attempts to
 populate automatically when the first dataset is loaded. By default, Cubeviz
-attempts to parse and display the flux in the top left viewer, the uncertainty
+attempts to parse and display the flux in the top left viewer and the uncertainty
 in the top right viewer. The spectrum
 viewer is populated by default by collapsing the spatial axes using the "Sum"
 function. The indicators that the load machinery looks for in each HDU to
@@ -34,8 +34,8 @@ Jupyter notebook using an API. The Toolbar below gives you several spectroscopic
 display options. Right click will open a dropdown with access to different options
 for each button.
 
-.. image:: ./img/cubeviztoolbar.jpg
-    :alt: Speciz Toolbar
+.. image:: ./img/cubeviztoolbar.png
+    :alt: Cubeviz Toolbar
 
 .. _cubeviz-selecting-data:
 
@@ -93,6 +93,7 @@ over the region, and the resulting spectrum will be displayed in the 1D spectrum
 the bottom of the UI.
 
 .. image:: img/subset_creation.png
+    :alt: Subset creation in Cubeviz
 
 .. _cubeviz-spectrum-at-spaxel:
 
