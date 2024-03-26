@@ -81,7 +81,7 @@ class WithSliceSelection:
             try:
                 spec_axis = layer.layer.data.get_object(cls=Spectrum1D).spectral_axis
                 display_spectral_units = self.jdaviz_app._get_display_unit('spectral')
-                if display_spectral_units is not '' and spec_axis.unit != display_spectral_units:
+                if display_spectral_units != '' and spec_axis.unit != display_spectral_units:
                     converted_axis = spec_axis.to(display_spectral_units).value
                 else:
                     converted_axis = spec_axis.value
