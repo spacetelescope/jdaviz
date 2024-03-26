@@ -5,8 +5,8 @@ Displaying Spectra
 A collapsed spectrum of the cube displayed in the upper-left viewer
 automatically appears in the 1D spectrum viewer, using the set collapse function.
 The collapse function can be changed in the :guilabel:`Line`
-tab of the |icon-settings-sliders| icon in the spectrum viewer, which takes you to the
-Plot Options plugin. Additional spectra
+tab of the Plot Options plugin, which can be reached by clicking the |icon-settings-sliders|
+icon in the spectrum viewer. Additional spectra
 can be loaded into the spectrum viewer, as detailed in the linked documentation
 below.
 
