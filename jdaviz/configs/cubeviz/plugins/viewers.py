@@ -13,7 +13,7 @@ from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
 from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage, GlobalDisplayUnitChanged
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.utils import get_subset_type
 
@@ -70,7 +70,6 @@ class WithSliceSelection:
 
     @property
     def slice_values(self):
-        print("IN SLICE VALUES")
         # TODO: make a cached property and invalidate cache on add/remove data
         # TODO: add support for multiple cubes (but then slice selection needs to be more complex)
         # if slice_index is 0, then we want the equivalent of [:, 0, 0]
