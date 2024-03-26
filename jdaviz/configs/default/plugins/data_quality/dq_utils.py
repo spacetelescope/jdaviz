@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from matplotlib.colors import ListedColormap, rgb2hex
+from glue.config import stretches
 from astropy.table import Table
 
 # paths to CSV files with DQ flag mappings:
@@ -10,6 +11,85 @@ dq_flag_map_paths = {
     'jwst': Path('data', 'data_quality', 'jwst.csv'),
     'roman': Path('data', 'data_quality', 'roman.csv'),
 }
+
+
+class LookupStretch:
+    """
+    Stretch class specific to DQ arrays.
+
+    Attributes
+    ----------
+    flags : array-like
+        DQ flags.
+    """
+
+    def __init__(self, flags=None, hidden_flags=None):
+        # Default x, y values(0-1) range chosen for a typical initial spline shape.
+        # Can be modified if required.
+        print('initializing stretch')
+        if flags is None:
+            flags = np.linspace(0, 1, 5)
+        if hidden_flags is None:
+            hidden_flags = []
+
+        self.flags = np.asarray(flags)
+        self.hidden_flags = np.asarray(hidden_flags).astype(int)
+
+    @property
+    def flag_range(self):
+        return np.max(self.flags) - np.min(self.flags)
+
+    @property
+    def scaled_flags(self):
+        # renormalize the flags on range (0, 1):
+        return (self.flags - np.min(self.flags)) / self.flag_range
+
+    def dq_array_to_flag_index(self, values):
+        # Find the index of the closest entry in `scaled_flags`
+        # for each of `values` using array broadcasting:
+        return np.argmin(
+            np.abs(
+                np.nan_to_num(values, nan=-10).flatten()[None, :] -
+                self.scaled_flags[:, None]
+            ), axis=0
+        ).reshape(values.shape)
+
+    def __call__(self, values, out=None, clip=False):
+        # For our uses, we can ignore `out` and `clip`, but those would need
+        # to be implemented before contributing this class upstream.
+
+        # find closest index in `self.flags` for each value in `values`:
+        if hasattr(values, 'squeeze'):
+            values = values.squeeze()
+
+        # `values` will have already been passed through
+        # astropy.visualization.ManualInterval and normalized on (0, 1)
+        # before they arrive here. First, remove that interval and get
+        # back the integer values:
+        values_integer = np.round(values * self.flag_range + np.min(self.flags))
+
+        # normalize by the number of flags, onto interval (0, 1):
+        renormed = self.dq_array_to_flag_index(values) / len(self.flags)
+
+        if len(self.hidden_flags):
+            # mask that is True for `values` in the hidden flags list:
+            value_is_hidden = np.isin(
+                np.nan_to_num(values_integer, nan=-10),
+                self.hidden_flags
+            )
+        else:
+            value_is_hidden = False
+
+        # preserve NaNs in values, and make hidden flags NaNs:
+        return np.where(
+            np.isnan(values) | value_is_hidden,
+            np.nan,
+            renormed
+        )
+
+
+if "lookup" not in stretches:
+    stretches.add("lookup", LookupStretch, display="DQ")
 
 
 def load_flag_map(mission_or_instrument=None, path=None):
@@ -77,7 +157,7 @@ def write_flag_map(flag_mapping, csv_path, **kwargs):
     table.write(csv_path, format='ascii.csv', **kwargs)
 
 
-def generate_listed_colormap(n_flags=None, seed=3):
+def generate_listed_colormap(n_flags=None, rgba_colors=None, seed=3):
     """
     Generate a list of random "light" colors of length ``n_flags``.
 
@@ -86,6 +166,8 @@ def generate_listed_colormap(n_flags=None, seed=3):
     n_flags : int
         Number of colors in the listed colormap, should match the
         number of unique DQ flags (before they're decomposed).
+    rgba_colors : list of tuples
+        List of RGBA tuples for each color in the colormap.
     seed : int
         Seed for the random number generator used to
         draw random colors.
@@ -100,12 +182,13 @@ def generate_listed_colormap(n_flags=None, seed=3):
     rng = np.random.default_rng(seed)
     default_alpha = 1
 
-    # Generate random colors that are generally "light", i.e. with
-    # RGB values in the upper half of the interval (0, 1):
-    rgba_colors = [
-        tuple(np.insert(rng.uniform(size=2), rng.integers(0, 3), 1).tolist() + [default_alpha])
-        for _ in range(n_flags)
-    ]
+    if rgba_colors is None:
+        # Generate random colors that are generally "light", i.e. with
+        # RGB values in the upper half of the interval (0, 1):
+        rgba_colors = [
+            tuple(np.insert(rng.uniform(size=2), rng.integers(0, 3), 1).tolist() + [default_alpha])
+            for _ in range(n_flags)
+        ]
 
     cmap = ListedColormap(rgba_colors)
 
@@ -162,6 +245,7 @@ def decode_flags(flag_map, unique_flags, rgba_colors):
             'flag': int(bit),
             'decomposed': {bit: flag_map[bit] for bit in decoded_bits},
             'color': rgb2hex(color),
+            'show': True,
         })
 
     return decoded_flags

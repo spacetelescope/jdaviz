@@ -147,18 +147,19 @@ class DataQuality(PluginTemplateMixin):
         ]
         dq_layer.composite._allow_bad_alpha = True
 
-        flag_bits = np.float32([flag['flag'] for flag in self.decoded_flags])
+        flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
 
-        with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max', 'stretch'):
-            dq_layer.state.cmap = cmap
+        dq_layer.state.stretch = 'lookup'
+        stretch_object = dq_layer.state.stretch_object
+        stretch_object.flags = flag_bits
 
-            dq_layer.state.stretch = 'lookup'
-            stretch_object = dq_layer.state.stretch_object
-            stretch_object.flags = flag_bits
+        with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max'):
+            if len(flag_bits):
+                dq_layer.state.v_min = min(flag_bits)
+                dq_layer.state.v_max = max(flag_bits)
 
-            dq_layer.state.v_min = min(flag_bits)
-            dq_layer.state.v_max = max(flag_bits)
             dq_layer.state.alpha = 0.9
+            dq_layer.state.cmap = cmap
 
     @observe('decoded_flags')
     def update_cmap(self, event={}):
@@ -167,24 +168,49 @@ class DataQuality(PluginTemplateMixin):
             layer for layer in viewer.layers if
             layer.layer.label == self.dq_layer_selected
         ]
-        flag_bits = np.float32([flag['flag'] for flag in self.decoded_flags])
+        flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
         rgb_colors = [hex2color(flag['color']) for flag in self.decoded_flags]
+        hidden_flags = np.array([flag['flag'] for flag in self.decoded_flags if not flag['show']])
 
-        # update the colors of the listed colormap without
-        # reassigning the layer.state.cmap object
-        cmap = dq_layer.state.cmap
-        cmap.colors = rgb_colors
-        cmap._init()
+        with delay_callback(dq_layer.state, 'v_min', 'v_max', 'alpha', 'stretch', 'cmap'):
+            # set correct stretch and limits:
+            # dq_layer.state.stretch = 'lookup'
+            stretch_object = dq_layer.state.stretch_object
+            stretch_object.flags = flag_bits
+            stretch_object.dq_array = dq_layer.get_image_data()
+            stretch_object.hidden_flags = hidden_flags
 
-        with delay_callback(dq_layer.state, 'v_min', 'v_max', 'alpha'):
+            # update the colors of the listed colormap without
+            # reassigning the layer.state.cmap object
+            cmap = dq_layer.state.cmap
+            cmap.colors = rgb_colors
+            cmap._init()
+
             # trigger updates to cmap in viewer:
             dq_layer.update()
 
-            # set correct stretch and limits:
-            dq_layer.state.stretch = 'lookup'
-            dq_layer.state.v_min = min(flag_bits)
-            dq_layer.state.v_max = max(flag_bits)
+            if len(flag_bits):
+                dq_layer.state.v_min = min(flag_bits)
+                dq_layer.state.v_max = max(flag_bits)
+
             dq_layer.state.alpha = 0.9
+
+    def update_visibility(self, index):
+        self.decoded_flags[index]['show'] = not self.decoded_flags[index]['show']
+        self.send_state('decoded_flags')
+        self.update_cmap()
+
+    def vue_update_visibility(self, index):
+        self.update_visibility(index)
+
+    def update_color(self, index, color):
+        self.decoded_flags[index]['color'] = color
+        self.send_state('decoded_flags')
+        self.update_cmap()
+
+    def vue_update_color(self, args):
+        index, color = args
+        self.update_color(index, color)
 
     @observe('science_layer_selected')
     def mission_or_instrument_from_meta(self, event):
@@ -192,9 +218,23 @@ class DataQuality(PluginTemplateMixin):
             return
 
         layer = self.science_layer.selected_obj
-        if len(layer):
-            # this is defined for JWST and ROMAN, should be upper case:
-            telescope = layer[0].layer.meta.get('telescope', None)
+        if not len(layer):
+            return
 
-            if telescope is not None:
-                self.flag_map_selected = telescope_names[telescope.lower()]
+        # this is defined for JWST and ROMAN, should be upper case:
+        telescope = layer[0].layer.meta.get('telescope', None)
+
+        if telescope is not None:
+            self.flag_map_selected = telescope_names[telescope.lower()]
+
+    def vue_hide_all_flags(self, event):
+        for flag in self.decoded_flags:
+            flag['show'] = False
+        self.send_state('decoded_flags')
+        self.update_cmap()
+
+    def vue_show_all_flags(self, event):
+        for flag in self.decoded_flags:
+            flag['show'] = True
+        self.send_state('decoded_flags')
+        self.update_cmap()
