@@ -6,7 +6,6 @@ from glue.core import BaseData
 from glue.core.subset_group import GroupedSubset
 from bqplot import Lines
 from glue_jupyter.bqplot.image import BqplotImageView
-from specutils import Spectrum1D
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
@@ -86,7 +85,7 @@ class WithSliceSelection:
                                                  to(display_spectral_units).value, dtype=float))
                 else:
                     data_obj = layer.layer.data.get_component(self.slice_component_label).data
-                    converted_axis = np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]),
+                    converted_axis = np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
                                                 dtype=float)
             except (AttributeError, KeyError):
                 continue
