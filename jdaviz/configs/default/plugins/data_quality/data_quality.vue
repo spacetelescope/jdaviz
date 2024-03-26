@@ -49,17 +49,50 @@
     </v-row>
 
     <j-plugin-section-header>Quality Flags</j-plugin-section-header>
+    <v-row class="row-no-padding">
+      <v-col cols=6>
+        <j-tooltip tipid='plugin-line-lists-erase-all'>
+          <v-btn
+            tile
+            :elevation=0
+            x-small
+            dense
+            color="turquoise"
+            dark
+            style="padding-left: 8px; padding-right: 6px;"
+            @click="show_all_flags">
+            <v-icon left small dense style="margin-right: 2px">mdi-eye</v-icon>
+            Show All
+          </v-btn>
+        </j-tooltip>
+      </v-col>
+      <v-col cols=6 style="text-align: right">
+        <j-tooltip tipid='plugin-line-lists-plot-all'>
+          <v-btn
+            tile
+            :elevation=0
+            x-small
+            dense
+            color="turquoise"
+            dark
+            style="padding-left: 8px; padding-right: 6px;"
+            @click="hide_all_flags">
+            <v-icon left small dense style="margin-right: 2px">mdi-eye-off</v-icon>
+            Hide All
+          </v-btn>
+        </j-tooltip>
+      </v-col>
+    </v-row>
+
     <v-row style="max-width: calc(100% - 80px)">
       <v-col>
         Color
       </v-col>
-      <v-col>
-        <strong>Flag</strong>
-      </v-col>
-      <v-col>
-        (Decomposed)
+      <v-col cols=8>
+        <strong>Flag</strong> (Decomposed)
       </v-col>
     </v-row>
+
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="(item, index) in decoded_flags" key=":item">
@@ -78,21 +111,30 @@
                     </template>
                     <div @click.stop="" style="text-align: end; background-color: white">
                         <v-color-picker v-model="decoded_flags[index].color"
-                                        @update:color="throttledSetColor($event.hexa)">
+                                        @update:color="throttledSetColor(index, $event.hexa)">
                         ></v-color-picker>
                     </div>
                   </v-menu>
                 </j-tooltip>
               </v-col>
-              <v-col>
-                <div> <strong>{{item.flag}}</strong> ({{Object.keys(item.decomposed).join(', ')}})</div>
+              <v-col cols=8>
+                <div><strong>{{item.flag}}</strong> ({{Object.keys(item.decomposed).join(', ')}})</div>
               </v-col>
           </v-row>
           </v-expansion-panel-header>
           <v-expansion-panel-content>
-              <v-col v-for="(item, key, index) in item.decomposed">
-                <span>{{item.name}} ({{key}}): {{item.description}}</span>
+            <v-row no-gutters style="..." align="center">
+              <v-col cols=2 align="left">
+                <v-btn :color="item.show ? 'accent' : 'default'" icon @click="toggle_visibility(index)">
+                  <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+                </v-btn>
               </v-col>
+            <v-col cols=8 align="left" style="...">
+              <v-row v-for="(item, key, index) in item.decomposed">
+                <span><strong>{{item.name}}</strong> ({{key}}): {{item.description}}</span>
+              </v-row>
+            </v-col>
+            </v-row>
           </v-expansion-panel-content>
         <v-expansion-panel>
       </v-expansion-panels>
@@ -103,12 +145,19 @@
 
 <script>
   module.exports = {
-    created() {
-      this.throttledSetColor = _.throttle(
-        (v) => { this.color = v },
-        100);
+  created() {
+    this.throttledSetColor = _.throttle(
+      (index, color) => {
+        this.update_color([index, color])
+      },
+      100);
+  },
+  methods: {
+    toggle_visibility(index) {
+      this.update_visibility(index)
     }
   }
+}
 </script>
 
 <style>
