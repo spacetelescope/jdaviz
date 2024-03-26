@@ -47,7 +47,7 @@ module.exports = {
       }
       if (this.scroll_to) {
         this.$emit('update:scroll_to', false)
-        this.$el.scrollIntoView({behavior: "smooth", block: "start"});
+        this.$el.scrollIntoView({behavior: "smooth", block: "nearest", inline: "start"});
       }
       if (!recursive) {
         return
