@@ -6,7 +6,7 @@ Importing Data into Cubeviz
 
 By design, Cubeviz only supports data that can be parsed as
 :class:`~specutils.Spectrum1D` objects. Despite the name, :class:`~specutils.Spectrum1D`
-now supports 3D cubes and allows the Python-level interface and parsing tools to
+supports 3D cubes and allows the Python-level interface and parsing tools to
 be defined in ``specutils`` instead of being duplicated in Jdaviz.
 :class:`~specutils.Spectrum1D` objects are very flexible in their capabilities, however,
 and hence should address most astronomical spectrum use cases.
@@ -139,8 +139,14 @@ object, you can load it into Cubeviz as follows:
 .. code-block:: python
 
     import numpy as np
-    import astropy.wcs as fitswcs
+    from astropy.wcs import wcs
+    import astropy.units as u
+    from specutils import Spectrum1D
     from jdaviz import Cubeviz
+    from jwst import datamodels
+
+    file = "/path/to/data/file.fits"
+    mydatamodel = datamodels.open(file)
 
     # mydatamodel is a jwst.datamodels object
     # Due to current schema in jwst.datamodels, you'll need to create your own WCS object before you create your Spectrum1D object
