@@ -55,10 +55,19 @@ class WithSliceIndicator:
 
 
 class WithSliceSelection:
-    @property
+    @cached_property
     def slice_index(self):
         # index in state.slices corresponding to the slice axis
-        return 2
+        for layer in self.layers:
+            try:
+                data_obj = layer.layer.data
+                return data_obj.meta['spectral_axis_index']
+            except (AttributeError, KeyError):
+                raise
+            else:
+                break
+        else:
+            return 2
 
     @property
     def slice_component_label(self):
@@ -176,9 +185,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                     x_att = att_name
                     self.state.x_att_world = ref_data.id[x_att]
                     break
-            else:
-                x_att = "Pixel Axis 0 [z]"
-                self.state.x_att = ref_data.id[x_att]
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None
