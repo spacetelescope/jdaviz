@@ -40,8 +40,7 @@ In addition, Cubeviz also allows users to interact with their cube to:
 
 * fit spectral lines,
 
-* create moment maps, including line flux and kinematic maps
-(rotation velocity and velocity dispersion),
+* create moment maps, including line flux and kinematic maps (rotation velocity and velocity dispersion),
 
 * overlay spectral line lists,
 
