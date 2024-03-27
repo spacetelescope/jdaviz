@@ -449,7 +449,7 @@ class PluginTemplateMixin(TemplateMixin):
             self._viewer_callbacks[key] = plugin_viewer_callback(viewer, plugin_method)
         return self._viewer_callbacks.get(key)
 
-    def open_in_tray(self, scroll_to=False):
+    def open_in_tray(self, scroll_to=True):
         """
         Open the plugin in the sidebar/tray (and open the sidebar if it is not already).
 
