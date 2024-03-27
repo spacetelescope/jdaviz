@@ -205,7 +205,7 @@ class LineListTool(PluginTemplateMixin):
         self._bounds["min"] = viewer_data.spectral_axis[0]
         self._bounds["max"] = viewer_data.spectral_axis[-1]
 
-        # set redshift slider to redshift stored in Spectrum1D object
+        # set redshift slider to redshift stored in Spectrum object
         if viewer_data.meta.get('plugin', None) is not None:
             self.rs_redshift = (viewer_data.redshift.value
                                 if hasattr(viewer_data.redshift, 'value')

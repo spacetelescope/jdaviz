@@ -3,7 +3,7 @@ import numpy as np
 import astropy
 from astropy import units as u
 from astropy.nddata import InverseVariance
-from specutils import Spectrum1D
+from specutils import Spectrum
 from astropy.utils.introspection import minversion
 
 ASTROPY_LT_5_3 = not minversion(astropy, "5.3")
@@ -105,7 +105,7 @@ def test_non_stddev_uncertainty(specviz_helper):
     var = stddev ** 2
     inv_var = np.ones(len(flux)) / var
     wavelength = np.linspace(1, 5, len(flux)) * u.um
-    spec = Spectrum1D(
+    spec = Spectrum(
         flux,
         uncertainty=InverseVariance(inv_var),
         spectral_axis=wavelength

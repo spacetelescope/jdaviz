@@ -2,7 +2,7 @@ import pytest
 
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from glue.core.roi import XRangeROI
 
@@ -68,7 +68,7 @@ def test_valid_function(cubeviz_helper, spectrum1d_cube):
                                           spatial_subset='Subset 1', function="minimum")
     results_max = cubeviz_helper.get_data(data_label="test[FLUX]",
                                           spatial_subset='Subset 1', function="maximum")
-    assert isinstance(results_min, Spectrum1D)
+    assert isinstance(results_min, Spectrum)
     assert_quantity_allclose(results_min.flux,
                              [6., 14.] * u.Jy, atol=1e-5 * u.Jy)
     assert_quantity_allclose(results_max.flux,

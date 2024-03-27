@@ -63,7 +63,7 @@ def _launch_config_with_data(config, data=None, show=True, filepath=None, **kwar
     config : str (path-like)
         Name for a local data file.
     data : str or any Jdaviz-compatible data
-        A filepath or Jdaviz-compatible data object (such as Spectrum1D or CCDData)
+        A filepath or Jdaviz-compatible data object (such as Spectrum or CCDData)
     show : bool
         Determines whether to immediately show the application
     filepath : str

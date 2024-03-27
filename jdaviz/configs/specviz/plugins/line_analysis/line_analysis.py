@@ -7,7 +7,7 @@ from glue.core.message import (SubsetDeleteMessage,
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Bool, List, Float, Unicode, observe
 from astropy import units as u
-from specutils import analysis, Spectrum1D
+from specutils import analysis, Spectrum
 
 from jdaviz.core.events import (AddDataMessage,
                                 RemoveDataMessage,
@@ -321,7 +321,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 if (flux_unit.is_equivalent(u.Jy) or
                         flux_unit.is_equivalent(u.Jy/u.sr)):
                     # Perform integration in frequency space
-                    freq_spec = Spectrum1D(
+                    freq_spec = Spectrum(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
                                                                        equivalencies=u.spectral()),
                         flux=spec_subtracted.flux,
@@ -354,7 +354,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 elif (flux_unit.is_equivalent(u.Unit('W/(m2 m)')) or
                         flux_unit.is_equivalent(u.Unit('W/(m2 m sr)'))):
                     # Perform integration in wavelength space using MKS unit (meters)
-                    wave_spec = Spectrum1D(
+                    wave_spec = Spectrum(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.m,
                                                                        equivalencies=u.spectral()),
                         flux=spec_subtracted.flux,

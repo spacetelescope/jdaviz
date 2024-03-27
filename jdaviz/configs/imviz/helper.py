@@ -330,7 +330,7 @@ class Imviz(ImageConfigHelper):
             Provide a label to retrieve a specific data set from data_collection.
         spatial_subset : str, optional
             Spatial subset applied to data.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+        cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
 
         Returns

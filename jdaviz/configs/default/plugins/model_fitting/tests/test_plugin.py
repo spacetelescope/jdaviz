@@ -15,7 +15,7 @@ from astropy.utils.introspection import minversion
 import astropy.units as u
 
 from glue.core.roi import CircularROI, XRangeROI
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.configs.cubeviz.plugins.tests.test_parsers import ASTROPY_LT_5_3
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
@@ -162,7 +162,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
 def test_fit_cube_no_wcs(cubeviz_helper):
     # This is like when user do something to a cube outside of Jdaviz
     # and then load it back into a new instance of Cubeviz for further analysis.
-    sp = Spectrum1D(flux=np.ones((7, 8, 9)) * u.nJy)  # ny, nx, nz
+    sp = Spectrum(flux=np.ones((7, 8, 9)) * u.nJy)  # ny, nx, nz
     cubeviz_helper.load_data(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
@@ -309,7 +309,7 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
 
     # Get the data object without collapsing the spectrum:
-    data = cubeviz_helper.app.data_collection[0].get_object(cls=Spectrum1D, statistic=None)
+    data = cubeviz_helper.app.data_collection[0].get_object(cls=Spectrum, statistic=None)
     masked_data = p._apply_subset_masks(data, p.spatial_subset)
 
     assert data.mask is None
@@ -321,10 +321,10 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
     # Get the data object again (ensures mask == None)
     data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
+        cls=Spectrum, statistic=None
     )
     subset = cubeviz_helper.app.data_collection[0].get_subset_object(
-        p.spatial_subset_selected, cls=Spectrum1D, statistic=None
+        p.spatial_subset_selected, cls=Spectrum, statistic=None
     )
     masked_data = p._apply_subset_masks(data, p.spatial_subset)
     expected_spatial_mask = np.ones(data.flux.shape).astype(bool)
@@ -351,10 +351,10 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
     # Get the data object again (ensures mask == None)
     data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
+        cls=Spectrum, statistic=None
     )
     subset = cubeviz_helper.app.data_collection[0].get_subset_object(
-        p.spectral_subset_selected, cls=Spectrum1D, statistic=None
+        p.spectral_subset_selected, cls=Spectrum, statistic=None
     )
     masked_data = p._apply_subset_masks(data, p.spectral_subset)
 
@@ -366,7 +366,7 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
     # Get the data object again (ensures mask == None)
     data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
+        cls=Spectrum, statistic=None
     )
 
     # apply both spectral+spatial masks:
@@ -383,7 +383,7 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="right_spectrum")
 
     # 5000-7000
-    sp2 = Spectrum1D(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
+    sp2 = Spectrum(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
                      flux=spectrum1d.flux * 1.25)
     specviz_helper.load_data(sp2, data_label="left_spectrum")
 
@@ -417,7 +417,7 @@ def test_all_nan_uncert(specviz_helper):
     # being filtered in the fitter, as would normally happen with nans)
 
     uncertainty = StdDevUncertainty([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan] * u.Jy)
-    spec = Spectrum1D(flux=[1, 2, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
+    spec = Spectrum(flux=[1, 2, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
     specviz_helper.load_data(spec)
 
     plugin = specviz_helper.plugins['Model Fitting']
@@ -444,7 +444,7 @@ def test_all_nan_uncert_subset(specviz_helper):
     # message
 
     uncertainty = StdDevUncertainty([1, 1, np.nan, np.nan, np.nan, np.nan] * u.Jy)
-    spec = Spectrum1D(flux=[2, 4, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
+    spec = Spectrum(flux=[2, 4, 3, 4, 5, 6]*u.Jy, uncertainty=uncertainty)
     specviz_helper.load_data(spec)
 
     plugin = specviz_helper.plugins['Model Fitting']

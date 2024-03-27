@@ -14,7 +14,7 @@ from glue.core.subset_group import GroupedSubset
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from matplotlib.colors import cnames
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.events import SpectralMarksChangedMessage, LineIdentifyMessage, SnackbarMessage
 from jdaviz.core.registries import viewer_registry
@@ -47,7 +47,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
-    default_class = Spectrum1D
+    default_class = Spectrum
     spectral_lines = None
     _state_cls = FreezableProfileViewerState
 
@@ -91,7 +91,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                             layer_data = self.jdaviz_app._get_object_cache[cache_key]
                         else:
                             # If spectrum, collapse via the defined statistic
-                            if _class == Spectrum1D:
+                            if _class == Spectrum:
                                 layer_data = lyr.get_object(cls=_class, statistic=statistic)
                             else:
                                 layer_data = lyr.get_object(cls=_class)
@@ -496,7 +496,7 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
                 # This may need adjustment after the following
                 # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
                 spectral_axis = -1
-                data_obj = lyr.data.get_object(cls=Spectrum1D, statistic=None)
+                data_obj = lyr.data.get_object(cls=Spectrum, statistic=None)
 
                 if isinstance(lyr.data.coords, SpectralCoordinates):
                     spectral_wcs = lyr.data.coords

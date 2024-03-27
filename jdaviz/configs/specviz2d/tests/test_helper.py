@@ -1,4 +1,4 @@
-from specutils import Spectrum1D
+from specutils import Spectrum
 from jdaviz import Specviz
 
 
@@ -10,7 +10,7 @@ def test_helper(specviz2d_helper, mos_spectrum2d):
 
     returned_data = specviz2d_helper.get_data("Spectrum 2D")
     assert len(returned_data.shape) == 1
-    assert isinstance(returned_data, Spectrum1D)
+    assert isinstance(returned_data, Spectrum)
 
 
 def test_plugin_user_apis(specviz2d_helper):

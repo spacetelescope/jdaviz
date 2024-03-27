@@ -2,7 +2,7 @@ import numpy as np
 
 from astropy import units as u
 from astropy.convolution import convolve, Gaussian2DKernel
-from specutils import Spectrum1D
+from specutils import Spectrum
 from specutils.manipulation import gaussian_smooth
 from traitlets import List, Unicode, Bool, observe
 
@@ -148,7 +148,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         Returns
         -------
-        spec : `~specutils.Spectrum1D`
+        spec : `~specutils.Spectrum`
             The smoothed spectrum or data cube
         """
         if self.mode_selected == 'Spatial':
@@ -187,18 +187,18 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         Returns
         -------
-        spec : `~specutils.Spectrum1D`
+        spec : `~specutils.Spectrum`
             The smoothed spectrum
         """
         # Testing inputs to make sure putting smoothed spectrum into
         # datacollection works
         # input_flux = Quantity(np.array([0.2, 0.3, 2.2, 0.3]), u.Jy)
         # input_spaxis = Quantity(np.array([1, 2, 3, 4]), u.micron)
-        # spec1 = Spectrum1D(input_flux, spectral_axis=input_spaxis)
+        # spec1 = Spectrum(input_flux, spectral_axis=input_spaxis)
 
         # Takes the user input from the dialog (stddev) and uses it to
         # define a standard deviation for gaussian smoothing
-        cube = self.dataset.get_object(cls=Spectrum1D, statistic=None)
+        cube = self.dataset.get_object(cls=Spectrum, statistic=None)
         spec_smoothed = gaussian_smooth(cube, stddev=self.stddev)
 
         return spec_smoothed
@@ -212,7 +212,7 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         Returns
         -------
-        cube : `~specutils.Spectrum1D`
+        cube : `~specutils.Spectrum`
             The smoothed cube
         """
         cube = self.dataset.selected_obj
@@ -234,6 +234,6 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # Create a new cube with the old metadata. Note that astropy
         # convolution generates values for masked (NaN) data.
-        newcube = Spectrum1D(flux=convolved_data * flux_unit, wcs=w)
+        newcube = Spectrum(flux=convolved_data * flux_unit, wcs=w)
 
         return newcube

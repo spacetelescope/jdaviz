@@ -3,7 +3,7 @@ import astropy.units as u
 from glue.viewers.profile.state import FUNCTIONS as COLLAPSE_FUNCTIONS
 import numpy as np
 import pytest
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz import Cubeviz
 
@@ -40,17 +40,17 @@ unit_flux_gaussian_test_cases = []
 # unit-flux gaussian in frequency space
 freq = np.arange(1, 2, 0.001)*u.Hz
 flux_freq = _gauss_with_unity_area(freq.value, mn, sig)*1.0E26*u.Jy
-fnu_freq = Spectrum1D(spectral_axis=freq, flux=flux_freq)
+fnu_freq = Spectrum(spectral_axis=freq, flux=flux_freq)
 unit_flux_gaussian_test_cases.append(fnu_freq)
-fnu_wave = Spectrum1D(spectral_axis=fnu_freq.wavelength, flux=flux_freq)
+fnu_wave = Spectrum(spectral_axis=fnu_freq.wavelength, flux=flux_freq)
 unit_flux_gaussian_test_cases.append(fnu_wave)
 
 # unit-flux gaussian in wavelength space
 lam = np.arange(1, 2, 0.001)*u.m
 flux_wave = _gauss_with_unity_area(lam.value, mn, sig)*1.0*u.W/u.m**2/u.m
-flam_wave = Spectrum1D(spectral_axis=lam, flux=flux_wave)
+flam_wave = Spectrum(spectral_axis=lam, flux=flux_wave)
 unit_flux_gaussian_test_cases.append(flam_wave)
-flam_freq = Spectrum1D(spectral_axis=flam_wave.frequency, flux=flux_wave)
+flam_freq = Spectrum(spectral_axis=flam_wave.frequency, flux=flux_wave)
 unit_flux_gaussian_test_cases.append(flam_freq)
 
 
@@ -116,7 +116,7 @@ def test_unit_gaussian_mixed_units_per_steradian(specviz_helper):
     # unit-flux gaussian in wavelength space, mixed units, per steradian
     lam_a = np.arange(1, 2, 0.001)*u.Angstrom
     flx_wave = _gauss_with_unity_area(lam_a.value, mn, sig)*1E3*u.erg/u.s/u.cm**2/u.Angstrom/u.sr
-    fl_wave = Spectrum1D(spectral_axis=lam_a, flux=flx_wave)
+    fl_wave = Spectrum(spectral_axis=lam_a, flux=flx_wave)
 
     specviz_helper.load_data(fl_wave)
     lineflux_result = _calculate_line_flux(specviz_helper)

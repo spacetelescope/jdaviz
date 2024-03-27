@@ -7,7 +7,7 @@ from astropy.nddata import CCDData
 from astropy.wcs import WCS
 
 from specutils.io.registers import identify_spectrum_format
-from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specutils import Spectrum, SpectrumList, SpectrumCollection
 from stdatamodels import asdf_in_fits
 
 from jdaviz.core.config import list_configurations
@@ -27,7 +27,7 @@ default_mapping = {'JWST x1d': 'specviz', 'JWST s2d': 'specviz2d',
 # get formats table for specutils objects
 formats_table = astropy.io.registry.get_formats(readwrite='Read')
 formats_table.add_index('Data class')
-formats_table = formats_table.loc[['Spectrum1D', 'SpectrumList']]
+formats_table = formats_table.loc[['Spectrum', 'SpectrumList']]
 formats_table.sort(['Data class', 'Format'])
 
 file_to_config_mapping = {i: default_mapping.get(
@@ -161,7 +161,7 @@ def identify_helper(filename, ext=1):
         The HDUList of the file opened to identify the helper
     """
     supported_dtypes = [
-        Spectrum1D,
+        Spectrum,
         SpectrumList,
         SpectrumCollection,
         CCDData
@@ -238,7 +238,7 @@ def identify_helper(filename, ext=1):
             return (['specviz'], hdul)
 
     # If the data could be spectral:
-    for cls in [Spectrum1D, SpectrumList]:
+    for cls in [Spectrum, SpectrumList]:
         if cls in possible_formats.keys():
             recognized_spectrum_format = possible_formats[cls][0].lower()
 

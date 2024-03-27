@@ -7,7 +7,7 @@ from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.table import TableViewer
 from scipy.interpolate import interp1d
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.events import (AddDataToViewerMessage,
                                 RemoveDataFromViewerMessage,
@@ -68,7 +68,7 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewe
 class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
     # Due to limitations in CCDData and 2D data that has spectral and spatial
     #  axes, the default conversion class must handle cubes
-    default_class = Spectrum1D
+    default_class = Spectrum
 
     # categories: zoom resets, zoom, pan, subset, select tools, shortcuts
     tools_nested = [
@@ -215,7 +215,7 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         self.figure.axes[1].tick_format = None
         self.figure.axes[1].label_location = "middle"
 
-        # Sync with Spectrum1D viewer (that is also used by other viz).
+        # Sync with Spectrum viewer (that is also used by other viz).
         # Make it so y axis label is not covering tick numbers.
         self.figure.fig_margin["left"] = 95
         self.figure.fig_margin["bottom"] = 60

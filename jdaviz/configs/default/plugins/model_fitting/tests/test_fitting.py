@@ -10,7 +10,7 @@ from astropy.nddata import StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs import WCS
 from numpy.testing import assert_allclose, assert_array_equal
-from specutils.spectra import Spectrum1D
+from specutils.spectra import Spectrum
 
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
@@ -56,7 +56,7 @@ def test_model_params():
 
 
 def test_model_ids(cubeviz_helper, spectral_cube_wcs):
-    cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs),
+    cubeviz_helper.load_data(Spectrum(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs),
                              data_label='test')
     plugin = cubeviz_helper.plugins["Model Fitting"]._obj
     plugin.dataset_selected = 'test[FLUX]'
@@ -79,7 +79,7 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
 def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     flux = np.ones((3, 4, 5))
     flux[2, 2, :] = [1, 2, 3, 4, 5]
-    cubeviz_helper.load_data(Spectrum1D(flux=flux * u.nJy, wcs=spectral_cube_wcs),
+    cubeviz_helper.load_data(Spectrum(flux=flux * u.nJy, wcs=spectral_cube_wcs),
                              data_label='test')
     plugin = cubeviz_helper.plugins["Model Fitting"]
     plugin.create_model_component("Linear1D", "L")
@@ -112,7 +112,7 @@ def test_fitting_backend(unc):
         uncertainties = StdDevUncertainty(np.zeros(y.shape)*u.Jy)
     elif unc is None:
         uncertainties = None
-    spectrum = Spectrum1D(flux=y*u.Jy, spectral_axis=x*u.um, uncertainty=uncertainties)
+    spectrum = Spectrum(flux=y*u.Jy, spectral_axis=x*u.um, uncertainty=uncertainties)
 
     g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')
     g2f = models.Gaussian1D(2.0*u.Jy, 5.55*u.um, 0.3*u.um, name='g2')
@@ -149,7 +149,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     IMAGE_SIZE_X = 15
     IMAGE_SIZE_Y = 14
 
-    # Flux cube oriented as in JWST data. To build a Spectrum1D
+    # Flux cube oriented as in JWST data. To build a Spectrum
     # instance with this, one need to transpose it so the spectral
     # axis direction corresponds to the last index.
     flux_cube = np.zeros((SPECTRUM_SIZE, IMAGE_SIZE_X, IMAGE_SIZE_Y))
@@ -164,7 +164,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     for spx in spaxels:
         flux_cube[:, spx[0], spx[1]] = build_spectrum(sigma=SIGMA)[1]
 
-    # Transpose so it can be packed in a Spectrum1D instance.
+    # Transpose so it can be packed in a Spectrum instance.
     flux_cube = flux_cube.transpose(1, 2, 0)  # (15, 14, 200)
     cube_wcs = WCS({
         'WCSAXES': 3, 'RADESYS': 'ICRS', 'EQUINOX': 2000.0,
@@ -184,7 +184,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     elif unc is None:
         uncertainties = None
 
-    spectrum = Spectrum1D(flux=flux_cube*u.Jy, wcs=cube_wcs,
+    spectrum = Spectrum(flux=flux_cube*u.Jy, wcs=cube_wcs,
                           uncertainty=uncertainties, mask=mask)
 
     # Initial model for fit.
@@ -221,7 +221,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     assert fitted_model[0].mean.unit == u.um
 
     # Check that spectrum result is formatted as expected.
-    assert isinstance(fitted_spectrum, Spectrum1D)
+    assert isinstance(fitted_spectrum, Spectrum)
     assert len(fitted_spectrum.shape) == 3
     assert fitted_spectrum.shape == (IMAGE_SIZE_X, IMAGE_SIZE_Y, SPECTRUM_SIZE)
     assert fitted_spectrum.flux.unit == u.Jy
@@ -271,7 +271,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     # Our custom format is not registered to readers, just writers.
     # You can read it back in without custom read. See "Cubeviz roundtrip" below.
     with pytest.raises(IORegistryError, match="No reader defined"):
-        Spectrum1D.read(out_fn, format="jdaviz-cube")
+        Spectrum.read(out_fn, format="jdaviz-cube")
 
     # Check Cubeviz roundtrip.
     cubeviz_helper.load_data(out_fn)
