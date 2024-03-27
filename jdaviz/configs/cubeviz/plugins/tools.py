@@ -6,7 +6,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.configs.imviz.plugins.tools import _MatchedZoomMixin
 from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
@@ -153,15 +153,15 @@ class SpectrumPerSpaxel(SinglePixelRegion):
                 return
             cube_data = cube_data[0]
 
-        if isinstance(cube_data, Spectrum1D):
+        if isinstance(cube_data, Spectrum):
             spectrum = cube_data
         else:
             spectrum = cube_data.get_object(statistic=None)
-        # Note: change this when Spectrum1D.with_spectral_axis is fixed.
+        # Note: change this when Spectrum.with_spectral_axis is fixed.
         x_unit = self._spectrum_viewer.state.x_display_unit
         if spectrum.spectral_axis.unit != x_unit:
             new_spectral_axis = spectrum.spectral_axis.to(x_unit)
-            spectrum = Spectrum1D(spectrum.flux, new_spectral_axis)
+            spectrum = Spectrum(spectrum.flux, new_spectral_axis)
 
         if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
             self._reset_spectrum_viewer_bounds()

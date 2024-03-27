@@ -10,7 +10,7 @@ from astropy.nddata import (
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 from packaging.version import Version
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
@@ -310,7 +310,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 axis=spatial_axes, **kwargs
             )  # returns an NDDataArray
 
-        # Convert to Spectrum1D, with the spectral axis in correct units:
+        # Convert to Spectrum, with the spectral axis in correct units:
         if hasattr(spectral_cube.coords, 'spectral_wcs'):
             target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[0]
         else:
@@ -347,7 +347,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def get_aperture(self):
         # Retrieve flux cube and create an array to represent the cone mask
-        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
+        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum,
                                                                           statistic=None)
         # TODO: Replace with code for retrieving display_unit in cubeviz when it is available
         display_unit = flux_cube.spectral_axis.unit

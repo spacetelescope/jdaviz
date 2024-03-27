@@ -257,7 +257,7 @@ class Mosviz(ConfigHelper, LineListMixin):
 
             if sp1_val is not None and sp1_val != sp2_val:
                 # then there was a conflict
-                msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum1D and Spectrum2D" # noqa
+                msg = f"Warning: value for {attr} in row {row} in disagreement between Spectrum and Spectrum2D" # noqa
                 msg = SnackbarMessage(msg, color='warning', sender=self)
                 self.app.hub.broadcast(msg)
 
@@ -282,12 +282,12 @@ class Mosviz(ConfigHelper, LineListMixin):
         ----------
         spectra_1d : list or str
             A list of spectra as translatable container objects (e.g.
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
         spectra_2d : list or str
             A list of spectra as translatable container objects (e.g.
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
         images : list of obj, str, or `None`
@@ -459,12 +459,12 @@ class Mosviz(ConfigHelper, LineListMixin):
         ----------
         spectra_1d : list or str
             A list of spectra as translatable container objects (e.g.
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
 
         spectra_2d : list or str
             A list of spectra as translatable container objects (e.g.
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
         """
 
@@ -498,7 +498,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         ----------
         data_obj : list or str
             A list of spectra as translatable container objects (e.g.
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
         data_labels : str or list
             String representing the label for the data item loaded via
@@ -526,7 +526,7 @@ class Mosviz(ConfigHelper, LineListMixin):
         ----------
         data_obj : list or str
             A list of 2D spectra as translatable container objects (e.g.
-            ``Spectrum1D``) that can be read by glue-jupyter. Alternatively,
+            ``Spectrum``) that can be read by glue-jupyter. Alternatively,
             can be a string file path.
         data_labels : str or list
             String representing the label for the data item loaded via
@@ -920,7 +920,7 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         Returns
         -------
-        `~specutils.Spectrum1D`
+        `~specutils.Spectrum`
         """
         return self._get_spectrum('1D Spectra', row, apply_slider_redshift)
 
@@ -940,7 +940,7 @@ class Mosviz(ConfigHelper, LineListMixin):
 
         Returns
         -------
-        `~specutils.Spectrum1D`
+        `~specutils.Spectrum`
         """
         return self._get_spectrum('2D Spectra', row, apply_slider_redshift)
 
@@ -955,7 +955,7 @@ class Mosviz(ConfigHelper, LineListMixin):
             Provide a label to retrieve a specific data set from data_collection.
         spectral_subset : str, optional
             Spectral subset applied to data.
-        cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
+        cls : `~specutils.Spectrum`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
 
         Returns

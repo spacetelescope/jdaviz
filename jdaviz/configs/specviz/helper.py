@@ -3,7 +3,7 @@ import warnings
 from astropy import units as u
 from regions.core.core import Region
 from glue.core.subset_group import GroupedSubset
-from specutils import SpectralRegion, Spectrum1D
+from specutils import SpectralRegion, Spectrum
 
 from jdaviz.core.helpers import ConfigHelper
 from jdaviz.core.events import RedshiftMessage
@@ -16,11 +16,11 @@ def _apply_redshift_to_spectra(spectra, redshift):
 
     flux = spectra.flux
     # This is a hack around inability to input separate redshift with
-    # a SpectralAxis instance in Spectrum1D
+    # a SpectralAxis instance in Spectrum
     spaxis = spectra.spectral_axis.value * spectra.spectral_axis.unit
     mask = spectra.mask
     uncertainty = spectra.uncertainty
-    output_spectra = Spectrum1D(flux, spectral_axis=spaxis,
+    output_spectra = Spectrum(flux, spectral_axis=spaxis,
                                 redshift=redshift, mask=mask,
                                 uncertainty=uncertainty)
 
@@ -47,13 +47,13 @@ class Specviz(ConfigHelper, LineListMixin):
 
         Parameters
         ----------
-        data : str, `~specutils.Spectrum1D`, or `~specutils.SpectrumList`
-            Spectrum1D, SpectrumList, or path to compatible data file.
+        data : str, `~specutils.Spectrum`, or `~specutils.SpectrumList`
+            Spectrum, SpectrumList, or path to compatible data file.
         data_label : str
             The Glue data label found in the ``DataCollection``.
         format : str
             Loader format specification used to indicate data format in
-            `~specutils.Spectrum1D.read` io method.
+            `~specutils.Spectrum.read` io method.
         show_in_viewer : bool
             Show data in viewer(s).
         concat_by_file : bool
@@ -82,7 +82,7 @@ class Specviz(ConfigHelper, LineListMixin):
         if data_label is not None:
             spectrum = get_data_method(data_label=data_label,
                                        spectral_subset=spectral_subset,
-                                       cls=Spectrum1D)
+                                       cls=Spectrum)
             spectra[data_label] = spectrum
         else:
             for layer_state in viewer.state.layers:
@@ -91,7 +91,7 @@ class Specviz(ConfigHelper, LineListMixin):
                     if lyr.label == spectral_subset:
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    spectral_subset=spectral_subset,
-                                                   cls=Spectrum1D,
+                                                   cls=Spectrum,
                                                    **function_kwargs)
                         spectra[lyr.data.label] = spectrum
                     else:
@@ -101,19 +101,19 @@ class Specviz(ConfigHelper, LineListMixin):
                             isinstance(all_subsets[lyr.label][0], Region)):
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    spatial_subset=lyr.label,
-                                                   cls=Spectrum1D,
+                                                   cls=Spectrum,
                                                    **function_kwargs)
                         spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
                     elif (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
                             isinstance(all_subsets[lyr.label], SpectralRegion)):
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    spectral_subset=lyr.label,
-                                                   cls=Spectrum1D,
+                                                   cls=Spectrum,
                                                    **function_kwargs)
                         spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
                     else:
                         spectrum = get_data_method(data_label=lyr.label,
-                                                   cls=Spectrum1D,
+                                                   cls=Spectrum,
                                                    **function_kwargs)
                         spectra[lyr.label] = spectrum
 
@@ -123,7 +123,7 @@ class Specviz(ConfigHelper, LineListMixin):
             return spectra
         else:
             output_spectra = {}
-            # We need to create new Spectrum1D outputs with the redshifts set
+            # We need to create new Spectrum outputs with the redshifts set
             for key in spectra.keys():
                 output_spectra[key] = _apply_redshift_to_spectra(spectra[key], self._redshift)
 
@@ -299,7 +299,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Provide a label to retrieve a specific data set from data_collection.
         spectral_subset : str, optional
             Spectral subset applied to data.
-        cls : `~specutils.Spectrum1D`, optional
+        cls : `~specutils.Spectrum`, optional
             The type that data will be returned as.
         use_display_units: bool, optional
             Whether to convert to the display units defined in the <unit-conversion> plugin.
@@ -323,7 +323,7 @@ class Specviz(ConfigHelper, LineListMixin):
                 function = getattr(default_sp_viewer.state, 'function', None)
 
             if cls is None:
-                cls = Spectrum1D
+                cls = Spectrum
         elif spatial_subset or function:
             raise ValueError('kwargs spatial subset and function are not valid in specviz')
         else:

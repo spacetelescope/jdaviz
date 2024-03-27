@@ -3,7 +3,7 @@ import numpy as np
 import astropy.units as u
 
 from glue.core.roi import XRangeROI, CircularROI
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -94,7 +94,7 @@ def test_spectral_subsetselect_collapsed(cubeviz_helper, spectrum1d_cube):
 
     # and when dimensions of mask match a collapsed spectrum:
     data = cubeviz_helper.app.data_collection[0]
-    collapsed_spectrum = data.get_object(cls=Spectrum1D)
+    collapsed_spectrum = data.get_object(cls=Spectrum)
 
     collapsed_spectrum.mask = np.zeros_like(collapsed_spectrum.spectral_axis.value).astype(bool)
     p._apply_subset_masks(collapsed_spectrum, p.spectral_subset)

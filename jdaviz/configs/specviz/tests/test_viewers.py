@@ -1,7 +1,7 @@
 import astropy.units as u
 import numpy as np
 import pytest
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 
 @pytest.mark.parametrize(
@@ -17,7 +17,7 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
     flux = np.arange(1, 10) * input_unit
     spectral_axis = np.arange(1, 10) * u.um
 
-    spec = Spectrum1D(flux, spectral_axis)
+    spec = Spectrum(flux, spectral_axis)
 
     specviz_helper.load_data(spec)
 

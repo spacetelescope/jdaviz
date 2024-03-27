@@ -4,14 +4,14 @@ import pytest
 
 import astropy.units as u
 from astropy.table import QTable
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.marks import SpectralLine
 from jdaviz.core.linelists import get_available_linelists
 
 
 def test_line_lists(specviz_helper):
-    spec = Spectrum1D(flux=np.random.rand(100)*u.Jy,
+    spec = Spectrum(flux=np.random.rand(100)*u.Jy,
                       spectral_axis=np.arange(6000, 7000, 10)*u.AA)
     specviz_helper.load_data(spec)
 

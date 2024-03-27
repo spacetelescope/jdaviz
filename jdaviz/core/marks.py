@@ -5,7 +5,7 @@ from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
 from copy import deepcopy
 from glue.core import HubListener
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
@@ -110,8 +110,8 @@ class PluginMark:
         unit = u.Unit(unit)
 
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
-            if self.viewer.default_class is Spectrum1D:
-                spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
+            if self.viewer.default_class is Spectrum:
+                spec = self.viewer.state.reference_data.get_object(cls=Spectrum)
                 eqv = u.spectral_density(spec.spectral_axis)
                 y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
             else:
@@ -158,7 +158,7 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
     def _update_reference_data(self, reference_data):
         if reference_data is None:
             return
-        self._update_unit(reference_data.get_object(cls=Spectrum1D).spectral_axis.unit)
+        self._update_unit(reference_data.get_object(cls=Spectrum).spectral_axis.unit)
 
     def _update_unit(self, new_unit):
         # the x-units may have changed.  We want to convert the internal self.x

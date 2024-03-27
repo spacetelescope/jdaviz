@@ -7,7 +7,7 @@ from astropy import units as u
 from astropy.io import fits
 
 from astropy.wcs import WCS
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
@@ -37,7 +37,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None, specutils_format=
     data_label : str, optional
         The label to be applied to the Glue data component.
     specutils_format : str, optional
-        Optional format string to pass to Spectrum1D.read(), see
+        Optional format string to pass to Spectrum.read(), see
         https://specutils.readthedocs.io/en/stable/spectrum1d.html#list-of-loaders
         for valid format strings. Useful for processed files that may not include
         the original headers with information used to auto-identify.
@@ -72,7 +72,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None, specutils_format=
             return
 
         elif specutils_format is not None:
-            sc = Spectrum1D.read(file_obj, format=specutils_format)
+            sc = Spectrum.read(file_obj, format=specutils_format)
             _parse_spectrum1d_3d(
                 app, sc, data_label=data_label,
                 flux_viewer_reference_name=flux_viewer_reference_name,
@@ -94,7 +94,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None, specutils_format=
             if telescop == 'jwst' and ('ifu' in exptype or
                                        'mrs' in exptype or
                                        filetype == '3d ifu cube'):
-                sc = Spectrum1D.read(file_obj)
+                sc = Spectrum.read(file_obj)
                 data_label = app.return_data_label(file_name)
                 _parse_spectrum1d_3d(
                                     app, sc, data_label=data_label,
@@ -114,9 +114,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None, specutils_format=
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
     #  into something glue can understand.
-    elif isinstance(file_obj, Spectrum1D) and file_obj.flux.ndim in (1, 3):
+    elif isinstance(file_obj, Spectrum) and file_obj.flux.ndim in (1, 3):
         if file_obj.flux.ndim == 3:
-            print("Parsing 3D Spectrum1D")
+            print("Parsing 3D Spectrum")
             _parse_spectrum1d_3d(
                 app, file_obj, data_label=data_label,
                 flux_viewer_reference_name=flux_viewer_reference_name,
@@ -154,7 +154,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
         warnings.filterwarnings(
             'ignore', message='Input WCS indicates that the spectral axis is not last',
             category=UserWarning)
-        sc = Spectrum1D(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask)
+        sc = Spectrum(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask)
 
     if target_wave_unit is None and hdulist is not None:
         found_target = False
@@ -180,7 +180,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
             warnings.filterwarnings(
                 'ignore', message='Input WCS indicates that the spectral axis is not last',
                 category=UserWarning)
-            new_sc = Spectrum1D(
+            new_sc = Spectrum(
                 flux=sc.flux,
                 spectral_axis=sc.spectral_axis.to(target_wave_unit, u.spectral()),
                 meta=metadata,
@@ -308,7 +308,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             if hasattr(file_obj, 'wcs'):
                 meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs)
 
-            s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=meta)
+            s1d = Spectrum(flux=flux, wcs=file_obj.wcs, meta=meta)
 
         cur_data_label = app.return_data_label(data_label, attr.upper())
         app.add_data(s1d, cur_data_label)
@@ -325,7 +325,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
 
 def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_name=None):
 
-    # Here 'file_obj' is a Spectrum1D
+    # Here 'file_obj' is a Spectrum
 
     if data_label is None:
         data_label = app.return_data_label(file_obj)
@@ -335,7 +335,7 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
     file_obj.meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs) if hasattr(file_obj, 'wcs') else None  # noqa: E501
 
     # TODO: glue-astronomy translators only look at the flux property of
-    #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
+    #  specutils Spectrum objects. Fix to support uncertainties and masks.
 
     app.add_data(file_obj, data_label)
     app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
@@ -358,7 +358,7 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
         flux = flux << u.count
 
     meta = standardize_metadata({'_orig_spatial_wcs': None})
-    s3d = Spectrum1D(flux=flux, meta=meta)
+    s3d = Spectrum(flux=flux, meta=meta)
     app.add_data(s3d, data_label)
 
     if data_type == 'flux':
@@ -385,7 +385,7 @@ def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None,
     flux = np.rot90(np.moveaxis(flux, 0, 2), k=-1, axes=(0, 1))
 
     meta = {'filename': file_name, '_orig_spatial_wcs': None}
-    s3d = Spectrum1D(flux=flux * u.count, meta=standardize_metadata(meta))
+    s3d = Spectrum(flux=flux * u.count, meta=standardize_metadata(meta))
 
     app.add_data(s3d, data_label)
     app.add_data_to_viewer(flux_viewer_reference_name, data_label)
