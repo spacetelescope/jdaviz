@@ -409,3 +409,4 @@ This plugin allows exporting:
 
 * the plot in a given viewer to a PNG or SVG file,
 * a table in a plugin to ecsv
+* subsets as a region to .fits or .reg file.

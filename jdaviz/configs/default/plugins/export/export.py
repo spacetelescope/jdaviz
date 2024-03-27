@@ -9,6 +9,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginCompone
                                         ViewerSelectMixin, DatasetMultiSelectMixin,
                                         SubsetSelectMixin, PluginTableSelectMixin,
                                         MultiselectMixin, with_spinner)
+from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
+
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 
@@ -46,7 +48,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     # feature flag for cone support
     dev_dataset_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
-    dev_subset_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
+
     dev_plot_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
     dev_multi_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
 
@@ -59,7 +61,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     table_format_items = List().tag(sync=True)
     table_format_selected = Unicode().tag(sync=True)
 
+    subset_format_items = List().tag(sync=True)
+    subset_format_selected = Unicode().tag(sync=True)
+
     filename = Unicode().tag(sync=True)
+
+    # if selected subset is spectral or composite, display message and disable export
+    subset_invalid_msg = Unicode().tag(sync=True)
 
     # For Cubeviz movie.
     movie_enabled = Bool(False).tag(sync=True)
@@ -100,6 +108,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                   selected='table_format_selected',
                                                   manual_options=table_format_options)
 
+        subset_format_options = ['fits', 'reg']
+        self.subset_format = SelectPluginComponent(self,
+                                                   items='subset_format_items',
+                                                   selected='subset_format_selected',
+                                                   manual_options=subset_format_options)
+
         # default selection:
         self.dataset._default_mode = 'empty'
         self.table._default_mode = 'empty'
@@ -110,19 +124,26 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if self.config == "cubeviz":
             self.session.hub.subscribe(self, AddDataMessage, handler=self._on_cubeviz_data_added)  # noqa: E501
 
+        self.session.hub.subscribe(self, SubsetCreateMessage,
+                                   handler=self._set_subset_not_supported_msg)
+        self.session.hub.subscribe(self, SubsetUpdateMessage,
+                                   handler=self._set_subset_not_supported_msg)
+        self.session.hub.subscribe(self, SubsetDeleteMessage,
+                                   handler=self._set_subset_not_supported_msg)
+
     @property
     def user_api(self):
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
+
         expose = ['viewer', 'viewer_format',
+                  'subset', 'subset_format',
                   'table', 'table_format',
                   'filename', 'export']
 
         if self.dev_dataset_support:
             expose += ['dataset']
-        if self.dev_subset_support:
-            expose += ['subset']
         if self.dev_plot_support:
             expose += ['plot']
         if self.dev_multi_support:
@@ -150,6 +171,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     @observe('viewer_selected', 'dataset_selected', 'subset_selected',
              'table_selected', 'plot_selected')
     def _sync_singleselect(self, event):
+
         if not hasattr(self, 'dataset') or not hasattr(self, 'viewer'):
             # plugin not fully intialized
             return
@@ -163,6 +185,27 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                      'table_selected', 'plot_selected'):
             if name != attr:
                 setattr(self, attr, '')
+            if attr == 'subset_selected':
+                self._set_subset_not_supported_msg()
+
+    def _set_subset_not_supported_msg(self, msg=None):
+        """
+        Check if selected subset is spectral or composite, and warn and
+        disable Export button until these are supported.
+        """
+
+        if self.subset.selected is not None:
+            subset = self.app.get_subsets(self.subset.selected)
+            if self.subset.selected == '':
+                self.subset_invalid_msg = ''
+            elif self.app._is_subset_spectral(subset[0]):
+                self.subset_invalid_msg = 'Export for spectral subsets not supported.'
+            elif len(subset) > 1:
+                self.subset_invalid_msg = 'Export for composite subsets not supported.'
+            else:
+                self.subset_invalid_msg = ''
+        else:  # no subset selected (can be '' instead of None if previous selection made)
+            self.subset_invalid_msg = ''
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None):
@@ -176,8 +219,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         """
         if self.dataset.selected is not None and len(self.dataset.selected):
             raise NotImplementedError("dataset export not yet supported")
-        if self.subset.selected is not None and len(self.subset.selected):
-            raise NotImplementedError("subset export not yet supported")
+
         if self.plot.selected is not None and len(self.plot.selected):
             raise NotImplementedError("plot export not yet supported")
         if self.multiselect:
@@ -200,11 +242,23 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 self.save_movie(viewer, filename, filetype)
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+
         elif len(self.table.selected):
             filetype = self.table_format.selected
             if not filename.endswith(filetype):
                 filename += f".{filetype}"
             self.table.selected_obj.export_table(filename, overwrite=True)
+
+        elif len(self.subset.selected):
+            selected_subset_label = self.subset.selected
+            filetype = self.subset_format.selected
+            if len(filename):
+                if not filename.endswith(filetype):
+                    filename += f".{filetype}"
+            if self.subset_invalid_msg != '':
+                raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
+            self.save_subset_as_region(selected_subset_label, filename)
+
         else:
             raise ValueError("nothing selected for export")
         return filename
@@ -221,6 +275,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"Exported to {filename}", sender=self, color="success"))
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
+
         if filetype == "png":
             if filename is None or show_dialog:
                 viewer.figure.save_png(str(filename) if filename is not None else None)
@@ -402,6 +457,26 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         ).start()
 
         return filename
+
+    def save_subset_as_region(self, selected_subset_label, filename):
+        """
+        Save a subset to file as a Region object in the working directory.
+        Currently only enabled for non-composite spatial subsets. Can be saved
+        as a .fits or .reg file. If link type is currently set to 'pixel',
+        then a pixel region will be saved. If link type is 'wcs', then a sky
+        region will be saved. If a file with the same name already exists in the
+        working directory, it will be overwriten.
+        """
+
+        # type of region saved depends on link type
+        link_type = getattr(self.app, '_link_type', None)
+
+        region = self.app.get_subsets(subset_name=selected_subset_label,
+                                      include_sky_region=link_type == 'wcs')
+
+        region = region[0][f'{"sky_" if link_type == "wcs" else ""}region']
+
+        region.write(filename, overwrite=True)
 
     def vue_interrupt_recording(self, *args):  # pragma: no cover
         self.movie_interrupt = True
