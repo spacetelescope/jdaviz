@@ -17,6 +17,9 @@ New Features
 
 - "Export" plugin supports exporting plugin tables. [#2755]
 
+- Opening a plugin in the tray (from the API or the toolbar buttons) now scrolls to that plugin.
+  [#2768]
+
 Cubeviz
 ^^^^^^^
 
