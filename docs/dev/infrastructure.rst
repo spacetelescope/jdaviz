@@ -145,7 +145,7 @@ for Jdaviz-specific elements.
 
 .. note::
 
-    GlueViz in the diagram above encapsulates all the libraries tied to the Glue
+    GlueViz in the diagram above encapsulates all the libraries tied to the glue
     visualization ecosystem. They include but not limited to glue-core, glue-jupyter,
     glue-astronomy, and bqplot-image-gl. Due to the complexity of Jdaviz's
     dependency tree, we will not mention all of them in this section.
