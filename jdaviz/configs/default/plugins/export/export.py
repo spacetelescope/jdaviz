@@ -13,6 +13,8 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
+from specutils import Spectrum1D
+import astropy.units as u
 
 try:
     import cv2
@@ -68,6 +70,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     # if selected subset is spectral or composite, display message and disable export
     subset_invalid_msg = Unicode().tag(sync=True)
+    data_invalid_msg = Unicode().tag(sync=True)
 
     # For Cubeviz movie.
     movie_enabled = Bool(False).tag(sync=True)
@@ -137,13 +140,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
 
-        expose = ['viewer', 'viewer_format',
+        expose = ['viewer', 'viewer_format', 'dataset',
                   'subset', 'subset_format',
                   'table', 'table_format',
                   'filename', 'export']
 
-        if self.dev_dataset_support:
-            expose += ['dataset']
         if self.dev_plot_support:
             expose += ['plot']
         if self.dev_multi_support:
@@ -187,6 +188,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 setattr(self, attr, '')
             if attr == 'subset_selected':
                 self._set_subset_not_supported_msg()
+            if attr == 'dataset_selected':
+                self._set_dataset_not_supported_msg()
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
@@ -207,6 +210,16 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:  # no subset selected (can be '' instead of None if previous selection made)
             self.subset_invalid_msg = ''
 
+    def _set_dataset_not_supported_msg(self, msg=None):
+        if self.dataset.selected_obj is not None:
+            data_unit = self.dataset.selected_obj.unit
+            if data_unit == u.Unit('DN/s'):
+                self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501
+            else:
+                self.data_invalid_msg = ''
+        else:
+            self.data_invalid_msg = ''
+
     @with_spinner()
     def export(self, filename=None, show_dialog=None):
         """
@@ -217,8 +230,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         filename : str, optional
             If not provided, plugin value will be used.
         """
-        if self.dataset.selected is not None and len(self.dataset.selected):
-            raise NotImplementedError("dataset export not yet supported")
 
         if self.plot.selected is not None and len(self.plot.selected):
             raise NotImplementedError("plot export not yet supported")
@@ -258,6 +269,14 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if self.subset_invalid_msg != '':
                 raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
             self.save_subset_as_region(selected_subset_label, filename)
+
+        elif len(self.dataset.selected):
+            if not filename.endswith(".fits"):
+                filename += ".fits"
+            if self.data_invalid_msg != "":
+                raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
+            if isinstance(self.dataset.selected_obj, Spectrum1D):
+                self.dataset.selected_obj.write(Path(filename), overwrite=True)
 
         else:
             raise ValueError("nothing selected for export")
