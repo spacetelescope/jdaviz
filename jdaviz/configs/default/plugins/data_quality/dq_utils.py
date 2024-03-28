@@ -26,7 +26,6 @@ class LookupStretch:
     def __init__(self, flags=None, hidden_flags=None):
         # Default x, y values(0-1) range chosen for a typical initial spline shape.
         # Can be modified if required.
-        print('initializing stretch')
         if flags is None:
             flags = np.linspace(0, 1, 5)
         if hidden_flags is None:

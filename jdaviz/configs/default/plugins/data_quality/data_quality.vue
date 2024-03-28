@@ -51,7 +51,7 @@
     <j-plugin-section-header>Quality Flags</j-plugin-section-header>
     <v-row class="row-no-padding">
       <v-col cols=6>
-        <j-tooltip tipid='plugin-line-lists-erase-all'>
+        <j-tooltip tipid='plugin-line-lists-plot-all'>
           <v-btn
             tile
             :elevation=0
@@ -67,7 +67,7 @@
         </j-tooltip>
       </v-col>
       <v-col cols=6 style="text-align: right">
-        <j-tooltip tipid='plugin-line-lists-plot-all'>
+        <j-tooltip tipid='plugin-line-lists-erase-all'>
           <v-btn
             tile
             :elevation=0
@@ -84,6 +84,40 @@
       </v-col>
     </v-row>
 
+    <v-col style="...">
+      <v-row>
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        multiple
+        :items="Object.keys(flag_map_definitions_selected).map(Number)"
+        item-value="item => item"
+        item-text="item"
+        v-model="flags_filter"
+        label="Filter by bits"
+        hint="Any flags containing these decomposed bits will be visualized."
+        persistent-hint
+      >
+        <template v-slot:item="{active, item, attrs, on}">
+          <v-list-item v-on="on" v-bind="attrs" #default="{active}">
+            <v-list-item-action>
+            <v-checkbox :input-value="active"></v-checkbox>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>
+                {{item + ': ' + flag_map_definitions_selected[item].name}}
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </template>
+      </v-select>
+      <v-col align="right">
+        <v-btn text @click="clear_flags_filter" color="accent">
+          Clear Filter
+        </v-btn>
+      </v-col>
+      </v-row>
+    </v-col>
     <v-row style="max-width: calc(100% - 80px)">
       <v-col>
         Color
@@ -96,6 +130,7 @@
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="(item, index) in decoded_flags" key=":item">
+          <div v-if="flagVisible(item, item.decomposed, flags_filter)">
           <v-expansion-panel-header v-slot="{ open }">
             <v-row no-gutters align="center" style="...">
               <v-col cols=1>
@@ -125,7 +160,7 @@
           <v-expansion-panel-content>
             <v-row no-gutters style="..." align="center">
               <v-col cols=2 align="left">
-                <v-btn :color="item.show ? 'accent' : 'default'" icon @click="toggle_visibility(index)">
+                <v-btn :color="item.show ? 'accent' : 'default'" icon @click="toggleVisibility(index)">
                   <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
                 </v-btn>
               </v-col>
@@ -136,6 +171,7 @@
             </v-col>
             </v-row>
           </v-expansion-panel-content>
+        </div>
         <v-expansion-panel>
       </v-expansion-panels>
     </v-row>
@@ -153,8 +189,18 @@
       100);
   },
   methods: {
-    toggle_visibility(index) {
+    toggleVisibility(index) {
       this.update_visibility(index)
+    },
+    flagVisible(flag_item, decomposed, flags_filter) {
+      if (flags_filter === null || flags_filter.length == 0) {
+        return true
+      } else {
+        // if any of the decomposed bits are in `flags_filter`, return true:
+        return Object.keys(decomposed).filter(value => flags_filter.includes(parseInt(value))).length !== 0;
+      }
+
+      return true
     }
   }
 }
