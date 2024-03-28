@@ -36,6 +36,8 @@ from photutils.utils import make_random_cmap
 
 __all__ = ['PlotOptions']
 
+RANDOM_SUBSET_SIZE = 10_000
+
 
 def _register_random_cmap(
     cmap_name,
@@ -999,15 +1001,21 @@ class PlotOptions(PluginTemplateMixin):
             arr = comp.data
             sub_data = arr.ravel()
 
-        # filter out nans (or else bqplot will fail)
-        if np.any(np.isnan(sub_data)):
-            sub_data = sub_data[~np.isnan(sub_data)]
-
+        self.stretch_histogram.viewer.state.random_subset = RANDOM_SUBSET_SIZE
         self.stretch_histogram._update_data('histogram', x=sub_data)
 
         if len(sub_data) > 0:
-            interval = PercentileInterval(95)
-            hist_lims = interval.get_limits(sub_data)
+
+            # Use glue to compute the statistics since this allows us to use
+            # a random subset of the data to compute the histogram
+            glue_data = self.stretch_histogram.app.data_collection['histogram']
+            hist_lims = (
+                glue_data.compute_statistic('percentile', glue_data.id['x'],
+                                            percentile=2.5, random_subset=RANDOM_SUBSET_SIZE),
+                glue_data.compute_statistic('percentile', glue_data.id['x'],
+                                            percentile=97.5, random_subset=RANDOM_SUBSET_SIZE)
+            )
+
             # set the stepsize for vmin/vmax to be approximately 1% of the range of the
             # histogram (within the percentile interval), rounded to 1-2 significant digits
             # to avoid random step sizes.  This logic is somewhat arbitrary and can be safely
