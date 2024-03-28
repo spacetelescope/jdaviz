@@ -6,6 +6,7 @@
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
     :popout_button="popout_button"
+    :scroll_to.sync="scroll_to"
     :disabled_msg="disabled_msg">
 
     <v-row>

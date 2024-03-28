@@ -2,7 +2,8 @@
   <j-tray-plugin
     :description="docs_description || 'Tools for selecting and interacting with subsets.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <v-row v-if="config === 'imviz'">
       <div style="width: calc(100% - 32px)">

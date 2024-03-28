@@ -4,7 +4,8 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-profiles'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <plugin-viewer-select
       :items="viewer_items"

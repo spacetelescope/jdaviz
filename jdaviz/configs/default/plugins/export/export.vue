@@ -2,7 +2,8 @@
   <j-tray-plugin
     description='Export data or plots from the app to a file.'
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#export'"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <j-multiselect-toggle
       v-if="dev_multi_support"

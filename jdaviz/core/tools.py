@@ -464,7 +464,7 @@ class _BaseSidebarShortcut(Tool):
 
     def activate(self):
         plugin = self.viewer.jdaviz_app.get_tray_item_from_name(self.plugin_name)
-        plugin.open_in_tray()
+        plugin.open_in_tray(scroll_to=True)
         viewer_id = self.viewer.reference_id
         viewer_select = getattr(plugin, self.viewer_attr)
         if viewer_select.multiselect:

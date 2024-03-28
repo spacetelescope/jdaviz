@@ -3,7 +3,8 @@
     :description="docs_description || 'Select slice of the cube to show in the image viewers.  The slice can also be changed interactively in the spectrum viewer by activating the slice tool.'"
     :irrelevant_msg="irrelevant_msg"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <v-row>
       <v-expansion-panels popout>
