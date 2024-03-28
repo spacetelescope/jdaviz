@@ -147,7 +147,6 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
     uncert_viewer.state._set_axes_aspect_ratio(1)
 
     mm = cubeviz_helper.plugins["Moment Maps"]
-    print(mm._obj.dataset_selected)
     mm._obj.dataset_selected = 'test[FLUX]'
 
     # Test moment 1 in velocity
@@ -169,6 +168,13 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
     assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value -4.14668e+02 km / s",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
+
+    # Add test for unit conversion
+    assert mm._obj.output_radio_items[0]['unit_str'] == 'm'
+    uc_plugin = cubeviz_helper.plugins['Unit Conversion']._obj
+    uc_plugin.spectral_unit.selected = 'Angstrom'
+    assert mm._obj.output_radio_items[0]['unit_str'] == 'Angstrom'
+    uc_plugin.spectral_unit.selected = 'm'
 
     # Test moment 2 in velocity
     mm.n_moment = 2

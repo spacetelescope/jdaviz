@@ -1,5 +1,5 @@
 import numpy as np
-
+import astropy.units as u
 from functools import cached_property
 from glue.core import BaseData
 
@@ -78,14 +78,22 @@ class WithSliceSelection:
         take_inds.remove(self.slice_index)
         for layer in self.layers:
             try:
-                data_obj = layer.layer.data.get_component(self.slice_component_label).data
+                if self.slice_component_label in layer.layer.data.world_component_ids:
+                    display_spectral_units = self.jdaviz_app._get_display_unit('spectral')
+                    data_obj = layer.layer.data.get_component(self.slice_component_label)
+                    converted_axis = (np.asarray((data_obj.data.ravel() * u.Unit(data_obj.units)).
+                                                 to(display_spectral_units).value, dtype=float))
+                else:
+                    data_obj = layer.layer.data.get_component(self.slice_component_label).data
+                    converted_axis = np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
+                                                dtype=float)
             except (AttributeError, KeyError):
                 continue
             else:
                 break
         else:
             return np.array([])
-        return np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]), dtype=float)
+        return converted_axis
 
     @property
     def slice(self):

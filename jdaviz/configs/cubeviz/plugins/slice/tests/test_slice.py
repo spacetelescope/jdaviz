@@ -58,6 +58,13 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.select_wavelength(4.62360028e-07)
     assert sl.value == slice_values[1]
 
+    # Add test for unit conversion
+    uc_plugin = cubeviz_helper.plugins['Unit Conversion']._obj
+    uc_plugin.spectral_unit.selected = 'Angstrom'
+    assert sl.value_unit == 'Angstrom'
+    cubeviz_helper.select_wavelength(4623.60028)
+    assert sl.value == 1
+
     # Test player buttons API
 
     sl.vue_goto_first()

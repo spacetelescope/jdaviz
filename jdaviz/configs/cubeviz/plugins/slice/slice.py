@@ -236,7 +236,7 @@ class Slice(PluginTemplateMixin):
             return
         prev_unit = u.Unit(self.value_unit)
         self.value_unit = str(msg.unit)
-        self.value = (self.value * prev_unit).to_value(msg.unit)
+        self.value = (self.value * prev_unit).to_value(msg.unit, equivalencies=u.spectral())
 
     @property
     def valid_selection_values(self):
