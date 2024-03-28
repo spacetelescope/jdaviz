@@ -149,8 +149,6 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Histogram in Plot Options no longer stalls for a very large image. [#2735]
-
 Mosviz
 ^^^^^^
 
