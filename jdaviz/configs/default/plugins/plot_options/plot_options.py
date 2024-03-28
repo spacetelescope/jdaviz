@@ -4,9 +4,8 @@ import os
 import matplotlib
 import numpy as np
 
-from astropy.visualization import (
-    ManualInterval, ContrastBiasStretch, PercentileInterval
-)
+from astropy.visualization import ManualInterval, ContrastBiasStretch
+
 from echo import delay_callback
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
