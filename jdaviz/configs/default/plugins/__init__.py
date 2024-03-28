@@ -11,3 +11,4 @@ from .metadata_viewer.metadata_viewer import *  # noqa
 from .export.export import *  # noqa
 from .plot_options.plot_options import *  # noqa
 from .markers.markers import * # noqa
+from .data_quality.data_quality import *  # noqa
