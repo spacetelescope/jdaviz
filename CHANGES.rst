@@ -17,6 +17,9 @@ New Features
 
 - "Export" plugin supports exporting plugin tables and non-composite spatial subsets.[#2755, #2760, #2772]
 
+- Opening a plugin in the tray (from the API or the toolbar buttons) now scrolls to that plugin.
+  [#2768]
+
 Cubeviz
 ^^^^^^^
 
