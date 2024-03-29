@@ -3350,7 +3350,7 @@ class DatasetSelect(SelectPluginComponent):
             return data.meta.get('Plugin', None) != self.plugin._plugin_name
 
         def not_from_plugin_model_fitting(data):
-            return data.meta.get('Plugin', None) != 'ModelFitting'
+            return data.meta.get('Plugin', None) != 'Model Fitting'
 
         def has_metadata(data):
             return hasattr(data, 'meta') and isinstance(data.meta, dict) and len(data.meta)
