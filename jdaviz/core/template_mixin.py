@@ -3671,7 +3671,9 @@ class AddResults(BasePluginComponent):
         self.add_observe(label, self._on_label_changed)
 
     def __repr__(self):
-        return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}, auto_update_result={self.auto_update_result}>"  # noqa
+        if getattr(self, 'auto_update_result', None) is not None:
+            return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}, auto_update_result={self.auto_update_result}>"  # noqa
+        return f"<AddResults label='{self.label}', auto={self.auto}, viewer={self.viewer.selected}>"  # noqa
 
     @property
     def user_api(self):
