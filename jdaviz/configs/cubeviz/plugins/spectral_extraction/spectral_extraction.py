@@ -273,7 +273,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             )
             if uncert_cube:
                 uncertainties = uncert_cube.get_subset_object(
-                    subset_id=self.aperture.selected, cls=StdDevUncertainty
+                    subset_id=self.aperture.selected, cls=StdDevUncertainty, attribute="flux"
                 )
             # Exact slice mask of cone or cylindrical aperture through the cube. `shape_mask` is
             # a 3D array with fractions of each pixel within an aperture at each
