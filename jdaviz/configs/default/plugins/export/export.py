@@ -122,9 +122,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         dataset_format_options = ['fits']
         self.dataset_format = SelectPluginComponent(self,
-                                                   items='dataset_format_items',
-                                                   selected='dataset_format_selected',
-                                                   manual_options=dataset_format_options)
+                                                    items='dataset_format_items',
+                                                    selected='dataset_format_selected',
+                                                    manual_options=dataset_format_options)
 
         # default selection:
         self.dataset._default_mode = 'empty'
