@@ -66,6 +66,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     subset_format_items = List().tag(sync=True)
     subset_format_selected = Unicode().tag(sync=True)
 
+    dataset_format_items = List().tag(sync=True)
+    dataset_format_selected = Unicode().tag(sync=True)
+
     filename = Unicode().tag(sync=True)
 
     # if selected subset is spectral or composite, display message and disable export
@@ -117,6 +120,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    selected='subset_format_selected',
                                                    manual_options=subset_format_options)
 
+        dataset_format_options = ['fits']
+        self.dataset_format = SelectPluginComponent(self,
+                                                   items='dataset_format_items',
+                                                   selected='dataset_format_selected',
+                                                   manual_options=dataset_format_options)
+
         # default selection:
         self.dataset._default_mode = 'empty'
         self.table._default_mode = 'empty'
@@ -140,7 +149,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
 
-        expose = ['viewer', 'viewer_format', 'dataset',
+        expose = ['viewer', 'viewer_format',
+                  'dataset', 'dataset_format',
                   'subset', 'subset_format',
                   'table', 'table_format',
                   'filename', 'export']
@@ -271,8 +281,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self.save_subset_as_region(selected_subset_label, filename)
 
         elif len(self.dataset.selected):
-            if not filename.endswith(".fits"):
-                filename += ".fits"
+            filetype = self.dataset_format.selected
+            if not filename.endswith(filetype):
+                filename += f".{filetype}"
             if self.data_invalid_msg != "":
                 raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
             if isinstance(self.dataset.selected_obj, Spectrum1D):

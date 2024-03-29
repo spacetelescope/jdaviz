@@ -93,6 +93,18 @@
                 {{data_invalid_msg}}
       </span>
     </v-row>
+    <v-row v-if="dataset_selected" class="row-min-bottom-padding">
+        <v-select
+          :menu-props="{ left: true }"
+          attach
+          v-model="dataset_format_selected"
+          :items="dataset_format_items.map(i => i.label)"
+          label="Format"
+          hint="Format for exporting datasets."
+          persistent-hint
+        >
+        </v-select>
+      </v-row>
 
     <div v-if="subset_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Subsets</j-plugin-section-header>
