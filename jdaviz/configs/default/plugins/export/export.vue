@@ -162,7 +162,7 @@
       </v-row>
     </div>
 
-    <div v-if="dev_plot_support && plot_items.length > 0">
+    <div v-if="plot_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Plugin Plots</j-plugin-section-header>
       <plugin-inline-select
         :items="plot_items"
@@ -171,6 +171,18 @@
         :single_select_allow_blank="true"
       >
       </plugin-inline-select>
+      <v-row v-if="plot_selected.length > 0" class="row-min-bottom-padding">
+        <v-select
+          :menu-props="{ left: true }"
+          attach
+          v-model="plot_format_selected"
+          :items="plot_format_items.map(i => i.label)"
+          label="Format"
+          hint="File format for exporting plugin plots."
+          persistent-hint
+        >
+        </v-select>
+      </v-row>
     </div>
 
     <j-plugin-section-header style="margin-top: 12px">Export To</j-plugin-section-header>

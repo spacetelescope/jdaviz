@@ -573,7 +573,7 @@ class PlotOptions(PluginTemplateMixin):
                                                    'stretch_params_value', 'stretch_params_sync',
                                                    state_filter=is_image)
 
-        self.stretch_histogram = Plot(self, viewer_type='histogram')
+        self.stretch_histogram = Plot(self, name='stretch_hist', viewer_type='histogram')
         # Add the stretch bounds tool to the default Plot viewer.
         self.stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
         self.stretch_histogram._initialize_toolbar(["jdaviz:stretch_bounds"])

@@ -10,7 +10,8 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'AstrowidgetMarkersChangedMessage', 'MarkersPluginUpdate',
            'CanvasRotationChangedMessage',
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
-           'PluginTableAddedMessage', 'PluginTableModifiedMessage']
+           'PluginTableAddedMessage', 'PluginTableModifiedMessage',
+           'PluginPlotAddedMessage', 'PluginPlotModifiedMessage']
 
 
 class NewViewerMessage(Message):
@@ -436,15 +437,27 @@ class PluginTableAddedMessage(Message):
         return self.sender._plugin
 
 
-class PluginTableModifiedMessage(Message):
+class PluginTableModifiedMessage(PluginTableAddedMessage):
     '''Message generated when the items in a plugin table are changed'''
     def __init__(self, sender):
         super().__init__(sender)
 
+
+class PluginPlotAddedMessage(Message):
+    '''Message generated when a plugin plot is initialized'''
+    def __init__(self, sender):
+        super().__init__(sender)
+
     @property
-    def table(self):
+    def plot(self):
         return self.sender
 
     @property
     def plugin(self):
         return self.sender._plugin
+
+
+class PluginPlotModifiedMessage(PluginPlotAddedMessage):
+    '''Message generated when the items in a plugin plot are changed'''
+    def __init__(self, sender):
+        super().__init__(sender)
