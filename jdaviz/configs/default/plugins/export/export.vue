@@ -17,7 +17,7 @@
       :items="viewer_items"
       :selected.sync="viewer_selected"
       :multiselect="multiselect"
-      :single_select_allow_blank="true"
+      :single_select_allow_blank="false"
     >
     </plugin-inline-select>
     <v-row v-if="viewer_selected.length > 0" class="row-min-bottom-padding">
@@ -85,7 +85,7 @@
         :items="dataset_items"
         :selected.sync="dataset_selected"
         :multiselect="multiselect"
-        :single_select_allow_blank="true"
+        :single_select_allow_blank="false"
       >
       </plugin-inline-select>
     </div>
@@ -99,7 +99,7 @@
         :items="subset_items"
         :selected.sync="subset_selected"
         :multiselect="multiselect"
-        :single_select_allow_blank="true"
+        :single_select_allow_blank="false"
       >
       </plugin-inline-select>
     </div>
@@ -129,7 +129,7 @@
         :items="table_items"
         :selected.sync="table_selected"
         :multiselect="multiselect"
-        :single_select_allow_blank="true"
+        :single_select_allow_blank="false"
       >
       </plugin-inline-select>
       <v-row v-if="table_selected.length > 0" class="row-min-bottom-padding">
@@ -152,7 +152,7 @@
         :items="plot_items"
         :selected.sync="plot_selected"
         :multiselect="multiselect"
-        :single_select_allow_blank="true"
+        :single_select_allow_blank="false"
       >
       </plugin-inline-select>
     </div>
