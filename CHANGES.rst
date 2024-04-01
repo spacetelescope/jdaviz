@@ -15,7 +15,8 @@ New Features
 
 - "Export Plot" plugin is now replaced with the more general "Export" plugin. [#2722]
 
-- "Export" plugin supports exporting plugin tables, data and non-composite spatial subsets.[#2755, #2760, #2772, #2770]
+- "Export" plugin supports exporting plugin tables, data, non-composite spatial
+  subsets, and plugin plots.[#2755, #2760, #2772, #2770, #2774]
 
 Cubeviz
 ^^^^^^^
