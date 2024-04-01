@@ -874,7 +874,6 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _is_valid_item(self, item, filter_callables={}):
         for valid_filter in self.filters:
-            print('valid filter', valid_filter)
             if isinstance(valid_filter, str):
                 # pull from the functions above (should be subclassed),
                 # will raise an error if not in locals
@@ -2571,7 +2570,8 @@ class PluginPlotSelect(SelectPluginComponent):
 
         def not_empty_plot(table):
             # checks plot.figure.marks to determine if figure is of an empty plot
-            return len(plot.marks) > 0
+            # not sure if this is a foolproof way to do this?
+            return len(plot.figure.marks) > 0
 
         return super()._is_valid_item(plot, locals())
 
@@ -4470,6 +4470,7 @@ class Plot(PluginSubcomponent):
         self._initialize_toolbar()
 
         plugin.session.hub.broadcast(PluginPlotAddedMessage(sender=self))
+        plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _initialize_toolbar(self, default_tool_priority=[]):
         self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, default_tool_priority)
@@ -4499,6 +4500,8 @@ class Plot(PluginSubcomponent):
         dc_entry = self.app.data_collection[label]
         self.viewer.remove_data(dc_entry)
         self.app.data_collection.remove(dc_entry)
+
+        self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
 
     def _update_data(self, label, reset_lims=False, **kwargs):
         self._check_valid_components(**kwargs)
@@ -4532,6 +4535,8 @@ class Plot(PluginSubcomponent):
         if reset_lims:
             self.viewer.state.reset_limits()
 
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def update_style(self, label, **kwargs):
         kwargs.setdefault('visible', True)
         if label not in self.layers.keys():
@@ -4559,6 +4564,8 @@ class Plot(PluginSubcomponent):
                     continue
                 setattr(lyr.state, k, v)
 
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def _add_data(self, label, **kwargs):
         self._check_valid_components(**kwargs)
         data = Data(label=label, **kwargs)
@@ -4574,6 +4581,8 @@ class Plot(PluginSubcomponent):
             dc.add_link(links)
         self.viewer.add_data(dc_entry)
 
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def _refresh_marks(self):
         # ensure all marks are drawn
         # NOTE: this seems to only be necessary for histogram viewers and may be an upstream bug
@@ -4582,6 +4591,8 @@ class Plot(PluginSubcomponent):
         other_marks = list(self.marks.values())
         layer_marks = [m for m in self.figure.marks if m not in other_marks]
         self.figure.marks = layer_marks + other_marks
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     @property
     def marks(self):
@@ -4599,8 +4610,12 @@ class Plot(PluginSubcomponent):
                     else:
                         mark.x, mark.y = [], []
 
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def clear_all_marks(self):
         self.clear_marks(*self.marks.keys())
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _add_mark(self, cls, label, xnorm=False, ynorm=False, **kwargs):
         """
@@ -4629,6 +4644,9 @@ class Plot(PluginSubcomponent):
                    **kwargs)
         self.figure.marks = self.figure.marks + [mark]
         self._marks[label] = mark
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
         return mark
 
     def add_line(self, label, x=[], y=[], xnorm=False, ynorm=False, **kwargs):
@@ -4637,11 +4655,15 @@ class Plot(PluginSubcomponent):
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
 
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def add_scatter(self, label, x=[], y=[], xnorm=False, ynorm=False, **kwargs):
         return self._add_mark(bqplot.Scatter, label, x=x, y=y,
                               xnorm=xnorm, ynorm=ynorm,
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def add_bins(self, label, sample=[0], bins=2, density=True, **kwargs):
         # NOTE: initializing with bins=1 breaks the figure until a resize event
@@ -4649,6 +4671,8 @@ class Plot(PluginSubcomponent):
                               density=density,
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def set_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         with delay_callback(self.viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):

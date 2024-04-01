@@ -12,7 +12,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginCompone
                                         MultiselectMixin, with_spinner)
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 
-from jdaviz.core.events import AddDataMessage, SnackbarMessage
+from jdaviz.core.events import AddDataMessage, PluginPlotModifiedMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 from specutils import Spectrum1D
 import astropy.units as u

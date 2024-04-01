@@ -210,28 +210,81 @@ def test_unable_export_unsupported_data_units(specviz2d_helper):
                        match='Data can not be exported - Export Disabled: The unit DN / s could not be saved in native FITS format.'):  # noqa
         export_plugin.export()
 
-def test_export_plugin_plots(tmp_path, imviz_helper):
-    """
-    Test basic funcionality of exporting plugin plots
-    from the export plugin. Tests on the 'Plot Options:stretch_hist'
-    plot.
-    """
 
-    data = NDData(np.ones((500, 500)) * u.nJy)
+class TestExportPluginPlots():
 
-    imviz_helper.load_data(data)
+    def test_basic_export_plugin_plots(tmp_path, imviz_helper):
+        """
+        Test basic funcionality of exporting plugin plots
+        from the export plugin. Tests on the 'Plot Options:stretch_hist'
+        plot, which exists upon loading data, and also that plots that
+        may have been initialized but are empty are not displayed in
+        the Export plugin.
+        """
+        data = NDData(np.ones((500, 500)) * u.nJy)
 
-    export_plugin = imviz_helper.plugins['Export']._obj
-    export_plugin.plot.selected = 'Plot Options:stretch_hist'
+        imviz_helper.load_data(data)
 
-    assert export_plugin.plot_format.selected == 'png'  # default format
+        export_plugin = imviz_helper.plugins['Export']._obj
+        export_plugin.plot.selected = 'Plot Options:stretch_hist'
 
-    export_plugin.export()
+        assert export_plugin.plot_format.selected == 'png'  # default format
+        export_plugin.export()
+        # assert os.path.isfile("imviz_export.png")
 
-    #assert os.path.isfile("imviz_export.png")
+        # change filename
+        export_plugin.filename = 'test_export_plugin_plot'
+        # assert os.path.isfile("test_export_plugin_plot.png")
 
-    # change filename
-    export_plugin.filename = 'test_export_plugin_plot'
+        # and change file type
+        export_plugin.plot_format.selected = 'svg'
+        # assert os.path.isfile("test_export_plugin_plot.svg")
 
-    assert os.path.isfile("test_export_plugin_plot.png")
+        # make sure that the only valid option for export is this plugin,
+        # not the other plots that exist but are empty (ap phot and line profile)
+        # this might change down the line if new plots are added.
+        available_plots = [x['label'] for x in export_plugin.plot.items]
+        assert len(available_plots) == 1
+        assert available_plots[0] == 'Plot Options:stretch_hist'
+
+
+    def test_ap_phot_plot_export(tmp_path, imviz_helper):
+
+        """
+        Test export functionality for plot from the aperture photometry
+        plugin.
+        """
+
+        data = NDData(np.ones((500, 500)) * u.nJy)
+
+        imviz_helper.load_data(data)
+
+        export_plugin = imviz_helper.plugins['Export']._obj
+
+        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(xc=250,
+                                                                     yc=250,
+                                                                     radius=100))
+
+        phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        phot_plugin.aperture_selected = 'Subset 1'
+        phot_pluginphot_plugin = True
+
+        phot_plugin.current_plot_type = 'Curve of Growth'
+        phot_plugin.vue_do_aper_phot()
+        assert phot_plugin.plot_available
+
+        available_plots = [x['label'] for x in export_plugin.plot.items]
+        assert 'Aperture Photometry:plot' in available_plots
+
+        export_plugin.plot.selected = 'Aperture Photometry:plot'
+        export_plugin.export()
+        # assert os.path.isfile("imviz_export.png")
+
+        # change filename
+        export_plugin.filename = 'test_export_plugin_plot'
+        # assert os.path.isfile("test_export_plugin_plot.png")
+
+        # and change file type
+        export_plugin.plot_format.selected = 'svg'
+        # assert os.path.isfile("test_export_plugin_plot.svg")
 
