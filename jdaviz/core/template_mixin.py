@@ -874,6 +874,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def _is_valid_item(self, item, filter_callables={}):
         for valid_filter in self.filters:
+            print('valid filter', valid_filter)
             if isinstance(valid_filter, str):
                 # pull from the functions above (should be subclassed),
                 # will raise an error if not in locals
@@ -2518,7 +2519,7 @@ class PluginPlotSelect(SelectPluginComponent):
 
     def __init__(self, plugin, items, selected,
                  multiselect=None,
-                 filters=[],
+                 filters=['not_empty_plot'],
                  default_text=None, manual_options=[],
                  default_mode='first'):
         """
@@ -2566,11 +2567,13 @@ class PluginPlotSelect(SelectPluginComponent):
     def selected_obj(self):
         return self.plugin.app._jdaviz_helper.plugin_plots.get(self.selected)
 
-    def _is_valid_item(self, table):
-        def not_empty_table(table):
-            return len(table.items) > 0
+    def _is_valid_item(self, plot):
 
-        return super()._is_valid_item(table, locals())
+        def not_empty_plot(table):
+            # checks plot.figure.marks to determine if figure is of an empty plot
+            return len(plot.marks) > 0
+
+        return super()._is_valid_item(plot, locals())
 
 
 class PluginPlotSelectMixin(VuetifyTemplate, HubListener):

@@ -209,3 +209,29 @@ def test_unable_export_unsupported_data_units(specviz2d_helper):
     with pytest.raises(NotImplementedError,
                        match='Data can not be exported - Export Disabled: The unit DN / s could not be saved in native FITS format.'):  # noqa
         export_plugin.export()
+
+def test_export_plugin_plots(tmp_path, imviz_helper):
+    """
+    Test basic funcionality of exporting plugin plots
+    from the export plugin. Tests on the 'Plot Options:stretch_hist'
+    plot.
+    """
+
+    data = NDData(np.ones((500, 500)) * u.nJy)
+
+    imviz_helper.load_data(data)
+
+    export_plugin = imviz_helper.plugins['Export']._obj
+    export_plugin.plot.selected = 'Plot Options:stretch_hist'
+
+    assert export_plugin.plot_format.selected == 'png'  # default format
+
+    export_plugin.export()
+
+    #assert os.path.isfile("imviz_export.png")
+
+    # change filename
+    export_plugin.filename = 'test_export_plugin_plot'
+
+    assert os.path.isfile("test_export_plugin_plot.png")
+
