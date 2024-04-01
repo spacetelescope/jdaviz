@@ -395,13 +395,20 @@ class Application(VuetifyTemplate, HubListener):
             if (trigger_data_lbl is not None and
                     not np.any([plugin_inputs.get(attr) == trigger_data_lbl
                                 for attr in data_subs])):
+                # trigger data does not match subscribed data entries
                 continue
-            if (trigger_subset_lbl is not None and
-                    not np.any([plugin_inputs.get(attr) == trigger_subset_lbl
-                                for attr in subset_subs])):
-                continue
+            if trigger_subset_lbl is not None:
+                if not np.any([plugin_inputs.get(attr) == trigger_subset_lbl
+                               for attr in subset_subs]):
+                    # trigger subset does not match subscribed subsets
+                    continue
+                if not np.any([plugin_inputs.get(attr) == trigger_subset.data.label
+                               for attr in data_subs]):
+                    # trigger parent data of subset does not match subscribed data entries
+                    continue
             # update and overwrite data
             # make a new instance of the plugin to avoid changing any UI settings
+            print("***", data.label, trigger_data_lbl, trigger_subset)
             plg = self._jdaviz_helper.plugins.get(data.meta.get('Plugin'))._obj.new()
             if not plg.supports_auto_update:
                 raise NotImplementedError(f"{data.meta.get('Plugin')} does not support live-updates")  # noqa

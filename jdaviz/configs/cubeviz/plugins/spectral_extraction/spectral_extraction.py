@@ -108,6 +108,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.extracted_spec = None
 
+        self.dataset.filters = ['is_flux_cube']
+
         # TODO: in the future this could be generalized with support in SelectPluginComponent
         self.aperture._default_text = 'Entire Cube'
         self.aperture._manual_options = ['Entire Cube']
@@ -166,7 +168,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def user_api(self):
-        expose = ['function', 'spatial_subset', 'aperture',
+        expose = ['dataset', 'function', 'spatial_subset', 'aperture',
                   'add_results', 'collapse_to_spectrum',
                   'wavelength_dependent', 'reference_spectral_value',
                   'aperture_method']

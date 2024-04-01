@@ -2422,7 +2422,7 @@ class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):
                                              'aperture_selected',
                                              'aperture_selected_validity',
                                              'aperture_scale_factor',
-                                             dataset='dataset' if hasattr(self, 'dataset') else None,  # noqa
+                                             dataset='dataset' if isinstance(getattr(self, 'dataset', None), DatasetSelect) else None,  # noqa
                                              multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
 
@@ -3387,6 +3387,9 @@ class DatasetSelect(SelectPluginComponent):
 
         def is_cube(data):
             return len(data.shape) == 3
+
+        def is_flux_cube(data):
+            return data.label == getattr(self.app._jdaviz_helper._loaded_flux_cube, 'label', None)
 
         def is_not_wcs_only(data):
             return not data.meta.get(_wcs_only_label, False)
