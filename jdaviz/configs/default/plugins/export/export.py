@@ -288,6 +288,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
             if isinstance(self.dataset.selected_obj, Spectrum1D):
                 self.dataset.selected_obj.write(Path(filename), overwrite=True)
+            else:
+                raise NotImplementedError(f"exporting {self.dataset.selected} not supported")
 
         else:
             raise ValueError("nothing selected for export")
