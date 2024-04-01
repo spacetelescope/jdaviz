@@ -192,8 +192,9 @@ def test_export_data(cubeviz_helper, spectrum1d_cube):
     assert export_plugin.dataset_format.selected == 'fits'
     assert 'test[FLUX]' in cubeviz_helper.app.data_collection.labels
     with pytest.raises(NotImplementedError,
-                       match='Data export is only available for plugin generated data.'):
+                       match='Data can not be exported'):
         export_plugin.export()
+    assert export_plugin.data_invalid_msg == 'Data export is only available for plugin generated data.'
 
 
 def test_disable_export_for_non_plugin_generated_data(cubeviz_helper, spectrum1d_cube):
@@ -210,9 +211,11 @@ def test_disable_export_for_non_plugin_generated_data(cubeviz_helper, spectrum1d
     ep = cubeviz_helper.plugins["Export"]._obj
     ep.dataset_selected = 'test[FLUX]'
     with pytest.raises(NotImplementedError,
-                       match='Data export is only available for plugin generated data.'):
+                       match='Data can not be exported'):
         ep.export()
+    assert ep.data_invalid_msg == 'Data export is only available for plugin generated data.'
 
     ep.dataset_selected = 'moment 0'
     ep.export()
     assert os.path.isfile("cubeviz_export.fits")
+    assert ep.data_invalid_msg == ''
