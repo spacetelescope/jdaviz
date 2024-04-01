@@ -32,6 +32,11 @@
       >
       </v-select>
     </v-row>
+    <v-row v-if="viewer_invalid_msg.length > 0">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                {{viewer_invalid_msg}}
+      </span>
+    </v-row>
     <div v-if="viewer_selected.length > 0 && viewer_format_selected === 'mp4'" class="row-min-bottom-padding">
       <div v-if="movie_enabled">
         <v-row class="row-min-bottom-padding">
@@ -184,9 +189,10 @@
         :results_isolated_to_plugin="true"
         @click="export_from_ui"
         :spinner="spinner"
-        :disabled="filename.length === 0 || 
+        :disabled="filename.length === 0 ||
                    movie_recording ||
-                   subset_invalid_msg.length > 0 || 
+                   subset_invalid_msg.length > 0 ||
+                   viewer_invalid_msg.length > 0 ||
                    (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
       >
         Export

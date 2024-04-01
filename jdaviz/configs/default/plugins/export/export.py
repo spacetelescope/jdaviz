@@ -69,6 +69,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # if selected subset is spectral or composite, display message and disable export
     subset_invalid_msg = Unicode().tag(sync=True)
 
+    # We currently disable exporting spectrum-viewer in Cubeviz
+    viewer_invalid_msg = Unicode().tag(sync=True)
+
     # For Cubeviz movie.
     movie_enabled = Bool(False).tag(sync=True)
     i_start = IntHandleEmpty(0).tag(sync=True)
@@ -187,6 +190,22 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 setattr(self, attr, '')
             if attr == 'subset_selected':
                 self._set_subset_not_supported_msg()
+            elif attr == "viewer_selected" and self.config == "cubeviz":
+                if self.viewer_selected == "spectrum-viewer" and self.viewer_format_selected == "png":
+                    msg = "Exporting the spectrum viewer as a PNG in Cubeviz is currently disabled"
+                else:
+                    msg = ""
+                self.viewer_invalid_msg = msg
+
+    @observe('viewer_format_selected')
+    def _disable_viewer_format_combo(self, event):
+        format = event.get('new')
+        if (self.config == "cubeviz" and self.viewer_selected == "spectrum-viewer"
+                and format == "png"):
+            msg = "Exporting the spectrum viewer as a PNG in Cubeviz is currently disabled"
+        else:
+            msg = ""
+        self.viewer_invalid_msg = msg
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
