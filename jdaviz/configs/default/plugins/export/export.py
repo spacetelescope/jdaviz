@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from traitlets import Any, Bool, List, Unicode, observe
+from traitlets import Bool, List, Unicode, observe
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
@@ -12,7 +12,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginCompone
                                         MultiselectMixin, with_spinner)
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 
-from jdaviz.core.events import AddDataMessage, PluginPlotModifiedMessage, SnackbarMessage
+from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 from specutils import Spectrum1D
 import astropy.units as u

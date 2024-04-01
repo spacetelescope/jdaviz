@@ -228,17 +228,15 @@ class TestExportPluginPlots():
         export_plugin = imviz_helper.plugins['Export']._obj
         export_plugin.plot.selected = 'Plot Options:stretch_hist'
 
-        assert export_plugin.plot_format.selected == 'png'  # default format
+        assert export_plugin.plot_format.selected == 'png'  # should be default format
+        # just check that it doesn't crash, since we can't download
         export_plugin.export()
-        # assert os.path.isfile("imviz_export.png")
 
         # change filename
         export_plugin.filename = 'test_export_plugin_plot'
-        # assert os.path.isfile("test_export_plugin_plot.png")
-
         # and change file type
         export_plugin.plot_format.selected = 'svg'
-        # assert os.path.isfile("test_export_plugin_plot.svg")
+        export_plugin.export()
 
         # make sure that the only valid option for export is this plugin,
         # not the other plots that exist but are empty (ap phot and line profile)
@@ -246,7 +244,6 @@ class TestExportPluginPlots():
         available_plots = [x['label'] for x in export_plugin.plot.items]
         assert len(available_plots) == 1
         assert available_plots[0] == 'Plot Options:stretch_hist'
-
 
     def test_ap_phot_plot_export(tmp_path, imviz_helper):
 
@@ -267,7 +264,6 @@ class TestExportPluginPlots():
 
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.aperture_selected = 'Subset 1'
-        phot_pluginphot_plugin = True
 
         phot_plugin.current_plot_type = 'Curve of Growth'
         phot_plugin.vue_do_aper_phot()
@@ -277,14 +273,11 @@ class TestExportPluginPlots():
         assert 'Aperture Photometry:plot' in available_plots
 
         export_plugin.plot.selected = 'Aperture Photometry:plot'
+        # just check that it doesn't crash, since we can't download
         export_plugin.export()
-        # assert os.path.isfile("imviz_export.png")
 
         # change filename
         export_plugin.filename = 'test_export_plugin_plot'
-        # assert os.path.isfile("test_export_plugin_plot.png")
-
         # and change file type
         export_plugin.plot_format.selected = 'svg'
-        # assert os.path.isfile("test_export_plugin_plot.svg")
-
+        export_plugin.export()
