@@ -15,7 +15,7 @@ from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 from specutils import Spectrum1D
 import astropy.units as u
-from astropy.nddata import NDData
+from astropy.nddata import NDData, CCDData
 
 try:
     import cv2
@@ -224,12 +224,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def _set_dataset_not_supported_msg(self, msg=None):
         if self.dataset.selected_obj is not None:
             data_unit = self.dataset.selected_obj.unit
-            if data_unit == u.Unit('DN/s'):
-                self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501
-            if isinstance(self.dataset.selected_obj, NDData):
-                self.data_invalid_msg = "Export is not implemented for NDdata objects."
-            elif not isinstance(self.dataset.selected_obj, Spectrum1D):
+            if self.dataset.selected_obj.meta.get("Plugin", None) is None:
+                self.data_invalid_msg= "Data export is only available for plugin generated data."
+            elif not isinstance(self.dataset.selected_obj, (Spectrum1D, CCDData)):
                 self.data_invalid_msg = "Export is not implemented for this type of data"
+            elif data_unit == u.Unit('DN/s'):
+                self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501
             else:
                 self.data_invalid_msg = ''
         else:
@@ -291,11 +291,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 filename += f".{filetype}"
             if self.data_invalid_msg != "":
                 raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
-            if isinstance(self.dataset.selected_obj, Spectrum1D):
-                self.dataset.selected_obj.write(Path(filename), overwrite=True)
-            else:
-                raise NotImplementedError(f"exporting {self.dataset.selected} not supported")
-
+            self.dataset.selected_obj.write(Path(filename), overwrite=True)
         else:
             raise ValueError("nothing selected for export")
         return filename

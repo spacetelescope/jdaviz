@@ -196,15 +196,23 @@ def test_export_data(cubeviz_helper, spectrum1d_cube):
     assert 'test[FLUX]' in cubeviz_helper.app.data_collection.labels
 
 
-def test_unable_export_unsupported_data_units(specviz2d_helper):
-    from astropy.units import def_unit, Unit
-    dn = def_unit("DN", represents=Unit("count"))
-    dn_per_s = dn / Unit("s")
-    data = Spectrum1D(flux=np.ones((500, 500, 2)) * dn_per_s)
-    specviz2d_helper.load_data(data)
-    export_plugin = specviz2d_helper.plugins["Export"]._obj
-    export_plugin.dataset_selected = "Spectrum 2D"
-    assert export_plugin.dataset.selected_obj.unit == "DN/s"
+def test_disable_export_for_non_plugin_generated_data(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    mm = cubeviz_helper.plugins["Moment Maps"]
+    mm.dataset = 'test[FLUX]'
+    mm._obj.dataset_selected = 'test[FLUX]'
+    mm.n_moment = 0
+    mm.calculate_moment()
+    assert mm._obj.results_label == 'moment 0'
+    cubeviz_helper.app.add_data_to_viewer(
+        cubeviz_helper._default_flux_viewer_reference_name, 'moment 0'
+    )
+    ep = cubeviz_helper.plugins["Export"]._obj
+    ep.dataset_selected = 'test[FLUX]'
     with pytest.raises(NotImplementedError,
-                       match='Data can not be exported'):  # noqa
-        export_plugin.export()
+                       match='Data export is only available for plugin generated data.'):
+        ep.export()
+
+    ep.dataset_selected = 'moment 0'
+    ep.export()
+    assert os.path.isfile("cubeviz_export.fits")
