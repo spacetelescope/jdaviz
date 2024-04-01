@@ -228,7 +228,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501
             if isinstance(self.dataset.selected_obj, NDData):
                 self.data_invalid_msg = f"Export isn't implemented for the NDdata objects."
+            elif not isinstance(self.dataset.selected_obj, Spectrum1D):
+                self.data_invalid_msg = "Export is not implemented for this type of data"
             else:
+
                 self.data_invalid_msg = ''
         else:
             self.data_invalid_msg = ''
