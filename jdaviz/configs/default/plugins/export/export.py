@@ -191,18 +191,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if attr == 'subset_selected':
                 self._set_subset_not_supported_msg()
             elif self.config == "cubeviz" and attr == "viewer_selected":
-                if (self.viewer_selected == "spectrum-viewer" and
-                        self.viewer_format_selected == "png"):
-                    msg = "Exporting the spectrum viewer as a PNG in Cubeviz is currently disabled"
-                else:
-                    msg = ""
-                self.viewer_invalid_msg = msg
+                self._disable_viewer_format_combo(event)
 
     @observe('viewer_format_selected')
     def _disable_viewer_format_combo(self, event):
-        format = event.get('new')
         if (self.config == "cubeviz" and self.viewer_selected == "spectrum-viewer"
-                and format == "png"):
+                and self.viewer_format_selected == "png"):
             msg = "Exporting the spectrum viewer as a PNG in Cubeviz is currently disabled"
         else:
             msg = ""
