@@ -190,7 +190,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 setattr(self, attr, '')
             if attr == 'subset_selected':
                 self._set_subset_not_supported_msg()
-            elif attr == "viewer_selected" and self.config == "cubeviz":
+            elif self.config == "cubeviz" and attr == "viewer_selected":
                 if self.viewer_selected == "spectrum-viewer" and self.viewer_format_selected == "png":
                     msg = "Exporting the spectrum viewer as a PNG in Cubeviz is currently disabled"
                 else:
