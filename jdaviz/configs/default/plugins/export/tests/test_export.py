@@ -194,7 +194,7 @@ def test_export_data(cubeviz_helper, spectrum1d_cube):
     with pytest.raises(NotImplementedError,
                        match='Data can not be exported'):
         export_plugin.export()
-    assert export_plugin.data_invalid_msg == 'Data export is only available for plugin generated data.'
+    assert export_plugin.data_invalid_msg == 'Data export is only available for plugin generated data.'   # noqa
 
 
 def test_disable_export_for_non_plugin_generated_data(cubeviz_helper, spectrum1d_cube):
