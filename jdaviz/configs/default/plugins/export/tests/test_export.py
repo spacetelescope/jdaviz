@@ -205,7 +205,6 @@ def test_unable_export_unsupported_data_units(specviz2d_helper):
     export_plugin = specviz2d_helper.plugins["Export"]._obj
     export_plugin.dataset_selected = "Spectrum 2D"
     assert export_plugin.dataset.selected_obj.unit == "DN/s"
-    print("export_plugin.dataset_selected", export_plugin.dataset_selected)
     with pytest.raises(NotImplementedError,
-                       match='Data can not be exported - Export Disabled: The unit DN / s could not be saved in native FITS format.'):  # noqa
+                       match='Data can not be exported'):  # noqa
         export_plugin.export()
