@@ -136,6 +136,11 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+Cubeviz
+^^^^^^^
+
+- Disabled exporting spectrum-viewer to PNG in Cubeviz pending investigation/bugfix. [#2777]
+
 3.8.3 (unreleased)
 ==================
 
