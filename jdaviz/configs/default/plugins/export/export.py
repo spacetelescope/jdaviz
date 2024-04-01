@@ -51,7 +51,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     * ``table`` (:class:`~jdaviz.core.template_mixin.PluginTableSelect`)
     * ``table_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``plot`` (:class:`~jdaviz.core.template_mixin.PluginPlotSelect`)
-    * ``plot_format`` (:class:`~jdaviz.core.teplate_mixin.SelectPluginComponent`)
+    * ``plot_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``filename``
     * :meth:`export`
     """

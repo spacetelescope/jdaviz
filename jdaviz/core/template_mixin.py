@@ -2568,7 +2568,7 @@ class PluginPlotSelect(SelectPluginComponent):
 
     def _is_valid_item(self, plot):
 
-        def not_empty_plot(table):
+        def not_empty_plot(plot):
             # checks plot.figure.marks to determine if figure is of an empty plot
             # not sure if this is a foolproof way to do this?
             return len(plot.figure.marks) > 0
