@@ -15,6 +15,7 @@ from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 from specutils import Spectrum1D
 import astropy.units as u
+from astropy.nddata import NDData
 
 try:
     import cv2
@@ -225,6 +226,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             data_unit = self.dataset.selected_obj.unit
             if data_unit == u.Unit('DN/s'):
                 self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501
+            if isinstance(self.dataset.selected_obj, NDData):
+                self.data_invalid_msg = f"Export isn't implemented for the NDdata objects."
             else:
                 self.data_invalid_msg = ''
         else:
