@@ -375,6 +375,7 @@ def test_cube_extraction_with_nan(cubeviz_helper, image_cube_hdu_obj):
     assert_allclose(sp_subset.flux.value, 12)  # (4 x 4) - 4
 
 
+# this test will have to move
 def test_unit_translation(cubeviz_helper):
     # custom cube so we have PIXAR_SR in metadata, and flux units = Jy/pix
     wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",

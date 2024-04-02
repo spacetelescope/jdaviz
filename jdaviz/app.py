@@ -72,7 +72,7 @@ class UnitConverterWithSpectral:
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
             list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
                 include_prefix_units=True, equivalencies=eqv))) + [
-                    'Jy', 'mJy', 'uJy',
+                    'Jy', 'mJy', 'uJy', 'MJy',
                     'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
                     'eV / (s m2 Hz)', 'eV / (Hz s m2)',
                     'erg / (s cm2)',
@@ -99,13 +99,44 @@ class UnitConverterWithSpectral:
                 spec = data.get_object(cls=Spectrum1D)
             except RuntimeError:
                 eqv = []
-            else:
-                if len(values) == 2:
+            if len(values) == 2:
                     # Need this for setting the y-limits
                     spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
                     eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
+    
+            elif '_pixel_scale_factor' in spec.meta:
+                if (u.sr in u.Unit(original_units).bases) and \
+                   (u.sr not in u.Unit(target_units).bases):
+                    # sb -> flux
+
+                    # to debug
+                    print('first if')
+                    print('values before')
+                    print(values)
+
+                    converted_values = values * spec.meta['_pixel_scale_factor']
+
+                    # to debug
+                    print(converted_values)
+
+                    return converted_values
                 else:
+                    # elif (u.sr in u.Unit(target_units).bases) and \
+                    # (u.sr not in u.Unit(original_units).bases):
+                    # flux -> sb
+
+                    # to debug
+                    print('second elif')
+                    print('values before')
+                    print(values)
+
+                    converted_values = values / spec.meta['_pixel_scale_factor']
+                    # to debug
+                    print(converted_values)
+                    return converted_values
+            else:
                     eqv = u.spectral_density(spec.spectral_axis)
+
         else:  # spectral axis
             eqv = u.spectral()
 

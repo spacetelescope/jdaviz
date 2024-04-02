@@ -1,10 +1,11 @@
 import numpy as np
 from astropy import units as u
-from traitlets import List, Unicode, observe
+from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, UnitSelectPluginComponent, PluginUserApi
+from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent, SelectPluginComponent,
+                                        PluginUserApi)
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list)
 
@@ -52,6 +53,12 @@ class UnitConversion(PluginTemplateMixin):
     flux_unit_items = List().tag(sync=True)
     flux_unit_selected = Unicode().tag(sync=True)
 
+    translate_unit = Bool(False).tag(sync=True)
+    show_translator = Bool(False).tag(sync=True)
+
+    flux_or_sb_items = List().tag(sync=True)
+    flux_or_sb_selected = Unicode().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -76,6 +83,10 @@ class UnitConversion(PluginTemplateMixin):
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
+        self.flux_or_sb = SelectPluginComponent(self,
+                                                items='flux_or_sb_items',
+                                                selected='flux_or_sb_selected',
+                                                manual_options=['Surface Brightness', 'Flux'])
 
     @property
     def user_api(self):
@@ -125,14 +136,28 @@ class UnitConversion(PluginTemplateMixin):
             self.flux_unit.choices = choices
             self.flux_unit.selected = y_unit
 
+    def translate_units(self, flux_or_sb_selected):
+        spec_units = u.Unit(self.spectrum_viewer.state.y_display_unit)
+        # Surface Brightness -> Flux
+        if u.sr in spec_units.bases and flux_or_sb_selected == 'Surface Brightness':
+            spec_units *= u.sr
+            # update display units
+            self.spectrum_viewer.state.y_display_unit = str(spec_units)
+
+        # Flux -> Surface Brightness
+        elif u.sr not in spec_units.bases and flux_or_sb_selected == 'Flux':
+            spec_units /= u.sr
+            # update display units
+            self.spectrum_viewer.state.y_display_unit = str(spec_units)
+
     @observe('spectral_unit_selected')
     def _on_spectral_unit_changed(self, *args):
+        self.hub.broadcast(GlobalDisplayUnitChanged('spectral',
+                                                    self.spectral_unit.selected,
+                                                    sender=self))
         xunit = _valid_glue_display_unit(self.spectral_unit.selected, self.spectrum_viewer, 'x')
         if self.spectrum_viewer.state.x_display_unit != xunit:
             self.spectrum_viewer.state.x_display_unit = xunit
-            self.hub.broadcast(GlobalDisplayUnitChanged('spectral',
-                                                        self.spectral_unit.selected,
-                                                        sender=self))
 
     @observe('flux_unit_selected')
     def _on_flux_unit_changed(self, *args):
@@ -142,3 +167,23 @@ class UnitConversion(PluginTemplateMixin):
             self.hub.broadcast(GlobalDisplayUnitChanged('flux',
                                                         self.flux_unit.selected,
                                                         sender=self))
+    @observe('flux_or_sb_selected')
+    def _set_flux_or_sb(self, *args):
+        if u.sr in u.Unit(self.flux_unit.selected).bases:
+            self.flux_or_sb_selected = 'Surface Brightness'
+        else:
+            self.flux_or_sb_selected = 'Flux'        
+
+    @observe('translate_unit', 'flux_or_sb_selected')
+    def _translate(self, *args):
+        # make sure we have a scale factor
+        specs_w_factor = [spec for spec in self.app.data_collection
+                          if "_pixel_scale_factor" in spec.meta]
+
+        if specs_w_factor:
+            self.translate_units(self.flux_or_sb_selected)
+        if not self.show_translator:
+            return
+        else:
+            raise ValueError("No collapsed spectra in data collection, \
+                              please collapse a spectrum first.")

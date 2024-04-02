@@ -67,7 +67,7 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
         return []
 
     # Get local units.
-    locally_defined_flux_units = ['Jy', 'mJy', 'uJy',
+    locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy',
                                   'W / (m2 Hz)',
                                   'eV / (s m2 Hz)',
                                   'erg / (s cm2)',
