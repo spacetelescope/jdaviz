@@ -83,6 +83,8 @@ Cubeviz
   of ``value``, ``value_unit``, and ``show_value``, respectively.  ``slice`` is also deprecated
   and should be replaced with accessing/setting ``value`` directly. [#2706, #2715]
 
+- Disabled exporting spectrum-viewer to PNG in Cubeviz; pending investigation/bugfix. [#2777]
+
 Imviz
 ^^^^^
 
