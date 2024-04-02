@@ -4625,8 +4625,6 @@ class Plot(PluginSubcomponent):
     def clear_all_marks(self):
         self.clear_marks(*self.marks.keys())
 
-        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
-
     def _add_mark(self, cls, label, xnorm=False, ynorm=False, **kwargs):
         """
         Parameters
