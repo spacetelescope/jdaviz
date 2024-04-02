@@ -265,6 +265,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         # at this point, we can assume only a single export is selected
         if len(self.viewer.selected):
+            if self.viewer_invalid_msg != "":
+                raise NotImplementedError(f"Viewer cannot be exported - {self.viewer_invalid_msg}")
+
             viewer = self.viewer.selected_obj
             filetype = self.viewer_format.selected
             if len(filename):
