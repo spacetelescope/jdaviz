@@ -388,7 +388,6 @@ class Application(VuetifyTemplate, HubListener):
         if msg.plugin._plugin_name is None:
             # plugin was instantiated after the app was created, ignore
             return
-        # TODO: make sure plot._plot_name is set
         key = f"{msg.plugin._plugin_name}:{msg.plot._plot_name}"
         self._plugin_plots.setdefault(key, msg.plot.user_api)
 

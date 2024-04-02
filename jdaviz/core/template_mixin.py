@@ -4480,7 +4480,6 @@ class Plot(PluginSubcomponent):
         self._initialize_toolbar()
 
         plugin.session.hub.broadcast(PluginPlotAddedMessage(sender=self))
-        plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _initialize_toolbar(self, default_tool_priority=[]):
         self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, default_tool_priority)
