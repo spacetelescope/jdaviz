@@ -121,7 +121,7 @@
     <div v-if="subset_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Subsets</j-plugin-section-header>
       <v-row>
-        <span class="v-messages v-messages__message text--secondary">Export subset as astropy region.</span>
+        <span class="v-messages v-messages__message text--secondary">Export spatial subset as astropy region.</span>
       </v-row>
       <plugin-inline-select
         :items="subset_items"

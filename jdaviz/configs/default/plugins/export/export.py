@@ -94,6 +94,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
                                 'from_plugin']
 
+        # NOTE: if/when adding support for spectral subsets, update the languange in the UI
+        self.subset.filters = ['is_spatial']
+
         self.plot = SelectPluginComponent(self,
                                           items='plot_items',
                                           selected='plot_selected',
