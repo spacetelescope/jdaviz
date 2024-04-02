@@ -13,7 +13,7 @@ New Features
 
 - Live-preview of aperture selection in plugins. [#2664, #2684]
 
-- "Export Plot" plugin is now replaced with the more general "Export" plugin. [#2722]
+- "Export Plot" plugin is now replaced with the more general "Export" plugin. [#2722, #2782]
 
 - "Export" plugin supports exporting plugin tables, data and non-composite spatial subsets.[#2755, #2760, #2772, #2770]
 
