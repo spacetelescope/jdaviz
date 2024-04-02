@@ -164,7 +164,7 @@
 
           <v-row>
             <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-                DeprecationWarning: Save as fits functionality has moved to the Export plugin as of version 3.9 and will be removed from here in a future release.
+                DeprecationWarning: Save as FITS functionality has moved to the Export plugin as of v3.9 and will be removed from Moment Maps plugin in a future release.
             </span>
           </v-row>
 
