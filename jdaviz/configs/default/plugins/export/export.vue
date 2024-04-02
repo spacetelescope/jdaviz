@@ -84,7 +84,7 @@
       </div>
     </div>
 
-    <div v-if="dev_dataset_support && dataset_items.length > 0">
+    <div v-if="dataset_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Data</j-plugin-section-header>
       <plugin-inline-select
         :items="dataset_items"
@@ -94,6 +94,23 @@
       >
       </plugin-inline-select>
     </div>
+    <v-row v-if="data_invalid_msg.length > 0">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                {{data_invalid_msg}}
+      </span>
+    </v-row>
+    <v-row v-if="dataset_selected" class="row-min-bottom-padding">
+        <v-select
+          :menu-props="{ left: true }"
+          attach
+          v-model="dataset_format_selected"
+          :items="dataset_format_items.map(i => i.label)"
+          label="Format"
+          hint="Format for exporting datasets."
+          persistent-hint
+        >
+        </v-select>
+      </v-row>
 
     <div v-if="subset_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Subsets</j-plugin-section-header>
@@ -191,7 +208,7 @@
         :spinner="spinner"
         :disabled="filename.length === 0 ||
                    movie_recording ||
-                   subset_invalid_msg.length > 0 ||
+                   subset_invalid_msg.length > 0 || data_invalid_msg.length > 0 ||
                    viewer_invalid_msg.length > 0 ||
                    (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
       >
