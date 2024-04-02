@@ -13,6 +13,9 @@
     ></j-multiselect-toggle>
 
     <j-plugin-section-header style="margin-top: 12px">Viewers</j-plugin-section-header>
+    <v-row>
+      <span class="v-messages v-messages__message text--secondary">Export viewer plot as an image.</span>
+    </v-row>
     <plugin-inline-select
       :items="viewer_items"
       :selected.sync="viewer_selected"
@@ -21,9 +24,6 @@
     >
     </plugin-inline-select>
     <v-row v-if="viewer_selected.length > 0" class="row-min-bottom-padding">
-      <v-row>
-        <span class="v-messages v-messages__message text--secondary">Export viewer plot as an image.</span>
-      </v-row>
       <v-select
         :menu-props="{ left: true }"
         attach
