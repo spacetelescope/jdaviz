@@ -256,13 +256,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filename = Path(filename).expanduser()
 
         filepath = filename.parent
-        self.hub.broadcast(SnackbarMessage(f"Filepath is initially {filepath}", sender=self, color="warning"))
         if filepath and not filepath.exists():
             raise ValueError(f"Invalid path={filepath}")
         elif ((not filepath or str(filepath).startswith(".")) and os.environ.get("JDAVIZ_START_DIR", "")):  # noqa: E501 # pragma: no cover
             filename = os.environ["JDAVIZ_START_DIR"] / filename
-        else:
-            self.hub.broadcast(SnackbarMessage(f"Got to Else case", sender=self, color="warning"))
+
         return filename
 
     @with_spinner()
