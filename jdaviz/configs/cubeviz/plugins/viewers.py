@@ -32,7 +32,7 @@ class WithSliceIndicator:
         self.figure.marks = self.figure.marks + slice_indicator.marks
         return slice_indicator
 
-    @property
+    @cached_property
     def slice_values(self):
 
         def _get_component(layer):
@@ -77,7 +77,7 @@ class WithSliceSelection:
             raise ValueError("slice plugin must be activated to access slice_component_label")
         return slice_plg._obj.slice_indicator_viewers[0].slice_component_label
 
-    @property
+    @cached_property
     def slice_values(self):
         # TODO: make a cached property and invalidate cache on add/remove data
         # TODO: add support for multiple cubes (but then slice selection needs to be more complex)
@@ -192,8 +192,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         return visible_layers[-1]
 
     def _on_global_display_unit_changed(self, msg):
-        # TODO: change slice_values to cached_property and clear cache
-        # del self.slice_values
+        del self.slice_values
         self.slice_values
 
     def _initial_x_axis(self, *args):
@@ -260,8 +259,7 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         return self.jdaviz_helper._default_flux_viewer_reference_name
 
     def _on_global_display_unit_changed(self, msg):
-        # TODO: change slice_values to cached_property and clear cache
-        # del self.slice_values
+        del self.slice_values
         self.slice_values
 
     def _check_if_data_removed(self, msg):
