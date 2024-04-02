@@ -6,7 +6,8 @@
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
     :disabled_msg="disabled_msg"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <j-plugin-section-header>Line</j-plugin-section-header>
     <v-row>

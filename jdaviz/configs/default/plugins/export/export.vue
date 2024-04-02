@@ -2,7 +2,8 @@
   <j-tray-plugin
     description='Export data or plots from the app to a file.'
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#export'"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <j-multiselect-toggle
       v-if="dev_multi_support"
@@ -16,7 +17,7 @@
       :items="viewer_items"
       :selected.sync="viewer_selected"
       :multiselect="multiselect"
-      :single_select_allow_blank="true"
+      :single_select_allow_blank="false"
     >
     </plugin-inline-select>
     <v-row v-if="viewer_selected.length > 0" class="row-min-bottom-padding">
@@ -30,6 +31,11 @@
         persistent-hint
       >
       </v-select>
+    </v-row>
+    <v-row v-if="viewer_invalid_msg.length > 0">
+      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                {{viewer_invalid_msg}}
+      </span>
     </v-row>
     <div v-if="viewer_selected.length > 0 && viewer_format_selected === 'mp4'" class="row-min-bottom-padding">
       <div v-if="movie_enabled">
@@ -84,7 +90,7 @@
         :items="dataset_items"
         :selected.sync="dataset_selected"
         :multiselect="multiselect"
-        :single_select_allow_blank="true"
+        :single_select_allow_blank="false"
       >
       </plugin-inline-select>
     </div>
@@ -115,7 +121,7 @@
         :items="subset_items"
         :selected.sync="subset_selected"
         :multiselect="multiselect"
-        :single_select_allow_blank="true"
+        :single_select_allow_blank="false"
       >
       </plugin-inline-select>
     </div>
@@ -145,7 +151,7 @@
         :items="table_items"
         :selected.sync="table_selected"
         :multiselect="multiselect"
-        :single_select_allow_blank="true"
+        :single_select_allow_blank="false"
       >
       </plugin-inline-select>
       <v-row v-if="table_selected.length > 0" class="row-min-bottom-padding">
@@ -168,7 +174,7 @@
         :items="plot_items"
         :selected.sync="plot_selected"
         :multiselect="multiselect"
-        :single_select_allow_blank="true"
+        :single_select_allow_blank="false"
       >
       </plugin-inline-select>
     </div>
@@ -200,9 +206,10 @@
         :results_isolated_to_plugin="true"
         @click="export_from_ui"
         :spinner="spinner"
-        :disabled="filename.length === 0 || 
+        :disabled="filename.length === 0 ||
                    movie_recording ||
                    subset_invalid_msg.length > 0 || data_invalid_msg.length > 0 ||
+                   viewer_invalid_msg.length > 0 ||
                    (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
       >
         Export

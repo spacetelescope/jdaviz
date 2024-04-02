@@ -17,6 +17,9 @@ New Features
 
 - "Export" plugin supports exporting plugin tables, data and non-composite spatial subsets.[#2755, #2760, #2772, #2770]
 
+- Opening a plugin in the tray (from the API or the toolbar buttons) now scrolls to that plugin.
+  [#2768]
+
 Cubeviz
 ^^^^^^^
 
@@ -79,6 +82,8 @@ Cubeviz
 - Slice plugin's ``wavelength``, ``wavelength_unit``, and ``show_wavelength`` are deprecated in favor
   of ``value``, ``value_unit``, and ``show_value``, respectively.  ``slice`` is also deprecated
   and should be replaced with accessing/setting ``value`` directly. [#2706, #2715]
+
+- Disabled exporting spectrum-viewer to PNG in Cubeviz; pending investigation/bugfix. [#2777]
 
 Imviz
 ^^^^^

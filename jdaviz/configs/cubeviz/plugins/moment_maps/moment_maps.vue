@@ -5,7 +5,8 @@
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <j-plugin-section-header>Cube</j-plugin-section-header>
     <v-row>
