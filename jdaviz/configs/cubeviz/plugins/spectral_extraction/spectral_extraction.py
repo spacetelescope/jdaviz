@@ -56,7 +56,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`collapse`
     * ``wavelength_dependent``:
       When true, the cone_aperture method will be used to determine the mask.
-    * ``reference_wavelength``:
+    * ``reference_spectral_value``:
       The wavelength that will be used to calculate the radius of the cone through the cube.
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Extract spectrum using an aperture masking method in place of the subset mask.
@@ -71,8 +71,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     active_step = Unicode().tag(sync=True)
 
     wavelength_dependent = Bool(False).tag(sync=True)
-    reference_wavelength = FloatHandleEmpty().tag(sync=True)
-    slice_wavelength = Float().tag(sync=True)
+    reference_spectral_value = FloatHandleEmpty().tag(sync=True)
+    slice_spectral_value = Float().tag(sync=True)
 
     bg_items = List([]).tag(sync=True)
     bg_selected = Any('').tag(sync=True)
@@ -159,7 +159,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def user_api(self):
         expose = ['function', 'spatial_subset', 'aperture',
                   'add_results', 'collapse_to_spectrum',
-                  'wavelength_dependent', 'reference_wavelength',
+                  'wavelength_dependent', 'reference_spectral_value',
                   'aperture_method']
         if self.dev_bg_support:
             expose += ['background', 'bg_wavelength_dependent']
@@ -183,32 +183,32 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe('wavelength_dependent', 'bg_wavelength_dependent')
     def _wavelength_dependent_changed(self, *args):
         if self.wavelength_dependent:
-            self.reference_wavelength = self.slice_plugin.value
+            self.reference_spectral_value = self.slice_plugin.value
         else:
             self.bg_wavelength_dependent = False
-        # NOTE: this can be redundant in the case where reference_wavelength changed and triggers
-        # the observe, but we need to ensure it is updated if reference_wavelength is unchanged
+        # NOTE: this can be redundant in the case where reference_spectral_value changed and triggers
+        # the observe, but we need to ensure it is updated if reference_spectral_value is unchanged
         self._update_mark_scale()
 
     def _on_slice_changed(self, msg):
-        self.slice_wavelength = msg.value
+        self.slice_spectral_value = msg.value
 
-    def vue_goto_reference_wavelength(self, *args):
-        self.slice_plugin.value = self.reference_wavelength
+    def vue_goto_reference_spectral_value(self, *args):
+        self.slice_plugin.value = self.reference_spectral_value
 
     def vue_adopt_slice_as_reference(self, *args):
-        self.reference_wavelength = self.slice_plugin.value
+        self.reference_spectral_value = self.slice_plugin.value
 
-    @observe('reference_wavelength', 'slice_wavelength')
+    @observe('reference_spectral_value', 'slice_spectral_value')
     def _update_mark_scale(self, *args):
         if not self.wavelength_dependent:
             self.aperture.scale_factor = 1.0
         else:
-            self.aperture.scale_factor = self.slice_wavelength/self.reference_wavelength
+            self.aperture.scale_factor = self.slice_spectral_value/self.reference_spectral_value
         if not self.bg_wavelength_dependent:
             self.background.scale_factor = 1.0
         else:
-            self.background.scale_factor = self.slice_wavelength/self.reference_wavelength
+            self.background.scale_factor = self.slice_spectral_value/self.reference_spectral_value
 
     @observe('function_selected', 'aperture_method_selected')
     def _update_aperture_method_on_function_change(self, *args):
@@ -372,7 +372,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     f'Spectral axis unit physical type is {display_unit.physical_type}, '
                     'must be length for cone aperture')
 
-            fac = flux_cube.spectral_axis.value / self.reference_wavelength
+            fac = flux_cube.spectral_axis.value / self.reference_spectral_value
 
             # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
             if isinstance(aperture, CircularAperture):
@@ -501,7 +501,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self._live_update(event)
 
     @observe('aperture_selected', 'function_selected',
-             'wavelength_dependent', 'reference_wavelength',
+             'wavelength_dependent', 'reference_spectral_value',
              'aperture_method_selected',
              'previews_temp_disabled')
     @skip_if_no_updates_since_last_active()
