@@ -261,7 +261,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         elif ((not filepath or str(filepath).startswith(".")) and os.environ.get("JDAVIZ_START_DIR", "")):  # noqa: E501 # pragma: no cover
             filename = os.environ["JDAVIZ_START_DIR"] / filename
 
-        return filename
+        return str(filename)
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None):
