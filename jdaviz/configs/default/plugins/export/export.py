@@ -245,6 +245,26 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             self.data_invalid_msg = ''
 
+    def _normalize_filename(self, filename=None, filetype=None):
+        # Make sure filename is valid and file does not end up in weird places in standalone mode.
+        if filename is None:
+            raise ValueError("Invalid filename")
+
+        if isinstance(filename, str) and len(filename):
+            if not filename.endswith(filetype):
+                filename += f".{filetype}"
+            filename = Path(filename).expanduser()
+
+        filepath = filename.parent
+        self.hub.broadcast(SnackbarMessage(f"Filepath is initially {filepath}", sender=self, color="warning"))
+        if filepath and not filepath.exists():
+            raise ValueError(f"Invalid path={filepath}")
+        elif ((not filepath or str(filepath).startswith(".")) and os.environ.get("JDAVIZ_START_DIR", "")):  # noqa: E501 # pragma: no cover
+            filename = os.environ["JDAVIZ_START_DIR"] / filename
+        else:
+            self.hub.broadcast(SnackbarMessage(f"Got to Else case", sender=self, color="warning"))
+        return filename
+
     @with_spinner()
     def export(self, filename=None, show_dialog=None):
         """
@@ -270,12 +290,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
             viewer = self.viewer.selected_obj
             filetype = self.viewer_format.selected
-            if len(filename):
-                if not filename.endswith(filetype):
-                    filename += f".{filetype}"
-                filename = Path(filename).expanduser()
-            else:
-                filename = None
+            filename = self._normalize_filename(filename, filetype)
 
             if filetype == "mp4":
                 self.save_movie(viewer, filename, filetype)
@@ -284,29 +299,26 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         elif len(self.table.selected):
             filetype = self.table_format.selected
-            if not filename.endswith(filetype):
-                filename += f".{filetype}"
+            filename = self._normalize_filename(filename, filetype)
             self.table.selected_obj.export_table(filename, overwrite=True)
 
         elif len(self.subset.selected):
             selected_subset_label = self.subset.selected
             filetype = self.subset_format.selected
-            if len(filename):
-                if not filename.endswith(filetype):
-                    filename += f".{filetype}"
+            filename = self._normalize_filename(filename, filetype)
             if self.subset_invalid_msg != '':
                 raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
             self.save_subset_as_region(selected_subset_label, filename)
 
         elif len(self.dataset.selected):
             filetype = self.dataset_format.selected
-            if not filename.endswith(filetype):
-                filename += f".{filetype}"
+            filename = self._normalize_filename(filename, filetype)
             if self.data_invalid_msg != "":
                 raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
             self.dataset.selected_obj.write(Path(filename), overwrite=True)
         else:
             raise ValueError("nothing selected for export")
+
         return filename
 
     def vue_export_from_ui(self, *args, **kwargs):
@@ -326,9 +338,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if filename is None or show_dialog:
                 viewer.figure.save_png(str(filename) if filename is not None else None)
             else:
-                if not filename.parent.exists():
-                    raise ValueError(f"Invalid path={filename.parent}")
-
                 # support writing without save dialog
                 # https://github.com/bqplot/bqplot/pull/1397
                 def on_img_received(data):
@@ -471,15 +480,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             fps = float(self.movie_fps)
         if fps <= 0:
             raise ValueError("Invalid frame rate, must be positive non-zero value.")
-
-        # Make sure file does not end up in weird places in standalone mode.
-        if filename is None:
-            raise ValueError("Invalid filename")
-        path = filename.parent
-        if path and not path.exists():
-            raise ValueError(f"Invalid path={path}")
-        elif (not path or str(path).startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
-            filename = os.environ["JDAVIZ_START_DIR"] / filename
 
         if i_start is None:
             i_start = int(self.i_start)
