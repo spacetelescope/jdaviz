@@ -269,12 +269,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         filename = filename if filename is not None else self.filename
 
         # at this point, we can assume only a single export is selected
-        if len(self.viewer.selected) or len(self.plot.selected):
-            if len(self.viewer.selected):
-                viewer = self.viewer.selected_obj
-            else:
-                viewer = self.plot.selected_obj._obj
-
+        if len(self.viewer.selected):
+            viewer = self.viewer.selected_obj
             if len(self.viewer.selected):
                 if self.viewer_invalid_msg != "":
                     raise NotImplementedError(f"Viewer cannot be exported - {self.viewer_invalid_msg}")  # noqa
@@ -293,6 +289,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 self.save_movie(viewer, filename, filetype)
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+
+        elif len(self.plot.selected):
+            plot = self.plot.selected_obj._obj
+            filetype = self.plot_format.selected
+
+            if len(filename):
+                if not filename.endswith(filetype):
+                    filename += f".{filetype}"
+                filename = Path(filename).expanduser()
+            else:
+                filename = None
+            self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
 
         elif len(self.table.selected):
             filetype = self.table_format.selected
