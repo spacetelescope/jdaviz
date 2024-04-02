@@ -162,6 +162,12 @@
               </v-text-field>
           </v-row>
 
+          <v-row>
+            <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                DeprecationWarning: Save as FITS functionality has moved to the Export plugin as of v3.9 and will be removed from Moment Maps plugin in a future release.
+            </span>
+          </v-row>
+
           <v-row justify="end">
             <j-tooltip tipid='plugin-moment-save-fits'>
               <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
