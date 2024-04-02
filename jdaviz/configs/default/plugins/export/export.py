@@ -89,6 +89,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # NOTE: if adding export support for non-plugin products, also update the language
+        # in the UI as well as in _set_dataset_not_supported_msg
+        self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
+                                'from_plugin']
+
         self.plot = SelectPluginComponent(self,
                                           items='plot_items',
                                           selected='plot_selected',
@@ -237,6 +242,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def _set_dataset_not_supported_msg(self, msg=None):
         if self.dataset.selected_obj is not None:
             if self.dataset.selected_obj.meta.get("Plugin", None) is None:
+                # NOTE: should not be a valid choice due to dataset filters, but we'll include
+                # another check here.
                 self.data_invalid_msg = "Data export is only available for plugin generated data."
             elif not isinstance(self.dataset.selected_obj, (Spectrum1D, CCDData)):
                 self.data_invalid_msg = "Export is not implemented for this type of data"
