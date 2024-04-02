@@ -231,6 +231,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         filename : str, optional
             If not provided, plugin value will be used.
         """
+        if self.viewer_invalid_msg != "":
+            raise ValueError(self.viewer_invalid_msg)
+
         if self.dataset.selected is not None and len(self.dataset.selected):
             raise NotImplementedError("dataset export not yet supported")
 
