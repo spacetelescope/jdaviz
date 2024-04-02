@@ -277,7 +277,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
             if len(self.viewer.selected):
                 if self.viewer_invalid_msg != "":
-                    raise NotImplementedError(f"Viewer cannot be exported - {self.viewer_invalid_msg}")
+                    raise NotImplementedError(f"Viewer cannot be exported - {self.viewer_invalid_msg}")  # noqa
 
             viewer = self.viewer.selected_obj
 

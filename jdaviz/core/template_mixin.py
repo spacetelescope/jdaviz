@@ -4664,15 +4664,11 @@ class Plot(PluginSubcomponent):
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
 
-        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
-
     def add_scatter(self, label, x=[], y=[], xnorm=False, ynorm=False, **kwargs):
         return self._add_mark(bqplot.Scatter, label, x=x, y=y,
                               xnorm=xnorm, ynorm=ynorm,
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
-
-        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def add_bins(self, label, sample=[0], bins=2, density=True, **kwargs):
         # NOTE: initializing with bins=1 breaks the figure until a resize event
@@ -4680,8 +4676,6 @@ class Plot(PluginSubcomponent):
                               density=density,
                               colors=kwargs.pop('color', kwargs.pop('colors', 'gray')),
                               **kwargs)
-
-        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def set_limits(self, x_min=None, x_max=None, y_min=None, y_max=None):
         with delay_callback(self.viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
