@@ -32,7 +32,7 @@
     <div @mouseover="() => active_step='ap'">
       <j-plugin-section-header :active="active_step==='ap'">Aperture</j-plugin-section-header>
 
-      <plugin-subset-select 
+      <plugin-subset-select
         :items="aperture_items"
         :selected.sync="aperture_selected"
         :show_if_single_entry="true"
@@ -87,7 +87,7 @@
 
     <div v-if="dev_bg_support" @mouseover="() => active_step='bg'">
       <j-plugin-section-header :active="active_step==='bg'">Background</j-plugin-section-header>
-      <plugin-subset-select 
+      <plugin-subset-select
         :items="bg_items"
         :selected.sync="bg_selected"
         :show_if_single_entry="true"
@@ -225,6 +225,12 @@
               </v-text-field>
             </v-row>
 
+            <v-row>
+              <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+                DeprecationWarning: Save as FITS functionality has moved to the Export plugin as of v3.9 and will be removed from here in a future release.
+              </span>
+            </v-row>
+
             <v-row justify="end">
               <j-tooltip tipid='plugin-extract-save-fits'>
                 <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
@@ -240,10 +246,10 @@
           opacity=1.0
           :value="overwrite_warn && export_enabled"
           :zIndex=3
-          style="grid-area: 1/1; 
+          style="grid-area: 1/1;
                  margin-left: -24px;
                  margin-right: -24px">
-        
+
         <v-card color="transparent" elevation=0 >
           <v-card-text width="100%">
             <div class="white--text">

@@ -25,7 +25,7 @@
       ></v-select>
     </v-row>
 
-    <plugin-subset-select 
+    <plugin-subset-select
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
       :has_subregions="spectral_subset_selected_has_subregions"
@@ -66,6 +66,12 @@
             </v-text-field>
           </v-row>
 
+          <v-row>
+            <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+              DeprecationWarning: Save as FITS functionality has moved to the Export plugin as of v3.9 and will be removed from here in a future release.
+            </span>
+          </v-row>
+
           <v-row justify="end">
             <j-tooltip tipid='plugin-collapse-save-fits'>
               <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
@@ -75,16 +81,16 @@
 
         </div>
       </div>
-      
+
       <v-overlay
         absolute
         opacity=1.0
         :value="overwrite_warn && export_enabled"
         :zIndex=3
-        style="grid-area: 1/1; 
+        style="grid-area: 1/1;
                margin-left: -24px;
                margin-right: -24px">
-      
+
       <v-card color="transparent" elevation=0 >
         <v-card-text width="100%">
           <div class="white--text">
