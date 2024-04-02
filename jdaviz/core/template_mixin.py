@@ -4501,7 +4501,7 @@ class Plot(PluginSubcomponent):
         self.viewer.remove_data(dc_entry)
         self.app.data_collection.remove(dc_entry)
 
-        self._plugin.session.hub.broadcast(PluginTableModifiedMessage(sender=self))
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _update_data(self, label, reset_lims=False, **kwargs):
         self._check_valid_components(**kwargs)

@@ -229,13 +229,14 @@ class TestExportPluginPlots():
         export_plugin.plot.selected = 'Plot Options:stretch_hist'
 
         assert export_plugin.plot_format.selected == 'png'  # should be default format
-        # just check that it doesn't crash, since we can't download
-        export_plugin.export()
-
-        # change filename
-        export_plugin.filename = 'test_export_plugin_plot'
         # and change file type
         export_plugin.plot_format.selected = 'svg'
+
+        export_plugin.filename == 'imviz_export'
+        # change filename
+        export_plugin.filename = 'test_export_plugin_plot'
+
+        # just check that it doesn't crash, since we can't download
         export_plugin.export()
 
         # make sure that the only valid option for export is this plugin,
@@ -273,11 +274,11 @@ class TestExportPluginPlots():
         assert 'Aperture Photometry:plot' in available_plots
 
         export_plugin.plot.selected = 'Aperture Photometry:plot'
-        # just check that it doesn't crash, since we can't download
-        export_plugin.export()
 
         # change filename
         export_plugin.filename = 'test_export_plugin_plot'
         # and change file type
         export_plugin.plot_format.selected = 'svg'
+
+        # just check that it doesn't crash, since we can't download
         export_plugin.export()
