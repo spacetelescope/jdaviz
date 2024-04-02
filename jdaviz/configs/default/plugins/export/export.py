@@ -247,10 +247,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def _normalize_filename(self, filename=None, filetype=None):
         # Make sure filename is valid and file does not end up in weird places in standalone mode.
-        if filename is None:
+        if filename is None or filename == "":
             raise ValueError("Invalid filename")
 
-        if isinstance(filename, str) and len(filename):
+        if isinstance(filename, str):
             if not filename.endswith(filetype):
                 filename += f".{filetype}"
             filename = Path(filename).expanduser()
