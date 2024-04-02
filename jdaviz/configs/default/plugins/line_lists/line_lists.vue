@@ -3,7 +3,8 @@
     :description="docs_description || 'Plot lines from preset or custom line lists.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'"
     :disabled_msg="disabled_msg"
-    :popout_button="popout_button">
+    :popout_button="popout_button"
+    :scroll_to.sync="scroll_to">
 
     <j-plugin-section-header>Identified Line</j-plugin-section-header>
     <v-row>

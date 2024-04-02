@@ -15,7 +15,7 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
 from specutils import Spectrum1D
-import astropy.units as u
+from astropy.nddata import CCDData
 
 try:
     import cv2
@@ -79,6 +79,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     # if selected subset is spectral or composite, display message and disable export
     subset_invalid_msg = Unicode().tag(sync=True)
     data_invalid_msg = Unicode().tag(sync=True)
+
+    # We currently disable exporting spectrum-viewer in Cubeviz
+    viewer_invalid_msg = Unicode().tag(sync=True)
 
     # For Cubeviz movie.
     movie_enabled = Bool(False).tag(sync=True)
@@ -207,6 +210,17 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 self._set_subset_not_supported_msg()
             if attr == 'dataset_selected':
                 self._set_dataset_not_supported_msg()
+            elif self.config == "cubeviz" and attr == "viewer_selected":
+                self._disable_viewer_format_combo(event)
+
+    @observe('viewer_format_selected')
+    def _disable_viewer_format_combo(self, event):
+        if (self.config == "cubeviz" and self.viewer_selected == "spectrum-viewer"
+                and self.viewer_format_selected == "png"):
+            msg = "Exporting the spectrum viewer as a PNG in Cubeviz is currently disabled"
+        else:
+            msg = ""
+        self.viewer_invalid_msg = msg
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
@@ -229,9 +243,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def _set_dataset_not_supported_msg(self, msg=None):
         if self.dataset.selected_obj is not None:
-            data_unit = self.dataset.selected_obj.unit
-            if data_unit == u.Unit('DN/s'):
-                self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501
+            if self.dataset.selected_obj.meta.get("Plugin", None) is None:
+                self.data_invalid_msg = "Data export is only available for plugin generated data."
+            elif not isinstance(self.dataset.selected_obj, (Spectrum1D, CCDData)):
+                self.data_invalid_msg = "Export is not implemented for this type of data"
             else:
                 self.data_invalid_msg = ''
         else:
@@ -259,6 +274,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 viewer = self.viewer.selected_obj
             else:
                 viewer = self.plot.selected_obj._obj
+
+            if len(self.viewer.selected):
+                if self.viewer_invalid_msg != "":
+                    raise NotImplementedError(f"Viewer cannot be exported - {self.viewer_invalid_msg}")
+
+            viewer = self.viewer.selected_obj
 
             filetype = self.viewer_format.selected
             if len(filename):
@@ -295,9 +316,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 filename += f".{filetype}"
             if self.data_invalid_msg != "":
                 raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
-            if isinstance(self.dataset.selected_obj, Spectrum1D):
-                self.dataset.selected_obj.write(Path(filename), overwrite=True)
-
+            self.dataset.selected_obj.write(Path(filename), overwrite=True)
         else:
             raise ValueError("nothing selected for export")
         return filename

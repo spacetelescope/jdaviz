@@ -137,7 +137,7 @@ module.exports = {
     return {
       // default to passed values, whenever value or uncertainty are changed
       // updateTruncatedValues will overwrite the displayed values
-      data_menu_open: false,
+      data_menu_open: this.$props.viewer.open_data_menu_if_empty && Object.keys(this.$props.viewer.selected_data_items).length == 0 && this.$props.data_items.length > 0,
       multi_select: multi_select,
       showExtraItems: Object.keys(this.$props.viewer.selected_data_items).length == 0,
       valueTrunc: this.value,

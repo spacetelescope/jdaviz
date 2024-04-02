@@ -2312,7 +2312,8 @@ class Application(VuetifyTemplate, HubListener):
         last_num = int(last_vid.split('-')[-1])
         return last_num + 1
 
-    def _create_viewer_item(self, viewer, vid=None, name=None, reference=None):
+    def _create_viewer_item(self, viewer, vid=None, name=None, reference=None,
+                            open_data_menu_if_empty=True):
         """
         Convenience method for generating viewer item dictionaries.
 
@@ -2328,7 +2329,9 @@ class Application(VuetifyTemplate, HubListener):
         reference : str, optional
             The reference associated with this viewer as defined in the yaml
             configuration file.
-
+        open_data_menu_if_empty : bool, optional
+            Whether the data menu should be opened when creating the viewer if the viewer is
+            empty.  Pass this as False if immediately populating the viewer.
         Returns
         -------
         dict
@@ -2369,9 +2372,11 @@ class Application(VuetifyTemplate, HubListener):
             'collapse': True,
             'reference': reference or name or vid,
             'linked_by_wcs': linked_by_wcs,
+            'open_data_menu_if_empty': open_data_menu_if_empty  # noqa open menu on init if viewer is empty
         }
 
-    def _on_new_viewer(self, msg, vid=None, name=None, add_layers_to_viewer=False):
+    def _on_new_viewer(self, msg, vid=None, name=None, add_layers_to_viewer=False,
+                       open_data_menu_if_empty=True):
         """
         Callback for when the `~jdaviz.core.events.NewViewerMessage` message is
         raised. This method asks the application handler to generate a new
@@ -2389,6 +2394,10 @@ class Application(VuetifyTemplate, HubListener):
         name : str or `None`
             Name of the viewer. If `None`, it is auto-generated
             from class name.
+
+        open_data_menu_if_empty : bool, optional
+            Whether the data menu should be opened when creating the viewer if the viewer is
+            empty.  Pass this as False if immediately populating the viewer.
 
         Returns
         -------
@@ -2429,7 +2438,8 @@ class Application(VuetifyTemplate, HubListener):
         if name is None:
             name = vid
         new_viewer_item = self._create_viewer_item(
-            viewer=viewer, vid=vid, name=name, reference=name
+            viewer=viewer, vid=vid, name=name, reference=name,
+            open_data_menu_if_empty=open_data_menu_if_empty
         )
 
         if self.config == 'imviz':
