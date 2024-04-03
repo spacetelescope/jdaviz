@@ -102,13 +102,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # NOTE: if/when adding support for spectral subsets, update the languange in the UI
         self.subset.filters = ['is_spatial']
 
-        self.plot = SelectPluginComponent(self,
-                                          items='plot_items',
-                                          selected='plot_selected',
-                                          multiselect='multiselect',
-                                          default_mode='empty',
-                                          manual_options=['plot-tst1', 'plot-tst2'])
-
         viewer_format_options = ['png', 'svg']
         if self.config == 'cubeviz':
             if not self.app.state.settings.get('server_is_remote'):

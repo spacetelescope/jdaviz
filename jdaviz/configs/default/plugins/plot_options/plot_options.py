@@ -1023,7 +1023,8 @@ class PlotOptions(PluginTemplateMixin):
             # to avoid random step sizes.  This logic is somewhat arbitrary and can be safely
             # modified or eventually exposed to the user if that would be useful.
             stretch_vstep = (hist_lims[1] - hist_lims[0]) / 100.
-            self.stretch_vstep = _round_step(stretch_vstep)[0]
+            #self.stretch_vstep = _round_step(stretch_vstep)[0]
+            self.stretch_vstep = np.round(stretch_vstep, decimals=6)
 
             with delay_callback(self.stretch_histogram.viewer.state, 'hist_x_min', 'hist_x_max'):
                 self.stretch_histogram.viewer.state.hist_x_min = hist_lims[0]

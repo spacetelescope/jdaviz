@@ -259,7 +259,6 @@ class TestExportPluginPlots():
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.aperture_selected = 'Subset 1'
 
-        phot_plugin.current_plot_type = 'Curve of Growth'
         phot_plugin.vue_do_aper_phot()
         assert phot_plugin.plot_available
 
