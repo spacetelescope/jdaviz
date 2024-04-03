@@ -2589,6 +2589,7 @@ class PluginPlotSelect(SelectPluginComponent):
 class PluginPlotSelectMixin(VuetifyTemplate, HubListener):
     plot_items = List().tag(sync=True)
     plot_selected = Any().tag(sync=True)
+    plot_selected_widget = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2596,6 +2597,15 @@ class PluginPlotSelectMixin(VuetifyTemplate, HubListener):
                                      'plot_items',
                                      'plot_selected',
                                      multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
+
+    @observe('plot_selected')
+    def _plot_selected_changed(self, *args):
+        if not hasattr(self, 'plot'):
+            return
+        if self.plot_selected == '':
+            self.plot_selected_widget = ''
+        else:
+            self.plot_selected_widget = f'IPY_MODEL_{self.plot.selected_obj._obj.model_id}'
 
 
 class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):

@@ -177,6 +177,10 @@
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
+      <jupyter-widget 
+          v-if='plot_selected_widget.length > 0'
+          style="position: absolute; left: -100%"
+          :widget="plot_selected_widget"/> 
       <v-row v-if="plot_selected.length > 0" class="row-min-bottom-padding">
         <v-select
           :menu-props="{ left: true }"
