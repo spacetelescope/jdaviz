@@ -301,10 +301,13 @@ class Application(VuetifyTemplate, HubListener):
             if cur_cm not in colormaps.members:
                 colormaps.add(*cur_cm)
 
-        from jdaviz.core.events import PluginTableAddedMessage
+        from jdaviz.core.events import PluginTableAddedMessage, PluginPlotAddedMessage
         self._plugin_tables = {}
         self.hub.subscribe(self, PluginTableAddedMessage,
                            handler=self._on_plugin_table_added)
+        self._plugin_plots = {}
+        self.hub.subscribe(self, PluginPlotAddedMessage,
+                           handler=self._on_plugin_plot_added)
 
         # Parse the yaml configuration file used to compose the front-end UI
         self.load_configuration(configuration)
@@ -380,6 +383,13 @@ class Application(VuetifyTemplate, HubListener):
             return
         key = f"{msg.plugin._plugin_name}:{msg.table._table_name}"
         self._plugin_tables.setdefault(key, msg.table.user_api)
+
+    def _on_plugin_plot_added(self, msg):
+        if msg.plugin._plugin_name is None:
+            # plugin was instantiated after the app was created, ignore
+            return
+        key = f"{msg.plugin._plugin_name}:{msg.plot._plot_name}"
+        self._plugin_plots.setdefault(key, msg.plot.user_api)
 
     @property
     def hub(self):
