@@ -220,6 +220,8 @@
       </v-row>
     </div>
 
+    <div style="display: grid; position: relative"> <!-- overlay container -->
+    <div style="grid-area: 1/1">
 
     <v-row style="margin-top: 24px">
         <v-text-field
@@ -254,6 +256,35 @@
       >
         Export
       </plugin-action-button>
+    </div>
+
+      <v-overlay
+        absolute
+        opacity=1.0
+        :value="overwrite_warn"
+        :zIndex=3
+        style="grid-area: 1/1;
+               margin-left: -24px;
+               margin-right: -24px">
+
+      <v-card color="transparent" elevation=0 >
+        <v-card-text width="100%">
+          <div class="white--text">
+            A file with this name is already on disk. Overwrite?
+          </div>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-row justify="end">
+            <v-btn tile small color="primary" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
+            <v-btn tile small color="accent" class="mr-4" @click="overwrite_from_ui">Overwrite</v-btn>
+          </v-row>
+        </v-card-actions>
+      </v-card>
+
+      </v-overlay>
+    </div>
+
     </v-row>
 
   </j-tray-plugin>
