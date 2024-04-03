@@ -247,7 +247,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def _normalize_filename(self, filename=None, filetype=None):
         # Make sure filename is valid and file does not end up in weird places in standalone mode.
-        if filename is None or filename == "":
+        if not filename:
             raise ValueError("Invalid filename")
 
         if isinstance(filename, str):
