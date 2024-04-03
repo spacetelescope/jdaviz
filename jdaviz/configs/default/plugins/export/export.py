@@ -48,10 +48,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     * ``dataset_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
     * ``subset_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
-    * ``table`` (:class:`~jdaviz.core.template_mixin.PluginTableSelect`)
-    * ``table_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
-    * ``plot`` (:class:`~jdaviz.core.template_mixin.PluginPlotSelect`)
-    * ``plot_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``plugin_table`` (:class:`~jdaviz.core.template_mixin.PluginTableSelect`)
+    * ``plugin_table_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``plugin_plot`` (:class:`~jdaviz.core.template_mixin.PluginPlotSelect`)
+    * ``plugin_plot_format`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``filename``
     * :meth:`export`
     """
@@ -62,8 +62,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     viewer_format_items = List().tag(sync=True)
     viewer_format_selected = Unicode().tag(sync=True)
 
-    table_format_items = List().tag(sync=True)
-    table_format_selected = Unicode().tag(sync=True)
+    plugin_table_format_items = List().tag(sync=True)
+    plugin_table_format_selected = Unicode().tag(sync=True)
 
     subset_format_items = List().tag(sync=True)
     subset_format_selected = Unicode().tag(sync=True)
@@ -71,8 +71,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     dataset_format_items = List().tag(sync=True)
     dataset_format_selected = Unicode().tag(sync=True)
 
-    plot_format_items = List().tag(sync=True)
-    plot_format_selected = Unicode().tag(sync=True)
+    plugin_plot_format_items = List().tag(sync=True)
+    plugin_plot_format_selected = Unicode().tag(sync=True)
 
     filename = Unicode().tag(sync=True)
 
@@ -115,13 +115,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                    selected='viewer_format_selected',
                                                    manual_options=viewer_format_options)
 
-        # NOTE: see self.table.selected_obj.write.list_formats() for full list of options,
+        # NOTE: see self.plugin_table.selected_obj.write.list_formats() for full list of options,
         # although not all support passing overwrite
-        table_format_options = ['ecsv', 'csv', 'fits']
-        self.table_format = SelectPluginComponent(self,
-                                                  items='table_format_items',
-                                                  selected='table_format_selected',
-                                                  manual_options=table_format_options)
+        plugin_table_format_options = ['ecsv', 'csv', 'fits']
+        self.plugin_table_format = SelectPluginComponent(self,
+                                                         items='plugin-table_format_items',
+                                                         selected='plugin_table_format_selected',
+                                                         manual_options=plugin_table_format_options)
 
         subset_format_options = ['fits', 'reg']
         self.subset_format = SelectPluginComponent(self,
@@ -135,19 +135,19 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                     selected='dataset_format_selected',
                                                     manual_options=dataset_format_options)
 
-        plot_format_options = ['png', 'svg']
-        self.plot_format = SelectPluginComponent(self,
-                                                 items='plot_format_items',
-                                                 selected='plot_format_selected',
-                                                 manual_options=plot_format_options)
+        plugin_plot_format_options = ['png', 'svg']
+        self.plugin_plot_format = SelectPluginComponent(self,
+                                                        items='plugin_plot_format_items',
+                                                        selected='plugin_plot_format_selected',
+                                                        manual_options=plugin_plot_format_options)
 
         # default selection:
         self.dataset._default_mode = 'empty'
         self.subset._default_mode = 'empty'
-        self.table._default_mode = 'empty'
-        self.plot._default_mode = 'empty'
-        self.plot.select_default()
-        self.table.select_default()
+        self.plugin_table._default_mode = 'empty'
+        self.plugin_plot._default_mode = 'empty'
+        self.plugin_plot.select_default()
+        self.plugin_table.select_default()
         # viewer last so that the first viewer is the default and all others are empty
         self.viewer.select_default()
         self.filename = f"{self.app.config}_export"
@@ -171,8 +171,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         expose = ['viewer', 'viewer_format',
                   'dataset', 'dataset_format',
                   'subset', 'subset_format',
-                  'table', 'table_format',
-                  'plot', 'plot_format',
+                  'plugin_table', 'plugin_table_format',
+                  'plugin_plot', 'plugin_plot_format',
                   'filename', 'export']
 
         if self.dev_multi_support:
@@ -198,7 +198,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             self._sync_singleselect({'name': 'viewer', 'new': self.viewer_selected})
 
     @observe('viewer_selected', 'dataset_selected', 'subset_selected',
-             'table_selected', 'plot_selected')
+             'plugin_table_selected', 'plugin_plot_selected')
     def _sync_singleselect(self, event):
 
         if not hasattr(self, 'dataset') or not hasattr(self, 'viewer'):
@@ -211,7 +211,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             return
         name = event.get('name')
         for attr in ('viewer_selected', 'dataset_selected', 'subset_selected',
-                     'table_selected', 'plot_selected'):
+                     'plugin_table_selected', 'plugin_plot_selected'):
             if name != attr:
                 setattr(self, attr, '')
             if attr == 'subset_selected':
@@ -313,9 +313,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
 
-        elif len(self.plot.selected):
-            plot = self.plot.selected_obj._obj
-            filetype = self.plot_format.selected
+        elif len(self.plugin_plot.selected):
+            plot = self.plugin_plot.selected_obj._obj
+            filetype = self.plugin_plot_format.selected
 
             if len(filename):
                 if not filename.endswith(filetype):
@@ -330,10 +330,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 time.sleep(0.2)
                 self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
 
-        elif len(self.table.selected):
-            filetype = self.table_format.selected
+        elif len(self.plugin_table.selected):
+            filetype = self.plugin_table_format.selected
             filename = self._normalize_filename(filename, filetype)
-            self.table.selected_obj.export_table(filename, overwrite=True)
+            self.plugin_table.selected_obj.export_table(filename, overwrite=True)
 
         elif len(self.subset.selected):
             selected_subset_label = self.subset.selected

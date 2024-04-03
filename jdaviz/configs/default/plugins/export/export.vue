@@ -160,14 +160,14 @@
       </v-row>
     </div>
 
-    <div v-if="table_items.length > 0">
+    <div v-if="plugin_table_items.length > 0">
       <span class="export-category">Plugin Tables</span>
       <v-row>
         <span class="category-content v-messages v-messages__message text--secondary">Export table from a plugin to a file.</span>
       </v-row>
       <plugin-inline-select
-        :items="table_items"
-        :selected.sync="table_selected"
+        :items="plugin_table_items"
+        :selected.sync="plugin_table_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
       >
@@ -177,39 +177,39 @@
           class="category-content"
           :menu-props="{ left: true }"
           attach
-          v-model="table_format_selected"
-          :items="table_format_items.map(i => i.label)"
+          v-model="plugin_table_format_selected"
+          :items="plugin_table_format_items.map(i => i.label)"
           label="Format"
           hint="File format for exporting plugin tables."
-          :disabled="table_selected.length == 0"
+          :disabled="plugin_table_selected.length == 0"
           persistent-hint
         >
         </v-select>
       </v-row>
     </div>
 
-    <div v-if="plot_items.length > 0">
+    <div v-if="plugin_plot_items.length > 0">
       <span class="export-category">Plugin Plots</span>
       <v-row>
         <span class="category-content v-messages v-messages__message text--secondary">Export plot from a plugin as an image.</span>
       </v-row>
       <plugin-inline-select
-        :items="plot_items"
-        :selected.sync="plot_selected"
+        :items="plugin_plot_items"
+        :selected.sync="plugin_plot_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
       <jupyter-widget 
-          v-if='plot_selected_widget.length > 0'
+          v-if='plugin_plot_selected_widget.length > 0'
           style="position: absolute; left: -100%"
-          :widget="plot_selected_widget"/> 
-      <v-row v-if="plot_selected.length > 0" class="row-min-bottom-padding">
+          :widget="plugin_plot_selected_widget"/> 
+      <v-row v-if="plugin_plot_selected.length > 0" class="row-min-bottom-padding">
         <v-select
           :menu-props="{ left: true }"
           attach
-          v-model="plot_format_selected"
-          :items="plot_format_items.map(i => i.label)"
+          v-model="plugin_plot_format_selected"
+          :items="plugin_plot_format_items.map(i => i.label)"
           label="Format"
           hint="File format for exporting plugin plots."
           persistent-hint

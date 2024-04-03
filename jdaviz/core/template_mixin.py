@@ -2471,15 +2471,15 @@ class PluginTableSelect(SelectPluginComponent):
 
 
 class PluginTableSelectMixin(VuetifyTemplate, HubListener):
-    table_items = List().tag(sync=True)
-    table_selected = Any().tag(sync=True)
+    plugin_table_items = List().tag(sync=True)
+    plugin_table_selected = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.table = PluginTableSelect(self,
-                                       'table_items',
-                                       'table_selected',
-                                        multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
+        self.plugin_table = PluginTableSelect(self,
+                                              'plugin_table_items',
+                                              'plugin_table_selected',
+                                              multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
 
 class PluginPlotSelect(SelectPluginComponent):
@@ -2589,25 +2589,25 @@ class PluginPlotSelect(SelectPluginComponent):
 
 
 class PluginPlotSelectMixin(VuetifyTemplate, HubListener):
-    plot_items = List().tag(sync=True)
-    plot_selected = Any().tag(sync=True)
-    plot_selected_widget = Any().tag(sync=True)
+    plugin_plot_items = List().tag(sync=True)
+    plugin_plot_selected = Any().tag(sync=True)
+    plugin_plot_selected_widget = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.plot = PluginPlotSelect(self,
-                                     'plot_items',
-                                     'plot_selected',
-                                     multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
+        self.plugin_plot = PluginPlotSelect(self,
+                                            'plugin_plot_items',
+                                            'plugin_plot_selected',
+                                            multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
-    @observe('plot_selected')
-    def _plot_selected_changed(self, *args):
-        if not hasattr(self, 'plot'):
+    @observe('plugin_plot_selected')
+    def _plugin_plot_selected_changed(self, *args):
+        if not hasattr(self, 'plugin_plot'):
             return
-        if self.plot_selected == '':
-            self.plot_selected_widget = ''
+        if self.plugin_plot_selected == '':
+            self.plugin_plot_selected_widget = ''
         else:
-            self.plot_selected_widget = f'IPY_MODEL_{self.plot.selected_obj._obj.model_id}'
+            self.plugin_plot_selected_widget = f'IPY_MODEL_{self.plugin_plot.selected_obj._obj.model_id}'  # noqa
 
 
 class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):

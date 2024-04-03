@@ -219,11 +219,11 @@ class TestExportPluginPlots():
         imviz_helper.load_data(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
-        export_plugin.plot.selected = 'Plot Options:stretch_hist'
+        export_plugin.plugin_plot.selected = 'Plot Options:stretch_hist'
 
-        assert export_plugin.plot_format.selected == 'png'  # should be default format
+        assert export_plugin.plugin_plot_format.selected == 'png'  # should be default format
         # and change file type
-        export_plugin.plot_format.selected = 'svg'
+        export_plugin.plugin_plot_format.selected = 'svg'
 
         export_plugin.filename == 'imviz_export'
         # change filename
