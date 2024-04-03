@@ -79,7 +79,6 @@ class WithSliceSelection:
 
     @cached_property
     def slice_values(self):
-        # TODO: make a cached property and invalidate cache on add/remove data
         # TODO: add support for multiple cubes (but then slice selection needs to be more complex)
         # if slice_index is 0, then we want the equivalent of [:, 0, 0]
         # if slice_index is 1, then we want the equivalent of [0, :, 0]
@@ -89,10 +88,22 @@ class WithSliceSelection:
         for layer in self.layers:
             try:
                 display_spectral_units = self.jdaviz_app._get_display_unit('spectral')
-                if (self.slice_component_label in layer.layer.data.world_component_ids and
-                        display_spectral_units != ''):
+                if self.slice_component_label in layer.layer.data.world_component_ids:
                     data_obj = layer.layer.data.get_component(self.slice_component_label)
-                    converted_axis = (np.asarray((data_obj.data.ravel() * u.Unit(data_obj.units)).
+                    if display_spectral_units == '':
+                        display_spectral_units = u.Unit(data_obj.units)
+                    converted_axis = (np.asarray((data_obj.data[0][0] * u.Unit(data_obj.units)).
+                                                 to_value(display_spectral_units,
+                                                          equivalencies=u.spectral()),
+                                                 dtype=float))
+                elif 'Wave' in layer.layer.data.world_component_ids:
+                    if display_spectral_units == '':
+                        display_spectral_units = layer.layer.data.get_component('Wave').units
+                    # Special if statement for handling cubes without 'Wavelength' in
+                    # world_component_ids
+                    uncert_units = layer.layer.data.get_component('Wave').units
+                    uncert_data = layer.layer.data.get_component('Wave').data[0][0]
+                    converted_axis = (np.asarray((uncert_data * u.Unit(uncert_units)).
                                                  to_value(display_spectral_units,
                                                           equivalencies=u.spectral()),
                                                  dtype=float))
@@ -165,7 +176,11 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.state.show_axes = False
 
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
-                           handler=self._on_global_display_unit_changed)
+                           handler=self._on_global_display_unit_changed
+                           )
+
+        self.hub.subscribe(self, AddDataMessage, handler=self._on_global_display_unit_changed)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_global_display_unit_changed)
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -192,8 +207,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         return visible_layers[-1]
 
     def _on_global_display_unit_changed(self, msg):
-        del self.slice_values
-        self.slice_values
+        if 'slice_values' in self.__dict__:
+            del self.__dict__['slice_values']
 
     def _initial_x_axis(self, *args):
         # Make sure that the x_att is correct on data load
@@ -258,9 +273,9 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
     def _default_flux_viewer_reference_name(self):
         return self.jdaviz_helper._default_flux_viewer_reference_name
 
-    def _on_global_display_unit_changed(self, msg):
-        del self.slice_values
-        self.slice_values
+    def _on_global_display_unit_changed(self, msg=None):
+        if 'slice_values' in self.__dict__:
+            del self.__dict__['slice_values']
 
     def _check_if_data_removed(self, msg):
         # isinstance and the data uuid check will be true for the data
@@ -268,6 +283,7 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         self.figure.marks = [m for m in self.figure.marks
                              if not (isinstance(m, ShadowSpatialSpectral)
                                      and m.data_uuid == msg.data.uuid)]
+        self._on_global_display_unit_changed()
 
     def _check_if_data_added(self, msg=None):
         # When data is added, make sure that all spatial subset layers
@@ -278,6 +294,7 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
                 if (isinstance(layer.layer, GroupedSubset) and
                         get_subset_type(layer.layer.subset_state) == 'spatial'):
                     self._expected_subset_layer_default(layer)
+        self._on_global_display_unit_changed()
 
     def _is_spatial_subset(self, layer):
         subset_state = getattr(layer.layer, 'subset_state', None)
