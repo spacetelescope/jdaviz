@@ -153,6 +153,9 @@
 
     <div v-if="table_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Plugin Tables</j-plugin-section-header>
+      <v-row>
+        <span class="v-messages v-messages__message text--secondary">Export table from a plugin to a file.</span>
+      </v-row>
       <plugin-inline-select
         :items="table_items"
         :selected.sync="table_selected"
@@ -176,6 +179,9 @@
 
     <div v-if="dev_plot_support && plot_items.length > 0">
       <j-plugin-section-header style="margin-top: 12px">Plugin Plots</j-plugin-section-header>
+      <v-row>
+        <span class="v-messages v-messages__message text--secondary">Export plot from a plugin as an image.</span>
+      </v-row>
       <plugin-inline-select
         :items="plot_items"
         :selected.sync="plot_selected"
