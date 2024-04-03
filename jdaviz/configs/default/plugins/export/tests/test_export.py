@@ -92,9 +92,7 @@ class TestExportSubsets():
 
         cubeviz_helper.app.session.edit_subset_mode.mode = NewMode
         cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
-        export_plugin.subset.selected = 'Subset 2'
-
-        assert export_plugin.subset_invalid_msg == 'Export for spectral subsets not supported.'
+        assert 'Subset 2' not in export_plugin.subset.choices
 
     def test_export_subsets_wcs(self, tmp_path, imviz_helper, spectral_cube_wcs):
 
@@ -186,18 +184,6 @@ class TestExportSubsets():
 
 
 def test_export_data(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label="test")
-    export_plugin = cubeviz_helper.plugins["Export"]._obj
-    export_plugin.dataset_selected = 'test[FLUX]'
-    assert export_plugin.dataset_format.selected == 'fits'
-    assert 'test[FLUX]' in cubeviz_helper.app.data_collection.labels
-    with pytest.raises(NotImplementedError,
-                       match='Data can not be exported'):
-        export_plugin.export()
-    assert export_plugin.data_invalid_msg == 'Data export is only available for plugin generated data.'   # noqa
-
-
-def test_disable_export_for_non_plugin_generated_data(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     mm = cubeviz_helper.plugins["Moment Maps"]
     mm.dataset = 'test[FLUX]'
@@ -209,13 +195,10 @@ def test_disable_export_for_non_plugin_generated_data(cubeviz_helper, spectrum1d
         cubeviz_helper._default_flux_viewer_reference_name, 'moment 0'
     )
     ep = cubeviz_helper.plugins["Export"]._obj
-    ep.dataset_selected = 'test[FLUX]'
-    with pytest.raises(NotImplementedError,
-                       match='Data can not be exported'):
-        ep.export()
-    assert ep.data_invalid_msg == 'Data export is only available for plugin generated data.'
+    assert 'test[FLUX]' not in ep.dataset.choices
 
     ep.dataset_selected = 'moment 0'
+    assert ep.dataset_format.selected == 'fits'
     ep.export()
     assert os.path.isfile("cubeviz_export.fits")
     assert ep.data_invalid_msg == ''
