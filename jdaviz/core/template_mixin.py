@@ -1339,6 +1339,7 @@ class LayerSelect(SelectPluginComponent):
                  multiselect=None,
                  default_text=None, manual_options=[],
                  default_mode='first',
+                 filters=['not_child_layer'],
                  only_wcs_layers=False):
         """
         Parameters
@@ -1392,12 +1393,6 @@ class LayerSelect(SelectPluginComponent):
         self._update_layer_items()
         self.update_wcs_only_filter(only_wcs_layers)
 
-        # ignore layers that are children in associations:
-        def is_parent(data):
-            return self.app._get_assoc_data_parent(data.label) is None
-
-        self.add_filter(is_parent)
-
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
         # of additional viewers in imviz.
@@ -1412,6 +1407,13 @@ class LayerSelect(SelectPluginComponent):
         if not isinstance(viewer_names, list):
             viewer_names = [viewer_names]
         return [self._get_viewer(viewer) for viewer in viewer_names]
+
+    def _is_valid_item(self, lyr):
+        def not_child_layer(lyr):
+            # ignore layers that are children in associations:
+            return self.app._get_assoc_data_parent(lyr.label) is None
+
+        return super()._is_valid_item(lyr, locals())
 
     def _layer_to_dict(self, layer_label):
         is_subset = None
@@ -3033,7 +3035,8 @@ class DatasetSelect(SelectPluginComponent):
 
     def __init__(self, plugin, items, selected,
                  multiselect=None,
-                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers', 'is_not_wcs_only'],
+                 filters=['not_from_plugin_model_fitting', 'layer_in_viewers',
+                          'is_not_wcs_only', 'not_child_layer'],
                  default_text=None, manual_options=[],
                  default_mode='first'):
         """
@@ -3071,12 +3074,6 @@ class DatasetSelect(SelectPluginComponent):
         self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
         # initialize items from original viewers
         self._on_data_changed()
-
-        # ignore layers that are children in associations:
-        def is_parent(data):
-            return self.app._get_assoc_data_parent(data.label) is None
-
-        self.add_filter(is_parent)
 
     def _cubeviz_include_spatial_subsets(self):
         """
@@ -3151,6 +3148,9 @@ class DatasetSelect(SelectPluginComponent):
                                                     use_display_units=use_display_units)
 
     def _is_valid_item(self, data):
+        def from_plugin(data):
+            return data.meta.get('Plugin', None) is not None
+
         def not_from_plugin(data):
             return data.meta.get('Plugin', None) is None
 
@@ -3198,6 +3198,10 @@ class DatasetSelect(SelectPluginComponent):
 
         def is_not_wcs_only(data):
             return not data.meta.get(_wcs_only_label, False)
+
+        def not_child_layer(data):
+            # ignore layers that are children in associations:
+            return self.app._get_assoc_data_parent(data.label) is None
 
         return super()._is_valid_item(data, locals())
 
