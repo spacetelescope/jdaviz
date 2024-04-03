@@ -1,4 +1,5 @@
 import os
+import time
 from pathlib import Path
 from traitlets import Bool, List, Unicode, observe
 from glue_jupyter.bqplot.image import BqplotImageView
@@ -23,7 +24,6 @@ except ImportError:
     HAS_OPENCV = False
 else:
     import threading
-    import time
     HAS_OPENCV = True
 
 __all__ = ['Export']
@@ -300,7 +300,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 filename = Path(filename).expanduser()
             else:
                 filename = None
-            self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
+
+            with plot._plugin.as_active():
+                # NOTE: could still take some time for the plot itself to update,
+                # for now we'll hardcode a short amount of time for the plot to render any updates
+                time.sleep(0.2)
+                self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
 
         elif len(self.table.selected):
             filetype = self.table_format.selected
