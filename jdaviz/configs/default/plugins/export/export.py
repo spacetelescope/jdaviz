@@ -225,7 +225,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def _disable_viewer_format_combo(self, event):
         if (self.config == "cubeviz" and self.viewer_selected == "spectrum-viewer"
                 and self.viewer_format_selected == "png"):
-            msg = "Exporting the spectrum viewer as a PNG in Cubeviz is currently disabled"
+            msg = "Exporting the spectrum viewer as a PNG in Cubeviz is not yet supported"
         else:
             msg = ""
         self.viewer_invalid_msg = msg
@@ -241,9 +241,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if self.subset.selected == '':
                 self.subset_invalid_msg = ''
             elif self.app._is_subset_spectral(subset[0]):
-                self.subset_invalid_msg = 'Export for spectral subsets not supported.'
+                self.subset_invalid_msg = 'Export for spectral subsets not yet supported.'
             elif len(subset) > 1:
-                self.subset_invalid_msg = 'Export for composite subsets not supported.'
+                self.subset_invalid_msg = 'Export for composite subsets not yet supported.'
             else:
                 self.subset_invalid_msg = ''
         else:  # no subset selected (can be '' instead of None if previous selection made)
@@ -256,7 +256,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # another check here.
                 self.data_invalid_msg = "Data export is only available for plugin generated data."
             elif not isinstance(self.dataset.selected_obj, (Spectrum1D, CCDData)):
-                self.data_invalid_msg = "Export is not implemented for this type of data"
+                self.data_invalid_msg = "Export is not yet implemented for this type of data"
             else:
                 self.data_invalid_msg = ''
         else:
