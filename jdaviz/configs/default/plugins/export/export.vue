@@ -12,79 +12,82 @@
       :icon_radialtocheck="icon_radialtocheck"
     ></j-multiselect-toggle>
 
-    <span class="export-category">Viewers</span>
-    <v-row>
-      <span class="category-content v-messages v-messages__message text--secondary">Export viewer plot as an image.</span>
-    </v-row>
-    <plugin-inline-select
-      :items="viewer_items"
-      :selected.sync="viewer_selected"
-      :multiselect="multiselect"
-      :single_select_allow_blank="false"
-    >
-    </plugin-inline-select>
-    <v-row v-if="viewer_selected.length > 0" class="row-min-bottom-padding">
-      <v-select
-        class="category-content"
-        :menu-props="{ left: true }"
-        attach
-        v-model="viewer_format_selected"
-        :items="viewer_format_items.map(i => i.label)"
-        label="Format"
-        hint="Image format for exporting viewers."
-        persistent-hint
+    <div v-if="viewer_items.length > 0">
+      <span class="export-category">Viewers</span>
+      <v-row>
+        <span class="category-content v-messages v-messages__message text--secondary">Export viewer plot as an image.</span>
+      </v-row>
+      <plugin-inline-select
+        :items="viewer_items"
+        :selected.sync="viewer_selected"
+        :multiselect="multiselect"
+        :single_select_allow_blank="false"
       >
-      </v-select>
-    </v-row>
-    <v-row v-if="viewer_invalid_msg.length > 0">
-      <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
-                {{viewer_invalid_msg}}
-      </span>
-    </v-row>
-    <div v-if="viewer_selected.length > 0 && viewer_format_selected === 'mp4'" class="row-min-bottom-padding">
-      <div v-if="movie_enabled">
-        <v-row class="row-min-bottom-padding">
-          <v-col>
-            <v-text-field
-              v-model.number="i_start"
-              class="mt-0 pt-0"
-              type="number"
-              :rules="[() => i_start>=0 || 'Must be at least zero.']"
-              label="Start"
-              hint="Start Slice"
-              persistent-hint
-            ></v-text-field>
-          </v-col>
-          <v-col>
-            <v-text-field
-              v-model.number="i_end"
-              class="mt-0 pt-0"
-              type="number"
-              :rules="[() => i_end>i_start || 'Must be larger than Start Slice.']"
-              label="End"
-              hint="End Slice"
-               persistent-hint
-            ></v-text-field>
-          </v-col>
-        </v-row>
-        <v-row class="row-min-bottom-padding">
-          <v-col>
-            <v-text-field
-              v-model.number="movie_fps"
-              class="mt-0 pt-0"
-              type="number"
-              :rules="[() => movie_fps>0 || 'Must be positive.']"
-              label="FPS"
-              hint="Frame rate"
-               persistent-hint
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </div>
-      <div v-else>
-        <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
-          opencv-python required to export to movie
-        </v-alert>
+      </plugin-inline-select>
+      <v-row class="row-min-bottom-padding">
+        <v-select
+          class="category-content"
+          :menu-props="{ left: true }"
+          attach
+          v-model="viewer_format_selected"
+          :items="viewer_format_items.map(i => i.label)"
+          label="Format"
+          hint="Image format for exporting viewers."
+          :disabled="viewer_selected.length == 0" 
+          persistent-hint
+        >
+        </v-select>
+      </v-row>
+      <v-row v-if="viewer_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+                  {{viewer_invalid_msg}}
+        </span>
+      </v-row>
+      <div v-if="viewer_selected.length > 0 && viewer_format_selected === 'mp4'" class="row-min-bottom-padding">
+        <div v-if="movie_enabled">
+          <v-row class="row-min-bottom-padding">
+            <v-col>
+              <v-text-field
+                v-model.number="i_start"
+                class="mt-0 pt-0"
+                type="number"
+                :rules="[() => i_start>=0 || 'Must be at least zero.']"
+                label="Start"
+                hint="Start Slice"
+                persistent-hint
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model.number="i_end"
+                class="mt-0 pt-0"
+                type="number"
+                :rules="[() => i_end>i_start || 'Must be larger than Start Slice.']"
+                label="End"
+                hint="End Slice"
+                persistent-hint
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row class="row-min-bottom-padding">
+            <v-col>
+              <v-text-field
+                v-model.number="movie_fps"
+                class="mt-0 pt-0"
+                type="number"
+                :rules="[() => movie_fps>0 || 'Must be positive.']"
+                label="FPS"
+                hint="Frame rate"
+                persistent-hint
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </div>
+        <div v-else>
+          <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
+            opencv-python required to export to movie
+          </v-alert>
+        </div>
       </div>
     </div>
 
@@ -100,25 +103,27 @@
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
-    </div>
-    <v-row v-if="data_invalid_msg.length > 0">
-      <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
-                {{data_invalid_msg}}
-      </span>
-    </v-row>
-    <v-row v-if="dataset_selected" class="row-min-bottom-padding">
-        <v-select
-          class="category-content"
-          :menu-props="{ left: true }"
-          attach
-          v-model="dataset_format_selected"
-          :items="dataset_format_items.map(i => i.label)"
-          label="Format"
-          hint="Format for exporting datasets."
-          persistent-hint
-        >
-        </v-select>
+
+      <v-row v-if="data_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+                  {{data_invalid_msg}}
+        </span>
       </v-row>
+      <v-row class="row-min-bottom-padding">
+          <v-select
+            class="category-content"
+            :menu-props="{ left: true }"
+            attach
+            v-model="dataset_format_selected"
+            :items="dataset_format_items.map(i => i.label)"
+            label="Format"
+            hint="Format for exporting datasets."
+            :disabled="dataset_selected.length == 0"
+            persistent-hint
+          >
+          </v-select>
+      </v-row>
+    </div>
 
     <div v-if="subset_items.length > 0">
       <span class="export-category">Spatial Subsets</span>
@@ -132,15 +137,14 @@
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
-    </div>
 
-    <v-row v-if="subset_invalid_msg.length > 0">
-      <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
-                {{subset_invalid_msg}}
-      </span>
-    </v-row>
+      <v-row v-if="subset_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+                  {{subset_invalid_msg}}
+        </span>
+      </v-row>
 
-      <v-row v-if="subset_selected" class="row-min-bottom-padding">
+      <v-row class="row-min-bottom-padding">
         <v-select
           class="category-content"
           :menu-props="{ left: true }"
@@ -149,10 +153,12 @@
           :items="subset_format_items.map(i => i.label)"
           label="Format"
           hint="Format for exporting subsets."
+          :disabled="subset_selected == null || subset_selected.length == 0"
           persistent-hint
         >
         </v-select>
       </v-row>
+    </div>
 
     <div v-if="table_items.length > 0">
       <span class="export-category">Plugin Tables</span>
@@ -166,7 +172,7 @@
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
-      <v-row v-if="table_selected.length > 0" class="row-min-bottom-padding">
+      <v-row class="row-min-bottom-padding">
         <v-select
           class="category-content"
           :menu-props="{ left: true }"
@@ -175,6 +181,7 @@
           :items="table_format_items.map(i => i.label)"
           label="Format"
           hint="File format for exporting plugin tables."
+          :disabled="table_selected.length == 0"
           persistent-hint
         >
         </v-select>
@@ -252,7 +259,7 @@
 
 <style scoped>
   .export-category {
-   margin-top: 12px;
+   margin-top: 24px;
    margin-left: 20px;
    margin-right: 20px;
    display: block;
