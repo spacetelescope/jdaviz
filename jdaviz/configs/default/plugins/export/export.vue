@@ -12,85 +12,89 @@
       :icon_radialtocheck="icon_radialtocheck"
     ></j-multiselect-toggle>
 
-    <j-plugin-section-header style="margin-top: 12px">Viewers</j-plugin-section-header>
-    <v-row>
-      <span class="v-messages v-messages__message text--secondary">Export viewer plot as an image.</span>
-    </v-row>
-    <plugin-inline-select
-      :items="viewer_items"
-      :selected.sync="viewer_selected"
-      :multiselect="multiselect"
-      :single_select_allow_blank="false"
-    >
-    </plugin-inline-select>
-    <v-row v-if="viewer_selected.length > 0" class="row-min-bottom-padding">
-      <v-select
-        :menu-props="{ left: true }"
-        attach
-        v-model="viewer_format_selected"
-        :items="viewer_format_items.map(i => i.label)"
-        label="Format"
-        hint="Image format for exporting viewers."
-        persistent-hint
+    <div v-if="viewer_items.length > 0">
+      <span class="export-category">Viewers</span>
+      <v-row>
+        <span class="category-content v-messages v-messages__message text--secondary">Export viewer plot as an image.</span>
+      </v-row>
+      <plugin-inline-select
+        :items="viewer_items"
+        :selected.sync="viewer_selected"
+        :multiselect="multiselect"
+        :single_select_allow_blank="false"
       >
-      </v-select>
-    </v-row>
-    <v-row v-if="viewer_invalid_msg.length > 0">
-      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-                {{viewer_invalid_msg}}
-      </span>
-    </v-row>
-    <div v-if="viewer_selected.length > 0 && viewer_format_selected === 'mp4'" class="row-min-bottom-padding">
-      <div v-if="movie_enabled">
-        <v-row class="row-min-bottom-padding">
-          <v-col>
-            <v-text-field
-              v-model.number="i_start"
-              class="mt-0 pt-0"
-              type="number"
-              :rules="[() => i_start>=0 || 'Must be at least zero.']"
-              label="Start"
-              hint="Start Slice"
-              persistent-hint
-            ></v-text-field>
-          </v-col>
-          <v-col>
-            <v-text-field
-              v-model.number="i_end"
-              class="mt-0 pt-0"
-              type="number"
-              :rules="[() => i_end>i_start || 'Must be larger than Start Slice.']"
-              label="End"
-              hint="End Slice"
-               persistent-hint
-            ></v-text-field>
-          </v-col>
-        </v-row>
-        <v-row class="row-min-bottom-padding">
-          <v-col>
-            <v-text-field
-              v-model.number="movie_fps"
-              class="mt-0 pt-0"
-              type="number"
-              :rules="[() => movie_fps>0 || 'Must be positive.']"
-              label="FPS"
-              hint="Frame rate"
-               persistent-hint
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </div>
-      <div v-else>
-        <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
-          opencv-python required to export to movie
-        </v-alert>
+      </plugin-inline-select>
+      <v-row class="row-min-bottom-padding">
+        <v-select
+          class="category-content"
+          :menu-props="{ left: true }"
+          attach
+          v-model="viewer_format_selected"
+          :items="viewer_format_items.map(i => i.label)"
+          label="Format"
+          hint="Image format for exporting viewers."
+          :disabled="viewer_selected.length == 0" 
+          persistent-hint
+        >
+        </v-select>
+      </v-row>
+      <v-row v-if="viewer_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+                  {{viewer_invalid_msg}}
+        </span>
+      </v-row>
+      <div v-if="viewer_selected.length > 0 && viewer_format_selected === 'mp4'" class="row-min-bottom-padding">
+        <div v-if="movie_enabled">
+          <v-row class="row-min-bottom-padding">
+            <v-col>
+              <v-text-field
+                v-model.number="i_start"
+                class="mt-0 pt-0"
+                type="number"
+                :rules="[() => i_start>=0 || 'Must be at least zero.']"
+                label="Start"
+                hint="Start Slice"
+                persistent-hint
+              ></v-text-field>
+            </v-col>
+            <v-col>
+              <v-text-field
+                v-model.number="i_end"
+                class="mt-0 pt-0"
+                type="number"
+                :rules="[() => i_end>i_start || 'Must be larger than Start Slice.']"
+                label="End"
+                hint="End Slice"
+                persistent-hint
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row class="row-min-bottom-padding">
+            <v-col>
+              <v-text-field
+                v-model.number="movie_fps"
+                class="mt-0 pt-0"
+                type="number"
+                :rules="[() => movie_fps>0 || 'Must be positive.']"
+                label="FPS"
+                hint="Frame rate"
+                persistent-hint
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </div>
+        <div v-else>
+          <v-alert type='warning' style="margin-left: -12px; margin-right: -12px">
+            opencv-python required to export to movie
+          </v-alert>
+        </div>
       </div>
     </div>
 
     <div v-if="dataset_items.length > 0">
-      <j-plugin-section-header style="margin-top: 12px">Data</j-plugin-section-header>
+      <span class="export-category">Generated Data</span>
       <v-row>
-        <span class="v-messages v-messages__message text--secondary">Export data generated by plugins.</span>
+        <span class="category-content v-messages v-messages__message text--secondary">Export data generated by plugins.</span>
       </v-row>
       <plugin-inline-select
         :items="dataset_items"
@@ -99,29 +103,32 @@
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
-    </div>
-    <v-row v-if="data_invalid_msg.length > 0">
-      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-                {{data_invalid_msg}}
-      </span>
-    </v-row>
-    <v-row v-if="dataset_selected" class="row-min-bottom-padding">
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          v-model="dataset_format_selected"
-          :items="dataset_format_items.map(i => i.label)"
-          label="Format"
-          hint="Format for exporting datasets."
-          persistent-hint
-        >
-        </v-select>
+
+      <v-row v-if="data_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+                  {{data_invalid_msg}}
+        </span>
       </v-row>
+      <v-row class="row-min-bottom-padding">
+          <v-select
+            class="category-content"
+            :menu-props="{ left: true }"
+            attach
+            v-model="dataset_format_selected"
+            :items="dataset_format_items.map(i => i.label)"
+            label="Format"
+            hint="Format for exporting datasets."
+            :disabled="dataset_selected.length == 0"
+            persistent-hint
+          >
+          </v-select>
+      </v-row>
+    </div>
 
     <div v-if="subset_items.length > 0">
-      <j-plugin-section-header style="margin-top: 12px">Subsets</j-plugin-section-header>
+      <span class="export-category">Spatial Subsets</span>
       <v-row>
-        <span class="v-messages v-messages__message text--secondary">Export spatial subset as astropy region.</span>
+        <span class="category-content v-messages v-messages__message text--secondary">Export spatial subset as astropy region.</span>
       </v-row>
       <plugin-inline-select
         :items="subset_items"
@@ -130,86 +137,91 @@
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
-    </div>
 
-    <v-row v-if="subset_invalid_msg.length > 0">
-      <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-                {{subset_invalid_msg}}
-      </span>
-    </v-row>
+      <v-row v-if="subset_invalid_msg.length > 0">
+        <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
+                  {{subset_invalid_msg}}
+        </span>
+      </v-row>
 
-      <v-row v-if="subset_selected" class="row-min-bottom-padding">
+      <v-row class="row-min-bottom-padding">
         <v-select
+          class="category-content"
           :menu-props="{ left: true }"
           attach
           v-model="subset_format_selected"
           :items="subset_format_items.map(i => i.label)"
           label="Format"
           hint="Format for exporting subsets."
-          persistent-hint
-        >
-        </v-select>
-      </v-row>
-
-    <div v-if="table_items.length > 0">
-      <j-plugin-section-header style="margin-top: 12px">Plugin Tables</j-plugin-section-header>
-      <v-row>
-        <span class="v-messages v-messages__message text--secondary">Export table from a plugin to a file.</span>
-      </v-row>
-      <plugin-inline-select
-        :items="table_items"
-        :selected.sync="table_selected"
-        :multiselect="multiselect"
-        :single_select_allow_blank="false"
-      >
-      </plugin-inline-select>
-      <v-row v-if="table_selected.length > 0" class="row-min-bottom-padding">
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          v-model="table_format_selected"
-          :items="table_format_items.map(i => i.label)"
-          label="Format"
-          hint="File format for exporting plugin tables."
+          :disabled="subset_selected == null || subset_selected.length == 0"
           persistent-hint
         >
         </v-select>
       </v-row>
     </div>
 
-    <div v-if="plot_items.length > 0">
-      <j-plugin-section-header style="margin-top: 12px">Plugin Plots</j-plugin-section-header>
+    <div v-if="plugin_table_items.length > 0">
+      <span class="export-category">Plugin Tables</span>
       <v-row>
-        <span class="v-messages v-messages__message text--secondary">Export plot from a plugin as an image.</span>
+        <span class="category-content v-messages v-messages__message text--secondary">Export table from a plugin to a file.</span>
       </v-row>
       <plugin-inline-select
-        :items="plot_items"
-        :selected.sync="plot_selected"
+        :items="plugin_table_items"
+        :selected.sync="plugin_table_selected"
+        :multiselect="multiselect"
+        :single_select_allow_blank="false"
+      >
+      </plugin-inline-select>
+      <v-row class="row-min-bottom-padding">
+        <v-select
+          class="category-content"
+          :menu-props="{ left: true }"
+          attach
+          v-model="plugin_table_format_selected"
+          :items="plugin_table_format_items.map(i => i.label)"
+          label="Format"
+          hint="File format for exporting plugin tables."
+          :disabled="plugin_table_selected.length == 0"
+          persistent-hint
+        >
+        </v-select>
+      </v-row>
+    </div>
+
+    <div v-if="plugin_plot_items.length > 0">
+      <span class="export-category">Plugin Plots</span>
+      <v-row>
+        <span class="category-content v-messages v-messages__message text--secondary">Export plot from a plugin as an image.</span>
+      </v-row>
+      <plugin-inline-select
+        :items="plugin_plot_items"
+        :selected.sync="plugin_plot_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
       <jupyter-widget 
-          v-if='plot_selected_widget.length > 0'
+          v-if='plugin_plot_selected_widget.length > 0'
           style="position: absolute; left: -100%"
-          :widget="plot_selected_widget"/> 
-      <v-row v-if="plot_selected.length > 0" class="row-min-bottom-padding">
+          :widget="plugin_plot_selected_widget"/> 
+      <v-row class="row-min-bottom-padding">
         <v-select
+          class="category-content"
           :menu-props="{ left: true }"
           attach
-          v-model="plot_format_selected"
-          :items="plot_format_items.map(i => i.label)"
+          v-model="plugin_plot_format_selected"
+          :items="plugin_plot_format_items.map(i => i.label)"
           label="Format"
           hint="File format for exporting plugin plots."
+          :disabled="plugin_plot_selected.length == 0"
           persistent-hint
         >
         </v-select>
       </v-row>
     </div>
 
-    <j-plugin-section-header style="margin-top: 12px">Export To</j-plugin-section-header>
 
-    <v-row>
+    <v-row style="margin-top: 24px">
         <v-text-field
         v-model="filename"
         label="Filename"
@@ -246,3 +258,22 @@
 
   </j-tray-plugin>
 </template>
+
+<style scoped>
+  .export-category {
+   margin-top: 24px;
+   margin-left: 20px;
+   margin-right: 20px;
+   display: block;
+   text-align: center;
+   overflow: hidden;
+   white-space: nowrap; 
+   text-transform: uppercase;
+   color: gray;
+   font-weight: 500;
+  }
+  .category-content {
+    margin-left: 32px;
+  }
+
+</style>

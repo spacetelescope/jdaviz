@@ -65,7 +65,7 @@
           </v-row>
           <v-row>
             <v-text-field
-              v-model.number="reference_wavelength"
+              v-model.number="reference_spectral_value"
               type="number"
               :step="0.1"
               class="mt-0 pt-0"
@@ -76,7 +76,7 @@
           </v-row>
           <v-row justify="end">
             <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
-              <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_wavelength">
+              <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_spectral_value">
                 Slice to Wavelength
               </plugin-action-button>
             </j-tooltip>
@@ -121,7 +121,7 @@
         <div v-if="bg_wavelength_dependent">
           <v-row>
             <v-text-field
-              v-model.number="reference_wavelength"
+              v-model.number="reference_spectral_value"
               type="number"
               :step="0.1"
               class="mt-0 pt-0"
