@@ -169,6 +169,14 @@ class TestExportSubsets:
         export_plugin.export()
         assert os.path.isfile('test.reg')
 
+        # Overwrite not enable, so no-op with warning.
+        export_plugin.export()
+        assert export_plugin.overwrite_warn
+
+        # User forces overwrite.
+        export_plugin.export(overwrite=True)
+        assert not export_plugin.overwrite_warn
+
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
                            match=re.escape("x not one of ['fits', 'reg'], reverting selection to reg")):  # noqa
