@@ -202,3 +202,24 @@ def test_export_data(cubeviz_helper, spectrum1d_cube):
     ep.export()
     assert os.path.isfile("cubeviz_export.fits")
     assert ep.data_invalid_msg == ''
+
+def test_disable_export_for_unsupported_units(specviz2d_helper):
+    from astropy.units import def_unit, Unit
+    dn = def_unit("DN", represents=Unit("count"))
+    dn_per_s = dn / Unit("s")
+    data = np.zeros((5, 10))
+    data[3] = np.arange(10)
+    data = Spectrum1D(flux=data*dn_per_s, spectral_axis=data[3]*u.um)
+    specviz2d_helper.load_data(data)
+
+    gs = specviz2d_helper.plugins["Gaussian Smooth"]
+    smooth_source_dataset = "Spectrum 1D"
+    gs.dataset = smooth_source_dataset
+    gs.stddev = 3
+    gs.smooth(add_data=True)
+
+    ep = specviz2d_helper.plugins["Export"]._obj
+    assert "Spectrum 1D smooth stddev-3.0" in ep.dataset.choices
+    ep.dataset_selected = "Spectrum 1D smooth stddev-3.0"
+    assert ep.dataset.selected_obj.unit == "DN/s"
+    assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."
