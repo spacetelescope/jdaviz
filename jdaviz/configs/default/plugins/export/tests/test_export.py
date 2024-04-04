@@ -209,7 +209,7 @@ class TestExportPluginPlots():
     def test_basic_export_plugin_plots(tmp_path, imviz_helper):
         """
         Test basic funcionality of exporting plugin plots
-        from the export plugin. Tests on the 'Plot Options:stretch_hist'
+        from the export plugin. Tests on the 'Plot Options: stretch_hist'
         plot, which exists upon loading data, and also that plots that
         may have been initialized but are empty are not displayed in
         the Export plugin.
@@ -219,7 +219,7 @@ class TestExportPluginPlots():
         imviz_helper.load_data(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
-        export_plugin.plugin_plot.selected = 'Plot Options:stretch_hist'
+        export_plugin.plugin_plot.selected = 'Plot Options: stretch_hist'
 
         assert export_plugin.plugin_plot_format.selected == 'png'  # should be default format
         # and change file type
@@ -237,7 +237,7 @@ class TestExportPluginPlots():
         # this might change down the line if new plots are added.
         available_plots = [x['label'] for x in export_plugin.plot.items]
         assert len(available_plots) == 1
-        assert available_plots[0] == 'Plot Options:stretch_hist'
+        assert available_plots[0] == 'Plot Options: stretch_hist'
 
     def test_ap_phot_plot_export(tmp_path, imviz_helper):
 
@@ -263,9 +263,9 @@ class TestExportPluginPlots():
         assert phot_plugin.plot_available
 
         available_plots = [x['label'] for x in export_plugin.plot.items]
-        assert 'Aperture Photometry:plot' in available_plots
+        assert 'Aperture Photometry: plot' in available_plots
 
-        export_plugin.plot.selected = 'Aperture Photometry:plot'
+        export_plugin.plot.selected = 'Aperture Photometry: plot'
 
         # change filename
         export_plugin.filename = 'test_export_plugin_plot'

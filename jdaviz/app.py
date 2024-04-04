@@ -381,14 +381,14 @@ class Application(VuetifyTemplate, HubListener):
         if msg.plugin._plugin_name is None:
             # plugin was instantiated after the app was created, ignore
             return
-        key = f"{msg.plugin._plugin_name}:{msg.table._table_name}"
+        key = f"{msg.plugin._plugin_name}: {msg.table._table_name}"
         self._plugin_tables.setdefault(key, msg.table.user_api)
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:
             # plugin was instantiated after the app was created, ignore
             return
-        key = f"{msg.plugin._plugin_name}:{msg.plot._plot_name}"
+        key = f"{msg.plugin._plugin_name}: {msg.plot._plot_name}"
         self._plugin_plots.setdefault(key, msg.plot.user_api)
 
     @property
