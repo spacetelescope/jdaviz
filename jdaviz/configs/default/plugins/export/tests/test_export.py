@@ -88,7 +88,7 @@ class TestExportSubsets():
         export_plugin = cubeviz_helper.plugins['Export']._obj
         export_plugin.subset.selected = 'Subset 1'
 
-        assert export_plugin.subset_invalid_msg == 'Export for composite subsets not supported.'
+        assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
 
         cubeviz_helper.app.session.edit_subset_mode.mode = NewMode
         cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
@@ -179,7 +179,7 @@ class TestExportSubsets():
         cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=20, yc=25, radius=5))
 
         with pytest.raises(NotImplementedError,
-                           match='Subset can not be exported - Export for composite subsets not supported.'):  # noqa
+                           match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
 
 
@@ -235,7 +235,7 @@ class TestExportPluginPlots():
         # make sure that the only valid option for export is this plugin,
         # not the other plots that exist but are empty (ap phot and line profile)
         # this might change down the line if new plots are added.
-        available_plots = [x['label'] for x in export_plugin.plot.items]
+        available_plots = [x['label'] for x in export_plugin.plugin_plot.items]
         assert len(available_plots) == 1
         assert available_plots[0] == 'Plot Options: stretch_hist'
 
@@ -262,15 +262,15 @@ class TestExportPluginPlots():
         phot_plugin.vue_do_aper_phot()
         assert phot_plugin.plot_available
 
-        available_plots = [x['label'] for x in export_plugin.plot.items]
+        available_plots = [x['label'] for x in export_plugin.plugin_plot.items]
         assert 'Aperture Photometry: plot' in available_plots
 
-        export_plugin.plot.selected = 'Aperture Photometry: plot'
+        export_plugin.plugin_plot.selected = 'Aperture Photometry: plot'
 
         # change filename
         export_plugin.filename = 'test_export_plugin_plot'
         # and change file type
-        export_plugin.plot_format.selected = 'svg'
+        export_plugin.plugin_plot_format.selected = 'svg'
 
         # just check that it doesn't crash, since we can't download
         export_plugin.export()
