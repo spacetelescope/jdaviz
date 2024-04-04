@@ -186,8 +186,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.reference_spectral_value = self.slice_plugin.value
         else:
             self.bg_wavelength_dependent = False
-        # NOTE: this can be redundant in the case where reference_spectral_value changed and triggers
-        # the observe, but we need to ensure it is updated if reference_spectral_value is unchanged
+        # NOTE: this can be redundant in the case where reference_spectral_value changed and
+        # triggers the observe, but we need to ensure it is updated if reference_spectral_value
+        # is unchanged
         self._update_mark_scale()
 
     def _on_slice_changed(self, msg):
