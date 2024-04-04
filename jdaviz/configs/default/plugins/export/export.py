@@ -360,7 +360,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 return
             self.save_subset_as_region(selected_subset_label, filename)
 
-        # TODO: Do we want to use data label here instead of generic filename?
         elif len(self.dataset.selected):
             filetype = self.dataset_format.selected
             filename = self._normalize_filename(filename, filetype, overwrite=overwrite)

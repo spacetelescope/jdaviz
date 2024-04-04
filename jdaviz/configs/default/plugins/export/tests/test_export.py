@@ -234,7 +234,6 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."  # noqa
 
 
-@pytest.mark.usefixtures('_jail')
 class TestExportPluginPlots:
 
     def test_basic_export_plugin_plots(self, imviz_helper):
