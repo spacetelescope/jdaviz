@@ -223,3 +223,75 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     ep.dataset_selected = "Spectrum 1D smooth stddev-3.0"
     assert ep.dataset.selected_obj.unit == "DN/s"
     assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."
+
+
+class TestExportPluginPlots():
+
+    def test_basic_export_plugin_plots(tmp_path, imviz_helper):
+        """
+        Test basic funcionality of exporting plugin plots
+        from the export plugin. Tests on the 'Plot Options:stretch_hist'
+        plot, which exists upon loading data, and also that plots that
+        may have been initialized but are empty are not displayed in
+        the Export plugin.
+        """
+        data = NDData(np.ones((500, 500)) * u.nJy)
+
+        imviz_helper.load_data(data)
+
+        export_plugin = imviz_helper.plugins['Export']._obj
+        export_plugin.plot.selected = 'Plot Options:stretch_hist'
+
+        assert export_plugin.plot_format.selected == 'png'  # should be default format
+        # and change file type
+        export_plugin.plot_format.selected = 'svg'
+
+        export_plugin.filename == 'imviz_export'
+        # change filename
+        export_plugin.filename = 'test_export_plugin_plot'
+
+        # just check that it doesn't crash, since we can't download
+        export_plugin.export()
+
+        # make sure that the only valid option for export is this plugin,
+        # not the other plots that exist but are empty (ap phot and line profile)
+        # this might change down the line if new plots are added.
+        available_plots = [x['label'] for x in export_plugin.plot.items]
+        assert len(available_plots) == 1
+        assert available_plots[0] == 'Plot Options:stretch_hist'
+
+    def test_ap_phot_plot_export(tmp_path, imviz_helper):
+
+        """
+        Test export functionality for plot from the aperture photometry
+        plugin.
+        """
+
+        data = NDData(np.ones((500, 500)) * u.nJy)
+
+        imviz_helper.load_data(data)
+
+        export_plugin = imviz_helper.plugins['Export']._obj
+
+        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(xc=250,
+                                                                     yc=250,
+                                                                     radius=100))
+
+        phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
+        phot_plugin.aperture_selected = 'Subset 1'
+
+        phot_plugin.vue_do_aper_phot()
+        assert phot_plugin.plot_available
+
+        available_plots = [x['label'] for x in export_plugin.plot.items]
+        assert 'Aperture Photometry:plot' in available_plots
+
+        export_plugin.plot.selected = 'Aperture Photometry:plot'
+
+        # change filename
+        export_plugin.filename = 'test_export_plugin_plot'
+        # and change file type
+        export_plugin.plot_format.selected = 'svg'
+
+        # just check that it doesn't crash, since we can't download
+        export_plugin.export()

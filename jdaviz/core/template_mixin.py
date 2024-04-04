@@ -44,7 +44,8 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 AddDataToViewerMessage, ChangeRefDataMessage,
-                                PluginTableAddedMessage, PluginTableModifiedMessage)
+                                PluginTableAddedMessage, PluginTableModifiedMessage,
+                                PluginPlotAddedMessage, PluginPlotModifiedMessage)
 
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
@@ -72,6 +73,7 @@ __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'ViewerSelect', 'ViewerSelectMixin',
            'LayerSelect', 'LayerSelectMixin',
            'PluginTableSelect', 'PluginTableSelectMixin',
+           'PluginPlotSelect', 'PluginPlotSelectMixin',
            'NonFiniteUncertaintyMismatchMixin',
            'DatasetSelect', 'DatasetSelectMixin', 'DatasetMultiSelectMixin',
            'FileImportSelectPluginComponent', 'HasFileImportSelect',
@@ -2480,6 +2482,134 @@ class PluginTableSelectMixin(VuetifyTemplate, HubListener):
                                         multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
 
 
+class PluginPlotSelect(SelectPluginComponent):
+    """
+    Plugin select for plugin plot entries, with support for single or multi-selection.
+
+    Useful API methods/attributes:
+
+    * :meth:`~SelectPluginComponent.choices`
+    * ``selected``
+    * :attr:`selected_obj`
+    * :meth:`~SelectPluginComponent.is_multiselect`
+    * :meth:`~SelectPluginComponent.select_default`
+    * :meth:`~SelectPluginComponent.select_all` (only if ``is_multiselect``)
+    * :meth:`~SelectPluginComponent.select_none` (only if ``is_multiselect``)
+
+    Traitlets (in the object, custom traitlets in the plugin):
+
+    * ``items`` (list of dicts with keys: label)
+    * ``selected`` (string)
+
+    Properties (in the object only):
+
+    * ``selected_obj``
+
+    Methods (in the object only):
+
+    * ``get_object``
+
+    To use in a plugin:
+
+    * create traitlets with default values
+    * register with all the automatic logic in the plugin's init by passing the string names
+      of the respective traitlets
+    * use component in plugin template (see below)
+    * refer to properties above based on the interally stored reference to the
+      instantiated object of this component
+
+    Example template (label and hint are optional)::
+
+      <v-select
+        :items="plot_items"
+        :selected.sync="plot_selected"
+        label="Plot"
+        hint="Select plot."
+      />
+    """
+
+    def __init__(self, plugin, items, selected,
+                 multiselect=None,
+                 filters=['not_empty_plot'],
+                 default_text=None, manual_options=[],
+                 default_mode='first'):
+        """
+        Parameters
+        ----------
+        plugin
+            the parent plugin object
+        items : str
+            the name of the items traitlet defined in ``plugin``
+        selected : str
+            the name of the selected traitlet defined in ``plugin``
+        multiselect : str
+            the name of the traitlet defining whether the dropdown should accept multiple selections
+        filters : list
+            list of strings (for built-in filters) or callables to filter to only valid options.
+        default_text : str or None
+            the text to show for no selection.  If not provided or None, no entry will be provided
+            in the dropdown for no selection.
+        manual_options: list
+            list of options to provide that are not automatically populated by datasets.  If
+            ``default`` text is provided but not in ``manual_options`` it will still be included as
+            the first item in the list.
+        default_mode : str, optional
+            What mode to use when making the default selection.  Valid options: first, default_text,
+            empty.
+        """
+        super().__init__(plugin, items=items, selected=selected,
+                         multiselect=multiselect, filters=filters,
+                         default_text=default_text, manual_options=manual_options,
+                         default_mode=default_mode)
+        self.hub.subscribe(self, PluginPlotAddedMessage, handler=self._on_plots_changed)
+        self.hub.subscribe(self, PluginPlotModifiedMessage, handler=self._on_plots_changed)
+        self._on_plots_changed()
+
+    @observe('filters')
+    def _on_plots_changed(self, *args):
+        manual_items = [{'label': label} for label in self.manual_options]
+        self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_plots.items()
+                                     if self._is_valid_item(v._obj)]
+        self._apply_default_selection()
+        # future improvement: only clear cache if the selected data entry was changed?
+        self._clear_cache(*self._cached_properties)
+
+    @cached_property
+    def selected_obj(self):
+        return self.plugin.app._jdaviz_helper.plugin_plots.get(self.selected)
+
+    def _is_valid_item(self, plot):
+
+        def not_empty_plot(plot):
+            # checks plot.figure.marks to determine if figure is of an empty plot
+            # not sure if this is a foolproof way to do this?
+            return len(plot.figure.marks) > 0
+
+        return super()._is_valid_item(plot, locals())
+
+
+class PluginPlotSelectMixin(VuetifyTemplate, HubListener):
+    plot_items = List().tag(sync=True)
+    plot_selected = Any().tag(sync=True)
+    plot_selected_widget = Any().tag(sync=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.plot = PluginPlotSelect(self,
+                                     'plot_items',
+                                     'plot_selected',
+                                     multiselect='multiselect' if hasattr(self, 'multiselect') else None)  # noqa
+
+    @observe('plot_selected')
+    def _plot_selected_changed(self, *args):
+        if not hasattr(self, 'plot'):
+            return
+        if self.plot_selected == '':
+            self.plot_selected_widget = ''
+        else:
+            self.plot_selected_widget = f'IPY_MODEL_{self.plot.selected_obj._obj.model_id}'
+
+
 class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
     """
     Adds a traitlet tracking whether self.dataset and self.spectral_subset
@@ -4334,13 +4464,14 @@ class Plot(PluginSubcomponent):
     figure = Any().tag(sync=True, **widget_serialization)
     toolbar = Any().tag(sync=True, **widget_serialization)
 
-    def __init__(self, plugin, viewer_type='scatter', app=None, *args, **kwargs):
+    def __init__(self, plugin, name='plot', viewer_type='scatter', app=None, *args, **kwargs):
         super().__init__(plugin, 'Plot', *args, **kwargs)
         if app is None:
             app = jglue()
 
         self._app = app
         self._plugin = plugin
+        self._plot_name = name
         self.viewer = app.new_data_viewer(viewer_type, show=False)
         self.viewer._plugin = plugin
         self.viewer._plot = self
@@ -4362,8 +4493,15 @@ class Plot(PluginSubcomponent):
                     ]
         self._initialize_toolbar()
 
+        plugin.session.hub.broadcast(PluginPlotAddedMessage(sender=self))
+        plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def _initialize_toolbar(self, default_tool_priority=[]):
         self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, default_tool_priority)
+
+    @property
+    def user_api(self):
+        return UserApiWrapper(self, ('set_limits'))
 
     @property
     def app(self):
@@ -4386,6 +4524,8 @@ class Plot(PluginSubcomponent):
         dc_entry = self.app.data_collection[label]
         self.viewer.remove_data(dc_entry)
         self.app.data_collection.remove(dc_entry)
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _update_data(self, label, reset_lims=False, **kwargs):
         self._check_valid_components(**kwargs)
@@ -4419,6 +4559,8 @@ class Plot(PluginSubcomponent):
         if reset_lims:
             self.viewer.state.reset_limits()
 
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def update_style(self, label, **kwargs):
         kwargs.setdefault('visible', True)
         if label not in self.layers.keys():
@@ -4446,6 +4588,8 @@ class Plot(PluginSubcomponent):
                     continue
                 setattr(lyr.state, k, v)
 
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def _add_data(self, label, **kwargs):
         self._check_valid_components(**kwargs)
         data = Data(label=label, **kwargs)
@@ -4461,6 +4605,8 @@ class Plot(PluginSubcomponent):
             dc.add_link(links)
         self.viewer.add_data(dc_entry)
 
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
     def _refresh_marks(self):
         # ensure all marks are drawn
         # NOTE: this seems to only be necessary for histogram viewers and may be an upstream bug
@@ -4469,6 +4615,8 @@ class Plot(PluginSubcomponent):
         other_marks = list(self.marks.values())
         layer_marks = [m for m in self.figure.marks if m not in other_marks]
         self.figure.marks = layer_marks + other_marks
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     @property
     def marks(self):
@@ -4485,6 +4633,8 @@ class Plot(PluginSubcomponent):
                         mark.samples = [0]
                     else:
                         mark.x, mark.y = [], []
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def clear_all_marks(self):
         self.clear_marks(*self.marks.keys())
@@ -4516,6 +4666,9 @@ class Plot(PluginSubcomponent):
                    **kwargs)
         self.figure.marks = self.figure.marks + [mark]
         self._marks[label] = mark
+
+        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
         return mark
 
     def add_line(self, label, x=[], y=[], xnorm=False, ynorm=False, **kwargs):

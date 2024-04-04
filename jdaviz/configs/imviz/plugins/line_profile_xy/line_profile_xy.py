@@ -26,8 +26,8 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.plot_across_x = Plot(self)
-        self.plot_across_y = Plot(self)
+        self.plot_across_x = Plot(self, name='across_x')
+        self.plot_across_y = Plot(self, name='across_y')
         for plot in (self.plot_across_x, self.plot_across_y):
             # override default styling
             plot.figure.fig_margin = {'top': 60, 'bottom': 60, 'left': 65, 'right': 15}
