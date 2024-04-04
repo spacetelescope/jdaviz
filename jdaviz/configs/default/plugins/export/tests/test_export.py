@@ -205,9 +205,7 @@ def test_export_data(cubeviz_helper, spectrum1d_cube):
 
 
 def test_disable_export_for_unsupported_units(specviz2d_helper):
-    from astropy.units import def_unit, Unit
-    dn = def_unit("DN", represents=Unit("count"))
-    dn_per_s = dn / Unit("s")
+    dn_per_s = u.DN / u.s
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
     data = Spectrum1D(flux=data*dn_per_s, spectral_axis=data[3]*u.um)
