@@ -59,6 +59,12 @@ load data into the application through code with the
 method, which takes as input a :class:`~specutils.Spectrum1D` object or filename for the
 2D spectrum and (optionally) the 1D spectrum.
 
+.. code-block:: python
+
+    specviz2d = Specviz2d()
+    specviz2d.load_data('/my/directory/2dspectrum.fits', '/my/directory/1dspectrum.fits')
+    specviz2d.show()
+
 By default, extension 1 of the 2D
 file is loaded, but you can specify another extension by providing an integer
 to the ``ext`` keyword. In case you want to load an uncalibrated spectrum
@@ -67,4 +73,4 @@ the spectrum to be horizontal:
 
 .. code-block:: python
 
-    specviz2d.load_data(fn, ext=7, transpose=True)
+    specviz2d.load_data(filename, ext=7, transpose=True)
