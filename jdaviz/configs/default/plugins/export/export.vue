@@ -204,14 +204,16 @@
           v-if='plugin_plot_selected_widget.length > 0'
           style="position: absolute; left: -100%"
           :widget="plugin_plot_selected_widget"/> 
-      <v-row v-if="plugin_plot_selected.length > 0" class="row-min-bottom-padding">
+      <v-row class="row-min-bottom-padding">
         <v-select
+          class="category-content"
           :menu-props="{ left: true }"
           attach
           v-model="plugin_plot_format_selected"
           :items="plugin_plot_format_items.map(i => i.label)"
           label="Format"
           hint="File format for exporting plugin plots."
+          :disabled="plugin_plot_selected.length == 0"
           persistent-hint
         >
         </v-select>
