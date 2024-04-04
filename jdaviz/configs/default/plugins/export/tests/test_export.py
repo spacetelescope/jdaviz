@@ -203,6 +203,7 @@ def test_export_data(cubeviz_helper, spectrum1d_cube):
     assert os.path.isfile("cubeviz_export.fits")
     assert ep.data_invalid_msg == ''
 
+
 def test_disable_export_for_unsupported_units(specviz2d_helper):
     from astropy.units import def_unit, Unit
     dn = def_unit("DN", represents=Unit("count"))
@@ -222,7 +223,7 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     assert "Spectrum 1D smooth stddev-3.0" in ep.dataset.choices
     ep.dataset_selected = "Spectrum 1D smooth stddev-3.0"
     assert ep.dataset.selected_obj.unit == "DN/s"
-    assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."
+    assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."  # noqa
 
 
 class TestExportPluginPlots():
