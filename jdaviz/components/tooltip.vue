@@ -24,7 +24,7 @@ const tooltips = {
   // app toolbar
   'app-help': 'Open docs in new tab',
   'app-snackbar-history': 'Toggle logger overlay',
-  'app-toolbar-plugins': 'Data analysis plug-ins',
+  'app-toolbar-plugins': 'Toggle plugin sidebar',
   'app-toolbar-popout': `Display in a new window<br /><br />
     <div style="width: 200px; border: 1px solid gray;" class="pa-2">
       <strong>Note:</strong>

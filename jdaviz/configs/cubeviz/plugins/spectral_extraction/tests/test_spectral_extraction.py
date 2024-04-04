@@ -215,12 +215,12 @@ def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
         slice_plg.value = slice_values[1]
         assert mark.x[1] != before_x[1]
 
-        extract_plg._obj.vue_goto_reference_wavelength()
+        extract_plg._obj.vue_goto_reference_spectral_value()
         assert_allclose(slice_plg.value, slice_values[0])
 
         slice_plg.value = slice_values[1]
         extract_plg._obj.vue_adopt_slice_as_reference()
-        extract_plg._obj.vue_goto_reference_wavelength()
+        extract_plg._obj.vue_goto_reference_spectral_value()
         assert_allclose(slice_plg.value, slice_values[1])
 
 
@@ -395,7 +395,7 @@ def test_unit_translation(cubeviz_helper):
     extract_plg.wavelength_dependent = True
     extract_plg.function = 'Sum'
     # set so pixel scale factor != 1
-    extract_plg.reference_wavelength = 0.000001
+    extract_plg.reference_spectral_value = 0.000001
 
     # collapse to spectrum, now we can get pixel scale factor
     collapsed_spec = extract_plg.collapse_to_spectrum()
