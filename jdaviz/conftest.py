@@ -3,6 +3,7 @@
 # get picked up when running the tests inside an interpreter using
 # packagename.test
 
+import os
 import warnings
 
 import numpy as np
@@ -332,6 +333,18 @@ def mos_image():
 def roman_imagemodel():
     if HAS_ROMAN_DATAMODELS:
         return create_wfi_image_model((20, 10))
+
+
+# Copied over from https://github.com/spacetelescope/ci_watson
+@pytest.fixture(scope='function')
+def _jail(tmp_path):
+    """Perform test in a pristine temporary working directory."""
+    old_dir = os.getcwd()
+    os.chdir(tmp_path)
+    try:
+        yield str(tmp_path)
+    finally:
+        os.chdir(old_dir)
 
 
 try:

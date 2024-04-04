@@ -319,7 +319,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
 
             if self.overwrite_warn and not overwrite:
-                raise FileExistsError(f"{filename} exists but overwrite={overwrite}")
+                return
 
             if filetype == "mp4":
                 self.save_movie(viewer, filename, filetype)
@@ -347,7 +347,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filetype = self.plugin_table_format.selected
             filename = self._normalize_filename(filename, filetype)
             if self.overwrite_warn and not overwrite:
-                raise FileExistsError(f"{filename} exists but overwrite={overwrite}")
+                return
             self.plugin_table.selected_obj.export_table(filename, overwrite=True)
 
         elif len(self.subset.selected):
@@ -357,7 +357,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if self.subset_invalid_msg != '':
                 raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
             if self.overwrite_warn and not overwrite:
-                raise FileExistsError(f"{filename} exists but overwrite={overwrite}")
+                return
             self.save_subset_as_region(selected_subset_label, filename)
 
         # TODO: Do we want to use data label here instead of generic filename?
@@ -367,7 +367,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if self.data_invalid_msg != "":
                 raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
             if self.overwrite_warn and not overwrite:
-                raise FileExistsError(f"{filename} exists but overwrite={overwrite}")
+                return
             self.dataset.selected_obj.write(Path(filename), overwrite=True)
         else:
             raise ValueError("nothing selected for export")
