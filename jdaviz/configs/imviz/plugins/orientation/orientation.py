@@ -275,6 +275,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def _get_wcs_angles(self, first_loaded_image=None):
         if first_loaded_image is None:
             first_loaded_image = self.viewer.selected_obj.first_loaded_data
+            if first_loaded_image is None:
+                # These won't end up getting used in this case, but need an actual number
+                return 0,0,0
         degn, dege, flip = get_compass_info(
             first_loaded_image.coords, first_loaded_image.shape
         )[-3:]
@@ -293,7 +296,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         return 0 * u.deg
 
     def add_orientation(self, rotation_angle=None, east_left=None, label=None,
-                        set_on_create=True, wrt_data=None):
+                        set_on_create=True, wrt_data=None, from_ui=False):
         """
         Add new orientation options.
 
@@ -332,6 +335,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             # default rotation:
             wrt_data = self.viewer.selected_obj.first_loaded_data
             if wrt_data is None:  # Nothing in viewer
+                msg = "Viewer must have data loaded to add an orientation."
+                if from_ui:
+                    self.hub.broadcast(SnackbarMessage(msg, color="error",
+                                                       timeout=6000, sender=self))
+                else:
+                    raise ValueError(msg)
                 return
 
         rotation_angle = self.rotation_angle_deg(rotation_angle)
@@ -414,7 +423,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self.viewer.selected_obj.state.reset_limits()
 
     def vue_add_orientation(self, *args, **kwargs):
-        self.add_orientation(set_on_create=True)
+        self.add_orientation(set_on_create=True, from_ui=True)
 
     @observe('orientation_layer_selected')
     def _change_reference_data(self, *args, **kwargs):
@@ -486,7 +495,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             if ref_data.label in self.orientation.choices:
                 self.orientation.selected = ref_data.label
 
-    def create_north_up_east_left(self, label="North-up, East-left", set_on_create=False):
+    def create_north_up_east_left(self, label="North-up, East-left", set_on_create=False,
+                                  from_ui=False):
         """
         Set the rotation angle and flip to achieve North up and East left
         according to the reference image WCS.
@@ -494,11 +504,13 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if label not in self.orientation.choices:
             degn = self._get_wcs_angles()[-3]
             self.add_orientation(rotation_angle=degn, east_left=True,
-                                 label=label, set_on_create=set_on_create)
+                                 label=label, set_on_create=set_on_create,
+                                 from_ui=from_ui)
         elif set_on_create:
             self.orientation.selected = label
 
-    def create_north_up_east_right(self, label="North-up, East-right", set_on_create=False):
+    def create_north_up_east_right(self, label="North-up, East-right", set_on_create=False,
+                                   from_ui=False):
         """
         Set the rotation angle and flip to achieve North up and East right
         according to the reference image WCS.
@@ -506,15 +518,16 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if label not in self.orientation.choices:
             degn = self._get_wcs_angles()[-3]
             self.add_orientation(rotation_angle=180 - degn, east_left=False,
-                                 label=label, set_on_create=set_on_create)
+                                 label=label, set_on_create=set_on_create,
+                                 from_ui=from_ui)
         elif set_on_create:
             self.orientation.selected = label
 
     def vue_select_north_up_east_left(self, *args, **kwargs):
-        self.create_north_up_east_left(set_on_create=True)
+        self.create_north_up_east_left(set_on_create=True, from_ui=True)
 
     def vue_select_north_up_east_right(self, *args, **kwargs):
-        self.create_north_up_east_right(set_on_create=True)
+        self.create_north_up_east_right(set_on_create=True, from_ui=True)
 
     def vue_select_default_orientation(self, *args, **kwargs):
         self.orientation.selected = base_wcs_layer_label
