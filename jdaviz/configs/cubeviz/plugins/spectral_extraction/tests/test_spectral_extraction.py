@@ -441,7 +441,7 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
 
     # update should take place automatically, but since its async, we'll call manually to ensure
     # the update is complete before comparing results
-    subset = cubeviz_helper.app.data_collection.subset_groups[0].subsets[0]
-    cubeviz_helper.app._update_live_plugin_results(trigger_subset=subset)
+    for subset in cubeviz_helper.app.data_collection.subset_groups[0].subsets:
+        cubeviz_helper.app._update_live_plugin_results(trigger_subset=subset)
     new_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
     assert new_med_flux > orig_med_flux
