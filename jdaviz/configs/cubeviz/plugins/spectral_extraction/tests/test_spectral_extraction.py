@@ -12,7 +12,6 @@ from numpy.testing import assert_allclose, assert_array_equal
 from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
 from specutils import Spectrum1D
-from time import sleep
 from astropy.wcs import WCS
 
 
@@ -439,7 +438,10 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
     # replace Subset 1 with a larger subset, resulting fluxes should increase
     cubeviz_helper.app.session.edit_subset_mode.mode = ReplaceMode
     fv.apply_roi(CircularROI(xc=5, yc=5, radius=3))
-    # give some time for update to take place in the callback
-    sleep(0.5)
+
+    # update should take place automatically, but since its async, we'll call manually to ensure
+    # the update is complete before comparing results
+    subset = cubeviz_helper.app.data_collection.subset_groups[0].subsets[0]
+    cubeviz_helper.app._update_live_plugin_results(trigger_subset=subset)
     new_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
     assert new_med_flux > orig_med_flux
