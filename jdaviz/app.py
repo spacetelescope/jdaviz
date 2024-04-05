@@ -134,6 +134,14 @@ class UnitConverterWithSpectral:
                     # to debug
                     print(converted_values)
                     return converted_values
+                # custom equivalency
+                '''
+                eqv = [(u.MJy / u.sr,
+                        u.MJy,
+                        lambda x: (x * spec.meta['_pixel_scale_factor']),
+                        lambda x: x)]
+                '''
+
             else:
                     eqv = u.spectral_density(spec.spectral_axis)
 

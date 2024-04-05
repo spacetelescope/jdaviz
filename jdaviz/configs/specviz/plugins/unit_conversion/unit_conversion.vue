@@ -25,7 +25,7 @@
         attach
         :items="flux_unit_items.map(i => i.label)"
         v-model="flux_unit_selected"
-        :label="translate_unit ? 'Flux Unit' : 'Surface Brightness'"
+        :label="translate_unit ? 'Flux Unit' : 'Surface Brightness Unit'"
         :hint="translate_unit ? 'Global display unit for flux.' : 'Global display unit for surface brightness.'"
         persistent-hint
         :disabled="config === 'cubeviz'"
