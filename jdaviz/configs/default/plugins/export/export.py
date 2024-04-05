@@ -291,7 +291,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         return str(filename)
 
     @with_spinner()
-    def export(self, filename=None, show_dialog=None, overwrite=False, raise_error_for_overwrite=True):
+    def export(self, filename=None, show_dialog=None, overwrite=False,
+               raise_error_for_overwrite=True):
         """
         Export selected item(s)
 
@@ -407,7 +408,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def vue_overwrite_from_ui(self, *args, **kwargs):
         """Attempt to force writing the output if the user confirms the desire to overwrite."""
         try:
-            filename = self.export(show_dialog=True, overwrite=True, raise_error_for_overwrite=False)
+            filename = self.export(show_dialog=True, overwrite=True,
+                                   raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export with overwrite failed with: {e}", sender=self, color="error"))
