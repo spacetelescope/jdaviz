@@ -408,7 +408,6 @@ class Application(VuetifyTemplate, HubListener):
                     continue
             # update and overwrite data
             # make a new instance of the plugin to avoid changing any UI settings
-            print("***", data.label, trigger_data_lbl, trigger_subset)
             plg = self._jdaviz_helper.plugins.get(data.meta.get('Plugin'))._obj.new()
             if not plg.supports_auto_update:
                 raise NotImplementedError(f"{data.meta.get('Plugin')} does not support live-updates")  # noqa
