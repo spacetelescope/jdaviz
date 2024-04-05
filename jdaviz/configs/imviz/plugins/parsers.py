@@ -29,6 +29,15 @@ INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
             " to the file name to load all of them.")
 
 
+def prep_data_layer_as_dq(data, component_id='DQ'):
+    # nans are used to mark "good" flags in the DQ colormap, so
+    # convert DQ array to float to support nans:
+    cid = data.get_component(component_id)
+    data_arr = np.float32(cid.data)
+    data_arr[data_arr == 0] = np.nan
+    data.update_components({cid: data_arr})
+
+
 @data_parser_registry("imviz-data-parser")
 def parse_data(app, file_obj, ext=None, data_label=None, parent=None):
     """Parse a data file into Imviz.
@@ -92,6 +101,19 @@ def parse_data(app, file_obj, ext=None, data_label=None, parent=None):
 
         else:  # Assume FITS
             with fits.open(file_obj) as pf:
+                available_extensions = [hdu.name for hdu in pf]
+
+                # if FITS file contains SCI and DQ extensions, assume the
+                # parent for the DQ is SCI:
+                if (
+                    'SCI' in available_extensions and
+                    ext == 'DQ' and parent is None
+                ):
+                    loaded_data_labels = [data.label for data in app.data_collection]
+                    latest_sci_extension = [label for label in loaded_data_labels
+                                            if label.endswith('[DATA]')][-1]
+                    parent = latest_sci_extension
+
                 _parse_image(app, pf, data_label, ext=ext, parent=parent)
     else:
         _parse_image(app, file_obj, data_label, ext=ext, parent=parent)
@@ -101,12 +123,11 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
     """This function is for internal use, so other viz can also extract image data
     like Imviz does.
     """
-
     if isinstance(file_obj, fits.HDUList):
         if 'ASDF' in file_obj:  # JWST ASDF-in-FITS
-            # Load all extensions
-            if ext == '*':
-                data_iter = _jwst_all_to_glue_data(file_obj, data_label)
+            # Load multiple extensions
+            if ext == '*' or isinstance(ext, (tuple, list)):
+                data_iter = _jwst_all_to_glue_data(file_obj, data_label, load_extensions=ext)
 
             # Load only specified extension
             else:
@@ -116,8 +137,8 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
                 # issue info message.
                 _info_nextensions(app, file_obj)
 
-        elif ext == '*':  # Load all extensions
-            data_iter = _hdus_to_glue_data(file_obj, data_label)
+        elif ext == '*' or isinstance(ext, (tuple, list)):  # Load multiple extensions
+            data_iter = _hdus_to_glue_data(file_obj, data_label, ext=ext)
 
         elif ext is not None:  # Load just the EXT user wants
             hdu = file_obj[ext]
@@ -175,7 +196,15 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
         data_label = app.return_data_label(file_obj, ext, alt_name="image_data")
     data_iter = get_image_data_iterator(app, file_obj, data_label, ext=ext)
 
+    # Save the SCI extension to this list:
+    sci_ext = None
+
     for data, data_label in data_iter:
+
+        # if the science extension hasn't been identified yet, do so here:
+        if sci_ext is None and data_label.endswith(('[DATA]', '[SCI]')):
+            sci_ext = data_label
+
         if isinstance(data.coords, GWCS) and (data.coords.bounding_box is not None):
             # keep a copy of the original bounding box so we can detect
             # when extrapolating beyond, but then remove the bounding box
@@ -188,14 +217,17 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
             data_label = app.return_data_label(data_label, alt_name="image_data")
 
         # TODO: generalize/centralize this for use in other configs too
-        if parent is not None and ext == 'DQ':
-            # nans are used to mark "good" flags in the DQ colormap, so
-            # convert DQ array to float to support nans:
-            cid = data.get_component("DQ")
-            data_arr = np.float32(cid.data)
-            data_arr[data_arr == 0] = np.nan
-            data.update_components({cid: data_arr})
-        app.add_data(data, data_label, parent=parent)
+        if data_label.endswith('[DQ]'):
+            prep_data_layer_as_dq(data)
+
+        if parent is not None:
+            parent_data_label = parent
+        elif data_label.endswith('[DQ]'):
+            parent_data_label = sci_ext
+        else:
+            parent_data_label = None
+
+        app.add_data(data, data_label, parent=parent_data_label)
 
     # Do not link image data here. We do it at the end in Imviz.load_data()
 
@@ -248,9 +280,12 @@ def _validate_bunit(bunit, raise_error=True):
 
 # ---- Functions that handle input from JWST FITS files -----
 
-def _jwst_all_to_glue_data(file_obj, data_label):
+def _jwst_all_to_glue_data(file_obj, data_label, load_extensions='*'):
     for hdu in file_obj:
-        if _validate_fits_image2d(hdu, raise_error=False):
+        if (
+            _validate_fits_image2d(hdu, raise_error=False) and
+            (load_extensions == '*' or hdu.name in load_extensions)
+        ):
 
             ext = hdu.name.lower()
             if ext == 'sci':
@@ -329,9 +364,11 @@ def _jwst2data(file_obj, ext, data_label):
 
 def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
 
-    if ext == '*' or ext is None:
+    if ext == '*':
         # NOTE: Update as needed. Should cover all the image extensions available.
         ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
+    elif ext is None:
+        ext_list = ('data', )
     elif isinstance(ext, (list, tuple)):
         ext_list = ext
     else:
@@ -352,13 +389,18 @@ def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
         data.add_component(component=component, label=comp_label)
         data.meta.update(standardize_metadata(dict(meta)))
 
+        if comp_label == 'dq':
+            prep_data_layer_as_dq(data, component_id=comp_label)
+
         yield data, new_data_label
 
 
 def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None):
-    if ext == '*' or ext is None:
+    if ext == '*':
         # NOTE: Update as needed. Should cover all the image extensions available.
         ext_list = ('data', 'dq', 'err', 'var_poisson', 'var_rnoise')
+    elif ext is None:
+        ext_list = ('data', )
     elif isinstance(ext, (list, tuple)):
         ext_list = ext
     else:
@@ -380,6 +422,8 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None):
             component = Component(np.array(ext_values), units=bunit)
             data.add_component(component=component, label=comp_label)
             data.meta.update(standardize_metadata(dict(meta)))
+            if comp_label == 'DQ':
+                prep_data_layer_as_dq(data, component_id=comp_label)
 
             yield data, new_data_label
 
@@ -391,11 +435,12 @@ def _hdu_to_glue_data(hdu, data_label, hdulist=None):
     yield data, data_label
 
 
-def _hdus_to_glue_data(file_obj, data_label):
+def _hdus_to_glue_data(file_obj, data_label, ext=None):
     for hdu in file_obj:
-        if _validate_fits_image2d(hdu, raise_error=False):
-            data, new_data_label = _hdu2data(hdu, data_label, file_obj)
-            yield data, new_data_label
+        if ext is None or hdu.name in ext:
+            if _validate_fits_image2d(hdu, raise_error=False):
+                data, new_data_label = _hdu2data(hdu, data_label, file_obj)
+                yield data, new_data_label
 
 
 def _hdu2data(hdu, data_label, hdulist, include_wcs=True):

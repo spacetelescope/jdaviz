@@ -120,7 +120,11 @@ def load_flag_map(mission_or_instrument=None, path=None):
         flag_map_path = path
 
     with resources.as_file(resources.files('jdaviz').joinpath(flag_map_path)) as path:
-        flag_table = Table.read(path, format='ascii.csv')
+        # by default astropy's Table.read returns "masked" for empty table data, so
+        # here we supply a fill value (empty string)
+        fill_values = ['']
+
+        flag_table = Table.read(path, format='ascii.csv', fill_values=fill_values)
 
     flag_mapping = {}
     for flag, name, desc in flag_table.iterrows():

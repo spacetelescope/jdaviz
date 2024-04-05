@@ -2065,13 +2065,12 @@ class Application(VuetifyTemplate, HubListener):
         # if Data has children, update their visibilities to match Data:
         assoc_children = self._get_assoc_data_children(data_label)
         for layer in viewer.layers:
-            for data_label in assoc_children:
-                if layer.layer.data.label == data_label:
-                    if visible and not layer.visible:
-                        layer.visible = True
-                        layer.update()
-                    else:
-                        layer.visible = visible
+            if layer.layer.data.label in assoc_children:
+                if visible and not layer.visible:
+                    layer.visible = True
+                    layer.update()
+                else:
+                    layer.visible = visible
 
         # update data menu - selected_data_items should be READ ONLY, not modified by the user/UI
         selected_items = viewer_item['selected_data_items']
