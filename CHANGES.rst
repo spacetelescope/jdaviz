@@ -1,4 +1,4 @@
-3.9 (unreleased)
+3.9 (2024-04-05)
 ================
 
 New Features
@@ -54,12 +54,6 @@ Imviz
 - Enabling any matched zoom tool in a viewer disables other matched zoom tools in other viewers
   to avoid recursion. [#2764]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
 Specviz2d
 ^^^^^^^^^
 
@@ -101,17 +95,12 @@ Imviz
 
 - Single-pixel tool is no longer available. To mark a single-pixel area, use Markers plugin. [#2710]
 
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
-
 Bug Fixes
 ---------
+
+- Fix redshifted line lists that were displaying at rest wavelengths, by assuming a global redshift. [#2726]
+
+- Order of RGB preset colors now matches for less than and greater than 5 layers. [#2731]
 
 Cubeviz
 ^^^^^^^
@@ -123,8 +112,7 @@ Imviz
 
 - Apertures that are selected and later modified to be invalid properly show a warning. [#2684]
 
-Mosviz
-^^^^^^
+- Histogram in Plot Options no longer stalls for a very large image. [#2735]
 
 Specviz
 ^^^^^^^
@@ -132,39 +120,6 @@ Specviz
 - Check unit type (e.g., flux density, surface brightness, counts, etc) for generating
   display label for the y axis in spectral viewer. Previously it was hard coded
   to always display ``flux density`` no matter the input unit. [#2703]
-
-Specviz2d
-^^^^^^^^^
-
-Other Changes and Additions
----------------------------
-
-3.8.3 (unreleased)
-==================
-
-Bug Fixes
----------
-
-- Fix redshifted line lists that were displaying at rest wavelengths, by assuming a global redshift. [#2726]
-
-- Order of RGB preset colors now matches for less than and greater than 5 layers. [#2731]
-
-Cubeviz
-^^^^^^^
-
-Imviz
-^^^^^
-
-- Histogram in Plot Options no longer stalls for a very large image. [#2735]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.8.2 (2024-02-23)
 ==================
@@ -216,16 +171,11 @@ Imviz
 
 - Fixes viewer keys in ``viz.viewers`` for additionally created viewers. [#2624]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 -  Fixed parser bug where an HDUList would load as SpectrumList, even though it was a Spectrum1D. [#2576]
 
-Specviz2d
-^^^^^^^^^
 
 3.8 (2023-11-29)
 ================
