@@ -173,6 +173,12 @@ class TestExportSubsets:
         export_plugin.export(raise_error_for_overwrite=False)
         assert export_plugin.overwrite_warn
 
+        # Changing filename should clear warning.
+        old_filename = export_plugin.filename
+        export_plugin.filename = "foo"
+        assert not export_plugin.overwrite_warn
+        export_plugin.filename = old_filename
+
         # Overwrite not enable, but with exception from API by default.
         with pytest.raises(FileExistsError, match=".* exists but overwrite=False"):
             export_plugin.export()

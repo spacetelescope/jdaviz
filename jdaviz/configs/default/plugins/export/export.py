@@ -233,6 +233,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             msg = ""
         self.viewer_invalid_msg = msg
 
+    @observe('filename')
+    def _is_filename_changed(self, event):
+        # Clear overwrite warning when user changes filename
+        self.overwrite_warn = False
+
     def _set_subset_not_supported_msg(self, msg=None):
         """
         Check if selected subset is spectral or composite, and warn and
