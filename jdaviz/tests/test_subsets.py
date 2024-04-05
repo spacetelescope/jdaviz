@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.wcs import WCS
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from glue.core import Data
@@ -789,6 +790,95 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     reg = specviz2d_helper.app.get_subsets("Subset 1")
     assert reg[0].lower.value == 6400 and reg[0].upper.value == 7400
     assert reg[1].lower.value == 7600 and reg[1].upper.value == 7800
+
+
+def test_draw_2D_subset_specviz2d(specviz2d_helper):
+    # custom test data to predict values for different viewers
+    header = {
+              'WCSAXES': 2,
+              'CRPIX1': 0.0, 'CRPIX2': 8.5,
+              'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
+              'CUNIT1': 'm', 'CUNIT2': 'deg',
+              'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
+              'CRVAL1': 0.0, 'CRVAL2': 5.0,
+              'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+    wcs = WCS(header)
+
+    x_values = np.linspace(0, 10, 128)
+    y_values = np.linspace(0, 5, 256)
+
+    data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
+    spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
+    specviz2d_helper.load_data(spectrum_2d=spectrum_data)
+
+    viewer_1d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_viewer_reference_name)
+    viewer_2d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
+
+    # create subset in 2d-viewer, want data in 1d-viewer
+    viewer_2d.apply_roi(XRangeROI(60, 80))
+    subset_drawn_2d = viewer_1d.native_marks[-1]
+
+    # get x and y components of 1D subset created to compute mask
+    y1 = subset_drawn_2d.y
+    x1 = subset_drawn_2d.x
+
+    subset_highlighted_region1 = x1[np.isfinite(y1)]
+    min_value_subset1 = np.min(subset_highlighted_region1)
+    max_value_subset1 = np.max(subset_highlighted_region1)
+
+    tolerance1 = 1e-6
+    expected_min1 = 6.e-5
+    expected_max1 = 8.e-05
+
+    assert np.allclose(min_value_subset1, expected_min1, atol=tolerance1)
+    assert np.allclose(max_value_subset1, expected_max1, atol=tolerance1)
+
+
+def test_draw_1D_subset_specviz2d(specviz2d_helper):
+    viewer_1d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_viewer_reference_name)
+    viewer_2d = specviz2d_helper.app.get_viewer(
+        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
+
+    # Note/TO DO: 2d-viewer does not display subset if it is drawn before
+    # specviz2d.show() is called. Work around for this test case,
+    # similiar to Imviz, 2d-viewer limits set so subset mask can be applied to viewer.
+    viewer_2d.jdaviz_helper.viewers['spectrum-2d-viewer']._obj.shape = (155, 864)
+
+    # custom test data to predict values for different viewers
+    header = {
+        'WCSAXES': 2,
+        'CRPIX1': 0.0, 'CRPIX2': 8.5,
+        'CDELT1': 1E-06, 'CDELT2': 7.5E-05,
+        'CUNIT1': 'm', 'CUNIT2': 'deg',
+        'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
+        'CRVAL1': 0.0, 'CRVAL2': 5.0,
+        'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+    wcs = WCS(header)
+
+    x_values = np.linspace(0, 10, 128)
+    y_values = np.linspace(0, 5, 256)
+
+    data = np.sin(x_values[:, np.newaxis]) * np.cos(y_values) * u.one
+    spectrum_data = Spectrum1D(data, wcs=wcs, meta=header)
+    specviz2d_helper.load_data(spectrum_2d=spectrum_data)
+
+    # subset drawn in 1d-viewer, want data in 2d-viewer
+    viewer_1d.apply_roi(XRangeROI(.0001, .0002))
+    subset_drawn_1d = viewer_2d.native_marks[-1].image
+
+    subset_highlighted_region2 = np.atleast_1d(np.nonzero(subset_drawn_1d))[1]
+    min_value_subset2 = np.min(subset_highlighted_region2)
+    max_value_subset2 = np.max(subset_highlighted_region2)
+
+    tolerance2 = 2
+    expected_min2 = 338
+    expected_max2 = 674
+
+    assert np.allclose(min_value_subset2, expected_min2, atol=tolerance2)
+    assert np.allclose(max_value_subset2, expected_max2, atol=tolerance2)
 
 
 def test_multi_mask_subset(specviz_helper, spectrum1d):
