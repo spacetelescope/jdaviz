@@ -175,7 +175,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.dev_bg_support:
             expose += ['background', 'bg_wavelength_dependent']
 
-        return PluginUserApi(self, expose=expose)
+        return PluginUserApi(self, expose=expose, excl_from_dict=['spatial_subset'])
 
     @property
     def live_update_subscriptions(self):
