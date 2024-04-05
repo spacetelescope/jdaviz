@@ -92,6 +92,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     movie_recording = Bool(False).tag(sync=True)
     movie_interrupt = Bool(False).tag(sync=True)
 
+    overwrite_warn = Bool(False).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -231,6 +233,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             msg = ""
         self.viewer_invalid_msg = msg
 
+    @observe('filename')
+    def _is_filename_changed(self, event):
+        # Clear overwrite warning when user changes filename
+        self.overwrite_warn = False
+
     def _set_subset_not_supported_msg(self, msg=None):
         """
         Check if selected subset is spectral or composite, and warn and
@@ -265,7 +272,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             self.data_invalid_msg = ''
 
-    def _normalize_filename(self, filename=None, filetype=None):
+    def _normalize_filename(self, filename=None, filetype=None, overwrite=False):
         # Make sure filename is valid and file does not end up in weird places in standalone mode.
         if not filename:
             raise ValueError("Invalid filename")
@@ -276,15 +283,21 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filename = Path(filename).expanduser()
 
         filepath = filename.parent
-        if filepath and not filepath.exists():
+        if filepath and not filepath.is_dir():
             raise ValueError(f"Invalid path={filepath}")
         elif ((not filepath or str(filepath).startswith(".")) and os.environ.get("JDAVIZ_START_DIR", "")):  # noqa: E501 # pragma: no cover
             filename = os.environ["JDAVIZ_START_DIR"] / filename
 
+        if filename.exists() and not overwrite:
+            self.overwrite_warn = True
+        else:
+            self.overwrite_warn = False
+
         return str(filename)
 
     @with_spinner()
-    def export(self, filename=None, show_dialog=None):
+    def export(self, filename=None, show_dialog=None, overwrite=False,
+               raise_error_for_overwrite=True):
         """
         Export selected item(s)
 
@@ -292,6 +305,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         ----------
         filename : str, optional
             If not provided, plugin value will be used.
+
+        show_dialog : bool or `None`
+            If `True`, prompts dialog to save PNG/SVG from browser.
+
+        overwrite : bool
+            If `True`, silently overwrite an existing file.
+
+        raise_error_for_overwrite : bool
+            If `True`, raise exception when ``overwrite=False`` but
+            output file already exists. Otherwise, a message will be sent
+            to application snackbar instead.
+
         """
 
         if self.multiselect:
@@ -309,7 +334,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             viewer = self.viewer.selected_obj
 
             filetype = self.viewer_format.selected
-            filename = self._normalize_filename(filename, filetype)
+            filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
+
+            if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
+                return
 
             if filetype == "mp4":
                 self.save_movie(viewer, filename, filetype)
@@ -336,21 +366,33 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         elif len(self.plugin_table.selected):
             filetype = self.plugin_table_format.selected
             filename = self._normalize_filename(filename, filetype)
+            if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
+                return
             self.plugin_table.selected_obj.export_table(filename, overwrite=True)
 
         elif len(self.subset.selected):
             selected_subset_label = self.subset.selected
             filetype = self.subset_format.selected
-            filename = self._normalize_filename(filename, filetype)
+            filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
             if self.subset_invalid_msg != '':
                 raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
+            if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
+                return
             self.save_subset_as_region(selected_subset_label, filename)
 
         elif len(self.dataset.selected):
             filetype = self.dataset_format.selected
-            filename = self._normalize_filename(filename, filetype)
+            filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
             if self.data_invalid_msg != "":
                 raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
+            if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
+                return
             self.dataset.selected_obj.write(Path(filename), overwrite=True)
         else:
             raise ValueError("nothing selected for export")
@@ -359,7 +401,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def vue_export_from_ui(self, *args, **kwargs):
         try:
-            filename = self.export(show_dialog=True)
+            filename = self.export(show_dialog=True, raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export failed with: {e}", sender=self, color="error"))
@@ -367,6 +409,19 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if filename is not None:
                 self.hub.broadcast(SnackbarMessage(
                     f"Exported to {filename}", sender=self, color="success"))
+
+    def vue_overwrite_from_ui(self, *args, **kwargs):
+        """Attempt to force writing the output if the user confirms the desire to overwrite."""
+        try:
+            filename = self.export(show_dialog=True, overwrite=True,
+                                   raise_error_for_overwrite=False)
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(
+                f"Export with overwrite failed with: {e}", sender=self, color="error"))
+        else:
+            if filename is not None:
+                self.hub.broadcast(SnackbarMessage(
+                    f"Exported to {filename} (overwrite)", sender=self, color="success"))
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
 

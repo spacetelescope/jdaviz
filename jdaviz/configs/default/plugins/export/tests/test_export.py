@@ -1,24 +1,25 @@
-import numpy as np
 import os
-import pytest
 import re
 
+import numpy as np
+import pytest
+from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
-import astropy.units as u
 from glue.core.edit_subset_mode import AndMode, NewMode
 from glue.core.roi import CircularROI, XRangeROI
 from regions import Regions, CircleSkyRegion
 from specutils import Spectrum1D
 
 
-class TestExportSubsets():
+@pytest.mark.usefixtures('_jail')
+class TestExportSubsets:
     """
     Tests for exporting subsets. Currently limited to non-composite spatial
     subsets.
     """
 
-    def test_basic_export_subsets_imviz(self, tmp_path, imviz_helper):
+    def test_basic_export_subsets_imviz(self, imviz_helper):
 
         data = NDData(np.ones((500, 500)) * u.nJy)
 
@@ -94,7 +95,7 @@ class TestExportSubsets():
         cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
         assert 'Subset 2' not in export_plugin.subset.choices
 
-    def test_export_subsets_wcs(self, tmp_path, imviz_helper, spectral_cube_wcs):
+    def test_export_subsets_wcs(self, imviz_helper, spectral_cube_wcs):
 
         # using cube WCS instead of 2d imaging wcs for consistancy with
         # cubeviz test. accessing just the spatial part of this.
@@ -125,7 +126,7 @@ class TestExportSubsets():
 
         assert isinstance(Regions.read('sky_region.reg')[0], CircleSkyRegion)
 
-    def test_basic_export_subsets_cubeviz(self, tmp_path, cubeviz_helper, spectral_cube_wcs):
+    def test_basic_export_subsets_cubeviz(self, cubeviz_helper, spectral_cube_wcs):
 
         data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
 
@@ -168,6 +169,25 @@ class TestExportSubsets():
         export_plugin.export()
         assert os.path.isfile('test.reg')
 
+        # Overwrite not enable, so no-op with warning.
+        export_plugin.export(raise_error_for_overwrite=False)
+        assert export_plugin.overwrite_warn
+
+        # Changing filename should clear warning.
+        old_filename = export_plugin.filename
+        export_plugin.filename = "foo"
+        assert not export_plugin.overwrite_warn
+        export_plugin.filename = old_filename
+
+        # Overwrite not enable, but with exception from API by default.
+        with pytest.raises(FileExistsError, match=".* exists but overwrite=False"):
+            export_plugin.export()
+        assert export_plugin.overwrite_warn
+
+        # User forces overwrite.
+        export_plugin.export(overwrite=True)
+        assert not export_plugin.overwrite_warn
+
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
                            match=re.escape("x not one of ['fits', 'reg'], reverting selection to reg")):  # noqa
@@ -183,6 +203,7 @@ class TestExportSubsets():
             export_plugin.export()
 
 
+@pytest.mark.usefixtures('_jail')
 def test_export_data(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     mm = cubeviz_helper.plugins["Moment Maps"]
@@ -224,9 +245,9 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     assert ep.data_invalid_msg == "Export Disabled: The unit DN / s could not be saved in native FITS format."  # noqa
 
 
-class TestExportPluginPlots():
+class TestExportPluginPlots:
 
-    def test_basic_export_plugin_plots(tmp_path, imviz_helper):
+    def test_basic_export_plugin_plots(self, imviz_helper):
         """
         Test basic funcionality of exporting plugin plots
         from the export plugin. Tests on the 'Plot Options: stretch_hist'
@@ -259,7 +280,7 @@ class TestExportPluginPlots():
         assert len(available_plots) == 1
         assert available_plots[0] == 'Plot Options: stretch_hist'
 
-    def test_ap_phot_plot_export(tmp_path, imviz_helper):
+    def test_ap_phot_plot_export(self, imviz_helper):
 
         """
         Test export functionality for plot from the aperture photometry
