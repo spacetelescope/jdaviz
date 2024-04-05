@@ -6,7 +6,7 @@ Data Analysis Plugins
 
 The Specviz2D data analysis plugins are meant to aid quick-look analysis
 of 2D spectroscopic data. All plugins are accessed via the :guilabel:`plugin`
-icon in the upper right corner of the Specviz application. 
+icon in the upper right corner of the Specviz2d application.
 
 .. _specviz2d-metadata-viewer:
 
@@ -37,7 +37,7 @@ Subset Tools
 
     :ref:`Subset Tools <imviz-subset-plugin>`
         Imviz documentation describing the concept of subsets in Jdaviz.
-  
+
 Markers
 =======
 
@@ -58,13 +58,13 @@ To interact with the plugin via the API in a notebook, access the plugin object 
 
 .. code-block:: python
 
-  sp_ext = viz.app.get_tray_item_from_name('spectral-extraction')
+  sp_ext = specviz2d.plugins['Spectral Extraction']
 
 
 Trace
 -----
 
-The first section of the plugin allows for creating and visualizing 
+The first section of the plugin allows for creating and visualizing
 :py:class:`specreduce.tracing.Trace` objects.
 
 Once you interact with any of the inputs in the extract step or hover over that area
@@ -74,18 +74,10 @@ in the 2D spectrum viewer.
 To create a new trace in the plugin, choose the desired "Trace Type" and edit any input arguments.
 A preview of the trace will update in real time in the 2D spectrum viewer.
 
-To export the trace as a data object into the 2D spectrum viewer (to access via the API or to 
+To export the trace as a data object into the 2D spectrum viewer (to access via the API or to
 adjust plotting options), open the "Export Trace" panel, choose a label for the new data entry,
 and click "Create".  Note that this step is not required to create an extraction with simple
 workflows.
-
-Trace objects created outside of jdaviz can be loaded into the app via :py:meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_trace`:
-
-.. code-block:: python
-
-  viz.load_trace(my_trace, data_label="my trace")
-
-and then added to the viewer through the data menu.
 
 Suppose you have 2D spectra of an extended source, and you have already created a trace that follows the
 bright central region of the source. It is possible to create a new trace, with the same 2D
@@ -95,18 +87,37 @@ brighter inner region. You can create a new trace based on the existing trace by
 the "Trace" dropdown and selecting the existing trace. Then, offset it in the spatial direction by clicking or entering
 the spatial offset, and save it by creating a new trace or overwriting the existing trace entry.
 
+From the API
+^^^^^^^^^^^^
+
+Trace parameters can be set from the notebook by accessing the plugin.
+
+.. code-block:: python
+
+    sp_ext.trace_type = 'Polynomial'
+    sp_ext.trace_order = 2
+    sp_ext.trace_window = 10
+    sp_ext.trace_peak_method = 'Gaussian'
+
 To export and access the specreduce Trace object defined in the plugin, call
 :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_trace`:
 
 .. code-block:: python
 
-  trace = sp_ext.export_trace()
+    trace = sp_ext.export_trace()
 
-To import the parameters from a specreduce Trace object, whether it's new or was exported and modified in the notebook, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.import_trace`:
+Trace objects created outside of jdaviz can be loaded into the app via :py:meth:`~jdaviz.configs.specviz2d.helper.Specviz2d.load_trace`:
 
 .. code-block:: python
 
-  sp_ext.import_trace(trace)
+    specviz2d.load_trace(my_trace, data_label="my trace")
+
+or directly into the plugin as
+
+.. code-block:: python
+
+    sp_ext.import_trace(my_trace)
+
 
 Background
 ----------
@@ -115,7 +126,7 @@ The background step of the plugin allows for creating background and background-
 images via :py:mod:`specreduce.background`.
 
 Once you interact with any of the inputs in the background step or hover over that area
-of the plugin, the live visualization in the 2D spectrum viewer will change to show the center 
+of the plugin, the live visualization in the 2D spectrum viewer will change to show the center
 (dotted line) and edges (solid lines) of the background region(s).  The 1D representation of the
 background will also be visualized in the 1D spectrum viewer (thin, solid line).
 
@@ -124,9 +135,20 @@ flat trace by selecting "Manual" in the Background Type dropdown.
 
 To visualize the resulting background or background-subtracted image, click on the respective panel,
 and choose a label for the new data entry.  The exported images will now appear in the data dropdown
-menu in the 2D spectrum viewer, and can be :ref:`exported into the notebook via the API <specviz2d-export-data-2d>`.  
+menu in the 2D spectrum viewer.
 To refine the trace based on the background-subtracted image, return
-to the Trace step and select the exported background-subtracted image as input. 
+to the Trace step and select the exported background-subtracted image as input.
+
+From the API
+^^^^^^^^^^^^
+
+Background parameters can be set from the notebook by accessing the plugin.
+
+.. code-block:: python
+
+    sp_ext.bg_type = 'TwoSided'
+    sp_ext.bg_separation = 8
+    sp_ext.bg_width = 6
 
 To export and access the specreduce Background object defined in the plugin, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_bg`:
 
@@ -161,9 +183,19 @@ To use a different 2D spectrum loaded in the app (or exported from the Backgroun
 that from the dropdown instead.  To skip background subtraction, choose the original 2D spectrum
 as input.
 
-To visualize or export the resulting 2D spectrum, provide a data label and click "Extract".  The 
-resulting spectrum object can be :ref:`accessed from the API <specviz2d-export-data-1d>` in the same
+To visualize or export the resulting 2D spectrum, provide a data label and click "Extract".
+The resulting spectrum object can be :ref:`accessed from the API <specviz2d-export-data-1d>` in the same
 way as any other data product in the spectrum viewer.
+
+From the API
+^^^^^^^^^^^^
+
+Extraction parameters can be set from the notebook by accessing the plugin.
+
+.. code-block:: python
+
+    sp_ext.ext_type = 'Boxcar'
+    sp_ext.ext_width = 8
 
 To export and access the specreduce extraction object defined in the plugin, call :py:meth:`~jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction.SpectralExtraction.export_extract`:
 
@@ -184,7 +216,8 @@ To import the parameters from a specreduce extraction object (either a new objec
 
     Horne extraction uses uncertainties on the input 2D spectrum. If the
     spectrum uncertainties are not explicitly assigned a type, they are assumed
-    to be standard deviation uncertainties.
+    to be standard deviation uncertainties. If no uncertainty is provided,
+    it is assumed to be an array of ones.
 
 
 .. _specviz2d-gaussian-smooth:
@@ -225,14 +258,13 @@ Line Lists
 ==========
 
 .. note::
-    The line lists plugin is currently disabled if the 1D spectrum was automatically extracted
-    and/or the 1D spectrum's x-axis is in pixels.
+    The line lists plugin is currently disabled if the 1D spectrum's x-axis is in pixels.
 
 .. seealso::
 
     :ref:`Line Lists <line-lists>`
         Specviz documentation on Line Lists.
-        
+
 
 .. _specviz2d-line-analysis:
 
@@ -240,8 +272,7 @@ Line Analysis
 =============
 
 .. note::
-    The line analysis plugin is currently disabled if the 1D spectrum was automatically extracted
-    and/or the 1D spectrum's x-axis is in pixels.
+    The line analysis plugin is currently disabled if the 1D spectrum's x-axis is in pixels.
 
 .. seealso::
 
