@@ -291,7 +291,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         return str(filename)
 
     @with_spinner()
-    def export(self, filename=None, show_dialog=None, overwrite=False):
+    def export(self, filename=None, show_dialog=None, overwrite=False, raise_error_for_overwrite=True):
         """
         Export selected item(s)
 
@@ -299,6 +299,18 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         ----------
         filename : str, optional
             If not provided, plugin value will be used.
+
+        show_dialog : bool or `None`
+            If `True`, prompts dialog to save PNG/SVG from browser.
+
+        overwrite : bool
+            If `True`, silently overwrite an existing file.
+
+        raise_error_for_overwrite : bool
+            If `True`, raise exception when ``overwrite=False`` but
+            output file already exists. Otherwise, a message will be sent
+            to application snackbar instead.
+
         """
 
         if self.multiselect:
@@ -319,6 +331,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
 
             if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
 
             if filetype == "mp4":
@@ -347,6 +361,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             filetype = self.plugin_table_format.selected
             filename = self._normalize_filename(filename, filetype)
             if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
             self.plugin_table.selected_obj.export_table(filename, overwrite=True)
 
@@ -357,6 +373,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if self.subset_invalid_msg != '':
                 raise NotImplementedError(f'Subset can not be exported - {self.subset_invalid_msg}')
             if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
             self.save_subset_as_region(selected_subset_label, filename)
 
@@ -366,6 +384,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if self.data_invalid_msg != "":
                 raise NotImplementedError(f"Data can not be exported - {self.data_invalid_msg}")
             if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
             self.dataset.selected_obj.write(Path(filename), overwrite=True)
         else:
@@ -375,7 +395,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def vue_export_from_ui(self, *args, **kwargs):
         try:
-            filename = self.export(show_dialog=True)
+            filename = self.export(show_dialog=True, raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export failed with: {e}", sender=self, color="error"))
@@ -387,7 +407,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def vue_overwrite_from_ui(self, *args, **kwargs):
         """Attempt to force writing the output if the user confirms the desire to overwrite."""
         try:
-            filename = self.export(show_dialog=True, overwrite=True)
+            filename = self.export(show_dialog=True, overwrite=True, raise_error_for_overwrite=False)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Export with overwrite failed with: {e}", sender=self, color="error"))

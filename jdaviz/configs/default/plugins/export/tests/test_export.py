@@ -170,7 +170,12 @@ class TestExportSubsets:
         assert os.path.isfile('test.reg')
 
         # Overwrite not enable, so no-op with warning.
-        export_plugin.export()
+        export_plugin.export(raise_error_for_overwrite=False)
+        assert export_plugin.overwrite_warn
+
+        # Overwrite not enable, but with exception from API by default.
+        with pytest.raises(FileExistsError, match=".* exists but overwrite=False"):
+            export_plugin.export()
         assert export_plugin.overwrite_warn
 
         # User forces overwrite.
