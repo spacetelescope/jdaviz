@@ -97,7 +97,7 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
             return
 
         viewer = self.viewer.selected_obj
-        i = get_top_layer_index(viewer, app=self.app)
+        i = get_top_layer_index(viewer)
         data = viewer.state.layers[i].layer
 
         x = int(round(self.selected_x))

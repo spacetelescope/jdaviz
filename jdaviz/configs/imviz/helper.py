@@ -411,28 +411,23 @@ def get_wcs_only_layer_labels(app):
             if layer_is_wcs_only(data)]
 
 
-def get_top_layer_index(viewer, app=None):
+def get_top_layer_index(viewer):
     """Get index of the top visible image layer in Imviz.
     This is because when blinked, first layer might not be top visible layer.
 
     """
-    if app is None:
-        visible_image_layers = [
-            i for i, lyr in enumerate(viewer.layers)
-            if lyr.visible and layer_is_image_data(lyr.layer)
-        ]
-    else:
-        # exclude children of layer associations
-        associations = app._data_associations
-        visible_image_layers = [
-            i for i, lyr in enumerate(viewer.layers)
-            if (
-                lyr.visible and
-                layer_is_image_data(lyr.layer) and
-                # check that this layer is a root, without parents:
-                associations[lyr.layer.label]['parent'] is None
-            )
-        ]
+    # exclude children of layer associations
+    associations = viewer.jdaviz_app._data_associations
+
+    visible_image_layers = [
+        i for i, lyr in enumerate(viewer.layers)
+        if (
+            lyr.visible and
+            layer_is_image_data(lyr.layer) and
+            # check that this layer is a root, without parents:
+            associations[lyr.layer.label]['parent'] is None
+        )
+    ]
 
     if len(visible_image_layers):
         return visible_image_layers[-1]
