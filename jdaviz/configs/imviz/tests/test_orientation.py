@@ -245,3 +245,4 @@ class TestOrientationNoData(BaseImviz_WCS_WCS):
         lc_plugin.viewer = "imviz-1"
         # This would error prior to bugfix
         lc_plugin.orientation = "North-up, East-left"
+        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
