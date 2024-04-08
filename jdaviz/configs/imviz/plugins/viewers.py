@@ -146,7 +146,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
     def on_limits_change(self, *args):
         try:
-            i = get_top_layer_index(self)
+            i = get_top_layer_index(self, app=self.jdaviz_app)
         except IndexError:
             if self.compass is not None:
                 self.compass.clear_compass()
@@ -159,7 +159,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
     def top_visible_data_label(self):
         """Data label of the top visible layer in the viewer."""
         try:
-            i = get_top_layer_index(self)
+            i = get_top_layer_index(self, app=self.jdaviz_app)
         except IndexError:
             data_label = ''
         else:

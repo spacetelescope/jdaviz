@@ -1,5 +1,5 @@
 import os
-from traitlets import Any, Dict, Bool, List, Unicode, observe
+from traitlets import Any, Dict, Bool, List, Unicode, Float, observe
 
 import numpy as np
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -45,6 +45,7 @@ class DataQuality(PluginTemplateMixin):
     dq_layer_multiselect = Bool(False).tag(sync=True)
     dq_layer_items = List().tag(sync=True)
     dq_layer_selected = Any().tag(sync=True)  # Any needed for multiselect
+    dq_layer_opacity = Float(0.9).tag(sync=True)  # Any needed for multiselect
 
     flag_map_definitions = Dict().tag(sync=True)
     flag_map_selected = Any().tag(sync=True)
@@ -87,6 +88,11 @@ class DataQuality(PluginTemplateMixin):
 
         self.dq_layer.filter_is_child_of = self.science_layer_selected
         self.dq_layer._update_layer_items()
+
+        # listen for changes on the image opacity, and update the
+        # data quality layer opacity on changes to the science layer opacity
+        plot_options = self.app.get_tray_item_from_name('g-plot-options')
+        plot_options.observe(self.update_opacity, 'image_opacity_value')
 
     def load_default_flag_maps(self):
         for name in dq_flag_map_paths:
@@ -165,11 +171,26 @@ class DataQuality(PluginTemplateMixin):
                 dq_layer.state.v_min = min(flag_bits)
                 dq_layer.state.v_max = max(flag_bits)
 
-            dq_layer.state.alpha = 0.9
+            dq_layer.state.alpha = self.dq_layer_opacity
             dq_layer.state.cmap = cmap
+
+    @observe('dq_layer_opacity')
+    def update_opacity(self, event={}):
+        viewer = self.viewer.selected_obj
+        [science_layer] = [
+            layer for layer in viewer.layers if
+            layer.layer.label == self.science_layer_selected
+        ]
+        [dq_layer] = [
+            layer for layer in viewer.layers if
+            layer.layer.label == self.dq_layer_selected
+        ]
+        # DQ opacity is a fraction of the science layer's opacity:
+        dq_layer.state.alpha = self.dq_layer_opacity * science_layer.state.alpha
 
     @observe('decoded_flags', 'flags_filter')
     def update_cmap(self, event={}):
+        print('update_cmap')
         viewer = self.viewer.selected_obj
         [dq_layer] = [
             layer for layer in viewer.layers if
@@ -212,7 +233,7 @@ class DataQuality(PluginTemplateMixin):
                 dq_layer.state.v_min = min(flag_bits)
                 dq_layer.state.v_max = max(flag_bits)
 
-            dq_layer.state.alpha = 0.9
+            dq_layer.state.alpha = self.dq_layer_opacity
 
     def update_visibility(self, index):
         self.decoded_flags[index]['show'] = not self.decoded_flags[index]['show']
@@ -262,4 +283,4 @@ class DataQuality(PluginTemplateMixin):
 
         self.send_state('decoded_flags')
         self.flags_filter = []
-        self.update_cmap()
+
