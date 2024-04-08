@@ -276,8 +276,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if first_loaded_image is None:
             first_loaded_image = self.viewer.selected_obj.first_loaded_data
             if first_loaded_image is None:
-                # These won't end up getting used in this case, but need an actual number
-                return 0,0,0
+                # These won't end up getting used in this case, but we need an actual number
+                return 0, 0, 0
         degn, dege, flip = get_compass_info(
             first_loaded_image.coords, first_loaded_image.shape
         )[-3:]
