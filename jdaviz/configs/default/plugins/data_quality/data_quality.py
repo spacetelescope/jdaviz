@@ -152,12 +152,7 @@ class DataQuality(PluginTemplateMixin):
             unique_flags=unique_flags,
             rgba_colors=rgba_colors
         )
-
-        viewer = self.viewer.selected_obj
-        [dq_layer] = [
-            layer for layer in viewer.layers if
-            layer.layer.label == self.dq_layer_selected
-        ]
+        dq_layer = self.get_dq_layer()
         dq_layer.composite._allow_bad_alpha = True
 
         flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
@@ -174,28 +169,37 @@ class DataQuality(PluginTemplateMixin):
             dq_layer.state.alpha = self.dq_layer_opacity
             dq_layer.state.cmap = cmap
 
-    @observe('dq_layer_opacity')
-    def update_opacity(self, event={}):
+    def get_dq_layer(self):
+        if self.dq_layer_selected == '':
+            return
+
+        viewer = self.viewer.selected_obj
+        [dq_layer] = [
+            layer for layer in viewer.layers if
+            layer.layer.label == self.dq_layer_selected
+        ]
+        return dq_layer
+
+    def get_science_layer(self):
         viewer = self.viewer.selected_obj
         [science_layer] = [
             layer for layer in viewer.layers if
             layer.layer.label == self.science_layer_selected
         ]
-        [dq_layer] = [
-            layer for layer in viewer.layers if
-            layer.layer.label == self.dq_layer_selected
-        ]
-        # DQ opacity is a fraction of the science layer's opacity:
-        dq_layer.state.alpha = self.dq_layer_opacity * science_layer.state.alpha
+        return science_layer
+
+    @observe('dq_layer_opacity')
+    def update_opacity(self, event={}):
+        science_layer = self.get_science_layer()
+        dq_layer = self.get_dq_layer()
+
+        if dq_layer is not None:
+            # DQ opacity is a fraction of the science layer's opacity:
+            dq_layer.state.alpha = self.dq_layer_opacity * science_layer.state.alpha
 
     @observe('decoded_flags', 'flags_filter')
     def update_cmap(self, event={}):
-        print('update_cmap')
-        viewer = self.viewer.selected_obj
-        [dq_layer] = [
-            layer for layer in viewer.layers if
-            layer.layer.label == self.dq_layer_selected
-        ]
+        dq_layer = self.get_dq_layer()
         flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
         rgb_colors = [hex2color(flag['color']) for flag in self.decoded_flags]
 
@@ -283,4 +287,3 @@ class DataQuality(PluginTemplateMixin):
 
         self.send_state('decoded_flags')
         self.flags_filter = []
-

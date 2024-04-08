@@ -66,7 +66,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 viewer_refs.append(viewer.reference_id)
 
         self.dataset._manual_options = ['auto', 'none']
-        self.dataset.filters = ['layer_in_viewers', 'is_not_wcs_only']
+
+        self.dataset.filters = ['layer_in_viewers', 'is_not_wcs_only', 'layer_is_not_dq']
         if self.app.config == 'imviz':
             # filter out scatter-plot entries (from add_markers API, for example)
             self.dataset.add_filter('is_image')
@@ -274,6 +275,15 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             else:
                 image = None
 
+        # If there is one, get the associated DQ layer for the active layer:
+        associated_dq_layer = None
+        available_plugins = [tray_item['name'] for tray_item in self.app.state.tray_items]
+        if 'g-data-quality' in available_plugins:
+            assoc_children = self.app._get_assoc_data_children(active_layer.layer.label)
+            if assoc_children:
+                data_quality_plugin = self.app.get_tray_item_from_name('g-data-quality')
+                associated_dq_layer = data_quality_plugin.get_dq_layer()
+
         unreliable_pixel, unreliable_world = False, False
 
         self._dict['axes_x'] = x
@@ -429,16 +439,30 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         if (-0.5 < x < image.shape[ix_shape] - 0.5 and -0.5 < y < image.shape[iy_shape] - 0.5
                 and hasattr(active_layer, 'attribute')):
+
             attribute = active_layer.attribute
+
             if isinstance(viewer, (ImvizImageView, MosvizImageView, MosvizProfile2DView)):
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
+                if associated_dq_layer is not None:
+                    dq_attribute = associated_dq_layer.state.attribute
+                    dq_data = associated_dq_layer.layer.get_data(dq_attribute)
+                    dq_value = dq_data[int(round(y)), int(round(x))]
                 unit = image.get_component(attribute).units
             elif isinstance(viewer, CubevizImageView):
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
                 value = self._get_cube_value(image, arr, x, y, viewer)
             self.row1b_title = 'Value'
-            self.row1b_text = f'{value:+10.5e} {unit}'
+
+            if associated_dq_layer is not None:
+                if np.isnan(dq_value):
+                    dq_text = ''
+                else:
+                    dq_text = f' (DQ: {int(dq_value):d})'
+            else:
+                dq_text = ''
+            self.row1b_text = f'{value:+10.5e} {unit}{dq_text}'
             self._dict['value'] = float(value)
             self._dict['value:unit'] = unit
             self._dict['value:unreliable'] = unreliable_pixel

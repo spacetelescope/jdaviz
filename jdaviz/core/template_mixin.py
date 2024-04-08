@@ -56,7 +56,10 @@ from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
-from jdaviz.utils import get_subset_type, is_wcs_only, is_not_wcs_only, _wcs_only_label
+from jdaviz.utils import (
+    get_subset_type, is_wcs_only, is_not_wcs_only,
+    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global
+)
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
@@ -3353,6 +3356,8 @@ class DatasetSelect(SelectPluginComponent):
         def not_child_layer(data):
             # ignore layers that are children in associations:
             return self.app._get_assoc_data_parent(data.label) is None
+
+        layer_is_not_dq = layer_is_not_dq_global
 
         return super()._is_valid_item(data, locals())
 
