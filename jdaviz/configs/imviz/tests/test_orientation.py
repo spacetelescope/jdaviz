@@ -223,3 +223,25 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         # FIXME: However, sky angle has to stay the same as per regions convention.
         with pytest.raises(AssertionError, match="Not equal to tolerance"):
             assert_quantity_allclose(out_reg.angle, reg.angle)
+
+class TestOrientationNoData(BaseImviz_WCS_WCS):
+    def test_create_no_data(self):
+        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin.link_type = 'WCS'
+
+        viewer_2 = self.imviz.create_image_viewer()
+        lc_plugin.viewer = "imviz-1"
+
+        with pytest.raises(ValueError, match="Viewer must have data loaded"):
+            lc_plugin._obj.create_north_up_east_left(set_on_create=True)
+
+    def test_select_no_data(self):
+        lc_plugin = self.imviz.plugins['Orientation']
+        lc_plugin.link_type = 'WCS'
+
+        lc_plugin._obj.create_north_up_east_left(set_on_create=True)
+
+        viewer_2 = self.imviz.create_image_viewer()
+        lc_plugin.viewer = "imviz-1"
+        # This would error prior to bugfix
+        lc_plugin.orientation = "North-up, East-left"
