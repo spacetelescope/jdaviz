@@ -70,6 +70,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Improved behavior when orientations are created or selected without having data loaded in the viewer. [#2789]
+
 Mosviz
 ^^^^^^
 
