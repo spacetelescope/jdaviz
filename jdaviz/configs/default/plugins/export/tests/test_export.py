@@ -9,7 +9,7 @@ from astropy.nddata import NDData
 from glue.core.edit_subset_mode import AndMode, NewMode
 from glue.core.roi import CircularROI, XRangeROI
 from regions import Regions, CircleSkyRegion
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 
 @pytest.mark.usefixtures('_jail')
@@ -74,7 +74,7 @@ class TestExportSubsets:
         the correct warning message to display in UI).
         """
 
-        data = Spectrum1D(flux=np.ones((500, 500, 2)) * u.nJy,
+        data = Spectrum(flux=np.ones((500, 500, 2)) * u.nJy,
                           wcs=spectral_cube_wcs)
         cubeviz_helper.load_data(data)
 
@@ -128,7 +128,7 @@ class TestExportSubsets:
 
     def test_basic_export_subsets_cubeviz(self, cubeviz_helper, spectral_cube_wcs):
 
-        data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
+        data = Spectrum(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
 
         cubeviz_helper.load_data(data)
 
@@ -229,7 +229,7 @@ def test_disable_export_for_unsupported_units(specviz2d_helper):
     dn_per_s = u.DN / u.s
     data = np.zeros((5, 10))
     data[3] = np.arange(10)
-    data = Spectrum1D(flux=data*dn_per_s, spectral_axis=data[3]*u.um)
+    data = Spectrum(flux=data*dn_per_s, spectral_axis=data[3]*u.um)
     specviz2d_helper.load_data(data)
 
     gs = specviz2d_helper.plugins["Gaussian Smooth"]

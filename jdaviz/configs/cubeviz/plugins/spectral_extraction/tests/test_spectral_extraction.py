@@ -384,7 +384,7 @@ def test_unit_translation(cubeviz_helper):
     w = WCS(wcs_dict)
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.MJy, wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * u.MJy, wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     center = PixCoord(5, 10)
