@@ -975,8 +975,7 @@ class PlotOptions(PluginTemplateMixin):
                 y_min = max(y_limits.min(), 0)
                 y_max = y_limits.max()
 
-                arr = comp.data[y_min:y_max, x_min:x_max]
-                sub_data = arr.ravel(order="K")
+                sub_data = comp.data[y_min:y_max, x_min:x_max]
 
             else:
                 # spectrum-2d-viewer, for example.  We'll assume the viewer
@@ -993,12 +992,11 @@ class PlotOptions(PluginTemplateMixin):
                                 (y_data >= viewer.state.y_min) &
                                 (y_data <= viewer.state.y_max))
 
-                sub_data = comp.data[inds].ravel(order="K")
+                sub_data = comp.data[inds]
 
         else:
             # include all data, regardless of zoom limits
-            arr = comp.data
-            sub_data = arr.ravel(order="K")
+            sub_data = comp.data
 
         self.stretch_histogram.viewer.state.random_subset = RANDOM_SUBSET_SIZE
         self.stretch_histogram._update_data('histogram', x=sub_data)
