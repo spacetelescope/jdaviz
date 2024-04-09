@@ -48,9 +48,9 @@
     ></v-select>
     </v-row>
 
-    <v-row>
+    <v-row class="row-no-padding">
       <v-col>
-        <v-subheader class="pl-0 slider-label" style="height: 12px">Data Quality Opacity</v-subheader>
+        <v-subheader class="pl-0 slider-label" style="height: 12px">Data quality relative opacity</v-subheader>
         <glue-throttled-slider wait="300" min="0" max="1" step="0.01" :value.sync="dq_layer_opacity"/>
       </v-col>
     </v-row>
@@ -58,7 +58,7 @@
     <j-plugin-section-header>Quality Flags</j-plugin-section-header>
     <v-row class="row-no-padding">
       <v-col cols=6>
-        <j-tooltip tipid='plugin-line-lists-plot-all'>
+        <j-tooltip tipid='plugin-dq-show-all'>
           <v-btn
             tile
             :elevation=0
@@ -74,7 +74,7 @@
         </j-tooltip>
       </v-col>
       <v-col cols=6 style="text-align: right">
-        <j-tooltip tipid='plugin-line-lists-erase-all'>
+        <j-tooltip tipid='plugin-dq-hide-all'>
           <v-btn
             tile
             :elevation=0

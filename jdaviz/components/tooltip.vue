@@ -105,6 +105,8 @@ const tooltips = {
   'plugin-collapse-save-fits': 'Save collapsed cube as FITS file',
   'plugin-link-apply': 'Apply linking to data',
   'plugin-footprints-color-picker': 'Change the color of the footprint overlay',
+  'plugin-dq-show-all': 'Show all quality flags',
+  'plugin-dq-hide-all': 'Hide all quality flags',
 }
 
 

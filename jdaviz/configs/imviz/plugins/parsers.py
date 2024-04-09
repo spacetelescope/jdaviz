@@ -437,7 +437,7 @@ def _hdu_to_glue_data(hdu, data_label, hdulist=None):
 
 def _hdus_to_glue_data(file_obj, data_label, ext=None):
     for hdu in file_obj:
-        if ext is None or hdu.name in ext:
+        if ext is None or ext == '*' or hdu.name in ext:
             if _validate_fits_image2d(hdu, raise_error=False):
                 data, new_data_label = _hdu2data(hdu, data_label, file_obj)
                 yield data, new_data_label
