@@ -54,7 +54,13 @@ def create_spectral_equivalencies_list(spectral_axis_unit,
 
 def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     """Get all possible conversions for flux from current flux units."""
-    if ((flux_unit in (u.count, (u.MJy / u.sr), u.dimensionless_unscaled))
+    flux_per_steradian = False
+    if ('sr' in str(flux_unit) and
+            spectral_axis_unit not in (u.pix, u.dimensionless_unscaled)):
+        # Find equivalencies for flux units with per steradian removed
+        flux_per_steradian = True
+        flux_unit = flux_unit * u.sr
+    elif ((flux_unit in (u.count, u.dimensionless_unscaled))
             or (spectral_axis_unit in (u.pix, u.dimensionless_unscaled))):
         return []
 
@@ -80,6 +86,10 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     # Remove overlap units.
     curr_flux_unit_equivalencies = list(set(curr_flux_unit_equivalencies)
                                         - set(local_units))
+    if flux_per_steradian:
+        # Add back the per steradian after finding equivalencies
+        curr_flux_unit_equivalencies = [unit/u.sr for unit in curr_flux_unit_equivalencies]
+        local_units = [unit/u.sr for unit in local_units]
 
     # Convert equivalencies into readable versions of the units and sort them alphabetically.
     flux_unit_equivalencies_titles = sorted(units_to_strings(curr_flux_unit_equivalencies))
