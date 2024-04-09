@@ -109,7 +109,26 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         VoilaConfiguration.theme = theme
         if browser != 'default':
             Voila.browser = browser
-        sys.exit(Voila().launch_instance(argv=[]))
+
+        voila = Voila.instance()
+        # monkey patch listen, so we can get a handle on the kernel_manager
+        # after it is created
+        previous_listen = voila.listen
+
+        def listen(*args, **kwargs):
+            # monkey patch remove_kernel, so we can stop the event loop
+            # when a kernel is removed (which means the browser page was closed)
+            previous_remove_kernel = voila.kernel_manager.remove_kernel
+
+            def remove_kernel(kernel_id):
+                previous_remove_kernel(kernel_id)
+                voila.ioloop.stop()
+
+            voila.kernel_manager.remove_kernel = remove_kernel
+            return previous_listen(*args, **kwargs)
+
+        voila.listen = listen
+        sys.exit(voila.launch_instance(argv=[]))
     finally:
         os.chdir(start_dir)
 
