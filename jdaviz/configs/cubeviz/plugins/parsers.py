@@ -146,7 +146,8 @@ def _get_celestial_wcs(wcs):
 
 
 def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=None,
-                                        hdulist=None, uncertainty=None, mask=None):
+                                        hdulist=None, uncertainty=None, mask=None,
+                                        spectral_axis=None):
     """Upstream issue of WCS not using the correct units for data must be fixed here.
     Issue: https://github.com/astropy/astropy/issues/3658
     """
@@ -154,7 +155,11 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
         warnings.filterwarnings(
             'ignore', message='Input WCS indicates that the spectral axis is not last',
             category=UserWarning)
-        sc = Spectrum(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask)
+        if spectral_axis is None:
+            sc = Spectrum(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask)
+        else:
+            sc = Spectrum(flux=flux, spectral_axis=spectral_axis,
+                          uncertainty=uncertainty, mask=mask)
 
     if target_wave_unit is None and hdulist is not None:
         found_target = False
