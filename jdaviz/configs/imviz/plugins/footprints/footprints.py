@@ -368,14 +368,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self._preset_args_changed()
 
     def _mark_visible(self, viewer_id, overlay=None):
-        if overlay not in self._overlays:
-            return False
         if not self.is_active:
             return False
         if self.is_pixel_linked:
             return False
         if overlay is None:
             overlay = self.overlay_selected
+        if overlay not in self._overlays:
+            return False
         fp = self._overlays[overlay]
         if viewer_id not in fp.get('viewer', []):
             return False
