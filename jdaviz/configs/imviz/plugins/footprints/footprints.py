@@ -374,6 +374,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             return False
         if overlay is None:
             overlay = self.overlay_selected
+        if overlay not in self._overlays:
+            return False
         fp = self._overlays[overlay]
         if viewer_id not in fp.get('viewer', []):
             return False
