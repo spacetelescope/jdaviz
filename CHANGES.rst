@@ -71,6 +71,7 @@ Cubeviz
 
 Imviz
 ^^^^^
+- Fix a bug where footprints did not overlay when created via API. [#2790]
 
 Mosviz
 ^^^^^^
