@@ -45,7 +45,6 @@ class WithSliceIndicator:
                                                  to_value(display_spectral_units,
                                                           equivalencies=u.spectral()),
                                                  dtype=float))
-                    # return layer.layer.get_component(self.slice_component_label).data
                     return converted_axis
             except (AttributeError, KeyError):
                 # layer either does not have get_component (because its a subset)

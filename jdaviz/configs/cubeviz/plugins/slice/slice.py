@@ -83,6 +83,8 @@ class Slice(PluginTemplateMixin):
                                    handler=self._on_viewer_removed)
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_add_data)
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=self._on_valid_selection_values_changed)
 
         # connect any pre-existing viewers
         for viewer in self.app._viewer_store.values():
@@ -95,9 +97,6 @@ class Slice(PluginTemplateMixin):
         # so that the current slice number is preserved
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_global_display_unit_changed)
-        self.session.hub.subscribe(self, AddDataMessage,
-                                   handler=self._on_valid_selection_values_changed)
-        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_valid_selection_values_changed)
         self._initialize_location()
 
     def _initialize_location(self, *args):
@@ -124,7 +123,7 @@ class Slice(PluginTemplateMixin):
             if str(viewer.state.x_att) not in self.valid_slice_att_names:
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
                 # also clear cache for slice values
-                viewer._on_global_display_unit_changed()
+                # viewer._on_global_display_unit_changed()
                 continue
             slice_values = viewer.slice_values
             if len(slice_values):
@@ -227,6 +226,7 @@ class Slice(PluginTemplateMixin):
         if isinstance(msg.viewer, WithSliceSelection):
             # instead of just setting viewer.slice_value, we'll make sure the "snapping" logic
             # is updated (if enabled)
+            self._on_valid_selection_values_changed()
             self._on_value_updated({'new': self.value})
 
     def _on_select_slice_message(self, msg):
@@ -251,6 +251,7 @@ class Slice(PluginTemplateMixin):
 
     @cached_property
     def valid_selection_values(self):
+        # all available slice values from cubes (unsorted)
         viewers = self.slice_selection_viewers
         if not len(viewers):
             return np.array([])

@@ -30,10 +30,6 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     slice_values = sl.valid_selection_values_sorted
     assert len(slice_values) == 2
 
-    # TODO: Uncertainty viewer is not set to the correct slice when initialized
-    #  this is a hack to get the test to pass
-    sl.value = slice_values[0]
-    sl.value = slice_values[1]
 
     assert sl.value == slice_values[1]
     assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 1
