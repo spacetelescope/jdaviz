@@ -9,6 +9,7 @@ from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
+from glue.core.link_helpers import LinkSame
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 from packaging.version import Version
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
@@ -350,10 +351,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         mask = collapsed_nddata.mask
         uncertainty = collapsed_nddata.uncertainty
 
-        print(flux.shape)
-        print(flux)
-        print(mask)
-
         if pass_spectral_axis:
             wcs_args = [0,0,0]
             spec_indices = np.arange(spectral_cube.shape[self.spectral_axis_index])
@@ -362,8 +359,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             spectral_and_spatial = wcs.pixel_to_world(*wcs_args)
             spectral_axis = [x for x in spectral_and_spatial if isinstance(x, SpectralCoord)][0]  # noqa
 
-        print(spectral_axis)
-
         collapsed_spec = _return_spectrum_with_correct_units(
             flux, wcs, collapsed_nddata.meta, 'flux',
             target_wave_unit=target_wave_unit,
@@ -371,8 +366,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask=mask,
             spectral_axis=spectral_axis
         )
-
-        print(collapsed_spec)
 
         # stuff for exporting to file
         self.extracted_spec = collapsed_spec
