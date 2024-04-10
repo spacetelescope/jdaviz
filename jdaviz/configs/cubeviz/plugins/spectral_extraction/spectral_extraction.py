@@ -378,7 +378,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         collapsed_spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         if add_data:
-            self.add_results.add_results_from_plugin(collapsed_spec)
+            self.add_results.add_results_from_plugin(
+                collapsed_spec, label=self.results_label, replace=False
+            )
 
             snackbar_message = SnackbarMessage(
                 "Spectrum extracted successfully.",

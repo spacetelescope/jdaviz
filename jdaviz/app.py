@@ -692,17 +692,16 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         elif self.config == 'cubeviz' and linked_data.ndim == 1:
-            ref_wavelength_component = dc[0].components[-2]
-            ref_flux_component = dc[0].components[-1]
-            linked_wavelength_component = dc[-1].components[1]
-            linked_flux_component = dc[-1].components[-1]
+            spectral_axis_index = dc[0].meta['spectral_axis_index']
+            ref_wavelength_component = dc[0].components[spectral_axis_index]
+            linked_wavelength_component = dc[-1].components[0]
 
             links = [
                 LinkSameWithUnits(ref_wavelength_component, linked_wavelength_component),
                 LinkSame(ref_flux_component, linked_flux_component)
             ]
 
-            dc.add_link(links)
+            dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
 
         elif (linked_data.meta.get('Plugin', None) == 'SpectralExtraction' or
