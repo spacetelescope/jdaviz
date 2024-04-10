@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fix dropdown selection for table format in export plugin. [#2793]
+
 Cubeviz
 ^^^^^^^
 

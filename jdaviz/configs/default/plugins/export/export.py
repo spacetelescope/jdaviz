@@ -122,7 +122,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # although not all support passing overwrite
         plugin_table_format_options = ['ecsv', 'csv', 'fits']
         self.plugin_table_format = SelectPluginComponent(self,
-                                                         items='plugin-table_format_items',
+                                                         items='plugin_table_format_items',
                                                          selected='plugin_table_format_selected',
                                                          manual_options=plugin_table_format_options)
 
