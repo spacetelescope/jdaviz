@@ -296,7 +296,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         return 0 * u.deg
 
     def add_orientation(self, rotation_angle=None, east_left=None, label=None,
-                        set_on_create=True, wrt_data=None, from_ui=False):
+                        set_on_create=True, wrt_data=None):
         """
         Add new orientation options.
 
@@ -327,6 +327,12 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             nothing will be done.
 
         """
+        self._add_orientation(rotation_angle=rotation_angle, east_left=east_left, label=label,
+                              set_on_create=set_on_create, wrt_data=wrt_data)
+
+    def _add_orientation(self, rotation_angle=None, east_left=None, label=None,
+                         set_on_create=True, wrt_data=None, from_ui=False):
+
         if self.link_type_selected != 'WCS':
             raise ValueError("must be aligned by WCS to add orientation options")
 
@@ -423,7 +429,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self.viewer.selected_obj.state.reset_limits()
 
     def vue_add_orientation(self, *args, **kwargs):
-        self.add_orientation(set_on_create=True, from_ui=True)
+        self._add_orientation(set_on_create=True, from_ui=True)
 
     @observe('orientation_layer_selected')
     def _change_reference_data(self, *args, **kwargs):
@@ -503,7 +509,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         """
         if label not in self.orientation.choices:
             degn = self._get_wcs_angles()[-3]
-            self.add_orientation(rotation_angle=degn, east_left=True,
+            self._add_orientation(rotation_angle=degn, east_left=True,
                                  label=label, set_on_create=set_on_create,
                                  from_ui=from_ui)
         elif set_on_create:
@@ -517,7 +523,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         """
         if label not in self.orientation.choices:
             degn = self._get_wcs_angles()[-3]
-            self.add_orientation(rotation_angle=180 - degn, east_left=False,
+            self._add_orientation(rotation_angle=180 - degn, east_left=False,
                                  label=label, set_on_create=set_on_create,
                                  from_ui=from_ui)
         elif set_on_create:
