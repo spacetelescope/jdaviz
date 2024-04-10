@@ -30,7 +30,6 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     slice_values = sl.valid_selection_values_sorted
     assert len(slice_values) == 2
 
-
     assert sl.value == slice_values[1]
     assert cubeviz_helper.app.get_viewer("flux-viewer").slice == 1
     assert cubeviz_helper.app.get_viewer("flux-viewer").state.slices[-1] == 1
