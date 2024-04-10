@@ -68,10 +68,14 @@ ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 class UnitConverterWithSpectral:
 
     def equivalent_units(self, data, cid, units):
+        # to debug
+        # print("eqv unit cid : ", cid, ", units : ", units)
+
         if cid.label == "flux":
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
             list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
-                include_prefix_units=True, equivalencies=eqv))) + [
+                include_prefix_units=True, equivalencies=eqv)))
+                + [
                     'Jy', 'mJy', 'uJy', 'MJy',
                     'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
                     'eV / (s m2 Hz)', 'eV / (Hz s m2)',
@@ -80,6 +84,14 @@ class UnitConverterWithSpectral:
                     'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
                     'ph / (s cm2 Angstrom)', 'ph / (Angstrom s cm2)',
                     'ph / (s cm2 Hz)', 'ph / (Hz s cm2)'
+                ]
+                + [
+                    'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
+                    'W / (m2 Hz sr)',
+                    'eV / (s m2 Hz sr)',
+                    'erg / (s cm2 sr)',
+                    'erg / (s cm2 Angstrom sr)', 'erg / (s cm2 Hz sr)',
+                    'ph / (s cm2 Angstrom sr)', 'ph / (s cm2 Hz sr)'
                 ])
         else:  # spectral axis
             # prefer Hz over Bq and um over micron

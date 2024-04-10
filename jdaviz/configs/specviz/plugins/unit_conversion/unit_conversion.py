@@ -162,6 +162,8 @@ class UnitConversion(PluginTemplateMixin):
     @observe('flux_unit_selected')
     def _on_flux_unit_changed(self, *args):
         yunit = _valid_glue_display_unit(self.flux_unit.selected, self.spectrum_viewer, 'y')
+        # to debug
+        print('y_unit = ', yunit)
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
             self.hub.broadcast(GlobalDisplayUnitChanged('flux',
