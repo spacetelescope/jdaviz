@@ -510,8 +510,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if label not in self.orientation.choices:
             degn = self._get_wcs_angles()[-3]
             self._add_orientation(rotation_angle=degn, east_left=True,
-                                 label=label, set_on_create=set_on_create,
-                                 from_ui=from_ui)
+                                  label=label, set_on_create=set_on_create,
+                                  from_ui=from_ui)
         elif set_on_create:
             self.orientation.selected = label
 
@@ -524,8 +524,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if label not in self.orientation.choices:
             degn = self._get_wcs_angles()[-3]
             self._add_orientation(rotation_angle=180 - degn, east_left=False,
-                                 label=label, set_on_create=set_on_create,
-                                 from_ui=from_ui)
+                                  label=label, set_on_create=set_on_create,
+                                  from_ui=from_ui)
         elif set_on_create:
             self.orientation.selected = label
 
