@@ -96,8 +96,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
-        self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
-                                   handler=self._set_data_units)
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._set_data_units)
 
         if self.app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not

@@ -122,8 +122,6 @@ class Slice(PluginTemplateMixin):
         for viewer in self.slice_indicator_viewers:
             if str(viewer.state.x_att) not in self.valid_slice_att_names:
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
-                # also clear cache for slice values
-                # viewer._on_global_display_unit_changed()
                 continue
             slice_values = viewer.slice_values
             if len(slice_values):
