@@ -350,6 +350,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         mask = collapsed_nddata.mask
         uncertainty = collapsed_nddata.uncertainty
 
+        print(flux.shape)
+        print(flux)
+        print(mask)
+
         if pass_spectral_axis:
             wcs_args = [0,0,0]
             spec_indices = np.arange(spectral_cube.shape[self.spectral_axis_index])
@@ -358,6 +362,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             spectral_and_spatial = wcs.pixel_to_world(*wcs_args)
             spectral_axis = [x for x in spectral_and_spatial if isinstance(x, SpectralCoord)][0]  # noqa
 
+        print(spectral_axis)
+
         collapsed_spec = _return_spectrum_with_correct_units(
             flux, wcs, collapsed_nddata.meta, 'flux',
             target_wave_unit=target_wave_unit,
@@ -365,6 +371,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask=mask,
             spectral_axis=spectral_axis
         )
+
+        print(collapsed_spec)
+
         # stuff for exporting to file
         self.extracted_spec = collapsed_spec
         self.extracted_spec_available = True
@@ -400,6 +409,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         im_shape = list(flux_cube.shape)
         im_shape.remove(im_shape[self.spectral_axis_index])
+        im_shape = tuple(im_shape)
         aper_method = self.aperture_method_selected.lower()
         if self.wavelength_dependent:
             # Cone aperture
@@ -447,6 +457,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
             mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=self.spectral_axis_index)
+
         return mask_weights
 
     def vue_spectral_extraction(self, *args, **kwargs):
