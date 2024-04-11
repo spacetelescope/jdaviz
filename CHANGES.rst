@@ -73,6 +73,8 @@ Imviz
 ^^^^^
 - Fix a bug where footprints did not overlay when created via API. [#2790]
 
+- Improved behavior when orientations are created or selected without having data loaded in the viewer. [#2789]
+
 Mosviz
 ^^^^^^
 
