@@ -187,9 +187,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         # When fp(s) added via API before WCS link. Overlays visibility & is_active
         # can be True, but only last fp will display. This ensures all fp(s) display
+        restore_choice = self.overlay.selected
         if not self.is_pixel_linked:
             for choice in self.overlay.choices:
                 self.overlay.selected = choice
+        self.overlay.selected = restore_choice
 
     def vue_link_by_wcs(self, *args):
         # call other plugin so that other options (wcs_use_affine, wcs_use_fallback)
