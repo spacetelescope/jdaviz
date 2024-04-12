@@ -6,6 +6,8 @@ Bug Fixes
 
 - Fix dropdown selection for table format in export plugin. [#2793]
 
+- Standalone mode: stop jdaviz/voila processes when closing app. [#2791]
+
 Cubeviz
 ^^^^^^^
 
