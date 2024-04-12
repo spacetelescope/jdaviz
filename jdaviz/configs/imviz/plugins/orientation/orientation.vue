@@ -14,6 +14,10 @@
           Please add at least one data with valid WCS to align by sky (WCS).
         </v-alert>
 
+        <v-alert v-if="wcs_linking_available" type='warning' style="margin-left: -12px; margin-right: -12px">
+          Switching link type will reset zoom.
+        </v-alert>
+
         <v-alert v-if="need_clear_astrowidget_markers" type='warning' style="margin-left: -12px; margin-right: -12px">
           Astrowidget markers must be cleared before changing alignment/linking options.
           <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
