@@ -167,6 +167,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return PluginUserApi(self, expose=expose)
 
     @property
+    def slice_display_unit_name(self):
+        return 'spectral'
+
+    @property
     @deprecated(since="3.9", alternative="aperture")
     def spatial_subset(self):
         return self.user_api.aperture
@@ -355,7 +359,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Retrieve flux cube and create an array to represent the cone mask
         flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)
-        display_unit = astropy.units.Unit(self.app._get_display_unit('spectral'))
+        display_unit = astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
