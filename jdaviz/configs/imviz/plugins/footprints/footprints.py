@@ -187,11 +187,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         # When fp(s) added via API before WCS link. Overlays visibility & is_active
         # can be True, but only last fp will display. This ensures all fp(s) display
-        restore_choice = self.overlay.selected
         if not self.is_pixel_linked:
             for choice in self.overlay.choices:
-                self.overlay.selected = choice
-        self.overlay.selected = restore_choice
+                self._preset_args_changed(overlay_selected=choice)
 
     def vue_link_by_wcs(self, *args):
         # call other plugin so that other options (wcs_use_affine, wcs_use_fallback)
@@ -469,24 +467,25 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         return regs
 
     @observe('preset_selected', 'from_file', 'ra', 'dec', 'pa', 'v2_offset', 'v3_offset')
-    def _preset_args_changed(self, msg={}):
+    def _preset_args_changed(self, msg={}, overlay_selected=None):
         if self._ignore_traitlet_change:
             return
-        if not self.overlay_selected:
+        overlay_selected = overlay_selected if overlay_selected is not None else self.overlay_selected  # noqa
+        if not overlay_selected:
             return
 
         name = msg.get('name', '').split('_selected')[0]
 
-        if self.overlay_selected not in self._overlays:
+        if overlay_selected not in self._overlays:
             # default dictionary has not been created yet
             return
 
         if len(name):
-            self._overlays[self.overlay_selected][name] = msg.get('new')
-        if name == 'from_file' and 'regions' in self._overlays[self.overlay_selected]:
+            self._overlays[overlay_selected][name] = msg.get('new')
+        if name == 'from_file' and 'regions' in self._overlays[overlay_selected]:
             # then the file may have been changed from the API, so we need to clear the cache
             # the cache will then be re-populated on the call to self.overlay_regions below
-            del self._overlays[self.overlay_selected]['regions']
+            del self._overlays[overlay_selected]['regions']
 
         regs = self.overlay_regions
 
@@ -498,12 +497,12 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             wcs = getattr(viewer.state.reference_data, 'coords', None)
             if wcs is None:
                 continue
-            existing_overlays = self._get_marks(viewer, self.overlay_selected)
+            existing_overlays = self._get_marks(viewer, overlay_selected)
             update_existing = len(existing_overlays) == len(regs)
             if not update_existing and len(existing_overlays):
                 # clear any existing marks (length has changed, perhaps a new preset)
                 viewer.figure.marks = [m for m in viewer.figure.marks
-                                       if getattr(m, 'overlay', None) != self.overlay_selected]
+                                       if getattr(m, 'overlay', None) != overlay_selected]
 
             # the following logic is adapted from
             # https://github.com/spacetelescope/jwst_novt/blob/main/jwst_novt/interact/display.py
@@ -544,7 +543,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 else:
                     mark = FootprintOverlay(
                         viewer,
-                        self.overlay_selected,
+                        overlay_selected,
                         x=x_coords,
                         y=y_coords,
                         colors=[self.color],
