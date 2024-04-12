@@ -37,15 +37,20 @@ class WithSliceIndicator:
 
         def _get_component(layer):
             try:
+                # Retrieve display units
                 display_spectral_units = self.jdaviz_app._get_display_unit('spectral')
-                if (self.slice_component_label in layer.layer.data.world_component_ids and
-                        display_spectral_units != ''):
-                    data_obj = layer.layer.data.get_component(self.slice_component_label)
-                    converted_axis = (np.asarray((data_obj.data.ravel() * u.Unit(data_obj.units)).
-                                                 to_value(display_spectral_units,
-                                                          equivalencies=u.spectral()),
-                                                 dtype=float))
-                    return converted_axis
+
+                # Retrieve layer data and units
+                data_obj = layer.layer.data.get_component(self.slice_component_label).data
+                data_units = layer.layer.data.get_component(self.slice_component_label).units
+                data_spec_axis = np.asarray(data_obj.data, dtype=float) * u.Unit(data_units)
+
+                # Convert axis if display units are set and are different
+                if display_spectral_units and display_spectral_units != data_units:
+                    return data_spec_axis.to_value(display_spectral_units,
+                                                   equivalencies=u.spectral())
+                else:
+                    return data_spec_axis
             except (AttributeError, KeyError):
                 # layer either does not have get_component (because its a subset)
                 # or slice_component_label is not a component in this layer
@@ -85,31 +90,26 @@ class WithSliceSelection:
         take_inds = [2, 1, 0]
         take_inds.remove(self.slice_index)
         for layer in self.layers:
+            world_comp_ids = layer.layer.data.world_component_ids
+            if self.slice_index >= len(world_comp_ids):
+                # Case where 2D image is loaded in image viewer
+                continue
             try:
+                # Retrieve display units
                 display_spectral_units = self.jdaviz_app._get_display_unit('spectral')
-                if self.slice_component_label in layer.layer.data.world_component_ids:
-                    data_obj = layer.layer.data.get_component(self.slice_component_label)
-                    if display_spectral_units == '':
-                        display_spectral_units = u.Unit(data_obj.units)
-                    converted_axis = (np.asarray((data_obj.data[0][0] * u.Unit(data_obj.units)).
-                                                 to_value(display_spectral_units,
-                                                          equivalencies=u.spectral()),
-                                                 dtype=float))
-                elif 'Wave' in layer.layer.data.world_component_ids:
-                    if display_spectral_units == '':
-                        display_spectral_units = layer.layer.data.get_component('Wave').units
-                    # Special if statement for handling cubes without 'Wavelength' in
-                    # world_component_ids
-                    uncert_units = layer.layer.data.get_component('Wave').units
-                    uncert_data = layer.layer.data.get_component('Wave').data[0][0]
-                    converted_axis = (np.asarray((uncert_data * u.Unit(uncert_units)).
-                                                 to_value(display_spectral_units,
-                                                          equivalencies=u.spectral()),
-                                                 dtype=float))
+
+                # Retrieve layer data and units using the slice index of the world components ids
+                data_obj = layer.layer.data.get_component(world_comp_ids[self.slice_index]).data
+                data_units = layer.layer.data.get_component(world_comp_ids[self.slice_index]).units
+
+                # Find the spectral axis
+                data_spec_axis = np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
+                                            dtype=float)
+                if display_spectral_units and display_spectral_units != data_units:
+                    converted_axis = (data_spec_axis * u.Unit(data_units)).to_value(display_spectral_units,
+                                                                                    equivalencies=u.spectral())
                 else:
-                    data_obj = layer.layer.data.get_component(self.slice_component_label).data
-                    converted_axis = np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
-                                                dtype=float)
+                    converted_axis = data_spec_axis
             except (AttributeError, KeyError):
                 continue
             else:
