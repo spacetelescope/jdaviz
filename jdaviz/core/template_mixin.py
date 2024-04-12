@@ -2872,8 +2872,8 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                           'center': spectral_axis.value,
                           'right': []}
             else:
-                mark_x = {'left': spectral_axis_nanmasked[spectral_axis < sr_lower],
-                          'right': spectral_axis_nanmasked[spectral_axis > sr_upper]}
+                mark_x = {'left': spectral_axis_nanmasked[spectral_axis < sr_lower].value,
+                          'right': spectral_axis_nanmasked[spectral_axis > sr_upper].value}
                 # Center should extend (at least) across the line region between the full
                 # range defined by the continuum subset(s).
                 # OK for mark_x to be all NaNs.

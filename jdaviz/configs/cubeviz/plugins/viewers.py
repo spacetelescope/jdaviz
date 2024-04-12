@@ -222,6 +222,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         return visible_layers[-1]
 
     def _on_global_display_unit_changed(self, msg):
+        # Clear cache of slice values when units change
         if 'slice_values' in self.__dict__:
             del self.__dict__['slice_values']
 
@@ -289,6 +290,7 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         return self.jdaviz_helper._default_flux_viewer_reference_name
 
     def _on_global_display_unit_changed(self, msg=None):
+        # Clear cache of slice values when units change
         if 'slice_values' in self.__dict__:
             del self.__dict__['slice_values']
 
