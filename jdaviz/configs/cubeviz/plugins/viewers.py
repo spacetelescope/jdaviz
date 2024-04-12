@@ -106,8 +106,10 @@ class WithSliceSelection:
                 data_spec_axis = np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
                                             dtype=float)
                 if display_spectral_units and display_spectral_units != data_units:
-                    converted_axis = (data_spec_axis * u.Unit(data_units)).to_value(display_spectral_units,
-                                                                                    equivalencies=u.spectral())
+                    converted_axis = (data_spec_axis * u.Unit(data_units)).to_value(
+                        display_spectral_units,
+                        equivalencies=u.spectral()
+                    )
                 else:
                     converted_axis = data_spec_axis
             except (AttributeError, KeyError):
