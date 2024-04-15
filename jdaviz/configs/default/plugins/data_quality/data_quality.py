@@ -10,6 +10,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
     PluginTemplateMixin, LayerSelect, ViewerSelectMixin
 )
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.configs.default.plugins.data_quality.dq_utils import (
     decode_flags, generate_listed_colormap, dq_flag_map_paths, load_flag_map
@@ -258,3 +259,13 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         self.send_state('decoded_flags')
         self.flags_filter = []
+
+    @property
+    def user_api(self):
+        return PluginUserApi(
+            self,
+            expose=(
+                'science_layer', 'dq_layer',
+                'decoded_flags', 'flags_filter'
+            )
+        )
