@@ -124,10 +124,6 @@ class DataQuality(PluginTemplateMixin):
         dq = selected_dq[0].get_image_data()
         return np.unique(dq[~np.isnan(dq)])
 
-    # @property
-    # def flag_map_definitions_selected(self):
-    #     return self.flag_map_definitions[self.flag_map_selected.lower()]
-
     @property
     def validate_flag_decode_possible(self):
         return (

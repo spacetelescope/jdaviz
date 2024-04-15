@@ -125,11 +125,11 @@
       </v-col>
       </v-row>
     </v-col>
-    <v-row style="max-width: calc(100% - 80px)">
-      <v-col>
+    <v-row >
+      <v-col cols=3 align="left">
         Color
       </v-col>
-      <v-col cols=8>
+      <v-col cols=7 align="left">
         <strong>Flag</strong> (Decomposed)
       </v-col>
     </v-row>
