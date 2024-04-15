@@ -7,6 +7,8 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Enable spectral unit conversion in cubeviz. [#2758]
+
 Imviz
 ^^^^^
 
