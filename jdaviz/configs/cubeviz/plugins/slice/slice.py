@@ -1,6 +1,7 @@
 import threading
 import time
 import warnings
+from functools import cached_property
 
 import numpy as np
 from astropy import units as u
@@ -12,7 +13,7 @@ from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator, WithSlic
                                                     CubevizImageView)
 from jdaviz.configs.cubeviz.helper import _spectral_axis_names
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import (AddDataMessage, SliceToolStateMessage,
+from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
                                 NewViewerMessage, ViewerAddedMessage, ViewerRemovedMessage,
                                 GlobalDisplayUnitChanged)
@@ -82,6 +83,8 @@ class Slice(PluginTemplateMixin):
                                    handler=self._on_viewer_removed)
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_add_data)
+        self.hub.subscribe(self, RemoveDataMessage,
+                           handler=self._on_valid_selection_values_changed)
 
         # connect any pre-existing viewers
         for viewer in self.app._viewer_store.values():
@@ -127,7 +130,7 @@ class Slice(PluginTemplateMixin):
                 return
 
     @property
-    def slice_axis(self):
+    def slice_display_unit_name(self):
         # global display unit "axis" corresponding to the slice axis
         return 'spectral'
 
@@ -221,6 +224,7 @@ class Slice(PluginTemplateMixin):
         if isinstance(msg.viewer, WithSliceSelection):
             # instead of just setting viewer.slice_value, we'll make sure the "snapping" logic
             # is updated (if enabled)
+            self._on_valid_selection_values_changed()
             self._on_value_updated({'new': self.value})
 
     def _on_select_slice_message(self, msg):
@@ -229,16 +233,21 @@ class Slice(PluginTemplateMixin):
             self.value = msg.value
 
     def _on_global_display_unit_changed(self, msg):
-        if msg.axis != self.slice_axis:
+        if msg.axis != self.slice_display_unit_name:
             return
         if not self.value_unit:
             self.value_unit = str(msg.unit)
             return
         prev_unit = u.Unit(self.value_unit)
         self.value_unit = str(msg.unit)
-        self.value = (self.value * prev_unit).to_value(msg.unit)
+        self._on_valid_selection_values_changed()
+        self.value = (self.value * prev_unit).to_value(msg.unit, equivalencies=u.spectral())
 
-    @property
+    def _on_valid_selection_values_changed(self, msg=None):
+        if 'valid_selection_values' in self.__dict__:
+            del self.__dict__['valid_selection_values']
+
+    @cached_property
     def valid_selection_values(self):
         # all available slice values from cubes (unsorted)
         viewers = self.slice_selection_viewers
@@ -280,7 +289,6 @@ class Slice(PluginTemplateMixin):
             except ValueError:
                 return
             return
-
         if self.snap_to_slice and not self.value_editing:
             valid_values = self.valid_selection_values
             if len(valid_values):
@@ -292,7 +300,6 @@ class Slice(PluginTemplateMixin):
                     self.value = float(closest_value)
                     # will trigger another call to this method
                     return
-
         for viewer in self.slice_indicator_viewers:
             viewer._set_slice_indicator_value(self.value)
         for viewer in self.slice_selection_viewers:

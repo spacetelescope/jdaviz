@@ -1,5 +1,5 @@
 import numpy as np
-
+import astropy.units as u
 from functools import cached_property
 from glue.core import BaseData
 
@@ -12,7 +12,7 @@ from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
 from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage, GlobalDisplayUnitChanged
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.utils import get_subset_type
 
@@ -25,6 +25,10 @@ class WithSliceIndicator:
     def slice_component_label(self):
         return str(self.state.x_att)
 
+    @property
+    def slice_display_unit_name(self):
+        return 'spectral'
+
     @cached_property
     def slice_indicator(self):
         # SliceIndicatorMarks does not yet exist
@@ -32,16 +36,33 @@ class WithSliceIndicator:
         self.figure.marks = self.figure.marks + slice_indicator.marks
         return slice_indicator
 
-    @property
+    @cached_property
     def slice_values(self):
+
         def _get_component(layer):
+            # Retrieve display units
+            slice_display_units = self.jdaviz_app._get_display_unit(
+                self.slice_display_unit_name
+            )
+
             try:
-                return layer.layer.get_component(self.slice_component_label).data
+                # Retrieve layer data and units
+                data_obj = layer.layer.data.get_component(self.slice_component_label).data
+                data_units = layer.layer.data.get_component(self.slice_component_label).units
             except (AttributeError, KeyError):
                 # layer either does not have get_component (because its a subset)
                 # or slice_component_label is not a component in this layer
                 # either way, return an empty array and skip this layer
                 return np.array([])
+
+            data_spec_axis = np.asarray(data_obj.data, dtype=float) * u.Unit(data_units)
+
+            # Convert axis if display units are set and are different
+            if slice_display_units and slice_display_units != data_units:
+                return data_spec_axis.to_value(slice_display_units,
+                                               equivalencies=u.spectral())
+            else:
+                return data_spec_axis
         try:
             return np.asarray(np.unique(np.concatenate([_get_component(layer) for layer in self.layers])),  # noqa
                               dtype=float)
@@ -68,24 +89,50 @@ class WithSliceSelection:
         return slice_plg._obj.slice_indicator_viewers[0].slice_component_label
 
     @property
+    def slice_display_unit_name(self):
+        return 'spectral'
+
+    @cached_property
     def slice_values(self):
-        # TODO: make a cached property and invalidate cache on add/remove data
         # TODO: add support for multiple cubes (but then slice selection needs to be more complex)
         # if slice_index is 0, then we want the equivalent of [:, 0, 0]
         # if slice_index is 1, then we want the equivalent of [0, :, 0]
         # if slice_index is 2, then we want the equivalent of [0, 0, :]
         take_inds = [2, 1, 0]
         take_inds.remove(self.slice_index)
+        converted_axis = np.array([])
         for layer in self.layers:
+            world_comp_ids = layer.layer.data.world_component_ids
+            if self.slice_index >= len(world_comp_ids):
+                # Case where 2D image is loaded in image viewer
+                continue
+
+            # Retrieve display units
+            slice_display_units = self.jdaviz_app._get_display_unit(
+                self.slice_display_unit_name
+            )
+
             try:
-                data_obj = layer.layer.data.get_component(self.slice_component_label).data
+                # Retrieve layer data and units using the slice index of the world components ids
+                data_obj = layer.layer.data.get_component(world_comp_ids[self.slice_index]).data
+                data_units = layer.layer.data.get_component(world_comp_ids[self.slice_index]).units
             except (AttributeError, KeyError):
                 continue
+
+            # Find the spectral axis
+            data_spec_axis = np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
+                                        dtype=float)
+
+            # Convert to display units if applicable
+            if slice_display_units and slice_display_units != data_units:
+                converted_axis = (data_spec_axis * u.Unit(data_units)).to_value(
+                    slice_display_units,
+                    equivalencies=u.spectral()
+                )
             else:
-                break
-        else:
-            return np.array([])
-        return np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]), dtype=float)
+                converted_axis = data_spec_axis
+
+        return converted_axis
 
     @property
     def slice(self):
@@ -143,6 +190,13 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Hide axes by default
         self.state.show_axes = False
 
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed
+                           )
+
+        self.hub.subscribe(self, AddDataMessage, handler=self._on_global_display_unit_changed)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_global_display_unit_changed)
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.jdaviz_helper._default_spectrum_viewer_reference_name
@@ -166,6 +220,11 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             return None
 
         return visible_layers[-1]
+
+    def _on_global_display_unit_changed(self, msg):
+        # Clear cache of slice values when units change
+        if 'slice_values' in self.__dict__:
+            del self.__dict__['slice_values']
 
     def _initial_x_axis(self, *args):
         # Make sure that the x_att is correct on data load
@@ -223,9 +282,17 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._check_if_data_added)
 
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed)
+
     @property
     def _default_flux_viewer_reference_name(self):
         return self.jdaviz_helper._default_flux_viewer_reference_name
+
+    def _on_global_display_unit_changed(self, msg=None):
+        # Clear cache of slice values when units change
+        if 'slice_values' in self.__dict__:
+            del self.__dict__['slice_values']
 
     def _check_if_data_removed(self, msg):
         # isinstance and the data uuid check will be true for the data
@@ -233,6 +300,7 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         self.figure.marks = [m for m in self.figure.marks
                              if not (isinstance(m, ShadowSpatialSpectral)
                                      and m.data_uuid == msg.data.uuid)]
+        self._on_global_display_unit_changed()
 
     def _check_if_data_added(self, msg=None):
         # When data is added, make sure that all spatial subset layers
@@ -243,6 +311,7 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
                 if (isinstance(layer.layer, GroupedSubset) and
                         get_subset_type(layer.layer.subset_state) == 'spatial'):
                     self._expected_subset_layer_default(layer)
+        self._on_global_display_unit_changed()
 
     def _is_spatial_subset(self, layer):
         subset_state = getattr(layer.layer, 'subset_state', None)

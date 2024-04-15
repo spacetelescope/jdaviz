@@ -28,7 +28,13 @@
         label="Flux Unit"
         hint="Global display unit for flux."
         persistent-hint
+        :disabled="config === 'cubeviz'"
       ></v-select>
+    </v-row>
+    <v-row v-if="config === 'cubeviz'">
+        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+          Flux conversion is not yet implemented in Cubeviz.
+        </span>
     </v-row>
   </j-tray-plugin>
 </template>

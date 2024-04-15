@@ -307,6 +307,12 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     def marks(self):
         return [self, self.label]
 
+    def _on_global_display_unit_changed(self, msg):
+        # Updating the value is handled by the plugin itself, need to update unit string.
+        if msg.axis in ["spectral", "x"]:
+            self.xunit = msg.unit
+        self._update_label()
+
     def _value_handle_oob(self, x=None, update_label=False):
         if x is None:
             x = self.value

@@ -9,7 +9,7 @@ from traitlets import Bool, List, Unicode, observe
 from specutils import manipulation, analysis, Spectrum1D
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage
+from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
@@ -96,6 +96,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._set_data_units)
 
         if self.app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not
@@ -155,12 +157,16 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         if self.dataset_selected != "":
             # Spectral axis is first in this list
             data = self.app.data_collection[self.dataset_selected]
-            if self.app.data_collection[self.dataset_selected].coords is not None:
+            if (self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'x_display_unit')
+                    and self.spectrum_viewer.state.x_display_unit is not None):
+                sunit = self.spectrum_viewer.state.x_display_unit
+            elif self.app.data_collection[self.dataset_selected].coords is not None:
                 sunit = data.coords.world_axis_units[0]
-                self.dataset_spectral_unit = sunit
-                unit_dict["Spectral Unit"] = sunit
             else:
-                self.dataset_spectral_unit = ""
+                sunit = ""
+            self.dataset_spectral_unit = sunit
+            unit_dict["Spectral Unit"] = sunit
+
             unit_dict["Flux"] = data.get_component('flux').units
 
         # Update units in selection item dictionary
