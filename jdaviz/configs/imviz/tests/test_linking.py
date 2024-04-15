@@ -207,10 +207,10 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
                          [10.148055, 10.554429],
                          [10.439091, -2.170755]], rtol=1e-5)
         assert_allclose(gwcs_zoom_limits,
-                        [[ 2.636299, 12.732915],
-                         [13.375281,  5.007547],
-                         [ 6.300587, -5.126264],
-                         [-4.438394,  2.599103]], rtol=1e-5)
+                        [[2.636299, 12.732915],
+                         [13.375281, 5.007547],
+                         [6.300587, -5.126264],
+                         [-4.438394, 2.599103]], rtol=1e-5)
 
         # Also check the coordinates display: Last loaded is on top.
         # Cycle order: GWCS, FITS WCS
