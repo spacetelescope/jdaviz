@@ -182,7 +182,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return {'data': ('dataset',), 'subset': ('aperture', 'background')}
 
     def __call__(self, add_data=True):
-        self.collapse_to_spectrum(add_data=add_data)
+        return self.collapse_to_spectrum(add_data=add_data)
 
     @property
     def slice_display_unit_name(self):
