@@ -196,16 +196,21 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
             self.imviz.app.data_collection['fits_wcs[DATA]'])
         gwcs_zoom_limits = self.viewer._get_zoom_limits(
             self.imviz.app.data_collection['gwcs[DATA]'])
+
+        # x_min, y_min
+        # x_min, y_max
+        # x_max, y_max
+        # x_max, y_min
         assert_allclose(fits_wcs_zoom_limits,
-                        [[-1.590838, -0.423662],
-                         [-1.826862, 9.896219],
-                         [8.590838, 9.423662],
-                         [8.826862, -0.896219]], rtol=1e-5)
+                        [[-2.406711, -1.588057],
+                         [-2.697746, 11.137127],
+                         [10.148055, 10.554429],
+                         [10.439091, -2.170755]], rtol=1e-5)
         assert_allclose(gwcs_zoom_limits,
-                        [[3.186753, 11.337468],
-                         [11.895862, 5.072343],
-                         [6.158421, -3.145985],
-                         [-2.550688, 3.119141]], rtol=1e-5)
+                        [[ 2.636299, 12.732915],
+                         [13.375281,  5.007547],
+                         [ 6.300587, -5.126264],
+                         [-4.438394,  2.599103]], rtol=1e-5)
 
         # Also check the coordinates display: Last loaded is on top.
         # Cycle order: GWCS, FITS WCS
