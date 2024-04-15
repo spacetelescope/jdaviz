@@ -130,7 +130,7 @@ class Slice(PluginTemplateMixin):
                 return
 
     @property
-    def slice_axis(self):
+    def slice_display_unit_name(self):
         # global display unit "axis" corresponding to the slice axis
         return 'spectral'
 
@@ -233,7 +233,7 @@ class Slice(PluginTemplateMixin):
             self.value = msg.value
 
     def _on_global_display_unit_changed(self, msg):
-        if msg.axis != self.slice_axis:
+        if msg.axis != self.slice_display_unit_name:
             return
         if not self.value_unit:
             self.value_unit = str(msg.unit)
