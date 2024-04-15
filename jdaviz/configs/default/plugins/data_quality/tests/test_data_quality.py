@@ -151,3 +151,17 @@ def test_data_quality_plugin(imviz_helper, tmp_path):
                                         {'event': 'mousemove', 'domain': {'x': 1361, 'y': 684}})
     label_mouseover_text = label_mouseover.as_text()[0]
     assert 'DQ' not in label_mouseover_text
+
+    # set a bit filter, then clear it:
+    assert len(dq_plugin.flags_filter) == 0
+    dq_plugin.flags_filter = [0, 1]
+    dq_plugin.vue_clear_flags_filter({})
+    assert len(dq_plugin.flags_filter) == 0
+
+    # hide all:
+    dq_plugin.vue_hide_all_flags({})
+    assert not any([flag['show'] for flag in dq_plugin.decoded_flags])
+
+    # now show all:
+    dq_plugin.vue_show_all_flags({})
+    assert all([flag['show'] for flag in dq_plugin.decoded_flags])

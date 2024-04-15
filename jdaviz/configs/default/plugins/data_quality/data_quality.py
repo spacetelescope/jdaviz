@@ -8,7 +8,7 @@ from matplotlib.colors import hex2color
 
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
-    PluginTemplateMixin, ViewerSelect, LayerSelect
+    PluginTemplateMixin, LayerSelect, ViewerSelectMixin
 )
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.configs.default.plugins.data_quality.dq_utils import (
@@ -24,16 +24,11 @@ telescope_names = {
 
 
 @tray_registry('g-data-quality', label="Data Quality", viewer_requirements="image")
-class DataQuality(PluginTemplateMixin):
+class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "data_quality.vue"
 
     # TODO: uncomment this line before merging into main:
     # irrelevant_msg = Unicode("Data Quality plugin is in development.").tag(sync=True)
-
-    viewer_multiselect = Bool(False).tag(sync=True)
-    viewer_items = List().tag(sync=True)
-    viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
-    viewer_limits = Dict().tag(sync=True)
 
     # `layer` is the science data layer
     science_layer_multiselect = Bool(False).tag(sync=True)
@@ -51,7 +46,6 @@ class DataQuality(PluginTemplateMixin):
     flag_map_selected = Any().tag(sync=True)
     flag_map_definitions_selected = Dict().tag(sync=True)
     flag_map_items = List().tag(sync=True)
-    viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
     decoded_flags = List().tag(sync=True)
     flags_filter = List().tag(sync=True)
 
@@ -64,9 +58,6 @@ class DataQuality(PluginTemplateMixin):
 
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 
-        self.viewer = ViewerSelect(
-            self, 'viewer_items', 'viewer_selected', 'viewer_multiselect'
-        )
         self.science_layer = LayerSelect(
             self, 'science_layer_items', 'science_layer_selected',
             'viewer_selected', 'science_layer_multiselect', is_root=True
@@ -98,22 +89,6 @@ class DataQuality(PluginTemplateMixin):
         for name in dq_flag_map_paths:
             self.flag_map_definitions[name] = load_flag_map(name)
             self.flag_map_items = self.flag_map_items + [telescope_names[name]]
-
-    @property
-    def multiselect(self):
-        logging.warning(f"DeprecationWarning: multiselect has been replaced by separate viewer_multiselect and layer_multiselect and will be removed in the future.  This currently evaluates viewer_multiselect or layer_multiselect")  # noqa
-        return self.viewer_multiselect or self.layer_multiselect
-
-    @multiselect.setter
-    def multiselect(self, value):
-        logging.warning(f"DeprecationWarning: multiselect has been replaced by separate viewer_multiselect and layer_multiselect and will be removed in the future.  This currently sets viewer_multiselect and layer_multiselect")  # noqa
-        self.viewer_multiselect = value
-        self.layer_multiselect = value
-
-    def vue_set_value(self, data):
-        attr_name = data.get('name')
-        value = data.get('value')
-        setattr(self, attr_name, value)
 
     @property
     def unique_flags(self):
