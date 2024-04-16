@@ -73,8 +73,8 @@ class LookupStretch:
         if len(self.hidden_flags):
             # mask that is True for `values` in the hidden flags list:
             value_is_hidden = np.isin(
-                np.nan_to_num(values_integer, nan=-10),
-                self.hidden_flags
+                np.nan_to_num(values_integer, nan=-10).astype(int),
+                self.hidden_flags.astype(int)
             )
         else:
             value_is_hidden = False

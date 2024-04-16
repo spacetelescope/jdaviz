@@ -170,7 +170,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             dq_layer.state.alpha = self.dq_layer_opacity * science_layer.state.alpha
 
     @observe('decoded_flags', 'flags_filter')
-    def update_cmap(self, event={}):
+    def _update_cmap(self, event={}):
         dq_layer = self.get_dq_layer()
         flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
         rgb_colors = [hex2color(flag['color']) for flag in self.decoded_flags]
@@ -184,7 +184,10 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             # hide the flag if `flags_filter` has entries but not this one:
             (
                 len(self.flags_filter) and
-                not np.isin(list(flag['decomposed'].keys()), list(self.flags_filter)).any()
+                not np.isin(
+                    list(map(int, flag['decomposed'].keys())),
+                    list(self.flags_filter)
+                ).any()
             )
         ])
 
@@ -213,16 +216,18 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
     def update_visibility(self, index):
         self.decoded_flags[index]['show'] = not self.decoded_flags[index]['show']
+        self.vue_update_cmap()
+
+    def vue_update_cmap(self):
         self.send_state('decoded_flags')
-        self.update_cmap()
+        self._update_cmap()
 
     def vue_update_visibility(self, index):
         self.update_visibility(index)
 
     def update_color(self, index, color):
         self.decoded_flags[index]['color'] = color
-        self.send_state('decoded_flags')
-        self.update_cmap()
+        self.vue_update_cmap()
 
     def vue_update_color(self, args):
         index, color = args
@@ -247,18 +252,18 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         for flag in self.decoded_flags:
             flag['show'] = False
 
-        self.send_state('decoded_flags')
-        self.update_cmap()
+        self.vue_update_cmap()
 
     def vue_clear_flags_filter(self, event):
         self.flags_filter = []
+        self.vue_update_cmap()
 
     def vue_show_all_flags(self, event):
         for flag in self.decoded_flags:
             flag['show'] = True
 
-        self.send_state('decoded_flags')
         self.flags_filter = []
+        self.vue_update_cmap()
 
     @property
     def user_api(self):
@@ -267,7 +272,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             expose=(
                 'science_layer', 'dq_layer',
                 'decoded_flags', 'flags_filter',
-                'viewer', 'flag_map',
-                'dq_layer_opacity'
+                'viewer', 'dq_layer_opacity',
+                'flag_map_definitions_selected',
             )
         )

@@ -206,8 +206,6 @@
         // if any of the decomposed bits are in `flags_filter`, return true:
         return Object.keys(decomposed).filter(value => flags_filter.includes(parseInt(value))).length !== 0;
       }
-
-      return true
     }
   }
 }
