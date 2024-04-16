@@ -419,7 +419,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.collapse_to_spectrum(add_data=True)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
-                f"Extraction failed: {e}",
+                f"Extraction failed: {repr(e)}",
                 sender=self, color="error"))
 
     def vue_save_as_fits(self, *args):
