@@ -201,6 +201,10 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
 
         x_min, x_max, y_min, y_max = self._get_reset_limits()
 
+        # If any bound wasn't set to a real value, don't update
+        if np.any(~np.isfinite([x_min, x_max, y_min, y_max])):
+            return
+
         with delay_callback(self, 'x_min', 'x_max', 'y_min', 'y_max'):
             self.x_min, self.x_max, self.y_min, self.y_max = x_min, x_max, y_min, y_max
             # We need to adjust the limits in here to avoid triggering all
