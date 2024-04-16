@@ -12,7 +12,7 @@ dependencies = [
     "traitlets>=5.0.5",
     "bqplot>=0.12.37",
     "bqplot-image-gl>=1.4.11",
-    "glue-core>=1.17.1",
+    "glue-core>=1.17.1,!=1.19.0",
     "glue-jupyter>=0.20",
     "echo>=0.5.0",
     "ipykernel>=6.19.4",
