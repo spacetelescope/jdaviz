@@ -13,7 +13,10 @@ Cubeviz
 
 Imviz
 ^^^^^
+
 - Fix a bug where footprints did not overlay when created via API. [#2790]
+
+- Fixed a bug in the Orientation plugin where a WCS orientation could sometimes be flipped. [#2802]
 
 Mosviz
 ^^^^^^

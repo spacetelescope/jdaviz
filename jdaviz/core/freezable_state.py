@@ -167,13 +167,18 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
                     y_min = min(y_min, world_bottom_left.dec.value)
                     y_max = max(y_max, world_top_right.dec.value)
                 else:
-                    pixel_bottom_left = self.reference_data.coords.world_to_pixel(world_bottom_left)
-                    pixel_top_right = self.reference_data.coords.world_to_pixel(world_top_right)
+                    x_bl, y_bl = self.reference_data.coords.world_to_pixel(world_bottom_left)
+                    x_tr, y_tr = self.reference_data.coords.world_to_pixel(world_top_right)
 
-                    x_min = min(x_min, pixel_bottom_left[0] - 0.5)
-                    x_max = max(x_max, pixel_top_right[0] + 0.5)
-                    y_min = min(y_min, pixel_bottom_left[1] - 0.5)
-                    y_max = max(y_max, pixel_top_right[1] + 0.5)
+                    x_pix_min = min(x_bl, x_tr)
+                    x_pix_max = max(x_bl, x_tr)
+                    y_pix_min = min(y_bl, y_tr)
+                    y_pix_max = max(y_bl, y_tr)
+
+                    x_min = min(x_min, x_pix_min - 0.5)
+                    x_max = max(x_max, x_pix_max + 0.5)
+                    y_min = min(y_min, y_pix_min - 0.5)
+                    y_max = max(y_max, y_pix_max + 0.5)
                 wcs_success = True
 
         if not wcs_success:
