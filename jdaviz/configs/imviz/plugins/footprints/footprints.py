@@ -189,7 +189,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         # can be True, but only last fp will display. This ensures all fp(s) display
         if not self.is_pixel_linked:
             for choice in self.overlay.choices:
-                self._preset_args_changed(overlay_selected=choice)
+                if len(self.overlay.choices) > 1:
+                    self._change_overlay(overlay_selected=choice)
 
     def vue_link_by_wcs(self, *args):
         # call other plugin so that other options (wcs_use_affine, wcs_use_fallback)
@@ -320,7 +321,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.center_on_viewer(viewer_ref)
 
     @observe('overlay_selected')
-    def _change_overlay(self, *args):
+    def _change_overlay(self, *args, overlay_selected=None):
         if not hasattr(self, 'overlay'):  # pragma: nocover
             # plugin/traitlet startup
             return
@@ -328,7 +329,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             # no overlay selected (this can happen when removing all overlays)
             return
 
-        if self.overlay_selected not in self._overlays:
+        overlay_selected = overlay_selected if overlay_selected is not None else self.overlay_selected  # noqa
+
+        if overlay_selected not in self._overlays:
             # create new entry with defaults (any defaults not provided here will be carried over
             # from the previous selection based on current traitlet values)
 
@@ -336,21 +339,21 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             # to something other than the default, so we want to use that, otherwise for successive
             # new overlays, we want to ignore the traitlet and default back to "active" orange.
             default_color = '#c75109' if len(self._overlays) else self.color
-            self._overlays[self.overlay_selected] = {'color': default_color}
+            self._overlays[overlay_selected] = {'color': default_color}
 
             # similarly, if the user called any import APIs before opening the plugin, we want to
             # respect that, but when creating successive overlays, any selection from file/region
             # should be cleared for the next selection
             if self.preset_selected == 'From File...' and len(self._overlays) > 1:
-                self._overlays[self.overlay_selected]['from_file'] = ''
-                self._overlays[self.overlay_selected]['preset'] = self.preset.choices[0]
+                self._overlays[overlay_selected]['from_file'] = ''
+                self._overlays[overlay_selected]['preset'] = self.preset.choices[0]
 
             # for the first overlay only, default the position to be centered on the current
             # zoom limits of the first selected viewer
             if len(self._overlays) == 1 and len(self.viewer.selected):
                 self.center_on_viewer(self.viewer.selected[0])
 
-        fp = self._overlays[self.overlay_selected]
+        fp = self._overlays[overlay_selected]
 
         # we'll temporarily disable updating the overlays so that we can set all
         # traitlets simultaneously (and since we're only updating traitlets to a previously-set
@@ -371,7 +374,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 # dict above.
                 fp[key] = getattr(self, attr)
         self._ignore_traitlet_change = False
-        self._preset_args_changed()
+        self._preset_args_changed(overlay_selected=overlay_selected)
 
     def _mark_visible(self, viewer_id, overlay=None):
         if not self.is_active:
