@@ -126,6 +126,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                            'output_unit', 'reference_wavelength',
                                            'add_results', 'calculate_moment'))
 
+    @property
+    def slice_display_unit_name(self):
+        return 'spectral'
+
     @observe('is_active')
     def _is_active_changed(self, msg):
         for pos, mark in self.continuum_marks.items():
@@ -239,6 +243,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # slice out desired region
         # TODO: should we add a warning for a composite spectral subset?
         spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
+        display_spectral_axis_unit = self.app._get_display_unit(self.slice_display_unit_name)
+
+        # Convert units of min and max if necessary
+        if display_spectral_axis_unit and display_spectral_axis_unit != str(spec_min.unit):
+            spec_min = spec_min.to(display_spectral_axis_unit, equivalencies=u.spectral())
+            spec_max = spec_max.to(display_spectral_axis_unit, equivalencies=u.spectral())
         slab = manipulation.spectral_slab(cube, spec_min, spec_max)
 
         # Calculate the moment and convert to CCDData to add to the viewers
