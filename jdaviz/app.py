@@ -412,7 +412,12 @@ class Application(VuetifyTemplate, HubListener):
             if not plg.supports_auto_update:
                 raise NotImplementedError(f"{data.meta.get('Plugin')} does not support live-updates")  # noqa
             plg.user_api.from_dict(plugin_inputs)
-            plg()
+            try:
+                plg()
+            except Exception as e:
+                self.hub.broadcast(SnackbarMessage(
+                    f"Auto-update for {plugin_inputs['add_results']['label']} failed: {e}",
+                    sender=self, color="error"))
 
     def _on_add_data_message(self, msg):
         self._on_layers_changed(msg)
