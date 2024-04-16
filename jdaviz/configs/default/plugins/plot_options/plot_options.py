@@ -1005,7 +1005,8 @@ class PlotOptions(PluginTemplateMixin):
 
             # Use glue to compute the statistics since this allows us to use
             # a random subset of the data to compute the histogram.
-            # The 2.5 and 97.5 hardcoded here is equivalent to PercentileInterval(95).get_limits(sub_data)
+            # The 2.5 and 97.5 hardcoded here is equivalent to
+            # PercentileInterval(95).get_limits(sub_data)
             glue_data = self.stretch_histogram.app.data_collection['histogram']
             hist_lims = (
                 glue_data.compute_statistic('percentile', glue_data.id['x'],
