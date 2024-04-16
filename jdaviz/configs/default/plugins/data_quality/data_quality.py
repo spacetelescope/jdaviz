@@ -266,6 +266,8 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             self,
             expose=(
                 'science_layer', 'dq_layer',
-                'decoded_flags', 'flags_filter'
+                'decoded_flags', 'flags_filter',
+                'viewer', 'flag_map',
+                'dq_layer_opacity'
             )
         )
