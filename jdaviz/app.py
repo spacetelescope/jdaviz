@@ -95,13 +95,17 @@ class UnitConverterWithSpectral:
         # gives the units of the values array, which might not be the same
         # as the original native units of the component in the data.
         if cid.label == "flux":
-            spec = data.get_object(cls=Spectrum1D)
-            if len(values) == 2:
-                # Need this for setting the y-limits
-                spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
-                eqv = u.spectral_density(spec_limits*spec.spectral_axis.unit)
+            try:
+                spec = data.get_object(cls=Spectrum1D)
+            except Exception:
+                eqv = []
             else:
-                eqv = u.spectral_density(spec.spectral_axis)
+                if len(values) == 2:
+                    # Need this for setting the y-limits
+                    spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
+                    eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
+                else:
+                    eqv = u.spectral_density(spec.spectral_axis)
         else:  # spectral axis
             eqv = u.spectral()
 
