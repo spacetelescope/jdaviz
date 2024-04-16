@@ -185,8 +185,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         # toggle visibility as necessary
         self._on_is_active_changed()
 
-        # When fp(s) added via API before WCS link. Overlays visibility & is_active
-        # can be True, but only last fp will display. This ensures all fp(s) display
+        # When footprint(s) are added via API before WCS link. Overlays visibility & is_active
+        # can be True, but only last footprint will display. This ensures all footprints display
         if not self.is_pixel_linked and len(self.overlay.choices) > 1:
             for choice in self.overlay.choices:
                 # trigger the update without actually changing the user-selection
