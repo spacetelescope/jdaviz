@@ -15,8 +15,8 @@ Cubeviz
 
 Imviz
 ^^^^^
-
-- Fix a bug where footprints did not overlay when created via API. [#2790]
+- Fix bugs where API created footprints did not overlay and only last 
+  footprint displayed if added before linking. [#2790, #2797]
 
 - Improved behavior when orientations are created or selected without having data loaded in the viewer. [#2789]
 
