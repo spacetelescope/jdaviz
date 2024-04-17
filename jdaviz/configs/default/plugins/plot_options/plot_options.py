@@ -572,7 +572,7 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_preset = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
                                                    'stretch_preset_value', 'stretch_preset_sync',
                                                    state_filter=is_image)
-        self.stretch_global = PlotOptionsSyncState(self, self.viewer, self.layer, 'global_limits',
+        self.stretch_global = PlotOptionsSyncState(self, self.viewer, self.layer, 'stretch_global',
                                                    'stretch_global_value', 'stretch_global_sync',
                                                    state_filter=is_image_cube)
         self.stretch_vmin = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_min',
