@@ -7,7 +7,9 @@ from astropy.io import fits
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
 from astroquery.mast import Observations
+import numpy as np
 from numpy.testing import assert_allclose
+from glue.core.roi import XRangeROI
 
 
 def test_user_api(cubeviz_helper, spectrum1d_cube):
@@ -186,6 +188,27 @@ def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
     assert label_mouseover.as_text() == ("Pixel x=01.0 y=01.0 Value +2.32415e+01 km / s",
                                          "World 13h39m59.9461s +27d00m00.7200s (ICRS)",
                                          "204.9997755344 27.0001999998 (deg)")
+
+
+def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger):
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
+        cubeviz_helper.load_data(spectrum1d_cube_larger, data_label='test')
+
+    uc = cubeviz_helper.plugins['Unit Conversion']
+    mm = cubeviz_helper.plugins['Moment Maps']
+    viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    viewer.apply_roi(XRangeROI(4.624e-07, 4.627e-07))
+
+    uc.spectral_unit = 'Hz'
+    mm.spectral_subset = 'Subset 1'
+    mm.continuum = 'Surrounding'
+    mm.n_moment = 1
+    mm.output_unit = 'Spectral Unit'
+    moment_1_data = mm.calculate_moment()
+
+    # Check to make sure there are no nans
+    assert len(np.where(moment_1_data.data > 0)[0]) == 8
 
 
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
