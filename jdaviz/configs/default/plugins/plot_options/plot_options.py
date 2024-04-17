@@ -173,6 +173,9 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Specviz
     * ``stretch_preset`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
+    * ``stretch_global`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
+      Whether to apply the stretch preset based on the data in entire cube (as opposed
+      to the currently selected slice).  Only exposed for Cubeviz.
     * ``stretch_vmin`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``stretch_vmax`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -326,6 +329,9 @@ class PlotOptions(PluginTemplateMixin):
     stretch_preset_value = Any().tag(sync=True)  # glue will pass either a float or string
     stretch_preset_sync = Dict().tag(sync=True)
 
+    stretch_global_value = Bool().tag(sync=True)
+    stretch_global_sync = Dict().tag(sync=True)
+
     stretch_vstep = Float(0.1).tag(sync=True)  # dynamic based on full range from image
 
     stretch_vmin_value = Float().tag(sync=True)
@@ -438,6 +444,9 @@ class PlotOptions(PluginTemplateMixin):
 
         def is_image(state):
             return isinstance(state, BqplotImageLayerState)
+
+        def is_image_cube(state):
+            return is_image(state) and state.layer.ndim == 3
 
         def not_image(state):
             return not is_image(state)
@@ -563,6 +572,9 @@ class PlotOptions(PluginTemplateMixin):
         self.stretch_preset = PlotOptionsSyncState(self, self.viewer, self.layer, 'percentile',
                                                    'stretch_preset_value', 'stretch_preset_sync',
                                                    state_filter=is_image)
+        self.stretch_global = PlotOptionsSyncState(self, self.viewer, self.layer, 'global_limits',
+                                                      'stretch_global_value', 'stretch_global_sync',
+                                                      state_filter=is_image_cube)
         self.stretch_vmin = PlotOptionsSyncState(self, self.viewer, self.layer, 'v_min',
                                                  'stretch_vmin_value', 'stretch_vmin_sync',
                                                  state_filter=is_image)
@@ -683,7 +695,7 @@ class PlotOptions(PluginTemplateMixin):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
                   'select_all', 'subset_visible']
         if self.config == "cubeviz":
-            expose += ['collapse_function', 'uncertainty_visible']
+            expose += ['collapse_function', 'uncertainty_visible', 'stretch_global']
         if self.config != "imviz":
             expose += ['x_min', 'x_max', 'y_min', 'y_max',
                        'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
