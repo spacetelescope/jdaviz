@@ -11,6 +11,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Spectral extraction errors will show in snackbar. [#2807]
+
 Imviz
 ^^^^^
 
