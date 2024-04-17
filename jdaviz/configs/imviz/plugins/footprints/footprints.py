@@ -187,10 +187,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         # When footprint(s) are added via API before WCS link. Overlays visibility & is_active
         # can be True, but only last footprint will display. This ensures all footprints display
-        if not self.is_pixel_linked and len(self.overlay.choices) > 1:
+        if not self.is_pixel_linked:
             for choice in self.overlay.choices:
                 # trigger the update without actually changing the user-selection
-                self._change_overlay(overlay_selected=choice)
+                self._change_overlay(overlay_selected=choice, center_the_overlay=False)
 
     def vue_link_by_wcs(self, *args):
         # call other plugin so that other options (wcs_use_affine, wcs_use_fallback)
@@ -321,7 +321,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.center_on_viewer(viewer_ref)
 
     @observe('overlay_selected')
-    def _change_overlay(self, *args, overlay_selected=None):
+    def _change_overlay(self, *args, overlay_selected=None, center_the_overlay=True):
         if not hasattr(self, 'overlay'):  # pragma: nocover
             # plugin/traitlet startup
             return
@@ -332,6 +332,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         overlay_selected = overlay_selected if overlay_selected is not None else self.overlay_selected  # noqa
 
         if overlay_selected not in self._overlays:
+            # _on_link_type_updated() called in init but don't want to create
+            # the default overlay yet, since center_on_viewer() will cause a traceback
+            if not center_the_overlay:
+                return
             # create new entry with defaults (any defaults not provided here will be carried over
             # from the previous selection based on current traitlet values)
 
