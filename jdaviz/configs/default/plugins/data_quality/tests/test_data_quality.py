@@ -77,6 +77,11 @@ def test_roman_against_rdm():
 
 @pytest.mark.remote_data
 def test_data_quality_plugin(imviz_helper, tmp_path):
+    # while the DQ plugin is in development, we are making it
+    # irrelevant by default. This fixture allows us to use DQ
+    # plugin in the tests until it's out of development.
+    dq_plugin = imviz_helper.app.get_tray_item_from_name('g-data-quality')
+    dq_plugin.irrelevant_msg = ""
 
     uri = "mast:JWST/product/jw01895001004_07101_00001_nrca3_cal.fits"
     download_path = str(tmp_path / Path(uri).name)

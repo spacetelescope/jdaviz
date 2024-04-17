@@ -28,8 +28,7 @@ telescope_names = {
 class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "data_quality.vue"
 
-    # TODO: uncomment this line before merging into main:
-    # irrelevant_msg = Unicode("Data Quality plugin is in development.").tag(sync=True)
+    irrelevant_msg = Unicode("Data Quality plugin is in development.").tag(sync=True)
 
     # `layer` is the science data layer
     science_layer_multiselect = Bool(False).tag(sync=True)
