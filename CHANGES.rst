@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- Infrastructure to support auto-updating plugin results. [#2680]
+
 Cubeviz
 ^^^^^^^
 

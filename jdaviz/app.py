@@ -362,14 +362,14 @@ class Application(VuetifyTemplate, HubListener):
         # Key should be (data_label, statistic) and value the translated object.
         self._get_object_cache = {}
         self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=lambda msg: self._clear_object_cache(msg.subset.label))
+                           handler=self._on_subset_update_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
 
         # Subscribe to messages that result in changes to the layers
         self.hub.subscribe(self, AddDataMessage,
-                           handler=self._on_layers_changed)
+                           handler=self._on_add_data_message)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=self._on_layers_changed)
         self.hub.subscribe(self, SubsetCreateMessage,
@@ -383,6 +383,51 @@ class Application(VuetifyTemplate, HubListener):
             return
         key = f"{msg.plugin._plugin_name}: {msg.table._table_name}"
         self._plugin_tables.setdefault(key, msg.table.user_api)
+
+    def _update_live_plugin_results(self, trigger_data_lbl=None, trigger_subset=None):
+        trigger_subset_lbl = trigger_subset.label if trigger_subset is not None else None
+        for data in self.data_collection:
+            plugin_inputs = data.meta.get('_update_live_plugin_results', None)
+            if plugin_inputs is None:
+                continue
+            data_subs = plugin_inputs.get('_subscriptions', {}).get('data', [])
+            subset_subs = plugin_inputs.get('_subscriptions', {}).get('subset', [])
+            if (trigger_data_lbl is not None and
+                    not np.any([plugin_inputs.get(attr) == trigger_data_lbl
+                                for attr in data_subs])):
+                # trigger data does not match subscribed data entries
+                continue
+            if trigger_subset_lbl is not None:
+                if not np.any([plugin_inputs.get(attr) == trigger_subset_lbl
+                               for attr in subset_subs]):
+                    # trigger subset does not match subscribed subsets
+                    continue
+                if not np.any([plugin_inputs.get(attr) == trigger_subset.data.label
+                               for attr in data_subs]):
+                    # trigger parent data of subset does not match subscribed data entries
+                    continue
+            # update and overwrite data
+            # make a new instance of the plugin to avoid changing any UI settings
+            plg = self._jdaviz_helper.plugins.get(data.meta.get('Plugin'))._obj.new()
+            if not plg.supports_auto_update:
+                raise NotImplementedError(f"{data.meta.get('Plugin')} does not support live-updates")  # noqa
+            plg.user_api.from_dict(plugin_inputs)
+            try:
+                plg()
+            except Exception as e:
+                self.hub.broadcast(SnackbarMessage(
+                    f"Auto-update for {plugin_inputs['add_results']['label']} failed: {e}",
+                    sender=self, color="error"))
+
+    def _on_add_data_message(self, msg):
+        self._on_layers_changed(msg)
+        self._update_live_plugin_results(trigger_data_lbl=msg.data.label)
+
+    def _on_subset_update_message(self, msg):
+        # NOTE: print statements in here will require the viewer output_widget
+        self._clear_object_cache(msg.subset.label)
+        if msg.attribute == 'subset_state':
+            self._update_live_plugin_results(trigger_subset=msg.subset)
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -2567,33 +2612,12 @@ class Application(VuetifyTemplate, HubListener):
 
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
-            tray_registry_options = tray.get('viewer_reference_name_kwargs', {})
 
-            # Optional keyword arguments are required to initialize some
-            # tray items. These kwargs specify the viewer reference names that are
-            # assumed to be present in the configuration.
-            optional_tray_kwargs = dict()
-
-            # If viewer reference names need to be passed to the tray item
-            # constructor, pass the names into the constructor in the format
-            # that the tray items expect.
-            for opt_attr, [opt_kwarg, get_name_kwargs] in tray_registry_options.items():
-                opt_value = getattr(
-                    self, opt_attr, self._get_first_viewer_reference_name(**get_name_kwargs)
-                )
-
-                if opt_value is None:
-                    continue
-
-                optional_tray_kwargs[opt_kwarg] = opt_value
+            tray_item_instance = tray.get('cls')(app=self)
 
             # store a copy of the tray name in the instance so it can be accessed by the
             # plugin itself
             tray_item_label = tray.get('label')
-
-            tray_item_instance = tray.get('cls')(
-                app=self, plugin_name=tray_item_label, **optional_tray_kwargs
-            )
 
             # NOTE: is_relevant is later updated by observing irrelevant_msg traitlet
             self.state.tray_items.append({

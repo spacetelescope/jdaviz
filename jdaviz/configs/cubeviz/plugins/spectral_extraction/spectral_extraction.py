@@ -108,10 +108,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.extracted_spec = None
 
+        self.dataset.filters = ['is_flux_cube']
+
         # TODO: in the future this could be generalized with support in SelectPluginComponent
         self.aperture._default_text = 'Entire Cube'
         self.aperture._manual_options = ['Entire Cube']
         self.aperture.items = [{"label": "Entire Cube"}]
+        # need to reinitialize choices since we overwrote items and some subsets may already
+        # exist.
+        self.aperture._initialize_choices()
         self.aperture.select_default()
 
         self.background = ApertureSubsetSelect(self,
@@ -150,21 +155,34 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
 
-        self.disabled_msg = (
-            "Spectral Extraction requires a single dataset to be loaded into Cubeviz, "
-            "please load data to enable this plugin."
-        )
+        for data in self.app.data_collection:
+            if len(data.data.shape) == 3:
+                break
+        else:
+            # no cube-like data loaded.  Once loaded, the parser will unset this
+            # TODO: change to an event listener on AddDataMessage
+            self.disabled_msg = (
+                "Spectral Extraction requires a single dataset to be loaded into Cubeviz, "
+                "please load data to enable this plugin."
+            )
 
     @property
     def user_api(self):
-        expose = ['function', 'spatial_subset', 'aperture',
+        expose = ['dataset', 'function', 'spatial_subset', 'aperture',
                   'add_results', 'collapse_to_spectrum',
                   'wavelength_dependent', 'reference_spectral_value',
                   'aperture_method']
         if self.dev_bg_support:
             expose += ['background', 'bg_wavelength_dependent']
 
-        return PluginUserApi(self, expose=expose)
+        return PluginUserApi(self, expose=expose, excl_from_dict=['spatial_subset'])
+
+    @property
+    def live_update_subscriptions(self):
+        return {'data': ('dataset',), 'subset': ('aperture', 'background')}
+
+    def __call__(self, add_data=True):
+        return self.collapse_to_spectrum(add_data=add_data)
 
     @property
     def slice_display_unit_name(self):
@@ -343,9 +361,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         collapsed_spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         if add_data:
-            self.add_results.add_results_from_plugin(
-                collapsed_spec, label=self.results_label, replace=False
-            )
+            self.add_results.add_results_from_plugin(collapsed_spec)
 
             snackbar_message = SnackbarMessage(
                 "Spectrum extracted successfully.",
