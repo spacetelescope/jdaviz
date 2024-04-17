@@ -416,9 +416,17 @@ def get_top_layer_index(viewer):
     This is because when blinked, first layer might not be top visible layer.
 
     """
+    # exclude children of layer associations
+    associations = viewer.jdaviz_app._data_associations
+
     visible_image_layers = [
         i for i, lyr in enumerate(viewer.layers)
-        if lyr.visible and layer_is_image_data(lyr.layer)
+        if (
+            lyr.visible and
+            layer_is_image_data(lyr.layer) and
+            # check that this layer is a root, without parents:
+            associations[lyr.layer.label]['parent'] is None
+        )
     ]
 
     if len(visible_image_layers):

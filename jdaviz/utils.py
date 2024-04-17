@@ -249,6 +249,10 @@ def is_not_wcs_only(layer):
     return not is_wcs_only(layer)
 
 
+def layer_is_not_dq(data):
+    return not data.label.endswith('[DQ]')
+
+
 def standardize_metadata(metadata):
     """Standardize given metadata so it can be viewed in
     Metadata Viewer plugin. The input can be plain

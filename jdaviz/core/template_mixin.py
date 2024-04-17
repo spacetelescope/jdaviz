@@ -56,7 +56,10 @@ from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.style_registry import PopoutStyleWrapper
-from jdaviz.utils import get_subset_type, is_wcs_only, is_not_wcs_only, _wcs_only_label
+from jdaviz.utils import (
+    get_subset_type, is_wcs_only, is_not_wcs_only,
+    _wcs_only_label, layer_is_not_dq as layer_is_not_dq_global
+)
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
@@ -1341,8 +1344,9 @@ class LayerSelect(SelectPluginComponent):
                  multiselect=None,
                  default_text=None, manual_options=[],
                  default_mode='first',
-                 filters=['not_child_layer'],
-                 only_wcs_layers=False):
+                 only_wcs_layers=False,
+                 is_root=True,
+                 is_child_of=None):
         """
         Parameters
         ----------
@@ -1394,6 +1398,25 @@ class LayerSelect(SelectPluginComponent):
         self.add_observe(selected, self._update_layer_items)
         self._update_layer_items()
         self.update_wcs_only_filter(only_wcs_layers)
+
+        self.filter_is_root = is_root
+        self.filter_is_child_of = is_child_of
+
+        if self.filter_is_root:
+            # ignore layers that are children in associations:
+            def filter_is_root(data):
+                return self.app._get_assoc_data_parent(data.label) is None
+
+            self.add_filter(filter_is_root)
+
+        elif not self.filter_is_root and self.filter_is_child_of is not None:
+            # only offer layers that are children of the correct parent:
+            def has_correct_parent(data):
+                if self.filter_is_child_of == '':
+                    return False
+                return self.app._get_assoc_data_parent(data.label) == self.filter_is_child_of
+
+            self.add_filter(has_correct_parent)
 
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case
@@ -3333,6 +3356,8 @@ class DatasetSelect(SelectPluginComponent):
         def not_child_layer(data):
             # ignore layers that are children in associations:
             return self.app._get_assoc_data_parent(data.label) is None
+
+        layer_is_not_dq = layer_is_not_dq_global
 
         return super()._is_valid_item(data, locals())
 
