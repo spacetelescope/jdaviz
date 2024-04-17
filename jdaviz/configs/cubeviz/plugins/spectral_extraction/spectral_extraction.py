@@ -415,7 +415,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return mask_weights
 
     def vue_spectral_extraction(self, *args, **kwargs):
-        self.collapse_to_spectrum(add_data=True)
+        try:
+            self.collapse_to_spectrum(add_data=True)
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(
+                f"Extraction failed: {repr(e)}",
+                sender=self, color="error"))
 
     def vue_save_as_fits(self, *args):
         self._save_extracted_spec_to_fits()
