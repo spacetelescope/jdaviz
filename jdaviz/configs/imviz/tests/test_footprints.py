@@ -147,7 +147,7 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
 
 def test_api_after_linking(imviz_helper):
     # custom image to enable visual test in notebook
-    arr = np.ones(300, 300)
+    arr = np.ones((300, 300))
     image_2d_wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
                         'CRPIX1': 1, 'CRVAL1': 337.5202808,
                         'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
