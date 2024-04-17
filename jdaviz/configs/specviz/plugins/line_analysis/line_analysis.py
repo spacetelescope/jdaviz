@@ -242,14 +242,15 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         if not self.spectral_subset_valid:
             valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
-            raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
+            raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range}"
+                             f" is outside data range of '{self.dataset.selected}' {spec_range}")
 
         self._calculate_statistics()
         return self.results
 
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
-        self.line_items = msg.names_rest
+        self.line_items = [f"{msg.marks[i].name} {msg.marks[i].rest_value} {msg.marks[i].xunit}" for i in range(len(msg.marks))]   # noqa
         if self.selected_line not in self.line_items:
             # default to identified line if available
             self.selected_line = self.identified_line
