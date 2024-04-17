@@ -7,6 +7,7 @@ from regions import PixCoord, CirclePixelRegion, CircleSkyRegion, RectangleSkyRe
 
 from jdaviz.core.marks import FootprintOverlay
 from jdaviz.configs.imviz.plugins.footprints.preset_regions import _all_apertures
+from astropy.wcs import WCS
 
 pytest.importorskip("pysiaf")
 
@@ -142,3 +143,44 @@ def test_user_api(imviz_helper, image_2d_wcs, tmp_path):
     assert plugin._obj.is_active is False
     viewer_marks = _get_markers_from_viewer(imviz_helper.default_viewer)
     assert viewer_marks[0].visible is False
+
+
+def test_api_after_linking(imviz_helper):
+    # custom image to enable visual test in a notebook
+    arr = np.ones((300, 300))
+    image_2d_wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
+                        'CRPIX1': 1, 'CRVAL1': 337.5202808,
+                        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg', 'CDELT2': 0.0002777777778,
+                        'CRPIX2': 1, 'CRVAL2': -20.833333059999998})
+
+    viewer = imviz_helper.app.get_viewer_by_id('imviz-0')
+
+    ndd = NDData(arr, wcs=image_2d_wcs)
+    imviz_helper.load_data(ndd)
+    imviz_helper.load_data(ndd)
+
+    plugin = imviz_helper.plugins['Footprints']
+    with plugin.as_active():
+
+        pointing = {'name': ['pt'], 'ra': [337.51], 'dec': [-20.77], 'pa': [0]}
+        plugin.color = 'green'
+        plugin.add_overlay(pointing['name'][0])
+        plugin.ra = pointing['ra'][0]
+        plugin.dec = pointing['dec'][0]
+        plugin.pa = pointing['pa'][0]
+
+        # when pixel linked are any marks displayed
+        viewer_marks = _get_markers_from_viewer(viewer)
+        no_marks_displayed = all(not mark.visible for mark in viewer_marks)
+        assert no_marks_displayed is True
+
+        # link by wcs and retest
+        imviz_helper.link_data(link_type='wcs')
+
+        viewer_marks = _get_markers_from_viewer(viewer)
+        # distinguish default from custom overlay with color
+        marks_displayed = any(mark.visible and mark.colors[0] == 'green'
+                              for mark in viewer_marks)
+
+        # when wcs linked are any marks displayed
+        assert marks_displayed is True
