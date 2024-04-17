@@ -62,6 +62,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Line menu in Redshift from Centroid section of Line Analysis now shows values in current units. [#2816]
+
 3.9.1 (unreleased)
 ==================
 
@@ -81,7 +83,7 @@ Cubeviz
 
 Imviz
 ^^^^^
-- Fix bugs where API created footprints did not overlay and only last 
+- Fix bugs where API created footprints did not overlay and only last
   footprint displayed if added before linking. [#2790, #2797]
 
 - Improved behavior when orientations are created or selected without having data loaded in the viewer. [#2789]
