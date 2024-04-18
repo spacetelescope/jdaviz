@@ -50,7 +50,7 @@
             :icon="layer_icons[item.name]"
             :icons="icons"
             :viewer="viewer"
-            :multi_select="multi_select"
+            :multi_select="multi_select || isChild(item)"
             :is_wcs_only="false"
             :n_data_entries="nDataEntries"
             @data-item-visibility="$emit('data-item-visibility', $event)"
@@ -272,6 +272,10 @@ module.exports = {
     },
     isRefData() {
       return this.$props.item.viewer.reference_data_label === this.$props.item.name
+    },
+    isChild(item) {
+      // only override multi_select choice when data entry is a child, and is in cubeviz:
+      return (this.$props.viewer.config === 'cubeviz' && item.parent !== null)
     },
     selectRefData() {
       this.$emit('change-reference-data', {

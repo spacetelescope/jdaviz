@@ -453,6 +453,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
                 value = self._get_cube_value(image, arr, x, y, viewer)
+
+                if associated_dq_layer is not None:
+                    dq_attribute = associated_dq_layer.state.attribute
+                    dq_data = associated_dq_layer.layer.get_data(dq_attribute)
+                    dq_value = self._get_cube_value(image, dq_data, x, y, viewer)
+
             self.row1b_title = 'Value'
 
             if associated_dq_layer is not None:

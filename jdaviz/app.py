@@ -2316,7 +2316,9 @@ class Application(VuetifyTemplate, HubListener):
             'has_wcs': data_has_valid_wcs(data),
             'is_astrowidgets_markers_table': (self.config == "imviz") and layer_is_table_data(data),
             'meta': {k: v for k, v in data.meta.items() if _expose_meta(k)},
-            'children': []}
+            'children': [],
+            'parent': None,
+        }
 
     @staticmethod
     def _create_stack_item(container='gl-stack', children=None, viewers=None):
@@ -2712,6 +2714,13 @@ class Application(VuetifyTemplate, HubListener):
     def _set_assoc_data_as_child(self, data_label, new_parent_label):
         # Data has a new parent:
         self._data_associations[data_label]['parent'] = new_parent_label
+
+        # update the data item so vue can see the change:
+        for data_item in self.state.data_items:
+            if data_item['name'] == data_label:
+                data_item['parent'] = new_parent_label
+                break
+
         # parent has a new child:
         self._data_associations[new_parent_label]['children'].append(data_label)
 

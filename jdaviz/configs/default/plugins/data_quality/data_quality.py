@@ -28,7 +28,7 @@ telescope_names = {
 class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "data_quality.vue"
 
-    irrelevant_msg = Unicode("Data Quality plugin is in development.").tag(sync=True)
+    irrelevant_msg = Unicode("").tag(sync=True)
 
     # `layer` is the science data layer
     science_layer_multiselect = Bool(False).tag(sync=True)
@@ -244,8 +244,13 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         # this is defined for JWST and ROMAN, should be upper case:
         telescope = layer[0].layer.meta.get('telescope', None)
 
+        if telescope is None:
+            # for spectral cubes in Cubeviz:
+            telescope = layer[0].layer.meta.get('_primary_header', {}).get('TELESCOP', None)
+
         if telescope is not None:
-            self.flag_map_selected = telescope_names[telescope.lower()]
+            flag_map_to_select = telescope_names.get(telescope.lower())
+            self.flag_map_selected = flag_map_to_select
 
     def vue_hide_all_flags(self, event):
         for flag in self.decoded_flags:
