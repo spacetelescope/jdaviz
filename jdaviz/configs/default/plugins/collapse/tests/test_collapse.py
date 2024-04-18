@@ -2,12 +2,12 @@ import numpy as np
 import pytest
 from astropy.nddata import CCDData
 from astropy import units as u
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 
 @pytest.mark.filterwarnings('ignore')
 def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
-    cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
+    cubeviz_helper.load_data(Spectrum(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
     dc = cubeviz_helper.app.data_collection
 
     # TODO: this now fails when instantiating Collapse after initialization
@@ -40,7 +40,7 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
 
 def test_save_collapsed_to_fits(cubeviz_helper, spectral_cube_wcs, tmp_path):
 
-    cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
+    cubeviz_helper.load_data(Spectrum(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
 
     collapse_plugin = cubeviz_helper.plugins['Collapse']
 

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from specutils import Spectrum1D
+from specutils import Spectrum
 from astropy.io import fits
 import astropy.units as u
 import numpy as np
@@ -62,7 +62,7 @@ def spec2d_1d_parser(app, data_obj, data_label=None, show_in_viewer=True):
         metadata = standardize_metadata(header)
         metadata[PRIHDR_KEY] = standardize_metadata(prihdr)
 
-        data_obj = Spectrum1D(flux, spectral_axis=spectral_axis, meta=metadata)
+        data_obj = Spectrum(flux, spectral_axis=spectral_axis, meta=metadata)
 
         data_label = app.return_data_label(data_label, alt_name="specviz2d_data")
         app.data_collection[data_label] = data_obj

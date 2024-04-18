@@ -11,7 +11,7 @@ from glue.core.edit_subset_mode import ReplaceMode
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
-from specutils import Spectrum1D
+from specutils import Spectrum
 from astropy.wcs import WCS
 
 
@@ -31,11 +31,11 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     collapsed_cube_nddata = spectral_cube.sum(axis=(0, 1))  # return NDDataArray
 
     # Collapse the spectral cube using the methods in jdaviz:
-    collapsed_cube_s1d = plg.collapse_to_spectrum(add_data=False)  # returns Spectrum1D
+    collapsed_cube_s1d = plg.collapse_to_spectrum(add_data=False)  # returns Spectrum
 
     assert plg._obj.disabled_msg == ''
     assert isinstance(spectral_cube, NDDataArray)
-    assert isinstance(collapsed_cube_s1d, Spectrum1D)
+    assert isinstance(collapsed_cube_s1d, Spectrum)
 
     assert_allclose(
         collapsed_cube_nddata.data,
@@ -161,7 +161,7 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tm
     assert fname_path.is_file()
 
     # read file back in, make sure it matches
-    dat = Spectrum1D.read(fname_path)
+    dat = Spectrum.read(fname_path)
     assert_array_equal(dat.data, extract_plugin._obj.extracted_spec.data)
     assert dat.unit == extract_plugin._obj.extracted_spec.unit
 
@@ -347,7 +347,7 @@ def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
 
 
 def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
-    data = Spectrum1D(flux=np.ones((128, 129, 256)) * u.nJy, wcs=spectral_cube_wcs)
+    data = Spectrum(flux=np.ones((128, 129, 256)) * u.nJy, wcs=spectral_cube_wcs)
     cubeviz_helper.load_data(data, data_label="Test Flux")
     cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
 
@@ -384,7 +384,7 @@ def test_unit_translation(cubeviz_helper):
     w = WCS(wcs_dict)
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.MJy, wcs=w, meta=wcs_dict)
+    cube = Spectrum(flux=flux * u.MJy, wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     center = PixCoord(5, 10)

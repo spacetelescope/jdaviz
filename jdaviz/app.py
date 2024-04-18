@@ -36,7 +36,7 @@ from ipypopout import PopoutButton
 from ipyvuetify import VuetifyTemplate
 from ipywidgets import widget_serialization
 from traitlets import Dict, Bool, Unicode, Any
-from specutils import Spectrum1D, SpectralRegion
+from specutils import Spectrum, SpectralRegion
 
 from jdaviz import __version__
 from jdaviz import style_registry
@@ -95,7 +95,7 @@ class UnitConverterWithSpectral:
         # gives the units of the values array, which might not be the same
         # as the original native units of the component in the data.
         if cid.label == "flux":
-            spec = data.get_object(cls=Spectrum1D)
+            spec = data.get_object(cls=Spectrum)
             if len(values) == 2:
                 # Need this for setting the y-limits
                 spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
@@ -692,17 +692,11 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         elif self.config == 'cubeviz' and linked_data.ndim == 1:
-            ref_wavelength_component = dc[0].components[-2]
-            ref_flux_component = dc[0].components[-1]
-            linked_wavelength_component = dc[-1].components[1]
-            linked_flux_component = dc[-1].components[-1]
+            spectral_axis_index = dc[0].meta['spectral_axis_index']
+            ref_wavelength_component = dc[0].components[spectral_axis_index]
+            linked_wavelength_component = dc[-1].components[0]
 
-            links = [
-                LinkSameWithUnits(ref_wavelength_component, linked_wavelength_component),
-                LinkSame(ref_flux_component, linked_flux_component)
-            ]
-
-            dc.add_link(links)
+            dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
 
         elif (linked_data.meta.get('Plugin', None) == 'SpectralExtraction' or
@@ -1027,7 +1021,7 @@ class Application(VuetifyTemplate, HubListener):
         # units = dc[0].data.coords.spectral_axis.unit
         viewer = self.get_viewer(self._jdaviz_helper. _default_spectrum_viewer_reference_name)
         data = viewer.data()
-        if data and len(data) > 0 and isinstance(data[0], Spectrum1D):
+        if data and len(data) > 0 and isinstance(data[0], Spectrum):
             units = data[0].spectral_axis.unit
         else:
             raise ValueError("Unable to find spectral axis units")
@@ -1402,7 +1396,7 @@ class Application(VuetifyTemplate, HubListener):
         Parameters
         ----------
         loaded_object : str or object
-            The path to a data file or FITS HDUList or image object or Spectrum1D or
+            The path to a data file or FITS HDUList or image object or Spectrum or
             NDData array or numpy.ndarray.
         ext : str, optional
             The extension (or other distinguishing feature) of data used to identify it.
@@ -1440,8 +1434,8 @@ class Application(VuetifyTemplate, HubListener):
                 data_label = f"{loaded_object.file_name}[HDU object]"
             else:
                 data_label = "Unknown HDU object"
-        elif isinstance(loaded_object, Spectrum1D):
-            data_label = "Spectrum1D"
+        elif isinstance(loaded_object, Spectrum):
+            data_label = "Spectrum"
         elif isinstance(loaded_object, NDData):
             data_label = "NDData"
         elif isinstance(loaded_object, np.ndarray):

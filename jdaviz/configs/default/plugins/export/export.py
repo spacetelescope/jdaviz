@@ -15,7 +15,7 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
-from specutils import Spectrum1D
+from specutils import Spectrum
 from astropy import units as u
 from astropy.nddata import CCDData
 
@@ -263,7 +263,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # NOTE: should not be a valid choice due to dataset filters, but we'll include
                 # another check here.
                 self.data_invalid_msg = "Data export is only available for plugin generated data."
-            elif not isinstance(self.dataset.selected_obj, (Spectrum1D, CCDData)):
+            elif not isinstance(self.dataset.selected_obj, (Spectrum, CCDData)):
                 self.data_invalid_msg = "Export is not yet implemented for this type of data"
             elif (data_unit := self.dataset.selected_obj.unit) == u.Unit('DN/s'):
                 self.data_invalid_msg = f'Export Disabled: The unit {data_unit} could not be saved in native FITS format.'  # noqa: E501

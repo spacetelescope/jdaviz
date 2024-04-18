@@ -3,7 +3,7 @@ import numpy as np
 from copy import deepcopy
 
 import astropy.units as u
-from specutils import Spectrum1D
+from specutils import Spectrum
 from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe
 
@@ -341,7 +341,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if selected_spec is None:
             return
 
-        # Replace NaNs from collapsed Spectrum1D in Cubeviz
+        # Replace NaNs from collapsed Spectrum in Cubeviz
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
         # TODO: can we simplify this logic?
@@ -908,7 +908,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if "_orig_spec" in data.meta:
             spec = data.meta["_orig_spec"]
         else:
-            spec = data.get_object(cls=Spectrum1D, statistic=None)
+            spec = data.get_object(cls=Spectrum, statistic=None)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
@@ -944,7 +944,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 temp_label = "{} ({}, {})".format(self.results_label, m["x"], m["y"])
                 self.app.fitted_models[temp_label] = m["model"]
 
-        output_cube = Spectrum1D(flux=fitted_spectrum.flux, wcs=fitted_spectrum.wcs)
+        output_cube = Spectrum(flux=fitted_spectrum.flux, wcs=fitted_spectrum.wcs)
 
         # Create new data entry for glue
         if add_data:

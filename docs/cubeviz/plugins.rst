@@ -12,7 +12,7 @@ icon in the upper right corner of the Cubeviz application.
 
 The data analysis plugins are meant to aid quick-look analysis
 of both 3D and 1D spectroscopic data. In many cases, functions can be applied to
-`~specutils.Spectrum1D` objects, which include both 3D and 1D datasets.
+`~specutils.Spectrum` objects, which include both 3D and 1D datasets.
 Plugins that are specific to 1D spectra are described in
 more detail under :ref:`Specviz: Data Analysis Plugins <specviz-plugins>`.
 In many cases, these capabilities can be further applied on a per spaxel basis

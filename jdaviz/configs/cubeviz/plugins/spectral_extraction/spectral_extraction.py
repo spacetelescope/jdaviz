@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 import astropy
 from astropy import units as u
+from astropy.coordinates import SpectralCoord
 from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
@@ -11,7 +12,7 @@ from astropy.nddata import (
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 from packaging.version import Version
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
-from specutils import Spectrum1D
+from specutils import Spectrum
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
@@ -118,6 +119,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # exist.
         self.aperture._initialize_choices()
         self.aperture.select_default()
+
+        self.spectral_axis_index = 0
 
         self.background = ApertureSubsetSelect(self,
                                                'bg_items',
@@ -262,7 +265,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
         uncertainties = None
         selected_func = self.function_selected.lower()
-
+        self.spectral_axis_index = spectral_cube.meta["spectral_axis_index"]
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
         # and uncertainties in different glue Data objects, we translate the spectral
@@ -273,7 +276,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             )
             if uncert_cube:
                 uncertainties = uncert_cube.get_subset_object(
-                    subset_id=self.aperture.selected, cls=StdDevUncertainty
+                    subset_id=self.aperture.selected, cls=StdDevUncertainty, attribute="flux"
                 )
             # Exact slice mask of cone or cylindrical aperture through the cube. `shape_mask` is
             # a 3D array with fractions of each pixel within an aperture at each
@@ -295,10 +298,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             flux = nddata.data << nddata.unit
             mask = nddata.mask
         # Use the spectral coordinate from the WCS:
+        pass_spectral_axis = False
+        spectral_axis = None
         if '_orig_spec' in spectral_cube.meta:
             wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
-        else:
+        elif hasattr(spectral_cube.coords, "spectral"):
             wcs = spectral_cube.coords.spectral
+        else:
+            # Can't split out spectral from GWCS
+            wcs = spectral_cube.coords
+            pass_spectral_axis = True
 
         # Filter out NaNs (False = good)
         mask = np.logical_or(mask, np.isnan(flux))
@@ -311,10 +320,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # by default we want to propagate uncertainties:
         kwargs.setdefault("propagate_uncertainties", True)
 
-        # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
-        # is always wavelength. This may need adjustment after the following
-        # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
-        spatial_axes = (0, 1)
+        # Collapse a 3D spectral cube to 1D spectrum.
+        spatial_axes = [0, 1, 2]
+        spatial_axes.remove(self.spectral_axis_index)
+        spatial_axes = tuple(spatial_axes)
         if selected_func == 'mean':
             # Use built-in sum function to collapse NDDataArray
             collapsed_sum_for_mean = nddata_reshaped.sum(axis=spatial_axes, **kwargs)
@@ -334,22 +343,29 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 axis=spatial_axes, **kwargs
             )  # returns an NDDataArray
 
-        # Convert to Spectrum1D, with the spectral axis in correct units:
-        if hasattr(spectral_cube.coords, 'spectral_wcs'):
-            target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[0]
-        else:
-            target_wave_unit = spectral_cube.coords.spectral.world_axis_units[0]
+        # Convert to Spectrum, with the spectral axis in correct units:
+        target_wave_unit = spectral_cube.coords.world_axis_units[2-self.spectral_axis_index]
 
         flux = collapsed_nddata.data << collapsed_nddata.unit
         mask = collapsed_nddata.mask
         uncertainty = collapsed_nddata.uncertainty
 
+        if pass_spectral_axis:
+            wcs_args = [0, 0, 0]
+            spec_indices = np.arange(spectral_cube.shape[self.spectral_axis_index])
+            wcs_args[self.spectral_axis_index] = spec_indices
+            wcs_args.reverse()
+            spectral_and_spatial = wcs.pixel_to_world(*wcs_args)
+            spectral_axis = [x for x in spectral_and_spatial if isinstance(x, SpectralCoord)][0]  # noqa
+
         collapsed_spec = _return_spectrum_with_correct_units(
             flux, wcs, collapsed_nddata.meta, 'flux',
             target_wave_unit=target_wave_unit,
             uncertainty=uncertainty,
-            mask=mask
+            mask=mask,
+            spectral_axis=spectral_axis
         )
+
         # stuff for exporting to file
         self.extracted_spec = collapsed_spec
         self.extracted_spec_available = True
@@ -373,7 +389,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def get_aperture(self):
         # Retrieve flux cube and create an array to represent the cone mask
-        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
+        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum,
                                                                           statistic=None)
         display_unit = astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
@@ -383,7 +399,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         aperture = regions2aperture(self.aperture.selected_spatial_region)
         aperture.positions = center
 
-        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
+        im_shape = list(flux_cube.shape)
+        im_shape.remove(im_shape[self.spectral_axis_index])
+        im_shape = tuple(im_shape)
         aper_method = self.aperture_method_selected.lower()
         if self.wavelength_dependent:
             # Cone aperture
@@ -422,12 +440,17 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
                 slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
                 # Add slice mask to fractional pixel array
-                mask_weights[:, :, index] = slice_mask
+                if self.spectral_axis_index == 0:
+                    mask_weights[index, :, :] = slice_mask
+                else:
+                    mask_weights[:, :, index] = slice_mask
         else:
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
-            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=2)
+            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis),
+                                    axis=self.spectral_axis_index)
+
         return mask_weights
 
     def vue_spectral_extraction(self, *args, **kwargs):
