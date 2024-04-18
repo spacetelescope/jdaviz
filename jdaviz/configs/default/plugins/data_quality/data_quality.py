@@ -72,6 +72,14 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         self.load_default_flag_maps()
         self.init_decoding()
 
+        if self.app.config == 'cubeviz':
+            # cubeviz will show the DQ layer in the flux-viewer only:
+            def is_flux_viewer(viewer):
+                return viewer.reference == 'flux-viewer'
+
+            self.viewer.add_filter(is_flux_viewer)
+            self.viewer._on_viewers_changed()
+
     @observe('science_layer_selected')
     def update_dq_layer(self, *args):
         if not hasattr(self, 'dq_layer'):
