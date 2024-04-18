@@ -252,8 +252,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
         self.line_items = msg.names_rest
-        menu_labels = [f"{msg.marks[i].name} {msg.marks[i].rest_value} {msg.marks[i].xunit}" for i in range(len(msg.marks))]   # noqa
-        self.line_menu_items = [{"title": menu_labels[i], "value": msg.names_rest[i]} for i in range(len(msg.names_rest))]
+        menu_labels = [f"{msg.marks[i].name} {msg.marks[i].rest_value} {msg.marks[i].xunit}" for i in range(len(msg.marks))]  # noqa
+        self.line_menu_items = [{"title": menu_labels[i], "value": msg.names_rest[i]} for i in range(len(msg.names_rest))]  # noqa
         print(self.line_menu_items)
         if self.selected_line not in self.line_items:
             # default to identified line if available
