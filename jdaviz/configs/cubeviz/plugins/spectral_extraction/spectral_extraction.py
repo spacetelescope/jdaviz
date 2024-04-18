@@ -9,7 +9,6 @@ from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
-from glue.core.link_helpers import LinkSame
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 from packaging.version import Version
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
@@ -352,7 +351,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         uncertainty = collapsed_nddata.uncertainty
 
         if pass_spectral_axis:
-            wcs_args = [0,0,0]
+            wcs_args = [0, 0, 0]
             spec_indices = np.arange(spectral_cube.shape[self.spectral_axis_index])
             wcs_args[self.spectral_axis_index] = spec_indices
             wcs_args.reverse()
@@ -451,7 +450,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
-            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=self.spectral_axis_index)
+            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis),
+                                    axis=self.spectral_axis_index)
 
         return mask_weights
 

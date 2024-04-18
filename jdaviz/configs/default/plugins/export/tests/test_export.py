@@ -75,7 +75,7 @@ class TestExportSubsets:
         """
 
         data = Spectrum(flux=np.ones((500, 500, 2)) * u.nJy,
-                          wcs=spectral_cube_wcs)
+                        wcs=spectral_cube_wcs)
         cubeviz_helper.load_data(data)
 
         cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=255,

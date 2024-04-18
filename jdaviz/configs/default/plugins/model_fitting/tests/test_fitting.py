@@ -185,7 +185,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
         uncertainties = None
 
     spectrum = Spectrum(flux=flux_cube*u.Jy, wcs=cube_wcs,
-                          uncertainty=uncertainties, mask=mask)
+                        uncertainty=uncertainties, mask=mask)
 
     # Initial model for fit.
     g1f = models.Gaussian1D(0.7*u.Jy, 4.65*u.um, 0.3*u.um, name='g1')

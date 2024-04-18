@@ -417,7 +417,7 @@ def test_invalid_subset(specviz_helper, spectrum1d):
 
     # 5000-7000
     sp2 = Spectrum(spectral_axis=spectrum1d.spectral_axis - 1000*spectrum1d.spectral_axis.unit,
-                     flux=spectrum1d.flux * 1.25)
+                   flux=spectrum1d.flux * 1.25)
     specviz_helper.load_data(sp2, data_label="left_spectrum")
 
     # apply subset that overlaps on left_spectrum, but not right_spectrum

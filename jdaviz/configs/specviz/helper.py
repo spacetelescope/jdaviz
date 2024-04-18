@@ -21,8 +21,8 @@ def _apply_redshift_to_spectra(spectra, redshift):
     mask = spectra.mask
     uncertainty = spectra.uncertainty
     output_spectra = Spectrum(flux, spectral_axis=spaxis,
-                                redshift=redshift, mask=mask,
-                                uncertainty=uncertainty)
+                              redshift=redshift, mask=mask,
+                              uncertainty=uncertainty)
 
     return output_spectra
 

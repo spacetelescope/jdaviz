@@ -114,8 +114,8 @@ def _fit_1D(initial_model, spectrum, run_fitter, filter_non_finite=True, window=
 
     # Build return spectrum
     output_spectrum = Spectrum(spectral_axis=spectrum.spectral_axis,
-                                 flux=output_values,
-                                 mask=spectrum.mask)
+                               flux=output_values,
+                               mask=spectrum.mask)
 
     return output_model, output_spectrum
 
@@ -216,8 +216,8 @@ def _fit_3D(initial_model, spectrum, window=None, n_cpu=None):
     # Build output 3D spectrum
     funit = spectrum.flux.unit
     output_spectrum = Spectrum(wcs=spectrum.wcs,
-                                 flux=output_flux_cube * funit,
-                                 mask=spectrum.mask)
+                               flux=output_flux_cube * funit,
+                               mask=spectrum.mask)
 
     return fitted_models, output_spectrum
 

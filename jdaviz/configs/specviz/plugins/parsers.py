@@ -227,5 +227,5 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
         unc = None
 
     spec = Spectrum(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
-                      uncertainty=unc)
+                    uncertainty=unc)
     return spec

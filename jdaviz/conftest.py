@@ -196,7 +196,7 @@ def multi_order_spectrum_list(spectrum1d, spectral_orders=10):
         uncertainty = StdDevUncertainty(np.abs(np.random.randn(len(spec_axis.value))) * u.Jy)
         meta = dict(header=dict(FILENAME="jdaviz-test-multi-order-file.fits"))
         spectrum1d = Spectrum(spectral_axis=spec_axis, flux=flux,
-                                uncertainty=uncertainty, meta=meta)
+                              uncertainty=uncertainty, meta=meta)
 
         sc.append(spectrum1d)
 
@@ -217,9 +217,9 @@ def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4), with_u
         uncert = StdDevUncertainty(np.abs(np.random.normal(flux) * u.Jy))
 
         return Spectrum(flux=flux,
-                          uncertainty=uncert,
-                          wcs=w,
-                          meta=wcs_dict)
+                        uncertainty=uncert,
+                        wcs=w,
+                        meta=wcs_dict)
     else:
         return Spectrum(flux=flux, wcs=w, meta=wcs_dict)
 
