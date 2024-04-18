@@ -51,10 +51,10 @@ jobs:
             toxposargs: --remote-data
             allow_failure: false
 
-          - name: OS X - Python 3.10
+          - name: OS X - Python 3.12
             os: macos-latest
-            python: '3.10'
-            toxenv: py310-test
+            python: '3.12'
+            toxenv: py312-test
             allow_failure: false
 
           - name: Windows - Python 3.10

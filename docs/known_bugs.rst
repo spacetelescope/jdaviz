@@ -51,7 +51,7 @@ compatible version:
 
 .. code-block:: bash
 
-    conda create -n jdaviz python=3.8
+    conda create -n jdaviz python=3.12
     conda activate jdaviz
     pip install vispy>=0.6.5
     pip install jdaviz --no-cache-dir

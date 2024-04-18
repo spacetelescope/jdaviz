@@ -62,6 +62,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Bump required Python version to 3.10. [#2757]
+
 3.9.1 (unreleased)
 ==================
 
