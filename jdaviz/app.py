@@ -696,11 +696,6 @@ class Application(VuetifyTemplate, HubListener):
             ref_wavelength_component = dc[0].components[spectral_axis_index]
             linked_wavelength_component = dc[-1].components[0]
 
-            links = [
-                LinkSameWithUnits(ref_wavelength_component, linked_wavelength_component),
-                LinkSame(ref_flux_component, linked_flux_component)
-            ]
-
             dc.add_link(LinkSame(ref_wavelength_component, linked_wavelength_component))
             return
 
