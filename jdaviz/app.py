@@ -97,7 +97,7 @@ class UnitConverterWithSpectral:
         if cid.label == "flux":
             try:
                 spec = data.get_object(cls=Spectrum1D)
-            except Exception:
+            except RuntimeError:
                 eqv = []
             else:
                 if len(values) == 2:
