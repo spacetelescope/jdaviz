@@ -1,4 +1,4 @@
-3.9.1 (unreleased)
+3.9.1 (2024-04-19)
 ==================
 
 - Fix mouseover display's top-layer logic to account for the visibility and contour toggles in
@@ -20,23 +20,18 @@ Cubeviz
 
 Imviz
 ^^^^^
-- Fix bugs where API created footprints did not overlay and only last 
+
+- Fix bugs where API created footprints did not overlay and only last
   footprint displayed if added before linking. [#2790, #2797]
 
 - Improved behavior when orientations are created or selected without having data loaded in the viewer. [#2789]
 
 - Fixed a bug in the Orientation plugin where a WCS orientation could sometimes be flipped. [#2802]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 - H-Paschen-Brackett HI 5-4 line's rest wavelength is now correct. It was previously off by 0.5 micron. [#2819]
-
-Specviz2d
-^^^^^^^^^
 
 3.9 (2024-04-05)
 ================
