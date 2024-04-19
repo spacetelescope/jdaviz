@@ -33,7 +33,7 @@
       hint="Select which region's collapsed spectrum to analyze."
     />
 
-    <plugin-subset-select 
+    <plugin-subset-select
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
       :show_if_single_entry="true"
@@ -50,13 +50,13 @@
     <j-plugin-section-header>Continuum</j-plugin-section-header>
     <v-row>
       <j-docs-link>
-        {{continuum_subset_selected=='Surrounding' && spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}  
+        {{continuum_subset_selected=='Surrounding' && spectral_subset_selected=='Entire Spectrum' ? "Since using the entire spectrum, the end points will be used to fit a linear continuum." : "Choose a region to fit a linear line as the underlying continuum."}}
         {{continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum' ? "Choose a width in number of data points to consider on each side of the line region defined above." : null}}
         When this plugin is opened, a visual indicator will show on the spectrum plot showing the continuum fitted as a thick line, and interpolated into the line region as a thin line.
       </j-docs-link>
     </v-row>
 
-    <plugin-subset-select 
+    <plugin-subset-select
       :items="continuum_subset_items"
       :selected.sync="continuum_subset_selected"
       :show_if_single_entry="true"
@@ -96,17 +96,17 @@
           <v-col cols=6><U>Function</U></v-col>
           <v-col cols=6><U>Result</U></v-col>
         </v-row>
-        <v-row 
+        <v-row
           v-for="item in results"
           :key="item.function">
           <v-col cols=6>
             {{  item.function  }}
             <j-tooltip :tooltipcontent="'specutils '+item.function+' documentation'">
-              <a v-bind:href="'https://specutils.readthedocs.io/en/stable/api/specutils.analysis.'+item.function.toLowerCase().replaceAll(' ', '_')+'.html'" 
-                target="__blank" 
+              <a v-bind:href="'https://specutils.readthedocs.io/en/stable/api/specutils.analysis.'+item.function.toLowerCase().replaceAll(' ', '_')+'.html'"
+                target="__blank"
                 style="color: #A75000">
                 <v-icon x-small color="#A75000">mdi-open-in-new</v-icon>
-              </a> 
+              </a>
             </j-tooltip>
           </v-col>
           <v-col cols=6>
@@ -123,7 +123,7 @@
       </div>
       <div v-if="results_computing"
            class="text-center"
-           style="grid-area: 1/1; 
+           style="grid-area: 1/1;
                   z-index:2;
                   margin-left: -24px;
                   margin-right: -24px;
@@ -154,7 +154,9 @@
             <v-select
               :menu-props="{ left: true }"
               attach
-              :items="line_items"
+              :items="line_menu_items"
+              item-text="title"
+              item-value="value"
               v-model="selected_line"
               label="Line"
               hint="Select reference line."
@@ -177,7 +179,7 @@
 
         <v-row justify="end">
           <j-tooltip tipid='plugin-line-analysis-assign'>
-            <v-btn 
+            <v-btn
             color="accent"
             style="padding-left: 8px; padding-right: 8px;"
             text
@@ -188,6 +190,6 @@
           </j-tooltip>
         </v-row>
       </div>
-    </div>  
+    </div>
   </j-tray-plugin>
 </template>

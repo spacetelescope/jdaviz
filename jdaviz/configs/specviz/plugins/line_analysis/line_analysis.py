@@ -102,7 +102,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
     results_centroid = Float().tag(sync=True)  # stored in AA units
-    line_items = List([]).tag(sync=True)
+    line_menu_items = List([{}]).tag(sync=True)
     sync_identify = Bool(True).tag(sync=True)
     sync_identify_icon_enabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
     sync_identify_icon_disabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select_disabled.svg'), 'svg+xml')).tag(sync=True)  # noqa
@@ -173,6 +173,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
                                            'continuum', 'width', 'continuum_width', 'get_results'))
 
+    @property
+    def line_items(self):
+        # Return list of only the table indices ("name_rest" in line table) from line_menu_items
+        return [item["value"] for item in self.line_menu_items]
+
     def _on_viewer_data_changed(self, msg):
         viewer_id = self.app._viewer_item_by_reference(
             self._default_spectrum_viewer_reference_name
@@ -242,14 +247,16 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         if not self.spectral_subset_valid:
             valid, spec_range, subset_range = self._check_dataset_spectral_subset_valid(return_ranges=True)  # noqa
-            raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range} is outside data range of '{self.dataset.selected}' {spec_range}")  # noqa
+            raise ValueError(f"spectral subset '{self.spectral_subset.selected}' {subset_range}"
+                             f" is outside data range of '{self.dataset.selected}' {spec_range}")
 
         self._calculate_statistics()
         return self.results
 
     def _on_plotted_lines_changed(self, msg):
         self.line_marks = msg.marks
-        self.line_items = msg.names_rest
+        self.line_menu_items = [{"title": f"{mark.name} {mark.rest_value} {mark.xunit}", "value": name_rest}  # noqa
+                                for mark, name_rest in zip(msg.marks, msg.names_rest)]
         if self.selected_line not in self.line_items:
             # default to identified line if available
             self.selected_line = self.identified_line
