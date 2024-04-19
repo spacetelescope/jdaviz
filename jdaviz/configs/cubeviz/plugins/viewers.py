@@ -209,18 +209,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     def _default_uncert_viewer_reference_name(self):
         return self.jdaviz_helper._default_uncert_viewer_reference_name
 
-    @property
-    def active_image_layer(self):
-        """Active image layer in the viewer, if available."""
-        # Find visible layers
-        visible_layers = [layer for layer in self.state.layers
-                          if (layer.visible and layer_is_cube_image_data(layer.layer))]
-
-        if len(visible_layers) == 0:
-            return None
-
-        return visible_layers[-1]
-
     def _on_global_display_unit_changed(self, msg):
         # Clear cache of slice values when units change
         if 'slice_values' in self.__dict__:
