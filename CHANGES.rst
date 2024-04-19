@@ -64,7 +64,28 @@ Other Changes and Additions
 
 - Line menu in Redshift from Centroid section of Line Analysis now shows values in current units. [#2816]
 
-3.9.1 (unreleased)
+3.9.2 (unreleased)
+==================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.9.1 (2024-04-19)
 ==================
 
 - Fix mouseover display's top-layer logic to account for the visibility and contour toggles in
@@ -86,6 +107,7 @@ Cubeviz
 
 Imviz
 ^^^^^
+
 - Fix bugs where API created footprints did not overlay and only last
   footprint displayed if added before linking. [#2790, #2797]
 
@@ -93,16 +115,10 @@ Imviz
 
 - Fixed a bug in the Orientation plugin where a WCS orientation could sometimes be flipped. [#2802]
 
-Mosviz
-^^^^^^
-
 Specviz
 ^^^^^^^
 
 - H-Paschen-Brackett HI 5-4 line's rest wavelength is now correct. It was previously off by 0.5 micron. [#2819]
-
-Specviz2d
-^^^^^^^^^
 
 3.9 (2024-04-05)
 ================
