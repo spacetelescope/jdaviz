@@ -8,6 +8,8 @@ Bug Fixes
 
 - Standalone mode: stop jdaviz/voila processes when closing app. [#2791]
 
+- Fixes compatibility with glue >= 1.19. [#2820]
+
 Cubeviz
 ^^^^^^^
 
