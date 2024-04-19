@@ -2121,14 +2121,19 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     layer.visible = visible
 
-        # update data menu - selected_data_items should be READ ONLY, not modified by the user/UI
+        # update data menu - selected_data_items should be READ ONLY, not modified by the user/UI.
+        # must update the visibility of `data_label` and its children:
         selected_items = viewer_item['selected_data_items']
-        data_id = self._data_id_from_label(data_label)
-        selected_items[data_id] = 'visible' if visible else 'hidden'
-        if replace:
-            for id in selected_items:
-                if id != data_id:
-                    selected_items[id] = 'hidden'
+        update_data_labels = [data_label] + assoc_children
+        for update_data_label in update_data_labels:
+            data_id = self._data_id_from_label(update_data_label)
+
+            if replace and update_data_label == data_label:
+                for id in selected_items:
+                    if id != data_id:
+                        selected_items[id] = 'hidden'
+
+            selected_items[data_id] = 'visible' if visible else 'hidden'
 
         # remove WCS-only data from selected items, add to wcs_only_layers:
         for layer in viewer.layers:
