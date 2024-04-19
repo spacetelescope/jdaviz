@@ -9,7 +9,6 @@ from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
-from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, GlobalDisplayUnitChanged
