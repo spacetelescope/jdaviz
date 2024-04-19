@@ -398,8 +398,12 @@ def layer_is_2d(layer):
     return isinstance(layer, BaseData) and layer.ndim == 2
 
 
+def layer_is_2d_or_3d(layer):
+    return isinstance(layer, BaseData) and layer.ndim in (2, 3)
+
+
 def layer_is_image_data(layer):
-    return layer_is_2d(layer) and not layer.meta.get(_wcs_only_label, False)
+    return layer_is_2d_or_3d(layer) and not layer.meta.get(_wcs_only_label, False)
 
 
 def layer_is_wcs_only(layer):
