@@ -337,7 +337,7 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
         app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
     if ext == 'DQ':
-        app.add_data_to_viewer(flux_viewer_reference_name, data_label)
+        app.add_data_to_viewer(flux_viewer_reference_name, data_label, visible=False)
 
     if data_type == 'flux':
         app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
