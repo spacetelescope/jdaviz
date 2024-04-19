@@ -314,8 +314,9 @@ class JdavizViewerMixin:
         """Active image layer in the viewer, if available."""
         # Find visible layers
         visible_layers = [layer for layer in self.state.layers
-                          if (layer.visible and layer_is_image_data(layer.layer))]
-
+                          if (layer.visible and
+                              layer_is_image_data(layer.layer) and
+                              (layer.bitmap_visible or layer.contour_visible))]
         if len(visible_layers) == 0:
             return None
 

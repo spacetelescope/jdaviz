@@ -9,7 +9,6 @@ from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
-from jdaviz.configs.cubeviz.helper import layer_is_cube_image_data
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
@@ -154,18 +153,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     @property
     def _default_uncert_viewer_reference_name(self):
         return self.jdaviz_helper._default_uncert_viewer_reference_name
-
-    @property
-    def active_image_layer(self):
-        """Active image layer in the viewer, if available."""
-        # Find visible layers
-        visible_layers = [layer for layer in self.state.layers
-                          if (layer.visible and layer_is_cube_image_data(layer.layer))]
-
-        if len(visible_layers) == 0:
-            return None
-
-        return visible_layers[-1]
 
     def _initial_x_axis(self, *args):
         # Make sure that the x_att is correct on data load
