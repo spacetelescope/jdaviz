@@ -65,6 +65,9 @@ Other Changes and Additions
 3.9.1 (unreleased)
 ==================
 
+- Fix mouseover display's top-layer logic to account for the visibility and contour toggles in
+  the plot options plugin. [#2818]
+
 Bug Fixes
 ---------
 
