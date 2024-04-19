@@ -99,6 +99,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- H-Paschen-Brackett HI 5-4 line's rest wavelength is now correct. It was previously off by 0.5 micron. [#2819]
+
 Specviz2d
 ^^^^^^^^^
 
