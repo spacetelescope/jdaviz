@@ -34,11 +34,12 @@ class TestExportSubsets:
         assert export_plugin.subset_format.selected == 'fits'  # default format
         assert export_plugin.subset_invalid_msg == ''  # for non-composite spatial
 
+        assert export_plugin.filename.value.endswith('.fits')
         export_plugin.export()
-        assert os.path.isfile('imviz_export.fits')
+        assert os.path.isfile(export_plugin.filename.value)
 
         # read exported file back in
-        with fits.open('imviz_export.fits') as hdu:
+        with fits.open(export_plugin.filename.value) as hdu:
             fits_region = hdu[1].data[0]
 
         assert fits_region[0] == 'circle'
@@ -48,17 +49,18 @@ class TestExportSubsets:
 
         # now test changing file format
         export_plugin.subset_format.selected = 'reg'
+        assert export_plugin.filename.value.endswith('.reg')
         export_plugin.export()
-        assert os.path.isfile('imviz_export.reg')
+        assert os.path.isfile(export_plugin.filename.value)
 
         # read exported file back in
-        region = Regions.read('imviz_export.reg')[0]
+        region = Regions.read(export_plugin.filename.value)[0]
         assert region.center.x == 250.0
         assert region.center.y == 250.0
         assert region.radius == 100.0
 
         # changing file name
-        export_plugin.filename = 'test'
+        export_plugin.filename_value = 'test'
         export_plugin.export()
         assert os.path.isfile('test.reg')
 
@@ -118,8 +120,8 @@ class TestExportSubsets:
         assert export_plugin.subset_invalid_msg == ''  # for non-composite spatial
 
         # test changing link type results in an output file with a sky region
-        export_plugin.filename = 'sky_region'
         export_plugin.subset_format.selected = 'reg'
+        export_plugin.filename_value = 'sky_region.reg'
         export_plugin.export()
 
         assert os.path.isfile('sky_region.reg')
@@ -141,11 +143,12 @@ class TestExportSubsets:
 
         assert export_plugin.subset_format.selected == 'fits'  # default format
 
+        assert export_plugin.filename.value.endswith('.fits')
         export_plugin.export()
-        assert os.path.isfile('cubeviz_export.fits')
+        assert os.path.isfile(export_plugin.filename.value)
 
         # read exported file back in
-        with fits.open('cubeviz_export.fits') as hdu:
+        with fits.open(export_plugin.filename.value) as hdu:
             fits_region = hdu[1].data[0]
 
         assert fits_region[0] == 'circle'
@@ -156,16 +159,16 @@ class TestExportSubsets:
         # now test changing file format
         export_plugin.subset_format.selected = 'reg'
         export_plugin.export()
-        assert os.path.isfile('cubeviz_export.reg')
+        assert os.path.isfile(export_plugin.filename.value)
 
         # read exported file back in
-        region = Regions.read('cubeviz_export.reg')[0]
+        region = Regions.read(export_plugin.filename.value)[0]
         assert region.center.x == 50.0
         assert region.center.y == 50.0
         assert region.radius == 10.0
 
         # changing file name
-        export_plugin.filename = 'test'
+        export_plugin.filename_value = 'test'
         export_plugin.export()
         assert os.path.isfile('test.reg')
 
@@ -174,10 +177,10 @@ class TestExportSubsets:
         assert export_plugin.overwrite_warn
 
         # Changing filename should clear warning.
-        old_filename = export_plugin.filename
-        export_plugin.filename = "foo"
+        old_filename = export_plugin.filename_value
+        export_plugin.filename_value = "foo"
         assert not export_plugin.overwrite_warn
-        export_plugin.filename = old_filename
+        export_plugin.filename_value = old_filename
 
         # Overwrite not enable, but with exception from API by default.
         with pytest.raises(FileExistsError, match=".* exists but overwrite=False"):
@@ -221,7 +224,7 @@ def test_export_data(cubeviz_helper, spectrum1d_cube):
     ep.dataset_selected = 'moment 0'
     assert ep.dataset_format.selected == 'fits'
     ep.export()
-    assert os.path.isfile("cubeviz_export.fits")
+    assert os.path.isfile(ep.filename.value)
     assert ep.data_invalid_msg == ''
 
 
@@ -266,9 +269,9 @@ class TestExportPluginPlots:
         # and change file type
         export_plugin.plugin_plot_format.selected = 'svg'
 
-        export_plugin.filename == 'imviz_export'
+        assert export_plugin.filename.value.endswith('.svg')
         # change filename
-        export_plugin.filename = 'test_export_plugin_plot'
+        export_plugin.filename_value = 'test_export_plugin_plot'
 
         # just check that it doesn't crash, since we can't download
         export_plugin.export()
@@ -309,7 +312,7 @@ class TestExportPluginPlots:
         export_plugin.plugin_plot.selected = 'Aperture Photometry: plot'
 
         # change filename
-        export_plugin.filename = 'test_export_plugin_plot'
+        export_plugin.filename_value = 'test_export_plugin_plot'
         # and change file type
         export_plugin.plugin_plot_format.selected = 'svg'
 

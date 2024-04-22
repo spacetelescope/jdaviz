@@ -65,8 +65,8 @@ def test_export_movie_cubeviz_exceptions(cubeviz_helper, spectrum1d_cube):
     with pytest.raises(ValueError, match="Invalid path"):
         plugin.export()
 
-    plugin.filename = ""
     plugin.viewer = 'uncert-viewer'
+    plugin.filename = ""
     with pytest.raises(ValueError, match="Invalid filename"):
         plugin.export()
 

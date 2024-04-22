@@ -3537,7 +3537,7 @@ class AutoTextField(BasePluginComponent):
         self.add_observe(auto, self._on_set_to_default)
 
     def __repr__(self):
-        return f"<AutoTextField label='{self.value}' auto={self.auto}>"
+        return f"<AutoTextField value='{self.value}' auto={self.auto}>"
 
     def __eq__(self, other):
         return self.value == other
