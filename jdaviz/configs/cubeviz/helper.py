@@ -2,7 +2,6 @@ import numpy as np
 from astropy.io import fits
 from astropy.io import registry as io_registry
 from astropy.utils.decorators import deprecated
-from glue.core import BaseData
 from specutils import Spectrum1D
 from specutils.io.registers import _astropy_has_priorities
 
@@ -179,10 +178,6 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
 
         """
         return self.plugins['Aperture Photometry']._obj.export_table()
-
-
-def layer_is_cube_image_data(layer):
-    return isinstance(layer, BaseData) and layer.ndim in (2, 3)
 
 
 # TODO: We can remove this when specutils supports it, i.e.,
