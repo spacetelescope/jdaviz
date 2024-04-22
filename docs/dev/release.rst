@@ -542,7 +542,7 @@ You can create a clean checkout as follows (requires
 
 .. code-block:: bash
 
-     conda create -n testenv python=3.9
+     conda create -n testenv python=3.12
      conda activate testenv
      pip install pytest pytest-astropy pytest-tornasync dist/*.whl
      cd ..
