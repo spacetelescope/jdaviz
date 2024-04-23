@@ -56,15 +56,13 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
         _parse_hdulist(
             app, file_obj, file_name=data_label,
             flux_viewer_reference_name=flux_viewer_reference_name,
-            spectrum_viewer_reference_name=spectrum_viewer_reference_name,
             uncert_viewer_reference_name=uncert_viewer_reference_name
         )
         app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
     elif isinstance(file_obj, str):
         if file_obj.lower().endswith('.gif'):  # pragma: no cover
             _parse_gif(app, file_obj, data_label,
-                       flux_viewer_reference_name=flux_viewer_reference_name,
-                       spectrum_viewer_reference_name=spectrum_viewer_reference_name)
+                       flux_viewer_reference_name=flux_viewer_reference_name)
             return
 
         file_name = os.path.basename(file_obj)
@@ -87,7 +85,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                     _parse_jwst_s3d(
                         app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
                         flux_viewer_reference_name=flux_viewer_reference_name,
-                        spectrum_viewer_reference_name=spectrum_viewer_reference_name
                     )
             elif telescop == 'jwst' and filetype == 'r3d' and system == 'esa-pipeline':
                 for ext, viewer_name in (('DATA', flux_viewer_reference_name),
@@ -97,13 +94,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                     _parse_esa_s3d(
                         app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
                         flux_viewer_reference_name=flux_viewer_reference_name,
-                        spectrum_viewer_reference_name=spectrum_viewer_reference_name
                     )
             else:
                 _parse_hdulist(
                     app, hdulist, file_name=data_label or file_name,
                     flux_viewer_reference_name=flux_viewer_reference_name,
-                    spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                     uncert_viewer_reference_name=uncert_viewer_reference_name
                 )
         app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
@@ -116,7 +111,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
             _parse_spectrum1d_3d(
                 app, file_obj, data_label=data_label,
                 flux_viewer_reference_name=flux_viewer_reference_name,
-                spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                 uncert_viewer_reference_name=uncert_viewer_reference_name
             )
         else:
@@ -129,7 +123,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
     elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
         _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type,
                        flux_viewer_reference_name=flux_viewer_reference_name,
-                       spectrum_viewer_reference_name=spectrum_viewer_reference_name,
                        uncert_viewer_reference_name=uncert_viewer_reference_name)
         app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
     else:
@@ -191,7 +184,6 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
 
 def _parse_hdulist(app, hdulist, file_name=None,
                    flux_viewer_reference_name=None,
-                   spectrum_viewer_reference_name=None,
                    uncert_viewer_reference_name=None):
     if file_name is None and hasattr(hdulist, 'file_name'):
         file_name = hdulist.file_name
@@ -263,14 +255,11 @@ def _parse_hdulist(app, hdulist, file_name=None,
         else:  # flux
             # Add flux to top left image viewer
             app.add_data_to_viewer(flux_viewer_reference_name, data_label)
-            # Add flux to spectrum viewer
-            app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
             app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
 
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
-                    viewer_name=None, flux_viewer_reference_name=None,
-                    spectrum_viewer_reference_name=None):
+                    viewer_name=None, flux_viewer_reference_name=None):
     hdu = hdulist[ext]
     data_type = _get_data_type_by_hdu(hdu)
 
@@ -311,9 +300,6 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
 
     if viewer_name is not None:
         app.add_data_to_viewer(viewer_name, data_label)
-    # Also add the collapsed flux to the spectrum viewer
-    if viewer_name == flux_viewer_reference_name:
-        app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
     if data_type == 'flux':
         app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
@@ -321,8 +307,7 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
         app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
 
 
-def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None,
-                   spectrum_viewer_reference_name=None):
+def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None):
     hdu = hdulist[ext]
     data_type = _get_data_type_by_hdu(hdu)
 
@@ -364,7 +349,6 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
         app.data_collection[-1].get_component("flux").units = flux.unit
 
     app.add_data_to_viewer(flux_viewer_reference_name, data_label)
-    app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
     if data_type == 'flux':
         app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
@@ -373,7 +357,7 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
 
 
 def _parse_spectrum1d_3d(app, file_obj, data_label=None,
-                         flux_viewer_reference_name=None, spectrum_viewer_reference_name=None,
+                         flux_viewer_reference_name=None,
                          uncert_viewer_reference_name=None):
     """Load spectrum1d as a cube."""
 
@@ -417,7 +401,6 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
 
         if attr == 'flux':
             app.add_data_to_viewer(flux_viewer_reference_name, cur_data_label)
-            app.add_data_to_viewer(spectrum_viewer_reference_name, cur_data_label)
             app._jdaviz_helper._loaded_flux_cube = app.data_collection[cur_data_label]
         elif attr == 'uncertainty':
             app.add_data_to_viewer(uncert_viewer_reference_name, cur_data_label)
@@ -444,7 +427,7 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
 
 
 def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
-                   flux_viewer_reference_name=None, spectrum_viewer_reference_name=None,
+                   flux_viewer_reference_name=None,
                    uncert_viewer_reference_name=None):
     if data_label is None:
         data_label = app.return_data_label(file_obj)
@@ -465,15 +448,13 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
 
     if data_type == 'flux':
         app.add_data_to_viewer(flux_viewer_reference_name, data_label)
-        app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
         app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
     elif data_type == 'uncert':
         app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
         app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
 
 
-def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None,
-               spectrum_viewer_reference_name=None):  # pragma: no cover
+def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None):  # pragma: no cover
     # NOTE: Parsing GIF needs imageio and Pillow, both are which undeclared
     # in setup.cfg but might or might not be installed by declared ones.
     import imageio
@@ -491,7 +472,6 @@ def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None,
 
     app.add_data(s3d, data_label)
     app.add_data_to_viewer(flux_viewer_reference_name, data_label)
-    app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
 
 def _get_data_type_by_hdu(hdu):
