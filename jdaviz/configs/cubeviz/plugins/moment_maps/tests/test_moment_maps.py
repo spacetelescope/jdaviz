@@ -128,6 +128,10 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     assert len(dc.links) == 22
     assert len(dc.external_links) == 4  # pixel linked
     # Link 3D z to 2D x and 3D y to 2D y
+    assert (dc.external_links[0].cids1[0].label == "Pixel Axis 0 [z]" and
+            dc.external_links[0].cids2[0].label == "Pixel Axis 1 [x]" and
+            dc.external_links[1].cids1[0].label == "Pixel Axis 1 [y]" and
+            dc.external_links[1].cids2[0].label == "Pixel Axis 0 [y]")
 
     # Coordinate display should be unaffected.
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
