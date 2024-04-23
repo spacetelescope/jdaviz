@@ -253,13 +253,13 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if self.viewer_selected:
             self.filename_default = f"{self.viewer_selected}.{self.viewer_format_selected}"  # noqa
         elif self.dataset_selected:
-            self.filename_default = f"{self.dataset_selected.replace(' ', '-')}.{self.dataset_format_selected}"  # noqa
+            self.filename_default = f"{self.dataset_selected.replace(' ', '_')}.{self.dataset_format_selected}"  # noqa
         elif self.subset_selected:
-            self.filename_default = f"{self.subset_selected.replace(' ', '-')}.{self.subset_format_selected}"  # noqa
+            self.filename_default = f"{self.subset_selected.replace(' ', '_')}.{self.subset_format_selected}"  # noqa
         elif self.plugin_table_selected:
-            self.filename_default = f"{self.plugin_table_selected.replace(':', '').replace(' ', '-')}.{self.plugin_table_format_selected}"  # noqa
+            self.filename_default = f"{self.plugin_table_selected.replace(':', '').replace(' ', '_')}.{self.plugin_table_format_selected}"  # noqa
         elif self.plugin_plot_selected:
-            self.filename_default = f"{self.plugin_plot_selected.replace(':', '').replace(' ', '-')}.{self.plugin_plot_format_selected}"  # noqa
+            self.filename_default = f"{self.plugin_plot_selected.replace(':', '').replace(' ', '_')}.{self.plugin_plot_format_selected}"  # noqa
         else:
             self.filename_default = ''
 
