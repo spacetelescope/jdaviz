@@ -5,6 +5,7 @@ from traitlets import Bool, List, Unicode, observe
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty, IntHandleEmpty
+from jdaviz.core.marks import ShadowMixin
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginComponent,
                                         ViewerSelectMixin, DatasetMultiSelectMixin,
@@ -330,10 +331,31 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
 
+            # temporarily "clean" incompatible marks of unicode characters, etc
+            restores = []
+            for mark in viewer.figure.marks:
+                restore = {}
+                if len(getattr(mark, 'text', [])):
+                    if not isinstance(mark, ShadowMixin):
+                        # if it is shadowing another mark, that will automatically get updated
+                        # when the other mark is restored, but we'll still ensure that the mark
+                        # is clean of unicode before exporting.
+                        restore['text'] = [t for t in mark.text]
+                    mark.text = [t.strip() for t in mark.text]
+                if len(getattr(mark, 'labels', [])):
+                    restore['labels'] = mark.labels[:]
+                    mark.labels = [lbl.strip() for lbl in mark.labels]
+                restores.append(restore)
+
             if filetype == "mp4":
                 self.save_movie(viewer, filename, filetype)
             else:
                 self.save_figure(viewer, filename, filetype, show_dialog=show_dialog)
+
+            # restore marks to their original state
+            for restore, mark in zip(restores, viewer.figure.marks):
+                for k, v in restore.items():
+                    setattr(mark, k, v)
 
         elif len(self.plugin_plot.selected):
             plot = self.plugin_plot.selected_obj._obj

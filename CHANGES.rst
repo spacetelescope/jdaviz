@@ -75,6 +75,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Re-enable support for exporting spectrum-viewer. [#2825]
+
 Imviz
 ^^^^^
 
