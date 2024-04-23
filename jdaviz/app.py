@@ -709,8 +709,8 @@ class Application(VuetifyTemplate, HubListener):
             dc.add_link(links)
             return
 
-        elif (linked_data.meta.get('Plugin', None) == 'SpectralExtraction' or
-                (linked_data.meta.get('Plugin', None) == ('GaussianSmooth') and
+        elif (linked_data.meta.get('Plugin', None) == 'Spectral Extraction' or
+                (linked_data.meta.get('Plugin', None) == ('Gaussian Smooth') and
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below
                  ref_data.ndim < 3)
               ):
@@ -749,7 +749,7 @@ class Application(VuetifyTemplate, HubListener):
             ref_index = ind
             if (len_linked_pixel == 2 and
                     (linked_data.meta.get("Plugin", None) in
-                     ['MomentMap', 'Collapse'])):
+                     ['Moment Maps', 'Collapse'])):
                 if pixel_coord == 'z':
                     linked_index = pc_linked.index('x')
                 elif pixel_coord == 'y':
