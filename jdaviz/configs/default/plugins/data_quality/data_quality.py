@@ -80,6 +80,15 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             self.viewer.add_filter(is_flux_viewer)
             self.viewer._on_viewers_changed()
 
+        self._set_irrelevant()
+
+    @observe('dq_layer_items')
+    def _set_irrelevant(self, *args):
+        self.irrelevant_msg = (
+            '' if len(self.dq_layer_items) else
+            "No Data Quality layers available."
+        )
+
     @observe('science_layer_selected')
     def update_dq_layer(self, *args):
         if not hasattr(self, 'dq_layer'):
