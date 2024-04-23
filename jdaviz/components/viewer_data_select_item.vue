@@ -159,7 +159,7 @@ module.exports = {
         } else if (this.$props.viewer.reference === 'mask-viewer') {
           return ['MASK', 'DQ'].indexOf(extension) !== -1
         } else if (this.$props.viewer.reference === 'spectrum-viewer') {
-          return ['SCI', 'FLUX'].indexOf(extension) !== -1
+          return this.$props.item.name !== 'Spectrum (Entire Cube)'  // name might need updating
         }
       } else if (this.$props.viewer.config === 'specviz2d') {
         if (this.$props.viewer.reference === 'spectrum-2d-viewer') {
