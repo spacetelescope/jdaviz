@@ -33,7 +33,7 @@
           :items="viewer_format_items.map(i => i.label)"
           label="Format"
           hint="Image format for exporting viewers."
-          :disabled="viewer_selected.length == 0" 
+          :disabled="viewer_selected.length == 0"
           persistent-hint
         >
         </v-select>
@@ -126,7 +126,7 @@
     </div>
 
     <div v-if="subset_items.length > 0">
-      <span class="export-category">Spatial Subsets</span>
+      <span class="export-category">Subsets</span>
       <v-row>
         <span class="category-content v-messages v-messages__message text--secondary">Export spatial subset as astropy region.</span>
       </v-row>
@@ -200,10 +200,10 @@
         :single_select_allow_blank="false"
       >
       </plugin-inline-select>
-      <jupyter-widget 
+      <jupyter-widget
           v-if='plugin_plot_selected_widget.length > 0'
           style="position: absolute; left: -100%"
-          :widget="plugin_plot_selected_widget"/> 
+          :widget="plugin_plot_selected_widget"/>
       <v-row class="row-min-bottom-padding">
         <v-select
           class="category-content"
@@ -297,7 +297,7 @@
    display: block;
    text-align: center;
    overflow: hidden;
-   white-space: nowrap; 
+   white-space: nowrap;
    text-transform: uppercase;
    color: gray;
    font-weight: 500;

@@ -269,7 +269,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if self.subset.selected == '':
                 self.subset_invalid_msg = ''
             elif self.app._is_subset_spectral(subset[0]):
-                self.subset_invalid_msg = 'Export for spectral subsets not yet supported.'
+                self.subset_invalid_msg = ''
+                self.subset_format_items = ['ecsv',]
+                self.subset_format.items = self.subset_format_items
             elif len(subset) > 1:
                 self.subset_invalid_msg = 'Export for composite subsets not yet supported.'
             else:
