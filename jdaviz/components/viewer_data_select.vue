@@ -274,8 +274,8 @@ module.exports = {
       return this.$props.item.viewer.reference_data_label === this.$props.item.name
     },
     isChild(item) {
-      // only override multi_select choice when data entry is a child, and is in cubeviz:
-      return (this.$props.viewer.config === 'cubeviz' && item.parent !== null)
+      // only override multi_select choice when data entry is a child:
+      return item.parent !== null
     },
     selectRefData() {
       this.$emit('change-reference-data', {
