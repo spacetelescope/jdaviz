@@ -134,6 +134,16 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         dq_layer = self.get_dq_layer()
         dq_layer.composite._allow_bad_alpha = True
 
+        # for cubeviz, also change uncert-viewer defaults to
+        # map the out-of-bounds regions to the cmap's `bad` color:
+        if self.app.config == 'cubeviz':
+            uncert_viewer = self.app.get_viewer(
+                self.app._jdaviz_helper._default_uncert_viewer_reference_name
+            )
+            for layer in uncert_viewer.layers:
+                layer.composite._allow_bad_alpha = True
+                layer.force_update()
+
         flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
 
         dq_layer.state.stretch = 'lookup'
