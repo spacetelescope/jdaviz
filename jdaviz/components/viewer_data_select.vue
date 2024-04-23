@@ -306,7 +306,7 @@ module.exports = {
       return this.$props.data_items.filter((item) => this.itemIsVisible(item, false))
     },
     extraDataItems() {
-      return this.$props.data_items.filter((item) => this.itemIsVisible(item, true))
+      return this.$props.data_items.filter((item) => this.itemIsVisible(item, true) && !this.isChild(item))
     },
     nDataEntries() {
       // return number of data entries in the entire plugin that were NOT created by a plugin

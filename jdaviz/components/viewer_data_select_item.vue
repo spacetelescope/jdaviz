@@ -191,7 +191,11 @@ module.exports = {
       } else {
         return 'gray'
       }
-    }
+    },
+    isChild(item) {
+      // only override multi_select choice when data entry is a child:
+      return item.parent !== null
+    },
   }
 };
 </script>

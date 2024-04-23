@@ -71,7 +71,8 @@ class JdavizViewerMixin:
         """
         viewer_item = self.jdaviz_app._get_viewer_item(self.reference_id)
         return [self.jdaviz_app._get_data_item_by_id(data_id)['name']
-                for data_id in viewer_item.get('selected_data_items', {}).keys()]
+                for data_id in viewer_item.get('selected_data_items', {}).keys()
+                if self.jdaviz_app._get_data_item_by_id(data_id) is not None]
 
     @property
     def data_labels_visible(self):

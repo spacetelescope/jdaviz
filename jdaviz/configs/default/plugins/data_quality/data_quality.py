@@ -10,11 +10,12 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
     PluginTemplateMixin, LayerSelect, ViewerSelectMixin
 )
-from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.default.plugins.data_quality.dq_utils import (
     decode_flags, generate_listed_colormap, dq_flag_map_paths, load_flag_map
 )
+
 
 __all__ = ['DataQuality']
 
@@ -71,21 +72,37 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         self.load_default_flag_maps()
         self.init_decoding()
+        self._set_irrelevant()
+        self._update_available_viewers()
 
-        if self.app.config == 'cubeviz':
-            # cubeviz will show the DQ layer in the flux-viewer only:
-            def is_flux_viewer(viewer):
-                return viewer.reference == 'flux-viewer'
+    def _update_available_viewers(self):
+        if not hasattr(self, 'viewer'):
+            return
 
-            self.viewer.add_filter(is_flux_viewer)
+        def is_image_viewer(viewer):
+            return hasattr(viewer, 'active_image_layer')
+
+        viewer_filter_names = [filt.__name__ for filt in self.viewer.filters]
+        if 'is_image_viewer' not in viewer_filter_names:
+            self.viewer.add_filter(is_image_viewer)
             self.viewer._on_viewers_changed()
 
-        self._set_irrelevant()
+    @observe('viewer_selected')
+    def _on_viewer_change(self, *args):
+        self._update_available_viewers()
+        self.update_dq_layer()
+        self.send_state('decoded_flags')
 
     @observe('dq_layer_items')
     def _set_irrelevant(self, *args):
+        self._update_available_viewers()
+
+        children_available = any([
+            len(assoc['children']) > 0
+            for label, assoc in getattr(self.app, '_data_associations', {}).items()
+        ])
         self.irrelevant_msg = (
-            '' if len(self.dq_layer_items) else
+            '' if children_available else
             "No Data Quality layers available."
         )
 
@@ -129,7 +146,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         self.flag_map_definitions_selected = selected
 
     @observe('dq_layer_selected')
-    def init_decoding(self, event={}):
+    def init_decoding(self, event={}, viewers=None):
         if not self.validate_flag_decode_possible:
             return
 
@@ -140,64 +157,84 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             unique_flags=unique_flags,
             rgba_colors=rgba_colors
         )
-        dq_layer = self.get_dq_layer()
-        dq_layer.composite._allow_bad_alpha = True
+        dq_layers = self.get_dq_layers(viewers=viewers)
 
-        # for cubeviz, also change uncert-viewer defaults to
-        # map the out-of-bounds regions to the cmap's `bad` color:
-        if self.app.config == 'cubeviz':
-            uncert_viewer = self.app.get_viewer(
-                self.app._jdaviz_helper._default_uncert_viewer_reference_name
-            )
-            for layer in uncert_viewer.layers:
-                layer.composite._allow_bad_alpha = True
-                layer.force_update()
+        for dq_layer in dq_layers:
+            dq_layer.composite._allow_bad_alpha = True
 
-        flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
+            # for cubeviz, also change uncert-viewer defaults to
+            # map the out-of-bounds regions to the cmap's `bad` color:
+            if self.app.config == 'cubeviz':
+                uncert_viewer = self.app.get_viewer(
+                    self.app._jdaviz_helper._default_uncert_viewer_reference_name
+                )
+                for layer in uncert_viewer.layers:
+                    layer.composite._allow_bad_alpha = True
+                    layer.force_update()
 
-        dq_layer.state.stretch = 'lookup'
-        stretch_object = dq_layer.state.stretch_object
-        stretch_object.flags = flag_bits
+            flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
 
-        with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max'):
-            if len(flag_bits):
-                dq_layer.state.v_min = min(flag_bits)
-                dq_layer.state.v_max = max(flag_bits)
+            dq_layer.state.stretch = 'lookup'
+            stretch_object = dq_layer.state.stretch_object
+            stretch_object.flags = flag_bits
 
-            dq_layer.state.alpha = self.dq_layer_opacity
-            dq_layer.state.cmap = cmap
+            with delay_callback(dq_layer.state, 'alpha', 'cmap', 'v_min', 'v_max'):
+                if len(flag_bits):
+                    dq_layer.state.v_min = min(flag_bits)
+                    dq_layer.state.v_max = max(flag_bits)
 
-    def get_dq_layer(self):
+                dq_layer.state.alpha = self.dq_layer_opacity
+                dq_layer.state.cmap = cmap
+
+    def get_dq_layers(self, viewers=None):
         if self.dq_layer_selected == '':
             return
 
-        viewer = self.viewer.selected_obj
-        [dq_layer] = [
-            layer for layer in viewer.layers if
+        if viewers is None:
+            viewers = self.viewer.selected_obj
+
+        if not hasattr(viewers, '__len__'):
+            viewers = [viewers]
+
+        dq_layers = [
+            layer for viewer in viewers
+            for layer in viewer.layers if
             layer.layer.label == self.dq_layer_selected
         ]
-        return dq_layer
+        return dq_layers
 
-    def get_science_layer(self):
-        viewer = self.viewer.selected_obj
-        [science_layer] = [
-            layer for layer in viewer.layers if
+    def get_science_layers(self, viewers=None):
+
+        if viewers is None:
+            viewers = self.viewer.selected_obj
+
+        if not hasattr(viewers, '__len__'):
+            viewers = [viewers]
+
+        science_layers = [
+            layer for viewer in viewers
+            for layer in viewer.layers if
             layer.layer.label == self.science_layer_selected
         ]
-        return science_layer
+        return science_layers
 
     @observe('dq_layer_opacity')
     def update_opacity(self, event={}):
-        science_layer = self.get_science_layer()
-        dq_layer = self.get_dq_layer()
+        science_layers = self.get_science_layers()
+        dq_layers = self.get_dq_layers()
 
-        if dq_layer is not None:
-            # DQ opacity is a fraction of the science layer's opacity:
-            dq_layer.state.alpha = self.dq_layer_opacity * science_layer.state.alpha
+        if dq_layers is not None:
+            for sci_layer, dq_layer in zip(science_layers, dq_layers):
+                # DQ opacity is a fraction of the science layer's opacity:
+                dq_layer.state.alpha = self.dq_layer_opacity * sci_layer.state.alpha
 
     @observe('decoded_flags', 'flags_filter')
-    def _update_cmap(self, event={}):
-        dq_layer = self.get_dq_layer()
+    def _update_cmap(self, event={}, viewers=None):
+        dq_layers = self.get_dq_layers(viewers=viewers)
+
+        if dq_layers is None:
+            return
+
         flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
         rgb_colors = [hex2color(flag['color']) for flag in self.decoded_flags]
 
@@ -217,28 +254,31 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             )
         ])
 
-        with delay_callback(dq_layer.state, 'v_min', 'v_max', 'alpha', 'stretch', 'cmap'):
-            # set correct stretch and limits:
-            # dq_layer.state.stretch = 'lookup'
-            stretch_object = dq_layer.state.stretch_object
-            stretch_object.flags = flag_bits
-            stretch_object.dq_array = dq_layer.get_image_data()
-            stretch_object.hidden_flags = hidden_flags
+        for dq_layer in dq_layers:
+            with delay_callback(
+                    dq_layer.state, 'v_min', 'v_max', 'alpha', 'stretch', 'cmap'
+            ):
+                # set correct stretch and limits:
+                # dq_layer.state.stretch = 'lookup'
+                stretch_object = dq_layer.state.stretch_object
+                stretch_object.flags = flag_bits
+                stretch_object.dq_array = dq_layer.get_image_data()
+                stretch_object.hidden_flags = hidden_flags
 
-            # update the colors of the listed colormap without
-            # reassigning the layer.state.cmap object
-            cmap = dq_layer.state.cmap
-            cmap.colors = rgb_colors
-            cmap._init()
+                # update the colors of the listed colormap without
+                # reassigning the layer.state.cmap object
+                cmap = dq_layer.state.cmap
+                cmap.colors = rgb_colors
+                cmap._init()
 
-            # trigger updates to cmap in viewer:
-            dq_layer.update()
+                # trigger updates to cmap in viewer:
+                dq_layer.update()
 
-            if len(flag_bits):
-                dq_layer.state.v_min = min(flag_bits)
-                dq_layer.state.v_max = max(flag_bits)
+                if len(flag_bits):
+                    dq_layer.state.v_min = min(flag_bits)
+                    dq_layer.state.v_max = max(flag_bits)
 
-            dq_layer.state.alpha = self.dq_layer_opacity
+                dq_layer.state.alpha = self.dq_layer_opacity
 
     def update_visibility(self, index):
         self.decoded_flags[index]['show'] = not self.decoded_flags[index]['show']
