@@ -8,7 +8,7 @@ from bqplot import Lines
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.marks import SliceIndicatorMarks, ShadowSpatialSpectral
+from jdaviz.core.marks import SliceIndicatorMarks
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, GlobalDisplayUnitChanged
@@ -285,8 +285,7 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         # isinstance and the data uuid check will be true for the data
         # that is being removed
         self.figure.marks = [m for m in self.figure.marks
-                             if not (isinstance(m, ShadowSpatialSpectral)
-                                     and m.data_uuid == msg.data.uuid)]
+                             if not m.data_uuid == msg.data.uuid]
         self._on_global_display_unit_changed()
 
     def _check_if_data_added(self, msg=None):
@@ -331,99 +330,3 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         # raising an IndexError.
         inds = [layers_list.index(layer) for layer in layers]
         return [layer_marks[ind] for ind in inds if ind < len(layer_marks)]
-
-    def _on_subset_delete(self, msg):
-        # delete any ShadowSpatialSpectral mark for which either of the spectral or spatial marks
-        # no longer exists by matching the uuid of the msg subset to the uuid of the subsets
-        # in ShadowSpatialSpectral
-        super()._on_subset_delete(msg)
-        self.figure.marks = [m for m in self.figure.marks
-                             if not (isinstance(m, ShadowSpatialSpectral)
-                                     and msg.subset.uuid in [m.spatial_uuid, m.spectral_uuid])]
-
-    def _expected_subset_layer_default(self, layer_state):
-        """
-        This gets called whenever the layer of an expected new subset is added, we want to set the
-        default for the linewidth depending on whether it is spatial or spectral, and handle
-        creating any necessary marks for spatial-spectral subset intersections.
-        """
-        def _marks_are_same(m, other):
-            # Check if ShadowSpatialSpectral mark already exists for particular
-            # data, spatial subset, and spectral subset combo
-            if (m.data_uuid == other.data_uuid
-                and m.spatial_uuid == other.spatial_uuid
-                    and m.spectral_uuid == other.spectral_uuid):
-                return True
-            return False
-
-        def _is_unique(m):
-            unique = True
-            for m in existing_shadows_for_data:
-                if _marks_are_same(m, new_shadow):
-                    unique = False
-                    break
-            return unique
-
-        super()._expected_subset_layer_default(layer_state)
-        subset_type = get_subset_type(layer_state.layer)
-        if subset_type is None:
-            return
-
-        this_mark = self._get_marks_for_layers([layer_state])[0]
-        # new ShadowSpatialSpectral marks to be added
-        new_marks = []
-        # ShadowSpatialSpectral marks that already exists in the viewer
-        existing_shadows_for_data = [m for m in self.figure.marks
-                                     if isinstance(m, ShadowSpatialSpectral)]
-        if subset_type == 'spatial':
-            layer_state.linewidth = 1
-
-            # need to add marks for every intersection between THIS spatial subset and ALL spectral
-            # subset marks corresponding to this data
-            spectral_layers = [sub_layer for sub_layer in
-                               self._get_spectral_subset_layers(layer_state.layer.data.label)]
-            spectral_marks = self._get_marks_for_layers(spectral_layers)
-
-            for index, spectral_mark in enumerate(spectral_marks):
-                new_shadow = ShadowSpatialSpectral(spatial_spectrum_mark=this_mark,
-                                                   spectral_subset_mark=spectral_mark,
-                                                   spatial_uuid=layer_state.layer.uuid,
-                                                   spectral_uuid=spectral_layers[index].layer.uuid,
-                                                   data_uuid=layer_state.layer.data.uuid)
-                if _is_unique(new_shadow):
-                    new_marks.append(new_shadow)
-
-            # change opacity for live-collapsed spectra from spatial subsets in Cubeviz:
-            spatial_layers = [sub_layer for sub_layer in
-                              self._get_spatial_subset_layers(layer_state.layer.data.label)]
-            spatial_marks = self._get_marks_for_layers(spatial_layers)
-            for layer, mark in zip(spatial_layers, spatial_marks):
-                # update profile opacities for spatial subset:
-                if isinstance(mark, Lines):
-                    mark.set_trait(
-                        'opacities',
-                        # set the alpha for the spectrum in the profile viewer
-                        # to be 50% more opaque than the alpha for the spatial subset
-                        # in the flux-viewer
-                        [min(1.5 * layer.alpha, 1)]
-                    )
-
-        elif subset_type == 'spectral':
-            # need to add marks for every intersection between THIS spectral subset and ALL spatial
-            # subset marks corresponding to this data
-            spatial_layers = [sub_layer for sub_layer in
-                              self._get_spatial_subset_layers(layer_state.layer.data.label)]
-            spatial_marks = self._get_marks_for_layers(spatial_layers)
-            for index, spatial_mark in enumerate(spatial_marks):
-                new_shadow = ShadowSpatialSpectral(spatial_spectrum_mark=spatial_mark,
-                                                   spectral_subset_mark=this_mark,
-                                                   spatial_uuid=spatial_layers[index].layer.uuid,
-                                                   spectral_uuid=layer_state.layer.uuid,
-                                                   data_uuid=layer_state.layer.data.uuid)
-                if _is_unique(new_shadow):
-                    new_marks.append(new_shadow)
-
-        else:
-            return
-        # NOTE: += or append won't pick up on change
-        self.figure.marks = self.figure.marks + new_marks
