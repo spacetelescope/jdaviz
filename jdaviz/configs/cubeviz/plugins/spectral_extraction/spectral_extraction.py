@@ -9,7 +9,6 @@ from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
-from packaging.version import Version
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
 from specutils import Spectrum1D
 
@@ -33,8 +32,6 @@ from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView
 
 
 __all__ = ['SpectralExtraction']
-
-ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
 
 
 @tray_registry(
@@ -147,9 +144,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
-
-        if ASTROPY_LT_5_3_2:
-            self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy>=5.3.2"
 
         if self.app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not

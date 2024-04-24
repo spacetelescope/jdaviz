@@ -7,7 +7,7 @@ authors = [
 ]
 dependencies = [
     "packaging",
-    "astropy>=4.3",
+    "astropy>=5.3.2",
     "matplotlib",
     "traitlets>=5.0.5",
     "bqplot>=0.12.37",
