@@ -5,6 +5,7 @@ from astropy.utils.decorators import deprecated
 from specutils import Spectrum1D
 from specutils.io.registers import _astropy_has_priorities
 
+from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
@@ -78,6 +79,30 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             kwargs['data_label'] = data_label
 
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
+
+        # create a new instance of the Spectral Extraction plugin (to not affect the instance if __name__ == '__main__':
+        # the tray) and extract the entire cube with defaults.
+        spext = self.plugins['Spectral Extraction']._obj.new()
+        if data_label := kwargs.get('data_label'):
+            spext.dataset.selected = data_label
+        spext.aperture_method.selected = 'Center'
+        spext.function.selected = 'Sum'
+        spext.add_results.label = 'Spectrum (Entire Cube, sum)'
+        # all other settings remain at their plugin defaults
+        try:
+            spext(add_data=True)
+        except Exception:
+            msg = SnackbarMessage(
+                "Automatic spectrum extraction failed. See the spectral extraction"
+                " plugin to perform a custom extraction",
+                color='error', sender=self, timeout=10000)
+        else:
+            msg = SnackbarMessage(
+                "The extracted 1D spectrum was generated automatically for the entire cube."
+                " See the spectral extraction plugin for details or to"
+                " perform a custom extraction.",
+                color='warning', sender=self, timeout=10000)
+        self.app.hub.broadcast(msg)
 
     @deprecated(since="3.9", alternative="select_wavelength")
     def select_slice(self, slice):

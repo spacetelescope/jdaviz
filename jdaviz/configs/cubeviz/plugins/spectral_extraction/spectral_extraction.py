@@ -166,6 +166,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 "please load data to enable this plugin."
             )
 
+        # continue to not use live-preview marks for the instance of the plugin used for the
+        # initial spectral extraction during load_data
+        self._do_marks = kwargs.get('interactive', True)
+
     @property
     def user_api(self):
         expose = ['dataset', 'function', 'spatial_subset', 'aperture',
@@ -495,6 +499,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def marks(self):
+        if not self._do_marks:
+            return {}
         marks = {}
         for id, viewer in self.app._viewer_store.items():
             if not isinstance(viewer, CubevizProfileView):
@@ -532,6 +538,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @skip_if_no_updates_since_last_active()
     @with_temp_disable(timeout=0.3)
     def _live_update(self, event={}):
+        if not self._do_marks:
+            return
         if not self.show_live_preview or not self.is_active:
             self._clear_marks()
             return
