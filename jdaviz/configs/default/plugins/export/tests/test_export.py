@@ -207,6 +207,19 @@ class TestExportSubsets:
 
 
 @pytest.mark.usefixtures('_jail')
+def test_export_cubeviz_spectrum_viewer(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+
+    ep = cubeviz_helper.plugins["Export"]
+    ep.viewer = 'spectrum-viewer'
+    ep.viewer_format = 'png'
+    ep.export()
+
+    ep.viewer_format = 'svg'
+    ep.export()
+
+
+@pytest.mark.usefixtures('_jail')
 def test_export_data(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     mm = cubeviz_helper.plugins["Moment Maps"]
