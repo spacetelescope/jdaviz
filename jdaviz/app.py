@@ -2403,7 +2403,7 @@ class Application(VuetifyTemplate, HubListener):
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
-            'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
+            'visible_layers': {},  # label: {color}, READ-ONLY
             'wcs_only_layers': wcs_only_layers,
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
