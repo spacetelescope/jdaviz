@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from numpy.testing import assert_allclose
 
@@ -130,9 +132,12 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
 
     # appears as option in export plugin and exports successfully
     assert "Markers: table" in exp.plugin_table.choices
-    exp.filename = str(tmp_path / "cubeviz_export.ecsv")
+    filename = str(tmp_path / "cubeviz_export.ecsv")
+    exp.filename.auto = False
+    exp.filename.value = filename
     exp.plugin_table = "Markers: table"
     exp.export()
+    assert os.path.isfile(filename)
 
     # clearing table clears markers
     mp.clear_table()
