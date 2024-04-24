@@ -2,9 +2,6 @@ import numpy as np
 import astropy.units as u
 from functools import cached_property
 from glue.core import BaseData
-
-from glue.core.subset_group import GroupedSubset
-from bqplot import Lines
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.core.registries import viewer_registry
@@ -258,17 +255,6 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
         super().__init__(*args, **kwargs)
-
-        self.hub.subscribe(self, RemoveDataMessage,
-                           handler=self._check_if_data_removed)
-
-        # TODO: Find out why this is not working
-        # self.hub.subscribe(self, DataCollectionDeleteMessage,
-        #                    handler=self._check_if_data_removed)
-
-        self.hub.subscribe(self, AddDataMessage,
-                           handler=self._check_if_data_added)
-
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
                            handler=self._on_global_display_unit_changed)
 
@@ -280,24 +266,6 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         # Clear cache of slice values when units change
         if 'slice_values' in self.__dict__:
             del self.__dict__['slice_values']
-
-    def _check_if_data_removed(self, msg):
-        # isinstance and the data uuid check will be true for the data
-        # that is being removed
-        self.figure.marks = [m for m in self.figure.marks
-                             if not m.data_uuid == msg.data.uuid]
-        self._on_global_display_unit_changed()
-
-    def _check_if_data_added(self, msg=None):
-        # When data is added, make sure that all spatial subset layers
-        # that correspond with that data are checked for intersections
-        # with spectral subset layers
-        for layer in self.state.layers:
-            if layer.layer.data.label == msg.data.label:
-                if (isinstance(layer.layer, GroupedSubset) and
-                        get_subset_type(layer.layer.subset_state) == 'spatial'):
-                    self._expected_subset_layer_default(layer)
-        self._on_global_display_unit_changed()
 
     def _is_spatial_subset(self, layer):
         subset_state = getattr(layer.layer, 'subset_state', None)
