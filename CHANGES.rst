@@ -66,7 +66,7 @@ Other Changes and Additions
 
 - Bump required Python version to 3.10. [#2757]
 
-- Line menu in Redshift from Centroid section of Line Analysis now shows values in current units. [#2816]
+- Line menu in Redshift from Centroid section of Line Analysis now shows values in current units. [#2816, #2831]
 
 3.9.2 (unreleased)
 ==================

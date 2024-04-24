@@ -102,7 +102,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
     results_centroid = Float().tag(sync=True)  # stored in AA units
-    line_menu_items = List([{}]).tag(sync=True)
+    line_menu_items = List([]).tag(sync=True)
     sync_identify = Bool(True).tag(sync=True)
     sync_identify_icon_enabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select.svg'), 'svg+xml')).tag(sync=True)  # noqa
     sync_identify_icon_disabled = Unicode(read_icon(os.path.join(ICON_DIR, 'line_select_disabled.svg'), 'svg+xml')).tag(sync=True)  # noqa
