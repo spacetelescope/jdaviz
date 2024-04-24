@@ -133,8 +133,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     # appears as option in export plugin and exports successfully
     assert "Markers: table" in exp.plugin_table.choices
     filename = str(tmp_path / "cubeviz_export.ecsv")
-    exp.filename.auto = False
-    exp.filename.value = filename
+    exp.filename = filename
     exp.plugin_table = "Markers: table"
     exp.export()
     assert os.path.isfile(filename)
