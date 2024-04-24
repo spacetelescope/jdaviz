@@ -1444,6 +1444,10 @@ class LayerSelect(SelectPluginComponent):
         self._update_layer_items()
         self.update_wcs_only_filter(only_wcs_layers)
 
+        # TODO: all of these add_filter commands should be refactored to pass filters directly
+        # to the init and defined in _is_valid_item()
+        self.add_filter('not_spatial_subset_in_profile_viewer')
+
         self.filter_is_root = is_root
         self.filter_is_child_of = is_child_of
 
@@ -1482,6 +1486,17 @@ class LayerSelect(SelectPluginComponent):
         def not_child_layer(lyr):
             # ignore layers that are children in associations:
             return self.app._get_assoc_data_parent(lyr.label) is None
+
+        def not_spatial_subset_in_profile_viewer(lyr):
+            if self.plugin.config != 'cubeviz':
+                return True
+            # note: have to check the classname instead of isinstance to avoid circular import
+            if np.any([viewer.__class__.__name__ != 'CubevizProfileView'
+                       for viewer in self.viewer_objs]):
+                return True
+            # at this point, we are in cubeviz and ALL selected viewers are profile viewers,
+            # so we want to exclude spatial subsets
+            return get_subset_type(lyr) != 'spatial'
 
         return super()._is_valid_item(lyr, locals())
 
