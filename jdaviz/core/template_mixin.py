@@ -64,7 +64,8 @@ from jdaviz.utils import (
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
-           'skip_if_no_updates_since_last_active', 'with_spinner', 'with_temp_disable',
+           'skip_if_no_updates_since_last_active', 'skip_if_not_tray_instance',
+           'with_spinner', 'with_temp_disable',
            'ViewerPropertiesMixin',
            'BasePluginComponent',
            'MultiselectMixin',
@@ -293,6 +294,16 @@ def skip_if_no_updates_since_last_active(skip_if_not_active=True):
                 self._methods_skip_since_last_active.remove(meth.__name__)
             return ret_
 
+        return wrapper
+    return decorator
+
+
+def skip_if_not_tray_instance():
+    def decorator(meth):
+        def wrapper(self, *args, **kwargs):
+            if not self._tray_instance:
+                return
+            return meth(self, *args, **kwargs)
         return wrapper
     return decorator
 

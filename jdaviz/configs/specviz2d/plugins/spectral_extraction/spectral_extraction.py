@@ -10,6 +10,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelect,
                                         AddResults,
                                         skip_if_no_updates_since_last_active,
+                                        skip_if_not_tray_instance,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
@@ -416,9 +417,8 @@ class SpectralExtraction(PluginTemplateMixin):
                 raise ValueError("step must be one of: trace, bg, ext")
 
     # also listens to is_active from any _interaction_in_*_step methods
+    @skip_if_not_tray_instance()
     def _update_plugin_marks(self, msg={}):
-        if not self._tray_instance:
-            return
         if self.app._jdaviz_helper is None:
             return
         if not len(self._marks):
@@ -493,11 +493,9 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('interactive_extract')
     @skip_if_no_updates_since_last_active()
+    @skip_if_not_tray_instance()
     def _update_interactive_extract(self, event={}):
         # also called by any of the _interaction_in_*_step
-        if not self._tray_instance:
-            return False
-
         if self.interactive_extract:
             try:
                 sp1d = self.export_extract_spectrum(add_data=False)
@@ -528,9 +526,8 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_trace_selected', 'trace_offset', 'trace_order',
              'trace_pixel', 'trace_peak_method_selected',
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
+    @skip_if_not_tray_instance()
     def _interaction_in_trace_step(self, event={}):
-        if not self._tray_instance:
-            return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'trace')
                 or not self.is_active):
             self._update_plugin_marks(event)
@@ -554,9 +551,8 @@ class SpectralExtraction(PluginTemplateMixin):
     @observe('is_active', 'bg_dataset_selected', 'bg_type_selected',
              'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
+    @skip_if_not_tray_instance()
     def _interaction_in_bg_step(self, event={}):
-        if not self._tray_instance:
-            return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
                 or not self.is_active):
             self._update_plugin_marks(event)
@@ -607,9 +603,8 @@ class SpectralExtraction(PluginTemplateMixin):
 
     @observe('is_active', 'ext_dataset_selected', 'ext_trace_selected',
              'ext_type_selected', 'ext_width', 'active_step')
+    @skip_if_not_tray_instance()
     def _interaction_in_ext_step(self, event={}):
-        if not self._tray_instance:
-            return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
             self._update_plugin_marks(event)

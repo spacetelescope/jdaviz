@@ -24,6 +24,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelect,
                                         AddResultsMixin,
                                         skip_if_no_updates_since_last_active,
+                                        skip_if_not_tray_instance,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.region_translators import regions2aperture
@@ -203,14 +204,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return self.app._jdaviz_helper.plugins['Slice']
 
     @observe('aperture_items')
+    @skip_if_not_tray_instance()
     def _aperture_items_changed(self, msg):
-        if not self._tray_instance:
-            return
         if not hasattr(self, 'aperture'):
             return
-        # TODO: move initial entire cube case here as well?
-        # TODO: how do we make sure only the original copy controls this?  With a decorator?
-        # TODO: how do we compare data/subset combinations to existing datasets?
         for item in msg['new']:
             if item not in msg['old']:
                 if item.get('type') != 'spatial':
