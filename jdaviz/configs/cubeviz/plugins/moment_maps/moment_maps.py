@@ -200,7 +200,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # NOTE: there is no use in caching this, as the continuum will need to be re-computed
         # per-spaxel to use within calculating the moment map
         _ = self._get_continuum(self.dataset,
-                                None,
                                 self.spectral_subset,
                                 update_marks=True)
 
@@ -236,9 +235,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 cube = self.dataset.selected_obj
         else:
             _, _, cube = self._get_continuum(self.dataset,
-                                             'per-pixel',
                                              self.spectral_subset,
-                                             update_marks=False)
+                                             update_marks=False,
+                                             per_pixel=True)
 
         # slice out desired region
         # TODO: should we add a warning for a composite spectral subset?

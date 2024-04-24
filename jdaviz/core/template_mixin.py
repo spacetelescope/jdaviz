@@ -2852,19 +2852,18 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         for pos, mark in self.continuum_marks.items():
             mark.update_xy(mark_x.get(pos, []), mark_y.get(pos, []))
 
-    def _get_continuum(self, dataset, spatial_subset, spectral_subset, update_marks=False):
+    def _get_continuum(self, dataset, spectral_subset, update_marks=False, per_pixel=False):
         if dataset.selected == '':
             self._update_continuum_marks()
             return None, None, None
 
-        if spatial_subset == 'per-pixel':
+        if per_pixel:
             if self.app.config != 'cubeviz':
                 raise ValueError("per-pixel only supported for cubeviz")
             full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
                                                              use_display_units=True)
         else:
-            full_spectrum = dataset.selected_spectrum_for_spatial_subset(spatial_subset.selected if spatial_subset is not None else None,  # noqa
-                                                                         use_display_units=True)
+            full_spectrum = dataset.selected_spectrum(use_display_units=True)
 
         if full_spectrum is None or self.continuum_width == "":
             self._update_continuum_marks()
@@ -2973,7 +2972,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
 
         continuum_x = spectral_axis[continuum_mask].value
         min_x = min(spectral_axis.value)
-        if spatial_subset == 'per-pixel':
+        if per_pixel:
             # full_spectrum.flux is a cube, so we want to act on all spaxels independently
             continuum_y = full_spectrum.flux[:, :, continuum_mask].value
 
@@ -3355,13 +3354,8 @@ class DatasetSelect(SelectPluginComponent):
         # from the data collection
         return self.get_object(cls=self.default_data_cls)
 
-    def selected_spectrum_for_spatial_subset(self,
-                                             spatial_subset=SPATIAL_DEFAULT_TEXT,
-                                             use_display_units=True):
-        if spatial_subset == SPATIAL_DEFAULT_TEXT:
-            spatial_subset = None
+    def selected_spectrum(self, use_display_units=True):
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
-                                                    spatial_subset=spatial_subset,
                                                     use_display_units=use_display_units)
 
     def _is_valid_item(self, data):

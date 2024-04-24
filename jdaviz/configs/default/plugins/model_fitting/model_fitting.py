@@ -314,9 +314,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return False
 
     def _get_1d_spectrum(self):
-        # retrieves the 1d spectrum (accounting for spatial subset for cubeviz, if necessary)
-        return self.dataset.selected_spectrum_for_spatial_subset(self.spatial_subset_selected,
-                                                                 use_display_units=True)
+        # retrieves the 1d spectrum
+        return self.dataset.selected_spectrum(use_display_units=True)
 
     @observe("dataset_selected", "spatial_subset_selected")
     def _dataset_selected_changed(self, event=None):

@@ -79,7 +79,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to use for computing line statistics.
     * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
-      Select which region's collapsed spectrum to analyze or ``Entire Cube``.
+      Deprecated as of 3.11.  Use the :ref:`Spectral Extraction Plugin <spectral-extraction>`
+      if necessary and select a spectrum as input to ``dataset``.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the line, or ``Entire Spectrum``.
     * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
@@ -95,9 +96,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
     uses_active_status = Bool(True).tag(sync=True)
-
-    spatial_subset_items = List().tag(sync=True)
-    spatial_subset_selected = Unicode().tag(sync=True)
 
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
@@ -123,15 +121,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         # continuum selection is mandatory for line-analysis
         self._continuum_remove_none_option()
-
-        if self.app.state.settings.get("configuration") == "cubeviz":
-            self.spatial_subset = SubsetSelect(self,
-                                               'spatial_subset_items',
-                                               'spatial_subset_selected',
-                                               default_text=SPATIAL_DEFAULT_TEXT,
-                                               filters=['is_spatial'])
-        else:
-            self.spatial_subset = None
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -167,9 +156,16 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self.continuum_width = width
 
     @property
+    def spatial_subset(self):
+        msg = "spatial_subset in no longer supported as of 3.11 and will be removed from the user API in a future release"  # noqa
+        logging.warning(f"DeprecationWarning: {msg}")
+        raise ValueError(msg)
+
+    @property
     def user_api(self):
         # deprecated: width was replaced with continuum_width in 3.9 so should be removed from the
         # user API and the property and setter above as soon as 3.11.
+        # deprecated: spatial_subset was removed in 3.11 so should be removed as soon as 3.13
         return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
                                            'continuum', 'width', 'continuum_width', 'get_results'))
 
@@ -218,7 +214,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             The glue message passed to this callback method.
         """
         if (msg.subset.label in [self.spectral_subset_selected,
-                                 self.spatial_subset_selected,
                                  self.continuum_subset_selected]):
             self._calculate_statistics(msg)
 
@@ -270,7 +265,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # in which case we'll default to the identified line
             self.selected_line = self.identified_line
 
-    @observe("dataset_selected", "spatial_subset_selected", "spectral_subset_selected",
+    @observe("dataset_selected", "spectral_subset_selected",
              "continuum_subset_selected", "continuum_width")
     @skip_if_no_updates_since_last_active()
     @with_spinner('results_computing')
@@ -295,7 +290,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
 
         spectrum, continuum, spec_subtracted = self._get_continuum(self.dataset,
-                                                                   self.spatial_subset,
                                                                    self.spectral_subset,
                                                                    update_marks=True)
         if spectrum is None:
