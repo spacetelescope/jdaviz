@@ -247,7 +247,7 @@
 
 
       <!-- PROFILE/LINE -->
-      <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && ((!marker_visible_sync.in_subscribed_states && line_visible_value) || (marker_visible_sync.in_subscribed_states && marker_visible_value))) || collapse_func_sync.in_subscribed_states">Line</j-plugin-section-header>
+      <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && ((!marker_visible_sync.in_subscribed_states && line_visible_value) || (marker_visible_sync.in_subscribed_states && marker_visible_value)))">Line</j-plugin-section-header>
       <glue-state-sync-wrapper v-if="marker_visible_sync.in_subscribed_states && marker_visible_value" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
         <span>
           <v-btn icon @click.stop="line_visible_value = !line_visible_value">
@@ -255,18 +255,6 @@
           </v-btn>
           Show Line
         </span>
-      </glue-state-sync-wrapper>
-
-      <glue-state-sync-wrapper v-if="config === 'cubeviz'" :sync="collapse_func_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('function')">
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          :items="collapse_func_sync.choices"
-          v-model="collapse_func_value"
-          label="Collapse Function"
-          hint="Function to use when collapsing the spectrum from the cube"
-          persistent-hint
-        ></v-select>
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_color')">

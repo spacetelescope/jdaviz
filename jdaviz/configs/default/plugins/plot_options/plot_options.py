@@ -156,7 +156,8 @@ class PlotOptions(PluginTemplateMixin):
     * ``axes_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
     * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      only exposed for Cubeviz
+      deprecated - use the :ref:`Spectral Extraction Plugin <spectral-extraction>` instead.
+      Only exposed for Cubeviz
     * ``line_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
     * ``line_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -228,9 +229,6 @@ class PlotOptions(PluginTemplateMixin):
     # profile/line viewer/layer options:
     line_visible_value = Bool().tag(sync=True)
     line_visible_sync = Dict().tag(sync=True)
-
-    collapse_func_value = Unicode().tag(sync=True)
-    collapse_func_sync = Dict().tag(sync=True)
 
     line_color_value = Any().tag(sync=True)
     line_color_sync = Dict().tag(sync=True)
@@ -467,8 +465,6 @@ class PlotOptions(PluginTemplateMixin):
         self.line_visible = PlotOptionsSyncState(self, self.viewer, self.layer, state_attr_for_line_visible,  # noqa
                                                  'line_visible_value', 'line_visible_sync',
                                                  state_filter=supports_line)
-        self.collapse_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'function',
-                                                      'collapse_func_value', 'collapse_func_sync')
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
                                                'line_color_value', 'line_color_sync',
                                                state_filter=not_image_or_spatial_subset)
@@ -701,6 +697,11 @@ class PlotOptions(PluginTemplateMixin):
                        'stretch_curve_visible', 'apply_RGB_presets']
 
         return PluginUserApi(self, expose)
+
+    @property
+    def collapse_function(self):
+        logging.warning(f"DeprecationWarning: collapse_function was removed in 3.10 and will be removed from the plugin user API in a future release")  # noqa
+        raise ValueError("collapse_function no longer supported in plot options.  Use the spectral extraction plugin instead.")  # noqa
 
     @observe('show_viewer_labels')
     def _on_show_viewer_labels_changed(self, event):
