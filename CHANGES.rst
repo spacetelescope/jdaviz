@@ -61,6 +61,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Loading a specific extension with ``ext`` keyword no longer crashes. [#2829]
+
 Other Changes and Additions
 ---------------------------
 
