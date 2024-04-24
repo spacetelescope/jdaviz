@@ -21,9 +21,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
-                                        SubsetSelect,
                                         SpectralContinuumMixin,
-                                        SPATIAL_DEFAULT_TEXT,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi

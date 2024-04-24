@@ -3,7 +3,6 @@ import numpy as np
 from astropy import units as u
 from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
-from copy import deepcopy
 from glue.core import HubListener
 from specutils import Spectrum1D
 

@@ -6,7 +6,7 @@ from astropy.utils.data import get_pkg_data_filename
 from glue.core import Data
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset_group import GroupedSubset
-from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode, NewMode
+from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, RectanglePixelRegion,
                      EllipsePixelRegion, CircleAnnulusPixelRegion)
 from numpy.testing import assert_allclose
