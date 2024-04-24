@@ -166,10 +166,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 "please load data to enable this plugin."
             )
 
-        # continue to not use live-preview marks for the instance of the plugin used for the
-        # initial spectral extraction during load_data
-        self._do_marks = kwargs.get('interactive', True)
-
     @property
     def user_api(self):
         expose = ['dataset', 'function', 'spatial_subset', 'aperture',
@@ -205,6 +201,47 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def slice_plugin(self):
         return self.app._jdaviz_helper.plugins['Slice']
+
+    @observe('aperture_items')
+    def _aperture_items_changed(self, msg):
+        if not self._tray_instance:
+            return
+        if not hasattr(self, 'aperture'):
+            return
+        # TODO: move initial entire cube case here as well?
+        # TODO: how do we make sure only the original copy controls this?  With a decorator?
+        # TODO: how do we compare data/subset combinations to existing datasets?
+        for item in msg['new']:
+            if item not in msg['old']:
+                if item.get('type') != 'spatial':
+                    continue
+                subset_lbl = item.get('label')
+                try:
+                    self._create_auto_extract(subset_lbl)
+                except Exception:
+                    msg = SnackbarMessage(
+                        f"Automatic spectrum extraction for {subset_lbl} failed",
+                        color='error', sender=self, timeout=10000)
+                    raise  # TODO: remove before merge
+                else:
+                    msg = SnackbarMessage(
+                        f"Automatic spectrum extraction for {subset_lbl} successful",
+                        color='success', sender=self)
+                self.app.hub.broadcast(msg)
+
+    def _create_auto_extract(self, subset_lbl=None):
+        # create a new instance of the Spectral Extraction plugin (to not affect the instance in
+        # the tray) and extract the entire cube with defaults.
+        if subset_lbl is None:
+            subset_lbl = self.aperture.default_text
+        plg = self.new()
+        plg.dataset.select_default()  # TODO: ensure this will be science flux cube
+        plg.aperture.selected = subset_lbl
+        plg.aperture_method.selected = 'Center'
+        plg.function.selected = 'Sum'
+        plg.add_results.auto_update_result = subset_lbl != self.aperture.default_text
+        # all other settings remain at their plugin defaults
+        plg(add_data=True)
 
     @observe('wavelength_dependent', 'bg_wavelength_dependent')
     def _wavelength_dependent_changed(self, *args):
@@ -497,7 +534,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def marks(self):
-        if not self._do_marks:
+        if not self._tray_instance:
             return {}
         marks = {}
         for id, viewer in self.app._viewer_store.items():
@@ -536,7 +573,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @skip_if_no_updates_since_last_active()
     @with_temp_disable(timeout=0.3)
     def _live_update(self, event={}):
-        if not self._do_marks:
+        if not self._tray_instance:
             return
         if not self.show_live_preview or not self.is_active:
             self._clear_marks()

@@ -80,28 +80,27 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
 
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
-        # create a new instance of the Spectral Extraction plugin (to not affect the instance in
-        # the tray) and extract the entire cube with defaults.
-        spext = self.plugins['Spectral Extraction']._obj.new()
-        if data_label := kwargs.get('data_label'):
-            spext.dataset.selected = data_label
-        spext.aperture_method.selected = 'Center'
-        spext.function.selected = 'Sum'
-        # all other settings remain at their plugin defaults
-        try:
-            spext(add_data=True)
-        except Exception:
+        if 'Spectral Extraction' not in self.plugins.keys():  # pragma: nocov
             msg = SnackbarMessage(
-                "Automatic spectrum extraction failed. See the spectral extraction"
-                " plugin to perform a custom extraction",
+                "Automatic spectral extraction requires the Spectral Extraction plugin to be enabled",  # noqa
                 color='error', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
         else:
-            msg = SnackbarMessage(
-                "The extracted 1D spectrum was generated automatically for the entire cube."
-                " See the spectral extraction plugin for details or to"
-                " perform a custom extraction.",
-                color='warning', sender=self, timeout=10000)
-        self.app.hub.broadcast(msg)
+            try:
+                self.plugins['Spectral Extraction']._obj._create_auto_extract()
+            except Exception:
+                msg = SnackbarMessage(
+                    "Automatic spectrum extraction for the entire cube failed."
+                    " See the spectral extraction plugin to perform a custom extraction",
+                    color='error', sender=self, timeout=10000)
+                raise  # TODO: remove before merge
+            else:
+                msg = SnackbarMessage(
+                    "The extracted 1D spectrum was generated automatically for the entire cube."
+                    " See the spectral extraction plugin for details or to"
+                    " perform a custom extraction.",
+                    color='warning', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
 
     @deprecated(since="3.9", alternative="select_wavelength")
     def select_slice(self, slice):

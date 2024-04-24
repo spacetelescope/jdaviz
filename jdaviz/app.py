@@ -2617,7 +2617,7 @@ class Application(VuetifyTemplate, HubListener):
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
 
-            tray_item_instance = tray.get('cls')(app=self)
+            tray_item_instance = tray.get('cls')(app=self, tray_instance=True)
 
             # store a copy of the tray name in the instance so it can be accessed by the
             # plugin itself

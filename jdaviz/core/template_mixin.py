@@ -208,11 +208,6 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
 
-    def new(self):
-        new = self.__class__(app=self.app)
-        new._plugin_name = self._plugin_name
-        return new
-
     @property
     def app(self):
         """
@@ -374,8 +369,9 @@ class PluginTemplateMixin(TemplateMixin):
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
 
-    def __init__(self, app, **kwargs):
+    def __init__(self, app, tray_instance=False, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
+        self._tray_instance = tray_instance  # set to True by the instance of the plugin in the tray
         self._viewer_callbacks = {}
         # _inactive_thread: thread checking for alive pings to control plugin_opened
         self._inactive_thread = None
@@ -417,6 +413,11 @@ class PluginTemplateMixin(TemplateMixin):
         self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
+
+    def new(self):
+        new = self.__class__(app=self.app)
+        new._plugin_name = self._plugin_name
+        return new
 
     @property
     def user_api(self):

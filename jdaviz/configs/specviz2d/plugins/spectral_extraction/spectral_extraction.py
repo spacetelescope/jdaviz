@@ -207,7 +207,6 @@ class SpectralExtraction(PluginTemplateMixin):
         super().__init__(*args, **kwargs)
 
         self._marks = {}
-        self._do_marks = False
 
         # TRACE
         self.trace_trace = DatasetSelect(self,
@@ -325,10 +324,6 @@ class SpectralExtraction(PluginTemplateMixin):
         self.ext_add_results.label_whitelist_overwrite = ['Spectrum 1D']
         self.ext_results_label_default = 'Spectrum 1D'
 
-        # continue to not use live-preview marks for the instance of the plugin used for the
-        # initial spectral extraction during load_data
-        self._do_marks = kwargs.get('interactive', True)
-
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -422,7 +417,7 @@ class SpectralExtraction(PluginTemplateMixin):
 
     # also listens to is_active from any _interaction_in_*_step methods
     def _update_plugin_marks(self, msg={}):
-        if not self._do_marks:
+        if not self._tray_instance:
             return
         if self.app._jdaviz_helper is None:
             return
@@ -461,7 +456,7 @@ class SpectralExtraction(PluginTemplateMixin):
             # TODO: replace with cache property?
             return self._marks
 
-        if not self._do_marks:
+        if not self._tray_instance:
             return {}
 
         viewer2d = self.app.get_viewer(self._default_spectrum_2d_viewer_reference_name)
@@ -500,7 +495,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @skip_if_no_updates_since_last_active()
     def _update_interactive_extract(self, event={}):
         # also called by any of the _interaction_in_*_step
-        if not self._do_marks:
+        if not self._tray_instance:
             return False
 
         if self.interactive_extract:
@@ -534,7 +529,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_pixel', 'trace_peak_method_selected',
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
     def _interaction_in_trace_step(self, event={}):
-        if not self._do_marks:
+        if not self._tray_instance:
             return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'trace')
                 or not self.is_active):
@@ -560,7 +555,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
     def _interaction_in_bg_step(self, event={}):
-        if not self._do_marks:
+        if not self._tray_instance:
             return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
                 or not self.is_active):
@@ -613,7 +608,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @observe('is_active', 'ext_dataset_selected', 'ext_trace_selected',
              'ext_type_selected', 'ext_width', 'active_step')
     def _interaction_in_ext_step(self, event={}):
-        if not self._do_marks:
+        if not self._tray_instance:
             return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
