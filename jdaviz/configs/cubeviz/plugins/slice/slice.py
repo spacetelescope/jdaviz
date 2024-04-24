@@ -136,7 +136,7 @@ class Slice(PluginTemplateMixin):
 
     @property
     def valid_slice_att_names(self):
-        return _spectral_axis_names + ['Pixel Axis 2 [x]']
+        return _spectral_axis_names + ['Pixel Axis 2 [x]', 'World 0']
 
     @property
     def slice_selection_viewers(self):
