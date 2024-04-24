@@ -80,14 +80,13 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
 
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
-        # create a new instance of the Spectral Extraction plugin (to not affect the instance if __name__ == '__main__':
+        # create a new instance of the Spectral Extraction plugin (to not affect the instance in
         # the tray) and extract the entire cube with defaults.
         spext = self.plugins['Spectral Extraction']._obj.new()
         if data_label := kwargs.get('data_label'):
             spext.dataset.selected = data_label
         spext.aperture_method.selected = 'Center'
         spext.function.selected = 'Sum'
-        spext.add_results.label = 'Spectrum (Entire Cube, sum)'
         # all other settings remain at their plugin defaults
         try:
             spext(add_data=True)

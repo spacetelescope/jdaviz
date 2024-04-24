@@ -486,16 +486,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             f"Extracted spectrum saved to {os.path.abspath(filename)}",
                            sender=self, color="success"))
 
-    @observe('aperture_selected')
+    @observe('aperture_selected', 'function_selected')
     def _set_default_results_label(self, event={}):
-        label = "Spectral extraction"
-
-        if (
-            hasattr(self, 'aperture') and
-            self.aperture.selected != self.aperture.default_text
-        ):
-            label += f' ({self.aperture_selected})'
-        self.results_label_default = label
+        if not hasattr(self, 'aperture'):
+            return
+        if self.aperture.selected == self.aperture.default_text:
+            self.results_label_default = f"Spectrum ({self.function_selected.lower()})"
+        else:
+            self.results_label_default = f"Spectrum ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
 
     @property
     def marks(self):
