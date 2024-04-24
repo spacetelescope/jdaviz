@@ -6,6 +6,8 @@ New Features
 
 - Infrastructure to support auto-updating plugin results. [#2680]
 
+- The filename entry in the export plugin is now automatically populated based on the selection. [#2824]
+
 Cubeviz
 ^^^^^^^
 

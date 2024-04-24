@@ -9,7 +9,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, SelectPluginComponent,
                                         ViewerSelectMixin, DatasetMultiSelectMixin,
                                         SubsetSelectMixin, PluginTableSelectMixin,
-                                        PluginPlotSelectMixin,
+                                        PluginPlotSelectMixin, AutoTextField,
                                         MultiselectMixin, with_spinner)
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 
@@ -75,7 +75,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     plugin_plot_format_items = List().tag(sync=True)
     plugin_plot_format_selected = Unicode().tag(sync=True)
 
-    filename = Unicode().tag(sync=True)
+    filename_value = Unicode().tag(sync=True)
+    filename_default = Unicode().tag(sync=True)
+    filename_auto = Bool(True).tag(sync=True)
+    filename_invalid_msg = Unicode('').tag(sync=True)
 
     # if selected subset is spectral or composite, display message and disable export
     subset_invalid_msg = Unicode().tag(sync=True)
@@ -96,6 +99,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.filename = AutoTextField(self, 'filename_value',
+                                      'filename_default',
+                                      'filename_auto',
+                                      'filename_invalid_msg')
 
         # NOTE: if adding export support for non-plugin products, also update the language
         # in the UI as well as in _set_dataset_not_supported_msg
@@ -153,7 +161,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.plugin_table.select_default()
         # viewer last so that the first viewer is the default and all others are empty
         self.viewer.select_default()
-        self.filename = f"{self.app.config}_export"
 
         if self.config == "cubeviz":
             self.session.hub.subscribe(self, AddDataMessage, handler=self._on_cubeviz_data_added)  # noqa: E501
@@ -233,7 +240,30 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             msg = ""
         self.viewer_invalid_msg = msg
 
-    @observe('filename')
+    @observe('viewer_selected', 'viewer_format_selected',
+             'dataset_selected', 'dataset_format_selected',
+             'subset_selected', 'subset_format_selected',
+             'plugin_table_selected', 'plugin_table_format_selected',
+             'plugin_plot_selected', 'plugin_plot_format_selected')
+    def _set_filename_default(self, *args, **kwargs):
+        if not hasattr(self, 'viewer'):
+            return
+        if self.multiselect:
+            raise NotImplementedError("batch export not yet supported")
+        if self.viewer_selected:
+            self.filename_default = f"{self.viewer_selected}.{self.viewer_format_selected}"  # noqa
+        elif self.dataset_selected:
+            self.filename_default = f"{self.dataset_selected.replace(' ', '_')}.{self.dataset_format_selected}"  # noqa
+        elif self.subset_selected:
+            self.filename_default = f"{self.subset_selected.replace(' ', '_')}.{self.subset_format_selected}"  # noqa
+        elif self.plugin_table_selected:
+            self.filename_default = f"{self.plugin_table_selected.replace(':', '').replace(' ', '_')}.{self.plugin_table_format_selected}"  # noqa
+        elif self.plugin_plot_selected:
+            self.filename_default = f"{self.plugin_plot_selected.replace(':', '').replace(' ', '_')}.{self.plugin_plot_format_selected}"  # noqa
+        else:
+            self.filename_default = ''
+
+    @observe('filename_value')
     def _is_filename_changed(self, event):
         # Clear overwrite warning when user changes filename
         self.overwrite_warn = False
@@ -318,11 +348,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             to application snackbar instead.
 
         """
-
         if self.multiselect:
             raise NotImplementedError("batch export not yet supported")
 
-        filename = filename if filename is not None else self.filename
+        filename = filename if filename is not None else self.filename_value
 
         # at this point, we can assume only a single export is selected
         if len(self.viewer.selected):
@@ -619,5 +648,5 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.movie_interrupt = True
         # TODO: this will need updating when batch/multiselect support is added
         self.hub.broadcast(SnackbarMessage(
-            f"Movie recording interrupted by user, {self.filename} will be deleted.",
+            f"Movie recording interrupted by user, {self.filename_value} will be deleted.",
             sender=self, color="warning"))
