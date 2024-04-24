@@ -171,6 +171,17 @@ class ViewerPropertiesMixin:
 
         return self.app.get_viewer(viewer_reference)
 
+    @cached_property
+    def flux_viewer(self):
+        if hasattr(self, '_default_flux_viewer_reference_name'):
+            viewer_reference = self._default_flux_viewer_reference_name
+        else:
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_flux_viewer=True
+            )
+
+        return self.app.get_viewer(viewer_reference)
+
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
     config = Unicode("").tag(sync=True)
@@ -848,6 +859,10 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def add_filter(self, *filters):
         self.filters += [filter for filter in filters]
+
+    def remove_filter(self, *filters):
+        self.filters = [f for f in self.filters
+                        if (f not in filters and getattr(f, '__name__', '') not in filters)]
 
     @property
     def viewer_dicts(self):
@@ -3291,27 +3306,6 @@ class DatasetSelect(SelectPluginComponent):
         # initialize items from original viewers
         self._on_data_changed()
 
-    def _cubeviz_include_spatial_subsets(self):
-        """
-        Call this method to prepend spatial subsets to the list of datasets (and listen for newly
-        created spatial subsets).  For a single viewer, consider using LayerSelect instead.
-        """
-        if self.app.config != 'cubeviz':
-            return
-
-        # add additional callback for subsets
-        # We have to use SubsetUpdateMessage instead of SubsetCreateMessage to ensure it has already
-        # been added to data_collection.subset_groups.  To avoid extra calls to _on_data_changed
-        # for changes in style, etc, we'll try to filter out extra messages in advance.
-        def _subset_update(msg):
-            if msg.attribute == 'subset_state':
-                if get_subset_type(msg.subset) == 'spatial':
-                    self._on_data_changed()
-
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=_subset_update)
-        self._include_spatial_subsets = True
-
     @property
     def default_data_cls(self):
         if self.app.config == 'imviz':
@@ -3397,6 +3391,12 @@ class DatasetSelect(SelectPluginComponent):
                 return True
             return data.label in [l.layer.label for l in self.spectrum_2d_viewer.layers]  # noqa E741
 
+        def layer_in_flux_viewer(data):
+            if not len(self.app.get_viewer_reference_names()):
+                # then this is a bare Application object, so ignore this filter
+                return True
+            return data.label in [l.layer.label for l in self.flux_viewer.layers]  # noqa E741
+
         def is_trace(data):
             return hasattr(data, 'meta') and 'Trace' in data.meta
 
@@ -3436,10 +3436,6 @@ class DatasetSelect(SelectPluginComponent):
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [_dc_to_dict(data) for data in self.app.data_collection
                                      if self._is_valid_item(data)]
-        if getattr(self, '_include_spatial_subsets', False):
-            # allow for spatial subsets to be listed
-            self.items = self.items + [_dc_to_dict(subset) for subset in self.app.data_collection.subset_groups  # noqa
-                                       if get_subset_type(subset) == 'spatial']
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)

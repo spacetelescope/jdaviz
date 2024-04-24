@@ -71,8 +71,6 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         if self.app.config == 'imviz':
             # filter out scatter-plot entries (from add_markers API, for example)
             self.dataset.add_filter('is_image')
-        # we also want to include auto-collapsed spectra (spatial subsets)
-        self.dataset._cubeviz_include_spatial_subsets()
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)

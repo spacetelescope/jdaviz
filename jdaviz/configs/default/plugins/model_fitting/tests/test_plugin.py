@@ -308,31 +308,6 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     # check that when no subset is selected, the spectral cube has no mask:
     p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
 
-    # Get the data object without collapsing the spectrum:
-    data = cubeviz_helper.app.data_collection[0].get_object(cls=Spectrum1D, statistic=None)
-    masked_data = p._apply_subset_masks(data, p.spatial_subset)
-
-    assert data.mask is None
-    assert masked_data.mask is None
-
-    # select the spatial subset, then show that mask is correct:
-    assert "Subset 1" in p.spatial_subset.choices
-    p.spatial_subset_selected = "Subset 1"
-
-    # Get the data object again (ensures mask == None)
-    data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
-    )
-    subset = cubeviz_helper.app.data_collection[0].get_subset_object(
-        p.spatial_subset_selected, cls=Spectrum1D, statistic=None
-    )
-    masked_data = p._apply_subset_masks(data, p.spatial_subset)
-    expected_spatial_mask = np.ones(data.flux.shape).astype(bool)
-    expected_spatial_mask[:, :2, :] = False
-
-    assert np.all(masked_data.mask == expected_spatial_mask)
-    assert np.all(subset.mask == expected_spatial_mask)
-
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
     # create a "Subset 2" entry in spectral dimension, selected "interactively"
     min_wavelength = 4625 * u.AA
@@ -344,10 +319,10 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
     # Now create the new spectral subset:
     sv.apply_roi(XRangeROI(min=min_wavelength.to_value(u.m), max=max_wavelength.to_value(u.m)))
-    assert "Subset 2" in p.spectral_subset.choices
+    assert "Subset 1" in p.spectral_subset.choices
 
     # Select the spectral subset
-    p.spectral_subset_selected = "Subset 2"
+    p.spectral_subset_selected = "Subset 1"
 
     # Get the data object again (ensures mask == None)
     data = cubeviz_helper.app.data_collection[0].get_object(
@@ -363,19 +338,6 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
     assert np.all(masked_data.mask == expected_spectral_mask)
     assert np.all(subset.mask == expected_spectral_mask)
-
-    # Get the data object again (ensures mask == None)
-    data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
-    )
-
-    # apply both spectral+spatial masks:
-    masked_data = data
-    for subset in [p.spatial_subset, p.spectral_subset]:
-        masked_data = p._apply_subset_masks(masked_data, subset)
-
-    # Check that both masks are applied correctly
-    assert np.all(masked_data.mask == (expected_spectral_mask | expected_spatial_mask))
 
 
 def test_invalid_subset(specviz_helper, spectrum1d):

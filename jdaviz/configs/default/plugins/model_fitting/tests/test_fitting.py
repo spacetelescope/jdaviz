@@ -82,8 +82,8 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.load_data(Spectrum1D(flux=flux * u.nJy, wcs=spectral_cube_wcs),
                              data_label='test')
     plugin = cubeviz_helper.plugins["Model Fitting"]
-    plugin.create_model_component("Linear1D", "L")
     plugin.cube_fit = True
+    plugin.create_model_component("Linear1D", "L")
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         plugin.calculate_fit()

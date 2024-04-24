@@ -76,7 +76,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to use for computing line statistics.
-    * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+    * ``spatial_subset``:
       Deprecated as of 3.11.  Use the :ref:`Spectral Extraction Plugin <spectral-extraction>`
       if necessary and select a spectrum as input to ``dataset``.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):

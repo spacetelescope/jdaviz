@@ -1,4 +1,5 @@
 import re
+import logging
 import numpy as np
 from copy import deepcopy
 
@@ -12,7 +13,6 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         SpectralSubsetSelectMixin,
-                                        SubsetSelect,
                                         DatasetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
                                         NonFiniteUncertaintyMismatchMixin,
@@ -54,8 +54,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to fit the model.
-    * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
-      Only exposed for Cubeviz.  Spatially collapsed spectrum to use to fit the model.
+    * ``spatial_subset``:
+      Deprecated as of 3.11.  Use the :ref:`Spectral Extraction Plugin <spectral-extraction>`
+      if necessary and select ``dataset`` and ``cube_fit`` accordingly.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
     * ``model_component`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``poly_order``
@@ -83,9 +84,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "model_fitting.vue"
     form_valid_model_component = Bool(False).tag(sync=True)
-
-    spatial_subset_items = List().tag(sync=True)
-    spatial_subset_selected = Unicode().tag(sync=True)
 
     # model components:
     model_comp_items = List().tag(sync=True)
@@ -124,14 +122,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.component_models = []
         self._initialized_models = {}
         self._display_order = False
-        if self.config == "cubeviz":
-            self.spatial_subset = SubsetSelect(self,
-                                               'spatial_subset_items',
-                                               'spatial_subset_selected',
-                                               default_text='Entire Cube',
-                                               filters=['is_spatial'])
-        else:
-            self.spatial_subset = None
 
         # create the label first so that when model_component defaults to the first selection,
         # the label automatically defaults as well
@@ -145,7 +135,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # when accessing the selected data, access the spectrum-viewer version
         self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
-        # require entries to be in spectrum-viewer (not other cubeviz images, etc)
+        if self.config == 'cubeviz':
+            # allow cube fitting to data in the flux viewer (toggled via the cube_fit toggle)
+            self.dataset._viewers += [self._default_flux_viewer_reference_name]
+        # by default, require entries to be in spectrum-viewer (not other cubeviz images, etc)
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
         self.equation = AutoTextField(self, 'model_equation', 'model_equation_default',
@@ -156,7 +149,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         headers = ['model', 'data_label', 'spectral_subset', 'equation']
         if self.config == 'cubeviz':
-            headers += ['spatial_subset', 'cube_fit']
+            headers += ['cube_fit']
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
@@ -182,10 +175,27 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
         )
 
+    @observe('cube_fit')
+    def _cube_fit_changed(self, msg={}):
+        if self.cube_fit:
+            self.dataset.add_filter('layer_in_flux_viewer')
+            self.dataset.remove_filter('layer_in_spectrum_viewer')
+        else:
+            self.dataset.add_filter('layer_in_spectrum_viewer')
+            self.dataset.remove_filter('layer_in_flux_viewer')
+        self.dataset._clear_cache()
+
+    @property
+    def spatial_subset(self):
+        msg = "spatial_subset in no longer supported as of 3.11 and will be removed from the user API in a future release"  # noqa
+        logging.warning(f"DeprecationWarning: {msg}")
+        raise ValueError(msg)
+
     @property
     def user_api(self):
         expose = ['dataset']
         if self.config == "cubeviz":
+            # deprecated: spatial_subset deprecated in 3.11, so remove from user API as soon as 3.13
             expose += ['spatial_subset']
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
                    'model_components', 'valid_model_components',
@@ -317,7 +327,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # retrieves the 1d spectrum
         return self.dataset.selected_spectrum(use_display_units=True)
 
-    @observe("dataset_selected", "spatial_subset_selected")
+    @observe("dataset_selected")
     def _dataset_selected_changed(self, event=None):
         """
         Callback method for when the user has selected data from the drop down
@@ -809,7 +819,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                'spectral_subset': self.spectral_subset_selected,
                'equation': self.equation.value}
         if self.app.config == 'cubeviz':
-            row['spatial_subset'] = self.spatial_subset_selected
             row['cube_fit'] = self.cube_fit
 
         equation_components = self.equation_components
@@ -917,9 +926,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Retrieve copy of the models with proper "fixed" dictionaries
         models_to_fit = self._reinitialize_with_fixed()
 
-        # Apply masks from selected subsets
-        for subset in [self.spatial_subset, self.spectral_subset]:
-            spec = self._apply_subset_masks(spec, subset)
+        # Apply masks from selected spectral subset
+        spec = self._apply_subset_masks(spec, self.spectral_subset)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
@@ -960,8 +968,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _apply_subset_masks(self, spectrum, subset_component):
         """
         For a spectrum/spectral cube ``spectrum``, add a mask attribute
-        if none exists. Mask excludes non-selected spectral and/or
-        spatial subsets.
+        if none exists. Mask excludes non-selected spectral subsets.
         """
         # only look for a mask if there is a selected subset:
         if subset_component.selected == subset_component.default_text:
