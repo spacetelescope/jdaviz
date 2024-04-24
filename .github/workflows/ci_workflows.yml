@@ -52,7 +52,7 @@ jobs:
             allow_failure: false
 
           - name: OS X - Python 3.9
-            os: macos-latest
+            os: macos-12
             python: 3.9
             toxenv: py39-test
             allow_failure: false
