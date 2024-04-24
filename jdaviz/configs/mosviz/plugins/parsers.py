@@ -259,7 +259,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False, ext=None, transpose=False):
+                      show_in_viewer=False, ext=1, transpose=False):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -326,7 +326,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         data_obj = [data_obj]
 
     # See if this is a multi s2d file
-    if (ext is None) and (len(data_obj) == 1) and _check_is_file(data_obj[0]):
+    if app.config == "mosviz" and len(data_obj) == 1 and _check_is_file(data_obj[0]):
         if identify_jwst_s2d_multi_fits("test", data_obj[0]):
             data_obj = SpectrumList.read(data_obj[0])
 
