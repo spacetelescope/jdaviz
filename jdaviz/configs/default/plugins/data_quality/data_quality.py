@@ -56,7 +56,6 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 
         self.science_layer = LayerSelect(
@@ -80,18 +79,20 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             return
 
         def is_image_viewer(viewer):
-            return hasattr(viewer, 'active_image_layer')
+            from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+            from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+
+            return isinstance(viewer, (ImvizImageView, CubevizImageView))
 
         viewer_filter_names = [filt.__name__ for filt in self.viewer.filters]
         if 'is_image_viewer' not in viewer_filter_names:
             self.viewer.add_filter(is_image_viewer)
             self.viewer._on_viewers_changed()
 
-    @observe('viewer_selected')
-    def _on_viewer_change(self, *args):
-        self._update_available_viewers()
-        self.update_dq_layer()
-        self.send_state('decoded_flags')
+        # by default, select all image viewers to sync each DQ layer's
+        # options across all viewers that they're visible in:
+        self.viewer_multiselect = True
+        self.viewer.select_all()
 
     @observe('dq_layer_items')
     def _set_irrelevant(self, *args):
@@ -126,7 +127,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def unique_flags(self):
-        selected_dq = self.dq_layer.selected_obj
+        selected_dq = self.get_dq_layers()
         if not len(selected_dq):
             return []
 
@@ -304,7 +305,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         if not hasattr(self, 'science_layer'):
             return
 
-        layer = self.science_layer.selected_obj
+        layer = self.get_science_layers()
         if not len(layer):
             return
 
@@ -343,7 +344,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             expose=(
                 'science_layer', 'dq_layer',
                 'decoded_flags', 'flags_filter',
-                'viewer', 'dq_layer_opacity',
+                'dq_layer_opacity',
                 'flag_map_definitions_selected',
             )
         )

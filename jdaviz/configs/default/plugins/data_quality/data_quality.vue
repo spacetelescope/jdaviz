@@ -5,19 +5,6 @@
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button">
 
-    <!-- VIEWER OPTIONS -->
-    <plugin-viewer-select
-      :items="viewer_items"
-      :selected.sync="viewer_selected"
-      :multiselect.sync="viewer_multiselect"
-      :show_multiselect_toggle="viewer_multiselect || viewer_items.length > 1"
-      :icon_checktoradial="icon_checktoradial"
-      :icon_radialtocheck="icon_radialtocheck"
-      :label="viewer_multiselect ? 'Viewers' : 'Viewer'"
-      :show_if_single_entry="viewer_multiselect"
-      :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
-    />
-
     <plugin-layer-select
       :items="science_layer_items"
       :selected.sync="science_layer_selected"
