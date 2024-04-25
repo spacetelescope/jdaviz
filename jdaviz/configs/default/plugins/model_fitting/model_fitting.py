@@ -203,8 +203,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                    'get_model_component', 'set_model_component', 'reestimate_model_parameters',
                    'equation', 'equation_components',
                    'add_results', 'residuals_calculate', 'residuals']
-        if self.config == "cubeviz":
-            expose += ['cube_fit']
         expose += ['calculate_fit', 'clear_table', 'export_table']
         return PluginUserApi(self, expose=expose)
 
@@ -758,8 +756,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         label_comps = []
         if hasattr(self, 'dataset') and (len(self.dataset.labels) > 1 or self.app.config == 'mosviz'):  # noqa
             label_comps += [self.dataset_selected]
-        if self.cube_fit:
-            label_comps += ["cube-fit"]
         label_comps += ["model"]
         self.results_label_default = " ".join(label_comps)
 
@@ -818,8 +814,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                'data_label': self.dataset_selected,
                'spectral_subset': self.spectral_subset_selected,
                'equation': self.equation.value}
-        if self.app.config == 'cubeviz':
-            row['cube_fit'] = self.cube_fit
 
         equation_components = self.equation_components
         for comp_ind, comp in enumerate(equation_components):
