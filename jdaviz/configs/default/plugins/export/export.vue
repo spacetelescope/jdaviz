@@ -150,7 +150,9 @@
           :menu-props="{ left: true }"
           attach
           v-model="subset_format_selected"
-          :items="subset_format_items.map(i => i.label)"
+          :items="subset_format_items"
+          item-text="label"
+          item-disabled="disabled"
           label="Format"
           hint="Format for exporting subsets."
           :disabled="subset_selected == null || subset_selected.length == 0"

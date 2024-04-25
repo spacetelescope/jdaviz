@@ -112,7 +112,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                 'from_plugin']
 
         # NOTE: if/when adding support for spectral subsets, update the languange in the UI
-        self.subset.filters = ['is_spatial']
+        #self.subset.filters = ['is_spatial']
 
         viewer_format_options = ['png', 'svg']
         if self.config == 'cubeviz':
@@ -135,7 +135,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                          selected='plugin_table_format_selected',
                                                          manual_options=plugin_table_format_options)
 
-        subset_format_options = ['fits', 'reg']
+        subset_format_options = [{'label': 'fits', 'value': 'fits', 'disabled': False},
+                                    {'label': 'reg', 'value': 'reg', 'disabled': False},
+                                    {'label': 'ecsv', 'value': 'ecsv', 'disabled': True}]
+        #subset_format_options = ['fits', 'reg']
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
@@ -226,6 +229,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if name != attr:
                 setattr(self, attr, '')
             if attr == 'subset_selected':
+                self._update_subset_format_disabled()
                 self._set_subset_not_supported_msg()
             if attr == 'dataset_selected':
                 self._set_dataset_not_supported_msg()
@@ -258,6 +262,24 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # Clear overwrite warning when user changes filename
         self.overwrite_warn = False
 
+    def _update_subset_format_disabled(self):
+        print("Updating disabled formats")
+        new_items = []
+        if self.subset.selected is not None:
+            subset = self.app.get_subsets(self.subset.selected)
+            if self.app._is_subset_spectral(subset[0]):
+                good_formats = ["ecsv"]
+            else:
+                good_formats = ["fits", "reg"]
+            for item in self.subset_format_items:
+                if item["label"] in good_formats:
+                    item["disabled"] = False
+                else:
+                    item["disabled"] = True
+                new_items.append(item)
+        self.subset_format_items = []
+        self.subset_format_items = new_items
+
     def _set_subset_not_supported_msg(self, msg=None):
         """
         Check if selected subset is spectral or composite, and warn and
@@ -270,8 +292,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 self.subset_invalid_msg = ''
             elif self.app._is_subset_spectral(subset[0]):
                 self.subset_invalid_msg = ''
-                self.subset_format_items = ['ecsv',]
-                self.subset_format.items = self.subset_format_items
             elif len(subset) > 1:
                 self.subset_invalid_msg = 'Export for composite subsets not yet supported.'
             else:
