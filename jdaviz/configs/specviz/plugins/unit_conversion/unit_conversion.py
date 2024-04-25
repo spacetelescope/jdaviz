@@ -4,8 +4,8 @@ from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent, SelectPluginComponent,
-                                        PluginUserApi)
+from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
+                                        SelectPluginComponent, PluginUserApi)
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list)
 
@@ -53,9 +53,7 @@ class UnitConversion(PluginTemplateMixin):
     flux_unit_items = List().tag(sync=True)
     flux_unit_selected = Unicode().tag(sync=True)
 
-    translate_unit = Bool(False).tag(sync=True)
     show_translator = Bool(False).tag(sync=True)
-
     flux_or_sb_items = List().tag(sync=True)
     flux_or_sb_selected = Unicode().tag(sync=True)
 
@@ -139,16 +137,20 @@ class UnitConversion(PluginTemplateMixin):
     def translate_units(self, flux_or_sb_selected):
         spec_units = u.Unit(self.spectrum_viewer.state.y_display_unit)
         # Surface Brightness -> Flux
-        if u.sr in spec_units.bases and flux_or_sb_selected == 'Surface Brightness':
+        if u.sr in spec_units.bases and flux_or_sb_selected == 'Flux':
             spec_units *= u.sr
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
 
         # Flux -> Surface Brightness
-        elif u.sr not in spec_units.bases and flux_or_sb_selected == 'Flux':
+        elif u.sr not in spec_units.bases and flux_or_sb_selected == 'Surface Brightness':
             spec_units /= u.sr
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
+
+        else:
+            raise ValueError("Unrecognized unit translation, \
+                             please ensure y-unit is in Surface Brightness or Flux.")
 
     @observe('spectral_unit_selected')
     def _on_spectral_unit_changed(self, *args):
@@ -167,23 +169,32 @@ class UnitConversion(PluginTemplateMixin):
             self.hub.broadcast(GlobalDisplayUnitChanged('flux',
                                                         self.flux_unit.selected,
                                                         sender=self))
-    @observe('flux_or_sb_selected')
-    def _set_flux_or_sb(self, *args):
-        if u.sr in u.Unit(self.flux_unit.selected).bases:
-            self.flux_or_sb_selected = 'Surface Brightness'
-        else:
-            self.flux_or_sb_selected = 'Flux'        
 
-    @observe('translate_unit', 'flux_or_sb_selected')
+    # Ensure first dropdown selection for Flux/Surface Brightness
+    # is in accordance with the data collection item's units.
+    @observe('show_translator')
+    def _set_flux_or_sb(self, *args):
+        if (self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit')
+           and self.spectrum_viewer.state.y_display_unit is not None):
+            if u.sr in u.Unit(self.spectrum_viewer.state.y_display_unit).bases:
+                self.flux_or_sb_selected = 'Surface Brightness'
+            else:
+                self.flux_or_sb_selected = 'Flux'
+
+    @observe('flux_or_sb_selected')
     def _translate(self, *args):
-        # make sure we have a scale factor
+        # Check for a scale factor/data passed through spectral extraction plugin.
         specs_w_factor = [spec for spec in self.app.data_collection
                           if "_pixel_scale_factor" in spec.meta]
-
+        # Translate if we have a scale factor
         if specs_w_factor:
             self.translate_units(self.flux_or_sb_selected)
-        if not self.show_translator:
+        # The translator dropdown hasn't been loaded yet so don't try translating
+        elif not self.show_translator:
             return
+        # Notify the user to extract a spectrum before using the surface brightness/flux
+        # translation. Can be removed after all 1D spectra in Cubeviz pass through
+        # spectral extraction plugin (as the scale factor will then be stored).
         else:
             raise ValueError("No collapsed spectra in data collection, \
                               please collapse a spectrum first.")

@@ -69,23 +69,23 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     # Get local units.
     if u.sr not in flux_unit.bases:
         locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'Jy',
-                                    'W / (m2 Hz)',
-                                    'eV / (s m2 Hz)',
-                                    'erg / (s cm2)',
-                                    'erg / (s cm2 Angstrom)',
-                                    'erg / (s cm2 Hz)',
-                                    'ph / (s cm2 Angstrom)',
-                                    'ph / (s cm2 Hz)']
+                                      'W / (m2 Hz)',
+                                      'eV / (s m2 Hz)',
+                                      'erg / (s cm2)',
+                                      'erg / (s cm2 Angstrom)',
+                                      'erg / (s cm2 Hz)',
+                                      'ph / (s cm2 Angstrom)',
+                                      'ph / (s cm2 Hz)']
         local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
     else:
         locally_defined_flux_units = ['Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr', 'Jy / sr',
-                                    'W / (m2 Hz sr)',
-                                    'eV / (s m2 Hz sr)',
-                                    'erg / (s cm2 sr)',
-                                    'erg / (s cm2 Angstrom sr)',
-                                    'erg / (s cm2 Hz sr)',
-                                    'ph / (s cm2 Angstrom sr)',
-                                    'ph / (s cm2 Hz sr)']
+                                      'W / (m2 Hz sr)',
+                                      'eV / (s m2 Hz sr)',
+                                      'erg / (s cm2 sr)',
+                                      'erg / (s cm2 Angstrom sr)',
+                                      'erg / (s cm2 Hz sr)',
+                                      'ph / (s cm2 Angstrom sr)',
+                                      'ph / (s cm2 Hz sr)']
         local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
 
     # Remove overlap units.

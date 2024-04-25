@@ -125,7 +125,7 @@ def test_non_stddev_uncertainty(specviz_helper):
 
 
 def test_unit_translation(cubeviz_helper):
-    # custom cube so we have PIXAR_SR in metadata, and flux units = Jy/pix
+    # custom cube so PIXAR_SR is in metadata, and Flux units, and in MJy
     wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
                 "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
                 "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
@@ -148,31 +148,42 @@ def test_unit_translation(cubeviz_helper):
     # set so pixel scale factor != 1
     extract_plg.reference_spectral_value = 0.000001
 
-    # collapse to spectrum, now we can get pixel scale factor
+    # all spectra will pass through spectral extraction,
+    # this will store a scale factor for use in translations.
     collapsed_spec = extract_plg.collapse_to_spectrum()
 
+    # test that the scale factor was set
     assert collapsed_spec.meta['_pixel_scale_factor'] != 1
 
-    # store to test second time after calling translate_units
-    mjy_sr_data1 = collapsed_spec._data[0]
-
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    # When the dropdown is displayed, this ensures the loaded
+    # data collection item units will be used for translations.
+    uc_plg._obj.show_translator = True
 
-    print(cubeviz_helper.app.data_collection[1])
-    data = cubeviz_helper.app.data_collection[1].data
-    spec = data.get_object(cls=Spectrum1D)
-    print("meta data", spec.meta['_pixel_scale_factor'])
+    # to have access to display units
+    viewer_1d = cubeviz_helper.app.get_viewer(
+        cubeviz_helper._default_spectrum_viewer_reference_name)
 
-    uc_plg._obj._translate()
+    # change global y-units from Flux -> Surface Brightness
+    uc_plg._obj.flux_or_sb_selected = 'Surface Brightness'
+    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
-    assert collapsed_spec._unit == u.MJy / u.sr
-    # some value in MJy/sr that we know the outcome after translation
-    assert np.allclose(collapsed_spec._data[0], 8.7516529e10)
+    # check if units translated
+    assert y_display_unit == u.MJy / u.sr
 
-    uc_plg._obj._translate()
+    # Surface Brightness conversion
+    uc_plg.flux_unit_selected = 'W / (Hz sr m2)'
+    assert y_display_unit == u.W / (u.m**2 * u.sr * u.Hz)
 
-    # translating again returns the original units
-    assert collapsed_spec._unit == u.MJy
-    # returns to the original values
-    # which is a value in Jy/pix that we know the outcome after translation
-    assert np.allclose(collapsed_spec._data[0], mjy_sr_data1)
+    # A second Surface Brightness conversion
+    uc_plg.flux_unit_selected = 'Jy / sr'
+    assert y_display_unit == u.Jy / u.sr
+
+    # Translate back to Flux
+    uc_plg._obj.flux_or_sb_selected = 'Flux'
+    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
+    assert y_display_unit == u.Jy
+
+    # test flux conversion
+    uc_plg.flux_unit_selected = 'ph / (Angstrom s cm2)'
+    assert y_display_unit == u.ph / (u.s * u.cm**2 * u.Angstrom)

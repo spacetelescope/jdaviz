@@ -83,7 +83,7 @@ class UnitConverterWithSpectral:
                     'erg / (s cm2 Angstrom)', 'erg / (Angstrom s cm2)',
                     'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
                     'ph / (s cm2 Angstrom)', 'ph / (Angstrom s cm2)',
-                    'ph / (s cm2 Hz)', 'ph / (Hz s cm2)'
+                    'ph / (Hz s cm2)', 'ph / (Hz s cm2)', 'bol', 'AB', 'ST'
                 ]
                 + [
                     'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
@@ -112,50 +112,67 @@ class UnitConverterWithSpectral:
             except RuntimeError:
                 eqv = []
             if len(values) == 2:
-                    # Need this for setting the y-limits
-                    spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
-                    eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
-    
+                # Need this for setting the y-limits
+                spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
+                eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
+
+            # Ensure a spectrum passed through Spectral Extraction plugin
             elif '_pixel_scale_factor' in spec.meta:
-                if (u.sr in u.Unit(original_units).bases) and \
-                   (u.sr not in u.Unit(target_units).bases):
-                    # sb -> flux
+                # if spectrum data collection item is in Surface Brightness units
+                if u.sr in spec.unit.bases:
+                    # Data item in data collection does not update from conversion/translation.
+                    # App wide orginal data units are used for conversion, orginal_units and
+                    # target_units dicate the conversion to take place.
+                    if (u.sr in u.Unit(original_units).bases) and \
+                       (u.sr not in u.Unit(target_units).bases) and \
+                       (target_units not in ["AB", "bol", "ST"]):  # astropy supported equivalency
+                        # Surface Brightness -> Flux
+                        eqv = [(u.MJy / u.sr,
+                                u.MJy,
+                                lambda x: (x * spec.meta['_pixel_scale_factor']),
+                                lambda x: x)]
+                        
+                        # below is the generalized version
+                        '''
+                        eqv = [(u.Unit(original_units),
+                                u.Unit(target_units),
+                                lambda x: (x * spec.meta['_pixel_scale_factor']),
+                                lambda x: x)]
+                        '''
+                    else:
+                        # Flux -> Surface Brightness
+                        eqv = u.spectral_density(spec.spectral_axis)
 
-                    # to debug
-                    print('first if')
-                    print('values before')
-                    print(values)
+                # if spectrum data collection item is in Flux units
+                elif u.sr not in spec.unit.bases:
+                    # Data item in data collection does not update from conversion/translation.
+                    # App wide orginal data units are used for conversion, orginal_units and
+                    # target_units dicate the conversion to take place.
+                    if (u.sr not in u.Unit(original_units).bases) and \
+                       (u.sr in u.Unit(target_units).bases) and \
+                       (target_units not in ["AB", "bol", "ST"]):  # astropy supported equivalency
+                        # Flux -> Surface Brightness
+                        eqv = [(u.MJy,
+                                u.MJy / u.sr,
+                                lambda x: (x / spec.meta['_pixel_scale_factor']),
+                                lambda x: x)]
+                        
+                        # below is the generalized version
+                        '''
+                        eqv = [(u.Unit(original_units),
+                                u.Unit(target_units),
+                                lambda x: (x / spec.meta['_pixel_scale_factor']),
+                                lambda x: x)]
+                        '''
+                    else:
+                        # Surface Brightness -> Flux
+                        eqv = u.spectral_density(spec.spectral_axis)
 
-                    converted_values = values * spec.meta['_pixel_scale_factor']
-
-                    # to debug
-                    print(converted_values)
-
-                    return converted_values
+                # flux cid, but neither Surface Brightness nor Flux units
                 else:
-                    # elif (u.sr in u.Unit(target_units).bases) and \
-                    # (u.sr not in u.Unit(original_units).bases):
-                    # flux -> sb
-
-                    # to debug
-                    print('second elif')
-                    print('values before')
-                    print(values)
-
-                    converted_values = values / spec.meta['_pixel_scale_factor']
-                    # to debug
-                    print(converted_values)
-                    return converted_values
-                # custom equivalency
-                '''
-                eqv = [(u.MJy / u.sr,
-                        u.MJy,
-                        lambda x: (x * spec.meta['_pixel_scale_factor']),
-                        lambda x: x)]
-                '''
-
+                    raise ValueError('flux cid, but not a flux nor surface brightness unit.')
             else:
-                    eqv = u.spectral_density(spec.spectral_axis)
+                eqv = u.spectral_density(spec.spectral_axis)
 
         else:  # spectral axis
             eqv = u.spectral()

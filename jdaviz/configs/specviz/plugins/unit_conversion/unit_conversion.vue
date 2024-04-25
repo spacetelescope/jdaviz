@@ -26,7 +26,7 @@
         :items="flux_or_sb_items.map(i => i.label)"
         v-model="flux_or_sb_selected"
         label="Flux or Surface Brightness"
-        hint="Select between Flux and Surface Brightness global display unit for y-axis."
+        hint="Select between Flux or Surface Brightness physical type for y-axis."
         persistent-hint
       ></v-select>
     </v-row>
@@ -40,7 +40,6 @@
         :label="flux_or_sb_selected === 'Flux' ? 'Flux Unit' : 'Surface Brightness Unit'"
         :hint="flux_or_sb_selected === 'Flux' ? 'Global display unit for flux.' : 'Global display unit for surface brightness.'"
         persistent-hint
-        :disabled="config === 'cubeviz'"
       ></v-select>
     </v-row>
   </j-tray-plugin>
