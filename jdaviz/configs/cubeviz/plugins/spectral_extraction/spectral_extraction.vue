@@ -135,17 +135,6 @@
       </div>
     </div>
 
-    <div>
-      <v-row>
-      <v-switch
-        v-model="translate_unit"
-        label="Translate units"
-        hint="Toggle between surface brightness and flux units"
-        persistent-hint
-      ></v-switch>
-    </v-row>
-  </div>
-
     <div @mouseover="() => active_step='ext'">
       <j-plugin-section-header :active="active_step==='ext'">Extract</j-plugin-section-header>
 
@@ -280,5 +269,6 @@
         </v-overlay>
       </div>
     </div>
+
   </j-tray-plugin>
 </template>
