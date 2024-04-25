@@ -60,7 +60,8 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
         self.science_layer = LayerSelect(
             self, 'science_layer_items', 'science_layer_selected',
-            'viewer_selected', 'science_layer_multiselect', is_root=True
+            'viewer_selected', 'science_layer_multiselect',
+            is_root=True, has_children=True
         )
 
         self.dq_layer = LayerSelect(
