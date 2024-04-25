@@ -3680,7 +3680,7 @@ class AddResults(BasePluginComponent):
 
     @property
     def user_api(self):
-        return UserApiWrapper(self, ('label', 'auto', 'viewer', 'auto_update_result'))
+        return UserApiWrapper(self, ('label', 'auto', 'viewer'))
 
     @property
     def label(self):
