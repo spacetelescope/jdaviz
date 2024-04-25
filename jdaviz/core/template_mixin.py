@@ -858,7 +858,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return self._cached_properties
 
     def add_filter(self, *filters):
-        self.filters += [filter for filter in filters]
+        self.filters = self.filters + [filter for filter in filters]
 
     def remove_filter(self, *filters):
         self.filters = [f for f in self.filters
