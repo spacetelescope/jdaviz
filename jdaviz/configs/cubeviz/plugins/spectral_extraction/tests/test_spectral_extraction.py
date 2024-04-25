@@ -430,7 +430,7 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
     extract_plg.aperture = 'Subset 1'
     extract_plg.add_results.label = 'extracted'
-    extract_plg.add_results.auto_update_result = True
+    extract_plg.add_results._obj.auto_update_result = True
     _ = extract_plg.collapse_to_spectrum()
 
 #    orig_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
