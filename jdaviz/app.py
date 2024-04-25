@@ -2078,7 +2078,14 @@ class Application(VuetifyTemplate, HubListener):
 
             data = self.data_collection[data_label]
 
-            viewer.add_data(data, percentile=95, color=viewer.color_cycler())
+            # set the original color based on metadata preferences, if provided, and otherwise
+            # based on the colorcycler
+            # NOTE: this is intentionally not a single line to avoid incrementing the color-cycler
+            # unless it is used
+            color = data.meta.get('_default_color')
+            if color is None:
+                color = viewer.color_cycler()
+            viewer.add_data(data, percentile=95, color=color)
 
             # Specviz removes the data from collection in viewer.py if flux unit incompatible.
             if data_label not in self.data_collection:

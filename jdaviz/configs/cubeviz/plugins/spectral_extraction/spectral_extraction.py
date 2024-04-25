@@ -393,6 +393,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         collapsed_spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         if add_data:
+            if default_color := self.aperture.selected_item.get('color', None):
+                collapsed_spec.meta['_default_color'] = default_color
             self.add_results.add_results_from_plugin(collapsed_spec)
 
             snackbar_message = SnackbarMessage(
