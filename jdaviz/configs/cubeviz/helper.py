@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from astropy.io import fits
 from astropy.io import registry as io_registry
@@ -147,20 +148,24 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
                  cls=None, use_display_units=False):
         """
         Returns data with name equal to ``data_label`` of type ``cls`` with subsets applied from
-        ``spatial_subset`` and/or ``spectral_subset`` using ``function`` if applicable.
+        ``spectral_subset``, if applicable.
 
         Parameters
         ----------
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
         spatial_subset : str, optional
+            Deprecated as of 3.11.  Use the spectral extraction plugin and extract the extracted
+            spectrum instead.
             Spatial subset applied to data.
         spectral_subset : str, optional
             Spectral subset applied to data.
         function : {True, False, 'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
+            Deprecated as of 3.11.  Use the spectral extraction plugin and extract the extracted
+            spectrum instead.
             Ignored if ``data_label`` does not point to cube-like data.
-            If True, will collapse according to the current collapse function defined in the
-            spectrum viewer.  If provided as a string, the cube will be collapsed with the provided
+            If True, will collapse using 'sum'.
+            If provided as a string, the cube will be collapsed with the provided
             function.  If False, None, or not passed, the entire cube will be returned (unless there
             are values for ``spatial_subset`` and ``spectral_subset``).
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
@@ -172,6 +177,11 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
+        if function is not None or spatial_subset is not None:
+            logging.warning("DeprecationWarning: function and spatial_subset are deprecated and"
+                            " will be removed in a future release.  Use the spectral extraction"
+                            " plugin and access the extracted spectrum directly.")
+
         # If function is a value ('sum' or 'minimum') or True and spatial and spectral
         # are set, then we collapse the cube along the spatial subset using the function, then
         # we apply the mask from the spectral subset.
