@@ -2091,10 +2091,12 @@ class Application(VuetifyTemplate, HubListener):
                                               sender=self)
             self.hub.broadcast(add_data_message)
 
+        assoc_children = self._get_assoc_data_children(data_label)
+
         # set visibility state of all applicable layers
         for layer in viewer.layers:
             layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(_wcs_only_label, False)
-            if layer.layer.data.label == data_label:
+            if layer.layer.data.label in [data_label] + assoc_children:
                 if layer_is_wcs_only:
                     layer.visible = False
                     layer.update()
@@ -2112,22 +2114,21 @@ class Application(VuetifyTemplate, HubListener):
                     layer.visible = False
 
         # if Data has children, update their visibilities to match Data:
-        assoc_children = self._get_assoc_data_children(data_label)
         available_plugins = [tray_item['name'] for tray_item in self.state.tray_items]
-        if assoc_children not in viewer.data_labels_loaded:
-            for child in assoc_children:
+        for child in assoc_children:
+            if child not in viewer.data_labels_loaded:
                 self.add_data_to_viewer(viewer.reference, child, visible=visible)
 
-                if 'g-data-quality' in available_plugins and visible:
-                    # if we're adding a DQ layer to a viewer, make sure that
-                    # the layer is appropriately colormapped as DQ:
-                    data_quality_plugin = self.get_tray_item_from_name('g-data-quality')
-                    old_viewer = data_quality_plugin.viewer_selected
-                    data_quality_plugin.viewer_selected = viewer.reference
-                    data_quality_plugin.science_layer_selected = data_label
-                    data_quality_plugin.dq_layer_selected = child
-                    data_quality_plugin.init_decoding(viewers=[viewer])
-                    data_quality_plugin.viewer_selected = old_viewer
+            if 'g-data-quality' in available_plugins and visible:
+                # if we're adding a DQ layer to a viewer, make sure that
+                # the layer is appropriately colormapped as DQ:
+                data_quality_plugin = self.get_tray_item_from_name('g-data-quality')
+                old_viewer = data_quality_plugin.viewer_selected
+                data_quality_plugin.viewer_selected = viewer.reference
+                data_quality_plugin.science_layer_selected = data_label
+                data_quality_plugin.dq_layer_selected = child
+                data_quality_plugin.init_decoding(viewers=[viewer])
+                data_quality_plugin.viewer_selected = old_viewer
 
         for layer in viewer.layers:
             if layer.layer.data.label in assoc_children:
