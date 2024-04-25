@@ -5,16 +5,6 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-      <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
-           to make sure that is clear -->
-      <plugin-dataset-select
-        :items="dataset_items"
-        :selected.sync="dataset_selected"
-        :show_if_single_entry="config=='mosviz'"
-        label="Data"
-        hint="Select the data to be smoothed."
-      />
-
       <v-row v-if="show_modes">
         <v-select
           :menu-props="{ left: true }"
@@ -26,6 +16,17 @@
           persistent-hint
         ></v-select>
       </v-row>
+
+      <!-- for mosviz, the entries change on row change
+           for cubeviz, the entries change when toggling "cube fit"
+           so let's always show the dropdown for those cases to make the selection clear -->
+      <plugin-dataset-select
+        :items="dataset_items"
+        :selected.sync="dataset_selected"
+        :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
+        label="Data"
+        hint="Select the data to be smoothed."
+      />
 
       <v-row>
         <v-text-field
