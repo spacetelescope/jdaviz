@@ -52,7 +52,9 @@
 
     <slot></slot>
 
-    <v-row v-if="false && auto_update_result !== undefined">
+    <!-- currently not exposed to users, uncomment this block and include in the 
+         user API for the AutoUpdate component to re-enable
+    <v-row v-if="auto_update_result !== undefined">
       <v-switch
         v-model="auto_update_result"
         @change="(e) => {$emit('update:auto_update_result', auto_update_result)}"
@@ -62,6 +64,7 @@
       >
       </v-switch>
     </v-row>
+    -->
 
     <v-row justify="end">
       <j-tooltip :tooltipcontent="label_overwrite ? action_tooltip+' and replace existing entry' : action_tooltip">
