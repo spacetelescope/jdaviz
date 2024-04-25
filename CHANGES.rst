@@ -4,7 +4,7 @@
 New Features
 ------------
 
-- Infrastructure to support auto-updating plugin results. [#2680]
+- Infrastructure to support auto-updating plugin results, not yet available to users. [#2680, #2834]
 
 - The filename entry in the export plugin is now automatically populated based on the selection. [#2824]
 
