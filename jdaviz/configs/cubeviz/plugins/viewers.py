@@ -10,7 +10,6 @@ from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage, GlobalDisplayUnitChanged
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
-from jdaviz.utils import get_subset_type
 
 __all__ = ['CubevizImageView', 'CubevizProfileView',
            'WithSliceIndicator', 'WithSliceSelection']
@@ -266,35 +265,3 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
         # Clear cache of slice values when units change
         if 'slice_values' in self.__dict__:
             del self.__dict__['slice_values']
-
-    def _is_spatial_subset(self, layer):
-        subset_state = getattr(layer.layer, 'subset_state', None)
-        return get_subset_type(subset_state) == 'spatial'
-
-    def _get_spatial_subset_layers(self, data_label=None):
-        if data_label:
-            return [ls for ls in self.state.layers if (ls.layer.data.label == data_label and
-                                                       self._is_spatial_subset(ls))]
-        return [ls for ls in self.state.layers if self._is_spatial_subset(ls)]
-
-    def _is_spectral_subset(self, layer):
-        subset_state = getattr(layer.layer, 'subset_state', None)
-        return get_subset_type(subset_state) == 'spectral'
-
-    def _get_spectral_subset_layers(self, data_label=None):
-        if data_label:
-            return [ls for ls in self.state.layers if (ls.layer.data.label == data_label and
-                                                       self._is_spectral_subset(ls))]
-        return [ls for ls in self.state.layers if self._is_spectral_subset(ls)]
-
-    def _get_marks_for_layers(self, layers):
-        layers_list = list(self.state.layers)
-        # here we'll assume that all custom marks are subclasses of Lines/GL but don't directly
-        # use Lines/LinesGL (so an isinstance check won't be sufficient here)
-        layer_marks = self.native_marks
-        # and now we'll assume that the marks are in the same order as the layers, this should
-        # be the case as long as the order isn't manually resorted.  If for any reason the layer
-        # is added but the mark has not yet been created, this will ignore that entry rather than
-        # raising an IndexError.
-        inds = [layers_list.index(layer) for layer in layers]
-        return [layer_marks[ind] for ind in inds if ind < len(layer_marks)]
