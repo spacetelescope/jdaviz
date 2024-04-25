@@ -74,6 +74,11 @@ def test_stretch_bounds(imviz_helper):
 
 
 def test_stretch_bounds_and_spline(imviz_helper):
+
+    # As the histogram randomly samples the array, we should make sure the
+    # values used here are reproducible
+    np.random.seed(42)
+
     image_1 = NDData(make_4gaussians_image(), unit=u.nJy)
     imviz_helper.load_data(image_1)
     po = imviz_helper.plugins["Plot Options"]
@@ -93,7 +98,7 @@ def test_stretch_bounds_and_spline(imviz_helper):
 
         knots_after_drag_move = (
             [0.0, 0.1, 0.21712585033417825, 0.7, 1.0],
-            [0.0, 0.05, 0.2900993441358025, 0.9, 1.0],
+            [0.0, 0.05, 0.2852214046563617, 0.9, 1.0],
         )
 
         stretch_tool.on_mouse_event(knot_move_msg)
