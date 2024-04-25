@@ -105,9 +105,8 @@ class Slice(PluginTemplateMixin):
         # will be handled by a change to global display units)
         if not self.value_unit:
             for viewer in self.slice_indicator_viewers:
-                # ignore while x_display_unit is unset or still degrees (before data transpose)
-                # if we ever need the slice axis to be degrees, this will need to be loosened
-                if getattr(viewer.state, 'x_display_unit', None) not in (None, 'deg'):
+                # ignore while x_display_unit is unset
+                if getattr(viewer.state, 'x_display_unit', None) is not None:
                     self.value_unit = viewer.state.x_display_unit
                     break
 
