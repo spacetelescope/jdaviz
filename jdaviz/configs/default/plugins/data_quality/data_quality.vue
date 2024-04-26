@@ -130,7 +130,7 @@
               <v-col cols=1>
               </v-col>
                 <v-col cols=2>
-                <j-tooltip tipid='plugin-line-lists-color-picker'>
+                <j-tooltip tipid='plugin-dq-color-picker'>
                   <v-menu>
                     <template v-slot:activator="{ on }">
                         <span class="color-menu"

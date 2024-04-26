@@ -835,7 +835,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return self._cached_properties
 
     def add_filter(self, *filters):
-        self.filters += [filter for filter in filters]
+        self.filters = self.filters + [filter for filter in filters]
 
     @property
     def viewer_dicts(self):

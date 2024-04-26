@@ -107,6 +107,7 @@ const tooltips = {
   'plugin-footprints-color-picker': 'Change the color of the footprint overlay',
   'plugin-dq-show-all': 'Show all quality flags',
   'plugin-dq-hide-all': 'Hide all quality flags',
+  'plugin-dq-color-picker': 'Change the color of this DQ flag',
 }
 
 

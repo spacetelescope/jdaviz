@@ -2734,17 +2734,24 @@ class Application(VuetifyTemplate, HubListener):
         self._data_associations[data_label] = {'parent': None, 'children': []}
 
     def _set_assoc_data_as_child(self, data_label, new_parent_label):
+        for data_item in self.state.data_items:
+            if data_item['name'] == data_label:
+                child_id = data_item['id']
+            elif data_item['name'] == new_parent_label:
+                new_parent_id = data_item['id']
+
         # Data has a new parent:
         self._data_associations[data_label]['parent'] = new_parent_label
+
+        # parent has a new child:
+        self._data_associations[new_parent_label]['children'].append(data_label)
 
         # update the data item so vue can see the change:
         for data_item in self.state.data_items:
             if data_item['name'] == data_label:
-                data_item['parent'] = new_parent_label
-                break
-
-        # parent has a new child:
-        self._data_associations[new_parent_label]['children'].append(data_label)
+                data_item['parent'] = new_parent_id
+            elif data_item['name'] == new_parent_label:
+                data_item['children'].append(child_id)
 
     def _get_assoc_data_children(self, data_label):
         # intentionally not recursive for now, just one generation:

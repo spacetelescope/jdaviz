@@ -1,3 +1,4 @@
+from itertools import chain
 import os
 from traitlets import Any, Dict, Bool, List, Unicode, Float, observe
 
@@ -88,7 +89,6 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         viewer_filter_names = [filt.__name__ for filt in self.viewer.filters]
         if 'is_image_viewer' not in viewer_filter_names:
             self.viewer.add_filter(is_image_viewer)
-            self.viewer._on_viewers_changed()
 
         # by default, select all image viewers to sync each DQ layer's
         # options across all viewers that they're visible in:
@@ -127,10 +127,22 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             self.flag_map_items = self.flag_map_items + [telescope_names[name]]
 
     @property
-    def unique_flags(self):
-        selected_dq = self.get_dq_layers()
+    def dq_layer_selected_flattened(self):
+        selected_dq = self.dq_layer.selected_obj
         if not len(selected_dq):
             return []
+
+        if isinstance(selected_dq, list) and isinstance(selected_dq[0], list):
+            # flatten a nested list:
+            selected_dq = list(chain.from_iterable(selected_dq))
+        elif not isinstance(selected_dq, list):
+            # if it's a single layer, make it a list:
+            selected_dq = [selected_dq]
+        return selected_dq
+
+    @property
+    def unique_flags(self):
+        selected_dq = self.dq_layer_selected_flattened
 
         dq = selected_dq[0].get_image_data()
         return np.unique(dq[~np.isnan(dq)])
@@ -223,10 +235,10 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     @observe('dq_layer_opacity')
     def update_opacity(self, event={}):
         science_layers = self.get_science_layers()
-        dq_layers = self.get_dq_layers()
+        selected_dq = self.dq_layer_selected_flattened
 
-        if dq_layers is not None:
-            for sci_layer, dq_layer in zip(science_layers, dq_layers):
+        if len(selected_dq):
+            for sci_layer, dq_layer in zip(science_layers, selected_dq):
                 # DQ opacity is a fraction of the science layer's opacity:
                 dq_layer.state.alpha = self.dq_layer_opacity * sci_layer.state.alpha
 
