@@ -397,16 +397,20 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._dict['world'] = (sky.ra.value, sky.dec.value)
             self._dict['world:unreliable'] = unreliable_world
         elif isinstance(viewer, MosvizProfile2DView) and hasattr(getattr(image, 'coords', None),
-                                                                 'pixel_to_world_values'):
+                                                                 'pixel_to_world'):
             # use WCS to expose the wavelength for a 2d spectrum shown in pixel space
-            wave, pixel = image.coords.pixel_to_world(x, y)
-            self.row2_title = 'Wave'
-            self.row2_text = f'{wave.value:10.5e} {wave.unit.to_string()}'
-            self.row2_unreliable = False
+            try:
+                wave, pixel = image.coords.pixel_to_world(x, y)
+            except Exception:  # WCS might not be valid  # pragma: no cover
+                coords_status = False
+            else:
+                self.row2_title = 'Wave'
+                self.row2_text = f'{wave.value:10.5e} {wave.unit.to_string()}'
+                self.row2_unreliable = False
 
-            self.row3_title = '\u00A0'
-            self.row3_text = ""
-            self.row3_unreliable = False
+                self.row3_title = '\u00A0'
+                self.row3_text = ""
+                self.row3_unreliable = False
         else:
             self.row2_title = '\u00A0'
             self.row2_text = ""
@@ -484,7 +488,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.marks[viewer._reference_id].visible = True
 
             for matched_marker_id in self._matched_markers.get(viewer._reference_id, []):
-                if hasattr(getattr(image, 'coords', None), 'pixel_to_world_values'):
+                if coords_status and hasattr(getattr(image, 'coords', None), 'pixel_to_world'):
                     # should already have wave computed from setting the coords-info
                     matched_viewer = self.app.get_viewer(matched_marker_id.split(':matched')[0])
                     wave = wave.to_value(matched_viewer.state.x_display_unit)

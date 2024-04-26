@@ -288,6 +288,20 @@ def spectrum2d():
     return Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.um)
 
 
+def _generate_mos_spectrum2d():
+    header = {
+        'WCSAXES': 2,
+        'CRPIX1': 0.0, 'CRPIX2': 1024.5,
+        'CDELT1': 1E-06, 'CDELT2': 2.9256727777778E-05,
+        'CUNIT1': 'm', 'CUNIT2': 'deg',
+        'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
+        'CRVAL1': 0.0, 'CRVAL2': 5.0,
+        'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+    np.random.seed(42)
+    data = np.random.sample((1024, 15)) * u.one
+    return data, header
+
+
 @pytest.fixture
 def mos_spectrum2d():
     '''
@@ -297,18 +311,26 @@ def mos_spectrum2d():
     TODO: This should be reformed to match the global Spectrum1D defined above so that we may
     deprecate the mos-specific spectrum1d.
     '''
-    header = {
-        'WCSAXES': 2,
-        'CRPIX1': 0.0, 'CRPIX2': 1024.5,
-        'CDELT1': 1E-06, 'CDELT2': 2.9256727777778E-05,
-        'CUNIT1': 'm', 'CUNIT2': 'deg',
-        'CTYPE1': 'WAVE', 'CTYPE2': 'OFFSET',
-        'CRVAL1': 0.0, 'CRVAL2': 5.0,
-        'RADESYS': 'ICRS', 'SPECSYS': 'BARYCENT'}
+    data, header = _generate_mos_spectrum2d()
     wcs = WCS(header)
-    np.random.seed(42)
-    data = np.random.sample((1024, 15)) * u.one
     return Spectrum1D(data, wcs=wcs, meta=header)
+
+
+@pytest.fixture
+def mos_spectrum2d_as_hdulist():
+    data, header = _generate_mos_spectrum2d()
+    hdu = fits.ImageHDU(data.value)
+    hdu.header.update(header)
+
+    # This layout is to trick specutils to think it is JWST s2d
+    hdulist = fits.HDUList([fits.PrimaryHDU(), hdu, hdu])
+    hdulist[0].header["TELESCOP"] = "JWST"
+    hdulist[1].name = "SCI"
+    hdulist[1].ver = 1
+    hdulist[2].name = "SCI"
+    hdulist[2].ver = 2
+
+    return hdulist
 
 
 @pytest.fixture
