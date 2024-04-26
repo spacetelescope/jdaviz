@@ -1,22 +1,9 @@
 <template>
   <j-tray-plugin
-    :description="docs_description || 'Viewer and data/layer options.'"
-    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'"
+    :description="docs_description || 'Data Quality layer visualization options.'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#data-quality'"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button">
-
-    <!-- VIEWER OPTIONS -->
-    <plugin-viewer-select
-      :items="viewer_items"
-      :selected.sync="viewer_selected"
-      :multiselect.sync="viewer_multiselect"
-      :show_multiselect_toggle="viewer_multiselect || viewer_items.length > 1"
-      :icon_checktoradial="icon_checktoradial"
-      :icon_radialtocheck="icon_radialtocheck"
-      :label="viewer_multiselect ? 'Viewers' : 'Viewer'"
-      :show_if_single_entry="viewer_multiselect"
-      :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
-    />
 
     <plugin-layer-select
       :items="science_layer_items"
@@ -143,7 +130,7 @@
               <v-col cols=1>
               </v-col>
                 <v-col cols=2>
-                <j-tooltip tipid='plugin-line-lists-color-picker'>
+                <j-tooltip tipid='plugin-dq-color-picker'>
                   <v-menu>
                     <template v-slot:activator="{ on }">
                         <span class="color-menu"

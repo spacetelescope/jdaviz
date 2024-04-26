@@ -10,6 +10,7 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
+from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 
@@ -22,7 +23,7 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, data_type=None, data_label=None):
+def parse_data(app, file_obj, data_type=None, data_label=None, parent=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -84,10 +85,24 @@ def parse_data(app, file_obj, data_type=None, data_label=None):
                                          ('ERR', uncert_viewer_reference_name),
                                          ('DQ', None)):
                     data_label = app.return_data_label(file_name, ext)
+
+                    if ext == 'SCI':
+                        sci_ext = data_label
+
+                    # TODO: generalize/centralize this for use in other configs too
+
+                    if parent is not None:
+                        parent_data_label = parent
+                    elif ext == 'DQ':
+                        parent_data_label = sci_ext
+                    else:
+                        parent_data_label = None
+
                     _parse_jwst_s3d(
                         app, hdulist, data_label, ext=ext, viewer_name=viewer_name,
                         flux_viewer_reference_name=flux_viewer_reference_name,
-                        spectrum_viewer_reference_name=spectrum_viewer_reference_name
+                        spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+                        parent=parent_data_label
                     )
             elif telescop == 'jwst' and filetype == 'r3d' and system == 'esa-pipeline':
                 for ext, viewer_name in (('DATA', flux_viewer_reference_name),
@@ -270,7 +285,7 @@ def _parse_hdulist(app, hdulist, file_name=None,
 
 def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
                     viewer_name=None, flux_viewer_reference_name=None,
-                    spectrum_viewer_reference_name=None):
+                    spectrum_viewer_reference_name=None, parent=None):
     hdu = hdulist[ext]
     data_type = _get_data_type_by_hdu(hdu)
 
@@ -305,7 +320,13 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
     data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
-    app.add_data(data, data_label)
+    app.add_data(data, data_label, parent=parent)
+
+    # get glue data and update if DQ:
+    if ext == 'DQ':
+        data = app.data_collection[-1]
+        prep_data_layer_as_dq(data, component_id='flux')
+
     if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
         app.data_collection[-1].get_component("flux").units = flux.unit
 
@@ -314,6 +335,9 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     # Also add the collapsed flux to the spectrum viewer
     if viewer_name == flux_viewer_reference_name:
         app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
+
+    if ext == 'DQ':
+        app.add_data_to_viewer(flux_viewer_reference_name, data_label, visible=False)
 
     if data_type == 'flux':
         app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]

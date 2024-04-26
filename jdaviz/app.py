@@ -2091,10 +2091,12 @@ class Application(VuetifyTemplate, HubListener):
                                               sender=self)
             self.hub.broadcast(add_data_message)
 
+        assoc_children = self._get_assoc_data_children(data_label)
+
         # set visibility state of all applicable layers
         for layer in viewer.layers:
             layer_is_wcs_only = getattr(layer.layer, 'meta', {}).get(_wcs_only_label, False)
-            if layer.layer.data.label == data_label:
+            if layer.layer.data.label in [data_label] + assoc_children:
                 if layer_is_wcs_only:
                     layer.visible = False
                     layer.update()
@@ -2112,7 +2114,22 @@ class Application(VuetifyTemplate, HubListener):
                     layer.visible = False
 
         # if Data has children, update their visibilities to match Data:
-        assoc_children = self._get_assoc_data_children(data_label)
+        available_plugins = [tray_item['name'] for tray_item in self.state.tray_items]
+        for child in assoc_children:
+            if child not in viewer.data_labels_loaded:
+                self.add_data_to_viewer(viewer.reference, child, visible=visible)
+
+            if 'g-data-quality' in available_plugins and visible:
+                # if we're adding a DQ layer to a viewer, make sure that
+                # the layer is appropriately colormapped as DQ:
+                data_quality_plugin = self.get_tray_item_from_name('g-data-quality')
+                old_viewer = data_quality_plugin.viewer_selected
+                data_quality_plugin.viewer_selected = viewer.reference
+                data_quality_plugin.science_layer_selected = data_label
+                data_quality_plugin.dq_layer_selected = child
+                data_quality_plugin.init_decoding(viewers=[viewer])
+                data_quality_plugin.viewer_selected = old_viewer
+
         for layer in viewer.layers:
             if layer.layer.data.label in assoc_children:
                 if visible and not layer.visible:
@@ -2121,14 +2138,19 @@ class Application(VuetifyTemplate, HubListener):
                 else:
                     layer.visible = visible
 
-        # update data menu - selected_data_items should be READ ONLY, not modified by the user/UI
+        # update data menu - selected_data_items should be READ ONLY, not modified by the user/UI.
+        # must update the visibility of `data_label` and its children:
         selected_items = viewer_item['selected_data_items']
-        data_id = self._data_id_from_label(data_label)
-        selected_items[data_id] = 'visible' if visible else 'hidden'
-        if replace:
-            for id in selected_items:
-                if id != data_id:
-                    selected_items[id] = 'hidden'
+        update_data_labels = [data_label] + assoc_children
+        for update_data_label in update_data_labels:
+            data_id = self._data_id_from_label(update_data_label)
+
+            if replace and update_data_label == data_label:
+                for id in selected_items:
+                    if id != data_id:
+                        selected_items[id] = 'hidden'
+
+            selected_items[data_id] = 'visible' if visible else 'hidden'
 
         # remove WCS-only data from selected items, add to wcs_only_layers:
         for layer in viewer.layers:
@@ -2316,7 +2338,9 @@ class Application(VuetifyTemplate, HubListener):
             'has_wcs': data_has_valid_wcs(data),
             'is_astrowidgets_markers_table': (self.config == "imviz") and layer_is_table_data(data),
             'meta': {k: v for k, v in data.meta.items() if _expose_meta(k)},
-            'children': []}
+            'children': [],
+            'parent': None,
+        }
 
     @staticmethod
     def _create_stack_item(container='gl-stack', children=None, viewers=None):
@@ -2710,10 +2734,24 @@ class Application(VuetifyTemplate, HubListener):
         self._data_associations[data_label] = {'parent': None, 'children': []}
 
     def _set_assoc_data_as_child(self, data_label, new_parent_label):
+        for data_item in self.state.data_items:
+            if data_item['name'] == data_label:
+                child_id = data_item['id']
+            elif data_item['name'] == new_parent_label:
+                new_parent_id = data_item['id']
+
         # Data has a new parent:
         self._data_associations[data_label]['parent'] = new_parent_label
+
         # parent has a new child:
         self._data_associations[new_parent_label]['children'].append(data_label)
+
+        # update the data item so vue can see the change:
+        for data_item in self.state.data_items:
+            if data_item['name'] == data_label:
+                data_item['parent'] = new_parent_id
+            elif data_item['name'] == new_parent_label:
+                data_item['children'].append(child_id)
 
     def _get_assoc_data_children(self, data_label):
         # intentionally not recursive for now, just one generation:

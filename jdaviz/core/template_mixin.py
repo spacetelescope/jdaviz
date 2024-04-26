@@ -835,7 +835,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
         return self._cached_properties
 
     def add_filter(self, *filters):
-        self.filters += [filter for filter in filters]
+        self.filters = self.filters + [filter for filter in filters]
 
     @property
     def viewer_dicts(self):
@@ -1379,6 +1379,7 @@ class LayerSelect(SelectPluginComponent):
                  default_mode='first',
                  only_wcs_layers=False,
                  is_root=True,
+                 has_children=False,
                  is_child_of=None):
         """
         Parameters
@@ -1433,13 +1434,14 @@ class LayerSelect(SelectPluginComponent):
         self.update_wcs_only_filter(only_wcs_layers)
 
         self.filter_is_root = is_root
+        self.has_children = has_children
         self.filter_is_child_of = is_child_of
 
         if self.filter_is_root:
-            # ignore layers that are children in associations:
             def filter_is_root(data):
                 return self.app._get_assoc_data_parent(data.label) is None
 
+            # ignore layers that are children in associations:
             self.add_filter(filter_is_root)
 
         elif not self.filter_is_root and self.filter_is_child_of is not None:
@@ -1450,6 +1452,12 @@ class LayerSelect(SelectPluginComponent):
                 return self.app._get_assoc_data_parent(data.label) == self.filter_is_child_of
 
             self.add_filter(has_correct_parent)
+
+        if self.has_children:
+            def filter_has_children(data):
+                return len(self.app._get_assoc_data_children(data.label)) > 0
+
+            self.add_filter(filter_has_children)
 
     def _get_viewer(self, viewer):
         # newer will likely be the viewer name in most cases, but viewer id in the case

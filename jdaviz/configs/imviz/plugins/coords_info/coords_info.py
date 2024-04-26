@@ -276,13 +276,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 image = None
 
         # If there is one, get the associated DQ layer for the active layer:
-        associated_dq_layer = None
+        associated_dq_layers = None
         available_plugins = [tray_item['name'] for tray_item in self.app.state.tray_items]
         if 'g-data-quality' in available_plugins:
             assoc_children = self.app._get_assoc_data_children(active_layer.layer.label)
             if assoc_children:
                 data_quality_plugin = self.app.get_tray_item_from_name('g-data-quality')
-                associated_dq_layer = data_quality_plugin.get_dq_layer()
+                viewer_obj = self.app.get_viewer(viewer)
+                associated_dq_layers = data_quality_plugin.get_dq_layers(viewer_obj)
 
         unreliable_pixel, unreliable_world = False, False
 
@@ -444,7 +445,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
             if isinstance(viewer, (ImvizImageView, MosvizImageView, MosvizProfile2DView)):
                 value = image.get_data(attribute)[int(round(y)), int(round(x))]
-                if associated_dq_layer is not None:
+                if associated_dq_layers is not None:
+                    associated_dq_layer = associated_dq_layers[0]
                     dq_attribute = associated_dq_layer.state.attribute
                     dq_data = associated_dq_layer.layer.get_data(dq_attribute)
                     dq_value = dq_data[int(round(y)), int(round(x))]
@@ -453,9 +455,16 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
                 value = self._get_cube_value(image, arr, x, y, viewer)
+
+                if associated_dq_layers is not None:
+                    associated_dq_layer = associated_dq_layers[0]
+                    dq_attribute = associated_dq_layer.state.attribute
+                    dq_data = associated_dq_layer.layer.get_data(dq_attribute)
+                    dq_value = self._get_cube_value(image, dq_data, x, y, viewer)
+
             self.row1b_title = 'Value'
 
-            if associated_dq_layer is not None:
+            if associated_dq_layers is not None:
                 if np.isnan(dq_value):
                     dq_text = ''
                 else:

@@ -50,7 +50,7 @@
             :icon="layer_icons[item.name]"
             :icons="icons"
             :viewer="viewer"
-            :multi_select="multi_select"
+            :multi_select="multi_select || isChild(item)"
             :is_wcs_only="false"
             :n_data_entries="nDataEntries"
             @data-item-visibility="$emit('data-item-visibility', $event)"
@@ -273,6 +273,10 @@ module.exports = {
     isRefData() {
       return this.$props.item.viewer.reference_data_label === this.$props.item.name
     },
+    isChild(item) {
+      // only override multi_select choice when data entry is a child:
+      return item.parent !== null
+    },
     selectRefData() {
       this.$emit('change-reference-data', {
         id: this.$props.viewer.id,
@@ -302,7 +306,7 @@ module.exports = {
       return this.$props.data_items.filter((item) => this.itemIsVisible(item, false))
     },
     extraDataItems() {
-      return this.$props.data_items.filter((item) => this.itemIsVisible(item, true))
+      return this.$props.data_items.filter((item) => this.itemIsVisible(item, true) && !this.isChild(item))
     },
     nDataEntries() {
       // return number of data entries in the entire plugin that were NOT created by a plugin
