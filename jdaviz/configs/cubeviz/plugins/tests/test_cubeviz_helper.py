@@ -34,6 +34,9 @@ def test_plugin_user_apis(cubeviz_helper):
                                                    'wavelength_unit', 'show_wavelength'):
                 # deprecated, so would raise a deprecation warning
                 continue
+            if plugin_name == 'Plot Options' and attr in ('collapse_function'):
+                # deprecated
+                continue
             assert hasattr(plugin, attr)
 
 

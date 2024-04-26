@@ -11,11 +11,13 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)
     spec_viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
 
-    assert len(dc) == 1
+    assert len(dc) == 2
 
     gs = cubeviz_helper.plugins['Gaussian Smooth']._obj
-    gs.dataset_selected = f'{data_label}[FLUX]'
     gs.mode_selected = 'Spectral'
+    assert len(gs.dataset_items) == 2  # cube and extracted spectrum
+    # selecting the cube as input will result in an output cube
+    gs.dataset_selected = f'{data_label}[FLUX]'
     gs.stddev = 3.2
     gs.add_to_viewer_selected = 'None'
     assert gs.results_label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
@@ -23,31 +25,31 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     # when not showing the results, the label will remain the same,
     # so there should be an overwrite warning
     assert gs.results_label_overwrite is True
-    gs.add_to_viewer_selected = 'spectrum-viewer'
+    gs.add_to_viewer_selected = 'uncert-viewer'
     gs.vue_apply()
     # but since we're overwriting, add_to_viewer_selected is ignored (and hidden in the UI)
     # so will still be hidden
-    assert len(gs.dataset_items) == 1
+    assert len(gs.dataset_items) == 2
     # by removing the data entry, the overwrite will no longer apply
-    app.remove_data_from_viewer('spectrum-viewer', f'{data_label}[FLUX] spectral-smooth stddev-3.2')
+    app.remove_data_from_viewer('uncert-viewer', f'{data_label}[FLUX] spectral-smooth stddev-3.2')
     app.data_collection.remove(
         app.data_collection[f'{data_label}[FLUX] spectral-smooth stddev-3.2'])
 
-    gs.add_to_viewer_selected = 'spectrum-viewer'
+    gs.add_to_viewer_selected = 'uncert-viewer'
     gs.vue_apply()
 
     # FOR HISTORICAL CONTEXT:
     # The data label used to be prepended to the results_label ONLY if there were multiple
     # smoothed spectra. As of PR#1973, POs requested the data label to always be present.
     # As a result, label will overwrite here
-    assert len(gs.dataset_items) == 1
+    assert len(gs.dataset_items) == 2
     assert gs.dataset_selected == f'{data_label}[FLUX]'
     assert gs.results_label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
     assert gs.results_label_overwrite is True
 
-    assert len(dc) == 2
-    assert dc[1].label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
-    assert len(dc.external_links) == 3
+    assert len(dc) == 3
+    assert dc[-1].label == f'{data_label}[FLUX] spectral-smooth stddev-3.2'
+    assert len(dc.external_links) == 5
 
     # Link cube 3D x, y, z to plugin 3D x, y, z
 
@@ -103,8 +105,9 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube, data_label=data_label)
 
     gs = cubeviz_helper.plugins['Gaussian Smooth']._obj
-    gs.dataset_selected = f'{data_label}[FLUX]'
     gs.mode_selected = 'Spatial'
+    assert len(gs.dataset_items) == 1
+    gs.dataset_selected = f'{data_label}[FLUX]'
     gs.stddev = 3
     assert gs.results_label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
     with pytest.warns(
@@ -112,9 +115,9 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
             match='The following attributes were set on the data object, but will be ignored'):
         gs.vue_apply()
 
-    assert len(dc) == 2
-    assert dc[1].label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
-    assert dc[1].shape == (2, 4, 2)  # specutils moved spectral axis to last
+    assert len(dc) == 3
+    assert dc[-1].label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
+    assert dc[-1].shape == (2, 4, 2)  # specutils moved spectral axis to last
     assert (dc[f'{data_label}[FLUX] spatial-smooth stddev-3.0'].get_object(cls=Spectrum1D,
                                                                            statistic=None).shape
             == (2, 4, 2))

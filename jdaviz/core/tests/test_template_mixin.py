@@ -105,7 +105,6 @@ def test_spectral_subsetselect_collapsed(cubeviz_helper, spectrum1d_cube):
 def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
     app.add_data(spectrum1d_cube, 'test')
-    app.add_data_to_viewer("spectrum-viewer", "test")
     app.add_data_to_viewer("flux-viewer", "test")
     fv = app.get_viewer("flux-viewer")
     sv = app.get_viewer("spectrum-viewer")

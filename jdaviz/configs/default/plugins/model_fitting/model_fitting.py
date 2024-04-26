@@ -52,6 +52,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``cube_fit``
+      Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
+      collapsed spectrum.
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to fit the model.
     * ``spatial_subset``:
@@ -70,9 +73,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     * :meth:`reestimate_model_parameters`
     * ``equation`` (:class:`~jdaviz.core.template_mixin.AutoTextField`)
     * :meth:`equation_components`
-    * ``cube_fit``
-      Only exposed for Cubeviz.  Whether to fit the model to the cube instead of to the
-      collapsed spectrum.
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``residuals_calculate`` (bool)
       Whether to calculate and expose the residuals (model minus data).
@@ -196,7 +196,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         expose = ['dataset']
         if self.config == "cubeviz":
             # deprecated: spatial_subset deprecated in 3.11, so remove from user API as soon as 3.13
-            expose += ['spatial_subset']
+            expose += ['spatial_subset', 'cube_fit']
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
                    'model_components', 'valid_model_components',
                    'create_model_component', 'remove_model_component',

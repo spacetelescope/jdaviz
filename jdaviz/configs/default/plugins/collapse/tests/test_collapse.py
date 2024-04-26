@@ -20,9 +20,9 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     coll.vue_collapse()
     assert coll.results_label_overwrite is True
 
-    assert len(dc) == 2
-    assert dc[1].label == 'collapsed'
-    assert len(dc.external_links) == 2
+    assert len(dc) == 3
+    assert dc[2].label == 'collapsed'
+    assert len(dc.external_links) == 4
 
     # Link 3D z to 2D x and 3D y to 2D y
 

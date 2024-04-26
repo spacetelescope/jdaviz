@@ -85,7 +85,7 @@ def test_cubeviz_collapse_fluxunits(spectrum1d_cube_custom_fluxunit, spectra_flu
 
         lineflux_result = _calculate_line_flux(cubeviz_helper)
         autocollapsed_spectrum_unit = (cubeviz_helper.
-                                       specviz.get_spectra()[f"{data_label}[FLUX]"].flux.unit)
+                                       specviz.get_spectra()["Spectrum (sum)"].flux.unit)
         # Futureproofing: Eventually Cubeviz autocollapse will change the flux units of the
         # spectra depending on whether the spectrum was collapsed OVER SPAXELS or not. Only
         # do the assertion check if we KNOW what the expected lineflux results should be

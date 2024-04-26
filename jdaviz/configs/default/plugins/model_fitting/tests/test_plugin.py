@@ -151,7 +151,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     # changing the lable should set auto to False, but the event may not have triggered yet
     modelfit_plugin._obj.results_label_auto = False
     modelfit_plugin.cube_fit = True
-    assert modelfit_plugin._obj.results_label_default == 'cube-fit model'
+    assert modelfit_plugin._obj.results_label_default == 'model'
     assert modelfit_plugin._obj.results_label == test_label
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='.*Model is linear in parameters.*')
@@ -172,7 +172,7 @@ def test_fit_cube_no_wcs(cubeviz_helper):
         fitted_model, output_cube = mf.calculate_fit(add_data=True)
     assert len(fitted_model) == 56  # ny * nx
     # Make sure shapes are all self-consistent within Cubeviz instance.
-    fitted_data = cubeviz_helper.app.data_collection["cube-fit model"]
+    fitted_data = cubeviz_helper.app.data_collection["model"]
     assert fitted_data.shape == (8, 7, 9)  # nx, ny, nz
     assert fitted_data.shape == cubeviz_helper.app.data_collection[0].shape
     assert fitted_data.shape == output_cube.shape
@@ -319,10 +319,10 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
     # Now create the new spectral subset:
     sv.apply_roi(XRangeROI(min=min_wavelength.to_value(u.m), max=max_wavelength.to_value(u.m)))
-    assert "Subset 1" in p.spectral_subset.choices
+    assert "Subset 2" in p.spectral_subset.choices
 
     # Select the spectral subset
-    p.spectral_subset_selected = "Subset 1"
+    p.spectral_subset_selected = "Subset 2"
 
     # Get the data object again (ensures mask == None)
     data = cubeviz_helper.app.data_collection[0].get_object(
