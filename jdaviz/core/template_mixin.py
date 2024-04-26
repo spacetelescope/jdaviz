@@ -4634,7 +4634,7 @@ class Plot(PluginSubcomponent):
         shape_mismatch = False
         for component in self._viewer_components:
             kwargs.setdefault(component, data[component])
-            if kwargs[component].shape != data[component].shape:
+            if np.asarray(kwargs[component]).shape != data[component].shape:
                 shape_mismatch = True
 
         if not shape_mismatch:
