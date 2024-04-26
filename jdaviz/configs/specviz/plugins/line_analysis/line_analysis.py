@@ -155,7 +155,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
     @property
     def spatial_subset(self):
-        msg = "spatial_subset in no longer supported as of 3.11 and will be removed from the user API in a future release"  # noqa
+        msg = "spatial_subset is no longer supported as of 3.11 and will be removed from the user API in a future release"  # noqa
         logging.warning(f"DeprecationWarning: {msg}")
         raise ValueError(msg)
 
