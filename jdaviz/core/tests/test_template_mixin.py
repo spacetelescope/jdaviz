@@ -2,8 +2,7 @@ import pytest
 import numpy as np
 import astropy.units as u
 
-from glue.core.roi import XRangeROI, CircularROI
-from specutils import Spectrum1D
+from glue.core.roi import XRangeROI
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):

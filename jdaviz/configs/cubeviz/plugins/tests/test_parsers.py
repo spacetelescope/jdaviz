@@ -129,7 +129,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     cubeviz_helper.load_data(sc)
 
     data = cubeviz_helper.app.data_collection[0]
-    assert len(cubeviz_helper.app.data_collection) == 1
+    assert len(cubeviz_helper.app.data_collection) == 2
     assert data.label == "Unknown spectrum object[FLUX]"
     assert data.shape == flux.shape
 

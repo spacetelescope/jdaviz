@@ -434,6 +434,9 @@ def test_plugin_user_apis(specviz_helper):
     for plugin_name, plugin_api in specviz_helper.plugins.items():
         plugin = plugin_api._obj
         for attr in plugin_api._expose:
+            if plugin_name == 'Line Analysis' and attr == 'spatial_subset':
+                # deprecated, so would raise a deprecation warning
+                continue
             assert hasattr(plugin, attr)
 
 
