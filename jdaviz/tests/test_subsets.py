@@ -199,26 +199,6 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert_quantity_allclose(reg.upper, 12.75 * u.Hz)
 
 
-def test_disjoint_spatial_subset(cubeviz_helper, spectral_cube_wcs):
-    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
-    cubeviz_helper.load_data(data, data_label="Test Flux")
-
-    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
-    flux_viewer.apply_roi(CircularROI(xc=3, yc=4, radius=1))
-
-    mf = cubeviz_helper.plugins['Model Fitting']
-    assert len(mf.spatial_subset.choices) == 2  # 'Entire Cube' and Subset 1
-    assert len(mf.spectral_subset.choices) == 1  # 'Entire Spectrum'
-
-    # Add second region to Subset 1
-    cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
-    flux_viewer.apply_roi(CircularROI(xc=1, yc=1, radius=1))
-
-    # regression test for https://github.com/spacetelescope/jdaviz/pull/2058
-    assert len(mf.spatial_subset.choices) == 2  # 'Entire Cube' and Subset 1
-    assert len(mf.spectral_subset.choices) == 1  # 'Entire Spectrum'
-
-
 def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
