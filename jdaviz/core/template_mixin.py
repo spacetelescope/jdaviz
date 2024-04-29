@@ -2319,7 +2319,9 @@ class ApertureSubsetSelect(SubsetSelect):
         # (or selected_spatial_region) will fail.
         if np.any([len(obj) > 1 for obj in objs]):
             validity = {'is_aperture': False,
-                        'aperture_message': 'composite subsets are not supported',
+                        'aperture_message': 'composite subsets only support extraction '
+                                            'with aperture extraction method "center," and '
+                                            'without wavelength dependence',
                         'is_composite': True}
             return [], [], validity
 

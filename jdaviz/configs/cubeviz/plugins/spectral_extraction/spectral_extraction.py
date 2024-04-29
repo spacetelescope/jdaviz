@@ -387,7 +387,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             [subset_group] = [
                 subset_group for subset_group in self.app.data_collection.subset_groups
                 if subset_group.label == self.aperture_selected]
-            # mask_weights = np.logical_not(subset_group.subsets[0].to_mask()).astype(np.float32)
             mask_weights = subset_group.subsets[0].to_mask().astype(np.float32)
             return mask_weights
 
