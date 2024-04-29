@@ -46,6 +46,19 @@ To show axes on image viewers, toggle on the "Show axes" option at the bottom of
     :ref:`Spectral Plot Options <specviz-plot-settings>`
         Documentation on Specviz display settings in the Jdaviz viewers.
 
+.. _cubeviz-data-quality:
+
+Data Quality
+============
+
+Visualize data quality arrays for spectral cubes from JWST.
+
+.. seealso::
+
+    :ref:`Data Quality Plugin <imviz-data-quality>`
+        Follow the link to the rest of the Data Quality plugin documentation.
+
+
 .. _cubeviz-subset-plugin:
 
 Subset Tools

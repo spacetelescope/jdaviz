@@ -20,6 +20,7 @@ toolbar:
 tray:
   - g-metadata-viewer
   - g-plot-options
+  - g-data-quality
   - g-subset-plugin
   - g-markers
   - cubeviz-slice

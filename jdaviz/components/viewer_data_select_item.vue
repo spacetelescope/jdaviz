@@ -13,6 +13,20 @@
         </v-btn>
       </j-tooltip>
     </div>
+    <div v-else-if="isChild(item) && !parentIsVisible(item)">
+      <j-tooltip
+        :tooltipcontent="'Select parent data first to make this layer visible'"
+        span_style="width: 36px;"
+      >
+        <v-btn
+          icon
+          color="default"
+          style="cursor: default;"
+          >
+            <v-icon>mdi-checkbox-blank-off-outline</v-icon>
+        </v-btn>
+      </j-tooltip>
+    </div>
     <div v-else-if="isSelected">
       <j-tooltip :tipid="multi_select ? 'viewer-data-select' : 'viewer-data-radio'">
         <v-btn 
@@ -44,7 +58,6 @@
         </v-btn>
       </j-tooltip>
     </div>
-
     <j-tooltip :tooltipcontent="is_wcs_only ? '' : 'data label: '+item.name" span_style="font-size: 12pt; padding-top: 6px; padding-left: 4px; padding-right: 16px; width: calc(100% - 80px); white-space: nowrap; cursor: default;">
       <j-layer-viewer-icon span_style="margin-left: 4px;" :icon="icon" :icons="icons" color="#000000DE"></j-layer-viewer-icon>
 
@@ -112,7 +125,14 @@ module.exports = {
     },
     linkedByWcs() {
       return this.$props.viewer.linked_by_wcs
-    }
+    },
+    isChild(item) {
+      // only override multi_select choice when data entry is a child:
+      return item.parent !== null
+    },
+    parentIsVisible(item) {
+      return this.$props.viewer.selected_data_items[item.parent] === 'visible'
+    },
   },
   computed: {
     itemNamePrefix() {
@@ -189,7 +209,7 @@ module.exports = {
       } else {
         return 'gray'
       }
-    }
+    },
   }
 };
 </script>

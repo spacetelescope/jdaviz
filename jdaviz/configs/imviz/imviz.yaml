@@ -22,9 +22,9 @@ tray:
   - g-metadata-viewer
   - imviz-orientation
   - g-plot-options
+  - g-data-quality
   - g-subset-plugin
   - g-markers
-  - g-data-quality
   - imviz-compass
   - imviz-line-profile-xy
   - imviz-aper-phot-simple

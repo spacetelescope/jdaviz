@@ -6,6 +6,8 @@ New Features
 
 - The filename entry in the export plugin is now automatically populated based on the selection. [#2824]
 
+- Adding Data Quality plugin for Imviz and Cubeviz. [#2767, #2817]
+
 Cubeviz
 ^^^^^^^
 
@@ -58,6 +60,8 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+- Loading a specific extension with ``ext`` keyword no longer crashes. [#2830]
 
 Other Changes and Additions
 ---------------------------

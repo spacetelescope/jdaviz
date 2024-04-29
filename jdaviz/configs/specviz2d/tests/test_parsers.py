@@ -1,8 +1,10 @@
 import pytest
+import stdatamodels
 from astropy.io import fits
 from astropy.utils.data import download_file
 
 from jdaviz.utils import PRIHDR_KEY
+from jdaviz.configs.imviz.tests.utils import create_example_gwcs
 
 
 @pytest.mark.remote_data
@@ -87,6 +89,37 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
                                          'Wave 7.00000e-06 m (6 pix)',
                                          'Flux -3.59571e+00')
     assert label_mouseover.icon == 'b'
+
+
+def test_2d_parser_hdulist_ext(tmp_path, specviz2d_helper, mos_spectrum2d_as_hdulist):
+    in_filename = tmp_path / "my_2d_spec.fits"
+
+    # Create a dummy ASDF extension to trick specutil to use JWST s2d parser.
+    # The actual values do not matter here; they are currently nonsense.
+    w = create_example_gwcs(mos_spectrum2d_as_hdulist['SCI'].data.shape)
+    w.bounding_box = ((-1, 2.9), (6, 7.5))
+    tree = {
+        'model': {
+            'sci': {
+                'data': mos_spectrum2d_as_hdulist['SCI'].data
+            }
+        },
+        'meta': {'wcs': w}
+    }
+    stdatamodels.asdf_in_fits.write(in_filename, tree, mos_spectrum2d_as_hdulist, overwrite=True)
+
+    specviz2d_helper.load_data(in_filename, ext=1)
+    assert len(specviz2d_helper.app.data_collection) == 2
+
+    dc_0 = specviz2d_helper.app.data_collection[0]
+    assert dc_0.label == 'Spectrum 2D'
+    assert dc_0.get_component('flux').units == 'ct'
+
+    dc_1 = specviz2d_helper.app.data_collection[1]
+    assert dc_1.label == 'Spectrum 1D'
+    assert dc_1.get_component('flux').units == dc_0.get_component('flux').units
+
+    # The rest already checked in test_2d_parser_no_unit above.
 
 
 def test_1d_parser(specviz2d_helper, spectrum1d):
