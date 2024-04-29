@@ -13,6 +13,8 @@ Cubeviz
 
 - Enable spectral unit conversion in cubeviz. [#2758, #2803]
 
+- Enable spectral extraction for composite subsets. [#2837]
+
 Imviz
 ^^^^^
 
