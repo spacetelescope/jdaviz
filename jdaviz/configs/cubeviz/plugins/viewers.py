@@ -8,7 +8,6 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.marks import SliceIndicatorMarks
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage, GlobalDisplayUnitChanged
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 
 __all__ = ['CubevizImageView', 'CubevizProfileView',
@@ -31,25 +30,25 @@ class WithSliceIndicator:
         self.figure.marks = self.figure.marks + slice_indicator.marks
         return slice_indicator
 
-    @cached_property
+    @property
     def slice_values(self):
+        # NOTE: these are cached at the slice-plugin level
+        # Retrieve display units
+        slice_display_units = self.jdaviz_app._get_display_unit(
+            self.slice_display_unit_name
+        )
 
         def _get_component(layer):
-            # Retrieve display units
-            slice_display_units = self.jdaviz_app._get_display_unit(
-                self.slice_display_unit_name
-            )
-
             try:
                 # Retrieve layer data and units
-                data_obj = layer.layer.data.get_component(self.slice_component_label).data
-                data_units = layer.layer.data.get_component(self.slice_component_label).units
+                data_comp = layer.layer.data.get_component(self.slice_component_label)
             except (AttributeError, KeyError):
                 # layer either does not have get_component (because its a subset)
                 # or slice_component_label is not a component in this layer
                 # either way, return an empty array and skip this layer
                 return np.array([])
-
+            data_obj = data_comp.data
+            data_units = data_comp.units
             data_spec_axis = np.asarray(data_obj.data, dtype=float) * u.Unit(data_units)
 
             # Convert axis if display units are set and are different
@@ -87,8 +86,9 @@ class WithSliceSelection:
     def slice_display_unit_name(self):
         return 'spectral'
 
-    @cached_property
+    @property
     def slice_values(self):
+        # NOTE: these are cached at the slice-plugin level
         # TODO: add support for multiple cubes (but then slice selection needs to be more complex)
         # if slice_index is 0, then we want the equivalent of [:, 0, 0]
         # if slice_index is 1, then we want the equivalent of [0, :, 0]
@@ -185,13 +185,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Hide axes by default
         self.state.show_axes = False
 
-        self.hub.subscribe(self, GlobalDisplayUnitChanged,
-                           handler=self._on_global_display_unit_changed
-                           )
-
-        self.hub.subscribe(self, AddDataMessage, handler=self._on_global_display_unit_changed)
-        self.hub.subscribe(self, RemoveDataMessage, handler=self._on_global_display_unit_changed)
-
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.jdaviz_helper._default_spectrum_viewer_reference_name
@@ -203,11 +196,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     @property
     def _default_uncert_viewer_reference_name(self):
         return self.jdaviz_helper._default_uncert_viewer_reference_name
-
-    def _on_global_display_unit_changed(self, msg):
-        # Clear cache of slice values when units change
-        if 'slice_values' in self.__dict__:
-            del self.__dict__['slice_values']
 
     def _initial_x_axis(self, *args):
         # Make sure that the x_att is correct on data load
@@ -254,14 +242,7 @@ class CubevizProfileView(SpecvizProfileView, WithSliceIndicator):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
         super().__init__(*args, **kwargs)
-        self.hub.subscribe(self, GlobalDisplayUnitChanged,
-                           handler=self._on_global_display_unit_changed)
 
     @property
     def _default_flux_viewer_reference_name(self):
         return self.jdaviz_helper._default_flux_viewer_reference_name
-
-    def _on_global_display_unit_changed(self, msg=None):
-        # Clear cache of slice values when units change
-        if 'slice_values' in self.__dict__:
-            del self.__dict__['slice_values']
