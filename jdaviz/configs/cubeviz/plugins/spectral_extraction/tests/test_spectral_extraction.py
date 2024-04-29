@@ -6,8 +6,8 @@ import numpy as np
 from astropy import units as u
 from astropy.nddata import NDDataArray, StdDevUncertainty
 from astropy.utils.exceptions import AstropyUserWarning
-from glue.core.roi import CircularROI
-from glue.core.edit_subset_mode import ReplaceMode
+from glue.core.roi import CircularROI, RectangularROI
+from glue.core.edit_subset_mode import ReplaceMode, AndNotMode, NewMode
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
@@ -447,3 +447,75 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
     # cover to make sure the logic does not crash
 #    new_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
 #    assert new_med_flux > orig_med_flux
+
+
+def test_aperture_composite_detection(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
+
+    # create a rectangular subset with all spaxels:
+    rectangle = RectangularROI(-0.5, 1.5, -0.5, 3.5)
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
+    flux_viewer.apply_roi(rectangle)
+
+    # select subset 1, ensure it's not a composite subset:
+    spec_extr_plugin.aperture_selected = 'Subset 1'
+    assert not spec_extr_plugin.aperture.is_composite
+
+    # now remove from this subset a circular region in the center:
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:truecircle']
+    subset_plugin.subset_selected = 'Subset 1'
+    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+
+    circle = CircularROI(0.5, 1.5, 1)
+    flux_viewer.apply_roi(circle)
+
+    # now the subset is composite:
+    assert spec_extr_plugin.aperture.is_composite
+
+
+def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+
+    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
+
+    lower_aperture = RectangularROI(-0.5, 1.5, -0.5, 0.5)
+    upper_aperture = RectangularROI(-0.5, 1.5, 2.5, 3.5)
+
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
+    flux_viewer.apply_roi(lower_aperture)
+
+    cubeviz_helper.app.session.edit_subset_mode.mode = NewMode
+    flux_viewer.apply_roi(upper_aperture)
+
+    spec_extr_plugin.aperture_selected = 'Subset 1'
+    spectrum_1 = spec_extr_plugin.collapse_to_spectrum()
+
+    spec_extr_plugin.aperture_selected = 'Subset 2'
+    spectrum_2 = spec_extr_plugin.collapse_to_spectrum()
+
+    subset_plugin.subset_selected = 'Create New'
+    rectangle = RectangularROI(-0.5, 1.5, -0.5, 3.5)
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
+    flux_viewer.apply_roi(rectangle)
+
+    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:truecircle']
+    subset_plugin.subset_selected = 'Subset 3'
+    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    circle = CircularROI(0.5, 1.5, 1.1)
+    flux_viewer.apply_roi(circle)
+
+    spec_extr_plugin.aperture_selected = 'Subset 3'
+
+    assert spec_extr_plugin.aperture.is_composite
+
+    spectrum_3 = spec_extr_plugin.collapse_to_spectrum()
+
+    np.testing.assert_allclose(
+        (spectrum_1 + spectrum_2).flux.value,
+        (spectrum_3).flux.value
+    )

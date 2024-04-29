@@ -2258,6 +2258,10 @@ class ApertureSubsetSelect(SubsetSelect):
         self._set_mark_visiblities(self.plugin.is_active)
 
     @property
+    def is_composite(self):
+        return hasattr(self.selected_obj, '__len__') and len(self.selected_obj) > 1
+
+    @property
     def image_viewers(self):
         return [viewer for viewer in self.app._viewer_store.values()
                 if isinstance(viewer, BqplotImageView)]
