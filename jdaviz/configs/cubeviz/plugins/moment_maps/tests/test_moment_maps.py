@@ -123,10 +123,10 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     assert mm._obj.results_label_overwrite is False
     mm._obj.vue_calculate_moment()
 
-    assert dc[2].label == 'moment 1'
+    assert dc[-1].label == 'moment 1'
 
-    assert len(dc.links) == 22
-    assert len(dc.external_links) == 4  # pixel linked
+    assert len(dc.links) == 27
+    assert len(dc.external_links) == 6  # pixel linked
     # Link 3D z to 2D x and 3D y to 2D y
     assert (dc.external_links[0].cids1[0].label == "Pixel Axis 0 [z]" and
             dc.external_links[0].cids2[0].label == "Pixel Axis 1 [x]" and
