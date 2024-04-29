@@ -3,7 +3,6 @@ import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
-from glue.core import Data
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset_group import GroupedSubset
 from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
@@ -17,8 +16,7 @@ from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 
 
 def test_region_from_subset_2d(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128)), label='Test 2D Flux')
-    cubeviz_helper.app.data_collection.append(data)
+    cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
 
@@ -54,8 +52,7 @@ def test_region_from_subset_2d(cubeviz_helper):
 
 
 def test_region_from_subset_3d(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128, 256)), label='Test 3D Flux')
-    cubeviz_helper.app.data_collection.append(data)
+    cubeviz_helper.load_data(np.ones((128, 128, 256)), data_label='Test 3D Flux')
 
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.subset_selected == "Create New"
@@ -246,8 +243,7 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
 
 
 def test_composite_region_from_subset_3d(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
-    cubeviz_helper.app.data_collection.append(data)
+    cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
     viewer = cubeviz_helper.app.get_viewer('flux-viewer')
@@ -298,8 +294,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
 
 
 def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
-    cubeviz_helper.app.data_collection.append(data)
+    cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
     viewer = cubeviz_helper.app.get_viewer('flux-viewer')

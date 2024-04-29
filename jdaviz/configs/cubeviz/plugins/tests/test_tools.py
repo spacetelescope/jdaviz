@@ -1,5 +1,5 @@
 import pytest
-from astropy.nddata import CCDData
+import numpy as np
 from echo import delay_callback
 from regions import RectanglePixelRegion
 
@@ -141,12 +141,10 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
 
 
 def test_spectrum_at_spaxel_with_2d(cubeviz_helper):
-    # Use 2D image, which should not work with the tool
-    x = CCDData([[1, 2, 3], [4, 5, 6]], unit='adu')
+    # Use cube with single slice
+    x = np.array([[[1, 2, 3], [4, 5, 6]]])
 
-    app = cubeviz_helper.app
-    app.data_collection["test"] = x
-    app.add_data_to_viewer("flux-viewer", "test")
+    cubeviz_helper.load_data(x, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")

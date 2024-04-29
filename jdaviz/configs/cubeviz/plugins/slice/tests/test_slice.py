@@ -92,11 +92,11 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
 
 
 def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     app = cubeviz_helper.app
-    app.add_data(spectrum1d_cube, 'test')
-    app.add_data_to_viewer("spectrum-viewer", "test")
-    app.add_data_to_viewer("flux-viewer", "test")
-    sl = Slice(app=app)
+    app.add_data_to_viewer("flux-viewer", "test[FLUX]")
+    app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
+    sl = cubeviz_helper.plugins['Slice']._obj
     sv = app.get_viewer('spectrum-viewer')
     indicator = sv.slice_indicator
 
