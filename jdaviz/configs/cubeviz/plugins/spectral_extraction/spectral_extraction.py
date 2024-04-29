@@ -329,8 +329,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Use the spectral coordinate from the WCS:
         if '_orig_spec' in spectral_cube.meta:
             wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
-        else:
+        elif hasattr(spectral_cube.coords, 'spectral'):
             wcs = spectral_cube.coords.spectral
+        else:
+            wcs = None
 
         # Filter out NaNs (False = good)
         mask = np.logical_or(mask, np.isnan(flux))
