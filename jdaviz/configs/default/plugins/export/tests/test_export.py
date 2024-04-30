@@ -66,7 +66,7 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match=re.escape("x not one of ['fits', 'reg'], reverting selection to reg")):  # noqa
+                           match=re.escape("x not one of ['fits', 'reg', 'ecsv'], reverting selection to reg")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
     def test_not_implemented(self, cubeviz_helper, spectral_cube_wcs):
@@ -92,10 +92,6 @@ class TestExportSubsets:
         export_plugin.subset.selected = 'Subset 1'
 
         assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
-
-        cubeviz_helper.app.session.edit_subset_mode.mode = NewMode
-        cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
-        assert 'Subset 2' not in export_plugin.subset.choices
 
     def test_export_subsets_wcs(self, imviz_helper, spectral_cube_wcs):
 
@@ -193,7 +189,7 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match=re.escape("x not one of ['fits', 'reg'], reverting selection to reg")):  # noqa
+                           match=re.escape("x not one of ['fits', 'reg', 'ecsv'], reverting selection to reg")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
         # test that attempting to save a composite subset raises an error
