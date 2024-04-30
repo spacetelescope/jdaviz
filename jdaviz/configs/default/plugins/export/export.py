@@ -280,20 +280,20 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     @observe('subset_format_selected')
     def _disable_subset_format_combo(self, event):
+        # Disable selecting a bad subset+format combination from the API
         if self.subset.selected == '' or self.subset.selected is None:
             return
-        # Disable selecting a bad subset+format combination from the API
         subset = self.app.get_subsets(self.subset.selected)
         bad_combo = False
         if self.app._is_subset_spectral(subset[0]):
-            if self.subset_format.selected.lower != "ecsv":
+            if event['new'] != "ecsv":
                 bad_combo = True
-        elif self.subset_format.selected.lower == "ecsv":
+        elif event['new'] == "ecsv":
             bad_combo = True
 
         if bad_combo:
             raise ValueError(f"Cannot export {self.subset.selected} in "
-                             f"{self.subset_format.selected.upper} format")
+                             f"{self.subset_format.selected.upper()} format")
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
@@ -459,7 +459,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
                 return
-            self.save_subset_as_region(selected_subset_label, filename)
+
+            if self.subset_format.selected in ('fits', 'reg'):
+                self.save_subset_as_region(selected_subset_label, filename)
+            elif self.subset_format.selected == 'ecsv':
+                self.save_subset_as_table(filename)
+
 
         elif len(self.dataset.selected):
             filetype = self.dataset_format.selected
@@ -691,6 +696,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         region = region[0][f'{"sky_" if link_type == "wcs" else ""}region']
 
         region.write(filename, overwrite=True)
+
+    def save_subset_as_table(self, filename):
+        region = self.app.get_subsets(subset_name=self.subset.selected)
+        region.write(filename)
 
     def vue_interrupt_recording(self, *args):  # pragma: no cover
         self.movie_interrupt = True
