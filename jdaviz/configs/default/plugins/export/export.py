@@ -111,9 +111,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.dataset.filters = ['is_not_wcs_only', 'not_child_layer',
                                 'from_plugin']
 
-        # NOTE: if/when adding support for spectral subsets, update the languange in the UI
-        #self.subset.filters = ['is_spatial']
-
         viewer_format_options = ['png', 'svg']
         if self.config == 'cubeviz':
             if not self.app.state.settings.get('server_is_remote'):
@@ -136,9 +133,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                                          manual_options=plugin_table_format_options)
 
         subset_format_options = [{'label': 'fits', 'value': 'fits', 'disabled': False},
-                                    {'label': 'reg', 'value': 'reg', 'disabled': False},
-                                    {'label': 'ecsv', 'value': 'ecsv', 'disabled': True}]
-        #subset_format_options = ['fits', 'reg']
+                                 {'label': 'reg', 'value': 'reg', 'disabled': False},
+                                 {'label': 'ecsv', 'value': 'ecsv', 'disabled': True}]
         self.subset_format = SelectPluginComponent(self,
                                                    items='subset_format_items',
                                                    selected='subset_format_selected',
@@ -296,7 +292,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             bad_combo = True
 
         if bad_combo:
-            raise ValueError(f"Cannot export {self.subset.selected} as {self.subset_format.selected}")
+            raise ValueError(f"Cannot export {self.subset.selected} in "
+                             f"{self.subset_format.selected.upper} format")
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
