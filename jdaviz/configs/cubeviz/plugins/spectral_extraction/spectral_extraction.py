@@ -223,6 +223,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _create_auto_extract(self, subset_lbl=None):
         # create a new instance of the Spectral Extraction plugin (to not affect the instance in
         # the tray) and extract the entire cube with defaults.
+        if self._app._jdaviz_helper._loaded_flux_cube is None:
+            return
         if subset_lbl is None:
             subset_lbl = self.aperture.default_text
         plg = self.new()
