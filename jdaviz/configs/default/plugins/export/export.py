@@ -229,7 +229,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if name != attr:
                 setattr(self, attr, '')
             if attr == 'subset_selected':
-                self._update_subset_format_disabled()
+                if self.subset.selected != '':
+                    self._update_subset_format_disabled()
                 self._set_subset_not_supported_msg()
             if attr == 'dataset_selected':
                 self._set_dataset_not_supported_msg()
@@ -263,7 +264,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         self.overwrite_warn = False
 
     def _update_subset_format_disabled(self):
-        print("Updating disabled formats")
         new_items = []
         if self.subset.selected is not None:
             subset = self.app.get_subsets(self.subset.selected)
@@ -276,9 +276,27 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     item["disabled"] = False
                 else:
                     item["disabled"] = True
+                    if item["label"] == self.subset_format.selected:
+                        self.subset_format.selected = good_formats[0]
                 new_items.append(item)
         self.subset_format_items = []
         self.subset_format_items = new_items
+
+    @observe('subset_format_selected')
+    def _disable_subset_format_combo(self, event):
+        if self.subset.selected == '' or self.subset.selected is None:
+            return
+        # Disable selecting a bad subset+format combination from the API
+        subset = self.app.get_subsets(self.subset.selected)
+        bad_combo = False
+        if self.app._is_subset_spectral(subset[0]):
+            if self.subset_format.selected.lower != "ecsv":
+                bad_combo = True
+        elif self.subset_format.selected.lower == "ecsv":
+            bad_combo = True
+
+        if bad_combo:
+            raise ValueError(f"Cannot export {self.subset.selected} as {self.subset_format.selected}")
 
     def _set_subset_not_supported_msg(self, msg=None):
         """
