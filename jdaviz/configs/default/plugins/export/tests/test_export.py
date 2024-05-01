@@ -215,6 +215,8 @@ class TestExportSubsets:
 
         export_plugin.filename = "test_spectral_region"
         export_plugin.export()
+        # Testing CI failure
+        print(os.listdir())
         assert os.path.isfile('test_spectral_region.ecsv')
 
 
