@@ -281,7 +281,7 @@ class Specviz(ConfigHelper, LineListMixin):
         ).figure.axes[axis].tick_format = fmt
 
     def get_data(self, data_label=None, spectral_subset=None, cls=None,
-                 use_display_units=False, **kwargs):
+                 use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         spectral_subset.
@@ -303,26 +303,5 @@ class Specviz(ConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        spatial_subset = kwargs.pop("spatial_subset", None)
-        function = kwargs.pop("function", None)
-        if len(kwargs) > 0:
-            raise ValueError(f'kwargs {[x for x in kwargs.keys()]} are not valid')
-
-        if self.app.config == 'cubeviz':
-            # then this is a specviz instance inside cubeviz and we want to default to the
-            # viewer's collapse function
-            default_sp_viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-            if function is True or function is None:
-                function = getattr(default_sp_viewer.state, 'function', None)
-
-            if cls is None:
-                cls = Spectrum1D
-        elif spatial_subset or function:
-            raise ValueError('kwargs spatial subset and function are not valid in specviz')
-        else:
-            spatial_subset = None
-            function = None
-
-        return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
-                              spectral_subset=spectral_subset, function=function,
+        return self._get_data(data_label=data_label, spectral_subset=spectral_subset,
                               cls=cls, use_display_units=use_display_units)

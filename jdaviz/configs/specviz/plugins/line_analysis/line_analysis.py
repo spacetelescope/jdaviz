@@ -184,10 +184,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if msg.data.label not in viewer_data_labels:
             return
 
-        get_data_kwargs = {'data_label': msg.data.label}
-        if self.config == 'cubeviz':
-            get_data_kwargs['function'] = getattr(viewer.state, 'function', None)
-        viewer_data = self.app._jdaviz_helper.get_data(**get_data_kwargs)
+        viewer_data = self.app._jdaviz_helper.get_data(data_label=msg.data.label)
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:

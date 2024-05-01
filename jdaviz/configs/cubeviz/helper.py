@@ -1,4 +1,3 @@
-import logging
 import numpy as np
 from astropy.io import fits
 from astropy.io import registry as io_registry
@@ -144,7 +143,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             self._specviz = Specviz(app=self.app)
         return self._specviz
 
-    def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None, function=None,
+    def get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
                  cls=None, use_display_units=False):
         """
         Returns data with name equal to ``data_label`` of type ``cls`` with subsets applied from
@@ -155,19 +154,10 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         data_label : str, optional
             Provide a label to retrieve a specific data set from data_collection.
         spatial_subset : str, optional
-            Deprecated as of 3.11.  Use the spectral extraction plugin and extract the extracted
-            spectrum instead.
-            Spatial subset applied to data.
+            Spatial subset applied to data.  Only applicable if ``data_label`` points to a cube or
+            image.  To extract a spectrum from a cube, use the spectral extraction plugin instead.
         spectral_subset : str, optional
             Spectral subset applied to data.
-        function : {True, False, 'minimum', 'maximum', 'mean', 'median', 'sum'}, optional
-            Deprecated as of 3.11.  Use the spectral extraction plugin and extract the extracted
-            spectrum instead.
-            Ignored if ``data_label`` does not point to cube-like data.
-            If True, will collapse using 'sum'.
-            If provided as a string, the cube will be collapsed with the provided
-            function.  If False, None, or not passed, the entire cube will be returned (unless there
-            are values for ``spatial_subset`` and ``spectral_subset``).
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
 
@@ -177,25 +167,8 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        if function is not None or spatial_subset is not None:
-            logging.warning("DeprecationWarning: function and spatial_subset are deprecated and"
-                            " will be removed in a future release.  Use the spectral extraction"
-                            " plugin and access the extracted spectrum directly.")
-
-        # If function is a value ('sum' or 'minimum') or True and spatial and spectral
-        # are set, then we collapse the cube along the spatial subset using the function, then
-        # we apply the mask from the spectral subset.
-        # If function is any value other than False, we use specviz
-        if (function is not False and spectral_subset and spatial_subset) or function:
-            return self.specviz.get_data(data_label=data_label, spectral_subset=spectral_subset,
-                                         cls=cls, spatial_subset=spatial_subset, function=function)
-        elif function is False and spectral_subset:
-            raise ValueError("function cannot be False if spectral_subset"
-                             " is set")
-        elif function is False:
-            function = None
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
-                              spectral_subset=spectral_subset, function=function,
+                              spectral_subset=spectral_subset,
                               cls=cls, use_display_units=use_display_units)
 
     # Need this method for Imviz Aperture Photometry plugin.

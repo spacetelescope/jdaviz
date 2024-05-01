@@ -170,7 +170,7 @@ def test_specviz2d_smooth(specviz2d_helper, spectrum2d):
 
     gs_plugin = specviz2d_helper.plugins['Gaussian Smooth']
 
-    # The Autocollapsed spectrum is given the label of "Spectrum 1D by default"
+    # The Autocollapsed spectrum is given the label of "Spectrum 1D" by default
     smooth_source_dataset = "Spectrum 1D"
     gs_plugin.dataset = smooth_source_dataset
     test_stddev_level = 10.0

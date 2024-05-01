@@ -5,7 +5,6 @@ from traitlets import Bool, Unicode, observe
 from astropy import units as u
 from bqplot import LinearScale
 from glue.core import BaseData
-from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image.layer_artist import BqplotImageSubsetLayerArtist
 
 from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
@@ -18,7 +17,6 @@ from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
-from jdaviz.utils import get_subset_type
 
 __all__ = ['CoordsInfo']
 
@@ -540,33 +538,18 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             if self.dataset.selected != 'auto' and self.dataset.selected != lyr.layer.label:
                 continue
 
-            if isinstance(lyr.layer, GroupedSubset):
-                subset_state = getattr(lyr.layer, 'subset_state', None)
-                if subset_state is None:
-                    continue
-                subset_type = get_subset_type(subset_state)
-                if subset_type == 'spectral':
-                    # then this is a SPECTRAL subset
-                    continue
-                # For use later in data retrieval
-                subset_label = lyr.layer.label
-                data_label = lyr.layer.data.label
-            elif ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))):
+            if ((not isinstance(lyr.layer, BaseData)) or (lyr.layer.ndim not in (1, 3))):
                 continue
-            else:
-                subset_label = None
-                data_label = lyr.layer.label
+            data_label = lyr.layer.label
 
             try:
                 # Cache should have been populated when spectrum was first plotted.
                 # But if not (maybe user changed statistic), we cache it here too.
-                statistic = getattr(viewer.state, 'function', None)
-                cache_key = (lyr.layer.label, statistic)
+                cache_key = lyr.layer.label
                 if cache_key in self.app._get_object_cache:
                     sp = self.app._get_object_cache[cache_key]
                 else:
-                    sp = self._specviz_helper.get_data(data_label=data_label,
-                                                       spatial_subset=subset_label)
+                    sp = self._specviz_helper.get_data(data_label=data_label)
                     self.app._get_object_cache[cache_key] = sp
 
                 # Calculations have to happen in the frame of viewer display units.

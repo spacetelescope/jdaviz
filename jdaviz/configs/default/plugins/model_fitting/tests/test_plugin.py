@@ -325,9 +325,7 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     p.spectral_subset_selected = "Subset 2"
 
     # Get the data object again (ensures mask == None)
-    data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
-    )
+    data = cubeviz_helper.app.data_collection[0].get_object("Spectrum (sum)")
     subset = cubeviz_helper.app.data_collection[0].get_subset_object(
         p.spectral_subset_selected, cls=Spectrum1D, statistic=None
     )

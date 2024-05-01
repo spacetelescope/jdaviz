@@ -2003,12 +2003,6 @@ class SubsetSelect(SelectPluginComponent):
         elif 'is_spatial' in self.filters:
             get_data_kwargs['spatial_subset'] = subset
 
-        if self.app.config == 'cubeviz' and 'is_spectral' in self.filters:
-            viewer_ref = getattr(self.plugin,
-                                 '_default_spectrum_viewer_reference_name',
-                                 self.viewers[0].reference_id)
-            get_data_kwargs['function'] = self.app.get_viewer(viewer_ref).state.function
-
         subset = self.app._jdaviz_helper.get_data(**get_data_kwargs)
         return subset.mask
 
