@@ -42,7 +42,7 @@
 
       <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
-            {{aperture_selected}} does not support wavelength dependence (cone support): {{aperture_selected_validity.aperture_message}}.
+            Aperture: '{{aperture_selected}}' does not support wavelength dependence (cone support): {{aperture_selected_validity.aperture_message}}.
         </span>
       </v-row>
 
@@ -103,7 +103,7 @@
 
       <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
-            {{bg_selected}} does not support wavelength dependence (cone support): {{bg_selected_validity.aperture_message}}.
+            Background: '{{bg_selected}}' does not support wavelength dependence (cone support): {{bg_selected_validity.aperture_message}}.
         </span>
       </v-row>
 
@@ -140,12 +140,12 @@
 
       <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
-            Aperture: {{aperture_selected}} does not support subpixel: {{aperture_selected_validity.aperture_message}}.
+            Aperture: '{{aperture_selected}}' does not support subpixel: {{aperture_selected_validity.aperture_message}}.
         </span>
       </v-row>
       <v-row v-if="bg_selected !== 'None' && !bg_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
-            Background: {{bg_selected}} does not support subpixel: {{bg_selected_validity.aperture_message}}.
+            Background: '{{bg_selected}}' does not support subpixel: {{bg_selected_validity.aperture_message}}.
         </span>
       </v-row>
 
