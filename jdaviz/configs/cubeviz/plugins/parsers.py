@@ -18,8 +18,8 @@ from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 __all__ = ['parse_data']
 
 EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
-                 uncert=['ivar', 'err', 'var', 'uncert'],
-                 mask=['mask', 'dq', 'quality'])
+                 uncert=['ivar', 'err', 'error', 'var', 'uncert'],
+                 mask=['mask', 'dq', 'quality', 'data_quality'])
 
 
 @data_parser_registry("cubeviz-data-parser")
