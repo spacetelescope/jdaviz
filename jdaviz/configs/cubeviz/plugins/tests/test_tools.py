@@ -107,8 +107,8 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert isinstance(reg, RectanglePixelRegion)
 
     # Using altKey should create a new subset
-    x = 2
-    y = 2
+    x = 0
+    y = 0
     flux_viewer.toolbar.active_tool.on_mouse_event(
         {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': True})
     assert len(flux_viewer.native_marks) == 4

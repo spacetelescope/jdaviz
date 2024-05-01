@@ -325,14 +325,14 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     p.spectral_subset_selected = "Subset 2"
 
     # Get the data object again (ensures mask == None)
-    data = cubeviz_helper.app.data_collection[0].get_object("Spectrum (sum)")
-    subset = cubeviz_helper.app.data_collection[0].get_subset_object(
+    data = cubeviz_helper.app.data_collection[-1].get_object()
+    subset = cubeviz_helper.app.data_collection[-1].get_subset_object(
         p.spectral_subset_selected, cls=Spectrum1D, statistic=None
     )
     masked_data = p._apply_subset_masks(data, p.spectral_subset)
 
     expected_spectral_mask = np.ones(data.flux.shape).astype(bool)
-    expected_spectral_mask[:, :, 3:] = False
+    expected_spectral_mask[3:] = False
 
     assert np.all(masked_data.mask == expected_spectral_mask)
     assert np.all(subset.mask == expected_spectral_mask)
