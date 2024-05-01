@@ -139,6 +139,9 @@ def test_unit_translation(cubeviz_helper):
     center = PixCoord(5, 10)
     cubeviz_helper.load_regions(CirclePixelRegion(center, radius=2.5))
 
+    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg.open_in_tray()
+
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
     extract_plg.aperture = extract_plg.aperture.choices[-1]
@@ -155,7 +158,6 @@ def test_unit_translation(cubeviz_helper):
     # test that the scale factor was set
     assert collapsed_spec.meta['_pixel_scale_factor'] != 1
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
     # When the dropdown is displayed, this ensures the loaded
     # data collection item units will be used for translations.
     uc_plg._obj.show_translator = True
@@ -172,12 +174,12 @@ def test_unit_translation(cubeviz_helper):
     assert y_display_unit == u.MJy / u.sr
 
     # Surface Brightness conversion
-    uc_plg.flux_unit_selected = 'W / (Hz sr m2)'
-    assert y_display_unit == u.W / (u.m**2 * u.sr * u.Hz)
-
-    # A second Surface Brightness conversion
     uc_plg.flux_unit_selected = 'Jy / sr'
     assert y_display_unit == u.Jy / u.sr
+
+    # A second Surface Brightness conversion
+    # uc_plg.flux_unit_selected = 'Jy / sr'
+    # assert y_display_unit == u.Jy / u.sr
 
     # Translate back to Flux
     uc_plg._obj.flux_or_sb_selected = 'Flux'

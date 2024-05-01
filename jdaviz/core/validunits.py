@@ -69,7 +69,7 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     # Get local units.
     if u.sr not in flux_unit.bases:
         locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'Jy',
-                                      'W / (m2 Hz)',
+                                      'W / (Hz m2)',
                                       'eV / (s m2 Hz)',
                                       'erg / (s cm2)',
                                       'erg / (s cm2 Angstrom)',
@@ -79,13 +79,14 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
         local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
     else:
         locally_defined_flux_units = ['Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr', 'Jy / sr',
-                                      'W / (m2 Hz sr)',
+                                      'W / (Hz sr m2)',
                                       'eV / (s m2 Hz sr)',
                                       'erg / (s cm2 sr)',
                                       'erg / (s cm2 Angstrom sr)',
                                       'erg / (s cm2 Hz sr)',
                                       'ph / (s cm2 Angstrom sr)',
-                                      'ph / (s cm2 Hz sr)']
+                                      'ph / (s cm2 Hz sr)',
+                                      'bol / sr', 'AB / sr', 'ST / sr']
         local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
 
     # Remove overlap units.

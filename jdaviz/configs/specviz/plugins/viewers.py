@@ -568,7 +568,8 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
             u.erg / (u.s * u.cm**2 * u.Angstrom),
             u.erg / (u.s * u.cm**2 * u.Hz),
             u.ph / (u.s * u.cm**2 * u.Angstrom),
-            u.ph / (u.s * u.cm**2 * u.Hz)
+            u.ph / (u.s * u.cm**2 * u.Hz),
+            u.bol, u.AB, u.ST
         ]
 
         locally_defined_sb_units = [
