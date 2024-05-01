@@ -76,6 +76,8 @@ Other Changes and Additions
 
 - Line menu in Redshift from Centroid section of Line Analysis now shows values in current units. [#2816, #2831]
 
+- Bump required specutils version to 1.15. [#2843]
+
 3.9.2 (unreleased)
 ==================
 

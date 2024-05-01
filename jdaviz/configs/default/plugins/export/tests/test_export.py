@@ -212,6 +212,11 @@ class TestExportSubsets:
 
         # Format should auto-update to first non-disabled entry
         assert export_plugin.subset_format.selected == 'ecsv'
+        for format in export_plugin.subset_format.items:
+            if format['label'] != 'ecsv':
+                assert format['disabled']
+            else:
+                assert format['disabled'] is False
 
         export_plugin.filename_value = "test_spectral_region"
         export_plugin.export()
