@@ -465,7 +465,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             elif self.subset_format.selected == 'ecsv':
                 self.save_subset_as_table(filename)
 
-
         elif len(self.dataset.selected):
             filetype = self.dataset_format.selected
             filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
