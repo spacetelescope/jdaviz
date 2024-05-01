@@ -84,6 +84,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Update "Orientation" plugin's ``rotation_angle`` when ``add_orientation()`` is called
+  via API. [#2838]  
+
 Mosviz
 ^^^^^^
 
