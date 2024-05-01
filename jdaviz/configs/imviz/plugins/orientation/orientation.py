@@ -336,6 +336,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         if self.link_type_selected != 'WCS':
             raise ValueError("must be aligned by WCS to add orientation options")
 
+        if rotation_angle is not None:
+            self.rotation_angle = rotation_angle
+
         if wrt_data is None:
             # if not specified, use first-loaded image layer as the
             # default rotation:
