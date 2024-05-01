@@ -18,8 +18,8 @@ from jdaviz.utils import standardize_metadata, PRIHDR_KEY
 __all__ = ['parse_data']
 
 EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
-                 uncert=['ivar', 'err', 'var', 'uncert'],
-                 mask=['mask', 'dq', 'quality'])
+                 uncert=['ivar', 'err', 'error', 'var', 'uncert'],
+                 mask=['mask', 'dq', 'quality', 'data_quality'])
 
 
 @data_parser_registry("cubeviz-data-parser")
@@ -252,12 +252,17 @@ def _parse_hdulist(app, hdulist, file_name=None,
             flux_unit = u.count
 
         flux = hdu.data << flux_unit
+        is_big_cube = hdu.data.size > 8_000_000
 
         metadata = standardize_metadata(hdu.header)
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+        if not is_big_cube:
+            sc = _return_spectrum_with_correct_units(
+                flux, wcs, metadata, data_type, hdulist=hdulist)
+        else:
+            sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata)
 
         # store original WCS in metadata. this is a hacky workaround for converting subsets
         # to sky regions, where the parent data of the subset might have dropped spatial WCS info
@@ -271,7 +276,7 @@ def _parse_hdulist(app, hdulist, file_name=None,
             # We no longer auto-populate the mask cube into a viewer
             pass
 
-        elif data_type == 'uncert':
+        elif data_type == 'uncert' and not is_big_cube:
             app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
             app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
 
