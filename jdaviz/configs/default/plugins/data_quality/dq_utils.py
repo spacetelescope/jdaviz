@@ -10,6 +10,11 @@ from astropy.table import Table
 dq_flag_map_paths = {
     'jwst': Path('data', 'data_quality', 'jwst.csv'),
     'roman': Path('data', 'data_quality', 'roman.csv'),
+    'hst-stis': Path('data', 'data_quality', 'hst-stis.csv'),
+    'hst-acs': Path('data', 'data_quality', 'hst-acs.csv'),
+    'hst-wfc3-uvis': Path('data', 'data_quality', 'hst-wfc3-uvis.csv'),
+    'hst-wfc3-ir': Path('data', 'data_quality', 'hst-wfc3-ir.csv'),
+    'hst-cos': Path('data', 'data_quality', 'hst-cos.csv'),
 }
 
 
@@ -127,7 +132,7 @@ def load_flag_map(mission_or_instrument=None, path=None):
         flag_table = Table.read(path, format='ascii.csv', fill_values=fill_values)
 
     flag_mapping = {}
-    for flag, name, desc in flag_table.iterrows():
+    for flag, name, desc in flag_table[['flag', 'name', 'description']].iterrows():
         flag_mapping[int(flag)] = dict(name=name, description=desc)
 
     return flag_mapping
@@ -246,7 +251,8 @@ def decode_flags(flag_map, unique_flags, rgba_colors):
         decoded_bits = decompose_bit(bit)
         decoded_flags.append({
             'flag': int(bit),
-            'decomposed': {bit: flag_map[bit] for bit in decoded_bits},
+            'decomposed': {bit: flag_map[bit] if bit in flag_map else bit
+                           for bit in decoded_bits},
             'color': rgb2hex(color),
             'show': True,
         })

@@ -29,9 +29,13 @@ INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
             " to the file name to load all of them.")
 
 
-def prep_data_layer_as_dq(data, component_id='DQ'):
+def prep_data_layer_as_dq(data):
     # nans are used to mark "good" flags in the DQ colormap, so
     # convert DQ array to float to support nans:
+    for component_id in data.main_components:
+        if component_id.label.startswith("DQ"):
+            break
+
     cid = data.get_component(component_id)
     data_arr = np.float32(cid.data)
     data_arr[data_arr == 0] = np.nan
@@ -202,7 +206,7 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
     for data, data_label in data_iter:
 
         # if the science extension hasn't been identified yet, do so here:
-        if sci_ext is None and data_label.endswith(('[DATA]', '[SCI]')):
+        if sci_ext is None and ('[DATA' in data_label or '[SCI' in data_label):
             sci_ext = data_label
 
         if isinstance(data.coords, GWCS) and (data.coords.bounding_box is not None):
@@ -217,12 +221,12 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
             data_label = app.return_data_label(data_label, alt_name="image_data")
 
         # TODO: generalize/centralize this for use in other configs too
-        if data_label.endswith('[DQ]'):
+        if '[DQ' in data_label:
             prep_data_layer_as_dq(data)
 
         if parent is not None:
             parent_data_label = parent
-        elif data_label.endswith('[DQ]'):
+        elif '[DQ' in data_label:
             parent_data_label = sci_ext
         else:
             parent_data_label = None
