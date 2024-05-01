@@ -31,6 +31,9 @@ API Changes
 Cubeviz
 ^^^^^^^
 
+- ERROR and DATA_QUALITY extension names are now recognized as
+  uncertainty and mask, respectively. [#2840]
+
 Imviz
 ^^^^^
 
