@@ -53,6 +53,15 @@
       hint="Select spectral region that defines the continuum."
     />
 
+    <plugin-dataset-select
+      v-if="continuum_subset_selected !== 'None'"
+      :items="continuum_dataset_items"
+      :selected.sync="continuum_dataset_selected"
+      :show_if_single_entry="false"
+      label="Continuum Spectrum"
+      hint="Select the spectrum used to determine the continuum."
+    />
+
     <v-row v-if="continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
