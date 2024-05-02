@@ -288,6 +288,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Boolean cube which is True outside of the aperture
             # (i.e., the numpy boolean mask convention)
             mask = np.isclose(shape_mask, 0)
+
+            # composite subset masks are in `nddata.mask`:
+            if nddata.mask is not None and np.all(shape_mask == 0):
+                mask &= nddata.mask
+
         else:
             nddata = spectral_cube.get_object(cls=NDDataArray)
             if uncert_cube:
@@ -376,6 +381,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
                                                                           statistic=None)
         display_unit = astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
+
+        # if subset is a composite subset, skip the other logic:
+        if self.aperture.is_composite:
+            [subset_group] = [
+                subset_group for subset_group in self.app.data_collection.subset_groups
+                if subset_group.label == self.aperture_selected]
+            mask_weights = subset_group.subsets[0].to_mask().astype(np.float32)
+            return mask_weights
 
         # Center is reverse coordinates
         center = (self.aperture.selected_spatial_region.center.y,
