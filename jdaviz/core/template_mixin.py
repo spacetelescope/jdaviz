@@ -2291,6 +2291,8 @@ class ApertureSubsetSelect(SubsetSelect):
             mark.visible = visible
 
     def _plugin_active_changed(self, *args):
+        if self.plugin.is_active:
+            self._update_mark_coords()
         self._set_mark_visiblities(self.plugin.is_active)
 
     @property
