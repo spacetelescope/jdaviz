@@ -140,7 +140,6 @@ def test_unit_translation(cubeviz_helper):
     cubeviz_helper.load_regions(CirclePixelRegion(center, radius=2.5))
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
-    uc_plg.open_in_tray()
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
@@ -173,19 +172,32 @@ def test_unit_translation(cubeviz_helper):
     # check if units translated
     assert y_display_unit == u.MJy / u.sr
 
+
+def test_sb_unit_conversion(cubeviz_helper):
+    # custom cube to have Surface Brightness units
+    wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
+                "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
+                "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 8e-11}
+    w = WCS(wcs_dict)
+    flux = np.zeros((30, 20, 3001), dtype=np.float32)
+    flux[5:15, 1:11, :] = 1
+    cube = Spectrum1D(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
+    cubeviz_helper.load_data(cube, data_label="test")
+
+    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg.open_in_tray()
+
+    # to have access to display units
+    viewer_1d = cubeviz_helper.app.get_viewer(
+        cubeviz_helper._default_spectrum_viewer_reference_name)
+
     # Surface Brightness conversion
-    uc_plg.flux_unit_selected = 'Jy / sr'
+    uc_plg.flux_or_sb_unit = 'Jy / sr'
+    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.Jy / u.sr
 
-    # A second Surface Brightness conversion
-    # uc_plg.flux_unit_selected = 'Jy / sr'
-    # assert y_display_unit == u.Jy / u.sr
-
-    # Translate back to Flux
-    uc_plg._obj.flux_or_sb_selected = 'Flux'
+    # Try a second conversion
+    uc_plg.flux_or_sb_unit = 'AB / sr'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    assert y_display_unit == u.Jy
-
-    # test flux conversion
-    uc_plg.flux_unit_selected = 'ph / (Angstrom s cm2)'
-    assert y_display_unit == u.ph / (u.s * u.cm**2 * u.Angstrom)
+    assert y_display_unit == u.AB / u.sr
