@@ -257,15 +257,13 @@ def _parse_hdulist(app, hdulist, file_name=None,
         if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
             metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
-
         # store original WCS in metadata. this is a hacky workaround for converting subsets
         # to sky regions, where the parent data of the subset might have dropped spatial WCS info
         metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
 
+        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+
         app.add_data(sc, data_label)
-        if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
-            app.data_collection[-1].get_component("flux").units = flux_unit
 
         if data_type == 'mask':
             # We no longer auto-populate the mask cube into a viewer
@@ -276,6 +274,8 @@ def _parse_hdulist(app, hdulist, file_name=None,
             app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
 
         else:  # flux
+            # Forced wave unit conversion made it lose stuff, so re-add
+            app.data_collection[data_label].get_component("flux").units = flux_unit
             # Add flux to top left image viewer
             app.add_data_to_viewer(flux_viewer_reference_name, data_label)
             # Add flux to spectrum viewer
