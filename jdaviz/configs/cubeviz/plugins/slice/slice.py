@@ -68,7 +68,9 @@ class Slice(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._cached_properties = ['valid_selection_values', 'valid_selection_values_sorted']
+        self._cached_properties = ['valid_selection_values', 'valid_selection_values_sorted',
+                                   'valid_indicator_values', 'valid_indicator_values_sorted',
+                                   'valid_values', 'valid_values_sorted']
 
         self._indicator_initialized = False
         self._player = None
