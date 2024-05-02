@@ -151,16 +151,16 @@ def test_spectrum_at_spaxel_with_2d(cubeviz_helper):
 
     # Set the active tool to spectrumperspaxel
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
-    x = 1
-    y = 1
+    x = 0
+    y = 0
     assert len(flux_viewer.native_marks) == 2
-    assert len(spectrum_viewer.data()) == 0
+    assert len(spectrum_viewer.data()) == 1  # Spectrum (sum)
 
     # Click on spaxel location
     flux_viewer.toolbar.active_tool.on_mouse_event(
         {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert len(flux_viewer.native_marks) == 3
-    assert len(spectrum_viewer.data()) == 0
+    assert len(spectrum_viewer.data()) == 2  # Spectrum (sum), Spectrum (Subset 1, sum)
 
     # Deselect tool
     flux_viewer.toolbar.active_tool = None

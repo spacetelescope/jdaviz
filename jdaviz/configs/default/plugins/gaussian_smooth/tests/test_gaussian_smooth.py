@@ -56,20 +56,24 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     # Link 2:
     # Pixel Axis 0 [z] from cube.pixel_component_ids[0]
     # Pixel Axis 0 [z] from plugin.pixel_component_ids[0]
-    assert dc.external_links[0].cids1[0] == dc[0].pixel_component_ids[0]
-    assert dc.external_links[0].cids2[0] == dc[-1].pixel_component_ids[0]
+    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[0]
+    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[0]
 
     # Link 3:
     # Pixel Axis 1 [y] from cube.pixel_component_ids[1]
     # Pixel Axis 1 [y] from plugin.pixel_component_ids[1]
-    assert dc.external_links[1].cids1[0] == dc[0].pixel_component_ids[1]
-    assert dc.external_links[1].cids2[0] == dc[-1].pixel_component_ids[1]
+    assert dc.external_links[3].cids1[0] == dc[0].pixel_component_ids[1]
+    assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[1]
 
     # Link 4:
     # Pixel Axis 2 [x] from cube.pixel_component_ids[2]
     # Pixel Axis 2 [x] from plugin.pixel_component_ids[2]
-    assert dc.external_links[2].cids1[0] == dc[0].pixel_component_ids[2]
-    assert dc.external_links[2].cids2[0] == dc[-1].pixel_component_ids[2]
+    assert dc.external_links[4].cids1[0] == dc[0].pixel_component_ids[2]
+    assert dc.external_links[4].cids2[0] == dc[-1].pixel_component_ids[2]
+
+    # Spectral smooth the input SPECTRUM
+    gs.dataset_selected = 'Spectrum (sum)'
+    gs.vue_apply()
 
     # Mouseover should automatically jump from one spectrum
     # to another, depending on which one is closer.
@@ -80,14 +84,14 @@ def test_linking_after_spectral_smooth(cubeviz_helper, spectrum1d_cube):
     assert label_mouseover.as_text() == ('Cursor 4.62360e-07, 6.00000e+01',
                                          'Wave 4.62360e-07 m (1 pix)',
                                          'Flux 9.20000e+01 Jy')
-    assert label_mouseover.icon == 'a'
+    assert label_mouseover.icon == 'b'
 
     label_mouseover._viewer_mouse_event(spec_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 4.6236e-7, 'y': 20}})
     assert label_mouseover.as_text() == ('Cursor 4.62360e-07, 2.00000e+01',
                                          'Wave 4.62360e-07 m (1 pix)',
                                          'Flux 1.47943e+01 Jy')
-    assert label_mouseover.icon == 'b'
+    assert label_mouseover.icon == 'd'
 
     # Check mouseover behavior when we hide everything.
     for lyr in spec_viewer.layers:
