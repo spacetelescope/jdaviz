@@ -107,7 +107,7 @@ class UnitConverterWithSpectral:
                 else:
                     eqv = u.spectral_density(spec.spectral_axis)
         else:  # spectral axis
-            eqv = u.spectral()
+            eqv = u.spectral() + u.pixel_scale(1*u.pix)
 
         return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
 

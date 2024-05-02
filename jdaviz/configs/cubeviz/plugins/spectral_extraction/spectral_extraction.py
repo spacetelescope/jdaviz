@@ -383,6 +383,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             target_wave_unit = spectral_cube.coords.spectral.world_axis_units[0]
 
+        if target_wave_unit == '':
+            target_wave_unit = 'pix'
+
         flux = collapsed_nddata.data << collapsed_nddata.unit
         mask = collapsed_nddata.mask
         uncertainty = collapsed_nddata.uncertainty

@@ -122,7 +122,7 @@ class WithSliceSelection:
             if slice_display_units and slice_display_units != data_units:
                 converted_axis = (data_spec_axis * u.Unit(data_units)).to_value(
                     slice_display_units,
-                    equivalencies=u.spectral()
+                    equivalencies=u.spectral() + u.pixel_scale(1*u.pix)
                 )
             else:
                 converted_axis = data_spec_axis
