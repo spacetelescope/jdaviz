@@ -59,7 +59,7 @@
       :selected.sync="continuum_dataset_selected"
       :show_if_single_entry="false"
       label="Continuum Spectrum"
-      hint="Select the spectrum used to determine the continuum."
+      hint="Select the spectrum used to visualize the continuum inputs.  The continuum will be recomputed on the input cube when computing the moment map."
     />
 
     <v-row v-if="continuum_subset_selected=='Surrounding' && spectral_subset_selected!='Entire Spectrum'">
