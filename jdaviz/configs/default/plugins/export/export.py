@@ -292,8 +292,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             bad_combo = True
 
         if bad_combo:
-            raise ValueError(f"Cannot export {self.subset.selected} in "
-                             f"{self.subset_format.selected.upper()} format")
+            # Set back to a good value and raise error
+            good_format = [format["label"] for format in self.subset_format_items if
+                           format["disabled"] is False][0]
+            self.subset_format.selected = good_format
+            raise ValueError(f"Cannot export {self.subset.selected} in {event['new']}"
+                             f" format, reverting selection to {self.subset_format.selected}")
 
     def _set_subset_not_supported_msg(self, msg=None):
         """

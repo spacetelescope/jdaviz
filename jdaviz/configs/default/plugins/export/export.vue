@@ -128,7 +128,7 @@
     <div v-if="subset_items.length > 0">
       <span class="export-category">Subsets</span>
       <v-row>
-        <span class="category-content v-messages v-messages__message text--secondary">Export spatial subset as astropy region.</span>
+        <span class="category-content v-messages v-messages__message text--secondary">Export spatial subset as astropy region or spectral subset as specutils SpectralRegion.</span>
       </v-row>
       <plugin-inline-select
         :items="subset_items"
@@ -224,7 +224,7 @@
 
     <div style="display: grid; position: relative"> <!-- overlay container -->
     <div style="grid-area: 1/1">
-      
+
     <plugin-auto-label
       :value.sync="filename_value"
       :default="filename_default"
