@@ -321,7 +321,7 @@ Export
 ======
 
 This plugin allows exporting the contents of a viewer or a plot within a plugin to various image formats.
-Additionally, spatial and spectral regions can be exported to files, as astropy regions saves as FITS or REG
+Additionally, spatial and spectral regions can be exported to files, as astropy regions saved as FITS or REG
 files (in the case of spatial regions), or as ECSV files in the case of spectral regions via specutils SpectralRegion.
 Note that multiple spectral regions can be saved out to the same file, as long as they are subregions of a single
 subset rather than independent subsets.
