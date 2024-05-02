@@ -66,7 +66,7 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match=re.escape("x not one of ['fits', 'reg'], reverting selection to reg")):  # noqa
+                           match=re.escape("x not one of ['fits', 'reg', 'ecsv'], reverting selection to reg")):  # noqa
             export_plugin.subset_format.selected = 'x'
 
     def test_not_implemented(self, cubeviz_helper, spectral_cube_wcs):
@@ -92,10 +92,6 @@ class TestExportSubsets:
         export_plugin.subset.selected = 'Subset 1'
 
         assert export_plugin.subset_invalid_msg == 'Export for composite subsets not yet supported.'
-
-        cubeviz_helper.app.session.edit_subset_mode.mode = NewMode
-        cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
-        assert 'Subset 2' not in export_plugin.subset.choices
 
     def test_export_subsets_wcs(self, imviz_helper, spectral_cube_wcs):
 
@@ -193,8 +189,12 @@ class TestExportSubsets:
 
         # test that invalid file extension raises an error
         with pytest.raises(ValueError,
-                           match=re.escape("x not one of ['fits', 'reg'], reverting selection to reg")):  # noqa
+                           match=re.escape("x not one of ['fits', 'reg', 'ecsv'], reverting selection to reg")):  # noqa
             export_plugin.subset_format.selected = 'x'
+
+        # Test that selecting disabled option raises an error
+        with pytest.raises(ValueError, match="Cannot export Subset 1 in ecsv format, reverting selection to fits"):  # noqa
+            export_plugin.subset_format.selected = 'ecsv'
 
         # test that attempting to save a composite subset raises an error
         cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
@@ -204,6 +204,23 @@ class TestExportSubsets:
         with pytest.raises(NotImplementedError,
                            match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
+
+        # Test saving spectral subset
+        cubeviz_helper.app.session.edit_subset_mode.mode = NewMode
+        cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
+        export_plugin.subset.selected = 'Subset 2'
+
+        # Format should auto-update to first non-disabled entry
+        assert export_plugin.subset_format.selected == 'ecsv'
+        for format in export_plugin.subset_format.items:
+            if format['label'] != 'ecsv':
+                assert format['disabled']
+            else:
+                assert format['disabled'] is False
+
+        export_plugin.filename_value = "test_spectral_region"
+        export_plugin.export()
+        assert os.path.isfile('test_spectral_region.ecsv')
 
 
 @pytest.mark.usefixtures('_jail')

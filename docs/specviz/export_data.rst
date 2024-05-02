@@ -14,7 +14,7 @@ those data currently back into your Jupyter notebook:
 
     specviz.get_spectra()
 
-which yields a either a single `specutils.Spectrum1D` object or a dictionary of 
+which yields a either a single `specutils.Spectrum1D` object or a dictionary of
 `specutils.Spectrum1D` (if there are multiple displayed spectra) that you can
 manipulate however you wish.  You can then load the modified spectrum back into
 the notebook via the API described in :ref:`specviz-import-api`.
@@ -69,6 +69,11 @@ To extract the spectral region you want:
 .. code-block:: python
 
     myregion = regions["Subset 2"]
+
+.. seealso::
+
+    :ref:`Export From Plugins <specviz-plugins>`
+        Spectral region subsets can also be exported to disk as an ECSV file.
 
 .. _specviz-export-model:
 

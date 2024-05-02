@@ -725,7 +725,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             manual_options = [default_text] + manual_options
         self._manual_options = manual_options
 
-        self.items = [{"label": opt} for opt in manual_options]
+        self.items = [{"label": opt} if isinstance(opt, str) else opt for opt in manual_options]
         # set default values for traitlets
         if default_text is not None:
             self.selected = default_text

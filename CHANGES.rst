@@ -8,6 +8,9 @@ New Features
 
 - Adding Data Quality plugin for Imviz and Cubeviz. [#2767, #2817]
 
+- Enable exporting spectral regions to ECSV files readable by ``astropy.table.QTable`` or
+  ``specutils.SpectralRegion`` [#2843]
+
 Cubeviz
 ^^^^^^^
 
@@ -74,6 +77,8 @@ Other Changes and Additions
 - Bump required Python version to 3.10. [#2757]
 
 - Line menu in Redshift from Centroid section of Line Analysis now shows values in current units. [#2816, #2831]
+
+- Bump required specutils version to 1.15. [#2843]
 
 3.9.2 (unreleased)
 ==================
