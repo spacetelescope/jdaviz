@@ -165,6 +165,10 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         selected = self.flag_map_definitions[flag_map_key]
         self.flag_map_definitions_selected = selected
 
+        # clear decoded_flags with a meaningless one:
+        self.init_decoding()
+        self._update_cmap()
+
     @observe('dq_layer_selected')
     def init_decoding(self, event={}, viewers=None):
         if not self.validate_flag_decode_possible:
@@ -177,6 +181,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             unique_flags=unique_flags,
             rgba_colors=rgba_colors
         )
+        self.send_state('decoded_flags')
         dq_layers = self.get_dq_layers(viewers=viewers)
 
         for dq_layer in dq_layers:

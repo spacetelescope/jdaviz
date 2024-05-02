@@ -394,7 +394,7 @@ def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
         data.meta.update(standardize_metadata(dict(meta)))
 
         if comp_label == 'dq':
-            prep_data_layer_as_dq(data, component_id=comp_label)
+            prep_data_layer_as_dq(data)
 
         yield data, new_data_label
 
@@ -427,7 +427,7 @@ def _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=None):
             data.add_component(component=component, label=comp_label)
             data.meta.update(standardize_metadata(dict(meta)))
             if comp_label == 'DQ':
-                prep_data_layer_as_dq(data, component_id=comp_label)
+                prep_data_layer_as_dq(data)
 
             yield data, new_data_label
 
