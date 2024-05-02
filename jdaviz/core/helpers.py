@@ -456,44 +456,44 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
+    def _handle_display_units(self, data, use_display_units=True):
+        if use_display_units:
+            if isinstance(data, Spectrum1D):
+                spectral_unit = self.app._get_display_unit('spectral')
+                if not spectral_unit:
+                    return data
+                flux_unit = self.app._get_display_unit('flux')
+                # TODO: any other attributes (meta, wcs, etc)?
+                # TODO: implement uncertainty.to upstream
+                uncertainty = data.uncertainty
+                if uncertainty is not None:
+                    # convert the uncertainties to StdDevUncertainties, since
+                    # that is assumed in a few places in jdaviz:
+                    if uncertainty.unit is None:
+                        uncertainty.unit = data.flux.unit
+                    if hasattr(uncertainty, 'represent_as'):
+                        new_uncert = uncertainty.represent_as(
+                            StdDevUncertainty
+                        ).quantity.to(flux_unit)
+                    else:
+                        # if not specified as NDUncertainty, assume stddev:
+                        new_uncert = uncertainty.quantity.to(flux_unit)
+                    new_uncert = StdDevUncertainty(new_uncert, unit=flux_unit)
+                else:
+                    new_uncert = None
+
+                data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
+                                                                      u.spectral()),
+                                  flux=data.flux.to(flux_unit,
+                                                    u.spectral_density(data.spectral_axis)),
+                                  uncertainty=new_uncert,
+                                  mask=data.mask)
+            else:  # pragma: nocover
+                raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
+        return data
+
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
                   mask_subset=None, cls=None, use_display_units=False):
-        def _handle_display_units(data, use_display_units):
-            if use_display_units:
-                if isinstance(data, Spectrum1D):
-                    spectral_unit = self.app._get_display_unit('spectral')
-                    if not spectral_unit:
-                        return data
-                    flux_unit = self.app._get_display_unit('flux')
-                    # TODO: any other attributes (meta, wcs, etc)?
-                    # TODO: implement uncertainty.to upstream
-                    uncertainty = data.uncertainty
-                    if uncertainty is not None:
-                        # convert the uncertainties to StdDevUncertainties, since
-                        # that is assumed in a few places in jdaviz:
-                        if uncertainty.unit is None:
-                            uncertainty.unit = data.flux.unit
-                        if hasattr(uncertainty, 'represent_as'):
-                            new_uncert = uncertainty.represent_as(
-                                StdDevUncertainty
-                            ).quantity.to(flux_unit)
-                        else:
-                            # if not specified as NDUncertainty, assume stddev:
-                            new_uncert = uncertainty.quantity.to(flux_unit)
-                        new_uncert = StdDevUncertainty(new_uncert, unit=flux_unit)
-                    else:
-                        new_uncert = None
-
-                    data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
-                                                                          u.spectral()),
-                                      flux=data.flux.to(flux_unit,
-                                                        u.spectral_density(data.spectral_axis)),
-                                      uncertainty=new_uncert,
-                                      mask=data.mask)
-                else:  # pragma: nocover
-                    raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
-            return data
-
         list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
         for subset in (spatial_subset, spectral_subset, mask_subset):
             if subset and subset not in list_of_valid_subset_names:
@@ -545,7 +545,7 @@ class ConfigHelper(HubListener):
             else:
                 data = data.get_object(cls=cls, **object_kwargs)
 
-            return _handle_display_units(data, use_display_units)
+            return self._handle_display_units(data, use_display_units)
 
         if not cls and spatial_subset:
             raise AttributeError(f"A valid cls must be provided to"
@@ -598,7 +598,7 @@ class ConfigHelper(HubListener):
             else:
                 data = spec_subset
 
-        return _handle_display_units(data, use_display_units)
+        return self._handle_display_units(data, use_display_units)
 
     def get_data(self, data_label=None, cls=None, use_display_units=False, **kwargs):
         """

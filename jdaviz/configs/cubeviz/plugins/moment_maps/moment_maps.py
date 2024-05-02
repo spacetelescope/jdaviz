@@ -210,6 +210,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             # during initial init, this can trigger before the component is initialized
             return
         if self.continuum_dataset_selected == '':
+            # NOTE: we could send self.dataset.selected through
+            # spectral_extraction._extract_in_new_instance() to get a spectrum
+            # for the selected/default cube,
+            # but there is no visible spectrum to even show under the continuum
             return
         # NOTE: there is no use in caching this, as the continuum will need to be re-computed
         # per-spaxel to use within calculating the moment map

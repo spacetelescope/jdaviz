@@ -133,12 +133,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                                      selected='model_comp_selected',
                                                      manual_options=list(MODELS.keys()))
 
-        # when accessing the selected data, access the spectrum-viewer version
-        self.dataset._viewers = [self._default_spectrum_viewer_reference_name]
         if self.config == 'cubeviz':
-            # allow cube fitting to data in the flux viewer (toggled via the cube_fit toggle)
-            self.dataset._viewers += [self._default_flux_viewer_reference_name]
+            # use mean whenever extracting the 1D spectrum of a cube to initialize model params
+            self.dataset._spectral_extraction_function = 'Mean'
         # by default, require entries to be in spectrum-viewer (not other cubeviz images, etc)
+        # in cubeviz, the cube_fit toggle will then replace this filter to filter for cubes
         self.dataset.add_filter('layer_in_spectrum_viewer')
 
         self.equation = AutoTextField(self, 'model_equation', 'model_equation_default',
@@ -178,11 +177,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @observe('cube_fit')
     def _cube_fit_changed(self, msg={}):
         if self.cube_fit:
-            self.dataset.add_filter('layer_in_flux_viewer')
+            self.dataset.add_filter('is_flux_cube')
             self.dataset.remove_filter('layer_in_spectrum_viewer')
         else:
             self.dataset.add_filter('layer_in_spectrum_viewer')
-            self.dataset.remove_filter('layer_in_flux_viewer')
+            self.dataset.remove_filter('is_flux_cube')
         self.dataset._clear_cache()
 
     @property
@@ -321,10 +320,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             return False
 
-    def _get_1d_spectrum(self):
-        # retrieves the 1d spectrum
-        return self.dataset.selected_spectrum(use_display_units=True)
-
     @observe("dataset_selected")
     def _dataset_selected_changed(self, event=None):
         """
@@ -344,7 +339,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # during initial init, this can trigger before the component is initialized
             return
 
-        selected_spec = self._get_1d_spectrum()
+        selected_spec = self.dataset.selected_spectrum
         if selected_spec is None:
             return
 
@@ -498,7 +493,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             initial_values[param_name] = initial_val
 
-        masked_spectrum = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
+        masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
+                                                   self.spectral_subset)
         mask = masked_spectrum.mask
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
@@ -841,7 +837,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return
         models_to_fit = self._reinitialize_with_fixed()
 
-        masked_spectrum = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
+        masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
+                                                   self.spectral_subset)
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
                 masked_spectrum,

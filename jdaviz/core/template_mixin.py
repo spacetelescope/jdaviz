@@ -2774,14 +2774,7 @@ class NonFiniteUncertaintyMismatchMixin(VuetifyTemplate, HubListener):
             # during initial init, this can trigger before the component is initialized
             return
 
-        if not hasattr(self, '_get_1d_spectrum'):
-            # only model_fitting has _get_1d_spectrum(), but this method is here
-            # instead of there  because it may eventually be used by other plugins.
-            # if that happens, move _get_1d_spectrum() somewhere more general
-            raise NotImplementedError("_get_1d_spectrum() must be available in "
-                                      "plugin to use NonFiniteUncertaintyMismatchMixin")
-
-        spec = self._get_1d_spectrum()
+        spec = self.dataset.selected_spectrum
 
         if spec.uncertainty is None:
             self.non_finite_uncertainty_mismatch = False
@@ -2792,7 +2785,7 @@ class NonFiniteUncertaintyMismatchMixin(VuetifyTemplate, HubListener):
             uncert = spec.uncertainty
         else:
             # get selected subset
-            spec = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
+            spec = self._apply_subset_masks(spec, self.spectral_subset)
             flux = spec.flux[~spec.mask]
             uncert = spec.uncertainty[~spec.mask]
 
@@ -2880,7 +2873,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
                                                              use_display_units=True)
         else:
-            full_spectrum = dataset.selected_spectrum(use_display_units=True)
+            full_spectrum = dataset.get_selected_spectrum(use_display_units=True)
 
         if full_spectrum is None or self.continuum_width == "":
             self._update_continuum_marks()
@@ -3297,7 +3290,9 @@ class DatasetSelect(SelectPluginComponent):
                          multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
-        self._cached_properties += ["selected_dc_item"]
+        self._cached_properties += ["selected_dc_item", "selected_spectrum"]
+        # override this for how to access on-the-fly spectral extraction of a cube
+        self._spectral_extraction_function = 'sum'
         # Add/Remove Data are triggered when checked/unchecked from viewers
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
@@ -3350,9 +3345,26 @@ class DatasetSelect(SelectPluginComponent):
         # from the data collection
         return self.get_object(cls=self.default_data_cls)
 
-    def selected_spectrum(self, use_display_units=True):
+    def get_selected_spectrum(self, use_display_units=True):
+        # retrieves the 1d spectrum
+        if len(self.selected_obj.shape) == 3:
+            # then this is a cube, but we want the 1D spectrum,
+            # so we can pass through the Spectral Extraction plugin
+            if self.plugin.config != 'cubeviz':
+                raise ValueError("extracting a spectrum from a cube only supported in cubeviz")
+            # we need to get the 1d extracted spectrum for the cube
+            spec_extract = self.app._jdaviz_helper.plugins['Spectral Extraction']._obj
+            sp = spec_extract._extract_in_new_instance(self.selected,
+                                                       function=self._spectral_extraction_function,
+                                                       add_data=False)
+            return self.plugin._specviz_helper._handle_display_units(sp, use_display_units)
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
                                                     use_display_units=use_display_units)
+
+    @cached_property
+    def selected_spectrum(self):
+        # TODO: do we need to reset this cache on a change to display units?
+        return self.get_selected_spectrum(use_display_units=True)
 
     def _is_valid_item(self, data):
         def from_plugin(data):
@@ -3412,7 +3424,8 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 3
 
         def is_flux_cube(data):
-            return data.label == getattr(self.app._jdaviz_helper._loaded_flux_cube, 'label', None)
+            uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
+            return is_cube(data) and not_child_layer(data) and data.label != uncert_label
 
         def is_not_wcs_only(data):
             return not data.meta.get(_wcs_only_label, False)

@@ -87,7 +87,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
             self.app.hub.broadcast(msg)
         else:
             try:
-                self.plugins['Spectral Extraction']._obj._create_auto_extract()
+                self.plugins['Spectral Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
             except Exception:
                 msg = SnackbarMessage(
                     "Automatic spectrum extraction for the entire cube failed."

@@ -10,7 +10,6 @@ from astropy.nddata import (
 )
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
-from specutils import Spectrum1D
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
@@ -208,7 +207,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     continue
                 subset_lbl = item.get('label')
                 try:
-                    self._create_auto_extract(subset_lbl)
+                    self._extract_in_new_instance(subset_lbl=subset_lbl,
+                                                  auto_update=True, add_data=True)
                 except Exception:
                     msg = SnackbarMessage(
                         f"Automatic spectrum extraction for {subset_lbl} failed",
@@ -220,21 +220,23 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                         color='success', sender=self)
                 self.app.hub.broadcast(msg)
 
-    def _create_auto_extract(self, subset_lbl=None):
+    def _extract_in_new_instance(self, dataset=None, function='Sum', subset_lbl=None,
+                                 auto_update=False, add_data=False):
         # create a new instance of the Spectral Extraction plugin (to not affect the instance in
         # the tray) and extract the entire cube with defaults.
-        if self._app._jdaviz_helper._loaded_flux_cube is None:
-            return
-        if subset_lbl is None:
-            subset_lbl = self.aperture.default_text
+        if dataset is None:
+            if self._app._jdaviz_helper._loaded_flux_cube is None:
+                return
+            dataset = self._app._jdaviz_helper._loaded_flux_cube.label
         plg = self.new()
-        plg.dataset.select_default()  # TODO: ensure this will be science flux cube
-        plg.aperture.selected = subset_lbl
+        plg.dataset.selected = dataset
+        if subset_lbl is not None:
+            plg.aperture.selected = subset_lbl
         plg.aperture_method.selected = 'Center'
-        plg.function.selected = 'Sum'
-        plg.add_results.auto_update_result = subset_lbl != self.aperture.default_text
+        plg.function.selected = function
+        plg.add_results.auto_update_result = auto_update
         # all other settings remain at their plugin defaults
-        plg(add_data=True)
+        return plg(add_data=add_data)
 
     @observe('wavelength_dependent', 'bg_wavelength_dependent')
     def _wavelength_dependent_changed(self, *args):
@@ -292,8 +294,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.conflicting_aperture_and_function:
             raise ValueError(self.conflicting_aperture_error_message)
 
-        spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
-        uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
+        spectral_cube = self.dataset.selected_dc_item
+        if self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label:
+            uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
+        else:
+            # TODO: allow selecting or associating an uncertainty cube?
+            uncert_cube = None
         uncertainties = None
         selected_func = self.function_selected.lower()
 
@@ -328,6 +334,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
             flux = nddata.data << nddata.unit
             mask = nddata.mask
+            shape_mask = np.ones_like(nddata.data)
         # Use the spectral coordinate from the WCS:
         if '_orig_spec' in spectral_cube.meta:
             wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
@@ -411,8 +418,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def get_aperture(self):
         # Retrieve flux cube and create an array to represent the cone mask
-        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
-                                                                          statistic=None)
+        flux_cube = self.dataset.selected_obj
         display_unit = astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
         # Center is reverse coordinates
