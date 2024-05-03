@@ -749,7 +749,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             manual_options = [default_text] + manual_options
         self._manual_options = manual_options
 
-        self.items = [{"label": opt} for opt in manual_options]
+        self.items = [{"label": opt} if isinstance(opt, str) else opt for opt in manual_options]
         # set default values for traitlets
         if default_text is not None:
             self.selected = default_text
@@ -2295,6 +2295,10 @@ class ApertureSubsetSelect(SubsetSelect):
         if self.plugin.is_active:
             self._update_mark_coords()
         self._set_mark_visiblities(self.plugin.is_active)
+
+    @property
+    def is_composite(self):
+        return hasattr(self.selected_obj, '__len__') and len(self.selected_obj) > 1
 
     @property
     def image_viewers(self):

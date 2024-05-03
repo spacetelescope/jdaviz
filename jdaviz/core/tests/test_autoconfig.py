@@ -25,6 +25,7 @@ AUTOCONFIG_EXAMPLES = (
 
 
 @pytest.mark.remote_data
+@pytest.mark.slow
 @pytest.mark.filterwarnings('ignore')
 @pytest.mark.parametrize('uris', AUTOCONFIG_EXAMPLES)
 def test_autoconfig(uris, tmp_path):

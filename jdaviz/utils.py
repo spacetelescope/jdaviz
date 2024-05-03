@@ -250,7 +250,7 @@ def is_not_wcs_only(layer):
 
 
 def layer_is_not_dq(data):
-    return not data.label.endswith('[DQ]')
+    return '[DQ' not in data.label
 
 
 def standardize_metadata(metadata):

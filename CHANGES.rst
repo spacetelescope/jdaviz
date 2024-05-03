@@ -6,12 +6,17 @@ New Features
 
 - The filename entry in the export plugin is now automatically populated based on the selection. [#2824]
 
-- Adding Data Quality plugin for Imviz and Cubeviz. [#2767, #2817]
+- Adding Data Quality plugin for Imviz and Cubeviz. [#2767, #2817, #2844]
+
+- Enable exporting spectral regions to ECSV files readable by ``astropy.table.QTable`` or
+  ``specutils.SpectralRegion`` [#2843]
 
 Cubeviz
 ^^^^^^^
 
 - Enable spectral unit conversion in cubeviz. [#2758, #2803]
+
+- Enable spectral extraction for composite subsets. [#2837]
 
 Imviz
 ^^^^^
@@ -30,6 +35,9 @@ API Changes
 
 Cubeviz
 ^^^^^^^
+
+- ERROR and DATA_QUALITY extension names are now recognized as
+  uncertainty and mask, respectively. [#2840]
 
 Imviz
 ^^^^^
@@ -69,6 +77,8 @@ Other Changes and Additions
 - Bump required Python version to 3.10. [#2757]
 
 - Line menu in Redshift from Centroid section of Line Analysis now shows values in current units. [#2816, #2831]
+
+- Bump required specutils version to 1.15. [#2843]
 
 3.9.2 (unreleased)
 ==================

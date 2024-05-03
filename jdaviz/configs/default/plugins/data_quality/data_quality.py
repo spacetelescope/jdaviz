@@ -22,7 +22,12 @@ __all__ = ['DataQuality']
 
 telescope_names = {
     "jwst": "JWST",
-    "roman": "Roman"
+    "roman": "Roman",
+    "hst-stis": "HST/STIS",
+    "hst-acs": "HST/ACS",
+    "hst-wfc3-uvis": "HST/WFC3-UVIS",
+    "hst-wfc3-ir": "HST/WFC3-IR",
+    "hst-cos": "HST/COS",
 }
 
 
@@ -143,6 +148,8 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def unique_flags(self):
         selected_dq = self.dq_layer_selected_flattened
+        if selected_dq is None or not len(selected_dq):
+            return []
 
         dq = selected_dq[0].get_image_data()
         return np.unique(dq[~np.isnan(dq)])
@@ -151,13 +158,19 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     def validate_flag_decode_possible(self):
         return (
             self.flag_map_selected is not None and
-            len(self.dq_layer.selected_obj) > 0
+            len(self.dq_layer.selected_obj) > 0 and
+            len(self.unique_flags) > 0
         )
 
     @observe('flag_map_selected')
     def update_flag_map_definitions_selected(self, event):
-        selected = self.flag_map_definitions[self.flag_map_selected.lower()]
+        flag_map_key = self.flag_map_selected.lower().replace('/', '-')
+        selected = self.flag_map_definitions[flag_map_key]
         self.flag_map_definitions_selected = selected
+
+        # clear decoded_flags with a meaningless one:
+        self.init_decoding()
+        self._update_cmap()
 
     @observe('dq_layer_selected')
     def init_decoding(self, event={}, viewers=None):
@@ -171,6 +184,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             unique_flags=unique_flags,
             rgba_colors=rgba_colors
         )
+        self.send_state('decoded_flags')
         dq_layers = self.get_dq_layers(viewers=viewers)
 
         for dq_layer in dq_layers:
@@ -330,6 +344,19 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             telescope = layer[0].layer.meta.get('_primary_header', {}).get('TELESCOP', None)
 
         if telescope is not None:
+            primary_header = layer[0].layer.meta.get('_primary_header', {})
+            if telescope == 'HST':
+                instrument = primary_header.get('INSTRUME', None)
+                if instrument == 'WFC3':
+                    detector = primary_header.get('DETECTOR', None)
+                else:
+                    detector = None
+
+                telescope = '-'.join(
+                    i for i in [telescope, instrument, detector]
+                    if i is not None
+                )
+
             flag_map_to_select = telescope_names.get(telescope.lower())
             self.flag_map_selected = flag_map_to_select
 

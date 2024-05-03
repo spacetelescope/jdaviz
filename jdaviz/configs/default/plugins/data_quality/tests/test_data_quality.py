@@ -77,12 +77,6 @@ def test_roman_against_rdm():
 
 @pytest.mark.remote_data
 def test_data_quality_plugin(imviz_helper, tmp_path):
-    # while the DQ plugin is in development, we are making it
-    # irrelevant by default. This fixture allows us to use DQ
-    # plugin in the tests until it's out of development.
-    dq_plugin = imviz_helper.app.get_tray_item_from_name('g-data-quality')
-    dq_plugin.irrelevant_msg = ""
-
     uri = "mast:JWST/product/jw01895001004_07101_00001_nrca3_cal.fits"
     download_path = str(tmp_path / Path(uri).name)
     Observations.download_file(uri, local_path=download_path)
@@ -170,3 +164,51 @@ def test_data_quality_plugin(imviz_helper, tmp_path):
     # now show all:
     dq_plugin.vue_show_all_flags({})
     assert all([flag['show'] for flag in dq_plugin.decoded_flags])
+
+
+@pytest.mark.remote_data
+def test_data_quality_plugin_hst_wfc3(imviz_helper, tmp_path):
+
+    # load HST/WFC3-UVIS observations:
+    uri = "mast:HST/product/hst_17183_02_wfc3_uvis_g280_iexr02mt_flt.fits"
+    download_path = str(tmp_path / Path(uri).name)
+    Observations.download_file(uri, local_path=download_path)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        imviz_helper.load_data(download_path, ext=('SCI', 'DQ'))
+
+    assert len(imviz_helper.app.data_collection) == 2
+
+    dq_plugin = imviz_helper.plugins['Data Quality']._obj
+
+    # mission+instrument+detector identified:
+    assert dq_plugin.flag_map_selected == 'HST/WFC3-UVIS'
+
+    flag_map_selected = dq_plugin.flag_map_definitions_selected
+    assert flag_map_selected[0]['description'] == 'Reed Solomon decoding error'
+
+
+@pytest.mark.remote_data
+def test_data_quality_plugin_hst_acs(imviz_helper, tmp_path):
+    # load HST/ACS observations:
+    uri = "mast:HST/product/hst_16968_01_acs_wfc_f606w_jezz01l3_flt.fits"
+    download_path = str(tmp_path / Path(uri).name)
+    Observations.download_file(uri, local_path=download_path)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        imviz_helper.load_data(download_path, ext=('SCI', 'DQ'))
+
+    assert len(imviz_helper.app.data_collection) == 2
+
+    dq_plugin = imviz_helper.plugins['Data Quality']._obj
+
+    # mission+instrument identified:
+    assert dq_plugin.flag_map_selected == 'HST/ACS'
+
+    flag_map_selected = dq_plugin.flag_map_definitions_selected
+    assert (
+        flag_map_selected[0]['description'] ==
+        'Reed-Solomon decoding error; e.g. data lost during compression.'
+    )
