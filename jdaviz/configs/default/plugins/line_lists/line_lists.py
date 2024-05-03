@@ -436,12 +436,14 @@ class LineListTool(PluginTemplateMixin):
             return
         # if set to auto, default the range based on the limits of the spectrum plot
         x_min, x_max = self.spectrum_viewer_min, self.spectrum_viewer_max
-        if x_min == x_max:
-            return
         x_mid = abs(x_max + x_min) / 2.
         # we'll *estimate* the redshift range to shift the range of the viewer
         # (for a line with a rest wavelength in the center of the viewer),
         # by taking abs, this will work for wavelength or frequency units.
+        if x_mid == 0:
+            # logic below fails, leave the half-range as-is
+            # instead of raising a divide by zero error
+            return
         half_range = abs(x_max - x_min) / x_mid
         ndec = -np.log10(half_range)
         if ndec > 0 and not np.isinf(ndec):
