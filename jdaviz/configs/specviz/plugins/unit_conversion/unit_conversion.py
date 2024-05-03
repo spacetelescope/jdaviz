@@ -79,7 +79,7 @@ class UnitConversion(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('spectral_unit', 'flux_unit'))
+        return PluginUserApi(self, expose=('spectral_unit',))
 
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:

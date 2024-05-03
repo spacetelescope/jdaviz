@@ -27,7 +27,7 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
         if "reverting selection to" not in repr(e):
             raise
     try:
-        plg.flux_unit = new_flux
+        plg._obj.flux_unit_selected = new_flux
     except ValueError as e:
         if "reverting selection to" not in repr(e):
             raise
@@ -62,7 +62,7 @@ def test_conv_flux_only(specviz_helper, spectrum1d, uncert):
     viewer = specviz_helper.app.get_viewer("spectrum-viewer")
     plg = specviz_helper.plugins["Unit Conversion"]
     new_flux = "erg / (s cm2 Angstrom)"
-    plg.flux_unit = new_flux
+    plg._obj.flux_unit_selected = new_flux
 
     assert len(specviz_helper.app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit('Angstrom')
@@ -80,7 +80,7 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
     new_spectral_axis = "micron"
     new_flux = "erg / (s cm2 Angstrom)"
     plg.spectral_unit = new_spectral_axis
-    plg.flux_unit = new_flux
+    plg._obj.flux_unit_selected = new_flux
 
     assert len(specviz_helper.app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit(new_spectral_axis)
@@ -93,8 +93,6 @@ def test_conv_no_data(specviz_helper):
     plg = specviz_helper.plugins["Unit Conversion"]
     with pytest.raises(ValueError, match="no valid unit choices"):
         plg.spectral_unit = "micron"
-    with pytest.raises(ValueError, match="no valid unit choices"):
-        plg.flux_unit = "erg / (s cm2 Angstrom)"
     assert len(specviz_helper.app.data_collection) == 0
 
 
