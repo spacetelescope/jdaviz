@@ -1,4 +1,4 @@
-3.10 (unreleased)
+3.10 (2024-05-03)
 =================
 
 New Features
@@ -57,6 +57,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Re-enable support for exporting spectrum-viewer. [#2825]
+
 Imviz
 ^^^^^
 
@@ -79,29 +81,6 @@ Other Changes and Additions
 - Line menu in Redshift from Centroid section of Line Analysis now shows values in current units. [#2816, #2831]
 
 - Bump required specutils version to 1.15. [#2843]
-
-3.9.2 (unreleased)
-==================
-
-Bug Fixes
----------
-
-Cubeviz
-^^^^^^^
-
-- Re-enable support for exporting spectrum-viewer. [#2825]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.9.1 (2024-04-19)
 ==================
