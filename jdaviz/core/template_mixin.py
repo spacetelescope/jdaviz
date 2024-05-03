@@ -3411,7 +3411,7 @@ class DatasetSelect(SelectPluginComponent):
             if not len(self.app.get_viewer_reference_names()):
                 # then this is a bare Application object, so ignore this filter
                 return True
-            return data.label in [l.layer.label for l in self.flux_viewer.layers]  # noqa E741
+            return data.label in [lyr.layer.label for lyr in self.flux_viewer.layers]  # noqa E741
 
         def is_trace(data):
             return hasattr(data, 'meta') and 'Trace' in data.meta
