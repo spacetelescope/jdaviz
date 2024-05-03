@@ -98,8 +98,14 @@
             <v-checkbox :input-value="active"></v-checkbox>
             </v-list-item-action>
             <v-list-item-content>
-              <v-list-item-title>
+              <v-list-item-title v-if="flag_map_definitions_selected[item].name.length > 0">
                 {{item + ': ' + flag_map_definitions_selected[item].name}}
+              </v-list-item-title>
+              <v-list-item-title v-else-if="flag_map_definitions_selected[item].description.length > 25">
+                {{item + ': ' + flag_map_definitions_selected[item].description.slice(0, 25) + "..."}}
+              </v-list-item-title>
+              <v-list-item-title v-else>
+                {{item + ': ' + flag_map_definitions_selected[item].description}}
               </v-list-item-title>
             </v-list-item-content>
           </v-list-item>
@@ -160,7 +166,8 @@
               </v-col>
             <v-col cols=8 align="left" style="...">
               <v-row v-for="(item, key, index) in item.decomposed">
-                <span><strong>{{item.name}}</strong> ({{key}}): {{item.description}}</span>
+                <span v-if="item.name !== null && item.name.length > 0"><strong>{{item.name}}</strong> ({{key}}): {{item.description}}</span>
+                <span v-else><strong>{{key}}</strong>: {{item.description}}</span>
               </v-row>
             </v-col>
             </v-row>

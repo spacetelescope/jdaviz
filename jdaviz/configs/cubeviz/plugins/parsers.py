@@ -325,7 +325,7 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     # get glue data and update if DQ:
     if ext == 'DQ':
         data = app.data_collection[-1]
-        prep_data_layer_as_dq(data, component_id='flux')
+        prep_data_layer_as_dq(data)
 
     if data_type == 'flux':  # Forced wave unit conversion made it lose stuff, so re-add
         app.data_collection[-1].get_component("flux").units = flux.unit

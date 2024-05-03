@@ -6,7 +6,7 @@ New Features
 
 - The filename entry in the export plugin is now automatically populated based on the selection. [#2824]
 
-- Adding Data Quality plugin for Imviz and Cubeviz. [#2767, #2817]
+- Adding Data Quality plugin for Imviz and Cubeviz. [#2767, #2817, #2844]
 
 - Enable exporting spectral regions to ECSV files readable by ``astropy.table.QTable`` or
   ``specutils.SpectralRegion`` [#2843]
