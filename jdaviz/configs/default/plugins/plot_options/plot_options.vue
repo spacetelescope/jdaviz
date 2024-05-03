@@ -559,6 +559,15 @@
         ></v-select>
       </glue-state-sync-wrapper>
 
+      <glue-state-sync-wrapper :sync="stretch_global_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_global')">
+        <v-switch
+          v-model="stretch_global_value"
+          label="Global stretch"
+          hint="Determine stretch from stretch preset and display stretch histogram based on data of entire cube (instead of currently selected slice)."
+          :persistent-hint="true"
+          />
+      </glue-state-sync-wrapper>
+
       <!-- for multiselect, show vmin/max here, otherwise they'll be in the "more stretch options" expandable section -->
       <glue-state-sync-wrapper v-if="layer_multiselect" :sync="stretch_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_vmin')">
         <v-text-field
