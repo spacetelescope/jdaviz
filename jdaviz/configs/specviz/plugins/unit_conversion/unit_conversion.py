@@ -46,7 +46,7 @@ class UnitConversion(PluginTemplateMixin):
     * ``flux_or_sb_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
       Global unit to use for all flux/surface brightness (depending on flux_or_sb selection) axes.
     * ``flux_or_sb`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      Y-axis physical type selection. Currently only accessible in Cubeviz (pixel scale factor 
+      Y-axis physical type selection. Currently only accessible in Cubeviz (pixel scale factor
       added in Cubeviz Spectral Extraction, and is used for this translation).
     """
     template_file = __file__, "unit_conversion.vue"
