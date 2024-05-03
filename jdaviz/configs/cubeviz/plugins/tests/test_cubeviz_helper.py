@@ -21,16 +21,9 @@ def test_plugin_user_apis(cubeviz_helper):
     for plugin_name, plugin_api in cubeviz_helper.plugins.items():
         plugin = plugin_api._obj
         for attr in plugin_api._expose:
-            if (plugin_name in ('Spectral Extraction', 'Model Fitting', 'Line Analysis')
-                    and attr == 'spatial_subset'):
-                # deprecated, so would raise a deprecation warning
-                continue
             if plugin_name == 'Slice' and attr in ('slice', 'wavelength',
                                                    'wavelength_unit', 'show_wavelength'):
                 # deprecated, so would raise a deprecation warning
-                continue
-            if plugin_name == 'Plot Options' and attr in ('collapse_function'):
-                # deprecated
                 continue
             assert hasattr(plugin, attr)
 

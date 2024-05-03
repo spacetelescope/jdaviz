@@ -76,9 +76,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to use for computing line statistics.
-    * ``spatial_subset``:
-      Deprecated as of 3.11.  Use the :ref:`Spectral Extraction Plugin <spectral-extraction>`
-      if necessary and select a spectrum as input to ``dataset``.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the line, or ``Entire Spectrum``.
     * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
@@ -154,17 +151,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         self.continuum_width = width
 
     @property
-    def spatial_subset(self):
-        msg = "spatial_subset is no longer supported as of 3.11 and will be removed from the user API in a future release"  # noqa
-        logging.warning(f"DeprecationWarning: {msg}")
-        raise ValueError(msg)
-
-    @property
     def user_api(self):
         # deprecated: width was replaced with continuum_width in 3.9 so should be removed from the
         # user API and the property and setter above as soon as 3.11.
-        # deprecated: spatial_subset was removed in 3.11 so should be removed as soon as 3.13
-        return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
+        return PluginUserApi(self, expose=('dataset', 'spectral_subset',
                                            'continuum', 'width', 'continuum_width', 'get_results'))
 
     @property

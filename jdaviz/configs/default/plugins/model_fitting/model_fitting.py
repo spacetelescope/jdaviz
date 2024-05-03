@@ -1,5 +1,4 @@
 import re
-import logging
 import numpy as np
 from copy import deepcopy
 
@@ -57,9 +56,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
       collapsed spectrum.
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to fit the model.
-    * ``spatial_subset``:
-      Deprecated as of 3.11.  Use the :ref:`Spectral Extraction Plugin <spectral-extraction>`
-      if necessary and select ``dataset`` and ``cube_fit`` accordingly.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`)
     * ``model_component`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``poly_order``
@@ -185,17 +181,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self.dataset._clear_cache()
 
     @property
-    def spatial_subset(self):
-        msg = "spatial_subset is no longer supported as of 3.11 and will be removed from the user API in a future release"  # noqa
-        logging.warning(f"DeprecationWarning: {msg}")
-        raise ValueError(msg)
-
-    @property
     def user_api(self):
         expose = ['dataset']
         if self.config == "cubeviz":
-            # deprecated: spatial_subset deprecated in 3.11, so remove from user API as soon as 3.13
-            expose += ['spatial_subset', 'cube_fit']
+            expose += ['cube_fit']
         expose += ['spectral_subset', 'model_component', 'poly_order', 'model_component_label',
                    'model_components', 'valid_model_components',
                    'create_model_component', 'remove_model_component',

@@ -155,9 +155,6 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Specviz
     * ``axes_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
-    * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      deprecated - use the :ref:`Spectral Extraction Plugin <spectral-extraction>` instead.
-      Only exposed for Cubeviz
     * ``line_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
     * ``line_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -679,7 +676,7 @@ class PlotOptions(PluginTemplateMixin):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
                   'select_all', 'subset_visible']
         if self.config == "cubeviz":
-            expose += ['collapse_function', 'uncertainty_visible']
+            expose += ['uncertainty_visible']
         if self.config != "imviz":
             expose += ['x_min', 'x_max', 'y_min', 'y_max',
                        'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',
@@ -697,11 +694,6 @@ class PlotOptions(PluginTemplateMixin):
                        'stretch_curve_visible', 'apply_RGB_presets']
 
         return PluginUserApi(self, expose)
-
-    @property
-    def collapse_function(self):
-        logging.warning(f"DeprecationWarning: collapse_function was removed in 3.10 and will be removed from the plugin user API in a future release")  # noqa
-        raise ValueError("collapse_function no longer supported in plot options.  Use the spectral extraction plugin instead.")  # noqa
 
     @observe('show_viewer_labels')
     def _on_show_viewer_labels_changed(self, event):
