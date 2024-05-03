@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import astropy
 from astropy import units as u
-from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
@@ -162,14 +161,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def user_api(self):
-        expose = ['dataset', 'function', 'spatial_subset', 'aperture',
+        expose = ['dataset', 'function', 'aperture',
                   'add_results', 'collapse_to_spectrum',
                   'wavelength_dependent', 'reference_spectral_value',
                   'aperture_method']
         if self.dev_bg_support:
             expose += ['background', 'bg_wavelength_dependent']
 
-        return PluginUserApi(self, expose=expose, excl_from_dict=['spatial_subset'])
+        return PluginUserApi(self, expose=expose)
 
     @property
     def live_update_subscriptions(self):
@@ -181,11 +180,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def slice_display_unit_name(self):
         return 'spectral'
-
-    @property
-    @deprecated(since="3.9", alternative="aperture")
-    def spatial_subset(self):
-        return self.user_api.aperture
 
     @observe('active_step')
     def _active_step_changed(self, *args):
