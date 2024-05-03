@@ -148,6 +148,8 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     @property
     def unique_flags(self):
         selected_dq = self.dq_layer_selected_flattened
+        if selected_dq is None or not len(selected_dq):
+            return []
 
         dq = selected_dq[0].get_image_data()
         return np.unique(dq[~np.isnan(dq)])
@@ -156,7 +158,8 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     def validate_flag_decode_possible(self):
         return (
             self.flag_map_selected is not None and
-            len(self.dq_layer.selected_obj) > 0
+            len(self.dq_layer.selected_obj) > 0 and
+            len(self.unique_flags) > 0
         )
 
     @observe('flag_map_selected')
