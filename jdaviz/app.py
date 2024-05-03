@@ -421,6 +421,9 @@ class Application(VuetifyTemplate, HubListener):
             if not plg.supports_auto_update:
                 raise NotImplementedError(f"{data.meta.get('Plugin')} does not support live-updates")  # noqa
             plg.user_api.from_dict(plugin_inputs)
+            # keep auto-updating, even if the option is hidden from the user API
+            # (can remove this line if auto_update is exposed to the user API in the future)
+            plg.add_results.auto_update_result = True
             try:
                 plg()
             except Exception as e:
