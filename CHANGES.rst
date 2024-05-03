@@ -39,6 +39,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Add option to use self-derived spatial profile for Horne extract in spectral extraction plugin. [#2845]
+
 API Changes
 -----------
 

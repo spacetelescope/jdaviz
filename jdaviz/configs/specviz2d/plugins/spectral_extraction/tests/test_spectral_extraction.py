@@ -1,6 +1,11 @@
 import gwcs
 import pytest
+from astropy.modeling import models
+from astropy.nddata import VarianceUncertainty
+from astropy.tests.helper import assert_quantity_allclose
+import astropy.units as u
 from astropy.utils.data import download_file
+import numpy as np
 from packaging.version import Version
 from specreduce import tracing, background, extract
 from specutils import Spectrum1D
@@ -185,3 +190,78 @@ def test_spectrum_on_top(specviz2d_helper):
     pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
     assert pext.bg_type_selected == 'OneSided'
     assert pext.bg_separation < 0
+
+
+@pytest.mark.filterwarnings('ignore')
+def test_horne_extract_self_profile(specviz2d_helper):
+
+    spec2d = np.zeros((40, 100))
+    spec2dvar = np.ones((40, 100))
+
+    for ii in range(spec2d.shape[1]):
+        mgaus = models.Gaussian1D(amplitude=10,
+                                  mean=(9.+(20/spec2d.shape[1])*ii),
+                                  stddev=2)
+        rg = np.arange(0, spec2d.shape[0], 1)
+        gaus = mgaus(rg)
+        spec2d[:, ii] = gaus
+
+    wave = np.arange(0, spec2d.shape[1], 1)
+    objectspec = Spectrum1D(spectral_axis=wave*u.m,
+                            flux=spec2d*u.Jy,
+                            uncertainty=VarianceUncertainty(spec2dvar*u.Jy*u.Jy))
+
+    specviz2d_helper.load_data(objectspec)
+    pext = specviz2d_helper.app.get_tray_item_from_name('spectral-extraction')
+
+    trace_fit = tracing.FitTrace(objectspec,
+                                 trace_model=models.Polynomial1D(degree=1),
+                                 window=13, peak_method='gaussian', guess=20)
+    pext.import_trace(trace_fit)
+
+    pext.ext_type_selected = "Horne"
+    pext.horne_ext_profile_selected = "Self (interpolated)"
+
+    # check that correct defaults are set
+    assert pext.self_prof_n_bins == 10
+    assert pext.self_prof_interp_degree_x == 1
+    assert pext.self_prof_interp_degree_y == 1
+
+    sp_ext = pext.export_extract_spectrum()
+
+    bg_sub = pext.export_bg_sub()
+
+    extract_horne_interp = extract.HorneExtract(bg_sub, trace_fit,
+                                                spatial_profile='interpolated_profile')
+
+    assert_quantity_allclose(extract_horne_interp.spectrum.flux, sp_ext.flux)
+
+    # now try changing from defaults
+    pext.self_prof_n_bins = 5
+    pext.self_prof_interp_degree_x = 2
+    pext.self_prof_interp_degree_y = 2
+
+    sp_ext = pext.export_extract_spectrum()
+    bg_sub = pext.export_bg_sub()
+
+    extract_horne_interp = extract.HorneExtract(bg_sub, trace_fit,
+                                                spatial_profile={'name': 'interpolated_profile',
+                                                                 'n_bins_interpolated_profile': 5,
+                                                                 'interp_degree': (2, 2)})
+
+    assert_quantity_allclose(extract_horne_interp.spectrum.flux, sp_ext.flux)
+
+    # test that correct errors are raised
+    pext.self_prof_n_bins = 0
+    with pytest.raises(ValueError, match='must be greater than 0'):
+        sp_ext = pext.export_extract_spectrum()
+
+    pext.self_prof_n_bins = 1
+    pext.self_prof_interp_degree_x = 0
+    with pytest.raises(ValueError, match='must be greater than 0'):
+        sp_ext = pext.export_extract_spectrum()
+
+    pext.self_prof_interp_degree_x = 1
+    pext.self_prof_interp_degree_y = 0
+    with pytest.raises(ValueError, match='`self_prof_interp_degree_y` must be greater than 0.'):
+        sp_ext = pext.export_extract_spectrum()
