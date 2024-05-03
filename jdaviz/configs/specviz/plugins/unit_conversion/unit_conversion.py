@@ -152,12 +152,12 @@ class UnitConversion(PluginTemplateMixin):
 
     @observe('spectral_unit_selected')
     def _on_spectral_unit_changed(self, *args):
-        self.hub.broadcast(GlobalDisplayUnitChanged('spectral',
-                                                    self.spectral_unit.selected,
-                                                    sender=self))
         xunit = _valid_glue_display_unit(self.spectral_unit.selected, self.spectrum_viewer, 'x')
         if self.spectrum_viewer.state.x_display_unit != xunit:
             self.spectrum_viewer.state.x_display_unit = xunit
+            self.hub.broadcast(GlobalDisplayUnitChanged('spectral',
+                               self.spectral_unit.selected,
+                               sender=self))
 
     @observe('flux_unit_selected')
     def _on_flux_unit_changed(self, *args):

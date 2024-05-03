@@ -108,67 +108,66 @@ class UnitConverterWithSpectral:
                 spec = data.get_object(cls=Spectrum1D)
             except RuntimeError:
                 eqv = []
-
-            # Ensure a spectrum passed through Spectral Extraction plugin
-            if '_pixel_scale_factor' in spec.meta:
-                # if spectrum data collection item is in Surface Brightness units
-                if u.sr in spec.unit.bases:
-                    # Data item in data collection does not update from conversion/translation.
-                    # App wide orginal data units are used for conversion, orginal_units and
-                    # target_units dicate the conversion to take place.
-                    if (u.sr in u.Unit(original_units).bases) and \
-                       (u.sr not in u.Unit(target_units).bases):
-                        # Surface Brightness -> Flux
-                        eqv = [(u.MJy / u.sr,
-                                u.MJy,
-                                lambda x: (x * spec.meta['_pixel_scale_factor']),
-                                lambda x: x)]
-
-                        # below is the generalized version
-                        '''
-                        eqv = [(u.Unit(original_units),
-                                u.Unit(target_units),
-                                lambda x: (x * spec.meta['_pixel_scale_factor']),
-                                lambda x: x)]
-                        '''
-                    else:
-                        # Flux -> Surface Brightness
-                        eqv = u.spectral_density(spec.spectral_axis)
-
-                # if spectrum data collection item is in Flux units
-                elif u.sr not in spec.unit.bases:
-                    # Data item in data collection does not update from conversion/translation.
-                    # App wide orginal data units are used for conversion, orginal_units and
-                    # target_units dicate the conversion to take place.
-                    if (u.sr not in u.Unit(original_units).bases) and \
-                       (u.sr in u.Unit(target_units).bases):
-                        # Flux -> Surface Brightness
-                        eqv = [(u.MJy,
-                                u.MJy / u.sr,
-                                lambda x: (x / spec.meta['_pixel_scale_factor']),
-                                lambda x: x)]
+            else:
+                # Ensure a spectrum passed through Spectral Extraction plugin
+                if '_pixel_scale_factor' in spec.meta:
+                    # if spectrum data collection item is in Surface Brightness units
+                    if u.sr in spec.unit.bases:
+                        # Data item in data collection does not update from conversion/translation.
+                        # App wide orginal data units are used for conversion, orginal_units and
+                        # target_units dicate the conversion to take place.
+                        if (u.sr in u.Unit(original_units).bases) and \
+                           (u.sr not in u.Unit(target_units).bases):
+                            # Surface Brightness -> Flux
+                            eqv = [(u.MJy / u.sr,
+                                    u.MJy,
+                                    lambda x: (x * spec.meta['_pixel_scale_factor']),
+                                    lambda x: x)]
+                        else:
+                            # Flux -> Surface Brightness
+                            eqv = u.spectral_density(spec.spectral_axis)
 
                         # below is the generalized version
                         '''
                         eqv = [(u.Unit(original_units),
                                 u.Unit(target_units),
+                                lambda x: (x * spec.meta['_pixel_scale_factor']),
+                                lambda x: x)]
+                        '''
+                    # if spectrum data collection item is in Flux units
+                    elif u.sr not in spec.unit.bases:
+                        # Data item in data collection does not update from conversion/translation.
+                        # App wide orginal data units are used for conversion, orginal_units and
+                        # target_units dicate the conversion to take place.
+                        if (u.sr not in u.Unit(original_units).bases) and \
+                           (u.sr in u.Unit(target_units).bases):
+                            # Flux -> Surface Brightness
+                            eqv = [(u.MJy,
+                                    u.MJy / u.sr,
+                                    lambda x: (x / spec.meta['_pixel_scale_factor']),
+                                    lambda x: x)]
+                        else:
+                            # Surface Brightness -> Flux
+                            eqv = u.spectral_density(spec.spectral_axis)
+
+                        # below is the generalized version
+                        '''
+                        eqv = [(u.Unit(original_units),
+                                u.Unit(target_units),
                                 lambda x: (x / spec.meta['_pixel_scale_factor']),
                                 lambda x: x)]
                         '''
-                    else:
-                        # Surface Brightness -> Flux
-                        eqv = u.spectral_density(spec.spectral_axis)
 
                 # flux cid, but neither Surface Brightness nor Flux units
-                else:
-                    raise ValueError('flux cid, but not a flux nor surface brightness unit.')
-            elif len(values) == 2:
-                # Need this for setting the y-limits
-                spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
-                eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
+                    else:
+                        raise ValueError('flux cid, but not a flux nor surface brightness unit.')
+                elif len(values) == 2:
+                    # Need this for setting the y-limits
+                    spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
+                    eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
 
-            else:
-                eqv = u.spectral_density(spec.spectral_axis)
+                else:
+                    eqv = u.spectral_density(spec.spectral_axis)
 
         else:  # spectral axis
             eqv = u.spectral()
