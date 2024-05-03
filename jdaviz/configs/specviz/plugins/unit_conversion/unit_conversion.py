@@ -41,10 +41,13 @@ class UnitConversion(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * ``spectral_unit`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+    * ``spectral_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
       Global unit to use for all spectral axes.
-    * ``flux_or_sb_unit`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      Global unit to use for all flux axes.
+    * ``flux_or_sb_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
+      Global unit to use for all flux/surface brightness (depending on flux_or_sb selection) axes.
+    * ``flux_or_sb`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      Y-axis physical type selection. Currently only accessible in Cubeviz (pixel scale factor 
+      added in Cubeviz Spectral Extraction, and is used for this translation).
     """
     template_file = __file__, "unit_conversion.vue"
 
@@ -89,7 +92,7 @@ class UnitConversion(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('spectral_unit',))
+        return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_or_sb_unit'))
 
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:
@@ -137,7 +140,6 @@ class UnitConversion(PluginTemplateMixin):
 
     def translate_units(self, flux_or_sb_selected):
         spec_units = u.Unit(self.spectrum_viewer.state.y_display_unit)
-        print('spec units ', spec_units, '  f or sb ', flux_or_sb_selected)
         # Surface Brightness -> Flux
         if u.sr in spec_units.bases and flux_or_sb_selected == 'Flux':
             spec_units *= u.sr
