@@ -80,7 +80,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
 
         super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
 
-        if 'Spectral Extraction' not in self.plugins.keys():  # pragma: nocov
+        if 'Spectral Extraction' not in self.plugins:  # pragma: no cover
             msg = SnackbarMessage(
                 "Automatic spectral extraction requires the Spectral Extraction plugin to be enabled",  # noqa
                 color='error', sender=self, timeout=10000)
@@ -93,7 +93,6 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
                     "Automatic spectrum extraction for the entire cube failed."
                     " See the spectral extraction plugin to perform a custom extraction",
                     color='error', sender=self, timeout=10000)
-                raise  # TODO: remove before merge
             else:
                 msg = SnackbarMessage(
                     "The extracted 1D spectrum was generated automatically for the entire cube."

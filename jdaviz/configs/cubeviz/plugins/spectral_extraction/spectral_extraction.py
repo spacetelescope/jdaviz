@@ -213,7 +213,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     msg = SnackbarMessage(
                         f"Automatic spectrum extraction for {subset_lbl} failed",
                         color='error', sender=self, timeout=10000)
-                    raise  # TODO: remove before merge
                 else:
                     msg = SnackbarMessage(
                         f"Automatic spectrum extraction for {subset_lbl} successful",
