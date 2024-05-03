@@ -45,7 +45,8 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 AddDataToViewerMessage, ChangeRefDataMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
-                                PluginPlotAddedMessage, PluginPlotModifiedMessage)
+                                PluginPlotAddedMessage, PluginPlotModifiedMessage,
+                                GlobalDisplayUnitChanged)
 
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
@@ -3300,6 +3301,8 @@ class DatasetSelect(SelectPluginComponent):
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_data_changed)
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed)
 
         self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
         # initialize items from original viewers
@@ -3365,7 +3368,6 @@ class DatasetSelect(SelectPluginComponent):
 
     @cached_property
     def selected_spectrum(self):
-        # TODO: do we need to reset this cache on a change to display units?
         return self.get_selected_spectrum(use_display_units=True)
 
     def _is_valid_item(self, data):
@@ -3456,6 +3458,10 @@ class DatasetSelect(SelectPluginComponent):
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)
+
+    def _on_global_display_unit_changed(self, msg=None):
+        if msg.axis in ('spectral', 'flux'):
+            self._clear_cache('selected_spectrum')
 
 
 class DatasetSelectMixin(VuetifyTemplate, HubListener):
