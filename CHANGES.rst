@@ -82,6 +82,8 @@ Specviz2d
 API Changes
 -----------
 
+- Plugin Table components now support row selection. [#2856]
+
 Cubeviz
 ^^^^^^^
 
