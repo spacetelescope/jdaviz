@@ -127,13 +127,6 @@ class UnitConverterWithSpectral:
                             # Flux -> Surface Brightness
                             eqv = u.spectral_density(spec.spectral_axis)
 
-                        # below is the generalized version
-                        '''
-                        eqv = [(u.Unit(original_units),
-                                u.Unit(target_units),
-                                lambda x: (x * spec.meta['_pixel_scale_factor']),
-                                lambda x: x)]
-                        '''
                     # if spectrum data collection item is in Flux units
                     elif u.sr not in spec.unit.bases:
                         # Data item in data collection does not update from conversion/translation.
@@ -150,17 +143,6 @@ class UnitConverterWithSpectral:
                             # Surface Brightness -> Flux
                             eqv = u.spectral_density(spec.spectral_axis)
 
-                        # below is the generalized version
-                        '''
-                        eqv = [(u.Unit(original_units),
-                                u.Unit(target_units),
-                                lambda x: (x / spec.meta['_pixel_scale_factor']),
-                                lambda x: x)]
-                        '''
-
-                # flux cid, but neither Surface Brightness nor Flux units
-                    else:
-                        raise ValueError('flux cid, but not a flux nor surface brightness unit.')
                 elif len(values) == 2:
                     # Need this for setting the y-limits
                     spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]

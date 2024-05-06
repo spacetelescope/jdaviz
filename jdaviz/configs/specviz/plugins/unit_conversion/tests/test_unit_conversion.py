@@ -140,7 +140,8 @@ def test_unit_translation(cubeviz_helper):
     cubeviz_helper.load_regions(CirclePixelRegion(center, radius=2.5))
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
-
+    # we can get rid of this after all spectra pass through
+    # spectral extraction plugin
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
     extract_plg.aperture = extract_plg.aperture.choices[-1]
@@ -160,13 +161,20 @@ def test_unit_translation(cubeviz_helper):
     # When the dropdown is displayed, this ensures the loaded
     # data collection item units will be used for translations.
     uc_plg._obj.show_translator = True
+    assert uc_plg._obj.flux_or_sb_selected == 'Flux'
 
     # to have access to display units
     viewer_1d = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
+    #  for testing _set_flux_or_sb()
+    uc_plg._obj.show_translator = False
+
     # change global y-units from Flux -> Surface Brightness
     uc_plg._obj.flux_or_sb_selected = 'Surface Brightness'
+
+    uc_plg._obj.show_translator = True
+    assert uc_plg._obj.flux_or_sb_selected == 'Surface Brightness'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
     # check if units translated
@@ -198,6 +206,29 @@ def test_sb_unit_conversion(cubeviz_helper):
     assert y_display_unit == u.Jy / u.sr
 
     # Try a second conversion
-    uc_plg.flux_or_sb_unit = 'AB / sr'
+    uc_plg.flux_or_sb_unit = 'W / Hz sr m2'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    assert y_display_unit == u.AB / u.sr
+    assert y_display_unit == u.Unit("W / (Hz sr m2)")
+
+    # really a translation test, test_unit_translation loads a Flux
+    # cube, this test load a Surface Brightness Cube, this ensures
+    # two-way translation
+    uc_plg.flux_or_sb_unit = 'MJy / sr'
+    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
+
+    # we can get rid of this after all spectra pass through
+    # spectral extraction plugin
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+    extract_plg.aperture = extract_plg.aperture.choices[-1]
+    extract_plg.aperture_method.selected = 'Exact'
+    extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Sum'
+    extract_plg.reference_spectral_value = 0.000001
+    extract_plg.collapse_to_spectrum()
+
+    uc_plg._obj.show_translator = True
+    uc_plg._obj.flux_or_sb_selected = 'Flux'
+    uc_plg.flux_or_sb_unit = 'MJy'
+    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
+
+    assert y_display_unit == u.MJy
