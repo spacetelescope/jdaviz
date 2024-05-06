@@ -409,7 +409,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if self.subset_types[index] == "Range":
                     if self.spectral_display_unit is not None:
                         x_att = sub_states.att
-                        base_units = self.app.data_collection[0].get_component(x_att).units
+                        # since this is a spectrum range subset, we can get the native units
+                        # from the current reference data in the spectrum viewer
+                        sv = self.spectrum_viewer
+                        base_units = sv.state.reference_data.get_component(x_att).units
                         if self.spectral_display_unit != base_units:
                             d_val = d_val*u.Unit(self.spectral_display_unit)
                             d_val = d_val.to(u.Unit(base_units))
