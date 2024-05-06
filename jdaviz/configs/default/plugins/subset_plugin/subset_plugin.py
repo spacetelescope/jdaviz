@@ -126,6 +126,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self._sync_selected_from_state(*args)
         if 'Create New' in self.subset_selected:
             return
+        subsets_avail = [sg.label for sg in self.app.data_collection.subset_groups]
+        if self.subset_selected not in subsets_avail:
+            # subset selection should re-default after processing the deleted subset,
+            # for now we can safely ignore
+            return
         self._get_subset_definition(*args)
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
         self.subset_select._update_subset(subset_to_update, attribute="type")
