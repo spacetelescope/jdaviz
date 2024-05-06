@@ -4361,6 +4361,9 @@ class Table(PluginSubcomponent):
     headers_visible = List([]).tag(sync=True)  # list of strings
     headers_avail = List([]).tag(sync=True)   # list of strings
     items = List().tag(sync=True)  # list of dictionaries, pass single dict to add_row
+    show_rowselect = Bool(False).tag(sync=True)  # Flag to enable row selection boxes
+    item_key = Unicode().tag(sync=True)  # Unique field to identify row for selection
+    selected_rows = List().tag(sync=True)  # List of selected rows
 
     def __init__(self, plugin, name='table', *args, **kwargs):
         self._qtable = None
