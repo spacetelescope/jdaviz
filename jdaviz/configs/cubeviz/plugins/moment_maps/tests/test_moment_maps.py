@@ -70,7 +70,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     mm._obj.vue_calculate_moment()
 
     assert mm._obj.moment_available
-    assert dc[1].label == 'moment 0'
+    assert dc[-1].label == 'moment 0'
     mv_data = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_uncert_viewer_reference_name
     ).data()
@@ -78,7 +78,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     assert len(mv_data) == 1
     assert mv_data[0].label == 'moment 0'
 
-    assert len(dc.links) == 14
+    assert len(dc.links) == 19
 
     # label should remain unchanged but raise overwrite warnings
     assert mm._obj.results_label == 'moment 0'
@@ -99,9 +99,9 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
         cubeviz_helper._default_flux_viewer_reference_name, 'moment 0'
     )
 
-    result = dc[1].get_object(cls=CCDData)
+    result = dc[-1].get_object(cls=CCDData)
     assert result.shape == (4, 2)  # Cube shape is (2, 2, 4)
-    assert isinstance(dc[1].coords, WCS)
+    assert isinstance(dc[-1].coords, WCS)
 
     # Make sure coordinate display now show moment map info (no WCS)
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
@@ -123,15 +123,15 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     assert mm._obj.results_label_overwrite is False
     mm._obj.vue_calculate_moment()
 
-    assert dc[2].label == 'moment 1'
+    assert dc[-1].label == 'moment 1'
 
-    assert len(dc.links) == 22
-    assert len(dc.external_links) == 4  # pixel linked
+    assert len(dc.links) == 27
+    assert len(dc.external_links) == 6  # pixel linked
     # Link 3D z to 2D x and 3D y to 2D y
-    assert (dc.external_links[0].cids1[0].label == "Pixel Axis 0 [z]" and
-            dc.external_links[0].cids2[0].label == "Pixel Axis 1 [x]" and
-            dc.external_links[1].cids1[0].label == "Pixel Axis 1 [y]" and
-            dc.external_links[1].cids2[0].label == "Pixel Axis 0 [y]")
+    assert (dc.external_links[2].cids1[0].label == "Pixel Axis 0 [z]" and
+            dc.external_links[2].cids2[0].label == "Pixel Axis 1 [x]" and
+            dc.external_links[3].cids1[0].label == "Pixel Axis 1 [y]" and
+            dc.external_links[3].cids2[0].label == "Pixel Axis 0 [y]")
 
     # Coordinate display should be unaffected.
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',

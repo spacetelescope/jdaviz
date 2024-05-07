@@ -25,13 +25,13 @@ tray:
   - g-markers
   - cubeviz-slice
   - g-unit-conversion
+  - cubeviz-spectral-extraction
   - g-gaussian-smooth
   - g-collapse
   - g-model-fitting
   - g-line-list
   - specviz-line-analysis
   - cubeviz-moment-maps
-  - cubeviz-spectral-extraction
   - imviz-aper-phot-simple
   - export
 viewer_area:

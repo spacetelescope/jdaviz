@@ -2,8 +2,7 @@ import pytest
 import numpy as np
 import astropy.units as u
 
-from glue.core.roi import XRangeROI, CircularROI
-from specutils import Spectrum1D
+from glue.core.roi import XRangeROI
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -54,58 +53,10 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     assert p.spectral_subset.selected_obj is not None
 
 
-def test_spatialsubsetselect(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube)
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
-    # create a "Subset 1" entry in spatial dimension
-    fv.apply_roi(CircularROI(0.5, 0.5, 1))
-
-    # model fitting uses the mixin
-    p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
-    assert len(p.spatial_subset.labels) == 2  # Entire Cube, Subset 1
-    assert len(p.spatial_subset_items) == 2
-    assert p.spatial_subset_selected == 'Entire Cube'
-    assert p.spatial_subset.selected_obj is None
-    p.spatial_subset_selected = 'Subset 1'
-    assert p.spatial_subset.selected_obj is not None
-
-    # put selected subset mask in same shape as expected mask, check it is preserved
-    selected_mask = np.swapaxes(p.spatial_subset.selected_subset_mask, 1, 0)
-
-    expected_mask = np.ones_like(spectrum1d_cube.flux.value).astype(bool)
-    expected_mask[:2, :2, :] = False
-
-    assert np.all(selected_mask == expected_mask)
-
-
-def test_spectral_subsetselect_collapsed(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube)
-    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
-    # create a "Subset 1" entry
-    sv.apply_roi(XRangeROI(6500, 7400))
-
-    # model fitting uses the mixin
-    p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
-
-    # Should work when dimensions of mask match the flux:
-    spectrum1d_cube.mask = np.zeros_like(spectrum1d_cube.flux.value).astype(bool)
-    p._apply_subset_masks(spectrum1d_cube, p.spatial_subset)
-    assert spectrum1d_cube.mask.shape == spectrum1d_cube.flux.shape
-
-    # and when dimensions of mask match a collapsed spectrum:
-    data = cubeviz_helper.app.data_collection[0]
-    collapsed_spectrum = data.get_object(cls=Spectrum1D)
-
-    collapsed_spectrum.mask = np.zeros_like(collapsed_spectrum.spectral_axis.value).astype(bool)
-    p._apply_subset_masks(collapsed_spectrum, p.spectral_subset)
-    assert collapsed_spectrum.mask.shape == collapsed_spectrum.spectral_axis.shape
-
-
 @pytest.mark.filterwarnings('ignore:No observer defined on WCS')
 def test_viewer_select(cubeviz_helper, spectrum1d_cube):
     app = cubeviz_helper.app
     app.add_data(spectrum1d_cube, 'test')
-    app.add_data_to_viewer("spectrum-viewer", "test")
     app.add_data_to_viewer("flux-viewer", "test")
     fv = app.get_viewer("flux-viewer")
     sv = app.get_viewer("spectrum-viewer")

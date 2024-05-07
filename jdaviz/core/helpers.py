@@ -456,56 +456,44 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
-    def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
-                  mask_subset=None, function=None, cls=None, use_display_units=False):
-        def _handle_display_units(data, use_display_units):
-            if use_display_units:
-                if isinstance(data, Spectrum1D):
-                    spectral_unit = self.app._get_display_unit('spectral')
-                    if not spectral_unit:
-                        return data
-                    if self.app.config == 'cubeviz' and spectral_unit == 'deg':
-                        # this happens before the correct axis is set for the spectrum-viewer
-                        # and would result in a unit-conversion error if attempting to convert
-                        # to the display units.  This should only ever be temporary during
-                        # app intialization.
-                        return data
-                    flux_unit = self.app._get_display_unit('flux')
-                    # TODO: any other attributes (meta, wcs, etc)?
-                    # TODO: implement uncertainty.to upstream
-                    uncertainty = data.uncertainty
-                    if uncertainty is not None:
-                        # convert the uncertainties to StdDevUncertainties, since
-                        # that is assumed in a few places in jdaviz:
-                        if uncertainty.unit is None:
-                            uncertainty.unit = data.flux.unit
-                        if hasattr(uncertainty, 'represent_as'):
-                            new_uncert = uncertainty.represent_as(
-                                StdDevUncertainty
-                            ).quantity.to(flux_unit)
-                        else:
-                            # if not specified as NDUncertainty, assume stddev:
-                            new_uncert = uncertainty.quantity.to(flux_unit)
-                        new_uncert = StdDevUncertainty(new_uncert, unit=flux_unit)
+    def _handle_display_units(self, data, use_display_units=True):
+        if use_display_units:
+            if isinstance(data, Spectrum1D):
+                spectral_unit = self.app._get_display_unit('spectral')
+                if not spectral_unit:
+                    return data
+                flux_unit = self.app._get_display_unit('flux')
+                # TODO: any other attributes (meta, wcs, etc)?
+                # TODO: implement uncertainty.to upstream
+                uncertainty = data.uncertainty
+                if uncertainty is not None:
+                    # convert the uncertainties to StdDevUncertainties, since
+                    # that is assumed in a few places in jdaviz:
+                    if uncertainty.unit is None:
+                        uncertainty.unit = data.flux.unit
+                    if hasattr(uncertainty, 'represent_as'):
+                        new_uncert = uncertainty.represent_as(
+                            StdDevUncertainty
+                        ).quantity.to(flux_unit)
                     else:
-                        new_uncert = None
+                        # if not specified as NDUncertainty, assume stddev:
+                        new_uncert = uncertainty.quantity.to(flux_unit)
+                    new_uncert = StdDevUncertainty(new_uncert, unit=flux_unit)
+                else:
+                    new_uncert = None
 
-                    data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
-                                                                          u.spectral()),
-                                      flux=data.flux.to(flux_unit,
-                                                        u.spectral_density(data.spectral_axis)),
-                                      uncertainty=new_uncert,
-                                      mask=data.mask)
-                else:  # pragma: nocover
-                    raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
-            return data
+                data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
+                                                                      u.spectral()),
+                                  flux=data.flux.to(flux_unit,
+                                                    u.spectral_density(data.spectral_axis)),
+                                  uncertainty=new_uncert,
+                                  mask=data.mask)
+            else:  # pragma: nocover
+                raise NotImplementedError(f"converting {data.__class__.__name__} to display units is not supported")  # noqa
+        return data
 
-        list_of_valid_function_values = ('minimum', 'maximum', 'mean',
-                                         'median', 'sum')
-        if function and function not in list_of_valid_function_values:
-            raise ValueError(f"function {function} not in list of valid"
-                             f" function values {list_of_valid_function_values}")
-
+    def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
+                  mask_subset=None, cls=None, use_display_units=False):
         list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
         for subset in (spatial_subset, spectral_subset, mask_subset):
             if subset and subset not in list_of_valid_subset_names:
@@ -547,7 +535,7 @@ class ConfigHelper(HubListener):
 
         object_kwargs = {}
         if cls == Spectrum1D:
-            object_kwargs['statistic'] = function
+            object_kwargs['statistic'] = None
 
         if not spatial_subset and not mask_subset:
             if 'Trace' in data.meta:
@@ -557,7 +545,7 @@ class ConfigHelper(HubListener):
             else:
                 data = data.get_object(cls=cls, **object_kwargs)
 
-            return _handle_display_units(data, use_display_units)
+            return self._handle_display_units(data, use_display_units)
 
         if not cls and spatial_subset:
             raise AttributeError(f"A valid cls must be provided to"
@@ -586,10 +574,6 @@ class ConfigHelper(HubListener):
                 warnings.warn(f"Not able to get {data_label} returned with"
                               f" subset {spatial_subset} applied of type {cls}."
                               f" Exception: {e}")
-        elif function:
-            # This covers the case where cubeviz.get_data is called using a spectral_subset
-            # with function set.
-            data = data.get_object(cls=cls, **object_kwargs)
 
         # Handle spectral subset, including case where spatial subset is also set
         if spectral_subset and not isinstance(all_subsets[spectral_subset],
@@ -608,13 +592,13 @@ class ConfigHelper(HubListener):
                 warnings.warn(f"Not able to get {data_label} returned with"
                               f" subset {mask_subset} applied of type {cls}."
                               f" Exception: {e}")
-            if spatial_subset or function:
+            if spatial_subset:
                 # Return collapsed Spectrum1D object with spectral subset mask applied
                 data.mask = spec_subset.mask
             else:
                 data = spec_subset
 
-        return _handle_display_units(data, use_display_units)
+        return self._handle_display_units(data, use_display_units)
 
     def get_data(self, data_label=None, cls=None, use_display_units=False, **kwargs):
         """
@@ -628,9 +612,6 @@ class ConfigHelper(HubListener):
             The type that data will be returned as.
         use_display_units : bool, optional
             Whether to convert to the display units defined in the <unit-conversion> plugin.
-        kwargs : dict
-            For Cubeviz, you could also pass in ``function`` (str) to collapse
-            the cube into 1D spectrum using provided function.
 
         Returns
         -------
@@ -639,7 +620,7 @@ class ConfigHelper(HubListener):
 
         """
         return self._get_data(data_label=data_label,
-                              cls=cls, use_display_units=use_display_units, **kwargs)
+                              cls=cls, use_display_units=use_display_units)
 
 
 class ImageConfigHelper(ConfigHelper):

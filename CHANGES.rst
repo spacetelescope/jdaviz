@@ -10,6 +10,12 @@ New Features
 Cubeviz
 ^^^^^^^
 
+- Automatic spectral extraction now goes through the logic of the spectral extraction plugin for
+  self-consistency.  This results in several breaking changes to data-labels and ``get_data``
+  (the extracted spectra are now given dedicated data-labels instead of referring to them by
+  the label of the flux cube) as well as to several plugins: model fitting, gaussian smooth,
+  line analysis, and moment maps. [#2827]
+
 Imviz
 ^^^^^
 
@@ -27,6 +33,14 @@ API Changes
 
 Cubeviz
 ^^^^^^^
+
+- ``get_data`` no longer supports ``function`` or ``spatial_subset`` as arguments.  To access
+  an extracted 1D spectrum, use the Spectral Extraction plugin or the automatic extraction of
+  spatial subsets, and refer to the data-label assigned to the resulting 1D spectrum. [#2827]
+
+- Several plugins that take 1D spectra replace ``spatial_subset`` with referring to the 1D
+  spectrum in ``dataset``.  This affects: model fitting, gaussian smooth, line analysis,
+  and moment maps. [#2827]
 
 Imviz
 ^^^^^

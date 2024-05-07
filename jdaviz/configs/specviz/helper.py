@@ -76,7 +76,6 @@ class Specviz(ConfigHelper, LineListMixin):
         # Just to save line length
         get_data_method = self.app._jdaviz_helper.get_data
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-        function_kwargs = {'function': getattr(viewer.state, "function")} if self.app.config == 'cubeviz' else {}  # noqa
         all_subsets = self.app.get_subsets(object_only=True)
 
         if data_label is not None:
@@ -91,31 +90,25 @@ class Specviz(ConfigHelper, LineListMixin):
                     if lyr.label == spectral_subset:
                         spectrum = get_data_method(data_label=lyr.data.label,
                                                    spectral_subset=spectral_subset,
-                                                   cls=Spectrum1D,
-                                                   **function_kwargs)
+                                                   cls=Spectrum1D)
                         spectra[lyr.data.label] = spectrum
                     else:
                         continue
+                elif (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
+                        isinstance(all_subsets[lyr.label][0], Region)):
+                    # spatial subsets appear as automatically extracted entries, we can skip
+                    # the layer representing the subset itself.
+                    continue
+                elif (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
+                        isinstance(all_subsets[lyr.label], SpectralRegion)):
+                    spectrum = get_data_method(data_label=lyr.data.label,
+                                               spectral_subset=lyr.label,
+                                               cls=Spectrum1D)
+                    spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
                 else:
-                    if (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
-                            isinstance(all_subsets[lyr.label][0], Region)):
-                        spectrum = get_data_method(data_label=lyr.data.label,
-                                                   spatial_subset=lyr.label,
-                                                   cls=Spectrum1D,
-                                                   **function_kwargs)
-                        spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
-                    elif (isinstance(lyr, GroupedSubset) and lyr.label in all_subsets.keys() and
-                            isinstance(all_subsets[lyr.label], SpectralRegion)):
-                        spectrum = get_data_method(data_label=lyr.data.label,
-                                                   spectral_subset=lyr.label,
-                                                   cls=Spectrum1D,
-                                                   **function_kwargs)
-                        spectra[f'{lyr.data.label} ({lyr.label})'] = spectrum
-                    else:
-                        spectrum = get_data_method(data_label=lyr.label,
-                                                   cls=Spectrum1D,
-                                                   **function_kwargs)
-                        spectra[lyr.label] = spectrum
+                    spectrum = get_data_method(data_label=lyr.label,
+                                               cls=Spectrum1D)
+                    spectra[lyr.label] = spectrum
 
         if not apply_slider_redshift:
             if data_label is not None:
@@ -288,7 +281,7 @@ class Specviz(ConfigHelper, LineListMixin):
         ).figure.axes[axis].tick_format = fmt
 
     def get_data(self, data_label=None, spectral_subset=None, cls=None,
-                 use_display_units=False, **kwargs):
+                 use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         spectral_subset.
@@ -310,26 +303,5 @@ class Specviz(ConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        spatial_subset = kwargs.pop("spatial_subset", None)
-        function = kwargs.pop("function", None)
-        if len(kwargs) > 0:
-            raise ValueError(f'kwargs {[x for x in kwargs.keys()]} are not valid')
-
-        if self.app.config == 'cubeviz':
-            # then this is a specviz instance inside cubeviz and we want to default to the
-            # viewer's collapse function
-            default_sp_viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)
-            if function is True or function is None:
-                function = getattr(default_sp_viewer.state, 'function', None)
-
-            if cls is None:
-                cls = Spectrum1D
-        elif spatial_subset or function:
-            raise ValueError('kwargs spatial subset and function are not valid in specviz')
-        else:
-            spatial_subset = None
-            function = None
-
-        return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
-                              spectral_subset=spectral_subset, function=function,
+        return self._get_data(data_label=data_label, spectral_subset=spectral_subset,
                               cls=cls, use_display_units=use_display_units)

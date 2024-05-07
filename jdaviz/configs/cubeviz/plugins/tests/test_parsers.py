@@ -18,7 +18,7 @@ ASTROPY_LT_5_3 = not minversion(astropy, "5.3")
 def test_fits_image_hdu_parse(image_cube_hdu_obj, cubeviz_helper):
     cubeviz_helper.load_data(image_cube_hdu_obj)
 
-    assert len(cubeviz_helper.app.data_collection) == 3
+    assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and extracted spectrum
     assert cubeviz_helper.app.data_collection[0].label == "Unknown HDU object[FLUX]"
 
     # first load should be successful; subsequent attempts should fail
@@ -31,7 +31,7 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     # Passing in data_label keyword as posarg.
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, 'has_microns')
 
-    assert len(cubeviz_helper.app.data_collection) == 3
+    assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and extracted spectrum
     assert cubeviz_helper.app.data_collection[0].label == 'has_microns[FLUX]'
 
     flux_cube = cubeviz_helper.app.data_collection[0].get_object(Spectrum1D, statistic=None)
@@ -90,7 +90,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     image_cube_hdu_obj.writeto(path, overwrite=True)
     cubeviz_helper.load_data(path)
 
-    assert len(cubeviz_helper.app.data_collection) == 3
+    assert len(cubeviz_helper.app.data_collection) == 4  # 3 cubes and auto-extracted spectrum
     assert cubeviz_helper.app.data_collection[0].label == "test_fits_image.fits[FLUX]"
 
     # This tests the same data as test_fits_image_hdu_parse above.
@@ -129,7 +129,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     cubeviz_helper.load_data(sc)
 
     data = cubeviz_helper.app.data_collection[0]
-    assert len(cubeviz_helper.app.data_collection) == 1
+    assert len(cubeviz_helper.app.data_collection) == 2
     assert data.label == "Unknown spectrum object[FLUX]"
     assert data.shape == flux.shape
 
@@ -187,13 +187,13 @@ def test_numpy_cube(cubeviz_helper):
         cubeviz_helper.load_data(arr, data_type='foo')
 
     cubeviz_helper.load_data(arr)
-    cubeviz_helper.load_data(arr << u.nJy, data_label='uncert_array', data_type='uncert',
+    cubeviz_helper.load_data(arr, data_label='uncert_array', data_type='uncert',
                              override_cube_limit=True)
 
     with pytest.raises(RuntimeError, match='Only one cube'):
         cubeviz_helper.load_data(arr, data_type='mask')
 
-    assert len(cubeviz_helper.app.data_collection) == 2
+    assert len(cubeviz_helper.app.data_collection) == 3  # flux cube, uncert cube, Spectrum (sum)
 
     # Check context of first cube.
     data = cubeviz_helper.app.data_collection[0]
@@ -209,7 +209,7 @@ def test_numpy_cube(cubeviz_helper):
     assert data.label == 'uncert_array'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
-    assert flux.units == 'nJy'
+    assert flux.units == 'ct'
 
 
 def test_invalid_data_types(cubeviz_helper):

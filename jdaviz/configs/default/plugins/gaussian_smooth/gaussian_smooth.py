@@ -44,7 +44,6 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
     """
     template_file = __file__, "gaussian_smooth.vue"
     stddev = FloatHandleEmpty(1).tag(sync=True)
-    selected_data_is_1d = Bool(True).tag(sync=True)
     show_modes = Bool(False).tag(sync=True)
     mode_items = List().tag(sync=True)
     mode_selected = Unicode().tag(sync=True)
@@ -55,7 +54,6 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         if self.config == "cubeviz":
             self.docs_description = 'Smooth data cube spatially or spectrally with a Gaussian kernel.'  # noqa
             self.show_modes = True
-            # retrieve the data from the cube, not the collapsed 1d spectrum
             self.dataset._viewers = [
                 self._default_flux_viewer_reference_name,
                 self._default_spectrum_viewer_reference_name
@@ -74,8 +72,8 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
                                           selected='mode_selected',
                                           manual_options=['Spectral', 'Spatial'])
 
-        # set the filter on the viewer options
-        self._update_viewer_filters()
+        # set the filter on the dataset and viewer options
+        self._update_dataset_viewer_filters()
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -115,23 +113,30 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
             self.app.return_data_label(f"{dataset}{smooth_type} {stddev}", check_unique=False))
 
     @observe("dataset_selected")
-    def _on_data_selected(self, event={}):
+    def _update_viewer_filters(self, event={}):
         if not hasattr(self, 'dataset'):
             # during initial init, this can trigger before the component is initialized
             return
 
-        # NOTE: if this is ever used anywhere else, it should be moved into DatasetSelect
         if self.dataset.selected_dc_item is not None:
-            self.selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
+            selected_data_is_1d = len(self.dataset.selected_dc_item.data.shape) == 1
+
+            if selected_data_is_1d:
+                # only want spectral viewers in the options
+                self.add_results.viewer.filters = ['is_spectrum_viewer']
+            else:
+                # only want image viewers in the options
+                self.add_results.viewer.filters = ['is_image_viewer']
 
     @observe("mode_selected")
-    def _update_viewer_filters(self, event={}):
+    def _update_dataset_viewer_filters(self, event={}):
         if event.get('new', self.mode_selected) == 'Spatial':
-            # only want image viewers in the options
-            self.add_results.viewer.filters = ['is_image_viewer']
+            # MUST be a cube
+            self.dataset.add_filter('layer_in_flux_viewer')
         else:
-            # only want spectral viewers in the options
-            self.add_results.viewer.filters = ['is_spectrum_viewer']
+            # can either be a cube OR a spectrum
+            self.dataset.remove_filter('layer_in_flux_viewer')
+        self._update_viewer_filters()
 
     def vue_apply(self, event={}):
         self.smooth(add_data=True)

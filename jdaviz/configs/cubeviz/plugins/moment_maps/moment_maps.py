@@ -12,7 +12,7 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
-                                        DatasetSelectMixin,
+                                        DatasetSelect, DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
                                         AddResultsMixin,
                                         SelectPluginComponent,
@@ -53,6 +53,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
       Subset to use for the continuum, or ``None`` to skip continuum subtraction,
       or ``Surrounding`` to use a region surrounding the
       subset set in ``spectral_subset``.
+    * ``continuum_dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Dataset of the extracted 1D spectrum to use when visualizing the continuum.
+      The continuum will be redetermined based on the input cube (``dataset``) when
+      computing the moment map.
     * ``continuum_width``:
       Width, relative to the overall line spectral region, to fit the linear continuum
       (excluding the region containing the line). If 1, will use endpoints within line region
@@ -67,6 +71,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     """
     template_file = __file__, "moment_maps.vue"
     uses_active_status = Bool(True).tag(sync=True)
+
+    continuum_dataset_items = List().tag(sync=True)
+    continuum_dataset_selected = Unicode().tag(sync=True)
 
     n_moment = IntHandleEmpty(0).tag(sync=True)
     filename = Unicode().tag(sync=True)
@@ -87,6 +94,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         super().__init__(*args, **kwargs)
 
         self.moment = None
+
+        self.continuum_dataset = DatasetSelect(self,
+                                               'continuum_dataset_items',
+                                               'continuum_dataset_selected',
+                                               filters=['not_child_layer',
+                                                        'layer_in_spectrum_viewer'])
 
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
@@ -121,7 +134,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # NOTE: leaving save_as_fits out for now - we may want a more general API to do that
         # accross all plugins at some point
         return PluginUserApi(self, expose=('dataset', 'spectral_subset',
-                                           'continuum', 'continuum_width',
+                                           'continuum', 'continuum_dataset', 'continuum_width',
                                            'n_moment',
                                            'output_unit', 'reference_wavelength',
                                            'add_results', 'calculate_moment'))
@@ -190,17 +203,21 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.send_state("output_radio_items")
 
     @observe("dataset_selected", "spectral_subset_selected",
-             "continuum_subset_selected", "continuum_width")
+             "continuum_subset_selected", "continuum_dataset_selected", "continuum_width")
     @skip_if_no_updates_since_last_active()
     def _calculate_continuum(self, msg=None):
         if not hasattr(self, 'dataset') or self.app._jdaviz_helper is None:  # noqa
             # during initial init, this can trigger before the component is initialized
             return
-
+        if self.continuum_dataset_selected == '':
+            # NOTE: we could send self.dataset.selected through
+            # spectral_extraction._extract_in_new_instance() to get a spectrum
+            # for the selected/default cube,
+            # but there is no visible spectrum to even show under the continuum
+            return
         # NOTE: there is no use in caching this, as the continuum will need to be re-computed
         # per-spaxel to use within calculating the moment map
-        _ = self._get_continuum(self.dataset,
-                                None,
+        _ = self._get_continuum(self.continuum_dataset,
                                 self.spectral_subset,
                                 update_marks=True)
 
@@ -235,10 +252,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             else:
                 cube = self.dataset.selected_obj
         else:
-            _, _, cube = self._get_continuum(self.dataset,
-                                             'per-pixel',
+            _, _, cube = self._get_continuum(self.continuum_dataset,
                                              self.spectral_subset,
-                                             update_marks=False)
+                                             update_marks=False,
+                                             per_pixel=True)
 
         # slice out desired region
         # TODO: should we add a warning for a composite spectral subset?

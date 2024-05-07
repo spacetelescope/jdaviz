@@ -151,7 +151,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     # changing the lable should set auto to False, but the event may not have triggered yet
     modelfit_plugin._obj.results_label_auto = False
     modelfit_plugin.cube_fit = True
-    assert modelfit_plugin._obj.results_label_default == 'cube-fit model'
+    assert modelfit_plugin._obj.results_label_default == 'model'
     assert modelfit_plugin._obj.results_label == test_label
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='.*Model is linear in parameters.*')
@@ -172,7 +172,7 @@ def test_fit_cube_no_wcs(cubeviz_helper):
         fitted_model, output_cube = mf.calculate_fit(add_data=True)
     assert len(fitted_model) == 56  # ny * nx
     # Make sure shapes are all self-consistent within Cubeviz instance.
-    fitted_data = cubeviz_helper.app.data_collection["cube-fit model"]
+    fitted_data = cubeviz_helper.app.data_collection["model"]
     assert fitted_data.shape == (8, 7, 9)  # nx, ny, nz
     assert fitted_data.shape == cubeviz_helper.app.data_collection[0].shape
     assert fitted_data.shape == output_cube.shape
@@ -308,31 +308,6 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     # check that when no subset is selected, the spectral cube has no mask:
     p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
 
-    # Get the data object without collapsing the spectrum:
-    data = cubeviz_helper.app.data_collection[0].get_object(cls=Spectrum1D, statistic=None)
-    masked_data = p._apply_subset_masks(data, p.spatial_subset)
-
-    assert data.mask is None
-    assert masked_data.mask is None
-
-    # select the spatial subset, then show that mask is correct:
-    assert "Subset 1" in p.spatial_subset.choices
-    p.spatial_subset_selected = "Subset 1"
-
-    # Get the data object again (ensures mask == None)
-    data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
-    )
-    subset = cubeviz_helper.app.data_collection[0].get_subset_object(
-        p.spatial_subset_selected, cls=Spectrum1D, statistic=None
-    )
-    masked_data = p._apply_subset_masks(data, p.spatial_subset)
-    expected_spatial_mask = np.ones(data.flux.shape).astype(bool)
-    expected_spatial_mask[:, :2, :] = False
-
-    assert np.all(masked_data.mask == expected_spatial_mask)
-    assert np.all(subset.mask == expected_spatial_mask)
-
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
     # create a "Subset 2" entry in spectral dimension, selected "interactively"
     min_wavelength = 4625 * u.AA
@@ -350,32 +325,17 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     p.spectral_subset_selected = "Subset 2"
 
     # Get the data object again (ensures mask == None)
-    data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
-    )
-    subset = cubeviz_helper.app.data_collection[0].get_subset_object(
+    data = cubeviz_helper.app.data_collection[-1].get_object()
+    subset = cubeviz_helper.app.data_collection[-1].get_subset_object(
         p.spectral_subset_selected, cls=Spectrum1D, statistic=None
     )
     masked_data = p._apply_subset_masks(data, p.spectral_subset)
 
     expected_spectral_mask = np.ones(data.flux.shape).astype(bool)
-    expected_spectral_mask[:, :, 3:] = False
+    expected_spectral_mask[3:] = False
 
     assert np.all(masked_data.mask == expected_spectral_mask)
     assert np.all(subset.mask == expected_spectral_mask)
-
-    # Get the data object again (ensures mask == None)
-    data = cubeviz_helper.app.data_collection[0].get_object(
-        cls=Spectrum1D, statistic=None
-    )
-
-    # apply both spectral+spatial masks:
-    masked_data = data
-    for subset in [p.spatial_subset, p.spectral_subset]:
-        masked_data = p._apply_subset_masks(masked_data, subset)
-
-    # Check that both masks are applied correctly
-    assert np.all(masked_data.mask == (expected_spectral_mask | expected_spatial_mask))
 
 
 def test_invalid_subset(specviz_helper, spectrum1d):

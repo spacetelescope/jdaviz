@@ -3,23 +3,20 @@ import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
-from glue.core import Data
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset_group import GroupedSubset
-from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode, NewMode
+from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, RectanglePixelRegion,
                      EllipsePixelRegion, CircleAnnulusPixelRegion)
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion, Spectrum1D
 from astropy.nddata import NDData
 
-from jdaviz.core.marks import ShadowSpatialSpectral
 from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 
 
 def test_region_from_subset_2d(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128)), label='Test 2D Flux')
-    cubeviz_helper.app.data_collection.append(data)
+    cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
 
@@ -55,8 +52,7 @@ def test_region_from_subset_2d(cubeviz_helper):
 
 
 def test_region_from_subset_3d(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128, 256)), label='Test 3D Flux')
-    cubeviz_helper.app.data_collection.append(data)
+    cubeviz_helper.load_data(np.ones((128, 128, 256)), data_label='Test 3D Flux')
 
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.subset_selected == "Create New"
@@ -200,126 +196,6 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     assert_quantity_allclose(reg.upper, 12.75 * u.Hz)
 
 
-def test_region_spectral_spatial(cubeviz_helper, spectral_cube_wcs):
-    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
-    cubeviz_helper.load_data(data, data_label="Test Flux")
-
-    # use gaussian smooth plugin as a regression test for
-    # https://github.com/spacetelescope/jdaviz/issues/1853
-    cubeviz_helper.plugins['Gaussian Smooth'].smooth(add_data=True)
-
-    spectrum_viewer_name = cubeviz_helper._default_spectrum_viewer_reference_name
-    spectrum_viewer = cubeviz_helper.app.get_viewer(spectrum_viewer_name)
-    spectrum_viewer.apply_roi(XRangeROI(5, 15.5))
-
-    # should be no spatial-spectral intersection marks yet
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 0  # noqa
-
-    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
-    # We set the active tool here to trigger a reset of the Subset state to "Create New"
-    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
-    flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
-
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
-
-    subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
-    reg = subsets.get('Subset 1')
-
-    assert len(subsets) == 1
-    assert isinstance(reg, SpectralRegion)
-
-    assert_quantity_allclose(reg.lower, 5.0 * u.Hz)
-    assert_quantity_allclose(reg.upper, 15.5 * u.Hz)
-
-    subsets = cubeviz_helper.app.get_subsets(spatial_only=True)
-    reg = subsets.get('Subset 2')[0]['region']
-
-    assert len(subsets) == 1
-    assert isinstance(reg, RectanglePixelRegion)
-    assert_allclose(reg.center.x, 2.25)
-    assert_allclose(reg.center.y, 1.55)
-    assert_allclose(reg.width, 2.5)
-    assert_allclose(reg.height, 3.5)
-
-    # add another spectral subset to ensure the spatial-spectral intersection marks are created as
-    # expected
-    # reset the tool to force a new selection instead of the default "replace"
-    spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['jdaviz:panzoom']
-    spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
-    spectrum_viewer.apply_roi(XRangeROI(3, 16))
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 4  # noqa
-
-    # Delete the spatial subset to make sure ALL ShadowSpatialSpectral marks are removed
-    dc = cubeviz_helper.app.data_collection
-    dc.remove_subset_group(dc.subset_groups[1])
-
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 0  # noqa
-    # Check that the subset selection tool was not deactivated by deleting inactive subset
-    assert spectrum_viewer.toolbar.active_tool_id == "bqplot:xrange"
-
-    spectrum_viewer.session.edit_subset_mode._mode = NewMode
-    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
-    flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
-
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 4  # noqa
-
-    # This creates a composite subset, which tests if ShadowSpatialSpectral marks are added
-    # to those types of subsets as well
-    spectrum_viewer.session.edit_subset_mode._mode = OrMode
-    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
-    flux_viewer.apply_roi(RectangularROI(0, 2, 2, 4))
-
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 4  # noqa
-
-    # Delete one of the spectral subsets to make sure the other is still applied as two
-    # ShadowSpatialSpectral objects. One for the data's spatial subset and the other for the
-    # smoothed data's spatial subset
-    dc.remove_subset_group(dc.subset_groups[0])
-
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
-
-    # Make sure that ShadowSpectralSpatial objects become invisible with data
-    cubeviz_helper.app.set_data_visibility(cubeviz_helper._default_spectrum_viewer_reference_name,
-                                           dc[-1].label, visible=False)
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral) and m.visible]) == 1  # noqa
-    cubeviz_helper.app.set_data_visibility(cubeviz_helper._default_spectrum_viewer_reference_name,
-                                           dc[-1].label, visible=True)
-
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
-
-    # Test that removing and adding the data from the viewer removes and adds
-    # the shadow marks accordingly
-    cubeviz_helper.app.remove_data_from_viewer(spectrum_viewer_name, dc[-1].label)
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 1  # noqa
-    cubeviz_helper.app.add_data_to_viewer(spectrum_viewer_name, dc[-1].label)
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 2  # noqa
-
-    # Remove the smoothed data to make sure the ShadowSpatialSpectral object still applies to
-    # the original data's spatial subset
-    dc.remove(dc[-1])
-    assert len([m for m in spectrum_viewer.figure.marks if isinstance(m, ShadowSpatialSpectral)]) == 1  # noqa
-
-
-def test_disjoint_spatial_subset(cubeviz_helper, spectral_cube_wcs):
-    data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
-    cubeviz_helper.load_data(data, data_label="Test Flux")
-
-    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
-    flux_viewer.apply_roi(CircularROI(xc=3, yc=4, radius=1))
-
-    mf = cubeviz_helper.plugins['Model Fitting']
-    assert len(mf.spatial_subset.choices) == 2  # 'Entire Cube' and Subset 1
-    assert len(mf.spectral_subset.choices) == 1  # 'Entire Spectrum'
-
-    # Add second region to Subset 1
-    cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
-    flux_viewer.apply_roi(CircularROI(xc=1, yc=1, radius=1))
-
-    # regression test for https://github.com/spacetelescope/jdaviz/pull/2058
-    assert len(mf.spatial_subset.choices) == 2  # 'Entire Cube' and Subset 1
-    assert len(mf.spectral_subset.choices) == 1  # 'Entire Spectrum'
-
-
 def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
     subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
@@ -367,8 +243,7 @@ def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
 
 
 def test_composite_region_from_subset_3d(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
-    cubeviz_helper.app.data_collection.append(data)
+    cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
     viewer = cubeviz_helper.app.get_viewer('flux-viewer')
@@ -419,8 +294,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
 
 
 def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
-    data = Data(flux=np.ones((128, 128, 10)), label='Test 3D Flux')
-    cubeviz_helper.app.data_collection.append(data)
+    cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
     viewer = cubeviz_helper.app.get_viewer('flux-viewer')

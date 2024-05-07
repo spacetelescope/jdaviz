@@ -152,7 +152,7 @@ class UnitConverterWithSpectral:
                     eqv = u.spectral_density(spec.spectral_axis)
 
         else:  # spectral axis
-            eqv = u.spectral()
+            eqv = u.spectral() + u.pixel_scale(1*u.pix)
 
         return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
 
@@ -412,6 +412,8 @@ class Application(VuetifyTemplate, HubListener):
         self._get_object_cache = {}
         self.hub.subscribe(self, SubsetUpdateMessage,
                            handler=self._on_subset_update_message)
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=self._on_subset_delete_message)
 
         # Store for associations between Data entries:
         self._data_associations = self._init_data_associations()
@@ -423,8 +425,7 @@ class Application(VuetifyTemplate, HubListener):
                            handler=self._on_layers_changed)
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=self._on_layers_changed)
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=self._on_layers_changed)
+        # SubsetDeleteMessage will also call _on_layers_changed via _on_subset_delete_message
 
     def _on_plugin_table_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -433,7 +434,7 @@ class Application(VuetifyTemplate, HubListener):
         key = f"{msg.plugin._plugin_name}: {msg.table._table_name}"
         self._plugin_tables.setdefault(key, msg.table.user_api)
 
-    def _update_live_plugin_results(self, trigger_data_lbl=None, trigger_subset=None):
+    def _iter_live_plugin_results(self, trigger_data_lbl=None, trigger_subset=None):
         trigger_subset_lbl = trigger_subset.label if trigger_subset is not None else None
         for data in self.data_collection:
             plugin_inputs = data.meta.get('_update_live_plugin_results', None)
@@ -455,18 +456,34 @@ class Application(VuetifyTemplate, HubListener):
                                for attr in data_subs]):
                     # trigger parent data of subset does not match subscribed data entries
                     continue
+            yield (data, plugin_inputs)
+
+    def _update_live_plugin_results(self, trigger_data_lbl=None, trigger_subset=None):
+        for data, plugin_inputs in self._iter_live_plugin_results(trigger_data_lbl, trigger_subset):
             # update and overwrite data
             # make a new instance of the plugin to avoid changing any UI settings
             plg = self._jdaviz_helper.plugins.get(data.meta.get('Plugin'))._obj.new()
             if not plg.supports_auto_update:
                 raise NotImplementedError(f"{data.meta.get('Plugin')} does not support live-updates")  # noqa
             plg.user_api.from_dict(plugin_inputs)
+            # keep auto-updating, even if the option is hidden from the user API
+            # (can remove this line if auto_update is exposed to the user API in the future)
+            plg.add_results.auto_update_result = True
             try:
                 plg()
             except Exception as e:
                 self.hub.broadcast(SnackbarMessage(
                     f"Auto-update for {plugin_inputs['add_results']['label']} failed: {e}",
                     sender=self, color="error"))
+                # TODO: should we delete the entry (but then any plot options, etc, are lost)
+                # self.vue_data_item_remove({'item_name': data.label})
+
+    def _remove_live_plugin_results(self, trigger_data_lbl=None, trigger_subset=None):
+        for data, plugin_inputs in self._iter_live_plugin_results(trigger_data_lbl, trigger_subset):
+            self.hub.broadcast(SnackbarMessage(
+                f"Removing {data.label} due to deletion of {trigger_subset.label if trigger_subset is not None else trigger_data_lbl}",  # noqa
+                sender=self, color="warning"))
+            self.vue_data_item_remove({'item_name': data.label})
 
     def _on_add_data_message(self, msg):
         self._on_layers_changed(msg)
@@ -477,6 +494,10 @@ class Application(VuetifyTemplate, HubListener):
         self._clear_object_cache(msg.subset.label)
         if msg.attribute == 'subset_state':
             self._update_live_plugin_results(trigger_subset=msg.subset)
+
+    def _on_subset_delete_message(self, msg):
+        self._remove_live_plugin_results(trigger_subset=msg.subset)
+        self._on_layers_changed(msg)
 
     def _on_plugin_plot_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -2123,7 +2144,14 @@ class Application(VuetifyTemplate, HubListener):
 
             data = self.data_collection[data_label]
 
-            viewer.add_data(data, percentile=95, color=viewer.color_cycler())
+            # set the original color based on metadata preferences, if provided, and otherwise
+            # based on the colorcycler
+            # NOTE: this is intentionally not a single line to avoid incrementing the color-cycler
+            # unless it is used
+            color = data.meta.get('_default_color')
+            if color is None:
+                color = viewer.color_cycler()
+            viewer.add_data(data, percentile=95, color=color)
 
             # Specviz removes the data from collection in viewer.py if flux unit incompatible.
             if data_label not in self.data_collection:
@@ -2315,13 +2343,6 @@ class Application(VuetifyTemplate, HubListener):
             if data_item['name'] == msg.data.label:
                 self.state.data_items.remove(data_item)
 
-        # TODO: Fix bug with DataCollectionDeleteMessage not working with
-        #  a handler in cubeviz/plugins/viewers.py. This code is a temporary
-        #  workaround for that.
-        if self.config == 'cubeviz':
-            viewer = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
-            viewer._check_if_data_removed(msg=msg)
-
         self._clear_object_cache(msg.data.label)
 
     def _create_data_item(self, data):
@@ -2479,7 +2500,7 @@ class Application(VuetifyTemplate, HubListener):
             'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
             'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
-            'visible_layers': {},  # label: {color, label_suffix}, READ-ONLY
+            'visible_layers': {},  # label: {color}, READ-ONLY
             'wcs_only_layers': wcs_only_layers,
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
@@ -2686,7 +2707,7 @@ class Application(VuetifyTemplate, HubListener):
         for name in config.get('tray', []):
             tray = tray_registry.members.get(name)
 
-            tray_item_instance = tray.get('cls')(app=self)
+            tray_item_instance = tray.get('cls')(app=self, tray_instance=True)
 
             # store a copy of the tray name in the instance so it can be accessed by the
             # plugin itself

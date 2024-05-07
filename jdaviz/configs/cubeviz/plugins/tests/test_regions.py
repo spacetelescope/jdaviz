@@ -69,8 +69,9 @@ class TestLoadRegions(BaseRegionHandler):
         # https://github.com/spacetelescope/jdaviz/issues/1584
         with pytest.warns(UserWarning, match='Applying the value from the redshift slider'):
             spectral_subsets = self.cubeviz.specviz.get_spectra()
-        assert list(spectral_subsets.keys()) == ['has_microns[FLUX]',
-                                                 'has_microns[FLUX] (Subset 1)',
-                                                 'has_microns[FLUX] (Subset 2)'], spectral_subsets  # noqa
+        assert list(spectral_subsets.keys()) == ['Spectrum (sum)',
+                                                 'Spectrum (Subset 1, sum)',
+                                                 'Spectrum (sum) (Subset 2)',
+                                                 'Spectrum (Subset 1, sum) (Subset 2)']
         for sp in spectral_subsets.values():
             assert isinstance(sp, Spectrum1D)

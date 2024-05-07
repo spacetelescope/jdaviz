@@ -59,7 +59,7 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs),
                              data_label='test')
     plugin = cubeviz_helper.plugins["Model Fitting"]._obj
-    plugin.dataset_selected = 'test[FLUX]'
+    plugin.dataset_selected = 'Spectrum (sum)'
     plugin.component_models = [{'id': 'valid_string_already_exists'}]
     plugin.model_comp_selected = 'Linear1D'
 
@@ -82,8 +82,8 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     cubeviz_helper.load_data(Spectrum1D(flux=flux * u.nJy, wcs=spectral_cube_wcs),
                              data_label='test')
     plugin = cubeviz_helper.plugins["Model Fitting"]
-    plugin.create_model_component("Linear1D", "L")
     plugin.cube_fit = True
+    plugin.create_model_component("Linear1D", "L")
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         plugin.calculate_fit()
@@ -95,9 +95,9 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     intercept_res = np.ones((4, 3))
     intercept_res[2, 2] = 0
     intercept_res = intercept_res * u.nJy
-    assert_quantity_allclose(params['cube-fit model']['slope'], slope_res,
+    assert_quantity_allclose(params['model']['slope'], slope_res,
                              atol=1e-10 * u.nJy / u.Hz)
-    assert_quantity_allclose(params['cube-fit model']['intercept'], intercept_res,
+    assert_quantity_allclose(params['model']['intercept'], intercept_res,
                              atol=1e-10 * u.nJy)
 
 
@@ -275,7 +275,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
 
     # Check Cubeviz roundtrip.
     cubeviz_helper.load_data(out_fn)
-    assert len(cubeviz_helper.app.data_collection) == 2
+    assert len(cubeviz_helper.app.data_collection) == 3
     data_sci = cubeviz_helper.app.data_collection["fitted_cube.fits[SCI]"]
     flux_sci = data_sci.get_component("flux")
     assert_allclose(flux_sci.data, fitted_spectrum.flux.value)

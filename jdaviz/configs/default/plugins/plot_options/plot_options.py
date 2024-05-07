@@ -155,8 +155,6 @@ class PlotOptions(PluginTemplateMixin):
       not exposed for Specviz
     * ``axes_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
-    * ``collapse_function`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      only exposed for Cubeviz
     * ``line_visible`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Imviz
     * ``line_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -228,9 +226,6 @@ class PlotOptions(PluginTemplateMixin):
     # profile/line viewer/layer options:
     line_visible_value = Bool().tag(sync=True)
     line_visible_sync = Dict().tag(sync=True)
-
-    collapse_func_value = Unicode().tag(sync=True)
-    collapse_func_sync = Dict().tag(sync=True)
 
     line_color_value = Any().tag(sync=True)
     line_color_sync = Dict().tag(sync=True)
@@ -467,8 +462,6 @@ class PlotOptions(PluginTemplateMixin):
         self.line_visible = PlotOptionsSyncState(self, self.viewer, self.layer, state_attr_for_line_visible,  # noqa
                                                  'line_visible_value', 'line_visible_sync',
                                                  state_filter=supports_line)
-        self.collapse_function = PlotOptionsSyncState(self, self.viewer, self.layer, 'function',
-                                                      'collapse_func_value', 'collapse_func_sync')
         self.line_color = PlotOptionsSyncState(self, self.viewer, self.layer, 'color',
                                                'line_color_value', 'line_color_sync',
                                                state_filter=not_image_or_spatial_subset)
@@ -683,7 +676,7 @@ class PlotOptions(PluginTemplateMixin):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
                   'select_all', 'subset_visible']
         if self.config == "cubeviz":
-            expose += ['collapse_function', 'uncertainty_visible']
+            expose += ['uncertainty_visible']
         if self.config != "imviz":
             expose += ['x_min', 'x_max', 'y_min', 'y_max',
                        'axes_visible', 'line_visible', 'line_color', 'line_width', 'line_opacity',

@@ -21,9 +21,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SpectralSubsetSelectMixin,
                                         DatasetSpectralSubsetValidMixin,
-                                        SubsetSelect,
                                         SpectralContinuumMixin,
-                                        SPATIAL_DEFAULT_TEXT,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
@@ -78,8 +76,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
       Dataset to use for computing line statistics.
-    * ``spatial_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
-      Select which region's collapsed spectrum to analyze or ``Entire Cube``.
     * ``spectral_subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
       Subset to use for the line, or ``Entire Spectrum``.
     * ``continuum`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
@@ -95,9 +91,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     dialog = Bool(False).tag(sync=True)
     template_file = __file__, "line_analysis.vue"
     uses_active_status = Bool(True).tag(sync=True)
-
-    spatial_subset_items = List().tag(sync=True)
-    spatial_subset_selected = Unicode().tag(sync=True)
 
     results_computing = Bool(False).tag(sync=True)
     results = List().tag(sync=True)
@@ -123,15 +116,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         # continuum selection is mandatory for line-analysis
         self._continuum_remove_none_option()
-
-        if self.app.state.settings.get("configuration") == "cubeviz":
-            self.spatial_subset = SubsetSelect(self,
-                                               'spatial_subset_items',
-                                               'spatial_subset_selected',
-                                               default_text=SPATIAL_DEFAULT_TEXT,
-                                               filters=['is_spatial'])
-        else:
-            self.spatial_subset = None
 
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_viewer_data_changed)
@@ -170,7 +154,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     def user_api(self):
         # deprecated: width was replaced with continuum_width in 3.9 so should be removed from the
         # user API and the property and setter above as soon as 3.11.
-        return PluginUserApi(self, expose=('dataset', 'spatial_subset', 'spectral_subset',
+        return PluginUserApi(self, expose=('dataset', 'spectral_subset',
                                            'continuum', 'width', 'continuum_width', 'get_results'))
 
     @property
@@ -190,10 +174,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
         if msg.data.label not in viewer_data_labels:
             return
 
-        get_data_kwargs = {'data_label': msg.data.label}
-        if self.config == 'cubeviz':
-            get_data_kwargs['function'] = getattr(viewer.state, 'function', None)
-        viewer_data = self.app._jdaviz_helper.get_data(**get_data_kwargs)
+        viewer_data = self.app._jdaviz_helper.get_data(data_label=msg.data.label)
 
         # If no data is currently plotted, don't attempt to update
         if viewer_data is None:
@@ -218,7 +199,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             The glue message passed to this callback method.
         """
         if (msg.subset.label in [self.spectral_subset_selected,
-                                 self.spatial_subset_selected,
                                  self.continuum_subset_selected]):
             self._calculate_statistics(msg)
 
@@ -270,7 +250,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # in which case we'll default to the identified line
             self.selected_line = self.identified_line
 
-    @observe("dataset_selected", "spatial_subset_selected", "spectral_subset_selected",
+    @observe("dataset_selected", "spectral_subset_selected",
              "continuum_subset_selected", "continuum_width")
     @skip_if_no_updates_since_last_active()
     @with_spinner('results_computing')
@@ -295,7 +275,6 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             return
 
         spectrum, continuum, spec_subtracted = self._get_continuum(self.dataset,
-                                                                   self.spatial_subset,
                                                                    self.spectral_subset,
                                                                    update_marks=True)
         if spectrum is None:

@@ -5,23 +5,24 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-    <!-- for mosviz, the entries change on row change, so we want to always show the dropdown
-         to make sure that is clear -->
+    <v-row v-if="config=='cubeviz'">
+      <v-switch
+        v-model="cube_fit"
+        label="Cube Fit"
+        hint="Whether to fit to an extracted spectrum or full cube."
+        persistent-hint
+      ></v-switch>
+    </v-row>
+
+    <!-- for mosviz, the entries change on row change
+         for cubeviz, the entries change when toggling "cube fit"
+         so let's always show the dropdown for those cases to make the selection clear -->
     <plugin-dataset-select
       :items="dataset_items"
       :selected.sync="dataset_selected"
-      :show_if_single_entry="config=='mosviz'"
+      :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
       label="Data"
       hint="Select the data set to be fitted."
-    />
-
-    <plugin-subset-select
-      v-if="config=='cubeviz'"
-      :items="spatial_subset_items"
-      :selected.sync="spatial_subset_selected"
-      :show_if_single_entry="true"
-      label="Spatial region"
-      hint="Select spatial region to fit."
     />
 
     <plugin-subset-select 
@@ -235,15 +236,6 @@
       ></plugin-auto-label>
 
       <j-plugin-section-header>Fit Model</j-plugin-section-header>
-      <v-row>
-        <v-switch v-if="config=='cubeviz'"
-          v-model="cube_fit"
-          label="Cube Fit"
-          hint="Whether to fit to the collapsed spectrum or entire cube"
-          persistent-hint
-        ></v-switch>
-      </v-row>
-
       <v-row v-if="cube_fit">
         <span class="v-messages v-messages__message text--secondary">
             Note: cube fit results are not logged to table.

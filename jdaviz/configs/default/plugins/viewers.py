@@ -193,24 +193,17 @@ class JdavizViewerMixin:
             return min(linewidth, 6)
 
         def _get_layer_info(layer):
-            if self.__class__.__name__ == 'CubevizProfileView' and len(layer.layer.data.shape) == 3:
-                suffix = f" (collapsed: {self.state.function})"
-            else:
-                suffix = ""
-
             if 'Trace' in layer.layer.data.meta:
-                return "mdi-chart-line-stacked", ""
+                return "mdi-chart-line-stacked", None
 
-            # then the underlying data is cube-like and we're in the profile viewer, so we
-            # want to include the collapse function *unless* the layer is a spectral subset
             for subset in self.jdaviz_app.data_collection.subset_groups:
                 if subset.label == layer.layer.label:
                     subset_type = get_subset_type(subset)
                     if subset_type == 'spatial':
-                        return "mdi-chart-scatter-plot", suffix
+                        return "mdi-chart-scatter-plot", subset_type
                     else:
-                        return "mdi-chart-bell-curve", ""
-            return "", suffix
+                        return "mdi-chart-bell-curve", subset_type
+            return "", None
 
         visible_layers = {}
         for layer in self.state.layers[::-1]:
@@ -219,11 +212,13 @@ class JdavizViewerMixin:
                     layer.layer.meta.get(_wcs_only_label, False)
             )
             if layer.visible and not layer_is_wcs_only:
-                prefix_icon, suffix = _get_layer_info(layer)
+                prefix_icon, subset_type = _get_layer_info(layer)
+                if self.__class__.__name__ == 'CubevizProfileView' and subset_type == 'spatial':
+                    # do not show spatial subsets in spectral-viewer
+                    continue
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),
                                                      'linewidth': _get_layer_linewidth(layer),
-                                                     'prefix_icon': prefix_icon,
-                                                     'suffix_label': suffix}
+                                                     'prefix_icon': prefix_icon}
 
         viewer_item = self.jdaviz_app._viewer_item_by_id(self.reference_id)
         viewer_item['visible_layers'] = visible_layers

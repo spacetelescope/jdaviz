@@ -77,7 +77,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     assert label_mouseover.as_text() == ('Cursor 4.62300e-07, 0.00000e+00 Value +8.00000e+00 Jy',
                                          'Wave 4.62280e-07 m (0 pix)',
                                          'Flux 2.80000e+01 Jy')
-    assert label_mouseover.as_dict() == {'data_label': 'test[FLUX]',
+    assert label_mouseover.as_dict() == {'data_label': 'Spectrum (sum)',
                                          'axes_x': 4.622800069238093e-07,
                                          'axes_x:unit': 'm',
                                          'slice': 0.0,

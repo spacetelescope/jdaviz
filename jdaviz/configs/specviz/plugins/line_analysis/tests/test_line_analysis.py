@@ -67,7 +67,7 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
     plugin = cubeviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
     plugin.keep_active = True
 
-    plugin.spatial_subset_selected = 'Subset 1'
+    plugin.dataset_selected = 'Spectrum (Subset 1, sum)'
     plugin.spectral_subset_selected = 'Subset 2'
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.width = 1

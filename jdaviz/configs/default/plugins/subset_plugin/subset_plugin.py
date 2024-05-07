@@ -126,6 +126,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self._sync_selected_from_state(*args)
         if 'Create New' in self.subset_selected:
             return
+        subsets_avail = [sg.label for sg in self.app.data_collection.subset_groups]
+        if self.subset_selected not in subsets_avail:
+            # subset selection should re-default after processing the deleted subset,
+            # for now we can safely ignore
+            return
         self._get_subset_definition(*args)
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
         self.subset_select._update_subset(subset_to_update, attribute="type")
@@ -404,7 +409,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if self.subset_types[index] == "Range":
                     if self.spectral_display_unit is not None:
                         x_att = sub_states.att
-                        base_units = self.app.data_collection[0].get_component(x_att).units
+                        # since this is a spectrum range subset, we can get the native units
+                        # from the current reference data in the spectrum viewer
+                        sv = self.spectrum_viewer
+                        base_units = sv.state.reference_data.get_component(x_att).units
                         if self.spectral_display_unit != base_units:
                             d_val = d_val*u.Unit(self.spectral_display_unit)
                             d_val = d_val.to(u.Unit(base_units))

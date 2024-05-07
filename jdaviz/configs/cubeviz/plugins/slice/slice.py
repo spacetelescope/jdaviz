@@ -68,6 +68,9 @@ class Slice(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._cached_properties = ['valid_selection_values', 'valid_selection_values_sorted',
+                                   'valid_indicator_values', 'valid_indicator_values_sorted',
+                                   'valid_values', 'valid_values_sorted']
 
         self._indicator_initialized = False
         self._player = None
@@ -84,7 +87,7 @@ class Slice(PluginTemplateMixin):
         self.hub.subscribe(self, AddDataMessage,
                            handler=self._on_add_data)
         self.hub.subscribe(self, RemoveDataMessage,
-                           handler=self._on_valid_selection_values_changed)
+                           handler=lambda _: self._clear_cache())
 
         # connect any pre-existing viewers
         for viewer in self.app._viewer_store.values():
@@ -105,9 +108,8 @@ class Slice(PluginTemplateMixin):
         # will be handled by a change to global display units)
         if not self.value_unit:
             for viewer in self.slice_indicator_viewers:
-                # ignore while x_display_unit is unset or still degrees (before data transpose)
-                # if we ever need the slice axis to be degrees, this will need to be loosened
-                if getattr(viewer.state, 'x_display_unit', None) not in (None, 'deg'):
+                # ignore while x_display_unit is unset
+                if getattr(viewer.state, 'x_display_unit', None) is not None:
                     self.value_unit = viewer.state.x_display_unit
                     break
 
@@ -119,6 +121,7 @@ class Slice(PluginTemplateMixin):
         # and just use the first layer with data.  Once initialized, this logic will be
         # skipped going forward to not change any user selection (so will default to the
         # middle of the first found layer)
+        self._clear_cache()
         for viewer in self.slice_indicator_viewers:
             if str(viewer.state.x_att) not in self.valid_slice_att_names:
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
@@ -136,7 +139,7 @@ class Slice(PluginTemplateMixin):
 
     @property
     def valid_slice_att_names(self):
-        return _spectral_axis_names + ['Pixel Axis 2 [x]']
+        return _spectral_axis_names + ['Pixel Axis 2 [x]', 'World 0']
 
     @property
     def slice_selection_viewers(self):
@@ -220,11 +223,11 @@ class Slice(PluginTemplateMixin):
         self._check_if_cube_viewer_exists()
 
     def _on_add_data(self, msg):
+        self._clear_cache()
         self._initialize_location()
         if isinstance(msg.viewer, WithSliceSelection):
             # instead of just setting viewer.slice_value, we'll make sure the "snapping" logic
             # is updated (if enabled)
-            self._on_valid_selection_values_changed()
             self._on_value_updated({'new': self.value})
 
     def _on_select_slice_message(self, msg):
@@ -240,12 +243,15 @@ class Slice(PluginTemplateMixin):
             return
         prev_unit = u.Unit(self.value_unit)
         self.value_unit = str(msg.unit)
-        self._on_valid_selection_values_changed()
+        self._clear_cache()
         self.value = (self.value * prev_unit).to_value(msg.unit, equivalencies=u.spectral())
 
-    def _on_valid_selection_values_changed(self, msg=None):
-        if 'valid_selection_values' in self.__dict__:
-            del self.__dict__['valid_selection_values']
+    def _clear_cache(self, *attrs):
+        if not len(attrs):
+            attrs = self._cached_properties
+        for attr in attrs:
+            if attr in self.__dict__:
+                del self.__dict__[attr]
 
     @cached_property
     def valid_selection_values(self):
@@ -255,12 +261,12 @@ class Slice(PluginTemplateMixin):
             return np.array([])
         return np.unique(np.concatenate([viewer.slice_values for viewer in viewers]))
 
-    @property
+    @cached_property
     def valid_selection_values_sorted(self):
         # all available slice values from cubes (sorted)
         return np.sort(self.valid_selection_values)
 
-    @property
+    @cached_property
     def valid_indicator_values(self):
         # all x-values in indicator viewers (unsorted)
         viewers = self.slice_indicator_viewers
@@ -268,15 +274,15 @@ class Slice(PluginTemplateMixin):
             return np.array([])
         return np.unique(np.concatenate([viewer.slice_values for viewer in viewers]))
 
-    @property
+    @cached_property
     def valid_indicator_values_sorted(self):
         return np.sort(self.valid_indicator_values)
 
-    @property
+    @cached_property
     def valid_values(self):
         return self.valid_selection_values if self.cube_viewer_exists else self.valid_indicator_values  # noqa
 
-    @property
+    @cached_property
     def valid_values_sorted(self):
         return self.valid_selection_values_sorted if self.cube_viewer_exists else self.valid_indicator_values_sorted  # noqa
 

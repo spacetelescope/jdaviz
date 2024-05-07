@@ -77,7 +77,7 @@
                 <v-icon v-if="layer_info.prefix_icon" dense>
                   {{layer_info.prefix_icon}}
                 </v-icon>
-                {{layer_name}}{{layer_info.suffix_label}}
+                {{layer_name}}
               </span>
             </div>
           </div>

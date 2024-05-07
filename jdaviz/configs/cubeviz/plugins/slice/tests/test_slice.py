@@ -21,11 +21,13 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
     assert not sl.is_playing
 
     cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
-    app.add_data_to_viewer("spectrum-viewer", "test[FLUX]")
     app.add_data_to_viewer("flux-viewer", "test[FLUX]")
     app.add_data_to_viewer("uncert-viewer", "test[FLUX]")
+    app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
+    sv = cubeviz_helper.viewers['spectrum-viewer']._obj
 
     # sample cube only has 2 slices with wavelengths [4.62280007e-07 4.62360028e-07] m
+    assert len(sv.slice_values) == 2
     assert len(sl.valid_indicator_values_sorted) == 2
     slice_values = sl.valid_selection_values_sorted
     assert len(slice_values) == 2
@@ -92,11 +94,11 @@ def test_slice(cubeviz_helper, spectrum1d_cube):
 
 
 def test_indicator_settings(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     app = cubeviz_helper.app
-    app.add_data(spectrum1d_cube, 'test')
-    app.add_data_to_viewer("spectrum-viewer", "test")
-    app.add_data_to_viewer("flux-viewer", "test")
-    sl = Slice(app=app)
+    app.add_data_to_viewer("flux-viewer", "test[FLUX]")
+    app.add_data_to_viewer("spectrum-viewer", "Spectrum (sum)")
+    sl = cubeviz_helper.plugins['Slice']._obj
     sv = app.get_viewer('spectrum-viewer')
     indicator = sv.slice_indicator
 

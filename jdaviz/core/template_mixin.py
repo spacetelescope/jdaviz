@@ -45,7 +45,8 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerRenamedMessage, SnackbarMessage,
                                 AddDataToViewerMessage, ChangeRefDataMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
-                                PluginPlotAddedMessage, PluginPlotModifiedMessage)
+                                PluginPlotAddedMessage, PluginPlotModifiedMessage,
+                                GlobalDisplayUnitChanged)
 
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
@@ -64,7 +65,8 @@ from jdaviz.utils import (
 
 
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
-           'skip_if_no_updates_since_last_active', 'with_spinner', 'with_temp_disable',
+           'skip_if_no_updates_since_last_active', 'skip_if_not_tray_instance',
+           'with_spinner', 'with_temp_disable',
            'ViewerPropertiesMixin',
            'BasePluginComponent',
            'MultiselectMixin',
@@ -170,6 +172,17 @@ class ViewerPropertiesMixin:
 
         return self.app.get_viewer(viewer_reference)
 
+    @cached_property
+    def flux_viewer(self):
+        if hasattr(self, '_default_flux_viewer_reference_name'):
+            viewer_reference = self._default_flux_viewer_reference_name
+        else:
+            viewer_reference = self.app._get_first_viewer_reference_name(
+                require_flux_viewer=True
+            )
+
+        return self.app.get_viewer(viewer_reference)
+
 
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
     config = Unicode("").tag(sync=True)
@@ -207,11 +220,6 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
         self._viewer_callbacks = {}
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
-
-    def new(self):
-        new = self.__class__(app=self.app)
-        new._plugin_name = self._plugin_name
-        return new
 
     @property
     def app(self):
@@ -302,6 +310,16 @@ def skip_if_no_updates_since_last_active(skip_if_not_active=True):
     return decorator
 
 
+def skip_if_not_tray_instance():
+    def decorator(meth):
+        def wrapper(self, *args, **kwargs):
+            if not self._tray_instance:
+                return
+            return meth(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
 def with_spinner(spinner_traitlet='spinner'):
     """
     decorator on a plugin method to set a traitlet to True at the beginning
@@ -374,8 +392,9 @@ class PluginTemplateMixin(TemplateMixin):
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
 
-    def __init__(self, app, **kwargs):
+    def __init__(self, app, tray_instance=False, **kwargs):
         self._plugin_name = kwargs.pop('plugin_name', None)
+        self._tray_instance = tray_instance  # set to True by the instance of the plugin in the tray
         self._viewer_callbacks = {}
         # _inactive_thread: thread checking for alive pings to control plugin_opened
         self._inactive_thread = None
@@ -417,6 +436,11 @@ class PluginTemplateMixin(TemplateMixin):
         self.supports_auto_update = hasattr(self, '__call__')
 
         super().__init__(app=app, **kwargs)
+
+    def new(self):
+        new = self.__class__(app=self.app)
+        new._plugin_name = self._plugin_name
+        return new
 
     @property
     def user_api(self):
@@ -836,6 +860,10 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def add_filter(self, *filters):
         self.filters = self.filters + [filter for filter in filters]
+
+    def remove_filter(self, *filters):
+        self.filters = [f for f in self.filters
+                        if (f not in filters and getattr(f, '__name__', '') not in filters)]
 
     @property
     def viewer_dicts(self):
@@ -1433,6 +1461,10 @@ class LayerSelect(SelectPluginComponent):
         self._update_layer_items()
         self.update_wcs_only_filter(only_wcs_layers)
 
+        # TODO: all of these add_filter commands should be refactored to pass filters directly
+        # to the init and defined in _is_valid_item()
+        self.add_filter('not_spatial_subset_in_profile_viewer')
+
         self.filter_is_root = is_root
         self.has_children = has_children
         self.filter_is_child_of = is_child_of
@@ -1478,6 +1510,17 @@ class LayerSelect(SelectPluginComponent):
         def not_child_layer(lyr):
             # ignore layers that are children in associations:
             return self.app._get_assoc_data_parent(lyr.label) is None
+
+        def not_spatial_subset_in_profile_viewer(lyr):
+            if self.plugin.config != 'cubeviz':
+                return True
+            # note: have to check the classname instead of isinstance to avoid circular import
+            if np.any([viewer.__class__.__name__ != 'CubevizProfileView'
+                       for viewer in self.viewer_objs]):
+                return True
+            # at this point, we are in cubeviz and ALL selected viewers are profile viewers,
+            # so we want to exclude spatial subsets
+            return get_subset_type(lyr) != 'spatial'
 
         return super()._is_valid_item(lyr, locals())
 
@@ -1961,12 +2004,6 @@ class SubsetSelect(SelectPluginComponent):
         elif 'is_spatial' in self.filters:
             get_data_kwargs['spatial_subset'] = subset
 
-        if self.app.config == 'cubeviz' and 'is_spectral' in self.filters:
-            viewer_ref = getattr(self.plugin,
-                                 '_default_spectrum_viewer_reference_name',
-                                 self.viewers[0].reference_id)
-            get_data_kwargs['function'] = self.app.get_viewer(viewer_ref).state.function
-
         subset = self.app._jdaviz_helper.get_data(**get_data_kwargs)
         return subset.mask
 
@@ -2255,6 +2292,8 @@ class ApertureSubsetSelect(SubsetSelect):
             mark.visible = visible
 
     def _plugin_active_changed(self, *args):
+        if self.plugin.is_active:
+            self._update_mark_coords()
         self._set_mark_visiblities(self.plugin.is_active)
 
     @property
@@ -2742,14 +2781,7 @@ class NonFiniteUncertaintyMismatchMixin(VuetifyTemplate, HubListener):
             # during initial init, this can trigger before the component is initialized
             return
 
-        if not hasattr(self, '_get_1d_spectrum'):
-            # only model_fitting has _get_1d_spectrum(), but this method is here
-            # instead of there  because it may eventually be used by other plugins.
-            # if that happens, move _get_1d_spectrum() somewhere more general
-            raise NotImplementedError("_get_1d_spectrum() must be available in "
-                                      "plugin to use NonFiniteUncertaintyMismatchMixin")
-
-        spec = self._get_1d_spectrum()
+        spec = self.dataset.selected_spectrum
 
         if spec.uncertainty is None:
             self.non_finite_uncertainty_mismatch = False
@@ -2760,7 +2792,7 @@ class NonFiniteUncertaintyMismatchMixin(VuetifyTemplate, HubListener):
             uncert = spec.uncertainty
         else:
             # get selected subset
-            spec = self._apply_subset_masks(self._get_1d_spectrum(), self.spectral_subset)
+            spec = self._apply_subset_masks(spec, self.spectral_subset)
             flux = spec.flux[~spec.mask]
             uncert = spec.uncertainty[~spec.mask]
 
@@ -2837,19 +2869,18 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         for pos, mark in self.continuum_marks.items():
             mark.update_xy(mark_x.get(pos, []), mark_y.get(pos, []))
 
-    def _get_continuum(self, dataset, spatial_subset, spectral_subset, update_marks=False):
+    def _get_continuum(self, dataset, spectral_subset, update_marks=False, per_pixel=False):
         if dataset.selected == '':
             self._update_continuum_marks()
             return None, None, None
 
-        if spatial_subset == 'per-pixel':
+        if per_pixel:
             if self.app.config != 'cubeviz':
                 raise ValueError("per-pixel only supported for cubeviz")
             full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
                                                              use_display_units=True)
         else:
-            full_spectrum = dataset.selected_spectrum_for_spatial_subset(spatial_subset.selected if spatial_subset is not None else None,  # noqa
-                                                                         use_display_units=True)
+            full_spectrum = dataset.get_selected_spectrum(use_display_units=True)
 
         if full_spectrum is None or self.continuum_width == "":
             self._update_continuum_marks()
@@ -2958,7 +2989,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
 
         continuum_x = spectral_axis[continuum_mask].value
         min_x = min(spectral_axis.value)
-        if spatial_subset == 'per-pixel':
+        if per_pixel:
             # full_spectrum.flux is a cube, so we want to act on all spaxels independently
             continuum_y = full_spectrum.flux[:, :, continuum_mask].value
 
@@ -3266,37 +3297,20 @@ class DatasetSelect(SelectPluginComponent):
                          multiselect=multiselect, filters=filters,
                          default_text=default_text, manual_options=manual_options,
                          default_mode=default_mode)
-        self._cached_properties += ["selected_dc_item"]
+        self._cached_properties += ["selected_dc_item", "selected_spectrum"]
+        # override this for how to access on-the-fly spectral extraction of a cube
+        self._spectral_extraction_function = 'sum'
         # Add/Remove Data are triggered when checked/unchecked from viewers
         self.hub.subscribe(self, AddDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_data_changed)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_data_changed)
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed)
 
         self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
         # initialize items from original viewers
         self._on_data_changed()
-
-    def _cubeviz_include_spatial_subsets(self):
-        """
-        Call this method to prepend spatial subsets to the list of datasets (and listen for newly
-        created spatial subsets).  For a single viewer, consider using LayerSelect instead.
-        """
-        if self.app.config != 'cubeviz':
-            return
-
-        # add additional callback for subsets
-        # We have to use SubsetUpdateMessage instead of SubsetCreateMessage to ensure it has already
-        # been added to data_collection.subset_groups.  To avoid extra calls to _on_data_changed
-        # for changes in style, etc, we'll try to filter out extra messages in advance.
-        def _subset_update(msg):
-            if msg.attribute == 'subset_state':
-                if get_subset_type(msg.subset) == 'spatial':
-                    self._on_data_changed()
-
-        self.hub.subscribe(self, SubsetUpdateMessage,
-                           handler=_subset_update)
-        self._include_spatial_subsets = True
 
     @property
     def default_data_cls(self):
@@ -3340,14 +3354,25 @@ class DatasetSelect(SelectPluginComponent):
         # from the data collection
         return self.get_object(cls=self.default_data_cls)
 
-    def selected_spectrum_for_spatial_subset(self,
-                                             spatial_subset=SPATIAL_DEFAULT_TEXT,
-                                             use_display_units=True):
-        if spatial_subset == SPATIAL_DEFAULT_TEXT:
-            spatial_subset = None
+    def get_selected_spectrum(self, use_display_units=True):
+        # retrieves the 1d spectrum
+        if len(self.selected_obj.shape) == 3:
+            # then this is a cube, but we want the 1D spectrum,
+            # so we can pass through the Spectral Extraction plugin
+            if self.plugin.config != 'cubeviz':
+                raise ValueError("extracting a spectrum from a cube only supported in cubeviz")
+            # we need to get the 1d extracted spectrum for the cube
+            spec_extract = self.app._jdaviz_helper.plugins['Spectral Extraction']._obj
+            sp = spec_extract._extract_in_new_instance(self.selected,
+                                                       function=self._spectral_extraction_function,
+                                                       add_data=False)
+            return self.plugin._specviz_helper._handle_display_units(sp, use_display_units)
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
-                                                    spatial_subset=spatial_subset,
                                                     use_display_units=use_display_units)
+
+    @cached_property
+    def selected_spectrum(self):
+        return self.get_selected_spectrum(use_display_units=True)
 
     def _is_valid_item(self, data):
         def from_plugin(data):
@@ -3388,6 +3413,12 @@ class DatasetSelect(SelectPluginComponent):
                 return True
             return data.label in [l.layer.label for l in self.spectrum_2d_viewer.layers]  # noqa E741
 
+        def layer_in_flux_viewer(data):
+            if not len(self.app.get_viewer_reference_names()):
+                # then this is a bare Application object, so ignore this filter
+                return True
+            return data.label in [lyr.layer.label for lyr in self.flux_viewer.layers]  # noqa E741
+
         def is_trace(data):
             return hasattr(data, 'meta') and 'Trace' in data.meta
 
@@ -3401,7 +3432,8 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 3
 
         def is_flux_cube(data):
-            return data.label == getattr(self.app._jdaviz_helper._loaded_flux_cube, 'label', None)
+            uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
+            return is_cube(data) and not_child_layer(data) and data.label != uncert_label
 
         def is_not_wcs_only(data):
             return not data.meta.get(_wcs_only_label, False)
@@ -3427,13 +3459,13 @@ class DatasetSelect(SelectPluginComponent):
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [_dc_to_dict(data) for data in self.app.data_collection
                                      if self._is_valid_item(data)]
-        if getattr(self, '_include_spatial_subsets', False):
-            # allow for spatial subsets to be listed
-            self.items = self.items + [_dc_to_dict(subset) for subset in self.app.data_collection.subset_groups  # noqa
-                                       if get_subset_type(subset) == 'spatial']
         self._apply_default_selection()
         # future improvement: only clear cache if the selected data entry was changed?
         self._clear_cache(*self._cached_properties)
+
+    def _on_global_display_unit_changed(self, msg=None):
+        if msg.axis in ('spectral', 'flux'):
+            self._clear_cache('selected_spectrum')
 
 
 class DatasetSelectMixin(VuetifyTemplate, HubListener):

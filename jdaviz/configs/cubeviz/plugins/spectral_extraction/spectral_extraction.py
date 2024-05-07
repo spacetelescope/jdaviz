@@ -3,14 +3,11 @@ from pathlib import Path
 
 import numpy as np
 import astropy
-from astropy.utils.decorators import deprecated
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
-from packaging.version import Version
 from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
-from specutils import Spectrum1D
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
@@ -23,6 +20,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelect,
                                         AddResultsMixin,
                                         skip_if_no_updates_since_last_active,
+                                        skip_if_not_tray_instance,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.region_translators import regions2aperture
@@ -31,8 +29,6 @@ from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView
 
 
 __all__ = ['SpectralExtraction']
-
-ASTROPY_LT_5_3_2 = Version(astropy.__version__) < Version('5.3.2')
 
 
 @tray_registry(
@@ -146,9 +142,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
-        if ASTROPY_LT_5_3_2:
-            self.disabled_msg = "Spectral Extraction in Cubeviz requires astropy>=5.3.2"
-
         if self.app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
@@ -167,14 +160,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def user_api(self):
-        expose = ['dataset', 'function', 'spatial_subset', 'aperture',
+        expose = ['dataset', 'function', 'aperture',
                   'add_results', 'collapse_to_spectrum',
                   'wavelength_dependent', 'reference_spectral_value',
                   'aperture_method']
         if self.dev_bg_support:
             expose += ['background', 'bg_wavelength_dependent']
 
-        return PluginUserApi(self, expose=expose, excl_from_dict=['spatial_subset'])
+        return PluginUserApi(self, expose=expose)
 
     @property
     def live_update_subscriptions(self):
@@ -187,11 +180,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def slice_display_unit_name(self):
         return 'spectral'
 
-    @property
-    @deprecated(since="3.9", alternative="aperture")
-    def spatial_subset(self):
-        return self.user_api.aperture
-
     @observe('active_step')
     def _active_step_changed(self, *args):
         self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'ext'))
@@ -200,6 +188,47 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def slice_plugin(self):
         return self.app._jdaviz_helper.plugins['Slice']
+
+    @observe('aperture_items')
+    @skip_if_not_tray_instance()
+    def _aperture_items_changed(self, msg):
+        if not hasattr(self, 'aperture'):
+            return
+        for item in msg['new']:
+            if item not in msg['old']:
+                if item.get('type') != 'spatial':
+                    continue
+                subset_lbl = item.get('label')
+                try:
+                    self._extract_in_new_instance(subset_lbl=subset_lbl,
+                                                  auto_update=True, add_data=True)
+                except Exception:
+                    msg = SnackbarMessage(
+                        f"Automatic spectrum extraction for {subset_lbl} failed",
+                        color='error', sender=self, timeout=10000)
+                else:
+                    msg = SnackbarMessage(
+                        f"Automatic spectrum extraction for {subset_lbl} successful",
+                        color='success', sender=self)
+                self.app.hub.broadcast(msg)
+
+    def _extract_in_new_instance(self, dataset=None, function='Sum', subset_lbl=None,
+                                 auto_update=False, add_data=False):
+        # create a new instance of the Spectral Extraction plugin (to not affect the instance in
+        # the tray) and extract the entire cube with defaults.
+        if dataset is None:
+            if self._app._jdaviz_helper._loaded_flux_cube is None:
+                return
+            dataset = self._app._jdaviz_helper._loaded_flux_cube.label
+        plg = self.new()
+        plg.dataset.selected = dataset
+        if subset_lbl is not None:
+            plg.aperture.selected = subset_lbl
+        plg.aperture_method.selected = 'Center'
+        plg.function.selected = function
+        plg.add_results.auto_update_result = auto_update
+        # all other settings remain at their plugin defaults
+        return plg(add_data=add_data)
 
     @observe('wavelength_dependent', 'bg_wavelength_dependent')
     def _wavelength_dependent_changed(self, *args):
@@ -257,8 +286,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.conflicting_aperture_and_function:
             raise ValueError(self.conflicting_aperture_error_message)
 
-        spectral_cube = self._app._jdaviz_helper._loaded_flux_cube
-        uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
+        spectral_cube = self.dataset.selected_dc_item
+        if self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label:
+            uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
+        else:
+            # TODO: allow selecting or associating an uncertainty cube?
+            uncert_cube = None
         uncertainties = None
         selected_func = self.function_selected.lower()
 
@@ -298,11 +331,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
             flux = nddata.data << nddata.unit
             mask = nddata.mask
+            shape_mask = np.ones_like(nddata.data)
         # Use the spectral coordinate from the WCS:
         if '_orig_spec' in spectral_cube.meta:
             wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
-        else:
+        elif hasattr(spectral_cube.coords, 'spectral'):
             wcs = spectral_cube.coords.spectral
+        else:
+            wcs = None
 
         # Filter out NaNs (False = good)
         mask = np.logical_or(mask, np.isnan(flux))
@@ -344,6 +380,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             target_wave_unit = spectral_cube.coords.spectral.world_axis_units[0]
 
+        if target_wave_unit == '':
+            target_wave_unit = 'pix'
+
         flux = collapsed_nddata.data << collapsed_nddata.unit
         mask = collapsed_nddata.mask
         uncertainty = collapsed_nddata.uncertainty
@@ -365,6 +404,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         collapsed_spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         if add_data:
+            if default_color := self.aperture.selected_item.get('color', None):
+                collapsed_spec.meta['_default_color'] = default_color
             self.add_results.add_results_from_plugin(collapsed_spec)
 
             snackbar_message = SnackbarMessage(
@@ -377,8 +418,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def get_aperture(self):
         # Retrieve flux cube and create an array to represent the cone mask
-        flux_cube = self._app._jdaviz_helper._loaded_flux_cube.get_object(cls=Spectrum1D,
-                                                                          statistic=None)
+        flux_cube = self.dataset.selected_obj
         display_unit = astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
         # if subset is a composite subset, skip the other logic:
@@ -494,19 +534,19 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             f"Extracted spectrum saved to {os.path.abspath(filename)}",
                            sender=self, color="success"))
 
-    @observe('aperture_selected')
+    @observe('aperture_selected', 'function_selected')
     def _set_default_results_label(self, event={}):
-        label = "Spectral extraction"
-
-        if (
-            hasattr(self, 'aperture') and
-            self.aperture.selected != self.aperture.default_text
-        ):
-            label += f' ({self.aperture_selected})'
-        self.results_label_default = label
+        if not hasattr(self, 'aperture'):
+            return
+        if self.aperture.selected == self.aperture.default_text:
+            self.results_label_default = f"Spectrum ({self.function_selected.lower()})"
+        else:
+            self.results_label_default = f"Spectrum ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
 
     @property
     def marks(self):
+        if not self._tray_instance:
+            return {}
         marks = {}
         for id, viewer in self.app._viewer_store.items():
             if not isinstance(viewer, CubevizProfileView):
@@ -544,6 +584,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @skip_if_no_updates_since_last_active()
     @with_temp_disable(timeout=0.3)
     def _live_update(self, event={}):
+        if not self._tray_instance:
+            return
         if not self.show_live_preview or not self.is_active:
             self._clear_marks()
             return

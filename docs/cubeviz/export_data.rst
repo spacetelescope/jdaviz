@@ -17,25 +17,15 @@ Spatial Regions
     :ref:`Export Spatial Regions <imviz_export>`
         Documentation on how to export spatial regions.
 
-Since Specviz can be accessed from Cubeviz, the following line of code
-can be used to extract the *spectrum* of a spatial subset named "Subset 1":
+Any cube (or extracted spectrum) can be extracted from cubeviz:
 
 .. code-block:: python
 
-    subset1_spec1d = cubeviz.specviz.get_spectra(spectral_subset="Subset 1")
+    subset1_spec1d = cubeviz.get_data("Spectrum (Subset 1, sum)")
 
-An example without accessing Specviz:
 
-.. code-block:: python
-
-    subset1_spec1d = cubeviz.get_data(data_label=flux_data_label, 
-                                      spatial_subset="Subset 1",
-                                      function="mean")
-
-Note that in the above example, the ``function`` keyword is used to tell Cubeviz
-how to collapse the flux cube down to a one dimensional spectrum - this is not 
-necessarily equivalent to the collapsed spectrum in the spectrum viewer, which 
-may have used a different collapse function.
+To use a ``function`` other than sum, use the :ref:`Spectral Extraction <spectral-extraction>` plugin
+first to create a 1D spectrum and then refer to it by label in ``get_data``.
 
 To get all subsets from the spectrum viewer:
 
@@ -58,11 +48,12 @@ To access the spatial regions themselves:
     :ref:`Export Spectra <specviz-export-data>`
         Documentation on how to export data from the ``spectrum-viewer``.
 
-The following line of code can be used to extract a spectral subset named "Subset 2":
+The following line of code can be used to extract 1D spectrum either automatically extracted
+or extracted manually through the :ref:`Spectral Extraction <spectral-extraction>` plugin:
 
 .. code-block:: python
 
-    subset2_spec1d = cubeviz.specviz.get_spectra("Subset 2")
+    subset2_spec1d = cubeviz.get_data("Spectrum (Subset 2, sum)")
 
 3D Data Cubes
 =============
@@ -85,16 +76,6 @@ where the mask (if available) is as defined in
 
     mydata.write("mydata.fits", format="jdaviz-cube")
 
-Data can also be accessed directly from ``data_collection`` using the following code:
-
-.. code-block:: python
-
-    cubeviz.app.data_collection[0]
-
-Which is returned as a `~glue.core.data.Data` object. The
-`~glue.core.data_collection.DataCollection` object
-can be indexed to return all available data (i.e., not just using 0 like in the
-previous example).
 
 .. _cubeviz-export-model:
 
