@@ -29,6 +29,7 @@ from glue_jupyter.bqplot.histogram import BqplotHistogramView
 from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.registries import viewer_registry
 from glue_jupyter.widgets.linked_dropdown import get_choices as _get_glue_choices
+from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
 from regions import PixelRegion
 from specutils import Spectrum1D
 from specutils.manipulation import extract_region
@@ -47,13 +48,13 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 PluginTableAddedMessage, PluginTableModifiedMessage,
                                 PluginPlotAddedMessage, PluginPlotModifiedMessage,
                                 GlobalDisplayUnitChanged)
-
 from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumCenter,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
                                ShadowLine, ApertureMark)
-from jdaviz.core.region_translators import regions2roi, _get_region_from_spatial_subset
+from jdaviz.core.region_translators import (regions2roi, regions2aperture,
+                                            _get_region_from_spatial_subset)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import UserApiWrapper, PluginUserApi
 from jdaviz.core.registries import tray_registry
@@ -2436,6 +2437,69 @@ class ApertureSubsetSelect(SubsetSelect):
                 if mark.viewer != viewer:
                     continue
                 mark.x, mark.y = x_coords, y_coords
+
+    def get_mask(self, flux_cube, aperture_method,
+                 spectral_display_unit, reference_spectral_value=None):
+        # if subset is a composite subset, skip the other logic:
+        if self.is_composite:
+            [subset_group] = [
+                subset_group for subset_group in self.app.data_collection.subset_groups
+                if subset_group.label == self.selected]
+            mask_weights = subset_group.subsets[0].to_mask().astype(np.float32)
+            return mask_weights
+
+        # Center is reverse coordinates
+        center = (self.selected_spatial_region.center.y,
+                  self.selected_spatial_region.center.x)
+        aperture = regions2aperture(self.selected_spatial_region)
+        aperture.positions = center
+
+        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
+        aperture_method = aperture_method.lower()
+        if reference_spectral_value is not None:
+            # wavelength-dependent (cone aperture)
+            if spectral_display_unit.physical_type != 'length':
+                raise ValueError(
+                    f'Spectral axis unit physical type is {spectral_display_unit.physical_type}, '
+                    'must be length for cone aperture')
+
+            fac = flux_cube.spectral_axis.to_value(spectral_display_unit) / reference_spectral_value
+
+            # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
+            if isinstance(aperture, CircularAperture):
+                radii = fac * aperture.r  # radius
+            elif isinstance(aperture, EllipticalAperture):
+                radii = fac * aperture.a  # semimajor axis
+                radii_b = fac * aperture.b  # semiminor axis
+            elif isinstance(aperture, RectangularAperture):
+                radii = fac * aperture.w  # full width
+                radii_h = fac * aperture.h  # full height
+            else:
+                raise NotImplementedError(f"{aperture.__class__.__name__} is not supported")
+
+            mask_weights = np.zeros(flux_cube.shape, dtype=np.float32)
+
+            # Loop through cube and create cone aperture at each wavelength. Then convert that to a
+            # weight array using the selected aperture method, and add it to a weight cube.
+            for index, cone_r in enumerate(radii):
+                if isinstance(aperture, CircularAperture):
+                    aperture.r = cone_r
+                elif isinstance(aperture, EllipticalAperture):
+                    aperture.a = cone_r
+                    aperture.b = radii_b[index]
+                else:  # RectangularAperture
+                    aperture.w = cone_r
+                    aperture.h = radii_h[index]
+
+                slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
+                # Add slice mask to fractional pixel array
+                mask_weights[:, :, index] = slice_mask
+        else:
+            # Cylindrical aperture
+            slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
+            # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
+            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=2)
+        return mask_weights
 
 
 class ApertureSubsetSelectMixin(VuetifyTemplate, HubListener):

@@ -85,7 +85,7 @@
       </div>
     </div>
 
-    <div v-if="dev_bg_support" @mouseover="() => active_step='bg'">
+    <div @mouseover="() => active_step='bg'">
       <j-plugin-section-header :active="active_step==='bg'">Background</j-plugin-section-header>
       <plugin-subset-select
         :items="bg_items"
