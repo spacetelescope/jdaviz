@@ -6,11 +6,12 @@ import astropy
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
+from functools import cached_property
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
-from jdaviz.core.marks import SpectralExtractionPreview
+from jdaviz.core.marks import PluginLine
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
@@ -23,7 +24,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
-from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView
 
 
 __all__ = ['SpectralExtraction']
@@ -185,6 +185,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _active_step_changed(self, *args):
         self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'ext'))
         self.background._set_mark_visiblities(self.active_step == 'bg')
+        self.marks['bg_spec'].visible = self.active_step == 'bg'
 
     @property
     def slice_plugin(self):
@@ -271,13 +272,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.conflicting_aperture_and_function = False
 
     @with_spinner()
-    def extract(self, add_data=True, **kwargs):
+    def extract(self, return_bg=False, add_data=True, **kwargs):
         """
         Extract the spectrum from the data cube according to the plugin inputs.
 
         Parameters
         ----------
-        add_data : bool
+        return_bg : bool, optional
+            Whether to also return the spectrum of the background, if applicable.
+        add_data : bool, optional
             Whether to load the resulting data back into the application according to
             ``add_results``.
         kwargs : dict
@@ -331,6 +334,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 sender=self)
             self.hub.broadcast(snackbar_message)
 
+        if return_bg:
+            return spec, bg_spec
         return spec
 
     def _extract_from_aperture(self, spectral_cube, uncert_cube, aperture, wavelength_dependent,
@@ -506,28 +511,21 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.results_label_default = f"Spectrum ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
 
-    @property
+    @cached_property
     def marks(self):
         if not self._tray_instance:
             return {}
-        marks = {}
-        for id, viewer in self.app._viewer_store.items():
-            if not isinstance(viewer, CubevizProfileView):
-                continue
-            for mark in viewer.figure.marks:
-                if isinstance(mark, SpectralExtractionPreview):
-                    marks[id] = mark
-                    break
-            else:
-                mark = SpectralExtractionPreview(viewer, visible=self.is_active)
-                viewer.figure.marks = viewer.figure.marks + [mark]
-                marks[id] = mark
+        sv = self.spectrum_viewer
+        marks = {'spec': PluginLine(sv, visible=self.is_active),
+                 'bg_spec': PluginLine(sv,
+                                       line_style='dotted',
+                                       visible=self.is_active and self.active_step == 'bg')}
+        sv.figure.marks = sv.figure.marks + [marks['spec'], marks['bg_spec']]
         return marks
 
     def _clear_marks(self):
         for mark in self.marks.values():
             if mark.visible:
-                mark.clear()
                 mark.visible = False
 
     @observe('is_active', 'show_live_preview')
@@ -554,16 +552,18 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self._clear_marks()
             return
 
-        if event.get('name', '') not in ('is_active', 'show_live_preview'):
-            # mark visibility hasn't been handled yet
-            self._toggle_marks()
-
         try:
-            sp = self.extract(add_data=False)
+            sp, bg_spec = self.extract(return_bg=True, add_data=False)
         except (ValueError, Exception):
             self._clear_marks()
             return
 
-        for mark in self.marks.values():
-            mark.update_xy(sp.spectral_axis.value, sp.flux.value)
-            mark.visible = True
+        self.marks['spec'].update_xy(sp.spectral_axis.value, sp.flux.value)
+        self.marks['spec'].visible = True
+
+        if bg_spec is None:
+            self.marks['bg_spec'].clear()
+            self.marks['bg_spec'].visible = False
+        else:
+            self.marks['bg_spec'].update_xy(bg_spec.spectral_axis.value, bg_spec.flux.value)
+            self.marks['bg_spec'].visible = self.active_step == 'bg'
