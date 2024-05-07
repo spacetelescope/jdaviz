@@ -66,20 +66,29 @@ ALL_JDAVIZ_CONFIGS = ['cubeviz', 'specviz', 'specviz2d', 'mosviz', 'imviz']
 
 @unit_converter('custom-jdaviz')
 class UnitConverterWithSpectral:
-
     def equivalent_units(self, data, cid, units):
         if cid.label == "flux":
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
             list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
-                include_prefix_units=True, equivalencies=eqv))) + [
-                    'Jy', 'mJy', 'uJy',
+                include_prefix_units=True, equivalencies=eqv)))
+                + [
+                    'Jy', 'mJy', 'uJy', 'MJy',
                     'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
                     'eV / (s m2 Hz)', 'eV / (Hz s m2)',
                     'erg / (s cm2)',
-                    'erg / (s cm2 Angstrom)', 'erg / (Angstrom s cm2)',
+                    'erg / (s cm2 Angstrom)', 'erg / (s cm2 Angstrom)',
                     'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
-                    'ph / (s cm2 Angstrom)', 'ph / (Angstrom s cm2)',
-                    'ph / (s cm2 Hz)', 'ph / (Hz s cm2)'
+                    'ph / (s cm2 Angstrom)', 'ph / (s cm2 Angstrom)',
+                    'ph / (Hz s cm2)', 'ph / (Hz s cm2)', 'bol', 'AB', 'ST'
+                ]
+                + [
+                    'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
+                    'W / (Hz sr m2)',
+                    'eV / (s m2 Hz sr)',
+                    'erg / (s cm2 sr)',
+                    'erg / (s cm2 Angstrom sr)', 'erg / (s cm2 Hz sr)',
+                    'ph / (s cm2 Angstrom sr)', 'ph / (s cm2 Hz sr)',
+                    'bol / sr', 'AB / sr', 'ST / sr'
                 ])
         else:  # spectral axis
             # prefer Hz over Bq and um over micron
@@ -100,12 +109,48 @@ class UnitConverterWithSpectral:
             except RuntimeError:
                 eqv = []
             else:
-                if len(values) == 2:
+                # Ensure a spectrum passed through Spectral Extraction plugin
+                if '_pixel_scale_factor' in spec.meta:
+                    # if spectrum data collection item is in Surface Brightness units
+                    if u.sr in spec.unit.bases:
+                        # Data item in data collection does not update from conversion/translation.
+                        # App wide orginal data units are used for conversion, orginal_units and
+                        # target_units dicate the conversion to take place.
+                        if (u.sr in u.Unit(original_units).bases) and \
+                           (u.sr not in u.Unit(target_units).bases):
+                            # Surface Brightness -> Flux
+                            eqv = [(u.MJy / u.sr,
+                                    u.MJy,
+                                    lambda x: (x * spec.meta['_pixel_scale_factor']),
+                                    lambda x: x)]
+                        else:
+                            # Flux -> Surface Brightness
+                            eqv = u.spectral_density(spec.spectral_axis)
+
+                    # if spectrum data collection item is in Flux units
+                    elif u.sr not in spec.unit.bases:
+                        # Data item in data collection does not update from conversion/translation.
+                        # App wide orginal data units are used for conversion, orginal_units and
+                        # target_units dicate the conversion to take place.
+                        if (u.sr not in u.Unit(original_units).bases) and \
+                           (u.sr in u.Unit(target_units).bases):
+                            # Flux -> Surface Brightness
+                            eqv = [(u.MJy,
+                                    u.MJy / u.sr,
+                                    lambda x: (x / spec.meta['_pixel_scale_factor']),
+                                    lambda x: x)]
+                        else:
+                            # Surface Brightness -> Flux
+                            eqv = u.spectral_density(spec.spectral_axis)
+
+                elif len(values) == 2:
                     # Need this for setting the y-limits
                     spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
                     eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
+
                 else:
                     eqv = u.spectral_density(spec.spectral_axis)
+
         else:  # spectral axis
             eqv = u.spectral()
 

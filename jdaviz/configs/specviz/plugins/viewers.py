@@ -559,9 +559,26 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         y_display_unit = self.state.y_display_unit
         y_unit = u.Unit(y_display_unit) if y_display_unit else u.dimensionless_unscaled
 
-        if y_unit.is_equivalent(u.Jy / u.sr):
-            flux_unit_type = "Surface brightness"
-        elif y_unit.is_equivalent(u.erg / (u.s * u.cm**2)):
+        # Get local units.
+        locally_defined_flux_units = [
+            u.Jy, u.mJy, u.uJy, u.MJy,
+            u.W / (u.m**2 * u.Hz),
+            u.eV / (u.s * u.m**2 * u.Hz),
+            u.erg / (u.s * u.cm**2),
+            u.erg / (u.s * u.cm**2 * u.Angstrom),
+            u.erg / (u.s * u.cm**2 * u.Hz),
+            u.ph / (u.s * u.cm**2 * u.Angstrom),
+            u.ph / (u.s * u.cm**2 * u.Hz),
+            u.bol, u.AB, u.ST
+        ]
+
+        locally_defined_sb_units = [
+            unit / u.sr for unit in locally_defined_flux_units
+            ]
+
+        if any(y_unit.is_equivalent(unit) for unit in locally_defined_sb_units):
+            flux_unit_type = "Surface Brightness"
+        elif any(y_unit.is_equivalent(unit) for unit in locally_defined_flux_units):
             flux_unit_type = 'Flux'
         elif y_unit.is_equivalent(u.electron / u.s) or y_unit.physical_type == 'dimensionless':
             # electron / s or 'dimensionless_unscaled' should be labeled counts

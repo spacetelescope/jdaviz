@@ -1,8 +1,12 @@
 import pytest
 
 import numpy as np
+from astropy import units as u
+from astropy.wcs import WCS
+from specutils import Spectrum1D
 from jdaviz import Application, Specviz
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
+from jdaviz.app import UnitConverterWithSpectral as uc
 
 
 # This applies to all viz but testing with Imviz should be enough.
@@ -192,3 +196,41 @@ def test_data_associations(imviz_helper):
     with pytest.raises(ValueError):
         # ensure the parent actually exists:
         imviz_helper.load_data(data_child, data_label='child_data', parent='absent parent')
+
+
+def test_to_unit(cubeviz_helper):
+    # custom cube to have Surface Brightness units
+    wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
+                "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
+                "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
+                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 8e-11}
+    w = WCS(wcs_dict)
+    flux = np.zeros((30, 20, 3001), dtype=np.float32)
+    flux[5:15, 1:11, :] = 1
+    cube = Spectrum1D(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
+    cubeviz_helper.load_data(cube, data_label="test")
+
+    # this can be removed once spectra pass through spectral extraction
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+
+    extract_plg.aperture = extract_plg.aperture.choices[-1]
+    extract_plg.aperture_method.selected = 'Exact'
+    extract_plg.wavelength_dependent = True
+    extract_plg.function = 'Sum'
+    # set so pixel scale factor != 1
+    extract_plg.reference_spectral_value = 0.000001
+
+    extract_plg.collapse_to_spectrum()
+
+    cid = cubeviz_helper.app.data_collection[0].data.find_component_id('flux')
+    data = cubeviz_helper.app.data_collection[-1].data
+    values = 1
+    original_units = u.MJy / u.sr
+    target_units = u.MJy
+
+    value = uc.to_unit(cubeviz_helper, data, cid, values, original_units, target_units)
+
+    assert np.allclose(value, 4.7945742429049767e-11)
+
+    original_units = u.MJy
+    target_units = u.MJy / u.sr

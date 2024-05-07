@@ -12,7 +12,6 @@ from numpy.testing import assert_allclose, assert_array_equal
 from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
 from specutils import Spectrum1D
-from astropy.wcs import WCS
 
 
 def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
@@ -373,53 +372,6 @@ def test_cube_extraction_with_nan(cubeviz_helper, image_cube_hdu_obj):
     extract_plg.aperture = 'Subset 1'
     sp_subset = extract_plg.collapse_to_spectrum()  # Default settings but on Subset
     assert_allclose(sp_subset.flux.value, 12)  # (4 x 4) - 4
-
-
-def test_unit_translation(cubeviz_helper):
-    # custom cube so we have PIXAR_SR in metadata, and flux units = Jy/pix
-    wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
-                "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
-                "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
-                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 8e-11}
-    w = WCS(wcs_dict)
-    flux = np.zeros((30, 20, 3001), dtype=np.float32)
-    flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.MJy, wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
-
-    center = PixCoord(5, 10)
-    cubeviz_helper.load_regions(CirclePixelRegion(center, radius=2.5))
-
-    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
-
-    extract_plg.aperture = extract_plg.aperture.choices[-1]
-    extract_plg.aperture_method.selected = 'Exact'
-    extract_plg.wavelength_dependent = True
-    extract_plg.function = 'Sum'
-    # set so pixel scale factor != 1
-    extract_plg.reference_spectral_value = 0.000001
-
-    # collapse to spectrum, now we can get pixel scale factor
-    collapsed_spec = extract_plg.collapse_to_spectrum()
-
-    assert collapsed_spec.meta['_pixel_scale_factor'] != 1
-
-    # store to test second time after calling translate_units
-    mjy_sr_data1 = collapsed_spec._data[0]
-
-    extract_plg._obj.translate_units(collapsed_spec)
-
-    assert collapsed_spec._unit == u.MJy / u.sr
-    # some value in MJy/sr that we know the outcome after translation
-    assert np.allclose(collapsed_spec._data[0], 8.7516529e10)
-
-    extract_plg._obj.translate_units(collapsed_spec)
-
-    # translating again returns the original units
-    assert collapsed_spec._unit == u.MJy
-    # returns to the original values
-    # which is a value in Jy/pix that we know the outcome after translation
-    assert np.allclose(collapsed_spec._data[0], mjy_sr_data1)
 
 
 def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
