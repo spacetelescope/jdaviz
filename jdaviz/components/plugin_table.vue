@@ -49,6 +49,9 @@
         dense
         :headers="headers_visible_sorted.map(item => {return {'text': item, 'value': item}})"
         :items="items"
+        :item-key="item_key"
+        :show-select="show_rowselect"
+        v-model="selected_rows"
         class="elevation-1 width-100"
       ></v-data-table>
     </v-row>
