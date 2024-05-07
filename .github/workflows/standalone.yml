@@ -34,7 +34,7 @@ jobs:
       run: pip install .[test]
 
     - name: Install pyinstaller
-      run: pip install pyinstaller==6.6
+      run: pip install "pyinstaller<6"
 
     - name: Create standalone binary
       env:
@@ -102,7 +102,7 @@ jobs:
       run: pip install .[test]
 
     - name: Install pyinstaller
-      run: pip install pyinstaller==6.6
+      run: pip install "pyinstaller<6"
 
     - name: Create standalone binary
       env:
