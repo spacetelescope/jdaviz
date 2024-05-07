@@ -197,8 +197,10 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
                     self.app._jdaviz_helper._default_uncert_viewer_reference_name
                 )
                 for layer in uncert_viewer.layers:
-                    layer.composite._allow_bad_alpha = True
-                    layer.force_update()
+                    # allow bad alpha for image layers, not subsets:
+                    if not hasattr(layer, 'subset_array'):
+                        layer.composite._allow_bad_alpha = True
+                        layer.force_update()
 
             flag_bits = np.array([flag['flag'] for flag in self.decoded_flags])
 

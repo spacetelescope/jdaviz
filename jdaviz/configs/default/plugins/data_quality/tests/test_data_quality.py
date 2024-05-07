@@ -5,6 +5,7 @@ import pytest
 import numpy as np
 from astroquery.mast import Observations
 from stdatamodels.jwst.datamodels.dqflags import pixel as pixel_jwst
+from glue.core.subset import RectangularROI
 
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.configs.default.plugins.data_quality.dq_utils import (
@@ -212,3 +213,35 @@ def test_data_quality_plugin_hst_acs(imviz_helper, tmp_path):
         flag_map_selected[0]['description'] ==
         'Reed-Solomon decoding error; e.g. data lost during compression.'
     )
+
+
+@pytest.mark.remote_data
+def test_cubeviz_layer_visibility_bug(cubeviz_helper, tmp_path):
+    # regression test for bug:
+    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_s3d.fits"
+    download_path = str(tmp_path / Path(uri).name)
+    Observations.download_file(uri, local_path=download_path)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        cubeviz_helper.load_data(download_path)
+
+    # create a moment map:
+    mm = cubeviz_helper.plugins['Moment Maps']
+    mm.n_moment = 1
+    mm.reference_wavelength = 6
+    mm._obj.add_to_viewer_selected = 'uncert-viewer'
+    mm.calculate_moment()
+
+    # add the moment map to the flux viewer
+    dc = cubeviz_helper.app.data_collection
+    viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    viewer.add_data(dc[-1])
+
+    # create a spatial subset in the flux-viewer
+    roi = RectangularROI(22, 27, 22, 30)
+    viewer.apply_roi(roi)
+
+    # toggle layer visibility, this used to trigger an AttributeError:
+    cubeviz_helper.app.set_data_visibility('flux-viewer', dc[-1].label)
+    cubeviz_helper.app.set_data_visibility('flux-viewer', dc[0].label)

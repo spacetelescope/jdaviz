@@ -7,6 +7,9 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fix Data Quality plugin bug that attempted to apply array compositing logic to
+  spatial subsets. [#2854]
+
 Imviz
 ^^^^^
 
