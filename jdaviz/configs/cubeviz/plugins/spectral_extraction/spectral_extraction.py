@@ -202,7 +202,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def slice_display_unit_name(self):
         return 'spectral'
 
-    @observe('active_step')
+    @observe('active_step', 'is_active')
     def _active_step_changed(self, *args):
         self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'ext'))
         self.background._set_mark_visiblities(self.active_step == 'bg')

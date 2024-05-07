@@ -318,6 +318,36 @@ def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
     assert_allclose(collapsed_spec.flux.value, 16)  # 4 x 4
 
 
+def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
+    center = PixCoord(5, 10)
+    cubeviz_helper.load_regions([
+        CirclePixelRegion(center, radius=2.5),
+        EllipsePixelRegion(center, width=5, height=5)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+    with extract_plg.as_active():
+        extract_plg.aperture = 'Subset 1'
+        spec_no_bg = extract_plg.extract()
+
+        extract_plg.background = 'Subset 2'
+
+        # test visiblity of background aperture and preview based on "active step"
+        assert extract_plg.background.marks[0].visible
+        assert not extract_plg._obj.marks['bg_spec'].visible
+        extract_plg._obj.active_step = 'ap'
+        assert not extract_plg.background.marks[0].visible
+        assert not extract_plg._obj.marks['bg_spec'].visible
+        extract_plg._obj.active_step = 'bg'
+        assert extract_plg.background.marks[0].visible
+        assert extract_plg._obj.marks['bg_spec'].visible
+
+        bg_spec = extract_plg.extract_bg_spectrum()
+        spec = extract_plg.extract()
+
+    assert np.allclose(spec.flux, spec_no_bg.flux - bg_spec.flux)
+
+
 def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     center = PixCoord(5, 10)
