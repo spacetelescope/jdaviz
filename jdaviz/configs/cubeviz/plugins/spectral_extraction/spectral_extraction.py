@@ -18,7 +18,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         ApertureSubsetSelectMixin,
                                         ApertureSubsetSelect,
-                                        AddResultsMixin,
+                                        AddResults, AddResultsMixin,
                                         skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
                                         with_spinner, with_temp_disable)
@@ -56,6 +56,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
       Whether the ``background`` aperture should be considered wavelength-dependent (requires
       ``wavelength_dependent`` to also be set to ``True``). The cone is defined
       to intersect ``background`` at ``reference_spectral_value``.
+    * ``bg_spec_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Method to use for extracting spectrum (and background, if applicable).
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
@@ -76,6 +77,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     bg_selected_validity = Dict().tag(sync=True)
     bg_scale_factor = Float(1).tag(sync=True)
     bg_wavelength_dependent = Bool(False).tag(sync=True)
+
+    bg_spec_results_label = Unicode().tag(sync=True)
+    bg_spec_results_label_default = Unicode().tag(sync=True)
+    bg_spec_results_label_auto = Bool(True).tag(sync=True)
+    bg_spec_results_label_invalid_msg = Unicode('').tag(sync=True)
+    bg_spec_results_label_overwrite = Bool().tag(sync=True)
+    bg_spec_add_to_viewer_items = List().tag(sync=True)
+    bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_spec_spinner = Bool(False).tag(sync=True)
 
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
@@ -125,6 +135,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                multiselect=None,
                                                default_text='None')
 
+        self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
+                                              'bg_spec_results_label_default',
+                                              'bg_spec_results_label_auto',
+                                              'bg_spec_results_label_invalid_msg',
+                                              'bg_spec_results_label_overwrite',
+                                              'bg_spec_add_to_viewer_items',
+                                              'bg_spec_add_to_viewer_selected')
+        self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
+        self.bg_spec_results_label_default = 'background-spectrum'
+
         self.function = SelectPluginComponent(
             self,
             items='function_items',
@@ -164,6 +184,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def user_api(self):
         expose = ['dataset', 'function', 'aperture',
                   'background', 'bg_wavelength_dependent',
+                  'bg_spec_add_results', 'extract_bg_spectrum',
                   'add_results', 'extract',
                   'wavelength_dependent', 'reference_spectral_value',
                   'aperture_method']
@@ -271,72 +292,17 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.conflicting_aperture_and_function = False
 
-    @with_spinner()
-    def extract(self, return_bg=False, add_data=True, **kwargs):
-        """
-        Extract the spectrum from the data cube according to the plugin inputs.
+    @property
+    def spectral_cube(self):
+        return self.dataset.selected_dc_item
 
-        Parameters
-        ----------
-        return_bg : bool, optional
-            Whether to also return the spectrum of the background, if applicable.
-        add_data : bool, optional
-            Whether to load the resulting data back into the application according to
-            ``add_results``.
-        kwargs : dict
-            Additional keyword arguments passed to the NDDataArray collapse operation.
-            Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
-        """
-        if self.conflicting_aperture_and_function:
-            raise ValueError(self.conflicting_aperture_error_message)
-        if self.aperture.selected == self.background.selected:
-            raise ValueError("aperture and background cannot be set to the same subset")
-
-        spectral_cube = self.dataset.selected_dc_item
+    @property
+    def uncert_cube(self):
         if self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label:
-            uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
+            return self._app._jdaviz_helper._loaded_uncert_cube
         else:
             # TODO: allow selecting or associating an uncertainty cube?
-            uncert_cube = None
-
-        selected_func = self.function_selected.lower()
-
-        spec = self._extract_from_aperture(spectral_cube, uncert_cube,
-                                           self.aperture, self.wavelength_dependent,
-                                           selected_func, **kwargs)
-
-        if self.background.selected != self.background.default_text:
-            bg_spec = self._extract_from_aperture(spectral_cube, uncert_cube,
-                                                  self.background, self.bg_wavelength_dependent,
-                                                  selected_func, **kwargs)
-            spec = spec - bg_spec
-        else:
-            bg_spec = None
-
-        # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
-        pix_scale_factor = self.aperture.scale_factor * spectral_cube.meta.get('PIXAR_SR', 1.0)
-        spec.meta['_pixel_scale_factor'] = pix_scale_factor
-
-        # stuff for exporting to file
-        self.extracted_spec = spec
-        self.extracted_spec_available = True
-        fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
-        self.filename = f"extracted_{selected_func}_{fname_label}.fits"
-
-        if add_data:
-            if default_color := self.aperture.selected_item.get('color', None):
-                spec.meta['_default_color'] = default_color
-            self.add_results.add_results_from_plugin(spec)
-
-            snackbar_message = SnackbarMessage(
-                "Spectrum extracted successfully.",
-                color="success",
-                sender=self)
-            self.hub.broadcast(snackbar_message)
-
-        if return_bg:
-            return spec, bg_spec
-        return spec
+            return None
 
     def _extract_from_aperture(self, spectral_cube, uncert_cube, aperture, wavelength_dependent,
                                selected_func, **kwargs):
@@ -450,6 +416,87 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         )
         return collapsed_spec
 
+    @with_spinner()
+    def extract(self, return_bg=False, add_data=True, **kwargs):
+        """
+        Extract the spectrum from the data cube according to the plugin inputs.
+
+        Parameters
+        ----------
+        return_bg : bool, optional
+            Whether to also return the spectrum of the background, if applicable.
+        add_data : bool, optional
+            Whether to load the resulting data back into the application according to
+            ``add_results``.
+        kwargs : dict
+            Additional keyword arguments passed to the NDDataArray collapse operation.
+            Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
+        """
+        if self.conflicting_aperture_and_function:
+            raise ValueError(self.conflicting_aperture_error_message)
+        if self.aperture.selected == self.background.selected:
+            raise ValueError("aperture and background cannot be set to the same subset")
+
+        selected_func = self.function_selected.lower()
+        spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
+                                           self.aperture, self.wavelength_dependent,
+                                           selected_func, **kwargs)
+
+        bg_spec = self.extract_bg_spectrum(add_data=False)
+        if bg_spec is not None:
+            spec = spec - bg_spec
+
+        # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
+        pix_scale_factor = self.aperture.scale_factor * self.spectral_cube.meta.get('PIXAR_SR', 1.0)
+        spec.meta['_pixel_scale_factor'] = pix_scale_factor
+
+        # stuff for exporting to file
+        self.extracted_spec = spec
+        self.extracted_spec_available = True
+        fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
+        self.filename = f"extracted_{selected_func}_{fname_label}.fits"
+
+        if add_data:
+            if default_color := self.aperture.selected_item.get('color', None):
+                spec.meta['_default_color'] = default_color
+            self.add_results.add_results_from_plugin(spec)
+
+            snackbar_message = SnackbarMessage(
+                "Spectrum extracted successfully.",
+                color="success",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+
+        if return_bg:
+            return spec, bg_spec
+        return spec
+
+    @with_spinner('bg_spec_spinner')
+    def extract_bg_spectrum(self, add_data=False, **kwargs):
+        """
+        Create a background 1D spectrum from the input parameters defined in the plugin.
+
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting spectrum to the application, according to the options
+            defined in the plugin.
+        kwargs : dict
+            Additional keyword arguments passed to the NDDataArray collapse operation.
+            Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
+        """
+        if self.background.selected != self.background.default_text:
+            bg_spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
+                                                  self.background, self.bg_wavelength_dependent,
+                                                  self.function_selected.lower(), **kwargs)
+        else:
+            bg_spec = None
+
+        if add_data:
+            self.bg_spec_add_results.add_results_from_plugin(bg_spec, replace=False)
+
+        return bg_spec
+
     def vue_spectral_extraction(self, *args, **kwargs):
         try:
             self.extract(add_data=True)
@@ -457,6 +504,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.hub.broadcast(SnackbarMessage(
                 f"Extraction failed: {repr(e)}",
                 sender=self, color="error"))
+
+    def vue_create_bg_spec(self, *args, **kwargs):
+        self.extract_bg_spectrum(add_data=True)
 
     def vue_save_as_fits(self, *args):
         self._save_extracted_spec_to_fits()
