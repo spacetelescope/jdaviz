@@ -6,8 +6,8 @@ from specutils import Spectrum1D
 
 @pytest.mark.parametrize(
     ('input_unit', 'y_axis_label'),
-    [(u.MJy, 'Flux density'),
-     (u.MJy / u.sr, 'Surface brightness'),
+    [(u.MJy, 'Flux'),
+     (u.MJy / u.sr, 'Surface Brightness'),
      (u.electron / u.s, 'Counts'),
      (u.dimensionless_unscaled, 'Counts'),
      (u.erg / (u.s * u.cm ** 2), 'Flux'),

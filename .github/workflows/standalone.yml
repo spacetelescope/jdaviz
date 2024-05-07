@@ -8,17 +8,79 @@ on:
     tags:
     - 'v*'
   workflow_dispatch:
+  pull_request:
 
 defaults:
   run:
     shell: bash {0}
 
 jobs:
-  build_binary:
+  build_binary_not_osx:
     runs-on: ${{ matrix.os }}-latest
+    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
-        os: [ubuntu, windows, macos]
+        os: [ubuntu, windows]
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install jdaviz
+      run: pip install .[test]
+
+    - name: Install pyinstaller
+      run: pip install pyinstaller==6.6
+
+    - name: Create standalone binary
+      env:
+        DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
+      run: (cd standalone; pyinstaller ./jdaviz.spec)
+
+    - name: Run jdaviz cmd in background
+      run: ./standalone/dist/jdaviz/jdaviz-cli imviz&
+
+    - name: Install playwright
+      run: (pip install playwright; playwright install chromium)
+
+    - name: Install pytest
+      run: pip install pytest-playwright
+
+    - name: Wait for Voila to get online
+      uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
+      with:
+        resource: tcp:8866
+        timeout: 60000
+
+    - name: Test standalone
+      run: (cd standalone; touch pytest.ini; JUPYTER_PLATFORM_DIRS=1 pytest test_standalone.py --video=on)
+
+    - name: Upload Test artifacts
+      if: github.event_name != 'pull_request'
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.os }}
+        path: standalone/test-results
+
+    - name: Upload jdaviz standalone (non-OSX)
+      if: github.event_name != 'pull_request'
+      uses: actions/upload-artifact@v3
+      with:
+        name: jdaviz-standlone-${{ matrix.os }}
+        path: |
+          standalone/dist/jdaviz
+
+  # Do not want to deal with OSX certs in pull request builds.
+  build_binary_osx:
+    runs-on: ${{ matrix.os }}-latest
+    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch'))
+    strategy:
+      matrix:
+        os: [macos]
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
@@ -27,19 +89,20 @@ jobs:
       with:
         p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
         p12-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
+
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
     - uses: actions/setup-python@v5
       with:
-        python-version: "3.10"
+        python-version: "3.11"
 
     - name: Install jdaviz
       run: pip install .[test]
 
     - name: Install pyinstaller
-      run: pip install pyinstaller==5.11
+      run: pip install pyinstaller==6.6
 
     - name: Create standalone binary
       env:
@@ -59,6 +122,8 @@ jobs:
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/skimage/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/MacOS/shapely/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/shapely/.dylibs
+        rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/.dylibs
+        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/.dylibs
 
     - name: Codesign (OSX)
       if: ${{ matrix.os == 'macos' }}
@@ -101,10 +166,6 @@ jobs:
       if: ${{ matrix.os == 'macos' }}
       run: ./standalone/dist/jdaviz.app/Contents/MacOS/jdaviz-cli imviz&
 
-    - name: Run jdaviz cmd in background
-      if: ${{ matrix.os != 'macos' }}
-      run: ./standalone/dist/jdaviz/jdaviz-cli imviz&
-
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
 
@@ -112,7 +173,7 @@ jobs:
       run: pip install pytest-playwright
 
     - name: Wait for Voila to get online
-      uses: ifaxity/wait-on-action@df89d0cf8089bb0c38e25279c74848ef313da53b  # v1.2.0
+      uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
       with:
         resource: tcp:8866
         timeout: 60000
@@ -126,14 +187,6 @@ jobs:
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
-
-    - name: Upload jdaviz standalone (non-OSX)
-      if: ${{ always() && (matrix.os != 'macos') }}
-      uses: actions/upload-artifact@v3
-      with:
-        name: jdaviz-standlone-${{ matrix.os }}
-        path: |
-          standalone/dist/jdaviz
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos') }}

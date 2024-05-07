@@ -19,22 +19,28 @@
       ></v-select>
     </v-row>
 
+    <v-row  v-if="config == 'cubeviz' && show_translator">
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="flux_or_sb_items.map(i => i.label)"
+        v-model="flux_or_sb_selected"
+        label="Flux or Surface Brightness"
+        hint="Select between Flux or Surface Brightness physical type for y-axis."
+        persistent-hint
+      ></v-select>
+    </v-row>
+
     <v-row>
       <v-select
         :menu-props="{ left: true }"
         attach
         :items="flux_unit_items.map(i => i.label)"
         v-model="flux_unit_selected"
-        label="Flux Unit"
-        hint="Global display unit for flux."
+        :label="flux_or_sb_selected === 'Flux' ? 'Flux Unit' : 'Surface Brightness Unit'"
+        :hint="flux_or_sb_selected === 'Flux' ? 'Global display unit for flux.' : 'Global display unit for surface brightness.'"
         persistent-hint
-        :disabled="config === 'cubeviz'"
       ></v-select>
-    </v-row>
-    <v-row v-if="config === 'cubeviz'">
-        <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-          Flux conversion is not yet implemented in Cubeviz.
-        </span>
     </v-row>
   </j-tray-plugin>
 </template>

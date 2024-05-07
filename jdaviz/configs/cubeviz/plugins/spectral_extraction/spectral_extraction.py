@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import astropy
-from astropy import units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
@@ -604,13 +603,3 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         for mark in self.marks.values():
             mark.update_xy(sp.spectral_axis.value, sp.flux.value)
             mark.visible = True
-
-    def translate_units(self, collapsed_spec):
-        # remove sr
-        if u.sr in collapsed_spec._unit.bases:
-            collapsed_spec._data *= collapsed_spec.meta['_pixel_scale_factor']
-            collapsed_spec._unit *= u.sr
-        # add sr
-        elif u.sr not in collapsed_spec._unit.bases:
-            collapsed_spec._data /= collapsed_spec.meta['_pixel_scale_factor']
-            collapsed_spec._unit /= u.sr

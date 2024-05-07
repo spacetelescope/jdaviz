@@ -554,8 +554,18 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
                 # Calculations have to happen in the frame of viewer display units.
                 disp_wave = sp.spectral_axis.to_value(viewer.state.x_display_unit, u.spectral())
-                disp_flux = sp.flux.to_value(viewer.state.y_display_unit,
-                                             u.spectral_density(sp.spectral_axis))
+
+                # temporarily here, may be removed after upstream units handling
+                # or will be generalized for any sb <-> flux
+                if '_pixel_scale_factor' in sp.meta:
+                    eqv = [(u.MJy / u.sr,
+                            u.MJy,
+                            lambda x: (x * sp.meta['_pixel_scale_factor']),
+                            lambda x: x)]
+                    disp_flux = sp.flux.to_value(viewer.state.y_display_unit, eqv)
+                else:
+                    disp_flux = sp.flux.to_value(viewer.state.y_display_unit,
+                                                 u.spectral_density(sp.spectral_axis))
 
                 # Out of range in spectral axis.
                 if (self.dataset.selected != lyr.layer.label and
