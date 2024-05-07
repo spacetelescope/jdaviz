@@ -16,6 +16,8 @@ Cubeviz
   the label of the flux cube) as well as to several plugins: model fitting, gaussian smooth,
   line analysis, and moment maps. [#2827]
 
+- Background subtraction support within Spectral Extraction. [#2859]
+
 Imviz
 ^^^^^
 
@@ -48,6 +50,8 @@ Cubeviz
 - In the Slice plugin, the following deprecated properties were removed: ``wavelength`` (use ``value``),
   ``wavelength_unit`` (use ``value_unit``), ``show_wavelength`` (use ``show_value``),
   ``slice`` (use ``value``). [#2878]
+
+- Spectral Extraction: renamed ``collapse_to_spectrum(...)`` to ``extract(...)``. [#2859]
 
 Imviz
 ^^^^^
