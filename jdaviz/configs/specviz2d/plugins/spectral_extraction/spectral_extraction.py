@@ -605,7 +605,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
     def _interaction_in_ext_step(self, event={}):
-        if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'ext')
+        if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
             return
 
