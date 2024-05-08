@@ -260,6 +260,9 @@ class SpectralExtraction(PluginTemplateMixin):
                                       default_text='From Plugin',
                                       filters=['is_trace'])
 
+        # Cache the actual calculated trace
+        self._bg_trace = None
+
         self.bg_statistic = SelectPluginComponent(self,
                                                   items='bg_statistic_items',
                                                   selected='bg_statistic_selected',
@@ -307,6 +310,9 @@ class SpectralExtraction(PluginTemplateMixin):
                                        selected='ext_trace_selected',
                                        default_text='From Plugin',
                                        filters=['is_trace'])
+
+        # Cache the actual calculated trace
+        self._ext_trace = None
 
         self.ext_type = SelectPluginComponent(self,
                                               items='ext_type_items',
@@ -527,6 +533,7 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_pixel', 'trace_peak_method_selected',
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
     @skip_if_not_tray_instance()
+    @skip_if_no_updates_since_last_active()
     def _interaction_in_trace_step(self, event={}):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'trace')
                 or not self.is_active):
@@ -559,7 +566,11 @@ class SpectralExtraction(PluginTemplateMixin):
             return
 
         try:
-            trace = self._get_bg_trace()
+            if event.get('name', '') == 'is_active' and self._bg_trace is not None:
+                trace = self._bg_trace
+            else:
+                trace = self._get_bg_trace()
+                self._bg_trace = trace
         except Exception:
             # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
             for mark in ['trace', 'bg1_center', 'bg1_lower', 'bg1_upper',
@@ -601,8 +612,8 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'bg'
         self._update_plugin_marks(event)
 
-    @observe('is_active', 'ext_dataset_selected', 'ext_trace_selected',
-             'ext_type_selected', 'ext_width', 'active_step')
+    @observe('is_active', 'active_step', 'ext_dataset_selected', 'ext_trace_selected',
+             'ext_type_selected', 'ext_width')
     @skip_if_not_tray_instance()
     def _interaction_in_ext_step(self, event={}):
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
@@ -611,7 +622,11 @@ class SpectralExtraction(PluginTemplateMixin):
             return
 
         try:
-            trace = self._get_ext_trace()
+            if event.get('name', '') == 'is_active' and self._ext_trace is not None:
+                trace = self._ext_trace
+            else:
+                trace = self._get_ext_trace()
+                self._ext_trace = trace
         except Exception:
             # NOTE: ignore error, but will be raised when clicking ANY of the export buttons
             for mark in ['trace', 'ext_lower', 'ext_upper']:
