@@ -421,6 +421,8 @@ class SpectralExtraction(PluginTemplateMixin):
                 raise ValueError("step must be one of: trace, bg, ext")
 
     # also listens to is_active from any _interaction_in_*_step methods
+    @observe('is_active', 'active_step')
+    @skip_if_not_tray_instance()
     def _update_plugin_marks(self, msg={}):
         if not self._do_marks:
             return
@@ -533,12 +535,13 @@ class SpectralExtraction(PluginTemplateMixin):
              'trace_trace_selected', 'trace_offset', 'trace_order',
              'trace_pixel', 'trace_peak_method_selected',
              'trace_do_binning', 'trace_bins', 'trace_window', 'active_step')
+    @skip_if_not_tray_instance()
+    @skip_if_no_updates_since_last_active()
     def _interaction_in_trace_step(self, event={}):
         if not self._do_marks:
             return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'trace')
                 or not self.is_active):
-            self._update_plugin_marks(event)
             return
 
         try:
@@ -554,17 +557,17 @@ class SpectralExtraction(PluginTemplateMixin):
         self._update_interactive_extract(event)
 
         self.active_step = 'trace'
-        self._update_plugin_marks(event)
 
     @observe('is_active', 'bg_dataset_selected', 'bg_type_selected',
              'bg_trace_selected', 'bg_trace_pixel',
              'bg_separation', 'bg_width', 'bg_statistic_selected', 'active_step')
+    @skip_if_not_tray_instance()
+    @skip_if_no_updates_since_last_active()
     def _interaction_in_bg_step(self, event={}):
         if not self._do_marks:
             return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step != 'bg')
                 or not self.is_active):
-            self._update_plugin_marks(event)
             return
 
         try:
@@ -608,16 +611,16 @@ class SpectralExtraction(PluginTemplateMixin):
         self._update_interactive_extract(event)
 
         self.active_step = 'bg'
-        self._update_plugin_marks(event)
 
     @observe('is_active', 'ext_dataset_selected', 'ext_trace_selected',
              'ext_type_selected', 'ext_width', 'active_step')
+    @skip_if_not_tray_instance()
+    @skip_if_no_updates_since_last_active()
     def _interaction_in_ext_step(self, event={}):
         if not self._do_marks:
             return
         if ((event.get('name', '') in ('active_step', 'is_active') and self.active_step not in ('ext', ''))  # noqa
                 or not self.is_active):
-            self._update_plugin_marks(event)
             return
 
         try:
@@ -643,7 +646,6 @@ class SpectralExtraction(PluginTemplateMixin):
         self._update_interactive_extract(event)
 
         self.active_step = 'ext'
-        self._update_plugin_marks(event)
 
         # TODO: remove this, the traitlet, and the row in spectral_extraction.vue
         # when specutils handles the warning/exception
