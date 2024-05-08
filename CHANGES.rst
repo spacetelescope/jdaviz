@@ -143,6 +143,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Histogram in Plot Options now uses random sampling to better
+  represent the data without sacrificing performance. [#2771]
+
 Cubeviz
 ^^^^^^^
 

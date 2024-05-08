@@ -4669,13 +4669,13 @@ class Plot(PluginSubcomponent):
         data = self.app.data_collection[label]
 
         # if not provided, fallback on existing data
-        length_mismatch = False
+        shape_mismatch = False
         for component in self._viewer_components:
             kwargs.setdefault(component, data[component])
-            if len(kwargs[component]) != len(data[component]):
-                length_mismatch = True
+            if np.asarray(kwargs[component]).shape != data[component].shape:
+                shape_mismatch = True
 
-        if not length_mismatch:
+        if not shape_mismatch:
             # then we can update the existing entry
             components = {c.label: c for c in data.components}
             data.update_components({components[comp]: kwargs[comp]
