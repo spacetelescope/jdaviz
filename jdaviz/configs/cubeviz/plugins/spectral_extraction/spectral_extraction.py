@@ -304,6 +304,43 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # TODO: allow selecting or associating an uncertainty cube?
             return None
 
+    @property
+    def spectral_display_unit(self):
+        return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
+
+    @property
+    def aperture_weight_mask(self):
+        # Exact slice mask of cone or cylindrical aperture through the cube. `shape_mask` is
+        # a 3D array with fractions of each pixel within an aperture at each
+        # wavelength, on the range [0, 1].
+        if self.aperture.selected == self.aperture.default_text:
+            # Entire Cube
+            return np.ones_like(self.dataset.selected_obj.flux)
+        return self.aperture.get_mask(self.dataset.selected_obj,
+                                      self.aperture_method_selected,
+                                      self.spectral_display_unit,
+                                      self.reference_spectral_value if self.wavelength_dependent else None)  # noqa
+
+    @property
+    def bg_weight_mask(self):
+        if self.background.selected == self.background.default_text:
+            # NO background
+            return np.zeros_like(self.dataset.selected_obj.flux)
+        return self.background.get_mask(self.dataset.selected_obj,
+                                        self.aperture_method_selected,
+                                        self.spectral_display_unit,
+                                        self.reference_spectral_value if self.bg_wavelength_dependent else None)  # noqa
+
+    @property
+    def aperture_area_along_spectral(self):
+        # Weight mask summed along the spatial axes so that we get area of the aperture, in pixels,
+        # as a function of wavelength.
+        return np.sum(self.aperture_weight_mask, axis=(0, 1))
+
+    @property
+    def bg_area_along_spectral(self):
+        return np.sum(self.bg_weight_mask, axis=(0, 1))
+
     def _extract_from_aperture(self, spectral_cube, uncert_cube, aperture, wavelength_dependent,
                                selected_func, **kwargs):
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
@@ -322,14 +359,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 )
             else:
                 uncertainties = None
-            # Exact slice mask of cone or cylindrical aperture through the cube. `shape_mask` is
-            # a 3D array with fractions of each pixel within an aperture at each
-            # wavelength, on the range [0, 1].
-            sp_display_unit = astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))  # noqa
-            shape_mask = aperture.get_mask(self.dataset.selected_obj,
-                                           self.aperture_method_selected,
-                                           sp_display_unit,
-                                           self.reference_spectral_value if wavelength_dependent else None)  # noqa
+
+            shape_mask = self.aperture_weight_mask
 
             if self.aperture_method_selected.lower() == 'center':
                 flux = nddata.data << nddata.unit
@@ -476,6 +507,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         """
         Create a background 1D spectrum from the input parameters defined in the plugin.
 
+        If ``function`` is 'sum', then the value is scaled by the relative ratios of the area
+        (along the spectral axis) of ``aperture`` to ``background``.
+
         Parameters
         ----------
         add_data : bool
@@ -489,10 +523,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             bg_spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
                                                   self.background, self.bg_wavelength_dependent,
                                                   self.function_selected.lower(), **kwargs)
+            if self.function_selected.lower() == 'sum':
+                # then scale according to aperture areas across the spectral axis (allowing for
+                # independent wavelength-dependence btwn the aperture and background)
+                bg_spec *= self.aperture_area_along_spectral / self.bg_area_along_spectral
         else:
             bg_spec = None
 
         if add_data:
+            if bg_spec is None:
+                raise ValueError(f"Background is set to {self.background.selected}")
             self.bg_spec_add_results.add_results_from_plugin(bg_spec, replace=False)
 
         return bg_spec
