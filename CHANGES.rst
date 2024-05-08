@@ -159,6 +159,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Cache calculated traces to prevent infinitely looping recalculation in some cases. [#2861]
+
 3.10 (2024-05-03)
 =================
 
