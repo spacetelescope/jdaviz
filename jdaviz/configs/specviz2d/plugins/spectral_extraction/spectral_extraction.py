@@ -416,7 +416,6 @@ class SpectralExtraction(PluginTemplateMixin):
             else:
                 raise ValueError("step must be one of: trace, bg, ext")
 
-    # also listens to is_active from any _interaction_in_*_step methods
     @observe('is_active', 'active_step')
     @skip_if_not_tray_instance()
     def _update_plugin_marks(self, msg={}):
