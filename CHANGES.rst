@@ -164,6 +164,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Prevent laggy behavior in trace previews for spectral extraction. [#2862]
+
 3.10 (2024-05-03)
 =================
 
