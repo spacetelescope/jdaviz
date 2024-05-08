@@ -341,6 +341,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def aperture_area_along_spectral(self):
         # Weight mask summed along the spatial axes so that we get area of the aperture, in pixels,
         # as a function of wavelength.
+        # To convert to steradians, multiply by self.spectral_cube.meta.get('PIXAR_SR', 1.0)
         return np.sum(self.aperture_weight_mask, axis=(0, 1))
 
     @property
@@ -483,7 +484,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             spec = spec - bg_spec
 
         # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
-        pix_scale_factor = self.aperture.scale_factor * self.spectral_cube.meta.get('PIXAR_SR', 1.0)
+        pix_scale_factor = self.aperture_area_along_spectral * self.spectral_cube.meta.get('PIXAR_SR', 1.0)  # noqa
         spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         # stuff for exporting to file
