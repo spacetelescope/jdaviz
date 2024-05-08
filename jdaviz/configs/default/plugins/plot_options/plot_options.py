@@ -4,9 +4,8 @@ import os
 import matplotlib
 import numpy as np
 
-from astropy.visualization import (
-    ManualInterval, ContrastBiasStretch, PercentileInterval
-)
+from astropy.visualization import ManualInterval, ContrastBiasStretch
+
 from echo import delay_callback
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
@@ -35,6 +34,8 @@ from scipy.interpolate import PchipInterpolator
 from photutils.utils import make_random_cmap
 
 __all__ = ['PlotOptions']
+
+RANDOM_SUBSET_SIZE = 10_000
 
 
 def _register_random_cmap(
@@ -973,13 +974,8 @@ class PlotOptions(PluginTemplateMixin):
                 x_max = x_limits.max()
                 y_min = max(y_limits.min(), 0)
                 y_max = y_limits.max()
-                arr = comp.data[y_min:y_max, x_min:x_max]
-                if self.config == "imviz":
-                    # Downsample input data to about 400px (as per compass.vue) for performance.
-                    xstep = max(1, round(arr.shape[1] / 400))
-                    ystep = max(1, round(arr.shape[0] / 400))
-                    arr = arr[::ystep, ::xstep]
-                sub_data = arr.ravel()
+
+                sub_data = comp.data[y_min:y_max, x_min:x_max]
 
             else:
                 # spectrum-2d-viewer, for example.  We'll assume the viewer
@@ -996,28 +992,29 @@ class PlotOptions(PluginTemplateMixin):
                                 (y_data >= viewer.state.y_min) &
                                 (y_data <= viewer.state.y_max))
 
-                sub_data = comp.data[inds].ravel()
+                sub_data = comp.data[inds]
 
         else:
-            if self.config == "imviz":
-                # Downsample input data to about 400px (as per compass.vue) for performance.
-                xstep = max(1, round(data.shape[1] / 400))
-                ystep = max(1, round(data.shape[0] / 400))
-                arr = comp[::ystep, ::xstep]
-            else:
-                # include all data, regardless of zoom limits
-                arr = comp.data
-            sub_data = arr.ravel()
+            # include all data, regardless of zoom limits
+            sub_data = comp.data
 
-        # filter out nans (or else bqplot will fail)
-        if np.any(np.isnan(sub_data)):
-            sub_data = sub_data[~np.isnan(sub_data)]
-
+        self.stretch_histogram.viewer.state.random_subset = RANDOM_SUBSET_SIZE
         self.stretch_histogram._update_data('histogram', x=sub_data)
 
         if len(sub_data) > 0:
-            interval = PercentileInterval(95)
-            hist_lims = interval.get_limits(sub_data)
+
+            # Use glue to compute the statistics since this allows us to use
+            # a random subset of the data to compute the histogram.
+            # The 2.5 and 97.5 hardcoded here is equivalent to
+            # PercentileInterval(95).get_limits(sub_data)
+            glue_data = self.stretch_histogram.app.data_collection['histogram']
+            hist_lims = (
+                glue_data.compute_statistic('percentile', glue_data.id['x'],
+                                            percentile=2.5, random_subset=RANDOM_SUBSET_SIZE),
+                glue_data.compute_statistic('percentile', glue_data.id['x'],
+                                            percentile=97.5, random_subset=RANDOM_SUBSET_SIZE)
+            )
+
             # set the stepsize for vmin/vmax to be approximately 1% of the range of the
             # histogram (within the percentile interval), rounded to 1-2 significant digits
             # to avoid random step sizes.  This logic is somewhat arbitrary and can be safely
