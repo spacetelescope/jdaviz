@@ -260,7 +260,8 @@ class SpectralExtraction(PluginTemplateMixin):
                                       default_text='From Plugin',
                                       filters=['is_trace'])
 
-        # Cache the actual calculated trace
+        # Cache the actual calculated trace. IMPORTANT: Only use for interactive previews,
+        # we should always recalculate when user is calling a method
         self._bg_trace = None
 
         self.bg_statistic = SelectPluginComponent(self,
@@ -311,7 +312,8 @@ class SpectralExtraction(PluginTemplateMixin):
                                        default_text='From Plugin',
                                        filters=['is_trace'])
 
-        # Cache the actual calculated trace
+        # Cache the actual calculated trace. IMPORTANT: Only use for interactive previews,
+        # we should always recalculate when user is calling a method
         self._ext_trace = None
 
         self.ext_type = SelectPluginComponent(self,
