@@ -85,9 +85,30 @@ jobs:
       run: python -m pip install --upgrade pip tox
     - name: Test/run with tox
       run: tox -e ${{ matrix.toxenv }} -- ${{ matrix.toxposargs }}
-    - name: Upload coverage to codecov
+    - name: Upload coverage to artifacts
       if: "contains(matrix.toxenv, '-cov')"
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage_${{ matrix.toxenv }}.xml
+        path: coverage.xml
+        if-no-files-found: error
+
+  upload-codecov:
+    needs: [ ci_tests ]
+    permissions:
+      contents: none
+    runs-on: ubuntu-latest
+    name: Upload Coverage
+    steps:
+    - name: Download coverage artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: coverage
+        pattern: coverage_*
+        merge-multiple: true
+    - name: Upload report to Codecov
       uses: codecov/codecov-action@v4
       with:
-        file: ./coverage.xml
+        directory: coverage
+        fail_ci_if_error: true
         verbose: true
