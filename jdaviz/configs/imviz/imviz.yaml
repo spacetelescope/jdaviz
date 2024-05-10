@@ -21,6 +21,7 @@ toolbar:
 tray:
   - g-metadata-viewer
   - imviz-orientation
+  - VoPlugin
   - g-plot-options
   - g-data-quality
   - g-subset-tools
