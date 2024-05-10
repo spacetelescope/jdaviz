@@ -98,18 +98,26 @@ def calc_compass(image_wcs, x, y, len_deg_e, len_deg_n):
 
 
 def calc_compass_radius(image_wcs, x, y, radius_px):
-    xe, ye = add_offset_xy(image_wcs, x, y, 1.0, 0.0)
-    xn, yn = add_offset_xy(image_wcs, x, y, 0.0, 1.0)
+
+    # Define an angular length we can use to determine the pixel scale
+    # along east and north - we want to make sure we use a small length so
+    # that the offset points still fall inside the image in case they have
+    # a bounding box set.
+
+    delta = 0.1 / 3600  # 0.1 arcsec
+
+    xe, ye = add_offset_xy(image_wcs, x, y, delta, 0.0)
+    xn, yn = add_offset_xy(image_wcs, x, y, 0.0, delta)
 
     # now calculate the length in pixels of those arcs
     # (planar geometry is good enough here)
-    px_per_deg_e = math.sqrt(math.fabs(ye - y) ** 2 + math.fabs(xe - x) ** 2)
-    px_per_deg_n = math.sqrt(math.fabs(yn - y) ** 2 + math.fabs(xn - x) ** 2)
+    px_per_delta_e = math.sqrt(math.fabs(ye - y) ** 2 + math.fabs(xe - x) ** 2)
+    px_per_delta_n = math.sqrt(math.fabs(yn - y) ** 2 + math.fabs(xn - x) ** 2)
 
     # now calculate the arm length in degrees for each arm
     # (this produces same-length arms)
-    len_deg_e = radius_px / px_per_deg_e
-    len_deg_n = radius_px / px_per_deg_n
+    len_deg_e = radius_px / px_per_delta_e * delta
+    len_deg_n = radius_px / px_per_delta_n * delta
 
     return calc_compass(image_wcs, x, y, len_deg_e, len_deg_n)
 
