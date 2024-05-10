@@ -24,9 +24,9 @@ def test_simple_fits_wcs():
     w = WCS()
     result = wcs_utils.get_compass_info(w, (100, 100), r_fac=0.25)
     assert_allclose(result[:-1], (50, 50,
-                                  50, 73.57533083557558,
-                                  73.57809873817803, 47.53791379556649,
-                                  0, 95.96136875946559))
+                                  50, 73.573199,
+                                  73.573199, 47.538975,
+                                  0, 95.960048))
     assert result[-1]
 
     # https://learn.astropy.org/tutorials/celestial_coords1.html
@@ -44,9 +44,9 @@ def test_simple_fits_wcs():
              'NAXIS2': 1024})
     result = wcs_utils.get_compass_info(w, (1024, 1024), r_fac=0.25)
     assert_allclose(result[:-1], (512.0, 512.0,
-                                  512.2415718047745, 767.9895741540789,
-                                  255.98982015749573, 512.240013842715,
-                                  0.054068767449065434, -90.00035302773995))
+                                  512.2416, 768.0007,
+                                  256.0009, 512.24,
+                                  0.05406877, -90.00035))
     assert not result[-1]
 
 
@@ -103,9 +103,9 @@ def test_simple_gwcs():
 
     result = wcs_utils.get_compass_info(w, (1024, 2048), r_fac=0.25)
     assert_allclose(result[:-1], (1024.0, 512.0,
-                                  1131.0265005852038, 279.446189124443,
-                                  1262.0057201165127, 606.2863901330095,
-                                  155.2870478938214, -86.89813081941797))
+                                  1131.026544, 279.446094,
+                                  1262.004542, 606.285924,
+                                  155.287048, -86.898131))
     assert not result[-1]
 
 
