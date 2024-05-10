@@ -107,10 +107,10 @@ jobs:
         pattern: coverage_*
         merge-multiple: true
     - name: Upload report to Codecov
+      if: ${{ hashFiles('coverage/') != '' }}
       uses: codecov/codecov-action@v4
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       with:
+        token: ${{ secrets.CODECOV_TOKEN }}
         directory: coverage
         fail_ci_if_error: true
         verbose: true
