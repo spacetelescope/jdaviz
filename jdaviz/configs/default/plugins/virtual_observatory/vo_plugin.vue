@@ -36,7 +36,7 @@
           <v-text-field
           v-model="source"
           label="Source or Coordinates"
-          hint="Enter a source name or Coordinates to center your query on"
+          hint="Enter a source name or ICRS coordinates in degrees to center your query on"
           persistent-hint>
           </v-text-field>
       </v-row>
