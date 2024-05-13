@@ -85,12 +85,12 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             sia_service = self._full_registry_results[self.resource_selected].get_service(service_type="sia")
             try:
                 # First parse user-provided source as direct coordinates
-                coord = SkyCoord(self.source)
+                coord = SkyCoord(self.source, unit=u.deg)
             except:
                 try:
                     # If that didn't work, try parsing it as an object name
                     coord = SkyCoord.from_name(self.source)
-                except:
+                except Exception:
                     raise LookupError(f"Unable to resolve source coordinates: {self.source}")
 
             # Once coordinate lookup is complete, search service using these coords.
