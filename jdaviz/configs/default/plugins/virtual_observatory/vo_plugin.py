@@ -100,7 +100,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     format='image/fits')
             if len(sia_results) == 0:
                 self.hub.broadcast(SnackbarMessage(
-                    f"No observations returned at coords {coord} from VO SIA resource: {sia_service.SOMETHING}", sender=self, color="error"))
+                    f"No observations returned at coords {coord} from VO SIA resource: {sia_service.baseurl}", sender=self, color="error"))
             else:
                 self.hub.broadcast(SnackbarMessage(
                     f"{len(sia_results)} SIA results found!", sender=self, color="success"))
