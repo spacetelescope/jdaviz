@@ -504,3 +504,17 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
         (spectrum_1 + spectrum_2).flux.value,
         (spectrum_3).flux.value
     )
+
+
+def test_spectral_extraction_with_correct_sum_units(cubeviz_helper,
+                                                    spectrum1d_cube_fluxunit_jy_per_steradian):
+    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
+    spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
+    collapsed = spec_extr_plugin.extract()
+    np.testing.assert_allclose(
+        collapsed.flux.value,
+        [3800., 11800., 19800., 27800., 35800., 43800., 51800., 59800., 67800., 75800.]
+
+    )
+    assert collapsed.flux.unit == u.Jy
+    assert collapsed.uncertainty.unit == u.Jy

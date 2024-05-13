@@ -214,7 +214,7 @@ def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4), with_u
                 "TELESCOP": "JWST", "BUNIT": fluxunit.to_string(), "PIXAR_A2": 0.01}
     w = WCS(wcs_dict)
     if with_uncerts:
-        uncert = StdDevUncertainty(np.abs(np.random.normal(flux) * u.Jy))
+        uncert = StdDevUncertainty(np.abs(np.random.normal(flux) * fluxunit))
 
         return Spectrum1D(flux=flux,
                           uncertainty=uncert,
@@ -254,6 +254,12 @@ def spectrum1d_cube_largest():
 @pytest.fixture
 def spectrum1d_cube_custom_fluxunit():
     return _create_spectrum1d_cube_with_fluxunit
+
+
+@pytest.fixture
+def spectrum1d_cube_fluxunit_jy_per_steradian():
+    return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy/u.sr, shape=(10, 4, 5),
+                                                 with_uncerts=True)
 
 
 @pytest.fixture
