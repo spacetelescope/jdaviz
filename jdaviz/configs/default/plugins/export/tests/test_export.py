@@ -153,6 +153,10 @@ class TestExportSubsets:
         assert fits_region[4] == 0.0
 
         # now test changing file format
+        export_plugin.subset_format.selected = 'ecsv'
+        export_plugin.export()
+        assert os.path.isfile(export_plugin.filename.value)
+
         export_plugin.subset_format.selected = 'reg'
         export_plugin.export()
         assert os.path.isfile(export_plugin.filename.value)
@@ -191,10 +195,6 @@ class TestExportSubsets:
         with pytest.raises(ValueError,
                            match=re.escape("x not one of ['fits', 'reg', 'ecsv'], reverting selection to reg")):  # noqa
             export_plugin.subset_format.selected = 'x'
-
-        # Test that selecting disabled option raises an error
-        with pytest.raises(ValueError, match="Cannot export Subset 1 in ecsv format, reverting selection to fits"):  # noqa
-            export_plugin.subset_format.selected = 'ecsv'
 
         # test that attempting to save a composite subset raises an error
         cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
