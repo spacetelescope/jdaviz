@@ -81,6 +81,8 @@ Other Changes and Additions
 New Features
 ------------
 
+- Enable exporting spatial regions to ECSV files readable by ``astropy.table.Table``. [#2847]
+
 Cubeviz
 ^^^^^^^
 
