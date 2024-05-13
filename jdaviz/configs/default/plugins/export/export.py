@@ -16,7 +16,8 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectralRegion
+from astropy.table import Table
 from astropy import units as u
 from astropy.nddata import CCDData
 
@@ -266,7 +267,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if self.app._is_subset_spectral(subset[0]):
                 good_formats = ["ecsv"]
             else:
-                good_formats = ["fits", "reg"]
+                good_formats = ["fits", "reg", "ecsv"]
             for item in self.subset_format_items:
                 if item["label"] in good_formats:
                     item["disabled"] = False
@@ -288,8 +289,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if self.app._is_subset_spectral(subset[0]):
             if event['new'] != "ecsv":
                 bad_combo = True
-        elif event['new'] == "ecsv":
-            bad_combo = True
 
         if bad_combo:
             # Set back to a good value and raise error
@@ -701,8 +700,49 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         region.write(filename, overwrite=True)
 
     def save_subset_as_table(self, filename):
-        region = self.app.get_subsets(subset_name=self.subset.selected)
-        region.write(filename)
+        link_type = getattr(self.app, '_link_type', None)
+
+        region = self.app.get_subsets(subset_name=self.subset.selected,
+                                      include_sky_region=link_type == 'wcs')
+
+        if isinstance(region, SpectralRegion):
+            # specutils handles this for SpectralRegion
+            region.write(filename)
+        else:
+            region = region[0][f'{"sky_" if link_type == "wcs" else ""}region']
+
+            attributes = []
+            att_values = []
+            att_units = []
+            for att in ("angle", "center", "height", "width", "radius"):
+                if hasattr(region, att):
+                    attribute = getattr(region, att)
+                    if att == "center":
+                        if link_type == "wcs":
+                            ra = attribute.ra
+                            dec = attribute.dec
+                            attributes += ["center_ra", "center_dec"]
+                            att_values += [ra.value, dec.value]
+                            att_units += [str(ra.unit), str(dec.unit)]
+                        else:
+                            x = attribute.x
+                            y = attribute.y
+                            attributes += ["center_x", "center_y"]
+                            att_values += [x, y]
+                            att_units += ["pix", "pix"]
+                    else:
+                        attributes.append(att)
+
+                        if isinstance(attribute, u.Quantity):
+                            att_values.append(attribute.value)
+                            att_units.append(str(attribute.unit))
+                        else:
+                            att_values.append(attribute)
+                            att_units.append("pix")
+
+            table = Table([attributes, att_values, att_units], names=("attribute", "value", "unit"))
+            print(table)
+            table.write(filename, overwrite=True)
 
     def vue_interrupt_recording(self, *args):  # pragma: no cover
         self.movie_interrupt = True
