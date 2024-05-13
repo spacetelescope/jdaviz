@@ -714,7 +714,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             attributes = []
             att_values = []
             att_units = []
-            for att in ("angle", "center", "height", "width", "radius"):
+            for att in ("angle", "center", "height", "width", "radius", "inner_radius",
+                        "outer_radius"):
                 if hasattr(region, att):
                     attribute = getattr(region, att)
                     if att == "center":
