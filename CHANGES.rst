@@ -1,4 +1,4 @@
-3.10.1 (unreleased)
+3.10.1 (2024-05-14)
 ===================
 
 Bug Fixes
@@ -9,15 +9,6 @@ Cubeviz
 
 - Fix Data Quality plugin bug that attempted to apply array compositing logic to
   spatial subsets. [#2854]
-
-Imviz
-^^^^^
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
