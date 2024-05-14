@@ -3,6 +3,8 @@ from astropy.io import fits
 from astropy import units as u
 from pyvo.utils import vocabularies
 from pyvo import registry
+from pyvo.dal.exceptions import DALFormatError
+from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Dict, Bool, Unicode, Any, List, Int
 
 from jdaviz.core.events import SnackbarMessage
@@ -59,9 +61,12 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             if event is not None:
                 self._full_registry_results = registry.search(registry.Servicetype("sia"), registry.Waveband(self.waveband_selected))
                 self.resources = list(self._full_registry_results.getcolumn("short_name"))
-        except Exception:
-            # TODO: Catch connection error
-            raise
+        except DALFormatError as e:
+            if type(e.cause) is RequestConnectionError:
+                self.hub.broadcast(SnackbarMessage(
+                        f"Unable to connect to VO registry. Please check your internet connection: {e}", sender=self, color="error"))
+            else:
+                raise e
         finally:
             self.resources_loading = False # Stop loading bar
 
