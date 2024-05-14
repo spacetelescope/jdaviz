@@ -137,14 +137,32 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-3.10.1 (unreleased)
+3.10.2 (unreleased)
 ===================
 
 Bug Fixes
 ---------
 
-- Histogram in Plot Options now uses random sampling to better
-  represent the data without sacrificing performance. [#2771]
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.10.1 (2024-05-14)
+===================
+
+Bug Fixes
+---------
 
 Cubeviz
 ^^^^^^^
