@@ -9,7 +9,7 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.utils import standardize_metadata
+from jdaviz.utils import standardize_metadata, download_uri_to_path
 
 
 __all__ = ["specviz_spectrum1d_parser"]
@@ -17,7 +17,7 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
 def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False):
+                              concat_by_file=False, cache=False):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -58,6 +58,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             # list treated as SpectrumList if not an HDUList
             data = SpectrumList.read(data, format=format)
     else:
+        # try parsing file_obj as a URI/URL:
+        data = download_uri_to_path(data, cache=cache)
+
         path = pathlib.Path(data)
 
         if path.is_file():

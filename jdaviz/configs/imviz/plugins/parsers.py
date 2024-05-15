@@ -14,7 +14,7 @@ from stdatamodels import asdf_in_fits
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY, _wcs_only_label
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY, _wcs_only_label, download_uri_to_path
 
 try:
     from roman_datamodels import datamodels as rdd
@@ -43,7 +43,7 @@ def prep_data_layer_as_dq(data):
 
 
 @data_parser_registry("imviz-data-parser")
-def parse_data(app, file_obj, ext=None, data_label=None, parent=None):
+def parse_data(app, file_obj, ext=None, data_label=None, parent=None, cache=False):
     """Parse a data file into Imviz.
 
     Parameters
@@ -64,6 +64,9 @@ def parse_data(app, file_obj, ext=None, data_label=None, parent=None):
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
+
+        # try parsing file_obj as a URI/URL:
+        file_obj = download_uri_to_path(file_obj, cache=cache)
 
         # If file_obj is a path to a cached file from
         # astropy.utils.data.download_file, the path has no file extension.

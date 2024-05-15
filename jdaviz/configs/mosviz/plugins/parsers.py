@@ -16,7 +16,7 @@ from specutils.io.default_loaders.jwst_reader import identify_jwst_s2d_multi_fit
 from jdaviz.configs.imviz.plugins.parsers import get_image_data_iterator
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
 __all__ = ['mos_spec1d_parser', 'mos_spec2d_parser', 'mos_image_parser']
 
@@ -259,7 +259,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False, ext=1, transpose=False):
+                      show_in_viewer=False, ext=1, transpose=False, cache=True):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -347,6 +347,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             # If we got a filepath, first try and parse using the Spectrum1D and
             # SpectrumList parsers, and then fall back to parsing it as a generic
             # FITS file.
+
+            # try parsing file_obj as a URI/URL:
+            data = download_uri_to_path(data, cache=cache)
+
             if _check_is_file(data):
                 try:
                     if ext != 1 or transpose:

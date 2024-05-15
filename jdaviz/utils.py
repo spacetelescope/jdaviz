@@ -2,11 +2,15 @@ import os
 import time
 import threading
 from collections import deque
+from urllib.parse import urlparse
 
 import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
+from astropy.utils.data import download_file
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astroquery.mast import Observations
+
 from glue.config import settings
 from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
@@ -14,7 +18,8 @@ from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
 from ipyvue import watch
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
-           'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type']
+           'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type',
+           'download_uri_to_path']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 
@@ -385,3 +390,52 @@ class MultiMaskSubsetState(SubsetState):
     def __setgluestate__(cls, rec, context):
         masks = {key: context.object(value) for key, value in rec['masks'].items()}
         return cls(masks=masks)
+
+
+def download_uri_to_path(possible_uri, cache=False, local_path=None):
+    """
+    Retrieve data from a URI (or a URL). Return the input if it
+    cannot be parsed as a URI.
+
+    Parameters
+    ----------
+    possible_uri : str or other
+
+    cache: bool, optional
+        Cache file after download. Default is False.
+    local_path : str, optional
+        Save the downloaded file to this path. Default is to
+        save the file with its remote filename in the current
+        working directory.
+
+    Returns
+    -------
+    possible_uri : str or other
+        If ``possible_uri`` cannot be retrieved as a URI, returns the input argument
+        unchanged. If ``possible_uri`` can be retrieved as a URI, returns the
+        local path to the downloaded file.
+    """
+    if not isinstance(possible_uri, str):
+        # only try to parse strings:
+        return possible_uri
+
+    if os.path.exists(possible_uri):
+        # don't try to parse file paths:
+        return possible_uri
+
+    parsed_uri = urlparse(possible_uri)
+
+    if parsed_uri.scheme.lower() == 'mast':
+        Observations.download_file(possible_uri, cache=cache, local_path=local_path)
+
+        if local_path is None:
+            # if not specified, this is the default location:
+            local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
+
+        return local_path
+
+    elif parsed_uri.scheme.lower() in ['http', 'https', 'ftp']:
+        return download_file(possible_uri, cache=cache)
+
+    # assume this isn't a URI after all:
+    return possible_uri

@@ -12,7 +12,7 @@ from specutils import Spectrum1D
 
 from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
 
 __all__ = ['parse_data']
@@ -23,7 +23,7 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, data_type=None, data_label=None, parent=None):
+def parse_data(app, file_obj, data_type=None, data_label=None, parent=None, cache=True):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -65,6 +65,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None, parent=None):
             _parse_gif(app, file_obj, data_label,
                        flux_viewer_reference_name=flux_viewer_reference_name)
             return
+
+        # try parsing file_obj as a URI/URL:
+        file_obj = download_uri_to_path(file_obj, cache=cache)
 
         file_name = os.path.basename(file_obj)
 

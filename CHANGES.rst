@@ -114,6 +114,8 @@ Other Changes and Additions
 New Features
 ------------
 
+- Load remote data from a URI or URL. [#2875]
+
 Cubeviz
 ^^^^^^^
 
