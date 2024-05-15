@@ -742,7 +742,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                             att_units.append("pix")
 
             table = Table([attributes, att_values, att_units], names=("attribute", "value", "unit"))
-            print(table)
+            table.meta["Region Class"] = str(type(region))
             table.write(filename, overwrite=True)
 
     def vue_interrupt_recording(self, *args):  # pragma: no cover
