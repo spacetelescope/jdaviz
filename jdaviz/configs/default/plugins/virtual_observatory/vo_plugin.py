@@ -81,7 +81,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
         then attempts to parse as a target name.
         """
+        # Reset Table
         self.table.items = []
+        self._populate_url_only = False
+        self.table.headers_visible = ["Title", "Instrument", "DateObs"]
+
         self.results_loading = True # Start loading spinner
         try:
             # Query SIA service
@@ -118,18 +122,19 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             self.results_loading = False # Stop loading spinner
 
         try:
-            if self._populate_url_only:
-                self.table.headers_visible = ["URL"]
-            else:
-                self.table.headers_visible = ["Title", "Instrument", "DateObs"]
             for result in sia_results:
-                if self._populate_url_only:
-                    self.table.add_item({"URL": str(result.getdataurl())})
-                else:
-                    self.table.add_item({"Title": str(result.title),
-                                        "URL": str(result.getdataurl()),
-                                        "Instrument": str(result.instr),
-                                        "DateObs": str(result.dateobs)})
+                table_entry = {"URL": result.getdataurl()}
+                if not self._populate_url_only:
+                    try:
+                        table_entry["Title"] = str(result.title)
+                        table_entry["Instrument"] = str(result.instr)
+                        table_entry["DateObs"] = str(result.dateobs)
+                    except Exception as e:
+                        self.hub.broadcast(SnackbarMessage(
+                            f"Unable to get metadata columns. Switching table to URL-only: {e}", sender=self, color="warning"))
+                        self.table.headers_visible = ["URL"]
+                        self._populate_url_only = True
+                self.table.add_item(table_entry)
             self.hub.broadcast(SnackbarMessage(
                     f"{len(sia_results)} SIA results populated!", sender=self, color="success"))
         except Exception as e:
@@ -142,13 +147,9 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.data_loading = True # Start loading spinner
         for entry in self.table.selected_rows:
             try:
-                if self._populate_url_only:
-                    data_label = f"{self.source}_{self.resource_selected}_{entry['URL']}"
-                else:
-                    data_label = f"{self.source}_{self.resource_selected}_{entry['Title']}"
                 self.app._jdaviz_helper.load_data(
                     fits.open(str(entry["URL"])), # Open URL as FITS object
-                    data_label=data_label)
+                    data_label=f"{self.source}_{self.resource_selected}_{entry.get('Title', entry.get('URL', ''))}")
             except Exception as e:
                 self.hub.broadcast(SnackbarMessage(
                     f"Unable to load file to viewer: {entry['URL']}: {e}", sender=self, color="error"))
