@@ -7,6 +7,7 @@ from astropy.io import fits
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
 from astroquery.mast import Observations
+import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
 from glue.core.roi import XRangeROI
@@ -277,3 +278,46 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
     sky_cube = cubeviz_helper.app.data_collection[0].meta["_orig_spec"].wcs.celestial.pixel_to_world(30, 50)  # noqa: E501
     assert_allclose((sky_moment.ra.deg, sky_moment.dec.deg),
                     (sky_cube.ra.deg, sky_cube.dec.deg))
+
+
+def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
+
+    # test that the output unit labels in the moment map plugin reflect any
+    # changes made in the unit conversion plugin.
+    # NOTE: for now this is limited to moment 0, test should be expanded to
+    # test higher-order moments once implemented.
+
+    sb_cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr)
+
+    # load surface brigtness cube
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
+        cubeviz_helper.load_data(sb_cube, data_label='test')
+
+    mm = cubeviz_helper.plugins['Moment Maps']._obj
+    mm.open_in_tray()  # plugin has to be open for unit change to take hold
+
+    # check that label is initialized with 'Surface Brightness' since the cube
+    # loaded is in MJy / sr. for the 0th moment, the only item will be the 0th
+    # in this list. also check that the initial unit is correct.
+    output_unit_moment_0 = mm.output_unit_items[0]
+    assert output_unit_moment_0['label'] == 'Surface Brightness'
+    assert output_unit_moment_0['unit_str'] == 'MJy / sr'
+
+    # check that calculated moment has the correct units
+    mm.calculate_moment()
+    assert mm.moment.unit == 'MJy / sr'
+
+    # now change surface brightness units in the unit conversion plugin
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    uc.open_in_tray()  # plugin has to be open for unit change to take hold
+    uc.flux_or_sb_unit = 'Jy / sr'
+
+    # and make sure this change is propogated
+    output_unit_moment_0 = mm.output_unit_items[0]
+    assert output_unit_moment_0['label'] == 'Surface Brightness'
+    assert output_unit_moment_0['unit_str'] == 'Jy / sr'
+
+    # and that calculated moment has the correct units
+    mm.calculate_moment()
+    assert mm.moment.unit == 'Jy / sr'
