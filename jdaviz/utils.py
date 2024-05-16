@@ -397,12 +397,23 @@ def download_uri_to_path(possible_uri, cache=False, local_path=None):
     Retrieve data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
 
+    If ``possible_uri`` is a MAST URI, the file will be retrieved via
+    astroquery's `~astroquery.mast.Observations.download_file`.
+    If ``possible_uri`` is a URL, it will be retrieved via astropy with
+    `~astropy.utils.data.download_file`.
+
     Parameters
     ----------
     possible_uri : str or other
-
-    cache: bool, optional
-        Cache file after download. Default is False.
+        This input will be returned without changes if it is not a string,
+        or if it is a local file path to an existing file. Otherwise,
+        it will be parsed as a URI. Local file URIs beginning with ``file://``
+        are not supported by this method – nor are they necessary, since string
+        paths without the scheme work fine! Cloud FITS are not yet supported.
+    cache: bool or "update", optional
+        Cache file after download. Default is False. If ``possible_uri`` is a
+        URL, ``cache`` may be a boolean or ``"update"``, see documentation for
+        `~astropy.utils.data.download_file` for details.
     local_path : str, optional
         Save the downloaded file to this path. Default is to
         save the file with its remote filename in the current
@@ -436,6 +447,10 @@ def download_uri_to_path(possible_uri, cache=False, local_path=None):
 
     elif parsed_uri.scheme.lower() in ['http', 'https', 'ftp']:
         return download_file(possible_uri, cache=cache)
+
+    else:
+        raise ValueError(f"URI {possible_uri} with scheme {parsed_uri.scheme} is not "
+                         f"currently supported.")
 
     # assume this isn't a URI after all:
     return possible_uri
