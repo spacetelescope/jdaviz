@@ -6,7 +6,6 @@ from functools import cached_property
 import numpy as np
 from astropy import units as u
 from astropy.units import UnitsWarning
-from astropy.utils.decorators import deprecated
 from traitlets import Bool, Int, Unicode, observe
 
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator, WithSliceSelection,
@@ -150,39 +149,8 @@ class Slice(PluginTemplateMixin):
         return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
 
     @property
-    @deprecated(since="3.9", alternative="value")
-    def wavelength(self):
-        return self.user_api.value
-
-    @property
-    @deprecated(since="3.9", alternative="value_unit")
-    def wavelength_unit(self):
-        return self.user_api.value_unit
-
-    @property
-    @deprecated(since="3.9", alternative="show_value")
-    def show_wavelength(self):
-        return self.user_api.show_value
-
-    @property
-    @deprecated(since="3.9", alternative="value")
-    def slice(self):
-        # this assumes the first slice_selection_viewer (and layer)
-        return self.slice_selection_viewers[0].slice
-
-    @slice.setter
-    @deprecated(since="3.9", alternative="value")
-    def slice(self, slice):
-        # this assumes the first slice_selection_viewer (and layer)
-        value = self.slice_selection_viewers[0].slice_values[slice]
-        self.value = value
-
-    @property
     def user_api(self):
-        # NOTE: remove slice, wavelength, show_wavelength after deprecation period
-        expose = ['slice', 'wavelength', 'show_wavelength',
-                  'value',
-                  'show_indicator', 'show_value']
+        expose = ['value', 'show_indicator', 'show_value']
         if self.allow_disable_snapping:
             expose += ['snap_to_slice']
         return PluginUserApi(self, expose=expose)

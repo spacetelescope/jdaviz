@@ -42,14 +42,25 @@ Cubeviz
   spectrum in ``dataset``.  This affects: model fitting, gaussian smooth, line analysis,
   and moment maps. [#2827]
 
+- Removed deprecated ``cubeviz.select_slice()`` method. Use ``cubeviz.select_wavelength()``
+  instead. [#2878]
+
+- In the Slice plugin, the following deprecated properties were removed: ``wavelength`` (use ``value``),
+  ``wavelength_unit`` (use ``value_unit``), ``show_wavelength`` (use ``show_value``),
+  ``slice`` (use ``value``). [#2878]
+
 Imviz
 ^^^^^
+
+- Deprecated Rotate Canvas plugin was removed; use Orientation plugin instead. [#2878]
 
 Mosviz
 ^^^^^^
 
 Specviz
 ^^^^^^^
+
+- In the Line Analysis plugin, deprecated ``width`` was removed (use ``continuum_width``). [#2878]
 
 Specviz2d
 ^^^^^^^^^

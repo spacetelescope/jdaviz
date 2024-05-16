@@ -260,7 +260,7 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
     assert 'Subset 1' in plugin.spectral_subset.labels
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.spectral_subset_selected = 'Subset 1'
-    plugin.width = 11
+    plugin.continuum_width = 11
     assert plugin.results[0]['result'] == ''
 
 

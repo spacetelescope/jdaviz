@@ -197,10 +197,6 @@ For an image with a valid WCS, the compass will show directions to North (N)
 and East (E) for ICRS sky coordinates. It also shows the currently displayed
 data label, the X and Y directions, and the zoom box.
 
-Note that when the axes canvas is rotated (by :ref:`rotate-canvas`), the zoom box corresponds
-to the set zoom limits, not the extent of the viewer.  Instead, the compass image itself is
-shown rotated/flipped to the same orientation.
-
 When you have multiple viewers created in Imviz, use the Viewer dropdown menu
 to change the active viewer that it tracks.
 
@@ -400,30 +396,12 @@ To import a regions file or object from the API:
   fp.import_region(region)
 
 
-
 .. _rotate-canvas:
 
 Canvas Rotation
 ===============
 
-.. note::
-
-    This plugin is deprecated in favor of rotation via :ref:`imviz-orientation` and will be removed
-    in a future release.
-
-The canvas rotation plugin allows rotating and horizontally flipping the image to any arbitrary
-value by rotating the canvas axes themselves.  Note that this does not affect the underlying data, and
-exporting data to the notebook via the API will therefore not exhibit the same rotation.
-
-The :ref:`imviz-compass` will also rotate (and flip) accordingly, but will show the zoom box
-corresponding to the zoom limits, not the region shown in the viewer itself.
-
-Presets are provided to reset the orientation as well as to set north up and east either to the
-right or the left, as well as a slider and input to set the angle and a switch to set whether the
-axes should be flipped horizontally after applying the rotation (a vertical flip can be achieved
-via a 180 deg rotation and a horizontal flip).
-
-Due to browser limitations, Canvas Rotation is only available on Chromium-based browsers.
+This plugin was removed in Jdaviz v4.0, use :ref:`imviz-orientation` instead.
 
 
 .. _imviz-export-plot:

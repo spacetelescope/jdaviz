@@ -1,7 +1,6 @@
 import numpy as np
 from astropy.io import fits
 from astropy.io import registry as io_registry
-from astropy.utils.decorators import deprecated
 from specutils import Spectrum1D
 from specutils.io.registers import _astropy_has_priorities
 
@@ -100,22 +99,6 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
                     " perform a custom extraction.",
                     color='warning', sender=self, timeout=10000)
             self.app.hub.broadcast(msg)
-
-    @deprecated(since="3.9", alternative="select_wavelength")
-    def select_slice(self, slice):
-        """
-        Select a slice by index.
-
-        Parameters
-        ----------
-        slice : int
-            Slice integer to select
-        """
-        if not isinstance(slice, int):
-            raise TypeError("slice must be an integer")
-        if slice < 0:
-            raise ValueError("slice must be positive")
-        self.plugins['Slice'].slice = slice
 
     def select_wavelength(self, wavelength):
         """
