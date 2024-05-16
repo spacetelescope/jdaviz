@@ -398,7 +398,7 @@ def download_uri_to_path(possible_uri, cache=False, local_path=None):
     cannot be parsed as a URI.
 
     If ``possible_uri`` is a MAST URI, the file will be retrieved via
-    astroquery's `~astroquery.mast.Observations.download_file`.
+    astroquery's `~astroquery.mast.ObservationsClass.download_file`.
     If ``possible_uri`` is a URL, it will be retrieved via astropy with
     `~astropy.utils.data.download_file`.
 
