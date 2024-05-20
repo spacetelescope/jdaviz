@@ -23,7 +23,7 @@
         </table>
       </div>
     </div>
-    <div v-else style="height: 100%">
+    <div v-else style="position: absolute; height: 100%">
       <v-toolbar-items>
         <j-tooltip tipid='coords-info-cycle'>
           <v-btn icon tile @click="next_layer()">
