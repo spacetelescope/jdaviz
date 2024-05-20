@@ -47,15 +47,15 @@
       </v-toolbar-items>
       <v-spacer></v-spacer>
       <v-toolbar-items>
-        <j-tooltip tipid="app-toolbar-popout">
+        <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-toolbar-popout">
           <jupyter-widget :widget="popout_button" ></jupyter-widget>
         </j-tooltip>
-        <j-tooltip tipid="app-help">
+        <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-help">
           <v-btn icon :href="docs_link" target="_blank">
             <v-icon medium>mdi-help-box</v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip tipid="app-snackbar-history">
+        <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-snackbar-history">
           <v-btn icon @click="state.logger_overlay = !state.logger_overlay" :class="{active : state.logger_overlay}">
             <v-icon medium style="padding-top: 2px">mdi-message-reply-text</v-icon>
           </v-btn>
