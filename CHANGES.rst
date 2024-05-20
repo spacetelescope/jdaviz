@@ -143,6 +143,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+* Update button in the subset plugin is now disabled when no subset is selected. [#2880]
+
 Cubeviz
 ^^^^^^^
 
