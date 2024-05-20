@@ -4,7 +4,7 @@
 export default {
   created() {
     this.$vuetify.theme.themes.light = {
-      toolbar: "#153A4B",
+      toolbar: "#003B4D",
       primary: "#00617E",
       secondary: "#007DA4",
       accent: "#C75109",
@@ -122,7 +122,7 @@ div.output_wrapper {
 }
 
 .lm_close {
-  /* hide the close button on the right (which allows closing an entire group of tabs) 
+  /* hide the close button on the right (which allows closing an entire group of tabs)
   so that we can control the ability to close tabs at the per-viewer level */
   display: none !important;
 }
