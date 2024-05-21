@@ -146,7 +146,7 @@ Load data from a URI or URL
 
 The examples above import data from a local file path, and also support loading remote
 data from a URL or URI with :meth:`~jdaviz.core.helpers.ConfigHelper.load_data`.
-URL. If the input is a string with a MAST URI, the file will be retrieved via
+If the input is a string with a MAST URI, the file will be retrieved via
 astroquery's `~astroquery.mast.ObservationsClass.download_file`. If the
 input string is a URL, it will be retrieved via astropy with
 `~astropy.utils.data.download_file`. Both methods support a
