@@ -449,7 +449,7 @@ def download_uri_to_path(possible_uri, cache=False, local_path=None):
         return download_file(possible_uri, cache=cache)
 
     elif parsed_uri.scheme == '':
-        raise ValueError(f"The data to load '{possible_uri}' cannot be parse as a "
+        raise ValueError(f"The input file '{possible_uri}' cannot be parsed as a "
                          f"URL or URI, and no existing local file is available "
                          f"at this path.")
 
