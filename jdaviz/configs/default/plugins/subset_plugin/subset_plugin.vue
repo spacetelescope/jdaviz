@@ -102,10 +102,11 @@
             :value="item.value"
             style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
             :readonly="true"
-            :hint="item.name === 'Parent' ? 'Subset7 was defined with respect to this reference data (read-only)' : 'Number of elements included by mask'"
+            :hint="item.name === 'Parent' ? 'Subset was defined with respect to this reference data (read-only)' : 'Number of elements included by mask'"
+            persistent-hint
           ></v-text-field>
         </v-row>
-        <v-row v-if="item.name !== 'Parent' && item.name !== 'Masked values'" class="row-no-outside-padding">
+        <v-row v-else="item.name !== 'Parent' && item.name !== 'Masked values'" class="row-no-outside-padding">
           <v-text-field
             :label="item.name"
             v-model.number="item.value"
