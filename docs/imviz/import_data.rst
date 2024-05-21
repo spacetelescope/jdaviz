@@ -153,7 +153,9 @@ input string is a URL, it will be retrieved via astropy with
 ``cache`` argument, which will store the file locally. Cached downloads via astropy
 are placed in the `astropy cache <https://docs.astropy.org/en/stable/utils/data.html>`_,
 and URIs retrieved via astroquery can be saved to a path of your choice with
-``local_path``::
+``local_path``.
+
+.. code-block:: python
 
     from jdaviz import Imviz
 
