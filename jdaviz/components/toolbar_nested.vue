@@ -5,10 +5,10 @@
             <template v-slot:activator="{ on }">
                 <v-btn v-on="on" icon :value="id" style="min-width: 40px !important" @contextmenu="(e) => show_submenu(e, has_suboptions, menu_ind)">
                     <img class="invert-if-dark" :src="img" width="20px" @click.ctrl.stop=""/>
-                    <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click.ctrl.stop="">mdi-menu-down</v-icon>
+                    <v-icon small v-if="has_suboptions" class="suboptions-carrot invert-if-dark" @click="(e) => show_submenu(e, has_suboptions, menu_ind)" @click.ctrl.stop="">mdi-menu-down</v-icon>
                 </v-btn>
             </template>
-            <span>{{ tooltip }}{{has_suboptions ? " [right-click for alt. tools]" : ""}}</span>
+            <span>{{ tooltip }}{{has_suboptions ? " [right-click or click arrow for alt. tools]" : ""}}</span>
         </v-tooltip>
     </v-btn-toggle>
     <v-menu
@@ -91,7 +91,9 @@
      regardless of light or dark theme */
   color: black !important;
 }
-
+.suboptions-carrot:hover {
+  scale: 1.75;
+}
 .theme--dark .invert-if-dark {
   filter: invert(1) !important;
 }
