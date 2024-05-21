@@ -139,6 +139,34 @@ data entries into the viewer until after the parsing is complete::
     imviz.show()
 
 
+.. _load-data-uri:
+
+Load data from a URI or URL
+---------------------------
+
+The examples above import data from a local file path, and also support loading remote
+data from a URL or URI with :meth:`~jdaviz.core.helpers.ConfigHelper.load_data`.
+URL. If the input is a string with a MAST URI, the file will be retrieved via
+astroquery's `~astroquery.mast.ObservationsClass.download_file`. If the
+input string is a URL, it will be retrieved via astropy with
+`~astropy.utils.data.download_file`. Both methods support a
+``cache`` argument, which will store the file locally. Cached downloads via astropy
+are placed in the `astropy cache <https://docs.astropy.org/en/stable/utils/data.html>`_,
+and URIs retrieved via astroquery can be saved to a path of your choice with
+``local_path``::
+
+    from jdaviz import Imviz
+
+    uri = "mast:JWST/product/jw01345-o001_t021_nircam_clear-f200w_i2d.fits"
+    cache = True
+
+    # store the retrieved file in the current working directory:
+    local_path = "jw01345-o001_t021_nircam_clear-f200w_i2d.fits"
+
+    imviz = Imviz()
+    imviz.load_data(uri, cache=cache, local_path=local_path)
+    imviz.show()
+
 Importing catalogs via the API
 ==============================
 

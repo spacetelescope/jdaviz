@@ -74,3 +74,11 @@ the spectrum to be horizontal:
 .. code-block:: python
 
     specviz2d.load_data(filename, ext=7, transpose=True)
+
+Loading from a URL or URI
+-------------------------
+
+.. seealso::
+
+    :ref:`Load from URL or URI <load-data-uri>`
+        Imviz documentation describing load from URI/URL.
