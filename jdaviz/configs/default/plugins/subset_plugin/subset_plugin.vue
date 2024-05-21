@@ -106,7 +106,7 @@
             persistent-hint
           ></v-text-field>
         </v-row>
-        <v-row v-else="item.name !== 'Parent' && item.name !== 'Masked values'" class="row-no-outside-padding">
+        <v-row v-else class="row-no-outside-padding">
           <v-text-field
             :label="item.name"
             v-model.number="item.value"
