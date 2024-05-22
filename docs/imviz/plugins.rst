@@ -396,14 +396,6 @@ To import a regions file or object from the API:
   fp.import_region(region)
 
 
-.. _rotate-canvas:
-
-Canvas Rotation
-===============
-
-This plugin was removed in Jdaviz v4.0, use :ref:`imviz-orientation` instead.
-
-
 .. _imviz-export-plot:
 
 Export
