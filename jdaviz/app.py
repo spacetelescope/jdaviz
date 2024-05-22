@@ -117,14 +117,14 @@ class UnitConverterWithSpectral:
                     # target_units dictate the conversion to take place.
 
                     if (u.sr in u.Unit(original_units).bases) and \
-                        (u.sr not in u.Unit(target_units).bases):
+                          (u.sr not in u.Unit(target_units).bases):
                         # Surface Brightness -> Flux
                         eqv = [(u.MJy / u.sr,
                                 u.MJy,
                                 lambda x: (x * spec.meta['_pixel_scale_factor']),
                                 lambda x: x)]
                     elif (u.sr not in u.Unit(original_units).bases) and \
-                        (u.sr in u.Unit(target_units).bases):
+                         (u.sr in u.Unit(target_units).bases):
                         # Flux -> Surface Brightness
                         eqv = [(u.MJy,
                                 u.MJy / u.sr,
