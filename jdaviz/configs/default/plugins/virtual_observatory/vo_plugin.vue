@@ -41,6 +41,19 @@
           </v-text-field>
       </v-row>
 
+      <v-row>
+        <v-select
+          v-model="coordframe_selected"
+          :menu-props="{ left: true }"
+          attach
+          :items="coordframes"
+          @change="coordframe_selected"
+          label="Coordinate Frame"
+          hint="Astronomical Coordinate Frame of the provided Coordinates"
+          persistent-hint
+        ></v-select>
+      </v-row>
+
     <j-plugin-section-header>Common Options</j-plugin-section-header>
 
       <v-row>
