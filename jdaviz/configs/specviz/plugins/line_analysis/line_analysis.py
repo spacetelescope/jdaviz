@@ -1,5 +1,4 @@
 import os
-import logging
 
 import numpy as np
 from glue.core.message import (SubsetDeleteMessage,
@@ -139,23 +138,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.app._jdaviz_helper, '_default_spectrum_viewer_reference_name', 'spectrum-viewer'
         )
 
-    # backwards compatibility for width (replace with user API deprecation)
-    @property
-    def width(self):
-        logging.warning(f"DeprecationWarning: width was replaced by continuum_width in 3.9 and will be removed in a future release")  # noqa
-        return self.continuum_width
-
-    @width.setter
-    def width(self, width):
-        logging.warning("DeprecationWarning: width was replaced by continuum_width in 3.9 and will be removed in a future release")  # noqa
-        self.continuum_width = width
-
     @property
     def user_api(self):
-        # deprecated: width was replaced with continuum_width in 3.9 so should be removed from the
-        # user API and the property and setter above as soon as 3.11.
         return PluginUserApi(self, expose=('dataset', 'spectral_subset',
-                                           'continuum', 'width', 'continuum_width', 'get_results'))
+                                           'continuum', 'continuum_width', 'get_results'))
 
     @property
     def line_items(self):

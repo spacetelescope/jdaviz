@@ -30,7 +30,6 @@ tray:
   - imviz-aper-phot-simple
   - imviz-catalogs
   - imviz-footprints
-  - imviz-rotate-canvas
   - export
 viewer_area:
   - container: col
