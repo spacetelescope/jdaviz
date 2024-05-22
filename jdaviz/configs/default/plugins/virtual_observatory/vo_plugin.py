@@ -1,6 +1,8 @@
+from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy import units as u
+
 from pyvo.utils import vocabularies
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError
@@ -21,9 +23,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
     wavebands = List().tag(sync=True)
     resources = List([]).tag(sync=True)
-    resources_loading = Bool(False).tag(sync=True)
+    resources_loading= Bool(False).tag(sync=True)
 
-    source = Unicode().tag(sync=True)
+    source = Unicode('').tag(sync=True)
+    coordframes = List([]).tag(sync=True)
+    coordframe_selected = Unicode('ICRS').tag(sync=True)
     radius_deg = Int(1).tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
@@ -38,6 +42,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         self._full_registry_results = None
         self.resource_selected = None
+
+        self.coordframes = [frame.lower() for frame in all_astropy_frames]
 
         self.table.headers_avail = ["Title", "Instrument", "DateObs", "URL"]
         self.table.headers_visible = ["Title", "Instrument", "DateObs"]
@@ -75,6 +81,10 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         """Sync IVOA resource selected"""
         self.resource_selected = event
 
+    def vue_coordframe_selected(self, event):
+        """Sync IVOA resource selected"""
+        self.coordframe_selected = event
+
     def vue_query_resource(self, *args, **kwargs):
         """
         Once a specific VO resource is selected, query it with the user-specified source target.
@@ -95,11 +105,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             sia_service = self._full_registry_results[self.resource_selected].get_service(service_type="sia")
             try:
                 # First parse user-provided source as direct coordinates
-                coord = SkyCoord(self.source, unit=u.deg)
+                coord = SkyCoord(self.source, unit=u.deg, frame=self.coordframe_selected)
             except:
                 try:
                     # If that didn't work, try parsing it as an object name
-                    coord = SkyCoord.from_name(self.source)
+                    coord = SkyCoord.from_name(self.source, frame=self.coordframe_selected)
                 except Exception:
                     raise LookupError(f"Unable to resolve source coordinates: {self.source}")
 
