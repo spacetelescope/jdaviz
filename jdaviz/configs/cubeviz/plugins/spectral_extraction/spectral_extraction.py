@@ -310,7 +310,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def aperture_weight_mask(self):
-        # Exact slice mask of cone or cylindrical aperture through the cube. `shape_mask` is
+        # Exact slice mask of cone or cylindrical aperture through the cube. `weight_mask` is
         # a 3D array with fractions of each pixel within an aperture at each
         # wavelength, on the range [0, 1].
         if self.aperture.selected == self.aperture.default_text:
@@ -341,7 +341,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def bg_area_along_spectral(self):
         return np.sum(self.bg_weight_mask, axis=(0, 1))
 
-    def _extract_from_aperture(self, spectral_cube, uncert_cube, aperture, wavelength_dependent,
+    def _extract_from_aperture(self, spectral_cube, uncert_cube, aperture,
+                               weight_mask, wavelength_dependent,
                                selected_func, **kwargs):
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
@@ -360,19 +361,17 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             else:
                 uncertainties = None
 
-            shape_mask = self.aperture_weight_mask
-
             if self.aperture_method_selected.lower() == 'center':
                 flux = nddata.data << nddata.unit
             else:  # exact (min/max not allowed here)
                 # Apply the fractional pixel array to the flux cube
-                flux = (shape_mask * nddata.data) << nddata.unit
+                flux = (weight_mask * nddata.data) << nddata.unit
             # Boolean cube which is True outside of the aperture
             # (i.e., the numpy boolean mask convention)
-            mask = np.isclose(shape_mask, 0)
+            mask = np.isclose(weight_mask, 0)
 
             # composite subset masks are in `nddata.mask`:
-            if nddata.mask is not None and np.all(shape_mask == 0):
+            if nddata.mask is not None and np.all(weight_mask == 0):
                 mask &= nddata.mask
 
         else:
@@ -383,7 +382,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 uncertainties = None
             flux = nddata.data << nddata.unit
             mask = nddata.mask
-            shape_mask = np.ones_like(nddata.data)
         # Use the spectral coordinate from the WCS:
         if '_orig_spec' in spectral_cube.meta:
             wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
@@ -415,7 +413,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             # Then normalize the flux based on the fractional pixel array
             flux_for_mean = (collapsed_sum_for_mean.data /
-                             np.sum(shape_mask, axis=spatial_axes)) << nddata_reshaped.unit
+                             np.sum(weight_mask, axis=spatial_axes)) << nddata_reshaped.unit
             # Combine that information into a new NDDataArray
             collapsed_nddata = NDDataArray(flux_for_mean, mask=collapsed_as_mean.mask,
                                            uncertainty=collapsed_as_mean.uncertainty,
@@ -470,7 +468,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         selected_func = self.function_selected.lower()
         spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
-                                           self.aperture, self.wavelength_dependent,
+                                           self.aperture, self.aperture_weight_mask,
+                                           self.wavelength_dependent,
                                            selected_func, **kwargs)
 
         bg_spec = self.extract_bg_spectrum(add_data=False)
@@ -521,7 +520,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         """
         if self.background.selected != self.background.default_text:
             bg_spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
-                                                  self.background, self.bg_wavelength_dependent,
+                                                  self.background, self.bg_weight_mask,
+                                                  self.bg_wavelength_dependent,
                                                   self.function_selected.lower(), **kwargs)
             if self.function_selected.lower() == 'sum':
                 # then scale according to aperture areas across the spectral axis (allowing for
