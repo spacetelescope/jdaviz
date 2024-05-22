@@ -33,7 +33,7 @@ class About(PluginTemplateMixin):
             if _ver_pypi:
                 self.jdaviz_pypi = _ver_pypi
                 self.not_is_latest = Version(__version__) < Version(_ver_pypi)
-            else:
+            else:  # pragma: no cover
                 self.jdaviz_pypi = "unknown"
                 self.not_is_latest = False
 
@@ -43,7 +43,7 @@ def latest_version_from_pypi(package_name):
     url = "https://pypi.org/pypi/%s/json" % package_name
     try:
         r = requests.get(url, timeout=60)
-    except Exception:  # nosec
+    except Exception:  # nosec # pragma: no cover
         pass
     else:
         if r.ok:
