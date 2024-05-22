@@ -27,6 +27,7 @@ tray:
   - g-line-list
   - specviz-line-analysis
   - export
+  - about
 viewer_area:
   - container: col
     children:

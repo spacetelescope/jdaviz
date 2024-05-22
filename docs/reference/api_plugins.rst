@@ -3,6 +3,9 @@
 Plugins API
 ===========
 
+.. automodapi:: jdaviz.configs.default.plugins.about.about
+   :no-inheritance-diagram:
+
 .. automodapi:: jdaviz.configs.default.plugins.collapse.collapse
    :no-inheritance-diagram:
 

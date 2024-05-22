@@ -7,6 +7,8 @@ New Features
 - Adding flux/surface brightness translation and surface brightness
   unit conversion in Cubeviz and Specviz. [#2781]
 
+- New "About" plugin to show Jdaviz version info. [#2886]
+
 Cubeviz
 ^^^^^^^
 

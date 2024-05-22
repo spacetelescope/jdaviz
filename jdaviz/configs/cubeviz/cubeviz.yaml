@@ -34,6 +34,7 @@ tray:
   - cubeviz-moment-maps
   - imviz-aper-phot-simple
   - export
+  - about
 viewer_area:
   - container: col
     children:
