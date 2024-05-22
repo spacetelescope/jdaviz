@@ -315,7 +315,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # wavelength, on the range [0, 1].
         if self.aperture.selected == self.aperture.default_text:
             # Entire Cube
-            return np.ones_like(self.dataset.selected_obj.flux)
+            return np.ones_like(self.dataset.selected_obj.flux.value)
         return self.aperture.get_mask(self.dataset.selected_obj,
                                       self.aperture_method_selected,
                                       self.spectral_display_unit,
@@ -325,7 +325,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def bg_weight_mask(self):
         if self.background.selected == self.background.default_text:
             # NO background
-            return np.zeros_like(self.dataset.selected_obj.flux)
+            return np.zeros_like(self.dataset.selected_obj.flux.value)
         return self.background.get_mask(self.dataset.selected_obj,
                                         self.aperture_method_selected,
                                         self.spectral_display_unit,
