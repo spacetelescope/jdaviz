@@ -4,6 +4,14 @@
     :link="'https://www.ivoa.net/astronomers/index.html'"
     :popout_button="popout_button">
 
+    <plugin-viewer-select
+       :items="viewer_items"
+       :selected.sync="viewer_selected"
+       label="Viewer"
+       :show_if_single_entry="false"
+       hint="Select a viewer to search."
+    />
+
     <j-plugin-section-header>Survey Collections</j-plugin-section-header>
       <v-row>
         <v-select
