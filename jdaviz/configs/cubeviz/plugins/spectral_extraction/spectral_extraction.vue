@@ -145,7 +145,7 @@
                 <v-switch
                   v-model="bg_spec_per_spaxel"
                   label="Normalize per-spaxel"
-                  hint="Whether to normalize the resulting summed background per spaxel (not shown in preview).  Otherwise, the spectrum will be scaled by the ratio between the areas of the aperture to the background aperture."
+                  hint="Whether to normalize the background per spaxel (not shown in preview). Otherwise, the spectrum will be scaled by the ratio between the areas of the extraction aperture to the background aperture."
                   persistent-hint
                 ></v-switch>
               </v-row>

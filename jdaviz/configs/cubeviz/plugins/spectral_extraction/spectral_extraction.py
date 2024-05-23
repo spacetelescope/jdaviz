@@ -57,8 +57,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
       ``wavelength_dependent`` to also be set to ``True``). The cone is defined
       to intersect ``background`` at ``reference_spectral_value``.
     * ```bg_spec_per_spaxel``:
-        Whether to normalize the resulting summed background per spaxel when calling
-        ``extract_bg_spectrum``.  Otherwise, the spectrum will be scaled by the ratio between the
+        Whether to normalize the background per spaxel when calling ``extract_bg_spectrum``.
+        Otherwise, the spectrum will be scaled by the ratio between the
         areas of the aperture and the background aperture. Only applicable if ``function`` is 'Sum'.
     * ``bg_spec_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`extract_bg_spectrum`
