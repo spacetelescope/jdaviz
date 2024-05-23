@@ -170,6 +170,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             marks = self.marks.get(marker_id)
             if marks is not None:
                 marks.visible = False
+        self.app.state.show_toolbar_buttons = True
 
     def _viewer_mouse_event(self, viewer, data):
         if data['event'] in ('mouseleave', 'mouseenter'):
@@ -254,6 +255,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self._viewer_mouse_clear_event(viewer)
             return
 
+        self.app.state.show_toolbar_buttons = False
         if self.dataset.selected == 'auto':
             image = active_layer.layer
         elif self.dataset.selected == 'none':
