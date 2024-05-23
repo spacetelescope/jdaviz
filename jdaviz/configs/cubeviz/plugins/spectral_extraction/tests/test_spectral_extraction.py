@@ -343,6 +343,9 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
         assert extract_plg._obj.marks['bg_spec'].visible
 
         bg_spec = extract_plg.extract_bg_spectrum()
+        extract_plg.bg_spec_per_spaxel = True
+        bg_spec_normed = extract_plg.extract_bg_spectrum()
+        assert np.all(bg_spec_normed.flux.value < bg_spec.flux.value)
         spec = extract_plg.extract()
 
     assert np.allclose(spec.flux, spec_no_bg.flux - bg_spec.flux)

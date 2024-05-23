@@ -141,6 +141,14 @@
               <span style="padding: 6px">Export Background Spectrum</span>
             </v-expansion-panel-header>
             <v-expansion-panel-content class="plugin-expansion-panel-content">
+              <v-row v-if="function_selected === 'Sum'">
+                <v-switch
+                  v-model="bg_spec_per_spaxel"
+                  label="Normalize per-spaxel"
+                  hint="Whether to normalize the resulting summed background per spaxel (not shown in preview).  Otherwise, the spectrum will be scaled by the ratio between the areas of the aperture to the background aperture."
+                  persistent-hint
+                ></v-switch>
+              </v-row>
               <plugin-add-results
                 :label.sync="bg_spec_results_label"
                 :label_default="bg_spec_results_label_default"

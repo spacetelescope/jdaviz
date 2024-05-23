@@ -56,7 +56,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
       Whether the ``background`` aperture should be considered wavelength-dependent (requires
       ``wavelength_dependent`` to also be set to ``True``). The cone is defined
       to intersect ``background`` at ``reference_spectral_value``.
+    * ```bg_spec_per_spaxel``:
+        Whether to normalize the resulting summed background per spaxel when calling
+        ``extract_bg_spectrum``.  Otherwise, the spectrum will be scaled by the ratio between the
+        areas of the aperture and the background aperture. Only applicable if ``function`` is 'Sum'.
     * ``bg_spec_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * :meth:`extract_bg_spectrum`
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Method to use for extracting spectrum (and background, if applicable).
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
@@ -78,6 +83,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     bg_scale_factor = Float(1).tag(sync=True)
     bg_wavelength_dependent = Bool(False).tag(sync=True)
 
+    bg_spec_per_spaxel = Bool(False).tag(sync=True)
     bg_spec_results_label = Unicode().tag(sync=True)
     bg_spec_results_label_default = Unicode().tag(sync=True)
     bg_spec_results_label_auto = Bool(True).tag(sync=True)
@@ -184,7 +190,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def user_api(self):
         expose = ['dataset', 'function', 'aperture',
                   'background', 'bg_wavelength_dependent',
-                  'bg_spec_add_results', 'extract_bg_spectrum',
+                  'bg_spec_per_spaxel', 'bg_spec_add_results', 'extract_bg_spectrum',
                   'add_results', 'extract',
                   'wavelength_dependent', 'reference_spectral_value',
                   'aperture_method']
@@ -472,7 +478,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                            self.wavelength_dependent,
                                            selected_func, **kwargs)
 
-        bg_spec = self.extract_bg_spectrum(add_data=False)
+        bg_spec = self.extract_bg_spectrum(add_data=False, bg_spec_per_spaxel=False)
         if bg_spec is not None:
             spec = spec - bg_spec
 
@@ -518,15 +524,20 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             Additional keyword arguments passed to the NDDataArray collapse operation.
             Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
         """
+        # allow internal calls to override the behavior of the bg_spec_per_spaxel traitlet
+        bg_spec_per_spaxel = kwargs.pop('bg_spec_per_spaxel', self.bg_spec_per_spaxel)
         if self.background.selected != self.background.default_text:
             bg_spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
                                                   self.background, self.bg_weight_mask,
                                                   self.bg_wavelength_dependent,
                                                   self.function_selected.lower(), **kwargs)
             if self.function_selected.lower() == 'sum':
-                # then scale according to aperture areas across the spectral axis (allowing for
-                # independent wavelength-dependence btwn the aperture and background)
-                bg_spec *= self.aperture_area_along_spectral / self.bg_area_along_spectral
+                if bg_spec_per_spaxel:
+                    bg_spec *= 1 / self.bg_area_along_spectral
+                else:
+                    # then scale according to aperture areas across the spectral axis (allowing for
+                    # independent wavelength-dependence btwn the aperture and background)
+                    bg_spec *= self.aperture_area_along_spectral / self.bg_area_along_spectral
         else:
             bg_spec = None
 
