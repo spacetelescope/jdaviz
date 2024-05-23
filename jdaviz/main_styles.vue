@@ -213,6 +213,10 @@ a:active {
   background-color: #c7510996 !important;
 }
 
+.vuetify-styles .v-btn-toggle>.v-btn.v-btn {
+    opacity: .8;
+}
+
 .v-divider.theme--dark {
   /* make the v-divider standout more */
   border-color: hsla(0,0%,100%,.35) !important;
