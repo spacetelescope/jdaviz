@@ -25,13 +25,15 @@
 
     <v-row>
       <j-docs-link link="https://github.com/spacetelescope/jdaviz/blob/main/CHANGES.rst" linktext="Change Log">
-        To see list of changes, go to your version section in the change log.
+        To see list of changes, go to your version section in the
+
       </j-docs-link>
     </v-row>
 
     <v-row>
       <j-docs-link link="https://jwsthelp.stsci.edu" linktext="JWST Help Desk">
-        For further assistance, please contact JWST Help Desk.
+        For further assistance, please contact the
+
       </j-docs-link>
     </v-row>
 
