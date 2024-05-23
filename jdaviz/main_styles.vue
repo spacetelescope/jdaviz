@@ -214,7 +214,7 @@ a:active {
 }
 
 .vuetify-styles .v-btn-toggle>.v-btn.v-btn {
-    opacity: .8;
+    opacity: 1;
 }
 
 .v-divider.theme--dark {
