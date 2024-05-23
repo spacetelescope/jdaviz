@@ -156,7 +156,7 @@ def test_unit_translation(cubeviz_helper):
     collapsed_spec = extract_plg.extract()
 
     # test that the scale factor was set
-    assert collapsed_spec.meta['_pixel_scale_factor'] != 1
+    assert np.all(collapsed_spec.meta['_pixel_scale_factor'] != 1)
 
     # When the dropdown is displayed, this ensures the loaded
     # data collection item units will be used for translations.

@@ -9,6 +9,7 @@ from astropy import units as u
 from astropy.nddata import NDData
 from astropy.io import fits
 from astropy.time import Time
+from astropy.units import Quantity
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
@@ -106,9 +107,11 @@ class UnitConverterWithSpectral:
         if cid.label == "flux":
             try:
                 spec = data.get_object(cls=Spectrum1D)
+
             except RuntimeError:
                 eqv = []
             else:
+                eqv = []
                 # Ensure a spectrum passed through Spectral Extraction plugin
                 if '_pixel_scale_factor' in spec.meta:
 
@@ -121,14 +124,14 @@ class UnitConverterWithSpectral:
                         # Surface Brightness -> Flux
                         eqv = [(u.MJy / u.sr,
                                 u.MJy,
-                                lambda x: (x * spec.meta['_pixel_scale_factor']),
+                                lambda x: (x * np.array(spec.meta['_pixel_scale_factor'])),
                                 lambda x: x)]
                     elif (u.sr not in u.Unit(original_units).bases) and \
                          (u.sr in u.Unit(target_units).bases):
                         # Flux -> Surface Brightness
                         eqv = [(u.MJy,
                                 u.MJy / u.sr,
-                                lambda x: (x / spec.meta['_pixel_scale_factor']),
+                                lambda x: (x / np.array(spec.meta['_pixel_scale_factor'])),
                                 lambda x: x)]
                     else:
                         eqv = u.spectral_density(spec.spectral_axis)
@@ -137,6 +140,26 @@ class UnitConverterWithSpectral:
                     # Need this for setting the y-limits
                     spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
                     eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
+
+                    if '_pixel_scale_factor' in spec.meta:
+                        # get min and max scale factors, to use with min and max of spec for
+                        # y-limits. Make sure they are Quantities (can be numpy.float64).
+                        pixel_scale_min = (Quantity(spec.meta['_pixel_scale_factor'][0])).value
+                        pixel_scale_max = (Quantity(spec.meta['_pixel_scale_factor'][-1])).value
+                        min_max = [pixel_scale_min, pixel_scale_max]
+
+                        if (u.sr in u.Unit(original_units).bases) and \
+                           (u.sr not in u.Unit(target_units).bases):
+                            eqv += [(u.MJy,
+                                     u.MJy / u.sr,
+                                     lambda x: x * np.array(min_max),
+                                     lambda x: x)]
+                        elif (u.sr not in u.Unit(original_units).bases) and \
+                             (u.sr in u.Unit(target_units).bases):
+                            eqv += [(u.MJy / u.sr,
+                                     u.MJy,
+                                     lambda x: x / np.array(min_max),
+                                     lambda x: x)]
 
                 else:
                     eqv = u.spectral_density(spec.spectral_axis)
