@@ -133,8 +133,8 @@
     <div v-if="image_color_mode_sync.in_subscribed_states">
       <glue-state-sync-wrapper :sync="image_color_mode_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('image_color_mode')">
         <v-select
-          attach 
-          :menu-props="{ left: true }" 
+          attach
+          :menu-props="{ left: true }"
           :items="image_color_mode_sync.choices"
           v-model="image_color_mode_value"
           label="Color Mode"
