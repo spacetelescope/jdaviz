@@ -1,6 +1,7 @@
 <template>
   <j-tray-plugin
     :description="docs_description || 'About Jdaviz.'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
