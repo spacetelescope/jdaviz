@@ -450,7 +450,17 @@ def download_uri_to_path(possible_uri, cache=None, local_path=None):
         )
 
     if parsed_uri.scheme.lower() == 'mast':
-        Observations.download_file(possible_uri, cache=cache, local_path=local_path)
+        (status, msg, url) = Observations.download_file(
+            possible_uri, cache=cache, local_path=local_path
+        )
+
+        if status != 'COMPLETE':
+            # pass along the error message from astroquery if the
+            # data were not successfully downloaded:
+            raise ValueError(
+                f"Failed query for URI '{possible_uri}' at '{url}':\n\n{msg}"
+            )
+
         if cache != True:  # noqa (may be None, string, or bool)
             warnings.warn(
                 f"The URI '{possible_uri}' has been downloaded from MAST via "
