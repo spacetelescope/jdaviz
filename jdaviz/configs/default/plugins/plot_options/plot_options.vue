@@ -138,10 +138,26 @@
           :items="image_color_mode_sync.choices"
           v-model="image_color_mode_value"
           label="Color Mode"
-          hint="Whether each layer gets a single color or colormap"
-          persistent-hint
-          dense
-        ></v-select>
+          hint="Whether each layer gets a single color or colormap."
+          persistent-hint 
+          dense 
+        >
+          <template v-slot:selection="{ item }">
+            <span>
+              {{ item.text }}
+            </span>
+          </template>
+          <template v-slot:item="{ item }">
+            <span>
+              <b>
+                {{ item.text }}
+              </b>
+              <span v-if="item.description" style="opacity: 0.85; font-size: 10pt">
+                | {{ item.description }}
+              </span>
+            </span>
+          </template>
+        </v-select>
       </glue-state-sync-wrapper>
     </div>
 

@@ -267,7 +267,7 @@ def test_apply_presets(imviz_helper):
     for i in range(4):
         imviz_helper.load_data(arr, data_label=f"array_{i}")
 
-    po.image_color_mode = "Monochromatic"
+    po.image_color_mode = "Color"
     po.apply_RGB_presets()
 
     for i in range(4):

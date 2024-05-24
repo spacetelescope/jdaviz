@@ -187,7 +187,7 @@ class PlotOptions(PluginTemplateMixin):
     * ``image_color_mode`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz
     * ``image_color`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
-      not exposed for Specviz.  This only applies when ``image_color_mode`` is "Monochromatic".
+      not exposed for Specviz.  This only applies when ``image_color_mode`` is "Color".
     * ``image_colormap`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
       not exposed for Specviz. This only applies when ``image_color_mode`` is "Colormap".
     * ``image_opacity`` (:class:`~jdaviz.core.template_mixin.PlotOptionsSyncState`):
@@ -769,12 +769,12 @@ class PlotOptions(PluginTemplateMixin):
     def apply_RGB_presets(self):
         """
         Applies preset colors, opacities, and stretch settings to all visible layers
-        (in all viewers) when in Monochromatic mode.
+        (in all viewers) when in Color (Monochromatic) mode.
         """
 
         if (self.image_color_mode_value != "One color per layer" or
                 self.image_color_mode_sync['mixed']):
-            raise ValueError("RGB presets can only be applied if color mode is Monochromatic.")
+            raise ValueError("RGB presets can only be applied if color mode is Color.")
         # Preselected colors we want to use for 5 or less layers
         preset_colors = [self.swatches_palette[4][1],
                          "#0000FF",
@@ -1088,7 +1088,7 @@ class PlotOptions(PluginTemplateMixin):
             # Compute colormapped image
             plane = layer_cmap(data)
 
-        else:  # Monochromatic
+        else:  # Color (Monochromatic)
             # Get color
             color = COLOR_CONVERTER.to_rgba_array(self.image_color_value)[0]
             plane = data[:, np.newaxis] * color

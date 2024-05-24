@@ -6,6 +6,7 @@ import astropy.units as u
 import bqplot
 from contextlib import contextmanager
 import numpy as np
+import logging
 import os
 import threading
 import time
@@ -4152,8 +4153,12 @@ class PlotOptionsSyncState(BasePluginComponent):
             helper = getattr(state, f'{glue_name}_helper')
             return [{'text': str(choice), 'value': str(choice)} for choice in helper.choices]
         if glue_name == 'color_mode':
-            return [{'text': 'Colormap', 'value': 'Colormaps'},
-                    {'text': 'Monochromatic', 'value': 'One color per layer'}]
+            return [{'text': 'Colormap',
+                     'value': 'Colormaps',
+                     'description': 'Select a colormap per-layer. Only top-layer will be visible without adjusting opacity.'},  # noqa
+                    {'text': 'Color',
+                     'value': 'One color per layer',
+                     'description': 'Select a color per-layer. Layers will be composited.'}]
 
         values, labels = _get_glue_choices(state, glue_name)
         return [{'text': l, 'value': v} for v, l in zip(values, labels)]
@@ -4270,6 +4275,11 @@ class PlotOptionsSyncState(BasePluginComponent):
 
         if self._spinner is not None:
             setattr(self.plugin, self._spinner, True)
+
+        if self._glue_name == 'color_mode' and msg['new'] == 'Monochromatic':
+            logging.warning("DeprecationWarning: 'Monochromatic' renamed to 'Color'")
+            self.value = 'One color per layer'
+            return
 
         self._processing_change_to_glue = True
         for glue_state in self.linked_states:

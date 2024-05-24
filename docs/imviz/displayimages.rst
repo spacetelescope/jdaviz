@@ -288,10 +288,10 @@ Color mode
 ----------
 
 This option allows you to choose whether to use a colormap or or a single color to visualize the image.
-The colormap can be selected from a dropdown within the Layer tab. In monochromatic mode, the color
+The colormap can be selected from a dropdown within the Layer tab. In "Color" mode, the color
 can be chosen from a color picker under "Image Color" within the Layer tab.
 
-In monochromatic mode, the option "Assign RGB presets" appears. This will automatically
+In "Color" mode, the option "Assign RGB presets" appears. This will automatically
 assign colors spanning from blue to red to the available layers and will adjust opacity and
 stretch to produce a composite color image (also known as RGB image). You will then
 be able to fine tune all options within each Layer tab.
