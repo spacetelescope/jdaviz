@@ -281,6 +281,9 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         The extension in the FITS file that contains the data to be loaded.
     transpose : bool, optional
         Flag to transpose the data array before loading.
+    cache : None, bool, or str
+        Cache the downloaded file if the data are retrieved by a query
+        to a URL or URI.
 
     Returns
     -------

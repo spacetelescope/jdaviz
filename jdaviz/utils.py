@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+import warnings
 from collections import deque
 from urllib.parse import urlparse
 
@@ -392,7 +393,7 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
-def download_uri_to_path(possible_uri, cache=False, local_path=None):
+def download_uri_to_path(possible_uri, cache=None, local_path=None):
     """
     Retrieve data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
@@ -410,10 +411,12 @@ def download_uri_to_path(possible_uri, cache=False, local_path=None):
         it will be parsed as a URI. Local file URIs beginning with ``file://``
         are not supported by this method – nor are they necessary, since string
         paths without the scheme work fine! Cloud FITS are not yet supported.
-    cache: bool or "update", optional
-        Cache file after download. Default is False. If ``possible_uri`` is a
+    cache: None, bool, or ``"update"``, optional
+        Cache file after download. If ``possible_uri`` is a
         URL, ``cache`` may be a boolean or ``"update"``, see documentation for
-        `~astropy.utils.data.download_file` for details.
+        `~astropy.utils.data.download_file` for details. If cache is None,
+        the file is cached and a warning is raised suggesting to set ``cache``
+        explicitly in the future.
     local_path : str, optional
         Save the downloaded file to this path. Default is to
         save the file with its remote filename in the current
@@ -435,6 +438,16 @@ def download_uri_to_path(possible_uri, cache=False, local_path=None):
         return possible_uri
 
     parsed_uri = urlparse(possible_uri)
+
+    if cache is None:
+        cache = True
+        warnings.warn(
+            "You may be querying for a remote file "
+            f"at '{possible_uri}', but the `cache` argument was not "
+            f"in the call to `load_data`. Unless you set `cache` "
+            f"explicitly, remote files will be cached locally and "
+            f"this warning will be raised."
+        )
 
     if parsed_uri.scheme.lower() == 'mast':
         Observations.download_file(possible_uri, cache=cache, local_path=local_path)

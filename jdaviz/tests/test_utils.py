@@ -22,7 +22,11 @@ def test_alpha_index_exceptions():
 @pytest.mark.remote_data
 def test_uri_to_download_imviz(imviz_helper):
     uri = "mast:HST/product/jezz02ljq_drz.fits"
-    imviz_helper.load_data(uri)
+    imviz_helper.load_data(uri, cache=True)
+
+    with pytest.warns(Warning, match='You may be'):
+        # if you don't pass a `cache` value, a warning should be raised:
+        imviz_helper.load_data(uri)
 
 
 @pytest.mark.remote_data
@@ -30,7 +34,7 @@ def test_url_to_download_imviz(imviz_helper):
     url = "https://www.astropy.org/astropy-data/tutorials/FITS-images/HorseHead.fits"
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', FITSFixedWarning)
-        imviz_helper.load_data(url)
+        imviz_helper.load_data(url, cache=True)
 
 
 @pytest.mark.remote_data
@@ -38,13 +42,13 @@ def test_uri_to_download_cubeviz(cubeviz_helper):
     uri = "mast:JWST/product/jw01373-o031_t007_miri_ch1-shortmediumlong_s3d.fits"
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', FITSFixedWarning)
-        cubeviz_helper.load_data(uri)
+        cubeviz_helper.load_data(uri, cache=True)
 
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper):
     uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits"
-    specviz_helper.load_data(uri)
+    specviz_helper.load_data(uri, cache=True)
 
 
 @pytest.mark.remote_data
@@ -52,4 +56,4 @@ def test_uri_to_download_specviz2d(specviz2d_helper):
     uri = "mast:JWST/product/jw01324-o006_s00005_nirspec_f100lp-g140h_s2d.fits"
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', AsdfWarning)
-        specviz2d_helper.load_data(uri)
+        specviz2d_helper.load_data(uri, cache=True)

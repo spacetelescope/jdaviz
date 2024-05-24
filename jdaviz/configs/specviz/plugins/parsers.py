@@ -17,7 +17,7 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
 def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False, cache=False):
+                              concat_by_file=False, cache=True):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -34,6 +34,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         If True and there is more than one available extension, concatenate
         the extensions within each spectrum file passed to the parser and
         add a concatenated spectrum to the data collection.
+    cache : None, bool, or str
+        Cache the downloaded file if the data are retrieved by a query
+        to a URL or URI.
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name

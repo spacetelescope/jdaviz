@@ -43,7 +43,7 @@ def prep_data_layer_as_dq(data):
 
 
 @data_parser_registry("imviz-data-parser")
-def parse_data(app, file_obj, ext=None, data_label=None, parent=None, cache=False):
+def parse_data(app, file_obj, ext=None, data_label=None, parent=None, cache=True):
     """Parse a data file into Imviz.
 
     Parameters
@@ -60,6 +60,9 @@ def parse_data(app, file_obj, ext=None, data_label=None, parent=None, cache=Fals
     data_label : str, optional
         The label to be applied to the Glue data component.
 
+    cache : None, bool, or str
+        Cache the downloaded file if the data are retrieved by a query
+        to a URL or URI.
     """
     if isinstance(file_obj, str):
         if data_label is None:
