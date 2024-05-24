@@ -40,7 +40,7 @@ class About(PluginTemplateMixin):
 
 def latest_version_from_pypi(package_name):
     """Version info for given package or `None`."""
-    url = "https://pypi.org/pypi/%s/json" % package_name
+    url = f"https://pypi.org/pypi/{package_name}/json"
     try:
         r = requests.get(url, timeout=60)
     except Exception:  # nosec # pragma: no cover
