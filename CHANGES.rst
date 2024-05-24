@@ -7,6 +7,8 @@ New Features
 - Adding flux/surface brightness translation and surface brightness
   unit conversion in Cubeviz and Specviz. [#2781]
 
+- Plugin tray is now open by default. [#2892]
+
 Cubeviz
 ^^^^^^^
 
