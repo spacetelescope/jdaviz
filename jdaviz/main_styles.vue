@@ -195,7 +195,11 @@ a:active {
   border: none !important;
   min-width: 42px !important;
   /* remove "dimming" since we use orange background for active */
-  color: transparent ! important;
+  color: transparent !important;
+}
+
+.jdaviz-nested-toolbar .v-btn-toggle>.v-btn.v-btn {
+    opacity: 1;
 }
 
 .suboptions-carrot {
