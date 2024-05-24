@@ -220,7 +220,7 @@ def test_to_unit(cubeviz_helper):
     # set so pixel scale factor != 1
     extract_plg.reference_spectral_value = 0.000001
 
-    extract_plg.collapse_to_spectrum()
+    extract_plg.extract()
 
     cid = cubeviz_helper.app.data_collection[0].data.find_component_id('flux')
     data = cubeviz_helper.app.data_collection[-1].data

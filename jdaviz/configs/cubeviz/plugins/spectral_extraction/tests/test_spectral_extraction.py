@@ -30,7 +30,7 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     collapsed_cube_nddata = spectral_cube.sum(axis=(0, 1))  # return NDDataArray
 
     # Collapse the spectral cube using the methods in jdaviz:
-    collapsed_cube_s1d = plg.collapse_to_spectrum(add_data=False)  # returns Spectrum1D
+    collapsed_cube_s1d = plg.extract(add_data=False)  # returns Spectrum1D
 
     assert plg._obj.disabled_msg == ''
     assert isinstance(spectral_cube, NDDataArray)
@@ -80,7 +80,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
     expected_uncert = 2
 
     extract_plugin.aperture = 'Subset 1'
-    collapsed_spec = extract_plugin.collapse_to_spectrum()
+    collapsed_spec = extract_plugin.extract()
 
     # this single pixel has two wavelengths, and all uncertainties are unity
     # irrespective of which collapse function is applied:
@@ -89,7 +89,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
 
     # this two-pixel region has four unmasked data points per wavelength:
     extract_plugin.aperture = 'Subset 2'
-    collapsed_spec_2 = extract_plugin.collapse_to_spectrum()
+    collapsed_spec_2 = extract_plugin.extract()
     assert_array_equal(collapsed_spec_2.uncertainty.array, expected_uncert)
 
 
@@ -120,7 +120,7 @@ def test_subset(
 
     # single pixel region:
     plg.aperture = 'Subset 1'
-    collapsed_spec_1 = plg.collapse_to_spectrum()
+    collapsed_spec_1 = plg.extract()
 
     # this single pixel has two wavelengths, and all uncertainties are unity
     # irrespective of which collapse function is applied:
@@ -129,7 +129,7 @@ def test_subset(
 
     # this two-pixel region has four unmasked data points per wavelength:
     plg.aperture = 'Subset 2'
-    collapsed_spec_2 = plg.collapse_to_spectrum()
+    collapsed_spec_2 = plg.extract()
 
     assert_array_equal(collapsed_spec_2.uncertainty.array, expected_uncert)
 
@@ -251,13 +251,13 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
     extract_plg.wavelength_dependent = True
     extract_plg.function = 'Sum'
 
-    collapsed_spec = extract_plg.collapse_to_spectrum()
+    collapsed_spec = extract_plg.extract()
 
     assert_allclose(collapsed_spec.flux.value[1000:1010], expected_flux_1000, rtol=1e-6)
     assert_allclose(collapsed_spec.flux.value[2400:2410], expected_flux_2400, rtol=1e-6)
 
     extract_plg.function = 'Mean'
-    collapsed_spec_mean = extract_plg.collapse_to_spectrum()
+    collapsed_spec_mean = extract_plg.extract()
 
     assert_allclose(collapsed_spec_mean.flux.value, 1)
 
@@ -283,12 +283,12 @@ def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_
     extract_plg.wavelength_dependent = False
     extract_plg.function = 'Sum'
 
-    collapsed_spec = extract_plg.collapse_to_spectrum()
+    collapsed_spec = extract_plg.extract()
 
     assert_allclose(collapsed_spec.flux.value, expected_flux_wav)
 
     extract_plg.function = 'Mean'
-    collapsed_spec_mean = extract_plg.collapse_to_spectrum()
+    collapsed_spec_mean = extract_plg.extract()
 
     assert_allclose(collapsed_spec_mean.flux.value, 1)
 
@@ -304,7 +304,7 @@ def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
     extract_plg.aperture_method.selected = "Exact"
     extract_plg.wavelength_dependent = True
     extract_plg.function = 'Sum'
-    collapsed_spec = extract_plg.collapse_to_spectrum()
+    collapsed_spec = extract_plg.extract()
 
     # The extracted spectrum has "steps" (aliased) but perhaps that is due to
     # how photutils is extracting a boxy aperture. There is still a slope.
@@ -313,9 +313,42 @@ def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
     assert_allclose(collapsed_spec.flux.value[::301], expected_flux_step)
 
     extract_plg.wavelength_dependent = False
-    collapsed_spec = extract_plg.collapse_to_spectrum()
+    collapsed_spec = extract_plg.extract()
 
     assert_allclose(collapsed_spec.flux.value, 16)  # 4 x 4
+
+
+def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
+    cubeviz_helper.load_data(spectrum1d_cube_largest)
+    center = PixCoord(5, 10)
+    cubeviz_helper.load_regions([
+        CirclePixelRegion(center, radius=2.5),
+        EllipsePixelRegion(center, width=5, height=5)])
+
+    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
+    with extract_plg.as_active():
+        extract_plg.aperture = 'Subset 1'
+        spec_no_bg = extract_plg.extract()
+
+        extract_plg.background = 'Subset 2'
+
+        # test visiblity of background aperture and preview based on "active step"
+        assert extract_plg.background.marks[0].visible
+        assert not extract_plg._obj.marks['bg_spec'].visible
+        extract_plg._obj.active_step = 'ap'
+        assert not extract_plg.background.marks[0].visible
+        assert not extract_plg._obj.marks['bg_spec'].visible
+        extract_plg._obj.active_step = 'bg'
+        assert extract_plg.background.marks[0].visible
+        assert extract_plg._obj.marks['bg_spec'].visible
+
+        bg_spec = extract_plg.extract_bg_spectrum()
+        extract_plg.bg_spec_per_spaxel = True
+        bg_spec_normed = extract_plg.extract_bg_spectrum()
+        assert np.all(bg_spec_normed.flux.value < bg_spec.flux.value)
+        spec = extract_plg.extract()
+
+    assert np.allclose(spec.flux, spec_no_bg.flux - bg_spec.flux)
 
 
 def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
@@ -333,16 +366,16 @@ def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
 
     extract_plg.function = 'Min'
     with pytest.raises(ValueError, match=extract_plg._obj.conflicting_aperture_error_message):
-        extract_plg.collapse_to_spectrum()
+        extract_plg.extract()
 
     extract_plg.function = 'Max'
     with pytest.raises(ValueError, match=extract_plg._obj.conflicting_aperture_error_message):
-        extract_plg.collapse_to_spectrum()
+        extract_plg.extract()
 
     extract_plg.function = 'Sum'
     extract_plg.aperture = 'Subset 2'
     with pytest.raises(NotImplementedError, match=".* is not supported"):
-        extract_plg.collapse_to_spectrum()
+        extract_plg.extract()
 
 
 def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
@@ -358,19 +391,19 @@ def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
     extract_plg.function = 'Sum'
 
     with pytest.raises(ValueError, match="Spectral axis unit physical type is"):
-        extract_plg.collapse_to_spectrum()
+        extract_plg.extract()
 
 
 def test_cube_extraction_with_nan(cubeviz_helper, image_cube_hdu_obj):
     image_cube_hdu_obj[1].data[:, :2, :2] = np.nan
     cubeviz_helper.load_data(image_cube_hdu_obj, data_label="with_nan")
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
-    sp = extract_plg.collapse_to_spectrum()  # Default settings (sum)
+    sp = extract_plg.extract()  # Default settings (sum)
     assert_allclose(sp.flux.value, 96)  # (10 x 10) - 4
 
     cubeviz_helper.load_regions(RectanglePixelRegion(PixCoord(1.5, 1.5), width=4, height=4))
     extract_plg.aperture = 'Subset 1'
-    sp_subset = extract_plg.collapse_to_spectrum()  # Default settings but on Subset
+    sp_subset = extract_plg.extract()  # Default settings but on Subset
     assert_allclose(sp_subset.flux.value, 12)  # (4 x 4) - 4
 
 
@@ -383,7 +416,7 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
     extract_plg.aperture = 'Subset 1'
     extract_plg.add_results.label = 'extracted'
     extract_plg.add_results._obj.auto_update_result = True
-    _ = extract_plg.collapse_to_spectrum()
+    _ = extract_plg.extract()
 
 #    orig_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
 
@@ -445,10 +478,10 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     flux_viewer.apply_roi(upper_aperture)
 
     spec_extr_plugin.aperture_selected = 'Subset 1'
-    spectrum_1 = spec_extr_plugin.collapse_to_spectrum()
+    spectrum_1 = spec_extr_plugin.extract()
 
     spec_extr_plugin.aperture_selected = 'Subset 2'
-    spectrum_2 = spec_extr_plugin.collapse_to_spectrum()
+    spectrum_2 = spec_extr_plugin.extract()
 
     subset_plugin.subset_selected = 'Create New'
     rectangle = RectangularROI(-0.5, 1.5, -0.5, 3.5)
@@ -465,7 +498,7 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
 
     assert spec_extr_plugin.aperture.is_composite
 
-    spectrum_3 = spec_extr_plugin.collapse_to_spectrum()
+    spectrum_3 = spec_extr_plugin.extract()
 
     np.testing.assert_allclose(
         (spectrum_1 + spectrum_2).flux.value,

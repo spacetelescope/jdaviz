@@ -153,7 +153,7 @@ def test_unit_translation(cubeviz_helper):
 
     # all spectra will pass through spectral extraction,
     # this will store a scale factor for use in translations.
-    collapsed_spec = extract_plg.collapse_to_spectrum()
+    collapsed_spec = extract_plg.extract()
 
     # test that the scale factor was set
     assert collapsed_spec.meta['_pixel_scale_factor'] != 1
@@ -224,7 +224,7 @@ def test_sb_unit_conversion(cubeviz_helper):
     extract_plg.wavelength_dependent = True
     extract_plg.function = 'Sum'
     extract_plg.reference_spectral_value = 0.000001
-    extract_plg.collapse_to_spectrum()
+    extract_plg.extract()
 
     uc_plg._obj.show_translator = True
     uc_plg._obj.flux_or_sb_selected = 'Flux'

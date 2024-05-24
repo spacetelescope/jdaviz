@@ -6,26 +6,24 @@ import astropy
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
+from functools import cached_property
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
-from photutils.aperture import CircularAperture, EllipticalAperture, RectangularAperture
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
-from jdaviz.core.marks import SpectralExtractionPreview
+from jdaviz.core.marks import PluginLine
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelectMixin,
                                         SelectPluginComponent,
                                         ApertureSubsetSelectMixin,
                                         ApertureSubsetSelect,
-                                        AddResultsMixin,
+                                        AddResults, AddResultsMixin,
                                         skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.core.region_translators import regions2aperture
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
-from jdaviz.configs.cubeviz.plugins.viewers import CubevizProfileView
 
 
 __all__ = ['SpectralExtraction']
@@ -45,23 +43,33 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * ``aperture`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+    * ``aperture`` (:class:`~jdaviz.core.template_mixin.ApertureSubsetSelect`):
       Subset to use for the spectral extraction, or ``Entire Cube``.
-    * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
-    * :meth:`collapse`
     * ``wavelength_dependent``:
-      When true, the cone_aperture method will be used to determine the mask.
+      Whether the ``aperture`` should be considered wavelength-dependent.  The cone is defined
+      to intersect ``aperture`` at ``reference_spectral_value``.
     * ``reference_spectral_value``:
       The wavelength that will be used to calculate the radius of the cone through the cube.
+    * ``background`` (:class:`~jdaviz.comre.template_mixin.ApertureSubsetSelect`):
+      Subset to use for background subtraction, or ``None``.
+    * ``bg_wavelength_dependent``:
+      Whether the ``background`` aperture should be considered wavelength-dependent (requires
+      ``wavelength_dependent`` to also be set to ``True``). The cone is defined
+      to intersect ``background`` at ``reference_spectral_value``.
+    * ```bg_spec_per_spaxel``:
+        Whether to normalize the background per spaxel when calling ``extract_bg_spectrum``.
+        Otherwise, the spectrum will be scaled by the ratio between the
+        areas of the aperture and the background aperture. Only applicable if ``function`` is 'Sum'.
+    * ``bg_spec_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * :meth:`extract_bg_spectrum`
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      Extract spectrum using an aperture masking method in place of the subset mask.
+      Method to use for extracting spectrum (and background, if applicable).
+    * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
+    * :meth:`collapse`
     """
     template_file = __file__, "spectral_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)
     show_live_preview = Bool(True).tag(sync=True)
-
-    # feature flag for background cone support
-    dev_bg_support = Bool(False).tag(sync=True)  # when enabling: add entries to docstring
 
     active_step = Unicode().tag(sync=True)
 
@@ -74,6 +82,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     bg_selected_validity = Dict().tag(sync=True)
     bg_scale_factor = Float(1).tag(sync=True)
     bg_wavelength_dependent = Bool(False).tag(sync=True)
+
+    bg_spec_per_spaxel = Bool(False).tag(sync=True)
+    bg_spec_results_label = Unicode().tag(sync=True)
+    bg_spec_results_label_default = Unicode().tag(sync=True)
+    bg_spec_results_label_auto = Bool(True).tag(sync=True)
+    bg_spec_results_label_invalid_msg = Unicode('').tag(sync=True)
+    bg_spec_results_label_overwrite = Bool().tag(sync=True)
+    bg_spec_add_to_viewer_items = List().tag(sync=True)
+    bg_spec_add_to_viewer_selected = Unicode().tag(sync=True)
+    bg_spec_spinner = Bool(False).tag(sync=True)
 
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
@@ -123,6 +141,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                multiselect=None,
                                                default_text='None')
 
+        self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
+                                              'bg_spec_results_label_default',
+                                              'bg_spec_results_label_auto',
+                                              'bg_spec_results_label_invalid_msg',
+                                              'bg_spec_results_label_overwrite',
+                                              'bg_spec_add_to_viewer_items',
+                                              'bg_spec_add_to_viewer_selected')
+        self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
+        self.bg_spec_results_label_default = 'background-spectrum'
+
         self.function = SelectPluginComponent(
             self,
             items='function_items',
@@ -161,11 +189,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def user_api(self):
         expose = ['dataset', 'function', 'aperture',
-                  'add_results', 'collapse_to_spectrum',
+                  'background', 'bg_wavelength_dependent',
+                  'bg_spec_per_spaxel', 'bg_spec_add_results', 'extract_bg_spectrum',
+                  'add_results', 'extract',
                   'wavelength_dependent', 'reference_spectral_value',
                   'aperture_method']
-        if self.dev_bg_support:
-            expose += ['background', 'bg_wavelength_dependent']
 
         return PluginUserApi(self, expose=expose)
 
@@ -174,16 +202,17 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return {'data': ('dataset',), 'subset': ('aperture', 'background')}
 
     def __call__(self, add_data=True):
-        return self.collapse_to_spectrum(add_data=add_data)
+        return self.extract(add_data=add_data)
 
     @property
     def slice_display_unit_name(self):
         return 'spectral'
 
-    @observe('active_step')
+    @observe('active_step', 'is_active')
     def _active_step_changed(self, *args):
         self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'ext'))
         self.background._set_mark_visiblities(self.active_step == 'bg')
+        self.marks['bg_spec'].visible = self.active_step == 'bg'
 
     @property
     def slice_plugin(self):
@@ -269,69 +298,96 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.conflicting_aperture_and_function = False
 
-    @with_spinner()
-    def collapse_to_spectrum(self, add_data=True, **kwargs):
-        """
-        Collapse over the spectral axis.
+    @property
+    def spectral_cube(self):
+        return self.dataset.selected_dc_item
 
-        Parameters
-        ----------
-        add_data : bool
-            Whether to load the resulting data back into the application according to
-            ``add_results``.
-        kwargs : dict
-            Additional keyword arguments passed to the NDDataArray collapse operation.
-            Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
-        """
-        if self.conflicting_aperture_and_function:
-            raise ValueError(self.conflicting_aperture_error_message)
-
-        spectral_cube = self.dataset.selected_dc_item
+    @property
+    def uncert_cube(self):
         if self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label:
-            uncert_cube = self._app._jdaviz_helper._loaded_uncert_cube
+            return self._app._jdaviz_helper._loaded_uncert_cube
         else:
             # TODO: allow selecting or associating an uncertainty cube?
-            uncert_cube = None
-        uncertainties = None
-        selected_func = self.function_selected.lower()
+            return None
 
+    @property
+    def spectral_display_unit(self):
+        return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
+
+    @property
+    def aperture_weight_mask(self):
+        # Exact slice mask of cone or cylindrical aperture through the cube. `weight_mask` is
+        # a 3D array with fractions of each pixel within an aperture at each
+        # wavelength, on the range [0, 1].
+        if self.aperture.selected == self.aperture.default_text:
+            # Entire Cube
+            return np.ones_like(self.dataset.selected_obj.flux.value)
+        return self.aperture.get_mask(self.dataset.selected_obj,
+                                      self.aperture_method_selected,
+                                      self.spectral_display_unit,
+                                      self.reference_spectral_value if self.wavelength_dependent else None)  # noqa
+
+    @property
+    def bg_weight_mask(self):
+        if self.background.selected == self.background.default_text:
+            # NO background
+            return np.zeros_like(self.dataset.selected_obj.flux.value)
+        return self.background.get_mask(self.dataset.selected_obj,
+                                        self.aperture_method_selected,
+                                        self.spectral_display_unit,
+                                        self.reference_spectral_value if self.bg_wavelength_dependent else None)  # noqa
+
+    @property
+    def aperture_area_along_spectral(self):
+        # Weight mask summed along the spatial axes so that we get area of the aperture, in pixels,
+        # as a function of wavelength.
+        return np.sum(self.aperture_weight_mask, axis=(0, 1))
+
+    @property
+    def bg_area_along_spectral(self):
+        return np.sum(self.bg_weight_mask, axis=(0, 1))
+
+    def _extract_from_aperture(self, spectral_cube, uncert_cube, aperture,
+                               weight_mask, wavelength_dependent,
+                               selected_func, **kwargs):
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
         # defaults to ``No Subset``). Since the Cubeviz parser puts the fluxes
         # and uncertainties in different glue Data objects, we translate the spectral
         # cube and its uncertainties into separate NDDataArrays, then combine them:
-        if self.aperture.selected != self.aperture.default_text:
+        if not isinstance(aperture, ApertureSubsetSelect):
+            raise ValueError("aperture must be an ApertureSubsetSelect object")
+        if aperture.selected != aperture.default_text:
             nddata = spectral_cube.get_subset_object(
-                subset_id=self.aperture.selected, cls=NDDataArray
+                subset_id=aperture.selected, cls=NDDataArray
             )
             if uncert_cube:
                 uncertainties = uncert_cube.get_subset_object(
-                    subset_id=self.aperture.selected, cls=StdDevUncertainty
+                    subset_id=aperture.selected, cls=StdDevUncertainty
                 )
-            # Exact slice mask of cone or cylindrical aperture through the cube. `shape_mask` is
-            # a 3D array with fractions of each pixel within an aperture at each
-            # wavelength, on the range [0, 1].
-            shape_mask = self.get_aperture()
+            else:
+                uncertainties = None
 
             if self.aperture_method_selected.lower() == 'center':
                 flux = nddata.data << nddata.unit
             else:  # exact (min/max not allowed here)
                 # Apply the fractional pixel array to the flux cube
-                flux = (shape_mask * nddata.data) << nddata.unit
+                flux = (weight_mask * nddata.data) << nddata.unit
             # Boolean cube which is True outside of the aperture
             # (i.e., the numpy boolean mask convention)
-            mask = np.isclose(shape_mask, 0)
+            mask = np.isclose(weight_mask, 0)
 
             # composite subset masks are in `nddata.mask`:
-            if nddata.mask is not None and np.all(shape_mask == 0):
+            if nddata.mask is not None and np.all(weight_mask == 0):
                 mask &= nddata.mask
 
         else:
             nddata = spectral_cube.get_object(cls=NDDataArray)
             if uncert_cube:
                 uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
+            else:
+                uncertainties = None
             flux = nddata.data << nddata.unit
             mask = nddata.mask
-            shape_mask = np.ones_like(nddata.data)
         # Use the spectral coordinate from the WCS:
         if '_orig_spec' in spectral_cube.meta:
             wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
@@ -363,7 +419,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             # Then normalize the flux based on the fractional pixel array
             flux_for_mean = (collapsed_sum_for_mean.data /
-                             np.sum(shape_mask, axis=spatial_axes)) << nddata_reshaped.unit
+                             np.sum(weight_mask, axis=spatial_axes)) << nddata_reshaped.unit
             # Combine that information into a new NDDataArray
             collapsed_nddata = NDDataArray(flux_for_mean, mask=collapsed_as_mean.mask,
                                            uncertainty=collapsed_as_mean.uncertainty,
@@ -393,20 +449,53 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             uncertainty=uncertainty,
             mask=mask
         )
+        return collapsed_spec
+
+    @with_spinner()
+    def extract(self, return_bg=False, add_data=True, **kwargs):
+        """
+        Extract the spectrum from the data cube according to the plugin inputs.
+
+        Parameters
+        ----------
+        return_bg : bool, optional
+            Whether to also return the spectrum of the background, if applicable.
+        add_data : bool, optional
+            Whether to load the resulting data back into the application according to
+            ``add_results``.
+        kwargs : dict
+            Additional keyword arguments passed to the NDDataArray collapse operation.
+            Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
+        """
+        if self.conflicting_aperture_and_function:
+            raise ValueError(self.conflicting_aperture_error_message)
+        if self.aperture.selected == self.background.selected:
+            raise ValueError("aperture and background cannot be set to the same subset")
+
+        selected_func = self.function_selected.lower()
+        spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
+                                           self.aperture, self.aperture_weight_mask,
+                                           self.wavelength_dependent,
+                                           selected_func, **kwargs)
+
+        bg_spec = self.extract_bg_spectrum(add_data=False, bg_spec_per_spaxel=False)
+        if bg_spec is not None:
+            spec = spec - bg_spec
+
+        # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
+        pix_scale_factor = self.aperture.scale_factor * self.spectral_cube.meta.get('PIXAR_SR', 1.0)
+        spec.meta['_pixel_scale_factor'] = pix_scale_factor
+
         # stuff for exporting to file
-        self.extracted_spec = collapsed_spec
+        self.extracted_spec = spec
         self.extracted_spec_available = True
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"extracted_{selected_func}_{fname_label}.fits"
 
-        # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
-        pix_scale_factor = self.aperture.scale_factor * spectral_cube.meta.get('PIXAR_SR', 1.0)
-        collapsed_spec.meta['_pixel_scale_factor'] = pix_scale_factor
-
         if add_data:
             if default_color := self.aperture.selected_item.get('color', None):
-                collapsed_spec.meta['_default_color'] = default_color
-            self.add_results.add_results_from_plugin(collapsed_spec)
+                spec.meta['_default_color'] = default_color
+            self.add_results.add_results_from_plugin(spec)
 
             snackbar_message = SnackbarMessage(
                 "Spectrum extracted successfully.",
@@ -414,81 +503,61 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 sender=self)
             self.hub.broadcast(snackbar_message)
 
-        return collapsed_spec
+        if return_bg:
+            return spec, bg_spec
+        return spec
 
-    def get_aperture(self):
-        # Retrieve flux cube and create an array to represent the cone mask
-        flux_cube = self.dataset.selected_obj
-        display_unit = astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
+    @with_spinner('bg_spec_spinner')
+    def extract_bg_spectrum(self, add_data=False, **kwargs):
+        """
+        Create a background 1D spectrum from the input parameters defined in the plugin.
 
-        # if subset is a composite subset, skip the other logic:
-        if self.aperture.is_composite:
-            [subset_group] = [
-                subset_group for subset_group in self.app.data_collection.subset_groups
-                if subset_group.label == self.aperture_selected]
-            mask_weights = subset_group.subsets[0].to_mask().astype(np.float32)
-            return mask_weights
+        If ``function`` is 'sum', then the value is scaled by the relative ratios of the area
+        (along the spectral axis) of ``aperture`` to ``background``.
 
-        # Center is reverse coordinates
-        center = (self.aperture.selected_spatial_region.center.y,
-                  self.aperture.selected_spatial_region.center.x)
-        aperture = regions2aperture(self.aperture.selected_spatial_region)
-        aperture.positions = center
-
-        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
-        aper_method = self.aperture_method_selected.lower()
-        if self.wavelength_dependent:
-            # Cone aperture
-            if display_unit.physical_type != 'length':
-                raise ValueError(
-                    f'Spectral axis unit physical type is {display_unit.physical_type}, '
-                    'must be length for cone aperture')
-
-            fac = flux_cube.spectral_axis.to_value(display_unit) / self.reference_spectral_value
-
-            # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
-            if isinstance(aperture, CircularAperture):
-                radii = fac * aperture.r  # radius
-            elif isinstance(aperture, EllipticalAperture):
-                radii = fac * aperture.a  # semimajor axis
-                radii_b = fac * aperture.b  # semiminor axis
-            elif isinstance(aperture, RectangularAperture):
-                radii = fac * aperture.w  # full width
-                radii_h = fac * aperture.h  # full height
-            else:
-                raise NotImplementedError(f"{aperture.__class__.__name__} is not supported")
-
-            mask_weights = np.zeros(flux_cube.shape, dtype=np.float32)
-
-            # Loop through cube and create cone aperture at each wavelength. Then convert that to a
-            # weight array using the selected aperture method, and add it to a weight cube.
-            for index, cone_r in enumerate(radii):
-                if isinstance(aperture, CircularAperture):
-                    aperture.r = cone_r
-                elif isinstance(aperture, EllipticalAperture):
-                    aperture.a = cone_r
-                    aperture.b = radii_b[index]
-                else:  # RectangularAperture
-                    aperture.w = cone_r
-                    aperture.h = radii_h[index]
-
-                slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
-                # Add slice mask to fractional pixel array
-                mask_weights[:, :, index] = slice_mask
+        Parameters
+        ----------
+        add_data : bool
+            Whether to add the resulting spectrum to the application, according to the options
+            defined in the plugin.
+        kwargs : dict
+            Additional keyword arguments passed to the NDDataArray collapse operation.
+            Examples include ``propagate_uncertainties`` and ``operation_ignores_mask``.
+        """
+        # allow internal calls to override the behavior of the bg_spec_per_spaxel traitlet
+        bg_spec_per_spaxel = kwargs.pop('bg_spec_per_spaxel', self.bg_spec_per_spaxel)
+        if self.background.selected != self.background.default_text:
+            bg_spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
+                                                  self.background, self.bg_weight_mask,
+                                                  self.bg_wavelength_dependent,
+                                                  self.function_selected.lower(), **kwargs)
+            if self.function_selected.lower() == 'sum':
+                if bg_spec_per_spaxel:
+                    bg_spec *= 1 / self.bg_area_along_spectral
+                else:
+                    # then scale according to aperture areas across the spectral axis (allowing for
+                    # independent wavelength-dependence btwn the aperture and background)
+                    bg_spec *= self.aperture_area_along_spectral / self.bg_area_along_spectral
         else:
-            # Cylindrical aperture
-            slice_mask = aperture.to_mask(method=aper_method).to_image(im_shape)
-            # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
-            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=2)
-        return mask_weights
+            bg_spec = None
+
+        if add_data:
+            if bg_spec is None:
+                raise ValueError(f"Background is set to {self.background.selected}")
+            self.bg_spec_add_results.add_results_from_plugin(bg_spec, replace=False)
+
+        return bg_spec
 
     def vue_spectral_extraction(self, *args, **kwargs):
         try:
-            self.collapse_to_spectrum(add_data=True)
+            self.extract(add_data=True)
         except Exception as e:
             self.hub.broadcast(SnackbarMessage(
                 f"Extraction failed: {repr(e)}",
                 sender=self, color="error"))
+
+    def vue_create_bg_spec(self, *args, **kwargs):
+        self.extract_bg_spectrum(add_data=True)
 
     def vue_save_as_fits(self, *args):
         self._save_extracted_spec_to_fits()
@@ -543,28 +612,21 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.results_label_default = f"Spectrum ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
 
-    @property
+    @cached_property
     def marks(self):
         if not self._tray_instance:
             return {}
-        marks = {}
-        for id, viewer in self.app._viewer_store.items():
-            if not isinstance(viewer, CubevizProfileView):
-                continue
-            for mark in viewer.figure.marks:
-                if isinstance(mark, SpectralExtractionPreview):
-                    marks[id] = mark
-                    break
-            else:
-                mark = SpectralExtractionPreview(viewer, visible=self.is_active)
-                viewer.figure.marks = viewer.figure.marks + [mark]
-                marks[id] = mark
+        sv = self.spectrum_viewer
+        marks = {'spec': PluginLine(sv, visible=self.is_active),
+                 'bg_spec': PluginLine(sv,
+                                       line_style='dotted',
+                                       visible=self.is_active and self.active_step == 'bg')}
+        sv.figure.marks = sv.figure.marks + [marks['spec'], marks['bg_spec']]
         return marks
 
     def _clear_marks(self):
         for mark in self.marks.values():
             if mark.visible:
-                mark.clear()
                 mark.visible = False
 
     @observe('is_active', 'show_live_preview')
@@ -577,12 +639,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # then the marks themselves need to be updated
             self._live_update(event)
 
-    @observe('aperture_selected', 'function_selected',
-             'wavelength_dependent', 'reference_spectral_value',
+    @observe('dataset_selected', 'aperture_selected', 'bg_selected',
+             'wavelength_dependent', 'bg_wavelength_dependent', 'reference_spectral_value',
+             'function_selected',
              'aperture_method_selected',
              'previews_temp_disabled')
     @skip_if_no_updates_since_last_active()
-    @with_temp_disable(timeout=0.3)
+    @with_temp_disable(timeout=0.4)
     def _live_update(self, event={}):
         if not self._tray_instance:
             return
@@ -590,16 +653,18 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self._clear_marks()
             return
 
-        if event.get('name', '') not in ('is_active', 'show_live_preview'):
-            # mark visibility hasn't been handled yet
-            self._toggle_marks()
-
         try:
-            sp = self.collapse_to_spectrum(add_data=False)
-        except Exception:
+            sp, bg_spec = self.extract(return_bg=True, add_data=False)
+        except (ValueError, Exception):
             self._clear_marks()
             return
 
-        for mark in self.marks.values():
-            mark.update_xy(sp.spectral_axis.value, sp.flux.value)
-            mark.visible = True
+        self.marks['spec'].update_xy(sp.spectral_axis.value, sp.flux.value)
+        self.marks['spec'].visible = True
+
+        if bg_spec is None:
+            self.marks['bg_spec'].clear()
+            self.marks['bg_spec'].visible = False
+        else:
+            self.marks['bg_spec'].update_xy(bg_spec.spectral_axis.value, bg_spec.flux.value)
+            self.marks['bg_spec'].visible = self.active_step == 'bg'
