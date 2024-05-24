@@ -11,6 +11,9 @@ New Features
 
 - New "About" plugin to show Jdaviz version info. [#2886]
 
+- Descriptions are shown in the color mode dropdown for image layers to help describe the use-cases
+  for ``Colormap`` vs ``Color``. [#2894]
+
 Cubeviz
 ^^^^^^^
 
@@ -36,6 +39,10 @@ Specviz2d
 
 API Changes
 -----------
+
+- The ``Monochromatic`` option for ``color_mode`` in plot options is now renamed to ``Color``.
+  ``Monochromatic`` will continue to work with a deprecation warning, but may be removed in a
+  future release. [#2894]
 
 Cubeviz
 ^^^^^^^
