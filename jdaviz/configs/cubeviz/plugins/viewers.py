@@ -46,22 +46,21 @@ class WithSliceIndicator:
 
             try:
                 # Retrieve layer data and units
-                data_obj = layer.layer.data.get_component(self.slice_component_label).data
-                data_units = layer.layer.data.get_component(self.slice_component_label).units
+                data_comp = layer.layer.data.get_component(self.slice_component_label)
             except (AttributeError, KeyError):
                 # layer either does not have get_component (because its a subset)
                 # or slice_component_label is not a component in this layer
                 # either way, return an empty array and skip this layer
                 return np.array([])
 
-            data_spec_axis = np.asarray(data_obj.data, dtype=float) * u.Unit(data_units)
-
             # Convert axis if display units are set and are different
-            if slice_display_units and slice_display_units != data_units:
-                return data_spec_axis.to_value(slice_display_units,
-                                               equivalencies=u.spectral())
+            data_units = getattr(data_comp, 'units', None)
+            if slice_display_units and data_units and slice_display_units != data_units:
+                data = np.asarray(data_comp.data, dtype=float) * u.Unit(data_units)
+                return data.to_value(slice_display_units,
+                                     equivalencies=u.spectral())
             else:
-                return data_spec_axis
+                return data_comp.data
         try:
             return np.asarray(np.unique(np.concatenate([_get_component(layer) for layer in self.layers])),  # noqa
                               dtype=float)
@@ -113,23 +112,22 @@ class WithSliceSelection:
 
             try:
                 # Retrieve layer data and units using the slice index of the world components ids
-                data_obj = layer.layer.data.get_component(world_comp_ids[self.slice_index]).data
-                data_units = layer.layer.data.get_component(world_comp_ids[self.slice_index]).units
+                data_comp = layer.layer.data.get_component(world_comp_ids[self.slice_index])
             except (AttributeError, KeyError):
                 continue
 
-            # Find the spectral axis
-            data_spec_axis = np.asarray(data_obj.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
-                                        dtype=float)
+            data = np.asarray(data_comp.data.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
+                              dtype=float)
 
             # Convert to display units if applicable
-            if slice_display_units and slice_display_units != data_units:
-                converted_axis = (data_spec_axis * u.Unit(data_units)).to_value(
+            data_units = getattr(data_comp, 'units', None)
+            if slice_display_units and data_units and slice_display_units != data_units:
+                converted_axis = (data * u.Unit(data_units)).to_value(
                     slice_display_units,
                     equivalencies=u.spectral()
                 )
             else:
-                converted_axis = data_spec_axis
+                converted_axis = data
 
         return converted_axis
 
