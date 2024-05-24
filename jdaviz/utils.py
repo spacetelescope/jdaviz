@@ -439,17 +439,23 @@ def download_uri_to_path(possible_uri, cache=None, local_path=None):
 
     parsed_uri = urlparse(possible_uri)
 
+    warning_msg = (
+        "You may be querying for a remote file "
+        f"at '{possible_uri}', but the `cache` argument was not "
+        f"in the call to `load_data`. Unless you set `cache` "
+        f"explicitly, remote files will be cached locally and "
+        f"this warning will be raised."
+    )
+
+    cache_warning = False
     if cache is None:
         cache = True
-        warnings.warn(
-            "You may be querying for a remote file "
-            f"at '{possible_uri}', but the `cache` argument was not "
-            f"in the call to `load_data`. Unless you set `cache` "
-            f"explicitly, remote files will be cached locally and "
-            f"this warning will be raised."
-        )
+        cache_warning = True
 
     if parsed_uri.scheme.lower() == 'mast':
+        if cache_warning:
+            warnings.warn(warning_msg)
+
         (status, msg, url) = Observations.download_file(
             possible_uri, cache=cache, local_path=local_path
         )
@@ -461,12 +467,6 @@ def download_uri_to_path(possible_uri, cache=None, local_path=None):
                 f"Failed query for URI '{possible_uri}' at '{url}':\n\n{msg}"
             )
 
-        if cache != True:  # noqa (may be None, string, or bool)
-            warnings.warn(
-                f"The URI '{possible_uri}' has been downloaded from MAST via "
-                f"astroquery with `cache != True`. "
-            )
-
         if local_path is None:
             # if not specified, this is the default location:
             local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
@@ -474,6 +474,9 @@ def download_uri_to_path(possible_uri, cache=None, local_path=None):
         return local_path
 
     elif parsed_uri.scheme.lower() in ['http', 'https', 'ftp']:
+        if cache_warning:
+            warnings.warn(warning_msg)
+
         return download_file(possible_uri, cache=cache)
 
     elif parsed_uri.scheme == '':
