@@ -65,9 +65,9 @@
 
     <!-- Show all subregions of a subset, including Glue state and subset type. -->
     <div v-for="(region, index) in subset_definitions">
-       <j-plugin-section-header style="margin: 0px; margin-left: -12px; text-align: left; font-size: larger; font-weight: bold">
+      <j-plugin-section-header style="margin: 0px; margin-left: -12px; text-align: left; font-size: larger; font-weight: bold">
        Subregion {{ index }}</j-plugin-section-header>
-       <v-row class="row-no-outside-padding">
+      <v-row class="row-no-outside-padding">
         <div style="margin-top: 4px">
             {{ subset_types[index] }} applied with
         </div>
@@ -95,22 +95,27 @@
         </div>
       </v-row>
 
-      <v-row v-for="(item, index2) in region" class="row-no-outside-padding">
-        <v-text-field v-if="item.name === 'Parent' || item.name === 'Masked values'"
-          :label="item.name"
-          :value="item.value"
-          style="padding-top: 0px; margin-top: 0px"
-          :readonly="true"
-          :hint="item.name === 'Parent' ? 'Subset was defined with respect to this reference data (read-only)' : 'Number of elements included by mask'"
-        ></v-text-field>
-        <v-text-field v-if="item.name !== 'Parent' && item.name !== 'Masked values'"
-          :label="item.name"
-          v-model.number="item.value"
-          type="number"
-          style="padding-top: 0px; margin-top: 0px"
-          :suffix="item.unit ? item.unit.replace('Angstrom', 'A') : ''"
-        ></v-text-field>
-      </v-row>
+      <div v-for="(item, index2) in region">
+        <v-row v-if="item.name === 'Parent' || item.name === 'Masked values'" class="row-no-outside-padding">
+          <v-text-field
+            :label="item.name"
+            :value="item.value"
+            style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
+            :readonly="true"
+            :hint="item.name === 'Parent' ? 'Subset was defined with respect to this reference data (read-only)' : 'Number of elements included by mask'"
+            persistent-hint
+          ></v-text-field>
+        </v-row>
+        <v-row v-else class="row-no-outside-padding">
+          <v-text-field
+            :label="item.name"
+            v-model.number="item.value"
+            type="number"
+            style="padding-top: 0px; margin-top: 0px; margin-bottom: 10px;"
+            :suffix="item.unit ? item.unit.replace('Angstrom', 'A') : ''"
+          ></v-text-field>
+        </v-row>
+      </div>
     </div>
 
       <v-row v-if="!multiselect" justify="end" no-gutters>
