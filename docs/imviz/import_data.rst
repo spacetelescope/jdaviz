@@ -155,6 +155,10 @@ are placed in the `astropy cache <https://docs.astropy.org/en/stable/utils/data.
 and URIs retrieved via astroquery can be saved to a path of your choice with
 ``local_path``.
 
+Local file URIs beginning with ``file://``
+are not supported by this method – nor are they necessary, since string
+paths without the scheme work fine! Cloud FITS are not yet supported.
+
 .. code-block:: python
 
     from jdaviz import Imviz
