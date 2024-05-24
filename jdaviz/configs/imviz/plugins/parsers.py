@@ -43,7 +43,7 @@ def prep_data_layer_as_dq(data):
 
 
 @data_parser_registry("imviz-data-parser")
-def parse_data(app, file_obj, ext=None, data_label=None, parent=None, cache=True):
+def parse_data(app, file_obj, ext=None, data_label=None, parent=None, cache=None):
     """Parse a data file into Imviz.
 
     Parameters

@@ -23,7 +23,7 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, data_type=None, data_label=None, parent=None, cache=True):
+def parse_data(app, file_obj, data_type=None, data_label=None, parent=None, cache=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.

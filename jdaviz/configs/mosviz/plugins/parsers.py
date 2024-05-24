@@ -259,7 +259,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False, ext=1, transpose=False, cache=True):
+                      show_in_viewer=False, ext=1, transpose=False, cache=None):
     """
     Attempts to parse a 2D spectrum object.
 
