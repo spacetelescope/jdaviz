@@ -198,6 +198,10 @@ a:active {
   color: transparent ! important;
 }
 
+.jdaviz-nested-toolbar .v-btn-toggle>.v-btn.v-btn {
+   opacity: 1;
+}
+
 .suboptions-carrot {
   /* tweak margins for different toolbar size */
   margin-bottom: -28px !important;
@@ -211,10 +215,6 @@ a:active {
 .plugin-nested-toolbar .v-btn--active, .plugin-nested-toolbar .v-btn:focus {
   /* semi-transparent active color (orange) */
   background-color: #c7510996 !important;
-}
-
-.vuetify-styles .v-btn-toggle>.v-btn.v-btn {
-    opacity: 1;
 }
 
 .v-divider.theme--dark {
