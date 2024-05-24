@@ -199,7 +199,7 @@ a:active {
 }
 
 .jdaviz-nested-toolbar .v-btn-toggle>.v-btn.v-btn {
-   opacity: 1;
+    opacity: 1;
 }
 
 .suboptions-carrot {
