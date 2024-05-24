@@ -6,14 +6,14 @@ from echo import delay_callback
 from glue.config import viewer_tool
 from glue.core import HubListener
 from glue.viewers.common.tool import Tool
+from glue_jupyter.bqplot.common import tools
 from glue_jupyter.bqplot.common.tools import (CheckableTool,
                                               HomeTool, BqplotPanZoomMode,
                                               BqplotPanZoomXMode, BqplotPanZoomYMode,
                                               BqplotRectangleMode, BqplotCircleMode,
                                               BqplotEllipseMode, BqplotCircularAnnulusMode,
                                               BqplotXRangeMode, BqplotYRangeMode,
-                                              BqplotSelectionTool,
-                                              INTERACT_COLOR)
+                                              BqplotSelectionTool)
 from bqplot.interacts import BrushSelector, BrushIntervalSelector
 
 from jdaviz.core.events import LineIdentifyMessage, SpectralMarksChangedMessage
@@ -21,6 +21,8 @@ from jdaviz.core.marks import SpectralLine
 
 __all__ = []
 
+INTERACT_COLOR = "#c75109"
+tools.INTERACT_COLOR = INTERACT_COLOR
 ICON_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'data', 'icons'))
 
 

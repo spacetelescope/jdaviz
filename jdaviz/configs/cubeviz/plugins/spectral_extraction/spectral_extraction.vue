@@ -85,7 +85,7 @@
       </div>
     </div>
 
-    <div v-if="dev_bg_support" @mouseover="() => active_step='bg'">
+    <div @mouseover="() => active_step='bg'">
       <j-plugin-section-header :active="active_step==='bg'">Background</j-plugin-section-header>
       <plugin-subset-select
         :items="bg_items"
@@ -133,6 +133,40 @@
           </v-row>
         </div>
       </div>
+
+      <v-row v-if="bg_selected !== 'None'">
+        <v-expansion-panels accordion>
+          <v-expansion-panel>
+            <v-expansion-panel-header v-slot="{ open }">
+              <span style="padding: 6px">Export Background Spectrum</span>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content class="plugin-expansion-panel-content">
+              <v-row v-if="function_selected === 'Sum'">
+                <v-switch
+                  v-model="bg_spec_per_spaxel"
+                  label="Normalize per-spaxel"
+                  hint="Whether to normalize the background per spaxel (not shown in preview). Otherwise, the spectrum will be scaled by the ratio between the areas of the extraction aperture to the background aperture."
+                  persistent-hint
+                ></v-switch>
+              </v-row>
+              <plugin-add-results
+                :label.sync="bg_spec_results_label"
+                :label_default="bg_spec_results_label_default"
+                :label_auto.sync="bg_spec_results_label_auto"
+                :label_invalid_msg="bg_spec_results_label_invalid_msg"
+                :label_overwrite="bg_spec_results_label_overwrite"
+                label_hint="Label for the background spectrum"
+                :add_to_viewer_items="bg_spec_add_to_viewer_items"
+                :add_to_viewer_selected.sync="bg_spec_add_to_viewer_selected"
+                action_label="Export"
+                action_tooltip="Create Background Spectrum"
+                @click:action="create_bg_spec"
+              ></plugin-add-results>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </v-row>
+
     </div>
 
     <div @mouseover="() => active_step='ext'">

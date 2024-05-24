@@ -4,8 +4,10 @@
 New Features
 ------------
 
-- Adding flux/surface brightness translation and surface brightness
+- Added flux/surface brightness translation and surface brightness
   unit conversion in Cubeviz and Specviz. [#2781]
+
+- Plugin tray is now open by default. [#2892]
 
 - New "About" plugin to show Jdaviz version info. [#2886]
 
@@ -17,6 +19,8 @@ Cubeviz
   (the extracted spectra are now given dedicated data-labels instead of referring to them by
   the label of the flux cube) as well as to several plugins: model fitting, gaussian smooth,
   line analysis, and moment maps. [#2827]
+
+- Background subtraction support within Spectral Extraction. [#2859]
 
 Imviz
 ^^^^^
@@ -50,6 +54,8 @@ Cubeviz
 - In the Slice plugin, the following deprecated properties were removed: ``wavelength`` (use ``value``),
   ``wavelength_unit`` (use ``value_unit``), ``show_wavelength`` (use ``show_value``),
   ``slice`` (use ``value``). [#2878]
+
+- Spectral Extraction: renamed ``collapse_to_spectrum(...)`` to ``extract(...)``. [#2859]
 
 Imviz
 ^^^^^
