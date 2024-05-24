@@ -13,6 +13,7 @@ from jdaviz.configs.default.plugins.data_tools.file_chooser import FileChooser
 from jdaviz.core.data_formats import identify_helper
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.template_mixin import show_widget
+from jdaviz.utils import download_uri_to_path
 
 STATUS_HINTS = {
     'idle': "Provide a file path, or pick which viz tool to open",
@@ -44,6 +45,9 @@ def open(filename, show=True, **kwargs):
     Jdaviz ConfigHelper : jdaviz.core.helpers.ConfigHelper
         The autoidentified ConfigHelper for the given data
     '''
+    # first catch URIs and download them, or return filename unchanged:
+    filename = download_uri_to_path(filename)
+
     # Identify the correct config
     compatible_helpers, hdul = identify_helper(filename)
     if len(compatible_helpers) > 1:

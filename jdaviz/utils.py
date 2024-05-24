@@ -451,6 +451,11 @@ def download_uri_to_path(possible_uri, cache=None, local_path=None):
 
     if parsed_uri.scheme.lower() == 'mast':
         Observations.download_file(possible_uri, cache=cache, local_path=local_path)
+        if cache != True:  # noqa (may be None, string, or bool)
+            warnings.warn(
+                f"The URI '{possible_uri}' has been downloaded from MAST via "
+                f"astroquery with `cache != True`. "
+            )
 
         if local_path is None:
             # if not specified, this is the default location:
