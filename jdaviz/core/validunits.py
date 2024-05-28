@@ -1,7 +1,8 @@
 from astropy import units as u
+import itertools
 
 __all__ = ['units_to_strings', 'create_spectral_equivalencies_list',
-           'create_flux_equivalencies_list']
+           'create_flux_equivalencies_list', 'check_if_unit_is_per_solid_angle']
 
 
 def units_to_strings(unit_list):
@@ -98,3 +99,52 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
 
     # Concatenate both lists with the local units coming first.
     return sorted(units_to_strings(local_units)) + flux_unit_equivalencies_titles
+
+
+def check_if_unit_is_per_solid_angle(unit):
+    """
+    Check if a given u.Unit or unit string (that can be converted to
+    a u.Unit object) represents some unit per solid angle.
+
+    Parameters
+    ----------
+    unit : str or u.Unit
+        Unit object or string representation of unit.
+
+    Examples
+    --------
+    >>> check_if_unit_is_per_solid_angle('erg / (s cm^2 sr)')
+    True
+    >>> check_if_unit_is_per_solid_angle('erg / s cm^2')
+    False
+    >>> check_if_unit_is_per_solid_angle('Jy * sr^-1')
+    True
+
+    """
+
+    # first, convert string to u.Unit obj.
+    # this will take care of some formatting consistency like
+    # turning something like Jy / (degree*degree) to Jy / deg**2
+    # and erg sr^1 to erg / sr
+    if isinstance(unit, u.core.Unit) or isinstance(unit, u.core.CompositeUnit):
+        unit_str = unit.to_string()
+    elif isinstance(unit, str):
+        unit = u.Unit(unit)
+        unit_str = unit.to_string()
+    else:
+        raise ValueError('Unit must be u.Unit, or string that can be converted into a u.Unit')
+
+    if '/' in unit_str:
+        # might be comprised of several units in denom.
+        denom = unit_str.split('/')[-1].split()
+
+        # find all combos of one or two units, to catch cases where there are two different
+        # units of angle in the denom that might comprise a solid angle when multiplied.
+        for i in [combo for length in (1, 2) for combo in itertools.combinations(denom, length)]:
+            # turn tuple of 1 or 2 units into a string, and turn that into a u.Unit to check type
+            new_unit_str = ' '.join(i).translate(str.maketrans('', '', '()'))
+            new_unit = u.Unit(new_unit_str)
+            if new_unit.physical_type == 'solid angle':
+                return True
+
+    return False

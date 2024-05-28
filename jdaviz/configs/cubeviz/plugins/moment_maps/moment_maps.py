@@ -19,6 +19,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralContinuumMixin,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner)
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['MomentMap']
@@ -27,7 +28,7 @@ __all__ = ['MomentMap']
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
-moment_unit_options = {0: ["Flux"],
+moment_unit_options = {0: ["Surface Brightness", "Flux"],
                        1: ["Velocity", "Spectral Unit"],
                        2: ["Velocity", "Velocity^N"]}
 
@@ -101,6 +102,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                                filters=['not_child_layer',
                                                         'layer_in_spectrum_viewer'])
 
+        # when plugin is initialized, there won't be a dataset selected, so
+        # call the output unit 'Flux' for now (rather than surface brightness).
+        # the appropriate label will be chosen once a dataset is selected, and/or
+        # unit conversion is done
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
                                                  selected='output_unit_selected',
@@ -159,6 +164,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     @observe("dataset_selected", "n_moment")
     def _set_data_units(self, event={}):
+
         if isinstance(self.n_moment, str) or self.n_moment < 0:
             return
         unit_options_index = 2 if self.n_moment > 2 else self.n_moment
@@ -166,7 +172,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             self.output_unit_selected = moment_unit_options[unit_options_index][0]
         self.send_state("output_unit_selected")
 
-        unit_dict = {"Flux": "",
+        # either 'Flux' or 'Surface Brightness'
+        orig_flux_or_sb = self.output_unit_items[0]['label']
+
+        unit_dict = {orig_flux_or_sb: "",
                      "Spectral Unit": "",
                      "Velocity": "km/s",
                      "Velocity^N": f"km{self.n_moment}/s{self.n_moment}"}
@@ -184,11 +193,36 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             self.dataset_spectral_unit = sunit
             unit_dict["Spectral Unit"] = sunit
 
-            unit_dict["Flux"] = data.get_component('flux').units
+            # get flux/SB units
+            if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
+                if self.spectrum_viewer.state.y_display_unit is not None:
+                    unit_dict[orig_flux_or_sb] = self.spectrum_viewer.state.y_display_unit
+                else:
+                    # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
+                    # been done if not, get default flux units which should be the units displayed
+                    unit_dict[orig_flux_or_sb] = data.get_component('flux').units
+            else:
+                # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
+                # been done if not, get default flux units which should be the units displayed
+                unit_dict[orig_flux_or_sb] = data.get_component('flux').units
+
+            # figure out if label should say 'Flux' or 'Surface Brightness'
+            sb_or_flux_label = "Flux"
+            is_unit_solid_angle = check_if_unit_is_per_solid_angle(unit_dict[orig_flux_or_sb])
+            if is_unit_solid_angle is True:
+                sb_or_flux_label = "Surface Brightness"
 
         # Update units in selection item dictionary
         for item in self.output_unit_items:
             item["unit_str"] = unit_dict[item["label"]]
+            if item["label"] in ["Flux", "Surface Brightness"]:
+                # change unit label to reflect if unit is flux or SB
+                item["label"] = sb_or_flux_label
+
+        if self.dataset_selected != "":
+            # output_unit_selected might not match (potentially) changed flux/SB label
+            if self.output_unit_selected in ['Flux', 'Surface Brightness']:
+                self.output_unit_selected = sb_or_flux_label
 
         # Filter what we want based on n_moment
         if self.n_moment == 0:
@@ -233,6 +267,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         """
 
         # Check to make sure API use hasn't put us into an invalid state.
+
         try:
             n_moment = int(self.n_moment)
             if n_moment < 0:
@@ -300,6 +335,23 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # If n>1 and velocity is desired, need to take nth root of result
         if n_moment > 0 and self.output_unit_selected.lower() == "velocity":
             self.moment = np.power(self.moment, 1/self.n_moment)
+
+        # convert units for moment 0, which is the only currently supported
+        # moment for using converted units.
+        if n_moment == 0:
+            # get flux/SB units
+            if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
+                if self.spectrum_viewer.state.y_display_unit is not None:
+                    flux_sb_unit = self.spectrum_viewer.state.y_display_unit
+                else:
+                    flux_sb_unit = data.get_component('flux').units
+            else:
+                flux_sb_unit = data.get_component('flux').units
+
+            # convert unit string to u.Unit so moment map data can be converted
+            flux_or_sb_display_unit = u.Unit(flux_sb_unit)
+            self.moment = self.moment.to(flux_or_sb_display_unit)
+
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)
 

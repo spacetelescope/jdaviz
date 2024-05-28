@@ -129,6 +129,7 @@ class UnitConversion(PluginTemplateMixin):
             y_unit = _valid_glue_display_unit(y_unit, self.spectrum_viewer, 'y')
             y_u = u.Unit(y_unit)
             choices = create_flux_equivalencies_list(y_u, x_u)
+
             # ensure that original entry is in the list of choices
             if not np.any([y_u == u.Unit(choice) for choice in choices]):
                 choices = [y_unit] + choices
@@ -160,8 +161,11 @@ class UnitConversion(PluginTemplateMixin):
 
     @observe('flux_unit_selected')
     def _on_flux_unit_changed(self, *args):
+
         yunit = _valid_glue_display_unit(self.flux_or_sb_unit.selected, self.spectrum_viewer, 'y')
+
         if self.spectrum_viewer.state.y_display_unit != yunit:
+
             self.spectrum_viewer.state.y_display_unit = yunit
             self.hub.broadcast(GlobalDisplayUnitChanged('flux',
                                                         self.flux_or_sb_unit.selected,

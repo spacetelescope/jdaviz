@@ -86,6 +86,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Moment map plugin now reflects selected flux / surface brightness unit for moment zero. [#2877]
+
 Imviz
 ^^^^^
 
