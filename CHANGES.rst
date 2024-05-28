@@ -16,6 +16,9 @@ New Features
 
 - The colormap menu for image layers now shows in-line previews of the colormaps. [#2900]
 
+- Display default filepath in Export plugin, re-enable API exporting, enable relative and absolute
+  path exports from the UI. [#2896]
+
 Cubeviz
 ^^^^^^^
 

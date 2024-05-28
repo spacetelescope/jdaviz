@@ -225,6 +225,18 @@
     <div style="display: grid; position: relative"> <!-- overlay container -->
     <div style="grid-area: 1/1">
 
+    <v-row class="row-no-outside-padding row-min-bottom-padding">
+      <v-col>
+        <v-text-field
+          :value="filepath_value"
+          label="Filepath"
+          hint="Default filepath export location."
+          persistent-hint
+          disabled
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
     <plugin-auto-label
       :value.sync="filename_value"
       :default="filename_default"
