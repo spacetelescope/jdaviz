@@ -81,6 +81,8 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     filename_auto = Bool(True).tag(sync=True)
     filename_invalid_msg = Unicode('').tag(sync=True)
 
+    default_filepath = Unicode().tag(sync=True)
+
     # if selected subset is spectral or composite, display message and disable export
     subset_invalid_msg = Unicode().tag(sync=True)
     data_invalid_msg = Unicode().tag(sync=True)
@@ -254,6 +256,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             self.filename_default = ''
 
+        # Call to initially set the default filepath
+        if hasattr(self, 'viewer_format') and self.filename_default:
+            self._normalize_filename(filename=self.filename_default,
+                                     filetype=self.viewer_format.selected,
+                                     default_path=True)
+
     @observe('filename_value')
     def _is_filename_changed(self, event):
         # Clear overwrite warning when user changes filename
@@ -333,7 +341,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             self.data_invalid_msg = ''
 
-    def _normalize_filename(self, filename=None, filetype=None, overwrite=False):
+    def _normalize_filename(self, filename=None, filetype=None, overwrite=False, default_path=False):  # noqa: E501
         # Make sure filename is valid and file does not end up in weird places in standalone mode.
         if not filename:
             raise ValueError("Invalid filename")
@@ -348,6 +356,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             raise ValueError(f"Invalid path={filepath}")
         elif ((not filepath or str(filepath).startswith(".")) and os.environ.get("JDAVIZ_START_DIR", "")):  # noqa: E501 # pragma: no cover
             filename = os.environ["JDAVIZ_START_DIR"] / filename
+
+        # Set the default filepath to inform user where file will be exported to
+        if default_path:
+            if not filepath.is_absolute():
+                abs_path = filepath.resolve()
+                self.default_filepath = str(abs_path)
 
         if filename.exists() and not overwrite:
             self.overwrite_warn = True
