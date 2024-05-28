@@ -65,6 +65,7 @@ class WithSliceIndicator:
             return np.asarray(np.unique(np.concatenate([_get_component(layer) for layer in self.layers])),  # noqa
                               dtype=float)
         except ValueError:
+            # NOTE: this will result in caching an empty list
             return np.array([])
 
     def _set_slice_indicator_value(self, value):
