@@ -24,7 +24,7 @@ def test_uri_to_download_imviz(imviz_helper):
     uri = "mast:HST/product/jezz02ljq_drz.fits"
     imviz_helper.load_data(uri, cache=True)
 
-    with pytest.warns(Warning, match='You may be'):
+    with pytest.warns(UserWarning, match='You may be querying for a remote file'):
         # if you don't pass a `cache` value, a warning should be raised:
         imviz_helper.load_data(uri)
 

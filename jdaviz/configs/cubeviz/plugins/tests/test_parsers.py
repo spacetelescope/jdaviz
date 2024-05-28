@@ -213,7 +213,7 @@ def test_numpy_cube(cubeviz_helper):
 
 
 def test_invalid_data_types(cubeviz_helper):
-    with pytest.raises(ValueError, match=r"The input file 'does_not_exist.fits'"):
+    with pytest.raises(ValueError, match=r"The input file 'does_not_exist\.fits'"):
         cubeviz_helper.load_data('does_not_exist.fits')
 
     with pytest.raises(NotImplementedError, match='Unsupported data format'):

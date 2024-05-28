@@ -393,7 +393,7 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
-def download_uri_to_path(possible_uri, cache=None, local_path=None):
+def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
     """
     Retrieve data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
@@ -454,7 +454,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=None):
 
     if parsed_uri.scheme.lower() == 'mast':
         if cache_warning:
-            warnings.warn(warning_msg)
+            warnings.warn(warning_msg, UserWarning)
 
         (status, msg, url) = Observations.download_file(
             possible_uri, cache=cache, local_path=local_path
@@ -473,9 +473,9 @@ def download_uri_to_path(possible_uri, cache=None, local_path=None):
 
         return local_path
 
-    elif parsed_uri.scheme.lower() in ['http', 'https', 'ftp']:
+    elif parsed_uri.scheme.lower() in ('http', 'https', 'ftp'):
         if cache_warning:
-            warnings.warn(warning_msg)
+            warnings.warn(warning_msg, UserWarning)
 
         return download_file(possible_uri, cache=cache)
 
