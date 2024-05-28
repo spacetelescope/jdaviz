@@ -88,6 +88,9 @@ Cubeviz
 
 - Moment map plugin now reflects selected flux / surface brightness unit for moment zero. [#2877]
 
+- Update the scale factor used to convert a spectrum between surface brightness and flux
+  to use wavelength-dependent aperture area instead of the cone slice scale factor. [#2860]
+
 Imviz
 ^^^^^
 

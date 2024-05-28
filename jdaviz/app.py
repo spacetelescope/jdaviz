@@ -144,8 +144,8 @@ class UnitConverterWithSpectral:
                     if '_pixel_scale_factor' in spec.meta:
                         # get min and max scale factors, to use with min and max of spec for
                         # y-limits. Make sure they are Quantities (can be numpy.float64).
-                        pixel_scale_min = (Quantity(spec.meta['_pixel_scale_factor'][0])).value
-                        pixel_scale_max = (Quantity(spec.meta['_pixel_scale_factor'][-1])).value
+                        pixel_scale_min = (Quantity(min(spec.meta['_pixel_scale_factor']))).value
+                        pixel_scale_max = (Quantity(max(spec.meta['_pixel_scale_factor']))).value
                         min_max = [pixel_scale_min, pixel_scale_max]
 
                         if (u.sr in u.Unit(original_units).bases) and \
