@@ -68,7 +68,7 @@ from jdaviz.utils import (
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_no_updates_since_last_active', 'skip_if_not_tray_instance',
            'with_spinner', 'with_temp_disable',
-           'ViewerPropertiesMixin',
+           'WithCache', 'ViewerPropertiesMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
