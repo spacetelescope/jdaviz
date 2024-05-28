@@ -10,6 +10,7 @@ from jdaviz.configs.imviz.helper import layer_is_image_data
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.registries import viewer_registry
+from jdaviz.core.template_mixin import WithCache
 from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.utils import ColorCycler, get_subset_type, _wcs_only_label, layer_is_not_dq
 
@@ -20,7 +21,7 @@ viewer_registry.add("g-image-viewer", label="Image 2D", cls=BqplotImageView)
 viewer_registry.add("g-table-viewer", label="Table", cls=TableViewer)
 
 
-class JdavizViewerMixin:
+class JdavizViewerMixin(WithCache):
     toolbar = None
     tools_nested = []
     _prev_limits = None
