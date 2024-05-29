@@ -125,6 +125,9 @@ class Slice(PluginTemplateMixin):
             if str(viewer.state.x_att) not in self.valid_slice_att_names:
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
                 continue
+            # ensure the cache is reset (if previous attempts to initialize failed resulting in an
+            # empty list as the cache)
+            viewer._clear_cache('slice_values')
             slice_values = viewer.slice_values
             if len(slice_values):
                 self.value = slice_values[int(len(slice_values)/2)]

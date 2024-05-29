@@ -69,7 +69,7 @@ from jdaviz.utils import (
 __all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
            'skip_if_no_updates_since_last_active', 'skip_if_not_tray_instance',
            'with_spinner', 'with_temp_disable',
-           'ViewerPropertiesMixin',
+           'WithCache', 'ViewerPropertiesMixin',
            'BasePluginComponent',
            'MultiselectMixin',
            'SelectPluginComponent', 'UnitSelectPluginComponent', 'EditableSelectPluginComponent',
@@ -186,7 +186,19 @@ class ViewerPropertiesMixin:
         return self.app.get_viewer(viewer_reference)
 
 
-class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin):
+class WithCache:
+    def _clear_cache(self, *attrs):
+        """
+        provide convenience function to clearing the cache for cached_properties
+        """
+        if not len(attrs):
+            attrs = getattr(self, '_cached_properties', [])
+        for attr in attrs:
+            if attr in self.__dict__:
+                del self.__dict__[attr]
+
+
+class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
@@ -612,7 +624,7 @@ class PluginTemplateMixin(TemplateMixin):
         show_widget(self, loc=loc, title=title)
 
 
-class BasePluginComponent(HubListener, ViewerPropertiesMixin):
+class BasePluginComponent(HubListener, ViewerPropertiesMixin, WithCache):
     """
     This base class handles attaching traitlets from the plugin itself to logic
     handled within the component, support for caching and clearing caches on properties,
@@ -636,16 +648,6 @@ class BasePluginComponent(HubListener, ViewerPropertiesMixin):
             return super().__setattr__(attr, value)
 
         return setattr(self._plugin, self._plugin_traitlets.get(attr), value)
-
-    def _clear_cache(self, *attrs):
-        """
-        provide convenience function to clearing the cache for cached_properties
-        """
-        if not len(attrs):
-            attrs = self._cached_properties
-        for attr in attrs:
-            if attr in self.__dict__:
-                del self.__dict__[attr]
 
     def add_traitlets(self, **traitlets):
         for k, v in traitlets.items():
