@@ -225,6 +225,9 @@ def test_to_unit(cubeviz_helper):
     cid = cubeviz_helper.app.data_collection[0].data.find_component_id('flux')
     data = cubeviz_helper.app.data_collection[-1].data
     values = 1
+
+    # Surface brightness to flux
+
     original_units = u.MJy / u.sr
     target_units = u.MJy
 
@@ -232,5 +235,9 @@ def test_to_unit(cubeviz_helper):
 
     assert np.allclose(value, 4.7945742429049767e-11)
 
+    # Flux to surface brightness
+
     original_units = u.MJy
     target_units = u.MJy / u.sr
+
+    value = uc.to_unit(cubeviz_helper, data, cid, values, original_units, target_units)
