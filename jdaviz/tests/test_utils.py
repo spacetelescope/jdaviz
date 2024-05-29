@@ -24,6 +24,13 @@ def test_uri_to_download_bad_scheme(imviz_helper):
         imviz_helper.load_data(uri)
 
 
+def test_uri_to_download_nonexistant_mast_file(imviz_helper):
+    # this validates as a mast uri but doesn't actually exist on mast:
+    uri = "mast:JWST/product/jw00000-no-file-here.fits"
+    with pytest.raises(ValueError, match='Failed query for URI'):
+        imviz_helper.load_data(uri)
+
+
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper, tmp_path):
     uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits"
