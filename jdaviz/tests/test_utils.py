@@ -20,18 +20,18 @@ def test_alpha_index_exceptions():
 
 def test_uri_to_download_bad_scheme(imviz_helper):
     uri = "file://path/to/file.fits"
-    with pytest.raises(ValueError, match='URI file://path/to/file.fits with scheme file'):
+    with pytest.raises(ValueError, match=r'URI file://path/to/file\.fits with scheme file'):
         imviz_helper.load_data(uri)
 
 
 @pytest.mark.remote_data
-def test_uri_to_download_specviz(specviz_helper):
+def test_uri_to_download_specviz(specviz_helper, tmp_path):
     uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits"
     specviz_helper.load_data(uri, cache=True)
 
 
 @pytest.mark.remote_data
-def test_uri_to_download_specviz2d(specviz2d_helper):
+def test_uri_to_download_specviz2d(specviz2d_helper, tmp_path):
     uri = "mast:JWST/product/jw01324-o006_s00005_nirspec_f100lp-g140h_s2d.fits"
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', AsdfWarning)

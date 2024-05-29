@@ -286,7 +286,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         Cache the downloaded file if the data are retrieved by a query
         to a URL or URI.
     local_path : str, optional
-        Cache remote files to this path.
+        Cache remote files to this path. This is only used if data is requested from `astroquery.mast`.
 
     Returns
     -------

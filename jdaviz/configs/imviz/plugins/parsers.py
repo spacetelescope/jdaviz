@@ -69,7 +69,7 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         to a URL or URI.
 
     local_path : str, optional
-        Cache remote files to this path.
+        Cache remote files to this path. This is only used if data is requested from `astroquery.mast`.
 
     """
     if isinstance(file_obj, str):

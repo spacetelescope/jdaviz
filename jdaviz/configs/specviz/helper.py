@@ -64,7 +64,7 @@ class Specviz(ConfigHelper, LineListMixin):
             Cache the downloaded file if the data are retrieved by a query
             to a URL or URI.
         local_path : str, optional
-            Cache remote files to this path.
+            Cache remote files to this path. This is only used if data is requested from `astroquery.mast`.
         """
         super().load_data(data,
                           parser_reference='specviz-spectrum1d-parser',

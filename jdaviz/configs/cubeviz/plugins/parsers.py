@@ -45,7 +45,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         Cache the downloaded file if the data are retrieved by a query
         to a URL or URI.
     local_path : str, optional
-        Cache remote files to this path.
+        Cache remote files to this path. This is only used if data is requested from `astroquery.mast`.
     """
 
     flux_viewer_reference_name = app._jdaviz_helper._default_flux_viewer_reference_name

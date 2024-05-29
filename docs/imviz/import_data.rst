@@ -151,14 +151,14 @@ astroquery's `~astroquery.mast.ObservationsClass.download_file`. If the
 input string is a URL, it will be retrieved via astropy with
 `~astropy.utils.data.download_file`. Both methods support a
 ``cache`` argument, which will store the file locally. Cached downloads via astropy
-are placed in the `astropy cache <https://docs.astropy.org/en/stable/utils/data.html>`_,
+are placed in the :ref:`astropy cache <astropy:utils-data>`,
 and URIs retrieved via astroquery can be saved to a path of your choice with
 ``local_path``. If the ``cache`` argument hasn't been set, the file will be cached
 and a warning will be raised.
 
 Local file URIs beginning with ``file://``
 are not supported by this method – nor are they necessary, since string
-paths without the scheme work fine! Cloud FITS are not yet supported.
+paths without the scheme work fine! :ref:`Cloud FITS <astropy:fits_io_cloud>` are not yet supported.
 
 .. code-block:: python
 

@@ -420,7 +420,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
     local_path : str, optional
         Save the downloaded file to this path. Default is to
         save the file with its remote filename in the current
-        working directory.
+        working directory. This is only used if data is requested from `astroquery.mast`.
 
     Returns
     -------
