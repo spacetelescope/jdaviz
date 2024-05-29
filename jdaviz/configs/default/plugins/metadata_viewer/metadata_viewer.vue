@@ -35,11 +35,6 @@
           hide-details
         ></v-text-field>
       </v-row>
-  
-      <v-row no-gutters>
-        <v-col cols=12><U><B>Key | Value </B></U></v-col>
-        <v-col v-if="has_comments" cols=12 class="text--secondary"><U>Comment</U></v-col>
-      </v-row>
       <v-row
         v-for="item in metadata.filter((item) => {return metadata_filter === null || item.join().toLowerCase().indexOf(metadata_filter.toLowerCase()) !== -1})"
         :key="item[0]"
