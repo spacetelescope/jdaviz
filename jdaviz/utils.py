@@ -439,12 +439,20 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
 
     parsed_uri = urlparse(possible_uri)
 
-    warning_msg = (
+    cache_none_msg = (
         "You may be querying for a remote file "
         f"at '{possible_uri}', but the `cache` argument was not "
         f"in the call to `load_data`. Unless you set `cache` "
         f"explicitly, remote files will be cached locally and "
         f"this warning will be raised."
+    )
+
+    local_path_msg = (
+        f"You requested to cache data to the `local_path`='{local_path}'. This "
+        f"keyword argument is supported for downloads of MAST URIs via astroquery, "
+        f"but since the remote file at '{possible_uri}' will be downloaded "
+        f"using `astropy.utils.data.download_file`, the file will be "
+        f"stored in the astropy download cache instead."
     )
 
     cache_warning = False
@@ -454,7 +462,11 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
 
     if parsed_uri.scheme.lower() == 'mast':
         if cache_warning:
-            warnings.warn(warning_msg, UserWarning)
+            warnings.warn(cache_none_msg, UserWarning)
+
+        if local_path is not None and os.path.isdir(local_path):
+            # if you give a directory, save the file there with default name:
+            local_path = os.path.join(local_path, parsed_uri.path.split(os.path.sep)[-1])
 
         (status, msg, url) = Observations.download_file(
             possible_uri, cache=cache, local_path=local_path
@@ -469,13 +481,16 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
 
         if local_path is None:
             # if not specified, this is the default location:
-            local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
+            local_path = os.path.join(os.getcwd(), parsed_uri.path.split(os.path.sep)[-1])
 
         return local_path
 
     elif parsed_uri.scheme.lower() in ('http', 'https', 'ftp'):
         if cache_warning:
-            warnings.warn(warning_msg, UserWarning)
+            warnings.warn(cache_none_msg, UserWarning)
+
+        if local_path not in (os.curdir, None):
+            warnings.warn(local_path_msg, UserWarning)
 
         return download_file(possible_uri, cache=cache)
 

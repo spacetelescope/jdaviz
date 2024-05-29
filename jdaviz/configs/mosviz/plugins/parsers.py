@@ -259,7 +259,8 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
-                      show_in_viewer=False, ext=1, transpose=False, cache=None):
+                      show_in_viewer=False, ext=1, transpose=False,
+                      cache=None, local_path=None):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -284,6 +285,8 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     cache : None, bool, or str
         Cache the downloaded file if the data are retrieved by a query
         to a URL or URI.
+    local_path : str, optional
+        Cache remote files to this path.
 
     Returns
     -------
@@ -352,7 +355,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             # FITS file.
 
             # try parsing file_obj as a URI/URL:
-            data = download_uri_to_path(data, cache=cache)
+            data = download_uri_to_path(data, cache=cache, local_path=local_path)
 
             if _check_is_file(data):
                 try:

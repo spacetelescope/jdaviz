@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pytest
 from astropy import units as u
@@ -234,15 +235,15 @@ class TestParseImage:
 
     @pytest.mark.remote_data
     def test_parse_jwst_nircam_level2(self, imviz_helper):
-        # TODO: Change back to smaller number (30?) when ITSD is convinced it is them and not us.
-        #       Help desk ticket INC0183598, J. Quick.
-        filename = download_file(self.jwst_asdf_url_1, cache=True, timeout=100)
-
         # Default behavior: Science image
-        imviz_helper.load_data(filename)
+        with pytest.warns(UserWarning, match='You may be querying for a remote file'):
+            # if you don't pass a `cache` value, a warning should be raised:
+            imviz_helper.load_data(self.jwst_asdf_url_1)
+
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('DATA')
-        assert data.label == 'contents[DATA]'  # download_file returns cache loc
+        expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_1))[0] + '[DATA]'
+        assert data.label == expected_label
         assert data.shape == (2048, 2048)
         assert isinstance(data.coords, GWCS)
         assert comp.units == 'MJy/sr'
@@ -312,7 +313,7 @@ class TestParseImage:
         # --- Back to parser testing below. ---
 
         # Request specific extension (name + ver, but ver is not used), use given label
-        imviz_helper.load_data(filename, ext=('DQ', 42),
+        imviz_helper.load_data(self.jwst_asdf_url_1, cache=True, ext=('DQ', 42),
                                data_label='jw01072001001_01101_00001_nrcb1_cal',
                                show_in_viewer=False)
         data = imviz_helper.app.data_collection[1]
@@ -322,6 +323,7 @@ class TestParseImage:
         assert comp.units == ''
 
         # Pass in HDUList directly + ext (name only), use given label
+        filename = download_file(self.jwst_asdf_url_1, cache=True)
         with fits.open(filename) as pf:
             imviz_helper.load_data(pf, ext='SCI',
                                    data_label='jw01072001001_01101_00001_nrcb1_cal',
@@ -362,12 +364,11 @@ class TestParseImage:
     @pytest.mark.remote_data
     def test_parse_jwst_niriss_grism(self, imviz_helper):
         """No valid image GWCS for Imviz, will fall back to loading without WCS."""
-        filename = download_file(self.jwst_asdf_url_2, cache=True)
-
-        imviz_helper.load_data(filename, show_in_viewer=False)
+        imviz_helper.load_data(self.jwst_asdf_url_2, cache=True, show_in_viewer=False)
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('DATA')
-        assert data.label == 'contents[DATA]'  # download_file returns cache loc
+        expected_label = os.path.splitext(os.path.basename(self.jwst_asdf_url_2))[0] + '[DATA]'
+        assert data.label == expected_label
         assert data.shape == (2048, 2048)
         assert data.coords is None
         assert comp.units == 'DN/s'
@@ -379,10 +380,11 @@ class TestParseImage:
         filename = download_file(url, cache=True)
 
         # Default behavior: Load first image
-        imviz_helper.load_data(filename)
+        imviz_helper.load_data(url, cache=True)
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('SCI,1')
-        assert data.label == 'contents[SCI,1]'  # download_file returns cache loc
+        expected_label = os.path.splitext(os.path.basename(url))[0] + '[SCI,1]'
+        assert data.label == expected_label
         assert data.shape == (4299, 4219)
         assert_allclose(data.meta['PHOTFLAM'], 7.8711728E-20)
         assert isinstance(data.coords, WCS)

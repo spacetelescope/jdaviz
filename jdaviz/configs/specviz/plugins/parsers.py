@@ -1,3 +1,4 @@
+import os
 import pathlib
 from collections import defaultdict
 
@@ -17,7 +18,7 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
 def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False, cache=None):
+                              concat_by_file=False, cache=None, local_path=os.curdir):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -37,6 +38,8 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     cache : None, bool, or str
         Cache the downloaded file if the data are retrieved by a query
         to a URL or URI.
+    local_path : str, optional
+        Cache remote files to this path.
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -62,7 +65,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             data = SpectrumList.read(data, format=format)
     else:
         # try parsing file_obj as a URI/URL:
-        data = download_uri_to_path(data, cache=cache)
+        data = download_uri_to_path(data, cache=cache, local_path=local_path)
 
         path = pathlib.Path(data)
 

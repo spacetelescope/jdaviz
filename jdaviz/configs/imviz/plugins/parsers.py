@@ -43,7 +43,8 @@ def prep_data_layer_as_dq(data):
 
 
 @data_parser_registry("imviz-data-parser")
-def parse_data(app, file_obj, ext=None, data_label=None, parent=None, cache=None):
+def parse_data(app, file_obj, ext=None, data_label=None,
+               parent=None, cache=None, local_path=None):
     """Parse a data file into Imviz.
 
     Parameters
@@ -60,16 +61,23 @@ def parse_data(app, file_obj, ext=None, data_label=None, parent=None, cache=None
     data_label : str, optional
         The label to be applied to the Glue data component.
 
+    parent : str, optional
+        Data label for "parent" data to associate with the loaded data as "child".
+
     cache : None, bool, or str
         Cache the downloaded file if the data are retrieved by a query
         to a URL or URI.
+
+    local_path : str, optional
+        Cache remote files to this path.
+
     """
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
 
         # try parsing file_obj as a URI/URL:
-        file_obj = download_uri_to_path(file_obj, cache=cache)
+        file_obj = download_uri_to_path(file_obj, cache=cache, local_path=local_path)
 
         # If file_obj is a path to a cached file from
         # astropy.utils.data.download_file, the path has no file extension.

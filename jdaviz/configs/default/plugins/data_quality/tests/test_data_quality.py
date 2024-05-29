@@ -79,12 +79,13 @@ def test_roman_against_rdm():
 @pytest.mark.remote_data
 def test_data_quality_plugin(imviz_helper, tmp_path):
     uri = "mast:JWST/product/jw01895001004_07101_00001_nrca3_cal.fits"
-    download_path = str(tmp_path / Path(uri).name)
-    Observations.download_file(uri, local_path=download_path)
+    local_path = str(tmp_path / Path(uri).name)
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        imviz_helper.load_data(download_path, ext=('SCI', 'DQ'))
+        imviz_helper.load_data(
+            uri, cache=True, local_path=local_path, ext=('SCI', 'DQ')
+        )
 
     assert len(imviz_helper.app.data_collection) == 2
 

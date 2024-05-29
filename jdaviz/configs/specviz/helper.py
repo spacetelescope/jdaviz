@@ -41,7 +41,7 @@ class Specviz(ConfigHelper, LineListMixin):
                                handler=self._redshift_listener)
 
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
-                  concat_by_file=False, cache=None):
+                  concat_by_file=False, cache=None, local_path=None):
         """
         Load data into Specviz.
 
@@ -63,6 +63,8 @@ class Specviz(ConfigHelper, LineListMixin):
         cache : None, bool, or str
             Cache the downloaded file if the data are retrieved by a query
             to a URL or URI.
+        local_path : str, optional
+            Cache remote files to this path.
         """
         super().load_data(data,
                           parser_reference='specviz-spectrum1d-parser',

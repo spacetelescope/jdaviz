@@ -23,7 +23,8 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, data_type=None, data_label=None, parent=None, cache=None):
+def parse_data(app, file_obj, data_type=None, data_label=None,
+               parent=None, cache=None, local_path=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -38,9 +39,13 @@ def parse_data(app, file_obj, data_type=None, data_label=None, parent=None, cach
         The data type used to explicitly differentiate parsed data.
     data_label : str, optional
         The label to be applied to the Glue data component.
+    parent : str, optional
+        Data label for "parent" data to associate with the loaded data as "child".
     cache : None, bool, or str
         Cache the downloaded file if the data are retrieved by a query
         to a URL or URI.
+    local_path : str, optional
+        Cache remote files to this path.
     """
 
     flux_viewer_reference_name = app._jdaviz_helper._default_flux_viewer_reference_name
@@ -70,7 +75,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None, parent=None, cach
             return
 
         # try parsing file_obj as a URI/URL:
-        file_obj = download_uri_to_path(file_obj, cache=cache)
+        file_obj = download_uri_to_path(file_obj, cache=cache, local_path=local_path)
 
         file_name = os.path.basename(file_obj)
 

@@ -1,7 +1,6 @@
 import pytest
 import warnings
 
-from astropy.wcs import FITSFixedWarning
 from asdf.exceptions import AsdfWarning
 from jdaviz import utils
 
@@ -19,30 +18,10 @@ def test_alpha_index_exceptions():
         utils.alpha_index(-1)
 
 
-@pytest.mark.remote_data
-def test_uri_to_download_imviz(imviz_helper):
-    uri = "mast:HST/product/jezz02ljq_drz.fits"
-    imviz_helper.load_data(uri, cache=True)
-
-    with pytest.warns(UserWarning, match='You may be querying for a remote file'):
-        # if you don't pass a `cache` value, a warning should be raised:
+def test_uri_to_download_bad_scheme(imviz_helper):
+    uri = "file://path/to/file.fits"
+    with pytest.raises(ValueError, match='URI file://path/to/file.fits with scheme file'):
         imviz_helper.load_data(uri)
-
-
-@pytest.mark.remote_data
-def test_url_to_download_imviz(imviz_helper):
-    url = "https://www.astropy.org/astropy-data/tutorials/FITS-images/HorseHead.fits"
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', FITSFixedWarning)
-        imviz_helper.load_data(url, cache=True)
-
-
-@pytest.mark.remote_data
-def test_uri_to_download_cubeviz(cubeviz_helper):
-    uri = "mast:JWST/product/jw01373-o031_t007_miri_ch1-shortmediumlong_s3d.fits"
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore', FITSFixedWarning)
-        cubeviz_helper.load_data(uri, cache=True)
 
 
 @pytest.mark.remote_data
