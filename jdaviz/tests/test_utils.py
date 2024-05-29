@@ -2,6 +2,7 @@ import pytest
 import warnings
 
 from asdf.exceptions import AsdfWarning
+from astropy.wcs import FITSFixedWarning
 from jdaviz import utils
 
 
@@ -24,11 +25,19 @@ def test_uri_to_download_bad_scheme(imviz_helper):
         imviz_helper.load_data(uri)
 
 
-def test_uri_to_download_nonexistant_mast_file(imviz_helper):
+@pytest.mark.remote_data
+def test_uri_to_download_nonexistent_mast_file(imviz_helper):
     # this validates as a mast uri but doesn't actually exist on mast:
     uri = "mast:JWST/product/jw00000-no-file-here.fits"
     with pytest.raises(ValueError, match='Failed query for URI'):
-        imviz_helper.load_data(uri)
+        imviz_helper.load_data(uri, cache=False)
+
+
+@pytest.mark.remote_data
+def test_url_to_download_imviz_local_path_warning(imviz_helper):
+    url = "https://www.astropy.org/astropy-data/tutorials/FITS-images/HorseHead.fits"
+    with pytest.warns((UserWarning, FITSFixedWarning), match='You requested to cache data'):
+        imviz_helper.load_data(url, cache=False, local_path='horsehead.fits')
 
 
 @pytest.mark.remote_data

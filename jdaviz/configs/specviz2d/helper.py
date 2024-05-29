@@ -69,7 +69,8 @@ class Specviz2d(ConfigHelper, LineListMixin):
             to a URL or URI.
 
         local_path : str, optional
-            Cache remote files to this path. This is only used if data is requested from `astroquery.mast`.
+            Cache remote files to this path. This is only used if data is
+            requested from `astroquery.mast`.
         """
         if spectrum_2d is None and spectrum_1d is None:
             raise ValueError('Must provide spectrum_2d or spectrum_1d but none given.')

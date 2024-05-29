@@ -39,7 +39,8 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         Cache the downloaded file if the data are retrieved by a query
         to a URL or URI.
     local_path : str, optional
-        Cache remote files to this path. This is only used if data is requested from `astroquery.mast`.
+        Cache remote files to this path. This is only used if data is
+        requested from `astroquery.mast`.
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
