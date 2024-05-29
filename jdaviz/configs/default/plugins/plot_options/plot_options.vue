@@ -139,8 +139,8 @@
           v-model="image_color_mode_value"
           label="Color Mode"
           hint="Whether each layer gets a single color or colormap."
-          persistent-hint 
-          dense 
+          persistent-hint
+          dense
         >
           <template v-slot:selection="{ item }">
             <span>
@@ -476,24 +476,31 @@
             v-model="image_colormap_value"
             label="Colormap"
             dense
-          ></v-select>
-              <v-alert v-if="image_colormap_value == 'Random' && (
-                  stretch_function_value !== 'linear' || stretch_preset_value !== 100 ||
-                  image_bias_value !== 0.5 || image_contrast_value !== 1.0
-                  )" type='warning' style="margin-left: -12px; margin-right: -12px">
-                For image segmentation maps, "Random" gives unique colors
-                only when the stretch percentile is min/max, stretch function
-                is linear, contrast is 1.0, and bias is 0.5. Click below
-                to choose these settings.
-                <v-row justify='end'>
-                <plugin-action-button
-                  :results_isolated_to_plugin="true"
-                  @click="image_segmentation_map_presets"
-                >
-                  Image segmentation map
-                </plugin-action-button>
-                </v-row>
-              </v-alert>
+          >
+            <template v-slot:selection="{ item, index }">
+              <span>{{ item.text }}</span>
+            </template>
+            <template v-slot:item="{ item }">
+              <v-card :style="colorStyle(item, cmap_samples)" class="ps-6">{{ item.text }}</v-card>
+            </template>
+          </v-select>
+          <v-alert v-if="image_colormap_value == 'Random' && (
+              stretch_function_value !== 'linear' || stretch_preset_value !== 100 ||
+              image_bias_value !== 0.5 || image_contrast_value !== 1.0
+              )" type='warning' style="margin-left: -12px; margin-right: -12px">
+            For image segmentation maps, "Random" gives unique colors
+            only when the stretch percentile is min/max, stretch function
+            is linear, contrast is 1.0, and bias is 0.5. Click below
+            to choose these settings.
+            <v-row justify='end'>
+            <plugin-action-button
+              :results_isolated_to_plugin="true"
+              @click="image_segmentation_map_presets"
+            >
+              Image segmentation map
+            </plugin-action-button>
+            </v-row>
+          </v-alert>
 
         </glue-state-sync-wrapper>
         <glue-state-sync-wrapper v-if="image_color_mode_value !== 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_color')">
@@ -783,6 +790,25 @@ module.exports = {
     contour_custom_levels_set_value(e) {
       this.contour_custom_levels_txt = e
       this.contour_custom_levels_value = e.split(',').filter(n => n.trim().length).map(n => Number(n)).filter(n => !isNaN(n))
+    },
+    colorStyle(item, cmap_samples) {
+      var cmap_strip_width = 1
+      var colors = []
+      var style = 'repeating-linear-gradient( 135deg, '
+      console.log(cmap_samples)
+      console.log(item.text)
+      colors = cmap_samples[item.value]
+      console.log(colors)
+      for ([ci, color] of colors.entries()) {
+        var start = ci*cmap_strip_width
+        var end = (ci+1)*cmap_strip_width
+        style += color + ' '+start+'px, ' + color + ' '+end+'px'
+        if (ci !== colors.length-1) {
+          style += ', '
+        }
+      }
+      style += ')'
+      return style
     }
   },
 }
