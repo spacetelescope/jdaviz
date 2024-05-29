@@ -481,7 +481,7 @@
               <span>{{ item.text }}</span>
             </template>
             <template v-slot:item="{ item }">
-              <v-card :style="colorStyle(item, cmap_samples)" class="ps-6">{{ item.text }}</v-card>
+              <v-card :style="'background: '+ colorStyle(item, cmap_samples)" class="ps-6">{{ item.text }}</v-card>
             </template>
           </v-select>
           <v-alert v-if="image_colormap_value == 'Random' && (
@@ -794,11 +794,8 @@ module.exports = {
     colorStyle(item, cmap_samples) {
       var cmap_strip_width = 1
       var colors = []
-      var style = 'repeating-linear-gradient( 135deg, '
-      console.log(cmap_samples)
-      console.log(item.text)
+      var style = 'repeating-linear-gradient( 90deg, '
       colors = cmap_samples[item.value]
-      console.log(colors)
       for ([ci, color] of colors.entries()) {
         var start = ci*cmap_strip_width
         var end = (ci+1)*cmap_strip_width
@@ -808,6 +805,7 @@ module.exports = {
         }
       }
       style += ')'
+      console.log(style)
       return style
     }
   },
