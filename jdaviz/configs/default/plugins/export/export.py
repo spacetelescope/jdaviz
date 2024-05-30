@@ -264,6 +264,15 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     @observe('filename_value')
     def _is_filename_changed(self, event):
+        # Update the UI Filepath if relative or absolute paths are provided
+        # by user via self.filename_value
+        if '/' in self.filename_value and \
+           ('.' in self.filename_value or '..' in self.filename_value):
+            abs_path = Path(self.filename_value).resolve()
+            self.default_filepath = str(abs_path)
+        elif '/' in self.filename_value:
+            self.default_filepath = str(self.filename_value)
+
         # Clear overwrite warning when user changes filename
         self.overwrite_warn = False
 
