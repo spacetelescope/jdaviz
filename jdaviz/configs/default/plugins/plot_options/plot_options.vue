@@ -148,13 +148,11 @@
             </span>
           </template>
           <template v-slot:item="{ item }">
-            <span>
-              <b>
+            <span style="margin-top: 8px; margin-bottom: 0px">
                 {{ item.text }}
-              </b>
-              <span v-if="item.description" style="opacity: 0.85; font-size: 10pt">
-                | {{ item.description }}
-              </span>
+              <v-row v-if="item.description" style="line-height: 1.0; margin: 0px; opacity: 0.85; font-size: 8pt">
+                {{ item.description }}
+              </v-row>
             </span>
           </template>
         </v-select>
