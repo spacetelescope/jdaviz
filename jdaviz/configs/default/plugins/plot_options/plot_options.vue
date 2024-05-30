@@ -481,7 +481,7 @@
               <span>{{ item.text }}</span>
             </template>
             <template v-slot:item="{ item }">
-              <v-card flat :style="'background: '+ colorStyle(item, cmap_samples)" width="150" class="d-flex justify-center align-center text-center">
+              <v-card :style="'background: '+ colorStyle(item, cmap_samples)" width="100%" class="d-flex justify-center align-center text-center">
                 <span style="color: white; font-weight: bold; text-shadow: 0px 0px 3px black">{{ item.text }}</span>
               </v-card>
             </template>
@@ -794,14 +794,14 @@ module.exports = {
       this.contour_custom_levels_value = e.split(',').filter(n => n.trim().length).map(n => Number(n)).filter(n => !isNaN(n))
     },
     colorStyle(item, cmap_samples) {
-      var cmap_strip_width = 3
+      var cmap_strip_width = 2
       var colors = []
       var style = 'repeating-linear-gradient( 90deg, '
       colors = cmap_samples[item.value]
       for ([ci, color] of colors.entries()) {
         var start = ci*cmap_strip_width
         var end = (ci+1)*cmap_strip_width
-        style += color + ' '+start+'px, ' + color + ' '+end+'px'
+        style += color + ' '+start+'%, ' + color + ' '+end+'%'
         if (ci !== colors.length-1) {
           style += ', '
         }
