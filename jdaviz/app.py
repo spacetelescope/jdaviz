@@ -113,7 +113,7 @@ class UnitConverterWithSpectral:
             else:
                 eqv = []
                 # Ensure a spectrum passed through Spectral Extraction plugin
-                if '_pixel_scale_factor' in spec.meta:
+                if '_pixel_scale_factor' in spec.meta and len(values) != 2:
 
                     # Data item in data collection does not update from conversion/translation.
                     # App wide original data units are used for conversion, original and
