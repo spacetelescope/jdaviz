@@ -222,20 +222,20 @@
       </v-row>
     </div>
 
-    <div style="display: grid; position: relative"> <!-- overlay container -->
-    <div style="grid-area: 1/1">
-
     <v-row class="row-no-outside-padding row-min-bottom-padding">
       <v-col>
         <v-text-field
-          :value="filepath_value"
+          :value="default_filepath"
           label="Filepath"
-          hint="Default filepath export location."
+          hint="Filepath export location."
           persistent-hint
           disabled
         ></v-text-field>
       </v-col>
     </v-row>
+
+    <div style="display: grid; position: relative"> <!-- overlay container -->
+    <div style="grid-area: 1/1">
 
     <plugin-auto-label
       :value.sync="filename_value"
@@ -243,7 +243,7 @@
       :auto.sync="filename_auto"
       :invalid_msg="filename_invalid_msg"
       label="Filename"
-      hint="Export to a file on disk"
+      hint="Export to a file on disk."
     ></plugin-auto-label>
 
     <v-row justify="end">
