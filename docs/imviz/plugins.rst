@@ -63,7 +63,7 @@ to select a color for any flag.
 
 .. image:: ./img/imviz_dq.png
     :alt: Imviz DQ plugin
-    :width: 350px
+    :width: 500px
 
 
 How to load the data quality array
