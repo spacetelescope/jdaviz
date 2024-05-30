@@ -61,6 +61,35 @@ will expand to flag to reveal the flag's short name and description,
 as well as a visibility toggle for that flag. Click on the color swatch
 to select a color for any flag.
 
+.. image:: ./img/imviz_dq.png
+    :alt: Imviz DQ plugin
+    :width: 350px
+
+
+How to load the data quality array
+----------------------------------
+
+The data quality array can be loaded by simply passing the appropriate
+extension when loading the data.
+
+.. code-block:: python
+
+    imviz = Imviz()
+    imviz.load_data('path/to/file', ext=['SCI', 'DQ'])
+    imviz.show()
+
+From the API
+------------
+
+Filtering can happen via the API as well as in the GUI. The following code
+will filter the flags that contain bits 0 and 2 and only display those.
+
+.. code-block:: python
+
+    dq_plugin = imviz.plugins['Data Quality']
+    dqplugin.flags_filter = [0, 2]
+
+
 .. _imviz-subset-plugin:
 
 Subset Tools
