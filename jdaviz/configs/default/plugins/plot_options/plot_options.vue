@@ -481,7 +481,9 @@
               <span>{{ item.text }}</span>
             </template>
             <template v-slot:item="{ item }">
-              <v-card :style="'background: '+ colorStyle(item, cmap_samples)" class="ps-6">{{ item.text }}</v-card>
+              <v-card flat :style="'background: '+ colorStyle(item, cmap_samples)" width="150" class="d-flex justify-center align-center text-center">
+                <span style="color: white; font-weight: bold; text-shadow: 0px 0px 3px black">{{ item.text }}</span>
+              </v-card>
             </template>
           </v-select>
           <v-alert v-if="image_colormap_value == 'Random' && (
@@ -792,7 +794,7 @@ module.exports = {
       this.contour_custom_levels_value = e.split(',').filter(n => n.trim().length).map(n => Number(n)).filter(n => !isNaN(n))
     },
     colorStyle(item, cmap_samples) {
-      var cmap_strip_width = 1
+      var cmap_strip_width = 3
       var colors = []
       var style = 'repeating-linear-gradient( 90deg, '
       colors = cmap_samples[item.value]
