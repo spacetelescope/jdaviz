@@ -41,7 +41,7 @@ class Specviz(ConfigHelper, LineListMixin):
                                handler=self._redshift_listener)
 
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
-                  concat_by_file=False, cache=None, local_path=None):
+                  concat_by_file=False, cache=None, local_path=None, timeout=None):
         """
         Load data into Specviz.
 

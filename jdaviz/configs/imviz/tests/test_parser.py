@@ -238,7 +238,7 @@ class TestParseImage:
         # Default behavior: Science image
         with pytest.warns(UserWarning, match='You may be querying for a remote file'):
             # if you don't pass a `cache` value, a warning should be raised:
-            imviz_helper.load_data(self.jwst_asdf_url_1)
+            imviz_helper.load_data(self.jwst_asdf_url_1, timeout=100)
 
         data = imviz_helper.app.data_collection[0]
         comp = data.get_component('DATA')

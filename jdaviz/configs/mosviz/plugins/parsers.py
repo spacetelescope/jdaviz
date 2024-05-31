@@ -260,7 +260,7 @@ def mos_spec1d_parser(app, data_obj, data_labels=None,
 @data_parser_registry("mosviz-spec2d-parser")
 def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
                       show_in_viewer=False, ext=1, transpose=False,
-                      cache=None, local_path=None):
+                      cache=None, local_path=None, timeout=None):
     """
     Attempts to parse a 2D spectrum object.
 
@@ -288,6 +288,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
     local_path : str, optional
         Cache remote files to this path. This is only used if data is
         requested from `astroquery.mast`.
+    timeout : float, optional
+        If downloading from a remote URL, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file`).
 
     Returns
     -------
@@ -356,7 +360,7 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
             # FITS file.
 
             # try parsing file_obj as a URI/URL:
-            data = download_uri_to_path(data, cache=cache, local_path=local_path)
+            data = download_uri_to_path(data, cache=cache, local_path=local_path, timeout=timeout)
 
             if _check_is_file(data):
                 try:

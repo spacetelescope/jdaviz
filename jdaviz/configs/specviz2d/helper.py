@@ -30,7 +30,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
 
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
                   spectrum_2d_label=None, show_in_viewer=True, ext=1,
-                  transpose=False, cache=None, local_path=None):
+                  transpose=False, cache=None, local_path=None, timeout=None):
         """
         Load and parse a pair of corresponding 1D and 2D spectra.
 
@@ -90,7 +90,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
                                data_labels=spectrum_2d_label,
                                show_in_viewer=False, add_to_table=False,
                                ext=ext, transpose=transpose,
-                               cache=cache, local_path=local_path)
+                               cache=cache, local_path=local_path, timeout=timeout)
 
             # Passing show_in_viewer into app.load_data does not work anymore,
             # so we force it to show here.

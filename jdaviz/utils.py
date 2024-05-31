@@ -393,7 +393,7 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
-def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
+def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None):
     """
     Retrieve data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
@@ -420,7 +420,12 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
     local_path : str, optional
         Save the downloaded file to this path. Default is to
         save the file with its remote filename in the current
-        working directory. This is only used if data is requested from `astroquery.mast`.
+        working directory. This is only used if data is requested
+        from `astroquery.mast`.
+    timeout : float, optional
+        If downloading from a remote URL, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file`).
 
     Returns
     -------
@@ -429,6 +434,11 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
         unchanged. If ``possible_uri`` can be retrieved as a URI, returns the
         local path to the downloaded file.
     """
+
+    if local_path == os.curdir and os.environ.get("JDAVIZ_START_DIR", ""):
+        # avoiding creating local paths in a tmp dir when in standalone:
+        local_path = os.environ["JDAVIZ_START_DIR"] / local_path
+
     if not isinstance(possible_uri, str):
         # only try to parse strings:
         return possible_uri
@@ -492,7 +502,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir):
         if local_path not in (os.curdir, None):
             warnings.warn(local_path_msg, UserWarning)
 
-        return download_file(possible_uri, cache=cache)
+        return download_file(possible_uri, cache=cache, timeout=timeout)
 
     elif parsed_uri.scheme == '':
         raise ValueError(f"The input file '{possible_uri}' cannot be parsed as a "

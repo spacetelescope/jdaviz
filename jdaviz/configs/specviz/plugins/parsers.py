@@ -18,7 +18,7 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
 def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False, cache=None, local_path=os.curdir):
+                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -41,6 +41,10 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     local_path : str, optional
         Cache remote files to this path. This is only used if data is
         requested from `astroquery.mast`.
+    timeout : float, optional
+        If downloading from a remote URL, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file`).
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -66,7 +70,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             data = SpectrumList.read(data, format=format)
     else:
         # try parsing file_obj as a URI/URL:
-        data = download_uri_to_path(data, cache=cache, local_path=local_path)
+        data = download_uri_to_path(
+            data, cache=cache, local_path=local_path, timeout=timeout
+        )
 
         path = pathlib.Path(data)
 

@@ -24,7 +24,7 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 @data_parser_registry("cubeviz-data-parser")
 def parse_data(app, file_obj, data_type=None, data_label=None,
-               parent=None, cache=None, local_path=None):
+               parent=None, cache=None, local_path=None, timeout=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -47,6 +47,10 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
     local_path : str, optional
         Cache remote files to this path. This is only used if data is
         requested from `astroquery.mast`.
+    timeout : float, optional
+        If downloading from a remote URL, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file`).
     """
 
     flux_viewer_reference_name = app._jdaviz_helper._default_flux_viewer_reference_name
@@ -76,7 +80,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
             return
 
         # try parsing file_obj as a URI/URL:
-        file_obj = download_uri_to_path(file_obj, cache=cache, local_path=local_path)
+        file_obj = download_uri_to_path(
+            file_obj, cache=cache, local_path=local_path, timeout=timeout
+        )
 
         file_name = os.path.basename(file_obj)
 

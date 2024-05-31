@@ -44,7 +44,7 @@ def prep_data_layer_as_dq(data):
 
 @data_parser_registry("imviz-data-parser")
 def parse_data(app, file_obj, ext=None, data_label=None,
-               parent=None, cache=None, local_path=None):
+               parent=None, cache=None, local_path=None, timeout=None):
     """Parse a data file into Imviz.
 
     Parameters
@@ -72,13 +72,19 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         Cache remote files to this path. This is only used if data is
         requested from `astroquery.mast`.
 
+    timeout : float, optional
+        If downloading from a remote URL, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file`).
     """
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
 
         # try parsing file_obj as a URI/URL:
-        file_obj = download_uri_to_path(file_obj, cache=cache, local_path=local_path)
+        file_obj = download_uri_to_path(
+            file_obj, cache=cache, local_path=local_path, timeout=timeout
+        )
 
         # If file_obj is a path to a cached file from
         # astropy.utils.data.download_file, the path has no file extension.
