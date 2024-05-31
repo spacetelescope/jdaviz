@@ -147,8 +147,7 @@ class UnitConverterWithSpectral:
 
                 elif len(values) == 2:
                     # Need this for setting the y-limits
-                    spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
-                    eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
+                    eqv = u.spectral_density(spectral_values)
 
                     if '_pixel_scale_factor' in spec.meta:
                         # get min and max scale factors, to use with min and max of spec for

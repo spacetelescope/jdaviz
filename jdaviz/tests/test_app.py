@@ -228,7 +228,7 @@ def test_to_unit(cubeviz_helper):
     original_units = u.MJy / u.sr
     target_units = u.MJy
 
-    value = uc.to_unit(cubeviz_helper, data, cid, value, original_units, target_units)
+    value = uc.to_unit(cubeviz_helper, data, cid, values, original_units, target_units)
 
     # so test first value in array
     assert np.allclose(value[0], 4.800000041882413e-08)
