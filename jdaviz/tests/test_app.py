@@ -230,6 +230,7 @@ def test_to_unit(cubeviz_helper):
 
     value = uc.to_unit(cubeviz_helper, data, cid, values, original_units, target_units)
 
+    # will be a uniform array since not wavelength dependent
     # so test first value in array
     assert np.allclose(value[0], 4.800000041882413e-08)
 
