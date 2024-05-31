@@ -81,12 +81,15 @@ extension when loading the data.
 From the API
 ------------
 
-If only a few of the bits are relevant to your workflow, it can be useful to hide all flags without the important bits. Say we want to see only flags containing bits zero and two. From the UI, we could select those bits in the "Filter by bits" dropdown, or from the API we could:
+If only a few of the bits are relevant to your workflow, it can be useful to
+hide all flags without the important bits. Say we want to see only flags
+containing bits zero and two. From the UI, we could select those bits
+in the "Filter by bits" dropdown, or from the API we could:
 
 .. code-block:: python
 
     dq_plugin = imviz.plugins['Data Quality']
-    dqplugin.flags_filter = [0, 2]
+    dq_plugin.flags_filter = [0, 2]
 
 
 .. _imviz-subset-plugin:
