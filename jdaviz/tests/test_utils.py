@@ -36,7 +36,10 @@ def test_uri_to_download_nonexistent_mast_file(imviz_helper):
 @pytest.mark.remote_data
 def test_url_to_download_imviz_local_path_warning(imviz_helper):
     url = "https://www.astropy.org/astropy-data/tutorials/FITS-images/HorseHead.fits"
-    with pytest.warns((UserWarning, FITSFixedWarning), match='You requested to cache data'):
+    with (
+        pytest.warns(UserWarning, match='You requested to cache data'),
+        pytest.warns(FITSFixedWarning, match="'datfix' made the change")
+    ):
         imviz_helper.load_data(url, cache=False, local_path='horsehead.fits')
 
 
