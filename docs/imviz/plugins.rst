@@ -61,6 +61,34 @@ will expand to flag to reveal the flag's short name and description,
 as well as a visibility toggle for that flag. Click on the color swatch
 to select a color for any flag.
 
+.. image:: ./img/imviz_dq.png
+    :alt: Imviz DQ plugin
+    :width: 600px
+
+
+How to load the data quality array
+----------------------------------
+
+The data quality array can be loaded by simply passing the appropriate
+extension when loading the data.
+
+.. code-block:: python
+
+    imviz = Imviz()
+    imviz.load_data('path/to/file', ext=('SCI', 'DQ'))
+    imviz.show()
+
+From the API
+------------
+
+If only a few of the bits are relevant to your workflow, it can be useful to hide all flags without the important bits. Say we want to see only flags containing bits zero and two. From the UI, we could select those bits in the "Filter by bits" dropdown, or from the API we could:
+
+.. code-block:: python
+
+    dq_plugin = imviz.plugins['Data Quality']
+    dqplugin.flags_filter = [0, 2]
+
+
 .. _imviz-subset-plugin:
 
 Subset Tools
