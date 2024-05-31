@@ -233,3 +233,32 @@ def test_to_unit(cubeviz_helper):
     # will be a uniform array since not wavelength dependent
     # so test first value in array
     assert np.allclose(value[0], 4.800000041882413e-08)
+
+    # Change from Fnu to Flam (with values shape matching spectral axis)
+
+    values = np.ones(3001)
+    original_units = u.MJy
+    target_units = u.erg / u.cm**2 / u.s / u.AA
+
+    new_values = uc.to_unit(cubeviz_helper, data, cid, values, original_units, target_units)
+
+    assert np.allclose(new_values,
+                       (values * original_units)
+                       .to_value(target_units,
+                                 equivalencies=u.spectral_density(cube.spectral_axis)))
+
+    # Change from Fnu to Flam (with a shape (2,) array of values indicating we
+    # are probably converting the limits)
+
+    values = [1, 2]
+    original_units = u.MJy
+    target_units = u.erg / u.cm**2 / u.s / u.AA
+
+    new_values = uc.to_unit(cubeviz_helper, data, cid, values, original_units, target_units)
+
+    # In this case we do a regular spectral density conversion, but using the
+    # first value in the spectral axis for the equivalency
+    assert np.allclose(new_values,
+                       ([1, 2] * original_units)
+                       .to_value(target_units,
+                                 equivalencies=u.spectral_density(cube.spectral_axis[0])))

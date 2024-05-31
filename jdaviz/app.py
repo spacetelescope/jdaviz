@@ -112,6 +112,15 @@ class UnitConverterWithSpectral:
                 eqv = []
             else:
                 eqv = []
+
+                # If there are only two values, this is likely the limits being converted, so then
+                # in case we need to use the spectral density equivalency, we need to provide only
+                # to spectral axis values. If there is only one value
+                if not np.isscalar(values) and len(values) == 2:
+                    spectral_values = spec.spectral_axis[0]
+                else:
+                    spectral_values = spec.spectral_axis
+
                 # Ensure a spectrum passed through Spectral Extraction plugin
                 if '_pixel_scale_factor' in spec.meta and len(values) != 2:
 
@@ -120,26 +129,25 @@ class UnitConverterWithSpectral:
                     # target_units dictate the conversion to take place.
 
                     if (u.sr in u.Unit(original_units).bases) and \
-                          (u.sr not in u.Unit(target_units).bases):
+                           (u.sr not in u.Unit(target_units).bases):
                         # Surface Brightness -> Flux
                         eqv = [(u.MJy / u.sr,
                                 u.MJy,
                                 lambda x: (x * np.array(spec.meta['_pixel_scale_factor'])),
                                 lambda x: x)]
                     elif (u.sr not in u.Unit(original_units).bases) and \
-                         (u.sr in u.Unit(target_units).bases):
+                            (u.sr in u.Unit(target_units).bases):
                         # Flux -> Surface Brightness
                         eqv = [(u.MJy,
                                 u.MJy / u.sr,
                                 lambda x: (x / np.array(spec.meta['_pixel_scale_factor'])),
                                 lambda x: x)]
                     else:
-                        eqv = u.spectral_density(spec.spectral_axis)
+                        eqv = u.spectral_density(spectral_values)
 
                 elif len(values) == 2:
                     # Need this for setting the y-limits
-                    spec_limits = [spec.spectral_axis[0].value, spec.spectral_axis[-1].value]
-                    eqv = u.spectral_density(spec_limits * spec.spectral_axis.unit)
+                    eqv = u.spectral_density(spectral_values)
 
                     if '_pixel_scale_factor' in spec.meta:
                         # get min and max scale factors, to use with min and max of spec for
@@ -162,7 +170,7 @@ class UnitConverterWithSpectral:
                                      lambda x: x)]
 
                 else:
-                    eqv = u.spectral_density(spec.spectral_axis)
+                    eqv = u.spectral_density(spectral_values)
 
         else:  # spectral axis
             eqv = u.spectral() + u.pixel_scale(1*u.pix)
