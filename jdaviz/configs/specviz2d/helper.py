@@ -30,7 +30,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
 
     def load_data(self, spectrum_2d=None, spectrum_1d=None, spectrum_1d_label=None,
                   spectrum_2d_label=None, show_in_viewer=True, ext=1,
-                  transpose=False):
+                  transpose=False, cache=None, local_path=None, timeout=None):
         """
         Load and parse a pair of corresponding 1D and 2D spectra.
 
@@ -63,6 +63,20 @@ class Specviz2d(ConfigHelper, LineListMixin):
         transpose : bool, optional
             Flag to transpose the 2D data array before loading. Useful for uncalibrated
             data that is dispersed vertically, to change it to horizontal dispersion.
+
+        cache : None, bool, or str
+            Cache the downloaded file if the data are retrieved by a query
+            to a URL or URI.
+
+        local_path : str, optional
+            Cache remote files to this path. This is only used if data is
+            requested from `astroquery.mast`.
+
+        timeout : float, optional
+            If downloading from a remote URI, set the timeout limit for
+            remote requests in seconds (passed to
+            `~astropy.utils.data.download_file` or
+            `~astroquery.mast.Conf.timeout`).
         """
         if spectrum_2d is None and spectrum_1d is None:
             raise ValueError('Must provide spectrum_2d or spectrum_1d but none given.')
@@ -81,7 +95,8 @@ class Specviz2d(ConfigHelper, LineListMixin):
             self.app.load_data(spectrum_2d, parser_reference="mosviz-spec2d-parser",
                                data_labels=spectrum_2d_label,
                                show_in_viewer=False, add_to_table=False,
-                               ext=ext, transpose=transpose)
+                               ext=ext, transpose=transpose,
+                               cache=cache, local_path=local_path, timeout=timeout)
 
             # Passing show_in_viewer into app.load_data does not work anymore,
             # so we force it to show here.
@@ -132,6 +147,9 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 spectrum_1d, data_label=spectrum_1d_label,
                 parser_reference="specviz-spectrum1d-parser",
                 show_in_viewer=show_in_viewer,
+                cache=cache,
+                local_path=local_path,
+                timeout=timeout
             )
 
     def load_trace(self, trace, data_label, show_in_viewer=True):

@@ -12,7 +12,7 @@ from specutils import Spectrum1D
 
 from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
 
 __all__ = ['parse_data']
@@ -23,7 +23,8 @@ EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
 
 
 @data_parser_registry("cubeviz-data-parser")
-def parse_data(app, file_obj, data_type=None, data_label=None, parent=None):
+def parse_data(app, file_obj, data_type=None, data_label=None,
+               parent=None, cache=None, local_path=None, timeout=None):
     """
     Attempts to parse a data file and auto-populate available viewers in
     cubeviz.
@@ -38,6 +39,19 @@ def parse_data(app, file_obj, data_type=None, data_label=None, parent=None):
         The data type used to explicitly differentiate parsed data.
     data_label : str, optional
         The label to be applied to the Glue data component.
+    parent : str, optional
+        Data label for "parent" data to associate with the loaded data as "child".
+    cache : None, bool, or str
+        Cache the downloaded file if the data are retrieved by a query
+        to a URL or URI.
+    local_path : str, optional
+        Cache remote files to this path. This is only used if data is
+        requested from `astroquery.mast`.
+    timeout : float, optional
+        If downloading from a remote URI, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file` or
+        `~astroquery.mast.Conf.timeout`).
     """
 
     flux_viewer_reference_name = app._jdaviz_helper._default_flux_viewer_reference_name
@@ -65,6 +79,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None, parent=None):
             _parse_gif(app, file_obj, data_label,
                        flux_viewer_reference_name=flux_viewer_reference_name)
             return
+
+        # try parsing file_obj as a URI/URL:
+        file_obj = download_uri_to_path(
+            file_obj, cache=cache, local_path=local_path, timeout=timeout
+        )
 
         file_name = os.path.basename(file_obj)
 

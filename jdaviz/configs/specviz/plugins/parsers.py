@@ -1,3 +1,4 @@
+import os
 import pathlib
 from collections import defaultdict
 
@@ -9,7 +10,7 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.utils import standardize_metadata
+from jdaviz.utils import standardize_metadata, download_uri_to_path
 
 
 __all__ = ["specviz_spectrum1d_parser"]
@@ -17,7 +18,7 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
 def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False):
+                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -34,6 +35,17 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         If True and there is more than one available extension, concatenate
         the extensions within each spectrum file passed to the parser and
         add a concatenated spectrum to the data collection.
+    cache : None, bool, or str
+        Cache the downloaded file if the data are retrieved by a query
+        to a URL or URI.
+    local_path : str, optional
+        Cache remote files to this path. This is only used if data is
+        requested from `astroquery.mast`.
+    timeout : float, optional
+        If downloading from a remote URI, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file` or
+        `~astroquery.mast.Conf.timeout`).
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -58,6 +70,11 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             # list treated as SpectrumList if not an HDUList
             data = SpectrumList.read(data, format=format)
     else:
+        # try parsing file_obj as a URI/URL:
+        data = download_uri_to_path(
+            data, cache=cache, local_path=local_path, timeout=timeout
+        )
+
         path = pathlib.Path(data)
 
         if path.is_file():

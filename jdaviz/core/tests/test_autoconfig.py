@@ -32,14 +32,13 @@ def test_autoconfig(uris, tmp_path):
     uri = uris[0]
     helper_class = uris[1]
 
-    if uri.startswith("mast:"):
-        download_path = str(tmp_path / Path(uri).name)
-        Observations.download_file(uri, local_path=download_path)
-    elif uri.startswith("http"):
-        download_path = download_file(uri, cache=True, timeout=100)
+    local_path = str(tmp_path / Path(uri).name)
 
-    viz_helper = jdaviz_open(download_path, show=False)
+    kwargs = dict(cache=True, show=False)
+    if uri.startswith('mast'):
+        kwargs['local_path'] = local_path
 
+    viz_helper = jdaviz_open(uri, **kwargs)
     assert isinstance(viz_helper, helper_class)
     assert len(viz_helper.app.data_collection) > 0
 

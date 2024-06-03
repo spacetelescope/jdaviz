@@ -41,7 +41,7 @@ class Specviz(ConfigHelper, LineListMixin):
                                handler=self._redshift_listener)
 
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
-                  concat_by_file=False):
+                  concat_by_file=False, cache=None, local_path=None, timeout=None):
         """
         Load data into Specviz.
 
@@ -60,13 +60,20 @@ class Specviz(ConfigHelper, LineListMixin):
             If True and there is more than one available extension, concatenate
             the extensions within each spectrum file passed to the parser and
             add a concatenated spectrum to the data collection.
+        cache : None, bool, or str
+            Cache the downloaded file if the data are retrieved by a query
+            to a URL or URI.
+        local_path : str, optional
+            Cache remote files to this path. This is only used if data is
+            requested from `astroquery.mast`.
         """
         super().load_data(data,
                           parser_reference='specviz-spectrum1d-parser',
                           data_label=data_label,
                           format=format,
                           show_in_viewer=show_in_viewer,
-                          concat_by_file=concat_by_file)
+                          concat_by_file=concat_by_file,
+                          cache=cache)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer

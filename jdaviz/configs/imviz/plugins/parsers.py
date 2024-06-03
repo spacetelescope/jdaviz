@@ -14,7 +14,7 @@ from stdatamodels import asdf_in_fits
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY, _wcs_only_label
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY, _wcs_only_label, download_uri_to_path
 
 try:
     from roman_datamodels import datamodels as rdd
@@ -43,7 +43,8 @@ def prep_data_layer_as_dq(data):
 
 
 @data_parser_registry("imviz-data-parser")
-def parse_data(app, file_obj, ext=None, data_label=None, parent=None):
+def parse_data(app, file_obj, ext=None, data_label=None,
+               parent=None, cache=None, local_path=None, timeout=None):
     """Parse a data file into Imviz.
 
     Parameters
@@ -60,10 +61,31 @@ def parse_data(app, file_obj, ext=None, data_label=None, parent=None):
     data_label : str, optional
         The label to be applied to the Glue data component.
 
+    parent : str, optional
+        Data label for "parent" data to associate with the loaded data as "child".
+
+    cache : None, bool, or str
+        Cache the downloaded file if the data are retrieved by a query
+        to a URL or URI.
+
+    local_path : str, optional
+        Cache remote files to this path. This is only used if data is
+        requested from `astroquery.mast`.
+
+    timeout : float, optional
+        If downloading from a remote URI, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file` or
+        `~astroquery.mast.Conf.timeout`).
     """
     if isinstance(file_obj, str):
         if data_label is None:
             data_label = os.path.splitext(os.path.basename(file_obj))[0]
+
+        # try parsing file_obj as a URI/URL:
+        file_obj = download_uri_to_path(
+            file_obj, cache=cache, local_path=local_path, timeout=timeout
+        )
 
         # If file_obj is a path to a cached file from
         # astropy.utils.data.download_file, the path has no file extension.

@@ -1,12 +1,17 @@
 import os
 import time
 import threading
+import warnings
 from collections import deque
+from urllib.parse import urlparse
 
 import numpy as np
 from astropy.io import fits
 from astropy.utils import minversion
+from astropy.utils.data import download_file
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astroquery.mast import Observations, conf
+
 from glue.config import settings
 from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
@@ -14,7 +19,8 @@ from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
 from ipyvue import watch
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
-           'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type']
+           'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type',
+           'download_uri_to_path']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 
@@ -385,3 +391,129 @@ class MultiMaskSubsetState(SubsetState):
     def __setgluestate__(cls, rec, context):
         masks = {key: context.object(value) for key, value in rec['masks'].items()}
         return cls(masks=masks)
+
+
+def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None):
+    """
+    Retrieve data from a URI (or a URL). Return the input if it
+    cannot be parsed as a URI.
+
+    If ``possible_uri`` is a MAST URI, the file will be retrieved via
+    astroquery's `~astroquery.mast.ObservationsClass.download_file`.
+    If ``possible_uri`` is a URL, it will be retrieved via astropy with
+    `~astropy.utils.data.download_file`.
+
+    Parameters
+    ----------
+    possible_uri : str or other
+        This input will be returned without changes if it is not a string,
+        or if it is a local file path to an existing file. Otherwise,
+        it will be parsed as a URI. Local file URIs beginning with ``file://``
+        are not supported by this method – nor are they necessary, since string
+        paths without the scheme work fine! Cloud FITS are not yet supported.
+    cache: None, bool, or ``"update"``, optional
+        Cache file after download. If ``possible_uri`` is a
+        URL, ``cache`` may be a boolean or ``"update"``, see documentation for
+        `~astropy.utils.data.download_file` for details. If cache is None,
+        the file is cached and a warning is raised suggesting to set ``cache``
+        explicitly in the future.
+    local_path : str, optional
+        Save the downloaded file to this path. Default is to
+        save the file with its remote filename in the current
+        working directory. This is only used if data is requested
+        from `astroquery.mast`.
+    timeout : float, optional
+        If downloading from a remote URI, set the timeout limit for
+        remote requests in seconds (passed to
+        `~astropy.utils.data.download_file` or
+        `~astroquery.mast.Conf.timeout`).
+
+    Returns
+    -------
+    possible_uri : str or other
+        If ``possible_uri`` cannot be retrieved as a URI, returns the input argument
+        unchanged. If ``possible_uri`` can be retrieved as a URI, returns the
+        local path to the downloaded file.
+    """
+
+    if os.environ.get("JDAVIZ_START_DIR", ""):
+        # avoiding creating local paths in a tmp dir when in standalone:
+        local_path = os.environ["JDAVIZ_START_DIR"] / local_path
+
+    if not isinstance(possible_uri, str):
+        # only try to parse strings:
+        return possible_uri
+
+    if os.path.exists(possible_uri):
+        # don't try to parse file paths:
+        return possible_uri
+
+    parsed_uri = urlparse(possible_uri)
+
+    cache_none_msg = (
+        "You may be querying for a remote file "
+        f"at '{possible_uri}', but the `cache` argument was not "
+        f"in the call to `load_data`. Unless you set `cache` "
+        f"explicitly, remote files will be cached locally and "
+        f"this warning will be raised."
+    )
+
+    local_path_msg = (
+        f"You requested to cache data to the `local_path`='{local_path}'. This "
+        f"keyword argument is supported for downloads of MAST URIs via astroquery, "
+        f"but since the remote file at '{possible_uri}' will be downloaded "
+        f"using `astropy.utils.data.download_file`, the file will be "
+        f"stored in the astropy download cache instead."
+    )
+
+    cache_warning = False
+    if cache is None:
+        cache = True
+        cache_warning = True
+
+    if parsed_uri.scheme.lower() == 'mast':
+        if cache_warning:
+            warnings.warn(cache_none_msg, UserWarning)
+
+        if local_path is not None and os.path.isdir(local_path):
+            # if you give a directory, save the file there with default name:
+            local_path = os.path.join(local_path, parsed_uri.path.split(os.path.sep)[-1])
+
+        with conf.set_temp('timeout', timeout):
+            (status, msg, url) = Observations.download_file(
+                possible_uri, cache=cache, local_path=local_path
+            )
+
+        if status != 'COMPLETE':
+            # pass along the error message from astroquery if the
+            # data were not successfully downloaded:
+            raise ValueError(
+                f"Failed query for URI '{possible_uri}' at '{url}':\n\n{msg}"
+            )
+
+        if local_path is None:
+            # if not specified, this is the default location:
+            local_path = os.path.join(os.getcwd(), parsed_uri.path.split(os.path.sep)[-1])
+
+        return local_path
+
+    elif parsed_uri.scheme.lower() in ('http', 'https', 'ftp'):
+        if cache_warning:
+            warnings.warn(cache_none_msg, UserWarning)
+
+        if local_path not in (os.curdir, None):
+            warnings.warn(local_path_msg, UserWarning)
+
+        return download_file(possible_uri, cache=cache, timeout=timeout)
+
+    elif parsed_uri.scheme == '':
+        raise ValueError(f"The input file '{possible_uri}' cannot be parsed as a "
+                         f"URL or URI, and no existing local file is available "
+                         f"at this path.")
+
+    else:
+        raise ValueError(f"URI {possible_uri} with scheme {parsed_uri.scheme} is not "
+                         f"currently supported.")
+
+    # assume this isn't a URI after all:
+    return possible_uri

@@ -6,7 +6,6 @@ import pytest
 from astropy.io import fits
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
-from astroquery.mast import Observations
 import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
@@ -262,12 +261,11 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
 @pytest.mark.remote_data
 def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
     uri = "mast:jwst/product/jw02732-o003_t002_nirspec_prism-clear_s3d.fits"
-    download_path = str(tmp_path / Path(uri).name)
-    Observations.download_file(uri, local_path=download_path)
+    local_path = str(tmp_path / Path(uri).name)
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        cubeviz_helper.load_data(download_path)
+        cubeviz_helper.load_data(uri, cache=True, local_path=local_path)
     plugin = cubeviz_helper.plugins['Moment Maps']
     plugin.calculate_moment()
     assert isinstance(plugin._obj.moment.wcs, WCS)

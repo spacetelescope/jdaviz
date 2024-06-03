@@ -213,3 +213,11 @@ For more details on the API, please see
 :py:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions_from_file`
 and :py:meth:`~jdaviz.core.helpers.ImageConfigHelper.load_regions` methods
 in Cubeviz.
+
+Loading from a URL or URI
+-------------------------
+
+.. seealso::
+
+    :ref:`Load from URL or URI <load-data-uri>`
+        Imviz documentation describing load from URI/URL.

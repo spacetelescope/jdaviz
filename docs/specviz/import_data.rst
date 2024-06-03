@@ -155,3 +155,11 @@ The :py:meth:`~jdaviz.configs.specviz.helper.Specviz.load_data` method also take
 an optional keyword argument ``concat_by_file``. When set to ``True``, the spectra
 loaded in the :class:`~specutils.SpectrumList` will be concatenated together into one
 combined spectrum per loaded file, which may be useful for MIRI observations, for example.
+
+Loading from a URL or URI
+-------------------------
+
+.. seealso::
+
+    :ref:`Load from URL or URI <load-data-uri>`
+        Imviz documentation describing load from URI/URL.

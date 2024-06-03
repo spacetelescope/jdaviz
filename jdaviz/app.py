@@ -886,22 +886,8 @@ class Application(VuetifyTemplate, HubListener):
         """
         self.loading = True
         try:
-            try:
-                # Properly form path and check if a valid file
-                file_obj = pathlib.Path(file_obj)
-                if not file_obj.exists():
-                    msg_text = "Error: File {} does not exist".format(file_obj)
-                    snackbar_message = SnackbarMessage(msg_text, sender=self,
-                                                       color='error')
-                    self.hub.broadcast(snackbar_message)
-                    raise FileNotFoundError("Could not locate file: {}".format(file_obj))
-                else:
-                    # Convert path to properly formatted string (Parsers do not accept path objs)
-                    file_obj = str(file_obj)
-            except TypeError:
-                # If it's not a str/path type, it might be a compatible class.
-                # Pass to parsers to see if they can accept it
-                pass
+            if isinstance(file_obj, pathlib.Path):
+                file_obj = str(file_obj)
 
             # attempt to get a data parser from the config settings
             parser = None
