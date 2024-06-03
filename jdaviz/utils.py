@@ -480,9 +480,9 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
             local_path = os.path.join(local_path, parsed_uri.path.split(os.path.sep)[-1])
 
         if timeout is None:
-            timeout = Conf.timeout.defaultvalue
+            timeout = conf.timeout.defaultvalue
 
-        with Conf.timeout.set_temp(timeout):
+        with conf.timeout.set_temp(timeout):
             (status, msg, url) = Observations.download_file(
                 possible_uri, cache=cache, local_path=local_path
             )
