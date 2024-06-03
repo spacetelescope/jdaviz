@@ -82,8 +82,8 @@ Aperture Photometry (old version)
 Cubeviz
 =======
 
-Measuring emission line properties, from JWebbinar 02/2023
-----------------------------------------------------------
+Measuring emission line properties, from the JWebbinar 02/2023
+--------------------------------------------------------------
 
 .. raw:: html
 
