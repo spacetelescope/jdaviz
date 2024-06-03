@@ -1,9 +1,12 @@
 import time
+
+import numpy as np
 from astropy import units as u
 from astropy.nddata import NDData
-from photutils.datasets import make_4gaussians_image
-import numpy as np
 from numpy.testing import assert_allclose
+from photutils.datasets import make_4gaussians_image
+
+from jdaviz.tests.test_utils import PHOTUTILS_LT_1_12_1
 
 
 def test_boxzoom(cubeviz_helper, image_cube_hdu_obj_microns):
@@ -96,10 +99,15 @@ def test_stretch_bounds_and_spline(imviz_helper):
             "domain": {"x": 11.639166666374734, "y": 970.9392968750001},
         }
 
-        knots_after_drag_move = (
-            [0.0, 0.1, 0.21712585033417825, 0.7, 1.0],
-            [0.0, 0.05, 0.2852214046563617, 0.9, 1.0],
-        )
+        if PHOTUTILS_LT_1_12_1:
+            knots_after_drag_move = (
+                [0.0, 0.1, 0.21712585033417825, 0.7, 1.0],
+                [0.0, 0.05, 0.2852214046563617, 0.9, 1.0],
+            )
+        else:
+            knots_after_drag_move = (
+                [0.0, 0.1, 0.21712585033417825, 0.7, 1.0],
+                [0.0, 0.05, 0.2698132855572785, 0.9, 1.0])
 
         stretch_tool.on_mouse_event(knot_move_msg)
 

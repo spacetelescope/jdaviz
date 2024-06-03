@@ -1,9 +1,13 @@
 import pytest
 import warnings
 
+import photutils
 from asdf.exceptions import AsdfWarning
+from astropy.utils import minversion
 from astropy.wcs import FITSFixedWarning
 from jdaviz import utils
+
+PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
