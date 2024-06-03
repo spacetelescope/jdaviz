@@ -25,21 +25,21 @@ Open Image Data and change the plot options
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/watch?v=NCX1Ge8ekdQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/NCX1Ge8ekdQ?si=v8tYWrQZ_QFdwIFd" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Create a color-composite image
 ------------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/watch?v=lAU8QdPXZ14" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/lAU8QdPXZ14?si=07t2UCJsjvYgwBBQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Interact with the viewer form the notebook, from the JWebbinar 02/2023
 ----------------------------------------------------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/MgWFqNNg9nI?si=EeZ4ut-ktvpcI_nI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/MgWFqNNg9nI?si=EeZ4ut-ktvpcI_nI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 
 Open Image Data (old version)
@@ -47,35 +47,35 @@ Open Image Data (old version)
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/WPe3XCZQGxs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/WPe3XCZQGxs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Overplotting a Catalog (old version)
 ------------------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/2OUuxxNkkbM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/2OUuxxNkkbM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Aligning Images (old version)
 -----------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/vZHiuDuKheQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/vZHiuDuKheQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Exploring the Plugin Toolbar (old version)
 ------------------------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/3GD8W6QT634" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/3GD8W6QT634" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Aperture Photometry (old version)
 ---------------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/hDoGvJIHby4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/hDoGvJIHby4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 .. _cubeviz_examples:
 
@@ -87,35 +87,35 @@ Measuring emission line properties, from the JWebbinar 02/2023
 
 .. raw:: html
 
-    <iframe width="560" src="https://www.youtube.com/embed/ayb6OkmZUwU?si=RwQl0DhFR9BuQQM4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/ayb6OkmZUwU?si=RwQl0DhFR9BuQQM4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Open and Explore a Cube (old version)
 -------------------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/Xjo8jQPa0M0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/Xjo8jQPa0M0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Selecting Subsets (old version)
 -------------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/G4oFVhxWu5I" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/G4oFVhxWu5I" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Model Fitting (old version)
 ---------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/mxh7kjfvd5g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/mxh7kjfvd5g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Line Analysis (old version)
 ---------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/STREWC6ugOI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/STREWC6ugOI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 .. _specviz_examples:
 
@@ -127,7 +127,7 @@ Line analysis and model fitting, from the JWebbinar 02/2023
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/QmZCXU_3dRA?si=-VKbUwexvpz9VLrf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/QmZCXU_3dRA?si=-VKbUwexvpz9VLrf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 
 Open a Spectrum (old version)
@@ -135,21 +135,21 @@ Open a Spectrum (old version)
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/NxpDtzbNhmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/NxpDtzbNhmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Model Fitting (old version)
 ---------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/YJVn5_BN6IM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/YJVn5_BN6IM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Line Analysis (old version)
 ---------------------------
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/zATHqXpE84Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/zATHqXpE84Q" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 .. _specviz2d_examples:
 
@@ -161,7 +161,7 @@ Spectral extraction, from the JWebbinar 02/2023
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/y0RL9coM4Kc?si=clKOBLgBvJtVjzC8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/y0RL9coM4Kc?si=clKOBLgBvJtVjzC8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 .. _mosviz_examples:
 
@@ -173,4 +173,4 @@ Measuring redshifts, from the JWebbinar 02/2023
 
 .. raw:: html
 
-    <iframe src="https://www.youtube.com/embed/5NLO3QSZ-8U?si=bhI3r6vqcjN9alim" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/5NLO3QSZ-8U?si=bhI3r6vqcjN9alim" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
