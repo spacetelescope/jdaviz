@@ -10,7 +10,7 @@ from astropy.io import fits
 from astropy.utils import minversion
 from astropy.utils.data import download_file
 from astropy.wcs.wcsapi import BaseHighLevelWCS
-from astroquery.mast import Observations
+from astroquery.mast import Observations, Conf
 
 from glue.config import settings
 from glue.core import BaseData
@@ -423,9 +423,10 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         working directory. This is only used if data is requested
         from `astroquery.mast`.
     timeout : float, optional
-        If downloading from a remote URL, set the timeout limit for
+        If downloading from a remote URI, set the timeout limit for
         remote requests in seconds (passed to
-        `~astropy.utils.data.download_file`).
+        `~astropy.utils.data.download_file` or
+        `~astroquery.mast.Conf.timeout`).
 
     Returns
     -------
@@ -435,7 +436,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         local path to the downloaded file.
     """
 
-    if local_path == os.curdir and os.environ.get("JDAVIZ_START_DIR", ""):
+    if os.environ.get("JDAVIZ_START_DIR", ""):
         # avoiding creating local paths in a tmp dir when in standalone:
         local_path = os.environ["JDAVIZ_START_DIR"] / local_path
 
@@ -478,9 +479,13 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
             # if you give a directory, save the file there with default name:
             local_path = os.path.join(local_path, parsed_uri.path.split(os.path.sep)[-1])
 
-        (status, msg, url) = Observations.download_file(
-            possible_uri, cache=cache, local_path=local_path
-        )
+        if timeout is None:
+            timeout = Conf.timeout.defaultvalue
+
+        with Conf.timeout.set_temp(timeout):
+            (status, msg, url) = Observations.download_file(
+                possible_uri, cache=cache, local_path=local_path
+            )
 
         if status != 'COMPLETE':
             # pass along the error message from astroquery if the

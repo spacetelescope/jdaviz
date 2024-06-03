@@ -48,9 +48,10 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         Cache remote files to this path. This is only used if data is
         requested from `astroquery.mast`.
     timeout : float, optional
-        If downloading from a remote URL, set the timeout limit for
+        If downloading from a remote URI, set the timeout limit for
         remote requests in seconds (passed to
-        `~astropy.utils.data.download_file`).
+        `~astropy.utils.data.download_file` or
+        `~astroquery.mast.Conf.timeout`).
     """
 
     flux_viewer_reference_name = app._jdaviz_helper._default_flux_viewer_reference_name

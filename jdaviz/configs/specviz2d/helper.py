@@ -71,6 +71,12 @@ class Specviz2d(ConfigHelper, LineListMixin):
         local_path : str, optional
             Cache remote files to this path. This is only used if data is
             requested from `astroquery.mast`.
+
+        timeout : float, optional
+            If downloading from a remote URI, set the timeout limit for
+            remote requests in seconds (passed to
+            `~astropy.utils.data.download_file` or
+            `~astroquery.mast.Conf.timeout`).
         """
         if spectrum_2d is None and spectrum_1d is None:
             raise ValueError('Must provide spectrum_2d or spectrum_1d but none given.')
@@ -141,7 +147,9 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 spectrum_1d, data_label=spectrum_1d_label,
                 parser_reference="specviz-spectrum1d-parser",
                 show_in_viewer=show_in_viewer,
-                cache=cache
+                cache=cache,
+                local_path=local_path,
+                timeout=timeout
             )
 
     def load_trace(self, trace, data_label, show_in_viewer=True):

@@ -289,9 +289,10 @@ def mos_spec2d_parser(app, data_obj, data_labels=None, add_to_table=True,
         Cache remote files to this path. This is only used if data is
         requested from `astroquery.mast`.
     timeout : float, optional
-        If downloading from a remote URL, set the timeout limit for
+        If downloading from a remote URI, set the timeout limit for
         remote requests in seconds (passed to
-        `~astropy.utils.data.download_file`).
+        `~astropy.utils.data.download_file` or
+        `~astroquery.mast.Conf.timeout`).
 
     Returns
     -------

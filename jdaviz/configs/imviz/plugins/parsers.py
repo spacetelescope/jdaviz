@@ -73,9 +73,10 @@ def parse_data(app, file_obj, ext=None, data_label=None,
         requested from `astroquery.mast`.
 
     timeout : float, optional
-        If downloading from a remote URL, set the timeout limit for
+        If downloading from a remote URI, set the timeout limit for
         remote requests in seconds (passed to
-        `~astropy.utils.data.download_file`).
+        `~astropy.utils.data.download_file` or
+        `~astroquery.mast.Conf.timeout`).
     """
     if isinstance(file_obj, str):
         if data_label is None:

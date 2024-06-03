@@ -36,8 +36,12 @@ def test_uri_to_download_nonexistent_mast_file(imviz_helper):
 @pytest.mark.remote_data
 def test_url_to_download_imviz_local_path_warning(imviz_helper):
     url = "https://www.astropy.org/astropy-data/tutorials/FITS-images/HorseHead.fits"
+    match_local_path_msg = (
+        'You requested to cache data to the .*local_path.*supported for downloads of '
+        'MAST URIs.*astropy download cache instead.*'
+    )
     with (
-        pytest.warns(UserWarning, match='You requested to cache data'),
+        pytest.warns(UserWarning, match=match_local_path_msg),
         pytest.warns(FITSFixedWarning, match="'datfix' made the change")
     ):
         imviz_helper.load_data(url, cache=False, local_path='horsehead.fits')
@@ -46,12 +50,15 @@ def test_url_to_download_imviz_local_path_warning(imviz_helper):
 @pytest.mark.remote_data
 def test_uri_to_download_specviz(specviz_helper, tmp_path):
     uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits"
-    specviz_helper.load_data(uri, cache=True)
+    local_path = str(tmp_path / uri.split('/')[-1])
+    specviz_helper.load_data(uri, cache=True, local_path=local_path)
 
 
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper, tmp_path):
     uri = "mast:JWST/product/jw01324-o006_s00005_nirspec_f100lp-g140h_s2d.fits"
+    local_path = str(tmp_path / uri.split('/')[-1])
+
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', AsdfWarning)
-        specviz2d_helper.load_data(uri, cache=True)
+        specviz2d_helper.load_data(uri, cache=True, local_path=local_path)
