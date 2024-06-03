@@ -121,6 +121,9 @@ class UnitConverterWithSpectral:
                 else:
                     spectral_values = spec.spectral_axis
 
+                # By default include spectral density equivalency
+                eqv = u.spectral_density(spectral_values)
+
                 # Ensure a spectrum passed through Spectral Extraction plugin
                 if '_pixel_scale_factor' in spec.meta and len(values) != 2:
 

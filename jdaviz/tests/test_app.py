@@ -234,6 +234,15 @@ def test_to_unit(cubeviz_helper):
     # so test first value in array
     assert np.allclose(value[0], 4.800000041882413e-08)
 
+    # Flux to surface brightness
+
+    original_units = u.MJy
+    target_units = u.MJy / u.sr
+
+    value = uc.to_unit(cubeviz_helper, data, cid, value, original_units, target_units)
+
+    assert np.allclose(value, 1)
+
     # Change from Fnu to Flam (with values shape matching spectral axis)
 
     values = np.ones(3001)
@@ -262,3 +271,16 @@ def test_to_unit(cubeviz_helper):
                        ([1, 2] * original_units)
                        .to_value(target_units,
                                  equivalencies=u.spectral_density(cube.spectral_axis[0])))
+
+    # Change from Fnu to Flam/sr (with values shape matching spectral axis)
+
+    values = np.ones(3001)
+    original_units = u.MJy
+    target_units = u.erg / u.cm**2 / u.s / u.AA / u.sr
+
+    new_values = uc.to_unit(cubeviz_helper, data, cid, values, original_units, target_units)
+
+    assert np.allclose(new_values,
+                       (values * original_units)
+                       .to_value(target_units,
+                                 equivalencies=u.spectral_density(cube.spectral_axis)))
