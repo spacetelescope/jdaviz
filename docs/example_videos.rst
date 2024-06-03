@@ -20,7 +20,7 @@ exactly the same as your local installation.
 Imviz
 =====
 
-Open Image Data and change the plot options
+Open image data and change the plot options
 -------------------------------------------
 
 .. raw:: html
@@ -42,35 +42,35 @@ Interact with the viewer form the notebook, from the JWebbinar 02/2023
     <iframe width="560" height="315" src="https://www.youtube.com/embed/MgWFqNNg9nI?si=EeZ4ut-ktvpcI_nI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 
-Open Image Data (old version)
+Open image data (old version)
 -------------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/WPe3XCZQGxs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Overplotting a Catalog (old version)
+Overplotting a catalog (old version)
 ------------------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/2OUuxxNkkbM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Aligning Images (old version)
+Aligning images (old version)
 -----------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/vZHiuDuKheQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Exploring the Plugin Toolbar (old version)
+Exploring the plugin toolbar (old version)
 ------------------------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/3GD8W6QT634" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Aperture Photometry (old version)
+Aperture photometry (old version)
 ---------------------------------
 
 .. raw:: html
@@ -89,28 +89,28 @@ Measuring emission line properties, from the JWebbinar 02/2023
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/ayb6OkmZUwU?si=RwQl0DhFR9BuQQM4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Open and Explore a Cube (old version)
+Open and explore a cube (old version)
 -------------------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/Xjo8jQPa0M0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Selecting Subsets (old version)
+Selecting subsets (old version)
 -------------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/G4oFVhxWu5I" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Model Fitting (old version)
+Model fitting (old version)
 ---------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/mxh7kjfvd5g" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Line Analysis (old version)
+Line analysis (old version)
 ---------------------------
 
 .. raw:: html
@@ -130,21 +130,21 @@ Line analysis and model fitting, from the JWebbinar 02/2023
     <iframe width="560" height="315" src="https://www.youtube.com/embed/QmZCXU_3dRA?si=-VKbUwexvpz9VLrf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 
-Open a Spectrum (old version)
+Open a spectrum (old version)
 -----------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/NxpDtzbNhmk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Model Fitting (old version)
+Model fitting (old version)
 ---------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/YJVn5_BN6IM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Line Analysis (old version)
+Line analysis (old version)
 ---------------------------
 
 .. raw:: html
