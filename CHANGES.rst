@@ -14,6 +14,8 @@ New Features
 - Descriptions are shown in the color mode dropdown for image layers to help describe the use-cases
   for ``Colormap`` vs ``Color``. [#2894]
 
+- The colormap menu for image layers now shows in-line previews of the colormaps. [#2900]
+
 Cubeviz
 ^^^^^^^
 
