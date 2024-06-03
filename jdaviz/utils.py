@@ -10,7 +10,7 @@ from astropy.io import fits
 from astropy.utils import minversion
 from astropy.utils.data import download_file
 from astropy.wcs.wcsapi import BaseHighLevelWCS
-from astroquery.mast import Observations, Conf
+from astroquery.mast import Observations, conf
 
 from glue.config import settings
 from glue.core import BaseData
