@@ -41,10 +41,10 @@ def test_url_to_download_imviz_local_path_warning(imviz_helper):
         'MAST URIs.*astropy download cache instead.*'
     )
     with (
-        pytest.warns(UserWarning, match=match_local_path_msg),
-        pytest.warns(FITSFixedWarning, match="'datfix' made the change")
+        pytest.warns(FITSFixedWarning, match="'datfix' made the change"),
+        pytest.warns(UserWarning, match=match_local_path_msg)
     ):
-        imviz_helper.load_data(url, cache=False, local_path='horsehead.fits')
+        imviz_helper.load_data(url, cache=True, local_path='horsehead.fits')
 
 
 @pytest.mark.remote_data
