@@ -49,22 +49,22 @@ Open image data (old version)
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/WPe3XCZQGxs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Overplotting a catalog (old version)
-------------------------------------
+Overplot a catalog (old version)
+--------------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/2OUuxxNkkbM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Aligning images (old version)
------------------------------
+Align images (old version)
+--------------------------
 
 .. raw:: html
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/vZHiuDuKheQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Exploring the plugin toolbar (old version)
-------------------------------------------
+Explore the plugin toolbar (old version)
+----------------------------------------
 
 .. raw:: html
 
@@ -82,8 +82,8 @@ Aperture photometry (old version)
 Cubeviz
 =======
 
-Measuring emission line properties, from the JWebbinar 02/2023
---------------------------------------------------------------
+Measure emission line properties, from the JWebbinar 02/2023
+------------------------------------------------------------
 
 .. raw:: html
 
@@ -96,8 +96,8 @@ Open and explore a cube (old version)
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/Xjo8jQPa0M0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Selecting subsets (old version)
--------------------------------
+Select subsets (old version)
+----------------------------
 
 .. raw:: html
 
@@ -168,8 +168,8 @@ Spectral extraction, from the JWebbinar 02/2023
 Mosviz
 ======
 
-Measuring redshifts, from the JWebbinar 02/2023
------------------------------------------------
+Measure redshifts, from the JWebbinar 02/2023
+---------------------------------------------
 
 .. raw:: html
 
