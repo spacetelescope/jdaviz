@@ -1,8 +1,8 @@
-.. _examples:
+.. _tutorials:
 
-**************
-Example videos
-**************
+***************
+Video Tutorials
+***************
 
 Below we list a series of videos that illustrate common workflows using the
 five Jdaviz configurations. Keep in mind that the user interface can change from one release to

@@ -9,7 +9,7 @@ User Guide
 
   installation
   quickstart
-  example_videos
+  video_tutorials
   imviz/index
   specviz/index
   cubeviz/index
