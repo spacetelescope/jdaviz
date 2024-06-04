@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 
+import numpy as np
+import specutils
 from astropy import units as u
 from astropy.nddata import CCDData
-import numpy as np
-
+from astropy.utils import minversion
 from traitlets import Bool, List, Unicode, observe
 from specutils import manipulation, analysis, Spectrum1D
 
@@ -24,6 +25,7 @@ from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['MomentMap']
 
+SPECUTILS_LT_1_15_1 = not minversion(specutils, "1.15.1.dev")
 
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
@@ -350,7 +352,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
             # convert unit string to u.Unit so moment map data can be converted
             flux_or_sb_display_unit = u.Unit(flux_sb_unit)
-            self.moment = self.moment.to(flux_or_sb_display_unit)
+            if SPECUTILS_LT_1_15_1:
+                moment_new_unit = flux_or_sb_display_unit
+            else:
+                moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
+            self.moment = self.moment.to(moment_new_unit)
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)

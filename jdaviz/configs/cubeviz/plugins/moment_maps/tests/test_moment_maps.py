@@ -2,14 +2,16 @@ import os
 import warnings
 from pathlib import Path
 
+import numpy as np
 import pytest
+from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
-import astropy.units as u
-import numpy as np
-from numpy.testing import assert_allclose
 from glue.core.roi import XRangeROI
+from numpy.testing import assert_allclose
+
+from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import SPECUTILS_LT_1_15_1
 
 
 def test_user_api(cubeviz_helper, spectrum1d_cube):
@@ -49,6 +51,13 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
 
 
 def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
+    if SPECUTILS_LT_1_15_1:
+        moment_unit = "Jy"
+        moment_value_str = "+8.00000e+00"
+    else:
+        moment_unit = "Jy m"
+        moment_value_str = "+6.40166e-10"
+
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
@@ -107,10 +116,11 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
 
-    # Slice 0 has 8 pixels, this is Slice 1  # noqa
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
-                                         "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
-                                         "204.9998877673 27.0001000000 (deg)")
+    # Slice 0 has 8 pixels, this is Slice 1
+    assert label_mouseover.as_text() == (
+        f"Pixel x=00.0 y=00.0 Value {moment_value_str} {moment_unit}",
+        "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
+        "204.9998877673 27.0001000000 (deg)")
 
     assert mm._obj.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
     mm._obj.filename = str(tmp_path / mm._obj.filename)  # But we want it in tmp_path for testing.
@@ -136,9 +146,10 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     # Coordinate display should be unaffected.
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
-                                         "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
-                                         "204.9998877673 27.0001000000 (deg)")
+    assert label_mouseover.as_text() == (
+        f"Pixel x=00.0 y=00.0 Value {moment_value_str} {moment_unit}",
+        "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
+        "204.9998877673 27.0001000000 (deg)")
 
 
 def test_moment_velocity_calculation(cubeviz_helper, spectrum1d_cube):
@@ -279,6 +290,10 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
 
 
 def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
+    if SPECUTILS_LT_1_15_1:
+        moment_unit = "Jy / sr"
+    else:
+        moment_unit = "Jy m / sr"
 
     # test that the output unit labels in the moment map plugin reflect any
     # changes made in the unit conversion plugin.
@@ -304,7 +319,7 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
 
     # check that calculated moment has the correct units
     mm.calculate_moment()
-    assert mm.moment.unit == 'MJy / sr'
+    assert mm.moment.unit == f'M{moment_unit}'
 
     # now change surface brightness units in the unit conversion plugin
     uc = cubeviz_helper.plugins["Unit Conversion"]
@@ -318,4 +333,4 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
 
     # and that calculated moment has the correct units
     mm.calculate_moment()
-    assert mm.moment.unit == 'Jy / sr'
+    assert mm.moment.unit == moment_unit
