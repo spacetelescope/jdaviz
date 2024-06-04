@@ -6,6 +6,8 @@ from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 
+from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import SPECUTILS_LT_1_15_1
+
 
 def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
@@ -100,14 +102,22 @@ def test_cubeviz_aperphot_generated_2d_moment(cubeviz_helper, image_cube_hdu_obj
     row = cubeviz_helper.get_aperture_photometry_results()[0]
 
     # Basically, we should recover the input rectangle here.
+    if SPECUTILS_LT_1_15_1:
+        moment_sum = 540 * flux_unit
+        moment_mean = 36 * flux_unit
+    else:
+        moment_unit = flux_unit * u.um
+        moment_sum = 0.54 * moment_unit
+        moment_mean = 0.036 * moment_unit
+
     assert_allclose(row["xcenter"], 1 * u.pix)
     assert_allclose(row["ycenter"], 2 * u.pix)
     sky = row["sky_center"]
     assert_allclose(sky.ra.deg, 205.43985906934287)
     assert_allclose(sky.dec.deg, 27.003490103642033)
-    assert_allclose(row["sum"], 540 * flux_unit)  # 3 (w) x 5 (h) x 36 (v)
+    assert_allclose(row["sum"], moment_sum)  # 3 (w) x 5 (h) x 36 (v)
     assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
-    assert_allclose(row["mean"], 36 * flux_unit)
+    assert_allclose(row["mean"], moment_mean)
     assert np.isnan(row["slice_wave"])
 
     # Moment 1 has no compatible unit, so should not be available for photometry.

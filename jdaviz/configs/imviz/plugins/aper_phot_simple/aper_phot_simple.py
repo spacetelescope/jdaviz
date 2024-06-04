@@ -113,7 +113,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 acceptable_types = ['spectral flux density wav',
                                     'photon flux density wav',
                                     'spectral flux density',
-                                    'photon flux density']
+                                    'photon flux density',
+                                    'energy flux']  # Moment map 0
                 return ((data.ndim in (2, 3)) and
                         ((img_unit == (u.MJy / u.sr)) or
                          (img_unit.physical_type in acceptable_types)))

@@ -1,6 +1,10 @@
+import photutils
 import pytest
+from astropy.utils import minversion
 
 from jdaviz import utils
+
+PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),

@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
 
+import numpy as np
+import specutils
 from astropy import units as u
 from astropy.nddata import CCDData
-import numpy as np
-
+from astropy.utils import minversion
 from traitlets import Bool, List, Unicode, observe
 from specutils import manipulation, analysis, Spectrum1D
 
@@ -23,6 +24,7 @@ from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['MomentMap']
 
+SPECUTILS_LT_1_15_1 = not minversion(specutils, "1.15.1.dev")
 
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
