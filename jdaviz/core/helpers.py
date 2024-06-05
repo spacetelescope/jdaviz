@@ -487,7 +487,8 @@ class ConfigHelper(HubListener):
                 else:
                     new_uncert = None
                 if cid:
-                    new_flux = uc.to_unit(self, data_obj, cid, data.flux.value, data.flux.unit, flux_unit) * u.Unit(flux_unit)
+                    new_flux = (uc.to_unit(self, data_obj, cid, data.flux.value,
+                                           data.flux.unit, flux_unit) * u.Unit(flux_unit))
                 else:
                     new_flux = data.flux
                 data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
