@@ -28,6 +28,8 @@ from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs
+from jdaviz.app import UnitConverterWithSpectral as uc
+
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper']
 
@@ -459,6 +461,9 @@ class ConfigHelper(HubListener):
     def _handle_display_units(self, data, use_display_units=True):
         if use_display_units:
             if isinstance(data, Spectrum1D):
+                # TODO: Remove hardcoded values when uc.to_unit is generalized
+                cid = self.app.data_collection[0].data.find_component_id('flux')
+                data_obj = self.app.data_collection[-1]
                 spectral_unit = self.app._get_display_unit('spectral')
                 if not spectral_unit:
                     return data
@@ -481,11 +486,15 @@ class ConfigHelper(HubListener):
                     new_uncert = StdDevUncertainty(new_uncert, unit=flux_unit)
                 else:
                     new_uncert = None
-
+                if cid:
+                    new_flux = uc.to_unit(self, data_obj, cid, data.flux.value, data.flux.unit, flux_unit) * u.Unit(flux_unit)
+                else:
+                    new_flux = data.flux
                 data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
                                                                       u.spectral()),
-                                  flux=data.flux.to(flux_unit,
-                                                    u.spectral_density(data.spectral_axis)),
+                                  # flux=data.flux.to(flux_unit,
+                                  #                   u.spectral_density(data.spectral_axis)),
+                                  flux=new_flux,
                                   uncertainty=new_uncert,
                                   mask=data.mask)
             else:  # pragma: nocover
