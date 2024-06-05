@@ -132,8 +132,7 @@ class Launcher(v.VuetifyTemplate):
             main = v.Sheet(class_="mx-25",
                            attributes={"id": "popout-widget-container"},
                            color="#00212C",
-                           height=height,
-                           _metadata={'mount_id': 'content'})
+                           height=height)
 
         self.main = main
         self.configs = configs
