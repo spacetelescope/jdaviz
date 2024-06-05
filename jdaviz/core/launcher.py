@@ -124,8 +124,16 @@ class Launcher(v.VuetifyTemplate):
     mosviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'mosviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
     imviz_icon = Unicode(read_icon(os.path.join(ICON_DIR, 'imviz_icon.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    def __init__(self, main, configs=ALL_JDAVIZ_CONFIGS, filepath='', height=None, *args, **kwargs):
+    def __init__(self, main=None, configs=ALL_JDAVIZ_CONFIGS, filepath='',
+                 height=None, *args, **kwargs):
         self.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
+
+        if main is None:
+            main = v.Sheet(class_="mx-25",
+                           attributes={"id": "popout-widget-container"},
+                           color="#00212C",
+                           height=height,
+                           _metadata={'mount_id': 'content'})
 
         self.main = main
         self.configs = configs
@@ -197,6 +205,11 @@ class Launcher(v.VuetifyTemplate):
         self.main.color = 'transparent'
         self.main.children = [helper.app]
 
+    @property
+    def main_with_launcher(self):
+        self.main.children = [self]
+        return self.main
+
 
 def show_launcher(configs=ALL_JDAVIZ_CONFIGS, filepath='', height='450px'):
     '''Display an interactive Jdaviz launcher to select your data and compatible configuration
@@ -213,11 +226,5 @@ def show_launcher(configs=ALL_JDAVIZ_CONFIGS, filepath='', height='450px'):
     '''
     # Color defined manually due to the custom theme not being defined yet (in main_styles.vue)
     height = f"{height}px" if isinstance(height, int) else height
-    main = v.Sheet(class_="mx-25",
-                   attributes={"id": "popout-widget-container"},
-                   color="#00212C",
-                   height=height,
-                   _metadata={'mount_id': 'content'})
-    main.children = [Launcher(main, configs, filepath, height)]
-
-    show_widget(main, loc='inline', title=None)
+    launcher = Launcher(None, configs, filepath, height)
+    show_widget(launcher.main_with_launcher, loc='inline', title=None)
