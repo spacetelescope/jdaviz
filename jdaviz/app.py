@@ -109,9 +109,9 @@ class UnitConverterWithSpectral:
                 spec = data.get_object(cls=Spectrum1D)
 
             except RuntimeError:
-                eqv = []
+                # eqv = []
+                print(f"{data} cannot be converted to Spectrum1D object")
             else:
-                eqv = []
                 return self._flux_conversion(spec, values, original_units, target_units)
         else:  # spectral axis
             return self._spectral_axis_conversion(values, original_units, target_units)
@@ -181,6 +181,7 @@ class UnitConverterWithSpectral:
     def _spectral_axis_conversion(self, values, original_units, target_units):
         eqv = u.spectral() + u.pixel_scale(1*u.pix)
         return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
+
 
 # Set default opacity for data layers to 1 instead of 0.8 in
 # some glue-core versions

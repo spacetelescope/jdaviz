@@ -1,5 +1,5 @@
 from astropy.coordinates.sky_coordinate import SkyCoord
-from astropy.nddata import NDData, StdDevUncertainty
+from astropy.nddata import NDData
 from astropy.table import QTable
 from astropy.table.row import Row as QTableRow
 import astropy.units as u
