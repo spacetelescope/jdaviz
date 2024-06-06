@@ -480,9 +480,10 @@ class ConfigHelper(HubListener):
                     else:
                         # if not specified as NDUncertainty, assume stddev:
                         new_uncert = uncertainty
-                    new_uncert2 = uc._flux_conversion(self, data, new_uncert.quantity.value,
-                                                      new_uncert.unit, flux_unit)
-                    new_uncert = StdDevUncertainty(new_uncert2, unit=flux_unit)
+                    new_uncert_converted = uc._flux_conversion(self, data,
+                                                               new_uncert.quantity.value,
+                                                               new_uncert.unit, flux_unit)
+                    new_uncert = StdDevUncertainty(new_uncert_converted, unit=flux_unit)
                 else:
                     new_uncert = None
 
