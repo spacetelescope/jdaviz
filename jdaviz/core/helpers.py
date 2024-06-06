@@ -461,9 +461,6 @@ class ConfigHelper(HubListener):
     def _handle_display_units(self, data, use_display_units=True):
         if use_display_units:
             if isinstance(data, Spectrum1D):
-                # TODO: Remove hardcoded values when uc.to_unit is generalized
-                cid = self.app.data_collection[0].data.find_component_id('flux')
-                data_obj = self.app.data_collection[-1]
                 spectral_unit = self.app._get_display_unit('spectral')
                 if not spectral_unit:
                     return data
@@ -479,22 +476,25 @@ class ConfigHelper(HubListener):
                     if hasattr(uncertainty, 'represent_as'):
                         new_uncert = uncertainty.represent_as(
                             StdDevUncertainty
-                        ).quantity.to(flux_unit)
+                        )
                     else:
                         # if not specified as NDUncertainty, assume stddev:
-                        new_uncert = uncertainty.quantity.to(flux_unit)
-                    new_uncert = StdDevUncertainty(new_uncert, unit=flux_unit)
+                        new_uncert = uncertainty
+                    new_uncert2 = uc._flux_conversion(self, data,
+                                             new_uncert.quantity.value,
+                                             new_uncert.unit, flux_unit)
+                    new_uncert = StdDevUncertainty(new_uncert2, unit=flux_unit)
                 else:
                     new_uncert = None
-                if cid:
-                    new_flux = (uc.to_unit(self, data_obj, cid, data.flux.value,
-                                           data.flux.unit, flux_unit) * u.Unit(flux_unit))
-                else:
-                    new_flux = data.flux
-                data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
-                                                                      u.spectral()),
-                                  # flux=data.flux.to(flux_unit,
-                                  #                   u.spectral_density(data.spectral_axis)),
+
+                new_flux = uc._flux_conversion(self, data, data.flux.value, data.flux.unit,
+                                               flux_unit) * u.Unit(flux_unit)
+                new_spec = uc._spectral_axis_conversion(self,
+                                      data.spectral_axis.value,
+                                      data.spectral_axis.unit,
+                                      spectral_unit) * u.Unit(spectral_unit)
+
+                data = Spectrum1D(spectral_axis=new_spec,
                                   flux=new_flux,
                                   uncertainty=new_uncert,
                                   mask=data.mask)

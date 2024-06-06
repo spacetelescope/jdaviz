@@ -53,7 +53,7 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label)
 
-__all__ = ['Application', 'ALL_JDAVIZ_CONFIGS']
+__all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
 SplitPanes()
 GoldenLayout()
@@ -112,71 +112,75 @@ class UnitConverterWithSpectral:
                 eqv = []
             else:
                 eqv = []
-
-                # If there are only two values, this is likely the limits being converted, so then
-                # in case we need to use the spectral density equivalency, we need to provide only
-                # to spectral axis values. If there is only one value
-                if not np.isscalar(values) and len(values) == 2:
-                    spectral_values = spec.spectral_axis[0]
-                else:
-                    spectral_values = spec.spectral_axis
-
-                # Ensure a spectrum passed through Spectral Extraction plugin
-                if '_pixel_scale_factor' in spec.meta and len(values) != 2:
-
-                    # Data item in data collection does not update from conversion/translation.
-                    # App wide original data units are used for conversion, original and
-                    # target_units dictate the conversion to take place.
-
-                    if (u.sr in u.Unit(original_units).bases) and \
-                           (u.sr not in u.Unit(target_units).bases):
-                        # Surface Brightness -> Flux
-                        eqv = [(u.MJy / u.sr,
-                                u.MJy,
-                                lambda x: (x * np.array(spec.meta['_pixel_scale_factor'])),
-                                lambda x: x)]
-                    elif (u.sr not in u.Unit(original_units).bases) and \
-                            (u.sr in u.Unit(target_units).bases):
-                        # Flux -> Surface Brightness
-                        eqv = [(u.MJy,
-                                u.MJy / u.sr,
-                                lambda x: (x / np.array(spec.meta['_pixel_scale_factor'])),
-                                lambda x: x)]
-                    else:
-                        eqv = u.spectral_density(spectral_values)
-
-                elif len(values) == 2:
-                    # Need this for setting the y-limits
-                    eqv = u.spectral_density(spectral_values)
-
-                    if '_pixel_scale_factor' in spec.meta:
-                        # get min and max scale factors, to use with min and max of spec for
-                        # y-limits. Make sure they are Quantities (can be numpy.float64).
-                        pixel_scale_min = (Quantity(min(spec.meta['_pixel_scale_factor']))).value
-                        pixel_scale_max = (Quantity(max(spec.meta['_pixel_scale_factor']))).value
-                        min_max = [pixel_scale_min, pixel_scale_max]
-
-                        if (u.sr in u.Unit(original_units).bases) and \
-                           (u.sr not in u.Unit(target_units).bases):
-                            eqv += [(u.MJy,
-                                     u.MJy / u.sr,
-                                     lambda x: x * np.array(min_max),
-                                     lambda x: x)]
-                        elif (u.sr not in u.Unit(original_units).bases) and \
-                             (u.sr in u.Unit(target_units).bases):
-                            eqv += [(u.MJy / u.sr,
-                                     u.MJy,
-                                     lambda x: x / np.array(min_max),
-                                     lambda x: x)]
-
-                else:
-                    eqv = u.spectral_density(spectral_values)
-
+                return self._flux_conversion(spec, values, original_units, target_units)
         else:  # spectral axis
-            eqv = u.spectral() + u.pixel_scale(1*u.pix)
+            return self._spectral_axis_conversion(values, original_units, target_units)
+
+    def _flux_conversion(self, spec, values, original_units, target_units):
+        # If there are only two values, this is likely the limits being converted, so then
+        # in case we need to use the spectral density equivalency, we need to provide only
+        # to spectral axis values. If there is only one value
+        if not np.isscalar(values) and len(values) == 2:
+            spectral_values = spec.spectral_axis[0]
+        else:
+            spectral_values = spec.spectral_axis
+
+        # Ensure a spectrum passed through Spectral Extraction plugin
+        if '_pixel_scale_factor' in spec.meta and len(values) != 2:
+
+            # Data item in data collection does not update from conversion/translation.
+            # App wide original data units are used for conversion, original and
+            # target_units dictate the conversion to take place.
+
+            if (u.sr in u.Unit(original_units).bases) and \
+                    (u.sr not in u.Unit(target_units).bases):
+                # Surface Brightness -> Flux
+                eqv = [(u.MJy / u.sr,
+                        u.MJy,
+                        lambda x: (x * np.array(spec.meta['_pixel_scale_factor'])),
+                        lambda x: x)]
+            elif (u.sr not in u.Unit(original_units).bases) and \
+                    (u.sr in u.Unit(target_units).bases):
+                # Flux -> Surface Brightness
+                eqv = [(u.MJy,
+                        u.MJy / u.sr,
+                        lambda x: (x / np.array(spec.meta['_pixel_scale_factor'])),
+                        lambda x: x)]
+            else:
+                eqv = u.spectral_density(spectral_values)
+
+        elif len(values) == 2:
+            # Need this for setting the y-limits
+            eqv = u.spectral_density(spectral_values)
+
+            if '_pixel_scale_factor' in spec.meta:
+                # get min and max scale factors, to use with min and max of spec for
+                # y-limits. Make sure they are Quantities (can be numpy.float64).
+                pixel_scale_min = (Quantity(min(spec.meta['_pixel_scale_factor']))).value
+                pixel_scale_max = (Quantity(max(spec.meta['_pixel_scale_factor']))).value
+                min_max = [pixel_scale_min, pixel_scale_max]
+
+                if (u.sr in u.Unit(original_units).bases) and \
+                        (u.sr not in u.Unit(target_units).bases):
+                    eqv += [(u.MJy,
+                             u.MJy / u.sr,
+                             lambda x: x * np.array(min_max),
+                             lambda x: x)]
+                elif (u.sr not in u.Unit(original_units).bases) and \
+                        (u.sr in u.Unit(target_units).bases):
+                    eqv += [(u.MJy / u.sr,
+                             u.MJy,
+                             lambda x: x / np.array(min_max),
+                             lambda x: x)]
+
+        else:
+            eqv = u.spectral_density(spectral_values)
 
         return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
 
+    def _spectral_axis_conversion(self, values, original_units, target_units):
+        eqv = u.spectral() + u.pixel_scale(1*u.pix)
+        return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
 
 # Set default opacity for data layers to 1 instead of 0.8 in
 # some glue-core versions
