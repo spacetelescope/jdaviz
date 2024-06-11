@@ -222,13 +222,11 @@ def test_to_unit(cubeviz_helper):
 
     extract_plg.extract()
 
-    # cid = cubeviz_helper.app.data_collection[0].data.find_component_id('flux')
     data = cubeviz_helper.app.data_collection[-1].data
     values = [1]
     original_units = u.MJy / u.sr
     target_units = u.MJy
 
-    # value = uc.to_unit(uc, data, cid, values, original_units, target_units)
     value = uc._flux_conversion(uc, data.get_object(cls=Spectrum1D), values,
                                 original_units, target_units)
 
