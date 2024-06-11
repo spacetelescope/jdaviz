@@ -179,7 +179,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
         # TODO: expose export method once API is finalized
-
+        # is the above comment still needed or can it be removed?
         expose = ['viewer', 'viewer_format',
                   'dataset', 'dataset_format',
                   'subset', 'subset_format',
@@ -266,8 +266,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def _is_filename_changed(self, event):
         # Update the UI Filepath if relative or absolute paths are provided
         # by user via self.filename_value
-        if '/' in self.filename_value and \
-           ('.' in self.filename_value or '..' in self.filename_value):
+        if '~' in self.filename_value and '/' in self.filename_value:
+            expanded_path = os.path.expanduser(self.filename_value)
+            abs_path = Path(expanded_path).resolve()
+            self.default_filepath = str(abs_path)
+        elif '/' in self.filename_value and \
+             ('.' in self.filename_value or '..' in self.filename_value):
             abs_path = Path(self.filename_value).resolve()
             self.default_filepath = str(abs_path)
         elif '/' in self.filename_value:
@@ -377,7 +381,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         else:
             self.overwrite_warn = False
 
-        return str(filename)
+        return filename
 
     @with_spinner()
     def export(self, filename=None, show_dialog=None, overwrite=False,
@@ -532,31 +536,30 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                     f"Exported to {filename} (overwrite)", sender=self, color="success"))
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
-
         if filetype == "png":
-            if filename is None or show_dialog:
-                viewer.figure.save_png(str(filename) if filename is not None else None)
-            else:
-                # support writing without save dialog
-                # https://github.com/bqplot/bqplot/pull/1397
-                def on_img_received(data):
-                    try:
-                        with filename.open(mode='bw') as f:
-                            f.write(data)
-                    except Exception as e:
-                        self.hub.broadcast(SnackbarMessage(
-                            f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
-                            sender=self, color="error"))
-                    finally:
-                        self.hub.broadcast(SnackbarMessage(
-                            f"{self.viewer.selected} exported to {str(filename)}",
-                            sender=self, color="success"))
+            # support writing without save dialog
+            # https://github.com/bqplot/bqplot/pull/1397
+            if filename is None:
+                filename = self.filename_default
 
-                if viewer.figure._upload_png_callback is not None:
-                    raise ValueError("previous png export is still in progress.  Wait to complete "
-                                     "before making another call to save_figure")
+            def on_img_received(data):
+                try:
+                    with filename.open(mode='bw') as f:
+                        f.write(data)
+                except Exception as e:
+                    self.hub.broadcast(SnackbarMessage(
+                        f"{self.viewer.selected} failed to export to {str(filename)}: {e}",
+                        sender=self, color="error"))
+                finally:
+                    self.hub.broadcast(SnackbarMessage(
+                        f"{self.viewer.selected} exported to {str(filename)}",
+                        sender=self, color="success"))
 
-                viewer.figure.get_png_data(on_img_received)
+            if viewer.figure._upload_png_callback is not None:
+                raise ValueError("previous png export is still in progress.  Wait to complete "
+                                 "before making another call to save_figure")
+
+            viewer.figure.get_png_data(on_img_received)
 
         elif filetype == "svg":
             viewer.figure.save_svg(str(filename) if filename is not None else None)
@@ -721,11 +724,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         region = region[0][f'{"sky_" if link_type == "wcs" else ""}region']
 
-        region.write(filename, overwrite=True)
+        region.write(str(filename), overwrite=True)
 
     def save_subset_as_table(self, filename):
         region = self.app.get_subsets(subset_name=self.subset.selected)
-        region.write(filename)
+        region.write(str(filename))
 
     def vue_interrupt_recording(self, *args):  # pragma: no cover
         self.movie_interrupt = True
