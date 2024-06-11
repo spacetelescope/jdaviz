@@ -6,7 +6,7 @@ import uuid
 import warnings
 import ipyvue
 from astropy import units as u
-from astropy.nddata import NDData
+from astropy.nddata import NDData, NDDataArray
 from astropy.io import fits
 from astropy.time import Time
 from astropy.units import Quantity
@@ -109,10 +109,9 @@ class UnitConverterWithSpectral:
                 spec = data.get_object(cls=Spectrum1D)
 
             except RuntimeError:
-                # eqv = []
-                print(f"{data} cannot be converted to Spectrum1D object")
-            else:
-                return self._flux_conversion(spec, values, original_units, target_units)
+                data = data.get_object(cls=NDDataArray)
+                spec = Spectrum1D(flux=data.data * u.Unit(original_units))
+            return self._flux_conversion(spec, values, original_units, target_units)
         else:  # spectral axis
             return self._spectral_axis_conversion(values, original_units, target_units)
 
