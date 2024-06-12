@@ -273,9 +273,9 @@
 
       <v-overlay
         absolute
-        opacity=1.0
+        opacity=0.5
         :value="overwrite_warn"
-        :zIndex=3
+        :zIndex=0
         style="grid-area: 1/1;
                margin-left: -24px;
                margin-right: -24px">
