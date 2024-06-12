@@ -11,11 +11,17 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
                                         with_spinner)
 
+from jdaviz.core.template_mixin import TableMixin
+from jdaviz.core.user_api import PluginUserApi
+
 __all__ = ['Catalogs']
 
 
 @tray_registry('imviz-catalogs', label="Catalog Search")
-class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
+
+#Katherine added in TableMixin 
+
+class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, TableMixin):
     """
     See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
 
@@ -32,8 +38,27 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
 
+#################################################################################
+
+#this is mirroring the markers code; I am assuming that the column names would be very simular
+# Kat added this 
+    
+    _default_table_values = {'spectral_axis': np.nan,
+                            'spectral_axis:unit': '',
+                            'slice': np.nan,
+                            'pixel': (np.nan, np.nan),
+                            'pixel:unreliable': None,
+                            'world': (np.nan, np.nan),
+                            'world:unreliable': None,
+                            'value': np.nan,
+                            'value:unit': '',
+                            'value:unreliable': None,
+                            'index': np.nan}
+#################################################################################
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.table = QTable()
 
         self.catalog = FileImportSelectPluginComponent(self,
                                                        items='catalog_items',
@@ -44,6 +69,46 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.catalog._file_parser = self._file_parser
 
         self._marker_name = 'catalog_results'
+
+#################################################################################
+# Kat added this 
+# this code is also from markers 
+        if self.config == 'cubeviz':
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'slice', 'pixel',
+                       'world', 'value', 'value:unit', 'viewer']
+
+        elif self.config == 'imviz':
+            headers = ['pixel', 'pixel:unreliable',
+                       'world', 'world:unreliable',
+                       'value', 'value:unit', 'value:unreliable',
+                       'viewer']
+
+        elif self.config == 'specviz':
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'index', 'value', 'value:unit']
+        elif self.config == 'specviz2d':
+            # TODO: add "index" if/when specviz2d supports plotting spectral_axis
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'pixel', 'value', 'value:unit', 'viewer']
+        elif self.config == 'mosviz':
+            headers = ['spectral_axis', 'spectral_axis:unit',
+                       'pixel', 'world', 'index', 'value', 'value:unit',
+                       'viewer']
+        else:
+            # allow downstream configs to override headers
+            headers = kwargs.get('headers', [])
+
+        headers += ['data_label']
+
+        self.table.headers_avail = headers
+        self.table.headers_visible = headers
+        self.table._default_values_by_colname = self._default_table_values
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('clear_table', 'export_table','display_table'))
+#################################################################################
 
     @staticmethod
     def _file_parser(path):
@@ -181,12 +246,82 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         # QTable stores all the filtered sky coordinate points to be marked
         catalog_results = QTable({'coord': filtered_skycoord_table})
         self.number_of_results = len(catalog_results)
+        
+        #this is the data I need to put into a table 
+        #self.display_table()
 
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
 
         return skycoord_table
+
+#################################################################################
+
+    #I think this code is unnecesaary for now:
+    # def add_results_to_table(self, viewer, catalog_results, max_rows=10):
+    #     """
+    #     Add catalog results to the data table.
+    
+    #     Parameters
+    #     ----------
+    #     viewer : Viewer
+    #         The viewer where the catalog results were obtained.
+    #     catalog_results : QTable
+    #         The catalog results containing sky coordinates.
+    #     max_rows : int, optional
+    #         Maximum number of rows to add to the table at once. Default is 100.
+    
+    #     """
+    # # Iterate over a limited number of rows at a time
+    #     num_rows = min(len(catalog_results), max_rows)
+    #     for i in range(num_rows):
+    #     # Create a dictionary to hold information for each row
+    #         row_info = {}
+
+    #     # Add relevant information to each row
+    #         for coord_key in catalog_results.keys():
+    #             row_info[coord_key] = catalog_results[coord_key][i]
+
+    #     # Optionally, add viewer reference if it's a column in the table
+    #         if 'viewer' in self.table.headers_avail:
+    #             viewer_id = viewer.reference if viewer.reference is not None else viewer.reference_id
+    #             row_info['viewer'] = viewer_id
+
+    #     # Add default values for any missing columns
+    #         for k in self.table.headers_avail:
+    #             row_info.setdefault(k, self._default_table_values.get(k, ''))
+
+    #         try:
+    #         # Add the row to the table
+    #             self.table.add_item(row_info)
+    #         except ValueError as err:
+    #         # Handle any errors that occur during addition
+    #             raise ValueError(f'Failed to add row to table: {repr(err)}')
+
+    # # Broadcast updates if necessary
+    #     self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
+
+
+    # Kat added this 
+    
+    def display_table(self):
+        if hasattr(self, 'catalog_results') and isinstance(self.catalog_results, QTable):
+            print(self.catalog_results)
+        else:
+            print("No catalog results available to display.")
+
+
+    def clear_table(self):
+        """
+        Clear all entries/markers from the current table.
+        """
+        super().clear_table()
+        for mark in self.marks.values():
+            mark.clear()
+
+        self.hub.broadcast(MarkersPluginUpdate(table_length=0, sender=self))
+#################################################################################
 
     def import_catalog(self, catalog):
         """
