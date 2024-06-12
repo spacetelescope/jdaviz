@@ -556,8 +556,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                         sender=self, color="success"))
 
             if viewer.figure._upload_png_callback is not None:
-                raise ValueError("previous png export is still in progress.  Wait to complete "
-                                 "before making another call to save_figure")
+                raise ValueError("previous png export is still in progress. Wait to complete before making another call to save_figure")  # noqa: E501 # pragma: no cover
 
             viewer.figure.get_png_data(on_img_received)
 
