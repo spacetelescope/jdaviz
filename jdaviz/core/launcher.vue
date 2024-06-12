@@ -1,5 +1,10 @@
 <template>
-  <div class="mx-12">
+  <div v-if="config_loaded">
+    <v-alert type="warning">
+      Jdaviz instance from this launcher has already loaded.  Create a new launcher instance or access launcher.jdaviz_helper.
+    </v-alert>
+  </div>
+  <div v-else class="mx-12">
     <span style="float: right; font-weight: 100; color: white">
         <a :href="'https://jdaviz.readthedocs.io/en/'+vdocs" target="__blank" style="color: white">
             <b>Learn More</b>
