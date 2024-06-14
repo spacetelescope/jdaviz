@@ -374,7 +374,7 @@ class TestExportPluginPlots:
         export_plugin = imviz_helper.plugins['Export']._obj
 
         export_plugin.filename_value = '/img.png'
-        assert export_plugin.default_filepath == export_plugin.filename_value
+        assert os.path.normpath(export_plugin.default_filepath) == os.path.normpath(export_plugin.filename_value)  # noqa: E501
 
         export_plugin.filename_value = '~/img.png'
         expected_path = os.path.normpath(os.path.expanduser('~/img.png'))
