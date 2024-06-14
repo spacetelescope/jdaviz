@@ -2948,12 +2948,14 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                                                              use_display_units=True)
             # TODO: Something like the following code may be needed to get continuum
             #  with display units working
-            # temp_spec = self.app._jdaviz_helper.get_data(self.dataset.selected, use_display_units=True)
+            # temp_spec = self.app._jdaviz_helper.get_data(self.dataset.selected,
+            #                                              use_display_units=True)
             # flux_values = np.sum(np.ones_like(temp_spec.flux.value), axis=(0, 1))
             # pix_scale = self.dataset.selected_dc_item.meta.get('PIXAR_SR', 1.0)
             # pix_scale_factor = (flux_values * pix_scale)
             # temp_spec.meta['_pixel_scale_factor'] = pix_scale_factor
-            # full_spectrum = self._specviz_helper._handle_display_units(temp_spec, use_display_units=True)
+            # full_spectrum = self._specviz_helper._handle_display_units(temp_spec,
+            #                                                            use_display_units=True)
 
         else:
             full_spectrum = dataset.get_selected_spectrum(use_display_units=True)
