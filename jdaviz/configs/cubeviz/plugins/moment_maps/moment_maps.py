@@ -22,6 +22,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.app import UnitConverterWithSpectral as uc
+
 
 __all__ = ['MomentMap']
 
@@ -356,7 +358,20 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 moment_new_unit = flux_or_sb_display_unit
             else:
                 moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
-            self.moment = self.moment.to(moment_new_unit)
+
+            # Create a temporary Spectrum1D object with ability to convert from surface brightness
+            # to flux
+            temp_spec = Spectrum1D(flux=self.moment)
+            flux_values = np.sum(np.ones_like(temp_spec.flux.value), axis=(0, 1))
+            pix_scale = self.dataset.selected_dc_item.meta.get('PIXAR_SR', 1.0)
+            pix_scale_factor = (flux_values * pix_scale)
+            temp_spec.meta['_pixel_scale_factor'] = pix_scale_factor
+            converted_spec = uc._flux_conversion(self, temp_spec, self.moment.value,
+                                                 self.moment.unit,
+                                                 moment_new_unit) * moment_new_unit
+
+            # self.moment = self.moment.to(moment_new_unit)
+            self.moment = converted_spec
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)

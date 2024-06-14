@@ -2946,6 +2946,15 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                 raise ValueError("per-pixel only supported for cubeviz")
             full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
                                                              use_display_units=True)
+            # TODO: Something like the following code may be needed to get continuum
+            #  with display units working
+            # temp_spec = self.app._jdaviz_helper.get_data(self.dataset.selected, use_display_units=True)
+            # flux_values = np.sum(np.ones_like(temp_spec.flux.value), axis=(0, 1))
+            # pix_scale = self.dataset.selected_dc_item.meta.get('PIXAR_SR', 1.0)
+            # pix_scale_factor = (flux_values * pix_scale)
+            # temp_spec.meta['_pixel_scale_factor'] = pix_scale_factor
+            # full_spectrum = self._specviz_helper._handle_display_units(temp_spec, use_display_units=True)
+
         else:
             full_spectrum = dataset.get_selected_spectrum(use_display_units=True)
 
@@ -3431,7 +3440,8 @@ class DatasetSelect(SelectPluginComponent):
             # we need to get the 1d extracted spectrum for the cube
             spec_extract = self.app._jdaviz_helper.plugins['Spectral Extraction']._obj
             sp = spec_extract._extract_in_new_instance(self.selected,
-                                                       function=self._spectral_extraction_function,
+                                                       # function=self._spectral_extraction_function,
+                                                       function='Sum',
                                                        add_data=False)
             return self.plugin._specviz_helper._handle_display_units(sp, use_display_units)
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
