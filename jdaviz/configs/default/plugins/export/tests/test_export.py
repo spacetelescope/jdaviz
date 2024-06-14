@@ -359,7 +359,7 @@ class TestExportPluginPlots:
 
         export_plugin.export(filename=None)
 
-        # attempting to save a figure back to back
+        # attempt to save a figure back to back
         try:
             export_plugin.export(filename='img.png')
         except ValueError as e:
@@ -372,6 +372,9 @@ class TestExportPluginPlots:
         imviz_helper.load_data(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
+
+        export_plugin.filename_value = '/img.png'
+        assert export_plugin.default_filepath == export_plugin.filename_value
 
         export_plugin.filename_value = '~/img.png'
         expected_path = os.path.normpath(os.path.expanduser('~/img.png'))
