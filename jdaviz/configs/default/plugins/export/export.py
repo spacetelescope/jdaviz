@@ -537,8 +537,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
         if filetype == "png":
-            # support writing without save dialog
-            # https://github.com/bqplot/bqplot/pull/1397
+
             if filename is None:
                 filename = self.filename_default
 

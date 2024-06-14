@@ -275,7 +275,7 @@
         absolute
         opacity=0.5
         :value="overwrite_warn"
-        :zIndex=0
+        :zIndex=3
         style="grid-area: 1/1;
                margin-left: -24px;
                margin-right: -24px">
