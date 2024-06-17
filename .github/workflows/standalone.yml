@@ -39,7 +39,7 @@ jobs:
     - name: Create standalone binary
       env:
         DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
-      run: (cd standalone; pyinstaller ./jdaviz.spec)
+      run: (cd standalone; pyinstaller ./jdaviz.spec --debug=all)
 
     - name: Run jdaviz cmd in background
       run: ./standalone/dist/jdaviz/jdaviz-cli imviz&
