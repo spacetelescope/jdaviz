@@ -172,13 +172,11 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
-3.10.2 (unreleased)
+3.10.3 (unreleased)
 ===================
 
 Bug Fixes
 ---------
-
-* Update button in the subset plugin is now disabled when no subset is selected. [#2880]
 
 Cubeviz
 ^^^^^^^
@@ -194,6 +192,15 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
+
+3.10.2 (2024-06-06)
+===================
+
+Bug Fixes
+---------
+
+* Update button in the subset plugin is now disabled when no subset is selected. [#2880]
+
 
 3.10.1 (2024-05-14)
 ===================
