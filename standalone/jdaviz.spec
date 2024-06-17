@@ -46,7 +46,7 @@ exe = EXE(
     # executable name: dist/jdaviz/jdaviz-cli
     # note: cannot be called jdaviz, because there is a directory called jdaviz
     name="jdaviz-cli",
-    debug=False,
+    debug="all",
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
