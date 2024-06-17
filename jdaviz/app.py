@@ -111,7 +111,7 @@ class UnitConverterWithSpectral:
             except RuntimeError:
                 data = data.get_object(cls=NDDataArray)
                 spec = Spectrum1D(flux=data.data * u.Unit(original_units),
-                                  meta=data.meta, wcs=data.wcs)
+                                  meta=data.meta)
             return self._flux_conversion(spec, values, original_units, target_units)
         else:  # spectral axis
             return self._spectral_axis_conversion(values, original_units, target_units)
