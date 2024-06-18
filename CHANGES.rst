@@ -172,6 +172,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Max pinned matplotlib to <3.9 due to standalone build problems. [#2917]
+
 3.10.3 (unreleased)
 ===================
 
