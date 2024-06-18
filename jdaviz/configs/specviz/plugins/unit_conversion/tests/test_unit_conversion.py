@@ -232,3 +232,6 @@ def test_sb_unit_conversion(cubeviz_helper):
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
     assert y_display_unit == u.MJy
+
+    la = cubeviz_helper.plugins['Line Analysis']._obj
+    assert la.dataset.get_selected_spectrum(use_display_units=True)

@@ -28,6 +28,8 @@ from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs
+from jdaviz.app import UnitConverterWithSpectral as uc
+
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper']
 
@@ -474,18 +476,26 @@ class ConfigHelper(HubListener):
                     if hasattr(uncertainty, 'represent_as'):
                         new_uncert = uncertainty.represent_as(
                             StdDevUncertainty
-                        ).quantity.to(flux_unit)
+                        )
                     else:
                         # if not specified as NDUncertainty, assume stddev:
-                        new_uncert = uncertainty.quantity.to(flux_unit)
-                    new_uncert = StdDevUncertainty(new_uncert, unit=flux_unit)
+                        new_uncert = uncertainty
+                    new_uncert_converted = uc._flux_conversion(self, data,
+                                                               new_uncert.quantity.value,
+                                                               new_uncert.unit, flux_unit)
+                    new_uncert = StdDevUncertainty(new_uncert_converted, unit=flux_unit)
                 else:
                     new_uncert = None
 
-                data = Spectrum1D(spectral_axis=data.spectral_axis.to(spectral_unit,
-                                                                      u.spectral()),
-                                  flux=data.flux.to(flux_unit,
-                                                    u.spectral_density(data.spectral_axis)),
+                new_flux = uc._flux_conversion(self, data, data.flux.value, data.flux.unit,
+                                               flux_unit) * u.Unit(flux_unit)
+                new_spec = uc._spectral_axis_conversion(self,
+                                                        data.spectral_axis.value,
+                                                        data.spectral_axis.unit,
+                                                        spectral_unit) * u.Unit(spectral_unit)
+
+                data = Spectrum1D(spectral_axis=new_spec,
+                                  flux=new_flux,
                                   uncertainty=new_uncert,
                                   mask=data.mask)
             else:  # pragma: nocover
