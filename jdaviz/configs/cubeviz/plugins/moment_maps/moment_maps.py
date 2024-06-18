@@ -369,8 +369,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             converted_spec = uc._flux_conversion(self, temp_spec, self.moment.value,
                                                  self.moment.unit,
                                                  moment_new_unit) * moment_new_unit
-
-            # self.moment = self.moment.to(moment_new_unit)
             self.moment = converted_spec
 
         # Reattach the WCS so we can load the result

@@ -3442,8 +3442,7 @@ class DatasetSelect(SelectPluginComponent):
             # we need to get the 1d extracted spectrum for the cube
             spec_extract = self.app._jdaviz_helper.plugins['Spectral Extraction']._obj
             sp = spec_extract._extract_in_new_instance(self.selected,
-                                                       # function=self._spectral_extraction_function,
-                                                       function='Sum',
+                                                       function=self._spectral_extraction_function,
                                                        add_data=False)
             return self.plugin._specviz_helper._handle_display_units(sp, use_display_units)
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
