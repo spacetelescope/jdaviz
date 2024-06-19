@@ -18,6 +18,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fix multiple footprints bug that prevented footprint updates on changes to the
+  viewer orientation. [#2918]
+
 Mosviz
 ^^^^^^
 
