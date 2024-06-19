@@ -188,6 +188,9 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Fix multiple footprints bug that prevented footprint updates on changes to the
+  viewer orientation. [#2918]
+
 Mosviz
 ^^^^^^
 
@@ -203,7 +206,7 @@ Specviz2d
 Bug Fixes
 ---------
 
-* Update button in the subset plugin is now disabled when no subset is selected. [#2880]
+- Update button in the subset plugin is now disabled when no subset is selected. [#2880]
 
 
 3.10.1 (2024-05-14)

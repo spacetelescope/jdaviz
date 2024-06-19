@@ -131,7 +131,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self._on_link_type_updated)
         self.hub.subscribe(self, DataCollectionAddMessage, handler=self._on_link_type_updated)
         self.hub.subscribe(self, DataCollectionDeleteMessage, handler=self._on_link_type_updated)
-        self.hub.subscribe(self, ChangeRefDataMessage, handler=lambda _: self._preset_args_changed())  # noqa
+        self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_rotation)  # noqa
         self._on_link_type_updated()
 
     @property
@@ -320,6 +320,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     def vue_center_on_viewer(self, viewer_ref):
         self.center_on_viewer(viewer_ref)
 
+    def _on_rotation(self, msg={}):
+        for overlay_selected in self._overlays:
+            self._change_overlay(overlay_selected=overlay_selected)
+
     @observe('overlay_selected')
     def _change_overlay(self, *args, overlay_selected=None, center_the_overlay=True):
         if not hasattr(self, 'overlay'):  # pragma: nocover
@@ -451,7 +455,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         Access the regions objects corresponding to the current settings
         """
 
-        callable_kwargs = {k: getattr(self, k)
+        callable_kwargs = {k: float(getattr(self, k))
                            for k in ('ra', 'dec', 'pa', 'v2_offset', 'v3_offset')}
 
         if self.preset_selected == 'From File...':
@@ -495,7 +499,6 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             del self._overlays[overlay_selected]['regions']
 
         regs = self.overlay_regions
-
         for viewer_id, viewer in self.app._viewer_store.items():
             visible = self._mark_visible(viewer_id)
             # TODO: need to re-call this logic when the reference_data is changed... which might
