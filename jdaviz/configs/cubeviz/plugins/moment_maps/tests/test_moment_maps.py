@@ -307,8 +307,13 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
         cubeviz_helper.load_data(sb_cube, data_label='test')
 
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    uc.open_in_tray()  # plugin has to be open for unit change to take hold
+    uc._obj.show_translator = True
+    uc.flux_or_sb.selected = 'Surface Brightness'
     mm = cubeviz_helper.plugins['Moment Maps']._obj
     mm.open_in_tray()  # plugin has to be open for unit change to take hold
+    mm._set_data_units()
 
     # check that label is initialized with 'Surface Brightness' since the cube
     # loaded is in MJy / sr. for the 0th moment, the only item will be the 0th
@@ -322,8 +327,7 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
     assert mm.moment.unit == f'M{moment_unit}'
 
     # now change surface brightness units in the unit conversion plugin
-    uc = cubeviz_helper.plugins["Unit Conversion"]
-    uc.open_in_tray()  # plugin has to be open for unit change to take hold
+
     uc.flux_or_sb_unit = 'Jy / sr'
 
     # and make sure this change is propogated
@@ -335,7 +339,6 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
     mm.calculate_moment()
     assert mm.moment.unit == moment_unit
 
-    uc._obj.show_translator = True
     uc.flux_or_sb.selected = 'Flux'
     mm._set_data_units()
 
