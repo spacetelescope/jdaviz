@@ -6,7 +6,7 @@ from astropy.wcs import WCS
 from specutils import Spectrum1D
 from jdaviz import Application, Specviz
 from jdaviz.configs.default.plugins.gaussian_smooth.gaussian_smooth import GaussianSmooth
-from jdaviz.utils import flux_conversion, spectral_axis_conversion
+from jdaviz.utils import flux_conversion
 
 
 # This applies to all viz but testing with Imviz should be enough.
