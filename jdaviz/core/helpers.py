@@ -28,7 +28,6 @@ from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs
-from jdaviz.app import UnitConverterWithSpectral as uc
 
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper']
