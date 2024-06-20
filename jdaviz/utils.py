@@ -10,6 +10,8 @@ from astropy.io import fits
 from astropy.utils import minversion
 from astropy.utils.data import download_file
 from astropy.wcs.wcsapi import BaseHighLevelWCS
+from astropy.units import Quantity
+from astropy import units as u
 from astroquery.mast import Observations, conf
 
 from glue.config import settings
@@ -20,7 +22,7 @@ from ipyvue import watch
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type',
-           'download_uri_to_path']
+           'download_uri_to_path', 'flux_conversion', 'spectral_axis_conversion']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 
@@ -281,6 +283,73 @@ def standardize_metadata(metadata):
         raise TypeError('metadata must be dictionary or FITS header')
 
     return out_meta
+
+
+def flux_conversion(spec, values, original_units, target_units):
+    # If there are only two values, this is likely the limits being converted, so then
+    # in case we need to use the spectral density equivalency, we need to provide only
+    # to spectral axis values. If there is only one value
+    if not np.isscalar(values) and len(values) == 2:
+        spectral_values = spec.spectral_axis[0]
+    else:
+        spectral_values = spec.spectral_axis
+
+    # Ensure a spectrum passed through Spectral Extraction plugin
+    if '_pixel_scale_factor' in spec.meta and len(values) != 2:
+        # Data item in data collection does not update from conversion/translation.
+        # App wide original data units are used for conversion, original and
+        # target_units dictate the conversion to take place.
+
+        if (u.sr in u.Unit(original_units).bases) and \
+                (u.sr not in u.Unit(target_units).bases):
+            # Surface Brightness -> Flux
+            eqv = [(u.MJy / u.sr,
+                    u.MJy,
+                    lambda x: (x * np.array(spec.meta.get('_pixel_scale_factor', 1))),
+                    lambda x: x)]
+        elif (u.sr not in u.Unit(original_units).bases) and \
+                (u.sr in u.Unit(target_units).bases):
+            # Flux -> Surface Brightness
+            eqv = [(u.MJy,
+                    u.MJy / u.sr,
+                    lambda x: (x / np.array(spec.meta.get('_pixel_scale_factor', 1))),
+                    lambda x: x)]
+        else:
+            eqv = u.spectral_density(spectral_values)
+
+    elif len(values) == 2:
+        # Need this for setting the y-limits
+        eqv = u.spectral_density(spectral_values)
+
+        if '_pixel_scale_factor' in spec.meta:
+            # get min and max scale factors, to use with min and max of spec for
+            # y-limits. Make sure they are Quantities (can be numpy.float64).
+            pixel_scale_min = (Quantity(min(spec.meta.get('_pixel_scale_factor', 1)))).value
+            pixel_scale_max = (Quantity(max(spec.meta.get('_pixel_scale_factor', 1)))).value
+            min_max = [pixel_scale_min, pixel_scale_max]
+
+            if (u.sr in u.Unit(original_units).bases) and \
+                    (u.sr not in u.Unit(target_units).bases):
+                eqv += [(u.MJy,
+                         u.MJy / u.sr,
+                         lambda x: x * np.array(min_max),
+                         lambda x: x)]
+            elif (u.sr not in u.Unit(original_units).bases) and \
+                    (u.sr in u.Unit(target_units).bases):
+                eqv += [(u.MJy / u.sr,
+                         u.MJy,
+                         lambda x: x / np.array(min_max),
+                         lambda x: x)]
+
+    else:
+        eqv = u.spectral_density(spectral_values)
+
+    return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
+
+
+def spectral_axis_conversion(values, original_units, target_units):
+    eqv = u.spectral() + u.pixel_scale(1*u.pix)
+    return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
 
 
 class ColorCycler:
