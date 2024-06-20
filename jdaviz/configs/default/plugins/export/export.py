@@ -375,8 +375,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if not filepath.is_absolute():
                 abs_path = filepath.resolve()
                 self.default_filepath = str(abs_path)
+            # set default path for standalone
+            if os.environ.get("JDAVIZ_START_DIR", ""):
+                self.default_filepath = os.environ["JDAVIZ_START_DIR"]
 
-        if filename.exists() and not overwrite:
+        if filename.exists() and not overwrite and not default_path:
             self.overwrite_warn = True
         else:
             self.overwrite_warn = False
