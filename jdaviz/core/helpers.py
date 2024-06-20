@@ -480,19 +480,19 @@ class ConfigHelper(HubListener):
                     else:
                         # if not specified as NDUncertainty, assume stddev:
                         new_uncert = uncertainty
-                    new_uncert_converted = uc._flux_conversion(self, data,
-                                                               new_uncert.quantity.value,
-                                                               new_uncert.unit, flux_unit)
+                    new_uncert_converted = self.app._flux_conversion(data,
+                                                                     new_uncert.quantity.value,
+                                                                     new_uncert.unit, flux_unit)
                     new_uncert = StdDevUncertainty(new_uncert_converted, unit=flux_unit)
                 else:
                     new_uncert = None
 
-                new_flux = uc._flux_conversion(self, data, data.flux.value, data.flux.unit,
-                                               flux_unit) * u.Unit(flux_unit)
-                new_spec = uc._spectral_axis_conversion(self,
-                                                        data.spectral_axis.value,
-                                                        data.spectral_axis.unit,
-                                                        spectral_unit) * u.Unit(spectral_unit)
+                new_flux = self.app._flux_conversion(data, data.flux.value, data.flux.unit,
+                                                     flux_unit) * u.Unit(flux_unit)
+                new_spec = (self.app._spectral_axis_conversion(data.spectral_axis.value,
+                                                               data.spectral_axis.unit,
+                                                               spectral_unit)
+                            * u.Unit(spectral_unit))
 
                 data = Spectrum1D(spectral_axis=new_spec,
                                   flux=new_flux,

@@ -227,8 +227,8 @@ def test_to_unit(cubeviz_helper):
     original_units = u.MJy / u.sr
     target_units = u.MJy
 
-    value = uc._flux_conversion(uc, data.get_object(cls=Spectrum1D), values,
-                                original_units, target_units)
+    value = cubeviz_helper.app._flux_conversion(data.get_object(cls=Spectrum1D),
+                                                values, original_units, target_units)
 
     # will be a uniform array since not wavelength dependent
     # so test first value in array
@@ -240,8 +240,8 @@ def test_to_unit(cubeviz_helper):
     original_units = u.MJy
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
-    new_values = uc._flux_conversion(uc, data.get_object(cls=Spectrum1D), values,
-                                     original_units, target_units)
+    new_values = cubeviz_helper.app._flux_conversion(data.get_object(cls=Spectrum1D), values,
+                                                     original_units, target_units)
 
     assert np.allclose(new_values,
                        (values * original_units)
@@ -255,8 +255,8 @@ def test_to_unit(cubeviz_helper):
     original_units = u.MJy
     target_units = u.erg / u.cm**2 / u.s / u.AA
 
-    new_values = uc._flux_conversion(uc, data.get_object(cls=Spectrum1D), values,
-                                     original_units, target_units)
+    new_values = cubeviz_helper.app._flux_conversion(data.get_object(cls=Spectrum1D), values,
+                                                     original_units, target_units)
 
     # In this case we do a regular spectral density conversion, but using the
     # first value in the spectral axis for the equivalency
