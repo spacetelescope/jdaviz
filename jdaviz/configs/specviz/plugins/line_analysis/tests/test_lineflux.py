@@ -12,9 +12,9 @@ warnings.filterwarnings('ignore')
 
 # Maps input spectrum flux unit to expected line analysis flux unit
 expected_lineflux_results = {
-    u.Jy/u.sr: u.Unit('W/(m2*sr)'),
+    u.Jy/u.sr: u.Unit('W/(m2)'),
     u.Jy: u.Unit('W/m2'),
-    u.Unit('W/m2/m')/u.sr: u.Unit('W/(m2*sr)'),
+    u.Unit('W/m2/m')/u.sr: u.Unit('W/(m2)'),
     u.Unit('W/m2/m'): u.Unit('W/m2')
 }
 
