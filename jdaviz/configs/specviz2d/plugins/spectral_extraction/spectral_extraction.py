@@ -629,7 +629,7 @@ class SpectralExtraction(PluginTemplateMixin):
     @observe('is_active', 'ext_dataset_selected', 'ext_trace_selected',
              'ext_type_selected', 'ext_width', 'active_step',
              'horne_ext_profile_selected', 'self_prof_n_bins',
-             'self_prof_interp_degree_x', 'self_interp_degree_y')
+             'self_prof_interp_degree_x', 'self_prof_interp_degree_y')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
     def _interaction_in_ext_step(self, event={}):
