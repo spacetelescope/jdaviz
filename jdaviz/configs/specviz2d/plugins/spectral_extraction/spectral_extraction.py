@@ -92,6 +92,17 @@ class SpectralExtraction(PluginTemplateMixin):
     * ``ext_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * :attr:`ext_width` :
       full width of the extraction window.
+    * ``horne_ext_profile`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      For Horne extract, choice of 'Gaussian' or 'Self (interpolated)' to use
+      empirical profile from data.
+    * :attr:`self_prof_n_bins` :
+      Number of bins to use when computing the self-derived profile for Horne Extract.
+    * :attr:`self_prof_interp_degree_x` :
+      Interpolation degree (in X) to use when computing the self-derived profile
+      for Horne Extract.
+    * :attr:`self_prof_interp_degree_y` :
+      Interpolation degree (in Y) to use when computing the self-derived profile
+      for Horne Extract.
     * ``ext_add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
     * :meth:`import_extract`
     * :meth:`export_extract`
@@ -189,6 +200,13 @@ class SpectralExtraction(PluginTemplateMixin):
 
     ext_type_items = List().tag(sync=True)
     ext_type_selected = Unicode().tag(sync=True)
+
+    horne_ext_profile_items = List().tag(sync=True)
+    horne_ext_profile_selected = Unicode().tag(sync=True)
+
+    self_prof_n_bins = IntHandleEmpty(10).tag(sync=True)
+    self_prof_interp_degree_x = IntHandleEmpty(1).tag(sync=True)
+    self_prof_interp_degree_y = IntHandleEmpty(1).tag(sync=True)
 
     ext_width = FloatHandleEmpty(0).tag(sync=True)
 
@@ -313,6 +331,11 @@ class SpectralExtraction(PluginTemplateMixin):
                                               selected='ext_type_selected',
                                               manual_options=['Boxcar', 'Horne'])
 
+        self.horne_ext_profile = SelectPluginComponent(self,
+                                                       items='horne_ext_profile_items',
+                                                       selected='horne_ext_profile_selected',
+                                                       manual_options=['Gaussian', 'Self (interpolated)'])  # noqa
+
         self.ext_add_results = AddResults(self, 'ext_results_label',
                                           'ext_results_label_default',
                                           'ext_results_label_auto',
@@ -350,6 +373,10 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'export_bg', 'export_bg_img', 'export_bg_sub',
                                            'ext_dataset', 'ext_trace', 'ext_type',
                                            'ext_width', 'ext_add_results',
+                                           'horne_ext_profile',
+                                           'self_prof_n_bins',
+                                           'self_prof_interp_degree_x',
+                                           'self_prof_interp_degree_y',
                                            'import_extract',
                                            'export_extract', 'export_extract_spectrum'))
 
@@ -600,7 +627,9 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'bg'
 
     @observe('is_active', 'ext_dataset_selected', 'ext_trace_selected',
-             'ext_type_selected', 'ext_width', 'active_step')
+             'ext_type_selected', 'ext_width', 'active_step',
+             'horne_ext_profile_selected', 'self_prof_n_bins',
+             'self_prof_interp_degree_x', 'self_prof_interp_degree_y')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
     def _interaction_in_ext_step(self, event={}):
@@ -925,11 +954,37 @@ class SpectralExtraction(PluginTemplateMixin):
         if self.ext_type_selected == 'Boxcar':
             ext = extract.BoxcarExtract(inp_sp2d, trace, width=self.ext_width)
         elif self.ext_type_selected == 'Horne':
+            spatial_profile = None
             if inp_sp2d.uncertainty is None:
                 inp_sp2d.uncertainty = VarianceUncertainty(np.ones_like(inp_sp2d.data))
+
             if not hasattr(inp_sp2d.uncertainty, 'uncertainty_type'):
                 inp_sp2d.uncertainty = StdDevUncertainty(inp_sp2d.uncert)
-            ext = extract.HorneExtract(inp_sp2d, trace)
+
+            if self.horne_ext_profile_selected == 'Self (interpolated)':
+
+                # check inputs
+                if self.self_prof_n_bins <= 0:
+                    raise ValueError('`self_prof_n_bins` must be greater than 0.')
+                if self.self_prof_interp_degree_x <= 0:
+                    raise ValueError('`self_prof_interp_degree_x` must be greater than 0.')
+                if self.self_prof_interp_degree_y <= 0:
+                    raise ValueError('`self_prof_interp_degree_y` must be greater than 0.')
+
+                # setup dict of interpolation options
+                n_bins_interpolated_profile = self.self_prof_n_bins
+                interp_degree = (self.self_prof_interp_degree_x, self.self_prof_interp_degree_y)
+                spatial_profile = {'name': 'interpolated_profile',
+                                   'n_bins_interpolated_profile': n_bins_interpolated_profile,
+                                   'interp_degree': interp_degree}
+
+            elif self.horne_ext_profile_selected == 'Gaussian':
+                spatial_profile = 'gaussian'
+
+            else:
+                raise ValueError("Horne extraction profile must either be 'Gaussian' or 'Self (interpolated)'")  # noqa
+
+            ext = extract.HorneExtract(inp_sp2d, trace, spatial_profile=spatial_profile)
         else:
             raise NotImplementedError(f"extraction type '{self.ext_type_selected}' not supported")  # noqa
 

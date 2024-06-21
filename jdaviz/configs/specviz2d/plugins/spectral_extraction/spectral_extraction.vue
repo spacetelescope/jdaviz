@@ -406,6 +406,59 @@
         </v-text-field>
       </v-row>
 
+      <v-row v-if="ext_type_selected === 'Horne'">
+        <v-select
+          attach
+          :menu-props="{ left: true }"
+          :items=" horne_ext_profile_items.map(i => i.label)"
+          v-model="horne_ext_profile_selected"
+          label="Profile Type"
+          hint="Profile to use for Horne extractoin."
+          persistent-hint
+        ></v-select>
+      </v-row>
+
+      <v-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
+        <v-text-field
+          label="N Bins"
+          type="number"
+          v-model.number=self_prof_n_bins
+          :rules="[() => self_prof_n_bins !== '' || 'This field is required',
+                   () => self_prof_n_bins >0 || 'Number of bins must be greater than zero']"
+          hint="Number of bins used to measure self profile."
+          persistent-hint
+        >
+        </v-text-field>
+      </v-row>
+
+      <div v-if="ext_type_selected === 'Horne'">
+        <v-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
+          <v-text-field
+            label="Interpolation Degree (X)"
+            type="number"
+            v-model.number=self_prof_interp_degree_x
+            :rules="[() => self_prof_interp_degree_x !== '' || 'This field is required',
+                     () => self_prof_interp_degree_x >0 || 'X interpolation degree must be be greater than zero']"
+            hint="Interpolation degree (X) to measure self profile."
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+
+        <v-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
+          <v-text-field
+            label="Interpolation Degree (Y)"
+            type="number"
+            v-model.number=self_prof_interp_degree_y
+            :rules="[() => self_prof_interp_degree_y !== '' || 'This field is required',
+                     () => self_prof_interp_degree_y >0 || 'Y interpolation degree must be be greater than zero']"
+            hint="Interpolation degree (Y) to measure self profile."
+            persistent-hint
+          >
+          </v-text-field>
+        </v-row>
+      </div>
+
       <plugin-add-results
         :label.sync="ext_results_label"
         :label_default="ext_results_label_default"
