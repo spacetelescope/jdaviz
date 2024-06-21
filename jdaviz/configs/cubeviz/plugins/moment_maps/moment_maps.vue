@@ -179,7 +179,7 @@
 
           <v-row justify="end">
             <j-tooltip tipid='plugin-moment-save-fits'>
-              <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
+              <v-btn color="primary" text elevation="3" @click="save_as_fits">Save as FITS</v-btn>
 
             </j-tooltip>
           </v-row>

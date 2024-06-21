@@ -112,7 +112,7 @@
         </template>
       </v-select>
       <v-col align="right">
-        <v-btn text @click="clear_flags_filter" color="accent">
+        <v-btn text elevation="3" @click="clear_flags_filter" color="accent">
           Clear Filter
         </v-btn>
       </v-col>

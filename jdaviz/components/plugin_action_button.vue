@@ -1,6 +1,7 @@
 <template>
   <v-btn :disabled="spinner || disabled"
     text
+    elevation="3"
     :color=buttonColor
     @click="$emit('click')"
   >
