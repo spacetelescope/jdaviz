@@ -92,7 +92,7 @@ class SpectralExtraction(PluginTemplateMixin):
     * ``ext_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * :attr:`ext_width` :
       full width of the extraction window.
-    * :attr:`horne_ext_profile_selected` :
+    * ``horne_ext_profile`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       For Horne extract, choice of 'Gaussian' or 'Self (interpolated)' to use
       empirical profile from data.
     * :attr:`self_prof_n_bins` :
@@ -373,7 +373,7 @@ class SpectralExtraction(PluginTemplateMixin):
                                            'export_bg', 'export_bg_img', 'export_bg_sub',
                                            'ext_dataset', 'ext_trace', 'ext_type',
                                            'ext_width', 'ext_add_results',
-                                           'horne_ext_profile_selected',
+                                           'horne_ext_profile',
                                            'self_prof_n_bins',
                                            'self_prof_interp_degree_x',
                                            'self_prof_interp_degree_y',
@@ -627,7 +627,9 @@ class SpectralExtraction(PluginTemplateMixin):
         self.active_step = 'bg'
 
     @observe('is_active', 'ext_dataset_selected', 'ext_trace_selected',
-             'ext_type_selected', 'ext_width', 'active_step')
+             'ext_type_selected', 'ext_width', 'active_step',
+             'horne_ext_profile_selected', 'self_prof_n_bins',
+             'self_prof_interp_degree_x', 'self_interp_degree_y')
     @skip_if_not_tray_instance()
     @skip_if_no_updates_since_last_active()
     def _interaction_in_ext_step(self, event={}):

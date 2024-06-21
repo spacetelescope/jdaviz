@@ -219,8 +219,8 @@ def test_horne_extract_self_profile(specviz2d_helper):
                                  window=13, peak_method='gaussian', guess=20)
     pext.import_trace(trace_fit)
 
-    pext.ext_type_selected = "Horne"
-    pext.horne_ext_profile_selected = "Self (interpolated)"
+    pext.ext_type.selected = "Horne"
+    pext.horne_ext_profile.selected = "Self (interpolated)"
 
     # check that correct defaults are set
     assert pext.self_prof_n_bins == 10
