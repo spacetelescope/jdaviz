@@ -50,63 +50,13 @@
 
     <v-row>
        <p class="font-weight-bold">Results:</p>
-       <span style='padding-left: 4px' v-if="results_available">{{ number_of_results }}</span>
-    </v-row>
+       <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
+    <v-row>
 
-    <!-- Display Catalog Results Table -->
-    <v-row v-if="results_available">
-       <p class="font-weight-bold">Catalog Results:</p>
-       <table>
-           <thead>
-               <tr>
-                   <!-- Define column headers based on the catalog results -->
-                   <th v-for="(header, index) in catalogHeaders" :key="index">{{ header }}</th>
-               </tr>
-           </thead>
-           <tbody>
-               <!-- Use v-for to loop through catalog results and display each row -->
-               <tr v-for="(result, index) in catalogResults" :key="index">
-                   <!-- Display data from each result -->
-                   <td v-for="(value, key) in result" :key="key">{{ value }}</td>
-               </tr>
-           </tbody>
-       </table>
-    </v-row>
+    <!-- Adding the div wrapper here for the jupyter-widget -->
+    <div class="jupyter-widget-container">
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
+    </div>
 
   </j-tray-plugin>
 </template>
-
-<script>
-export default {
-  props: {
-    docs_description: String,
-    docs_link: String,
-    popout_button: Boolean,
-    scroll_to: String,
-    viewer_items: Array,
-    viewer_selected: String,
-    catalog_items: Array,
-    catalog_selected: String,
-    from_file: Boolean,
-    from_file_message: String,
-    results_available: Boolean,
-    number_of_results: Number,
-    catalogResults: Array, // This prop should be passed from the parent component or state
-    catalogHeaders: Array // This prop should contain the headers for the table
-  },
-  methods: {
-    do_clear() {
-      this.$emit('clear');
-    },
-    do_search() {
-      this.$emit('search');
-    },
-    file_import_cancel() {
-      this.$emit('file-import-cancel');
-    },
-    file_import_accept() {
-      this.$emit('file-import-accept');
-    }
-  }
-}
-</script>
