@@ -32,4 +32,3 @@ This documentation provides details on the various capabilities, demo videos, an
   displayimages
   plugins
   export_data
-  examples
