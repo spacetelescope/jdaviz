@@ -477,7 +477,9 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
         if local_path is not None and os.path.isdir(local_path):
             # if you give a directory, save the file there with default name:
-            local_path = os.path.join(local_path, parsed_uri.path.split(os.path.sep)[-1])
+            # os.path.sep does not work because on windows that is a back slash
+            # and this web path needs to be split with a forward slash
+            local_path = os.path.join(local_path, parsed_uri.path.split('/')[-1])
 
         with conf.set_temp('timeout', timeout):
             (status, msg, url) = Observations.download_file(
@@ -493,8 +495,9 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
         if local_path is None:
             # if not specified, this is the default location:
-            local_path = os.path.join(os.getcwd(), parsed_uri.path.split(os.path.sep)[-1])
-
+            # os.path.sep does not work because on windows that is a back slash
+            # and this web path needs to be split with a forward slash
+            local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
         return local_path
 
     elif parsed_uri.scheme.lower() in ('http', 'https', 'ftp'):
