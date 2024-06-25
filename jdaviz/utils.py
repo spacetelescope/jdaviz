@@ -286,6 +286,30 @@ def standardize_metadata(metadata):
 
 
 def flux_conversion(spec, values, original_units, target_units):
+    """
+    Given a Spectrum1D object, flux values, original flux units, and target units,
+    this method will return the flux values in the converted units. This conversion
+    takes into account the possible surface brightness to flux or vice versa change that
+    may happen between units.
+
+    Parameters
+    ----------
+    spec : ~specutils.Spectrum1D~ object
+        The Spectrum1D object that will have converted flux units.
+
+    values : float array
+        Flux values in the original units.
+
+    original_units : str
+        The flux units of the spec object.
+
+    target_units : str
+        The units the flux will be converted to.
+
+    Returns
+    -------
+    Flux values in the target units.
+    """
     # If there are only two values, this is likely the limits being converted, so then
     # in case we need to use the spectral density equivalency, we need to provide only
     # to spectral axis values. If there is only one value
