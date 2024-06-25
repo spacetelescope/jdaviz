@@ -39,6 +39,7 @@ dependencies = [
     "ipypopout>=0.0.11",
     "astroquery",
     "requests",
+    "importlib_metadata==7.2.1"
 ]
 dynamic = [
     "version",
