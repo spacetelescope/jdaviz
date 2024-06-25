@@ -95,7 +95,8 @@ Cubeviz
 
 - Handle display units when doing flux / surface brightness conversions. [#2910]
 
-- Flux units are now correct for collapsed spectra when using the sum function. [#2873]
+- Flux units are now correct for collapsed spectra when using the sum function
+  when units are in per steradian. [#2873]
 
 Imviz
 ^^^^^
