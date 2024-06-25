@@ -44,4 +44,3 @@ videos and example notebooks.
   displaying
   plugins
   export_data
-  examples

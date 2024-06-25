@@ -62,4 +62,3 @@ In addition, Cubeviz also allows users to interact with their cube to:
   displayspectra
   plugins
   export_data
-  examples
