@@ -43,7 +43,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     _default_table_values = {
             'Right Ascension (degrees)' : np.nan,
-            'Declination (degrees)' :  np.nan
+            'Declination (degrees)' :  np.nan,
+            'Object ID' : np.nan
         }
         
     @property
@@ -64,7 +65,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         self._marker_name = 'catalog_results'
         
-        headers = ['Right Ascension (degrees)', 'Declination (degrees)']
+        headers = ['Right Ascension (degrees)', 'Declination (degrees)','Object ID']
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
@@ -218,14 +219,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
 
-        for i in skycoord_table:
-            # Access the Right Ascension and Declination
-            row_info = { 'Right Ascension (degrees)': i.ra.deg,
-                        'Declination (degrees)':i.dec.deg
+        # adding in coordinates and Source IDs into the catalog table
+        for i in range(len(self.app._catalog_source_table)):
+            row_info = { 'Right Ascension (degrees)': self.app._catalog_source_table['ra'][i],
+                        'Declination (degrees)': self.app._catalog_source_table['dec'][i],
+                        'Object ID' : self.app._catalog_source_table['objid'][i]
                        }
             self.table.add_item(row_info)
-            
-        self.hub.broadcast(MarkersPluginUpdate(table_length=len(self.table), sender=self))
         
         return skycoord_table
         
