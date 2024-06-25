@@ -117,7 +117,7 @@ Other Changes and Additions
 New Features
 ------------
 
-- Load remote data from a URI or URL. [#2875]
+- Load remote data from a URI or URL. [#2875, #2923]
 
 Cubeviz
 ^^^^^^^
