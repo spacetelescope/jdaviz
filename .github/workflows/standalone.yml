@@ -124,7 +124,7 @@ jobs:
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/shapely/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/MacOS/scipy/.dylibs
         rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/.dylibs
-        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/special/.dylibs
+        rm -rf standalone/dist/jdaviz.app/Contents/Resources/scipy/special/*.dylib
 
     - name: Codesign (OSX)
       if: ${{ matrix.os == 'macos' }}
