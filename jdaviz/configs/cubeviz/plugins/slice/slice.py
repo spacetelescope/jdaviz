@@ -7,6 +7,9 @@ import numpy as np
 from astropy import units as u
 from astropy.units import UnitsWarning
 from traitlets import Bool, Int, Unicode, observe
+from specutils import Spectrum1D
+from glue_jupyter.bqplot.image import BqplotImageView
+from glue_jupyter.bqplot.profile import BqplotProfileView
 
 from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator, WithSliceSelection,
                                                     CubevizImageView)
@@ -19,6 +22,7 @@ from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStat
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.configs.cubeviz.plugins.parsers import cubeviz_ramp_meta_flag
 
 
 __all__ = ['Slice']
@@ -146,6 +150,73 @@ class Slice(PluginTemplateMixin):
     @property
     def slice_selection_viewers(self):
         return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceSelection)]
+
+    def slice_indicator(self):
+        return self.spectrum_viewer.slice_indicator
+
+    def _watch_viewer(self, viewer, watch=True):
+        if isinstance(viewer, BqplotImageView):
+            if watch and viewer not in self._watched_viewers:
+                self._watched_viewers.append(viewer)
+                viewer.state.add_callback('slices',
+                                          self._viewer_slices_changed)
+            elif not watch and viewer in self._watched_viewers:
+                viewer.state.remove_callback('slices',
+                                             self._viewer_slices_changed)
+                self._watched_viewers.remove(viewer)
+        elif isinstance(viewer, BqplotProfileView) and watch:
+            viewer_data = viewer.data()
+            if self._x_all is None and len(viewer.data()):
+                if hasattr(viewer_data, 'spectral_axis'):
+                    # cache wavelengths so that wavelength <> slice
+                    # conversion can be done efficiently
+                    self._update_data(viewer_data[0].spectral_axis)
+                else:
+                    sample_index = np.arange(1, 1 + viewer_data[0].shape[-1]) * u.one
+                    self._update_data(sample_index)
+
+            if viewer not in self._indicator_viewers:
+                self._indicator_viewers.append(viewer)
+                # if the units (or data) change, we need to update internally
+                viewer.state.add_callback("reference_data",
+                                          self._update_reference_data)
+
+    def _on_data_added(self, msg):
+        if isinstance(msg.viewer, BqplotImageView):
+            if len(msg.data.shape) == 3:
+                self.max_value = msg.data.shape[-1] - 1  # Same as i_end in Export Plot plugin
+                self._watch_viewer(msg.viewer, True)
+                msg.viewer.state.slices = (0, 0, int(self.slice))
+
+        elif isinstance(msg.viewer, BqplotProfileView):
+            self._watch_viewer(msg.viewer, True)
+
+    def _update_reference_data(self, reference_data):
+        if reference_data is None:
+            return  # pragma: no cover
+
+        if reference_data.meta.get(cubeviz_ramp_meta_flag, False):
+            sample_index = np.arange(1, 1 + reference_data['flux'].shape[-1]) * u.one
+            self._update_data(sample_index)
+        else:
+            self._update_data(reference_data.get_object(cls=Spectrum1D).spectral_axis)
+
+    def _update_data(self, x_all):
+        self._x_all = x_all.value
+
+        if self.wavelength == -1:
+            if len(x_all):
+                # initialize at middle of cube
+                self.slice = int(len(x_all)/2)
+            else:
+                # leave in the pre-init state and don't update the wavelength/slice
+                return
+
+        # Also update unit when data is updated
+        self.wavelength_unit = x_all.unit.to_string()
+
+        # force wavelength to update from the current slider value
+        self._on_slider_updated({'new': self.slice})
 
     @property
     def slice_indicator_viewers(self):

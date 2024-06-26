@@ -22,6 +22,7 @@ from jdaviz.core.marks import SpectralLine, LineUncertainties, ScatterMask, Offs
 from jdaviz.core.linelists import load_preset_linelist, get_available_linelists
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
+from jdaviz.configs.cubeviz.plugins.parsers import cubeviz_ramp_meta_flag
 from jdaviz.utils import get_subset_type
 
 __all__ = ['SpecvizProfileView']
@@ -399,11 +400,23 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
         result = super().add_data(data, color, alpha, **layer_state)
 
         if reset_plot_axes:
-            x_units = data.get_component(self.state.x_att.label).units
-            y_units = data.get_component("flux").units
-            with delay_callback(self.state, "x_display_unit", "y_display_unit"):
-                self.state.x_display_unit = x_units if len(x_units) else None
-                self.state.y_display_unit = y_units if len(y_units) else None
+            component_labels = [comp.label for comp in data.components]
+            if 'flux' in component_labels:
+                # interpret this as a spectrum:
+                x_units = data.get_component(self.state.x_att.label).units
+                y_units = data.get_component('flux').units
+
+                with delay_callback(self.state, "x_display_unit", "y_display_unit"):
+                    self.state.x_display_unit = x_units if len(x_units) else None
+                    self.state.y_display_unit = y_units if len(y_units) else None
+
+            elif 'data' in component_labels:
+                # interpret this as a ramp:
+                x_units = ''
+                y_units = data.get_component('data').units
+
+            self.state.x_display_unit = x_units if len(x_units) else None
+            self.state.y_display_unit = y_units if len(y_units) else None
             self.set_plot_axes()
 
         self._plot_uncertainties()
@@ -591,18 +604,31 @@ class SpecvizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         # Set x axes labels for the spectrum viewer
         x_disp_unit = self.state.x_display_unit
-        x_unit = u.Unit(x_disp_unit) if x_disp_unit else u.dimensionless_unscaled
-        if x_unit.is_equivalent(u.m):
-            spectral_axis_unit_type = "Wavelength"
-        elif x_unit.is_equivalent(u.Hz):
-            spectral_axis_unit_type = "Frequency"
-        elif x_unit.is_equivalent(u.pixel):
-            spectral_axis_unit_type = "Pixel"
+
+        is_ramp = (
+            self.state.reference_data and
+            self.state.reference_data.meta.get(cubeviz_ramp_meta_flag, False)
+        )
+
+        if not is_ramp:
+            flux_unit_type = "Flux density"
+            x_unit = u.Unit(x_disp_unit) if x_disp_unit else u.dimensionless_unscaled
+            if x_unit.is_equivalent(u.m):
+                spectral_axis_unit_type = "Wavelength"
+            elif x_unit.is_equivalent(u.Hz):
+                spectral_axis_unit_type = "Frequency"
+            elif x_unit.is_equivalent(u.pixel):
+                spectral_axis_unit_type = "Pixel"
+            else:
+                spectral_axis_unit_type = str(x_unit.physical_type).title()
+            x_disp_unit = f'[{self.state.x_display_unit}]'
         else:
-            spectral_axis_unit_type = str(x_unit.physical_type).title()
+            flux_unit_type = "Counts"
+            spectral_axis_unit_type = "Sample"
+            x_disp_unit = ''
 
         with self.figure.hold_sync():
-            self.figure.axes[0].label = f"{spectral_axis_unit_type} [{self.state.x_display_unit}]"
+            self.figure.axes[0].label = f"{spectral_axis_unit_type} {x_disp_unit}"
             self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
 
             # Make it so axis labels are not covering tick numbers.

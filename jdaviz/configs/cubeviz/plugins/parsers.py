@@ -15,11 +15,20 @@ from jdaviz.core.registries import data_parser_registry
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
 
+try:
+    from roman_datamodels import datamodels as rdd
+except ImportError:
+    HAS_ROMAN_DATAMODELS = False
+else:
+    HAS_ROMAN_DATAMODELS = True
+
 __all__ = ['parse_data']
 
 EXT_TYPES = dict(flux=['flux', 'sci', 'data'],
                  uncert=['ivar', 'err', 'error', 'var', 'uncert'],
                  mask=['mask', 'dq', 'quality', 'data_quality'])
+
+cubeviz_ramp_meta_flag = '_roman_ramp'
 
 
 @data_parser_registry("cubeviz-data-parser")
@@ -78,6 +87,19 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         if file_obj.lower().endswith('.gif'):  # pragma: no cover
             _parse_gif(app, file_obj, data_label,
                        flux_viewer_reference_name=flux_viewer_reference_name)
+            return
+        elif file_obj.lower().endswith('.asdf'):
+            if not HAS_ROMAN_DATAMODELS:
+                raise ImportError(
+                    "ASDF detected but roman-datamodels is not installed."
+                )
+            with rdd.open(file_obj) as pf:
+                _roman_3d_to_glue_data(
+                    app, pf, data_label,
+                    flux_viewer_reference_name=flux_viewer_reference_name,
+                    spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+                    uncert_viewer_reference_name=uncert_viewer_reference_name
+                )
             return
 
         # try parsing file_obj as a URI/URL:
@@ -158,7 +180,18 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type,
                        flux_viewer_reference_name=flux_viewer_reference_name,
                        uncert_viewer_reference_name=uncert_viewer_reference_name)
+
         app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
+
+    elif HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
+        with rdd.open(file_obj) as pf:
+            _roman_3d_to_glue_data(
+                app, pf, data_label,
+                flux_viewer_reference_name=flux_viewer_reference_name,
+                spectrum_viewer_reference_name=spectrum_viewer_reference_name,
+                uncert_viewer_reference_name=uncert_viewer_reference_name
+            )
+
     else:
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
@@ -472,7 +505,8 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
 
 def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
                    flux_viewer_reference_name=None,
-                   uncert_viewer_reference_name=None):
+                   uncert_viewer_reference_name=None,
+                   meta=None):
     if data_label is None:
         data_label = app.return_data_label(file_obj)
 
@@ -486,7 +520,9 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     if not hasattr(flux, 'unit'):
         flux = flux << u.count
 
-    meta = standardize_metadata({'_orig_spatial_wcs': None})
+    meta.update({'_orig_spatial_wcs': None})
+    meta = standardize_metadata(meta)
+
     s3d = Spectrum1D(flux=flux, meta=meta)
     app.add_data(s3d, data_label)
 
@@ -531,3 +567,88 @@ def _get_data_type_by_hdu(hdu):
     else:
         data_type = ''
     return data_type
+
+
+def _roman_3d_to_glue_data(
+    app, file_obj, data_label,
+    flux_viewer_reference_name=None,
+    spectrum_viewer_reference_name=None,
+    uncert_viewer_reference_name=None,
+):
+    """
+    Parse a Roman 3D ramp cube file (Level 1),
+    usually with suffix '_uncal.asdf'.
+    """
+    def _swap_axes(x):
+        # swap axes per the conventions of Roman cubes
+        # (group axis comes first) and the default in
+        # Cubeviz (wavelength axis expected last)
+        return np.swapaxes(x, 0, -1)
+
+    # update viewer reference names for Roman ramp cubes:
+    # app._update_viewer_reference_name()
+
+    data = file_obj.data
+
+    if data_label is None:
+        data_label = app.return_data_label(file_obj)
+
+    # last axis is the group axis, first two are spatial axes:
+    diff_data = np.vstack([
+        # begin with a group of zeros, so
+        # that `diff_data.ndim == data.ndim`
+        np.zeros((1, *data[0].shape)),
+        np.diff(data, axis=0)
+    ])
+
+    meta = {cubeviz_ramp_meta_flag: True}
+
+    # load the `data` cube into what's usually the "flux-viewer"
+    _parse_ndarray(
+        app,
+        file_obj=_swap_axes(data),
+        data_label=f"{data_label}[DATA]",
+        data_type="flux",
+        flux_viewer_reference_name=flux_viewer_reference_name,
+        meta=meta
+    )
+
+    # load the diff of the data cube
+    # into what's usually the "uncert-viewer"
+    _parse_ndarray(
+        app,
+        file_obj=_swap_axes(diff_data),
+        data_type="uncert",
+        data_label=f"{data_label}[DIFF]",
+        uncert_viewer_reference_name=uncert_viewer_reference_name,
+        meta=meta
+    )
+
+    # If the default Cubeviz viewers are still their defaults, rename them to
+    # names that are appropriate for the Roman ramp files that we just parsed:
+    if 'flux-viewer' in app.get_viewer_reference_names():
+        app._update_viewer_reference_name('flux-viewer', 'group-viewer')
+        app._update_viewer_reference_name('uncert-viewer', 'group-diff-viewer')
+        app._update_viewer_reference_name('spectrum-viewer', 'integration-viewer')
+
+    # the default collapse function in the profile viewer is "sum",
+    # but for ramp files, "median" is more useful:
+    viewer = app.get_viewer('integration-viewer')
+    viewer.state.function = 'median'
+
+    # some Cubeviz plugins aren't relevant for ramps, so remove them:
+    remove_tray_items = [
+        'g-line-list',
+        'specviz-line-analysis',
+        'cubeviz-moment-maps',
+        'g-gaussian-smooth'
+    ]
+
+    for item_name in remove_tray_items:
+        item_names = [
+            tray_item['name'] for tray_item in app.state.tray_items
+        ]
+
+        app.state.tray_items.pop(
+            item_names.index(item_name)
+        )

@@ -104,10 +104,13 @@ class UnitConverterWithSpectral:
         # should return the converted values. Note that original_units
         # gives the units of the values array, which might not be the same
         # as the original native units of the component in the data.
-        if cid.label == "flux":
+        if cid.label == 'Pixel Axis 0 [z]' and target_units == '':
+            # handle ramps loaded into Cubeviz by avoiding conversion
+            # of the groups axis:
+            return values
+        elif cid.label == "flux":
             try:
                 spec = data.get_object(cls=Spectrum1D)
-
             except RuntimeError:
                 data = data.get_object(cls=NDDataArray)
                 spec = Spectrum1D(flux=data.data * u.Unit(original_units))
@@ -1255,6 +1258,9 @@ class Application(VuetifyTemplate, HubListener):
             elif axis == 'flux':
                 sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
                 return sv.data()[0].flux.unit
+            elif axis == 'data':
+                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+                return sv.data()[0].unit
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
         try:

@@ -69,7 +69,8 @@ class UserApiWrapper:
             return
         elif isinstance(exp_obj, PlotOptionsSyncState):
             if not len(exp_obj.linked_states):
-                raise ValueError("there are currently no synced glue states to set")
+                raise ValueError("There are currently no synced glue states to set. "
+                                 "Check the selected viewer and/or layer.")
 
             # this allows setting the value immediately, and unmixing state, if appropriate,
             # even if the value matches the current value

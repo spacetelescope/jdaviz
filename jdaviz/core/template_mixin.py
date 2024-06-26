@@ -3448,6 +3448,17 @@ class DatasetSelect(SelectPluginComponent):
         return self.plugin._specviz_helper.get_data(data_label=self.selected,
                                                     use_display_units=use_display_units)
 
+    def selected_spectrum_for_spatial_subset(self,
+                                             spatial_subset=SPATIAL_DEFAULT_TEXT,
+                                             use_display_units=True,
+                                             cls=None):
+        if spatial_subset == SPATIAL_DEFAULT_TEXT:
+            spatial_subset = None
+        return self.plugin._specviz_helper.get_data(data_label=self.selected,
+                                                    spatial_subset=spatial_subset,
+                                                    use_display_units=use_display_units,
+                                                    cls=cls)
+
     @cached_property
     def selected_spectrum(self):
         return self.get_selected_spectrum(use_display_units=True)
