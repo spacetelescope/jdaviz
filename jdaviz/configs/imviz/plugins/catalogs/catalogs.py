@@ -22,8 +22,6 @@ __all__ = ['Catalogs']
 
 @tray_registry('imviz-catalogs', label="Catalog Search")
 
-#Katherine added in TableMixin 
-
 class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, TableMixin):
     """
     See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
@@ -41,6 +39,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
 
+
+    # setting the default table headers and values 
     _default_table_values = {
             'Right Ascension (degrees)' : np.nan,
             'Declination (degrees)' :  np.nan,
@@ -53,7 +53,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #self.table = QTable()
 
         self.catalog = FileImportSelectPluginComponent(self,
                                                        items='catalog_items',
@@ -64,14 +63,14 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.catalog._file_parser = self._file_parser
 
         self._marker_name = 'catalog_results'
-        
+
+
+        #initializing the headers in the table that is displayed in the UI
         headers = ['Right Ascension (degrees)', 'Declination (degrees)','Object ID']
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
         self.table._default_values_by_colname = self._default_table_values 
-            
-        return 
     
 
     @staticmethod
@@ -209,11 +208,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         # QTable stores all the filtered sky coordinate points to be marked
         catalog_results = QTable({'coord': filtered_skycoord_table})
-        print(catalog_results) 
+       
         self.number_of_results = len(catalog_results)
         
-        #this is the data I need to put into a table 
-        #self.display_table()
 
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
@@ -221,15 +218,14 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         # adding in coordinates and Source IDs into the catalog table
         for i in range(len(self.app._catalog_source_table)):
-            row_info = { 'Right Ascension (degrees)': self.app._catalog_source_table['ra'][i],
+            row_info = {'Right Ascension (degrees)': self.app._catalog_source_table['ra'][i],
                         'Declination (degrees)': self.app._catalog_source_table['dec'][i],
                         'Object ID' : self.app._catalog_source_table['objid'][i]
                        }
             self.table.add_item(row_info)
         
         return skycoord_table
-        
-
+    
        
     def import_catalog(self, catalog):
         """
