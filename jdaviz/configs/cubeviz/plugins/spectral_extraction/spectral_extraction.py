@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import astropy
+import astropy.units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
@@ -426,11 +427,20 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                            uncertainty=collapsed_as_mean.uncertainty,
                                            wcs=collapsed_as_mean.wcs,
                                            meta=collapsed_as_mean.meta)
+        elif selected_func == 'sum':
+            collapsed_nddata = getattr(nddata_reshaped, selected_func)(
+                axis=spatial_axes, **kwargs
+            )  # returns an NDDataArray
+            # Remove per steradian denominator
+            if astropy.units.sr in collapsed_nddata.unit.bases:
+                aperture_area = (self.aperture_area_along_spectral
+                                 * self.spectral_cube.meta.get('PIXAR_SR', 1.0) * u.sr)
+                collapsed_nddata = collapsed_nddata.multiply(aperture_area,
+                                                             propagate_uncertainties=True)
         else:
             collapsed_nddata = getattr(nddata_reshaped, selected_func)(
                 axis=spatial_axes, **kwargs
             )  # returns an NDDataArray
-
         # Convert to Spectrum1D, with the spectral axis in correct units:
         if hasattr(spectral_cube.coords, 'spectral_wcs'):
             target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[0]

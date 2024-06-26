@@ -277,13 +277,19 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         cubeviz_helper.load_data(uri, cache=True, local_path=local_path)
-    plugin = cubeviz_helper.plugins['Moment Maps']
-    plugin.calculate_moment()
-    assert isinstance(plugin._obj.moment.wcs, WCS)
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    uc.open_in_tray()  # plugin has to be open for unit change to take hold
+    uc._obj.show_translator = True
+    uc.flux_or_sb.selected = 'Surface Brightness'
+    mm = cubeviz_helper.plugins['Moment Maps']._obj
+    mm.open_in_tray()  # plugin has to be open for unit change to take hold
+    mm._set_data_units()
+    mm.calculate_moment()
+    assert isinstance(mm.moment.wcs, WCS)
 
     # Because cube axes order is re-arranged by specutils on load, this gets confusing.
     # There is a swapaxes within Moment Map WCS calculation.
-    sky_moment = plugin._obj.moment.wcs.pixel_to_world(50, 30)
+    sky_moment = mm.moment.wcs.pixel_to_world(50, 30)
     sky_cube = cubeviz_helper.app.data_collection[0].meta["_orig_spec"].wcs.celestial.pixel_to_world(30, 50)  # noqa: E501
     assert_allclose((sky_moment.ra.deg, sky_moment.dec.deg),
                     (sky_cube.ra.deg, sky_cube.dec.deg))
@@ -307,8 +313,13 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
         cubeviz_helper.load_data(sb_cube, data_label='test')
 
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    uc.open_in_tray()  # plugin has to be open for unit change to take hold
+    uc._obj.show_translator = True
+    uc.flux_or_sb.selected = 'Surface Brightness'
     mm = cubeviz_helper.plugins['Moment Maps']._obj
     mm.open_in_tray()  # plugin has to be open for unit change to take hold
+    mm._set_data_units()
 
     # check that label is initialized with 'Surface Brightness' since the cube
     # loaded is in MJy / sr. for the 0th moment, the only item will be the 0th
@@ -322,8 +333,7 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
     assert mm.moment.unit == f'M{moment_unit}'
 
     # now change surface brightness units in the unit conversion plugin
-    uc = cubeviz_helper.plugins["Unit Conversion"]
-    uc.open_in_tray()  # plugin has to be open for unit change to take hold
+
     uc.flux_or_sb_unit = 'Jy / sr'
 
     # and make sure this change is propogated
@@ -335,7 +345,6 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
     mm.calculate_moment()
     assert mm.moment.unit == moment_unit
 
-    uc._obj.show_translator = True
     uc.flux_or_sb.selected = 'Flux'
     mm._set_data_units()
 

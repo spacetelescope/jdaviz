@@ -22,7 +22,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.app import UnitConverterWithSpectral as uc
+from jdaviz.utils import flux_conversion
 
 
 __all__ = ['MomentMap']
@@ -366,9 +366,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             pix_scale = self.dataset.selected_dc_item.meta.get('PIXAR_SR', 1.0)
             pix_scale_factor = (flux_values * pix_scale)
             temp_spec.meta['_pixel_scale_factor'] = pix_scale_factor
-            converted_spec = uc._flux_conversion(self, temp_spec, self.moment.value,
-                                                 self.moment.unit,
-                                                 moment_new_unit) * moment_new_unit
+            converted_spec = flux_conversion(temp_spec, self.moment.value,
+                                             self.moment.unit,
+                                             moment_new_unit) * moment_new_unit
             self.moment = converted_spec
 
         # Reattach the WCS so we can load the result

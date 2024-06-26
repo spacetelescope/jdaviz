@@ -27,8 +27,7 @@ from specutils import Spectrum1D, SpectralRegion
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
 from jdaviz.core.template_mixin import show_widget
-from jdaviz.utils import data_has_valid_wcs
-from jdaviz.app import UnitConverterWithSpectral as uc
+from jdaviz.utils import data_has_valid_wcs, flux_conversion, spectral_axis_conversion
 
 
 __all__ = ['ConfigHelper', 'ImageConfigHelper']
@@ -480,19 +479,18 @@ class ConfigHelper(HubListener):
                     else:
                         # if not specified as NDUncertainty, assume stddev:
                         new_uncert = uncertainty
-                    new_uncert_converted = uc._flux_conversion(self, data,
-                                                               new_uncert.quantity.value,
-                                                               new_uncert.unit, flux_unit)
+                    new_uncert_converted = flux_conversion(data, new_uncert.quantity.value,
+                                                           new_uncert.unit, flux_unit)
                     new_uncert = StdDevUncertainty(new_uncert_converted, unit=flux_unit)
                 else:
                     new_uncert = None
 
-                new_flux = uc._flux_conversion(self, data, data.flux.value, data.flux.unit,
-                                               flux_unit) * u.Unit(flux_unit)
-                new_spec = uc._spectral_axis_conversion(self,
-                                                        data.spectral_axis.value,
-                                                        data.spectral_axis.unit,
-                                                        spectral_unit) * u.Unit(spectral_unit)
+                new_flux = flux_conversion(data, data.flux.value, data.flux.unit,
+                                           flux_unit) * u.Unit(flux_unit)
+                new_spec = (spectral_axis_conversion(data.spectral_axis.value,
+                                                     data.spectral_axis.unit,
+                                                     spectral_unit)
+                            * u.Unit(spectral_unit))
 
                 data = Spectrum1D(spectral_axis=new_spec,
                                   flux=new_flux,

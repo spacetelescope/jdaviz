@@ -200,6 +200,9 @@ def test_sb_unit_conversion(cubeviz_helper):
     viewer_1d = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
+    uc_plg._obj.show_translator = True
+    uc_plg.flux_or_sb.selected = 'Surface Brightness'
+
     # Surface Brightness conversion
     uc_plg.flux_or_sb_unit = 'Jy / sr'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
