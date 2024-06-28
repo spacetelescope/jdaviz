@@ -12,7 +12,7 @@ from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import ViewerAddedMessage
+from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
@@ -56,7 +56,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._marks = {}
         self._dict = {}  # dictionary representation of current mouseover info
         self._x, self._y = None, None  # latest known cursor positions
-
+        self.current_unit = None
+        self.previous_unit = None
+        self.unit_changed = False
         # subscribe/unsubscribe to mouse events across all existing viewers
         viewer_refs = []
         for viewer in self.app._viewer_store.values():
@@ -73,6 +75,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
+        self.hub.subscribe(self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed)
 
     def _create_marks_for_viewer(self, viewer, id=None):
         if id is None:
@@ -111,6 +114,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+    
+    def _on_global_display_unit_changed(self, msg):
+        new_unit = u.Unit(msg.unit)
+        if new_unit != self.current_unit:
+            self.previous_unit = self.current_unit
+            self.current_unit = new_unit
+            self.unit_changed = True
+
 
     @property
     def marks(self):
@@ -460,6 +471,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 unit = image.get_component(attribute).units
                 value = self._get_cube_value(image, arr, x, y, viewer)
 
+                if self.unit_changed and unit != self.current_unit:
+                    value = (value * u.Unit(unit)).to_value(self.current_unit, equivalencies=u.spectral())
+                    self.unit_changed = False
+
+
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]
                     dq_attribute = associated_dq_layer.state.attribute
@@ -475,7 +491,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_text = f' (DQ: {int(dq_value):d})'
             else:
                 dq_text = ''
-            self.row1b_text = f'{value:+10.5e} {unit}{dq_text}'
+            self.row1b_text = f'{value:+10.5e} {self.current_unit}{dq_text}'
             self._dict['value'] = float(value)
             self._dict['value:unit'] = unit
             self._dict['value:unreliable'] = unreliable_pixel
