@@ -167,7 +167,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             self.disabled_msg = 'Line Analysis unavailable without spectral data'
             return
 
-        if viewer_data.spectral_axis.unit == u.pix:
+        if not hasattr(viewer_data, 'spectral_axis'):
+            self.disabled_msg = 'Line Analysis plugin unavailable when viewing ramps'
+        elif viewer_data.spectral_axis.unit == u.pix:
             # disable the plugin until we can address this properly (either using the wavelength
             # solution to support pixels in line-lists, or properly displaying the extracted
             # 1d spectrum in wavelength-space)
