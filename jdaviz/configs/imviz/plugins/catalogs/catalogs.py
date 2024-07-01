@@ -20,7 +20,6 @@ __all__ = ['Catalogs']
 
 
 @tray_registry('imviz-catalogs', label="Catalog Search")
-
 class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, TableMixin):
     """
     See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
