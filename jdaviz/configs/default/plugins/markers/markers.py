@@ -213,7 +213,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def _on_viewer_key_event(self, viewer, data):
         if data['event'] == 'keydown' and data['key'] == 'm':
             row_info = self.coords_info.as_dict()
-            print(row_info)
 
             if 'viewer' in self.table.headers_avail:
                 row_info['viewer'] = viewer.reference if viewer.reference is not None else viewer.reference_id  # noqa
