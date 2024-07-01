@@ -53,10 +53,9 @@
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
     <v-row>
 
-    <!-- Adding the div wrapper here for the jupyter-widget -->
-    <div class="jupyter-widget-container">
       <jupyter-widget :widget="table_widget"></jupyter-widget>
-    </div>
 
   </j-tray-plugin>
+
+
 </template>
