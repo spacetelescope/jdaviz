@@ -397,7 +397,8 @@ are not stored. To save the current result before submitting a new query, you ca
     The table returned from the API above may cover more sources than shown in the currently zoomed-in
     portion of the image. Additional steps will be needed to filter out these points, if necessary.
 
-After a sesearch is perfomed, a table is populated on the right that contains the right ascension, declination, and the object ID of the found sources. 
+After a search is performed, a table is populated on the right that contains the
+right ascension, declination, and the object ID of the found sources. 
 
 .. _imviz-footprints:
 
