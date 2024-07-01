@@ -529,10 +529,6 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         local path to the downloaded file.
     """
 
-    if os.environ.get("JDAVIZ_START_DIR", ""):
-        # avoiding creating local paths in a tmp dir when in standalone:
-        local_path = os.environ["JDAVIZ_START_DIR"] / local_path
-
     if not isinstance(possible_uri, str):
         # only try to parse strings:
         return possible_uri
@@ -540,6 +536,10 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
     if os.path.exists(possible_uri):
         # don't try to parse file paths:
         return possible_uri
+
+    if os.environ.get("JDAVIZ_START_DIR", ""):
+        # avoiding creating local paths in a tmp dir when in standalone:
+        local_path = os.path.join(os.environ["JDAVIZ_START_DIR"], local_path)
 
     parsed_uri = urlparse(possible_uri)
 
@@ -588,7 +588,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
 
         if local_path is None:
             # if not specified, this is the default location:
-            # os.path.sep does not work because on windows that is a back slash
+            # os.path.sep does not work because on Windows that is a back slash
             # and this web path needs to be split with a forward slash
             local_path = os.path.join(os.getcwd(), parsed_uri.path.split('/')[-1])
         return local_path
