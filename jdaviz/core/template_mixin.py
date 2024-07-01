@@ -4685,12 +4685,14 @@ class Plot(PluginSubcomponent):
     figure = Any().tag(sync=True, **widget_serialization)
     toolbar = Any().tag(sync=True, **widget_serialization)
 
-    def __init__(self, plugin, name='plot', viewer_type='scatter', app=None, *args, **kwargs):
+    def __init__(self, plugin, name='plot', viewer_type='scatter', update_callback=None,
+                 app=None, *args, **kwargs):
         super().__init__(plugin, 'Plot', *args, **kwargs)
         if app is None:
             app = jglue()
 
         self._app = app
+        self._update_callback = update_callback
         self._plugin = plugin
         self._plot_name = name
         self.viewer = app.new_data_viewer(viewer_type, show=False)
@@ -4747,6 +4749,11 @@ class Plot(PluginSubcomponent):
         self.app.data_collection.remove(dc_entry)
 
         self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+
+    def _update(self):
+        # call the update callback, if it exists, on the parent plugin.  This is useful for updating the plot when a plugin is inactive
+        if self._update_callback is not None:
+            self._update_callback()
 
     def _update_data(self, label, reset_lims=False, **kwargs):
         self._check_valid_components(**kwargs)
