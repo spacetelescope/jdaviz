@@ -207,7 +207,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                 viewer.add_event_callback(callback, events=['keydown'])
             else:
                 viewer.remove_event_callback(callback)
-                
+
     # this is where items are being added to the table
     def _on_viewer_key_event(self, viewer, data):
         if data['event'] == 'keydown' and data['key'] == 'm':

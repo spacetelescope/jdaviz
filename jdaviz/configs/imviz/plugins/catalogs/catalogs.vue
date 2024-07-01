@@ -53,9 +53,11 @@
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
     <v-row>
 
-      <jupyter-widget :widget="table_widget"></jupyter-widget>
+    <j-tray-plugin
+        :keep_active.sync="keepActive"
+        :popout_button="popoutButton"
+        :scroll_to.sync="scroll_to">
+        <jupyter-widget :widget="table_widget"></jupyter-widget>
 
-  </j-tray-plugin>
-
-
+    </j-tray-plugin>
 </template>
