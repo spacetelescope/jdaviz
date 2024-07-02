@@ -358,18 +358,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 moment_new_unit = flux_or_sb_display_unit
             else:
                 moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
-
-            # Create a temporary Spectrum1D object with ability to convert from surface brightness
-            # to flux
-            temp_spec = Spectrum1D(flux=self.moment)
-            flux_values = np.sum(np.ones_like(temp_spec.flux.value), axis=(0, 1))
-            pix_scale = self.dataset.selected_dc_item.meta.get('PIXAR_SR', 1.0)
-            pix_scale_factor = (flux_values * pix_scale)
-            temp_spec.meta['_pixel_scale_factor'] = pix_scale_factor
-            converted_spec = flux_conversion(temp_spec, self.moment.value,
-                                             self.moment.unit,
-                                             moment_new_unit) * moment_new_unit
-            self.moment = converted_spec
+            self.moment = self.moment.to(moment_new_unit)
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)
