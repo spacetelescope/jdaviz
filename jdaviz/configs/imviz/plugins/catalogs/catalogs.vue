@@ -5,6 +5,8 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <jupyter-widget :widget="table_widget"></jupyter-widget>
+
     <plugin-viewer-select
        :items="viewer_items"
        :selected.sync="viewer_selected"
@@ -52,6 +54,9 @@
        <p class="font-weight-bold">Results:</p>
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
     <v-row>
+
+    <jupyter-widget :widget="table_widget"></jupyter-widget>
+    
 
   </j-tray-plugin>
 </template>
