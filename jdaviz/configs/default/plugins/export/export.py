@@ -73,7 +73,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     dataset_format_items = List().tag(sync=True)
     dataset_format_selected = Unicode().tag(sync=True)
 
-    plugin_plot_selected_widget = Unicode().tag(sync=True)  # copy of widget of the selected plugin_plot in case the parent plugin is not opened
+    # copy of widget of the selected plugin_plot in case the parent plugin is not opened
+    plugin_plot_selected_widget = Unicode().tag(sync=True)
+
     plugin_plot_format_items = List().tag(sync=True)
     plugin_plot_format_selected = Unicode().tag(sync=True)
 
@@ -464,10 +466,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 filename = None
 
             if not plot._plugin.is_active:
-                # force an update to the plot.  This requires the plot to have set update_callback when instantiated
+                # force an update to the plot.  This requires the plot to have set
+                # update_callback when instantiated
                 plot._update()
 
-                # create a copy of the widget shown off screen to enable rendering in case one was never created in the parent plugin
+                # create a copy of the widget shown off screen to enable rendering
+                # in case one was never created in the parent plugin
                 self.plugin_plot_selected_widget = f'IPY_MODEL_{plot.model_id}'
 
             self.save_figure(plot, filename, filetype, show_dialog=show_dialog)

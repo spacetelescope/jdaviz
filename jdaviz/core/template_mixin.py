@@ -4751,7 +4751,8 @@ class Plot(PluginSubcomponent):
         self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _update(self):
-        # call the update callback, if it exists, on the parent plugin.  This is useful for updating the plot when a plugin is inactive
+        # call the update callback, if it exists, on the parent plugin.
+        # This is useful for updating the plot when a plugin is inactive.
         if self._update_callback is not None:
             self._update_callback()
 
