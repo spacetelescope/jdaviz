@@ -903,8 +903,9 @@ class PlotOptions(PluginTemplateMixin):
             # its type
             msg = {}
 
-        # NOTE: this method is separate from _update_stretch_histogram so that _update_stretch_histogram
-        # can be called manually (or from the update_callback on the Plot object itself) without going through
+        # NOTE: this method is separate from _update_stretch_histogram so that
+        # _update_stretch_histogram can be called manually (or from the
+        # update_callback on the Plot object itself) without going through
         # the skip_if_no_updates_since_last_active check
         self._update_stretch_histogram(msg)
 
