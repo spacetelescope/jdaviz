@@ -486,7 +486,8 @@ class MultiMaskSubsetState(SubsetState):
         return cls(masks=masks)
 
 
-def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None):
+def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout=None,
+                         dryrun=False):
     """
     Retrieve data from a URI (or a URL). Return the input if it
     cannot be parsed as a URI.
@@ -520,6 +521,9 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
+    dryrun : bool
+        Set to `True` to skip downloading data from MAST.
+        This is only used for debugging.
 
     Returns
     -------
@@ -574,10 +578,13 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
             # and this web path needs to be split with a forward slash
             local_path = os.path.join(local_path, parsed_uri.path.split('/')[-1])
 
-        with conf.set_temp('timeout', timeout):
-            (status, msg, url) = Observations.download_file(
-                possible_uri, cache=cache, local_path=local_path
-            )
+        if not dryrun:
+            with conf.set_temp('timeout', timeout):
+                (status, msg, url) = Observations.download_file(
+                    possible_uri, cache=cache, local_path=local_path
+                )
+        else:
+            status = "COMPLETE"
 
         if status != 'COMPLETE':
             # pass along the error message from astroquery if the
