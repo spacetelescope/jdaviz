@@ -5,6 +5,8 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <jupyter-widget :widget="table_widget"></jupyter-widget>
+
     <plugin-viewer-select
        :items="viewer_items"
        :selected.sync="viewer_selected"
@@ -53,11 +55,8 @@
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
     <v-row>
 
-    <j-tray-plugin
-        :keep_active.sync="keepActive"
-        :popout_button="popoutButton"
-        :scroll_to.sync="scroll_to">
-        <jupyter-widget :widget="table_widget"></jupyter-widget>
+    <jupyter-widget :widget="table_widget"></jupyter-widget>
+    
 
-    </j-tray-plugin>
+  </j-tray-plugin>
 </template>
