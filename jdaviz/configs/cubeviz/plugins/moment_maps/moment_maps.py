@@ -22,8 +22,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.utils import flux_conversion
-
 
 __all__ = ['MomentMap']
 
