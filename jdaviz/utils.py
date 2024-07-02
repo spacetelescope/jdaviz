@@ -3,6 +3,7 @@ import time
 import threading
 import warnings
 from collections import deque
+from collections.abc import Iterable
 from urllib.parse import urlparse
 
 import numpy as np
@@ -294,7 +295,7 @@ def flux_conversion(spec, values, original_units, target_units):
 
     Parameters
     ----------
-    spec : ~specutils.Spectrum1D~ object
+    spec : `~specutils.Spectrum1D` object
         The Spectrum1D object that will have converted flux units.
 
     values : float array
@@ -308,7 +309,8 @@ def flux_conversion(spec, values, original_units, target_units):
 
     Returns
     -------
-    Flux values in the target units.
+    result : float array
+        Flux values in the target units.
     """
     # If there are only two values, this is likely the limits being converted, so then
     # in case we need to use the spectral density equivalency, we need to provide only
@@ -318,57 +320,49 @@ def flux_conversion(spec, values, original_units, target_units):
     else:
         spectral_values = spec.spectral_axis
 
+    # Need this for setting the y-limits
+    eqv = u.spectral_density(spectral_values)
+
+    orig_units = u.Unit(original_units)
+    orig_bases = orig_units.bases
+    targ_units = u.Unit(target_units)
+    targ_bases = targ_units.bases
+
     # Ensure a spectrum passed through Spectral Extraction plugin
-    if '_pixel_scale_factor' in spec.meta and len(values) != 2:
+    if (('_pixel_scale_factor' in spec.meta) and
+            (((u.sr in orig_bases) and (u.sr not in targ_bases)) or
+             ((u.sr not in orig_bases) and (u.sr in targ_bases)))):
         # Data item in data collection does not update from conversion/translation.
-        # App wide original data units are used for conversion, original and
+        # App-wide original data units are used for conversion, original and
         # target_units dictate the conversion to take place.
+        n_values = len(values)
 
-        if (u.sr in u.Unit(original_units).bases) and \
-                (u.sr not in u.Unit(target_units).bases):
-            # Surface Brightness -> Flux
-            eqv = [(u.MJy / u.sr,
-                    u.MJy,
-                    lambda x: (x * np.array(spec.meta.get('_pixel_scale_factor', 1))),
-                    lambda x: x)]
-        elif (u.sr not in u.Unit(original_units).bases) and \
-                (u.sr in u.Unit(target_units).bases):
-            # Flux -> Surface Brightness
-            eqv = [(u.MJy,
-                    u.MJy / u.sr,
-                    lambda x: (x / np.array(spec.meta.get('_pixel_scale_factor', 1))),
-                    lambda x: x)]
+        # Make sure they are float (can be Quantity).
+        fac = spec.meta['_pixel_scale_factor']
+        if isinstance(fac, Quantity):
+            fac = fac.value
+
+        # Get min and max scale factors, to use with min and max of spec for y-limits.
+        if n_values == 2 and isinstance(fac, Iterable):
+            eqv_in = [min(fac), max(fac)]
         else:
-            eqv = u.spectral_density(spectral_values)
+            eqv_in = fac
 
-    elif len(values) == 2:
-        # Need this for setting the y-limits
-        eqv = u.spectral_density(spectral_values)
+        eqv += _eqv_pixar_sr(np.array(eqv_in))
 
-        if '_pixel_scale_factor' in spec.meta:
-            # get min and max scale factors, to use with min and max of spec for
-            # y-limits. Make sure they are Quantities (can be numpy.float64).
-            pixel_scale_min = (Quantity(min(spec.meta.get('_pixel_scale_factor', 1)))).value
-            pixel_scale_max = (Quantity(max(spec.meta.get('_pixel_scale_factor', 1)))).value
-            min_max = [pixel_scale_min, pixel_scale_max]
+    return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 
-            if (u.sr in u.Unit(original_units).bases) and \
-                    (u.sr not in u.Unit(target_units).bases):
-                eqv += [(u.MJy,
-                         u.MJy / u.sr,
-                         lambda x: x * np.array(min_max),
-                         lambda x: x)]
-            elif (u.sr not in u.Unit(original_units).bases) and \
-                    (u.sr in u.Unit(target_units).bases):
-                eqv += [(u.MJy / u.sr,
-                         u.MJy,
-                         lambda x: x / np.array(min_max),
-                         lambda x: x)]
 
-    else:
-        eqv = u.spectral_density(spectral_values)
+def _eqv_pixar_sr(pixar_sr):
+    def converter_flux(x):  # Surface Brightness -> Flux
+        return x * pixar_sr
 
-    return (values * u.Unit(original_units)).to_value(u.Unit(target_units), equivalencies=eqv)
+    def iconverter_flux(x):  # Flux -> Surface Brightness
+        return x / pixar_sr
+
+    return [(u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux),
+            # TODO: This can be removed when we remove SB->flux unit support from Moment Maps
+            (u.MJy * u.m / u.sr, u.MJy * u.m, converter_flux, iconverter_flux)]
 
 
 def spectral_axis_conversion(values, original_units, target_units):
