@@ -949,6 +949,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
             self.selected = self._default_text if self._default_text else default_empty
         else:
             self.selected = default_empty
+        self._clear_cache(*self._cached_properties)
 
     def _is_valid_item(self, item, filter_callables={}):
         for valid_filter in self.filters:
@@ -2632,9 +2633,7 @@ class PluginTableSelect(SelectPluginComponent):
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_tables.items()
                                      if self._is_valid_item(v._obj)]
-        self._apply_default_selection()
-        # future improvement: only clear cache if the selected data entry was changed?
-        self._clear_cache(*self._cached_properties)
+        self._apply_default_selection(skip_if_current_valid=True)
 
     @cached_property
     def selected_obj(self):
@@ -2747,8 +2746,7 @@ class PluginPlotSelect(SelectPluginComponent):
         manual_items = [{'label': label} for label in self.manual_options]
         self.items = manual_items + [{'label': k} for k, v in self.plugin.app._plugin_plots.items()
                                      if self._is_valid_item(v._obj)]
-        self._apply_default_selection()
-        # future improvement: only clear cache if the selected data entry was changed?
+        self._apply_default_selection(skip_if_current_valid=True)
         self._clear_cache(*self._cached_properties)
 
     @cached_property
@@ -2756,7 +2754,6 @@ class PluginPlotSelect(SelectPluginComponent):
         return self.plugin.app._jdaviz_helper.plugin_plots.get(self.selected)
 
     def _is_valid_item(self, plot):
-
         def not_empty_plot(plot):
             # checks plot.figure.marks to determine if figure is of an empty plot
             # not sure if this is a foolproof way to do this?
@@ -4717,7 +4714,6 @@ class Plot(PluginSubcomponent):
         self._initialize_toolbar()
 
         plugin.session.hub.broadcast(PluginPlotAddedMessage(sender=self))
-        plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _initialize_toolbar(self, default_tool_priority=[]):
         self.toolbar = NestedJupyterToolbar(self.viewer, self.tools_nested, default_tool_priority)
@@ -4743,12 +4739,13 @@ class Plot(PluginSubcomponent):
                 # https://github.com/astrofrog/fast-histogram/issues/60
                 raise ValueError("histogram requires data entries with length > 1")
 
-    def _remove_data(self, label):
+    def _remove_data(self, label, broadcast=True):
         dc_entry = self.app.data_collection[label]
         self.viewer.remove_data(dc_entry)
         self.app.data_collection.remove(dc_entry)
 
-        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+        if broadcast:
+            self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _update(self):
         # call the update callback, if it exists, on the parent plugin.
@@ -4782,8 +4779,8 @@ class Plot(PluginSubcomponent):
                 style_state = self.layers[label].state.as_dict()
             else:
                 style_state = {}
-            self._remove_data(label)
-            self._add_data(label, **kwargs)
+            self._remove_data(label, broadcast=False)
+            self._add_data(label, broadcast=False, **kwargs)
             self.update_style(label, **style_state)
         if reset_lims:
             self.viewer.state.reset_limits()
@@ -4819,7 +4816,7 @@ class Plot(PluginSubcomponent):
 
         self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
-    def _add_data(self, label, **kwargs):
+    def _add_data(self, label, broadcast=True, **kwargs):
         self._check_valid_components(**kwargs)
         data = Data(label=label, **kwargs)
         dc = self.app.data_collection
@@ -4834,7 +4831,8 @@ class Plot(PluginSubcomponent):
             dc.add_link(links)
         self.viewer.add_data(dc_entry)
 
-        self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
+        if broadcast:
+            self._plugin.session.hub.broadcast(PluginPlotModifiedMessage(sender=self))
 
     def _refresh_marks(self):
         # ensure all marks are drawn
