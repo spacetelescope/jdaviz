@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import solara
 import ipygoldenlayout
 import ipysplitpanes
@@ -28,9 +30,11 @@ def Page():
 
     ipyvue.register_component_from_file('g-viewer-tab', "container.vue", jdaviz.__file__)
 
+    solara.Style(Path(__file__).parent / "solara.css")
+
     if not len(data_list):
         from jdaviz.core.launcher import Launcher
-        launcher = Launcher(height='100%', filepath=(data_list[0] if len(data_list) == 1 else ''))
+        launcher = Launcher(height='100vh', filepath=(data_list[0] if len(data_list) == 1 else ''))
         solara.display(launcher.main_with_launcher)
         return
 
@@ -42,11 +46,4 @@ def Page():
         else:
             viz.load_data(data, **load_data_kwargs)
 
-    viz.app.template.template = viz.app.template.template.replace(
-        'calc(100% - 48px);', '800px'  # '80vh !important;'
-    )
-
-    height = '800px'
-    viz.app.layout.height = height
-    viz.app.state.settings['context']['notebook']['max_height'] = height
     solara.display(viz.app)
