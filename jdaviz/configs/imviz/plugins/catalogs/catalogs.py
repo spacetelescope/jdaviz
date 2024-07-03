@@ -210,9 +210,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                         'Declination (degrees)': row['dec'],
                         'Object ID': row['objid']}
             self.table.add_item(row_info)
-        
+
         return skycoord_table
-    
+
     def import_catalog(self, catalog):
         """
         Import a catalog from a file path.
