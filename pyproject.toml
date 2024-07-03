@@ -105,6 +105,7 @@ jdaviz = [
     "data/*",
     "data/*/*",
     "*.vue",
+    "*.css",
     "components/*.vue",
     "configs/*/*/*/*.vue",
     "configs/*/*.yaml",

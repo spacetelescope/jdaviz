@@ -196,7 +196,7 @@ class Launcher(v.VuetifyTemplate):
         config = event.get('config')
         helper = _launch_config_with_data(config, self.loaded_data,
                                           filepath=self.filepath, show=False)
-        if self.height != '100%':
+        if self.height not in ['100%', '100vh']:
             # We're in jupyter mode. Set to default height
             default_height = helper.app.state.settings['context']['notebook']['max_height']
             helper.app.layout.height = default_height
