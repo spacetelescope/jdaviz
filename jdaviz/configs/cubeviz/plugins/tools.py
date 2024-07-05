@@ -8,9 +8,8 @@ from glue.viewers.common.tool import CheckableTool
 import numpy as np
 from specutils import Spectrum1D
 
-from jdaviz.configs.imviz.plugins.tools import _MatchedZoomMixin
 from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
-from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion
+from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion, _MatchedZoomMixin
 from jdaviz.core.marks import PluginLine
 
 __all__ = []

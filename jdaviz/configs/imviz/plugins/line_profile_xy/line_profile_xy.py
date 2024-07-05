@@ -1,12 +1,13 @@
 import numpy as np
 from traitlets import Bool, Unicode, observe
 
-from jdaviz.configs.imviz.helper import get_top_layer_index
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import ViewerAddedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, Plot,
                                         skip_if_no_updates_since_last_active)
+from jdaviz.utils import get_top_layer_index
+
 
 __all__ = ['LineProfileXY']
 

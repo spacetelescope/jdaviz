@@ -23,6 +23,10 @@ Utilities API
    :no-inheritance-diagram:
    :no-inherited-members:
 
+.. automodapi:: jdaviz.configs.cubeviz.plugins.mixins
+   :no-inheritance-diagram:
+   :no-inherited-members:
+
 .. automodapi:: jdaviz.configs.imviz.wcs_utils
    :no-inheritance-diagram:
    :no-inherited-members:

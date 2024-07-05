@@ -8,7 +8,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from glue_jupyter.utils import debounced
 
 from jdaviz.core.tools import BoxZoom, PanZoom, _MatchedZoomMixin
-from jdaviz.configs.imviz.helper import get_top_layer_index
+from jdaviz.utils import get_top_layer_index
 
 __all__ = []
 
@@ -135,7 +135,7 @@ class ContrastBias(CheckableTool):
             self._layer_state.contrast = contrast
 
     def on_mouse_or_key_event(self, data):
-        from jdaviz.configs.imviz.helper import get_top_layer_index
+        from jdaviz.utils import get_top_layer_index
 
         event = data['event']
 

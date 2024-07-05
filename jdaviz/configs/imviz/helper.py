@@ -9,7 +9,7 @@ from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.helpers import ImageConfigHelper
-from jdaviz.utils import data_has_valid_wcs, _wcs_only_label
+from jdaviz.utils import data_has_valid_wcs, get_wcs_only_layer_labels, get_reference_image_data, _wcs_only_label
 
 __all__ = ['Imviz']
 
@@ -390,67 +390,3 @@ def split_filename_with_fits_ext(filename):
     data_label = os.path.basename(s[0])
 
     return filepath, ext, data_label
-
-
-def layer_is_2d(layer):
-    # returns True for subclasses of BaseData with ndim=2, both for
-    # layers that are WCS-only as well as images containing data:
-    return isinstance(layer, BaseData) and layer.ndim == 2
-
-
-def layer_is_2d_or_3d(layer):
-    return isinstance(layer, BaseData) and layer.ndim in (2, 3)
-
-
-def layer_is_image_data(layer):
-    return layer_is_2d_or_3d(layer) and not layer.meta.get(_wcs_only_label, False)
-
-
-def layer_is_wcs_only(layer):
-    return layer_is_2d(layer) and layer.meta.get(_wcs_only_label, False)
-
-
-def get_wcs_only_layer_labels(app):
-    return [data.label for data in app.data_collection
-            if layer_is_wcs_only(data)]
-
-
-def get_top_layer_index(viewer):
-    """Get index of the top visible image layer in Imviz.
-    This is because when blinked, first layer might not be top visible layer.
-
-    """
-    # exclude children of layer associations
-    associations = viewer.jdaviz_app._data_associations
-
-    visible_image_layers = [
-        i for i, lyr in enumerate(viewer.layers)
-        if (
-            lyr.visible and
-            layer_is_image_data(lyr.layer) and
-            # check that this layer is a root, without parents:
-            associations[lyr.layer.label]['parent'] is None
-        )
-    ]
-
-    if len(visible_image_layers):
-        return visible_image_layers[-1]
-    return None
-
-
-def get_reference_image_data(app, viewer_id=None):
-    """
-    Return the current reference data in the given image viewer and its index.
-    By default, the first viewer is used.
-    """
-    if viewer_id is None:
-        refdata = app._jdaviz_helper.default_viewer._obj.state.reference_data
-    else:
-        viewer = app.get_viewer_by_id(viewer_id)
-        refdata = viewer.state.reference_data
-
-    if refdata is not None:
-        iref = app.data_collection.index(refdata)
-        return refdata, iref
-
-    return None, -1
