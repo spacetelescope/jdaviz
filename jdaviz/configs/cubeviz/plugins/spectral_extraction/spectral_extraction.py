@@ -496,6 +496,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
         pix_scale_factor = self.aperture_area_along_spectral * self.spectral_cube.meta.get('PIXAR_SR', 1.0)  # noqa
         spec.meta['_pixel_scale_factor'] = pix_scale_factor
+        
+        # need this to work
+        '''
+        if hasattr(spec.meta, '_pixel_scale_factor') and pix_scale_factor == 1:
+            snackbar_message = SnackbarMessage(
+                "PIXAR_SR FITS header keyword not found when parsing spectral cube. Flux/Surface Brightness conversion will not work.",
+                color="error",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+        '''
 
         # stuff for exporting to file
         self.extracted_spec = spec

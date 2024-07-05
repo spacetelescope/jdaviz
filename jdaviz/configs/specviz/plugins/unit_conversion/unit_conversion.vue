@@ -28,7 +28,9 @@
         label="Flux or Surface Brightness"
         hint="Select between Flux or Surface Brightness physical type for y-axis."
         persistent-hint
+        :disabled="!can_translate"
       ></v-select>
+      <span v-if="!can_translate">Translation is not available due to current settings.</span>
     </v-row>
 
     <v-row>
@@ -37,10 +39,23 @@
         attach
         :items="flux_unit_items.map(i => i.label)"
         v-model="flux_unit_selected"
-        :label="flux_or_sb_selected === 'Flux' ? 'Flux Unit' : 'Surface Brightness Unit'"
-        :hint="flux_or_sb_selected === 'Flux' ? 'Global display unit for flux.' : 'Global display unit for surface brightness.'"
+        label="Flux Unit"
+        hint="Global display unit for y-axis axis."
         persistent-hint
       ></v-select>
     </v-row>
+
+    <v-row>
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="sb_unit_items.map(i => i.label)"
+        v-model="sb_unit_selected"
+        label="Surface Brightness Unit"
+        hint="Global display unit for y-axis axis."
+        persistent-hint
+      ></v-select>
+    </v-row>
+
   </j-tray-plugin>
 </template>

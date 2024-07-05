@@ -67,28 +67,17 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     except u.core.UnitConversionError:
         return []
 
-    # Get local units.
-    if u.sr not in flux_unit.bases:
-        locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'Jy',
-                                      'W / (Hz m2)',
-                                      'eV / (s m2 Hz)',
-                                      'erg / (s cm2)',
-                                      'erg / (s cm2 Angstrom)',
-                                      'erg / (s cm2 Hz)',
-                                      'ph / (s cm2 Angstrom)',
-                                      'ph / (s cm2 Hz)']
-        local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
-    else:
-        locally_defined_flux_units = ['Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr', 'Jy / sr',
-                                      'W / (Hz sr m2)',
-                                      'eV / (s m2 Hz sr)',
-                                      'erg / (s cm2 sr)',
-                                      'erg / (s cm2 Angstrom sr)',
-                                      'erg / (s cm2 Hz sr)',
-                                      'ph / (s cm2 Angstrom sr)',
-                                      'ph / (s cm2 Hz sr)',
-                                      'bol / sr', 'AB / sr', 'ST / sr']
-        local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
+    # Get local flux units.
+    locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy',
+                                  'W / (Hz m2)',
+                                  'eV / (s m2 Hz)',
+                                  'erg / (s cm2)',
+                                  'erg / (s cm2 Hz)',
+                                  'ph / (Angstrom s cm2)',
+                                  'ph / (Hz s cm2)',
+                                  'bol', 'AB', 'ST'
+                                  ]
+    local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
 
     # Remove overlap units.
     curr_flux_unit_equivalencies = list(set(curr_flux_unit_equivalencies)
@@ -99,6 +88,56 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
 
     # Concatenate both lists with the local units coming first.
     return sorted(units_to_strings(local_units)) + flux_unit_equivalencies_titles
+
+def create_sb_equivalencies_list(sb_unit, spectral_axis_unit):
+    """Get all possible conversions for flux from current flux units."""
+    if ((sb_unit in (u.count, u.dimensionless_unscaled))
+            or (spectral_axis_unit in (u.pix, u.dimensionless_unscaled))):
+        return []
+
+    # Get unit equivalencies. Value passed into u.spectral_density() is irrelevant.
+    try:
+        curr_sb_unit_equivalencies = sb_unit.find_equivalent_units(
+            equivalencies=u.spectral_density(1 * spectral_axis_unit),
+            include_prefix_units=False)
+    except u.core.UnitConversionError:
+        return []
+
+    locally_defined_sb_units = ['Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr', 'Jy / sr',
+                                'W / (Hz sr m2)',
+                                'eV / (Hz s sr m2)',
+                                #'erg / (s cm2 sr)',
+                                #'erg / (s cm2 Angstrom sr)',
+                                #'erg / (s cm2 Hz sr)',
+                                #'ph / (Angstrom s sr cm2)',
+                                #'ph / (s cm2 Hz sr)',
+                                'AB / sr']
+
+    local_units = [u.Unit(unit) for unit in locally_defined_sb_units]
+
+    exclude = []
+    jansky_units = [u.Jy, u.mJy, u.uJy, u.MJy]
+
+    for unit in jansky_units:
+        if any(base in unit.bases for base in sb_unit.bases):
+            exclude = [
+                            u.ph / (u.Angstrom * u.s * u.sr * u.cm**2),
+                            u.ph / (u.Hz * u.s * u.sr * u.cm**2),
+                            u.ST / u.sr, u.bol / u.sr,
+                            u.erg / (u.Angstrom * u.s * u.sr * u.cm**2),
+                            u.erg / (u.Hz * u.s * u.sr * u.cm**2),
+                            u.erg / (u.s * u.sr * u.cm**2)
+                            ]
+
+    # Remove overlap units.
+    curr_sb_unit_equivalencies = list(set(curr_sb_unit_equivalencies)
+                                      - set(local_units))
+
+    # Convert equivalencies into readable versions of the units and sort them alphabetically.
+    sb_unit_equivalencies_titles = sorted(units_to_strings(curr_sb_unit_equivalencies))
+
+    # Concatenate both lists with the local units coming first.
+    return sorted(units_to_strings(local_units)) + sb_unit_equivalencies_titles
 
 
 def check_if_unit_is_per_solid_angle(unit):
