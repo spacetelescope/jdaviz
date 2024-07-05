@@ -298,7 +298,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.conflicting_aperture_and_function = False
 
     @property
-    def spectral_cube(self):
+    def cube(self):
         return self.dataset.selected_dc_item
 
     @property
@@ -361,14 +361,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def aperture_area_along_spectral(self):
         # Weight mask summed along the spatial axes so that we get area of the aperture, in pixels,
         # as a function of wavelength.
-        # To convert to steradians, multiply by self.spectral_cube.meta.get('PIXAR_SR', 1.0)
+        # To convert to steradians, multiply by self.cube.meta.get('PIXAR_SR', 1.0)
         return np.sum(self.aperture_weight_mask, axis=(0, 1))
 
     @property
     def bg_area_along_spectral(self):
         return np.sum(self.bg_weight_mask, axis=(0, 1))
 
-    def _extract_from_aperture(self, spectral_cube, uncert_cube, aperture,
+    def _extract_from_aperture(self, cube, uncert_cube, aperture,
                                weight_mask, wavelength_dependent,
                                selected_func, **kwargs):
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
@@ -378,7 +378,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not isinstance(aperture, ApertureSubsetSelect):
             raise ValueError("aperture must be an ApertureSubsetSelect object")
         if aperture.selected != aperture.default_text:
-            nddata = spectral_cube.get_subset_object(
+            nddata = cube.get_subset_object(
                 subset_id=aperture.selected, cls=NDDataArray
             )
             if uncert_cube:
@@ -402,7 +402,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 mask &= nddata.mask
 
         else:
-            nddata = spectral_cube.get_object(cls=NDDataArray)
+            nddata = cube.get_object(cls=NDDataArray)
             if uncert_cube:
                 uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
             else:
@@ -410,10 +410,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             flux = nddata.data << nddata.unit
             mask = nddata.mask
         # Use the spectral coordinate from the WCS:
-        if '_orig_spec' in spectral_cube.meta:
-            wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
-        elif hasattr(spectral_cube.coords, 'spectral'):
-            wcs = spectral_cube.coords.spectral
+        if '_orig_spec' in cube.meta:
+            wcs = cube.meta['_orig_spec'].wcs.spectral
+        elif hasattr(cube.coords, 'spectral'):
+            wcs = cube.coords.spectral
         else:
             wcs = None
 
@@ -452,7 +452,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             )  # returns an NDDataArray
             # Remove per steradian denominator
             if astropy.units.sr in collapsed_nddata.unit.bases:
-                aperture_area = self.spectral_cube.meta.get('PIXAR_SR', 1.0) * u.sr
+                aperture_area = self.cube.meta.get('PIXAR_SR', 1.0) * u.sr
                 collapsed_nddata = collapsed_nddata.multiply(aperture_area,
                                                              propagate_uncertainties=True)
         else:
@@ -460,10 +460,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 axis=spatial_axes, **kwargs
             )  # returns an NDDataArray
         # Convert to Spectrum1D, with the spectral axis in correct units:
-        if hasattr(spectral_cube.coords, 'spectral_wcs'):
-            target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[0]
+        if hasattr(cube.coords, 'spectral_wcs'):
+            target_wave_unit = cube.coords.spectral_wcs.world_axis_units[0]
         else:
-            target_wave_unit = spectral_cube.coords.spectral.world_axis_units[0]
+            target_wave_unit = cube.coords.spectral.world_axis_units[0]
 
         if target_wave_unit == '':
             target_wave_unit = 'pix'
@@ -502,7 +502,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError("aperture and background cannot be set to the same subset")
 
         selected_func = self.function_selected.lower()
-        spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
+        spec = self._extract_from_aperture(self.cube, self.uncert_cube,
                                            self.aperture, self.aperture_weight_mask,
                                            self.wavelength_dependent,
                                            selected_func, **kwargs)
@@ -512,11 +512,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             spec = spec - bg_spec
 
         # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
-        pix_scale_factor = self.spectral_cube.meta.get('PIXAR_SR', 1.0)
+        pix_scale_factor = self.cube.meta.get('PIXAR_SR', 1.0)
         spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         # inform the user if scale factor keyword not in metadata
-        if 'PIXAR_SR' not in self.spectral_cube.meta:
+        if 'PIXAR_SR' not in self.cube.meta:
             snackbar_message = SnackbarMessage(
                 ("PIXAR_SR FITS header keyword not found when parsing spectral cube. "
                  "Flux/Surface Brightness will use default PIXAR_SR value of 1 sr/pix^2."),
@@ -565,7 +565,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # allow internal calls to override the behavior of the bg_spec_per_spaxel traitlet
         bg_spec_per_spaxel = kwargs.pop('bg_spec_per_spaxel', self.bg_spec_per_spaxel)
         if self.background.selected != self.background.default_text:
-            bg_spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
+            bg_spec = self._extract_from_aperture(self.cube, self.uncert_cube,
                                                   self.background, self.bg_weight_mask,
                                                   self.bg_wavelength_dependent,
                                                   self.function_selected.lower(), **kwargs)
