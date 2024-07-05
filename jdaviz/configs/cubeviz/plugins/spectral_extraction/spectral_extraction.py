@@ -248,12 +248,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                  auto_update=False, add_data=False):
         # create a new instance of the Spectral Extraction plugin (to not affect the instance in
         # the tray) and extract the entire cube with defaults.
-        if dataset is None:
-            if self._app._jdaviz_helper._loaded_flux_cube is None:
-                return
-            dataset = self._app._jdaviz_helper._loaded_flux_cube.label
         plg = self.new()
-        plg.dataset.selected = dataset
+        plg.dataset.selected = self.dataset.selected
         if subset_lbl is not None:
             plg.aperture.selected = subset_lbl
         plg.aperture_method.selected = 'Center'
@@ -307,7 +303,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def uncert_cube(self):
-        if self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label:
+        if (hasattr(self._app._jdaviz_helper, '_loaded_flux_cube') and 
+                self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label):
             return self._app._jdaviz_helper._loaded_uncert_cube
         else:
             # TODO: allow selecting or associating an uncertainty cube?
