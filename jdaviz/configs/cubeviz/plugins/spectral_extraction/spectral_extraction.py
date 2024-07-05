@@ -25,6 +25,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
+from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
 
 __all__ = ['SpectralExtraction']
@@ -205,6 +206,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def slice_display_unit_name(self):
         return 'spectral'
+
+    @property
+    def slice_indicator_viewers(self):
+        return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
 
     @observe('active_step', 'is_active')
     def _active_step_changed(self, *args):
@@ -650,7 +655,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def marks(self):
         if not self._tray_instance:
             return {}
-        sv = self.spectrum_viewer
+        ### TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
+        sv = self.slice_indicator_viewers[0]
         marks = {'spec': PluginLine(sv, visible=self.is_active),
                  'bg_spec': PluginLine(sv,
                                        line_style='dotted',
