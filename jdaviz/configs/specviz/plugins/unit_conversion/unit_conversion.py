@@ -106,7 +106,7 @@ class UnitConversion(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_or_sb_unit', 'flux_unit', 'sb_unit'))
+        return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_unit', 'sb_unit'))
 
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:
@@ -174,21 +174,20 @@ class UnitConversion(PluginTemplateMixin):
             self.flux_unit.choices = flux_choices
             self.sb_unit.choices = sb_choices
             self.sb_unit.selected = y_unit
-            # self.flux_unit.selected = str(y_u * u.sr)
  
     def translate_units(self, flux_or_sb_selected):
-        spec_units = (self.spectrum_viewer.state.y_display_unit)
+        spec_units = self.spectrum_viewer.state.y_display_unit
         # Surface Brightness -> Flux
         if check_if_unit_is_per_solid_angle(spec_units) and flux_or_sb_selected == 'Flux':
             spec_units *= u.sr
             # update display units
-            self.spectrum_viewer.state.y_display_unit = str(spec_units)
+            self.spectrum_viewer.state.y_display_unit = spec_units
 
         # Flux -> Surface Brightness
         elif not check_if_unit_is_per_solid_angle(spec_units) and flux_or_sb_selected == 'Surface Brightness':
             spec_units /= u.sr
             # update display units
-            self.spectrum_viewer.state.y_display_unit = str(spec_units)
+            self.spectrum_viewer.state.y_display_unit = spec_units
         
         self.spectrum_viewer.reset_limits()
 
@@ -204,30 +203,38 @@ class UnitConversion(PluginTemplateMixin):
     @observe('flux_unit_selected', 'sb_unit_selected')
     def _on_flux_unit_changed(self, *args):
         flux_or_sb = None
+        current_y = self.spectrum_viewer.state.y_display_unit
 
         for arg in args:
+            # determine if flux or surface brightness unit was changed  by user
             if arg['name'] == 'flux_unit_selected':
                 flux_or_sb = self.flux_unit.selected
+                # update flux or surface brightness dropdown if necessary
+                if check_if_unit_is_per_solid_angle(current_y):
+                    self.flux_or_sb.selected = 'Flux'
                 
-                untranslatable = [
+                untranslatable_units = [
                     u.erg / (u.s * u.cm**2),
                     u.erg / (u.s * u.cm**2 * u.Angstrom),
                     u.erg / (u.s * u.cm**2 * u.Hz),
                     u.ph / (u.Angstrom * u.s * u.cm**2),
                     u.ph / (u.s * u.cm**2 * u.Hz),
-                    u.ST,
-                    u.bol
+                    u.ST, u.bol
                 ]
-
-                if flux_or_sb in untranslatable:
+                # disable translator is flux unit is untranslatable
+                # still can select surface brightness units, just disables
+                # flux -> surface brightnes of particular unit selected.
+                if flux_or_sb in untranslatable_units:
                     self.can_translate = False
                 else:
-                    self.can_translate = True
+                    self.can_translate = True      
 
             elif arg['name'] == 'sb_unit_selected':
                 flux_or_sb = self.sb_unit.selected
-
                 self.can_translate = True
+                # update flux or surface brightness dropdown if necessary
+                if not check_if_unit_is_per_solid_angle(current_y):
+                    self.flux_or_sb.selected = 'Surface Brightness'
 
         yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
 
@@ -255,7 +262,7 @@ class UnitConversion(PluginTemplateMixin):
         if not self.show_translator:
             return
         
-        flux_or_sb_select = None
+        flux_or_sb = None
 
         if args:
             # need to check current y_unit to see if we need to translate
@@ -265,15 +272,15 @@ class UnitConversion(PluginTemplateMixin):
                     # don't translate if self.flux_or_sb == Flux
                     if not check_if_unit_is_per_solid_angle(y_unit):
                         return
-                    flux_or_sb_select = 'Flux'
+                    flux_or_sb = 'Flux'
                 elif arg['name'] == 'sb_unit_selected':
                     # don't translate if self.flux_or_sb == Surface Brightness
                     if check_if_unit_is_per_solid_angle(y_unit):
                         return 
-                    flux_or_sb_select = 'Surface Brightness'
+                    flux_or_sb = 'Surface Brightness'
                 elif arg['name'] == 'flux_or_sb_selected':
-                    flux_or_sb_select = self.flux_or_sb_selected
+                    flux_or_sb = self.flux_or_sb_selected
                 else:
                     return
                         
-        self.translate_units(flux_or_sb_select)
+        self.translate_units(flux_or_sb)

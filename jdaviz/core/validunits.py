@@ -115,20 +115,6 @@ def create_sb_equivalencies_list(sb_unit, spectral_axis_unit):
 
     local_units = [u.Unit(unit) for unit in locally_defined_sb_units]
 
-    exclude = []
-    jansky_units = [u.Jy, u.mJy, u.uJy, u.MJy]
-
-    for unit in jansky_units:
-        if any(base in unit.bases for base in sb_unit.bases):
-            exclude = [
-                            u.ph / (u.Angstrom * u.s * u.sr * u.cm**2),
-                            u.ph / (u.Hz * u.s * u.sr * u.cm**2),
-                            u.ST / u.sr, u.bol / u.sr,
-                            u.erg / (u.Angstrom * u.s * u.sr * u.cm**2),
-                            u.erg / (u.Hz * u.s * u.sr * u.cm**2),
-                            u.erg / (u.s * u.sr * u.cm**2)
-                            ]
-
     # Remove overlap units.
     curr_sb_unit_equivalencies = list(set(curr_sb_unit_equivalencies)
                                       - set(local_units))
