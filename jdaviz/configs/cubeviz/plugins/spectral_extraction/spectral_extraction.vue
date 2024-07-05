@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    :description="docs_description || 'Extract a spectrum from a spectral cube.'"
+    :description="docs_description || 'Extract a '+resulting_product_name+' from a spectral cube.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
@@ -37,7 +37,7 @@
         :selected.sync="aperture_selected"
         :show_if_single_entry="true"
         label="Spatial aperture"
-        hint="Select a spatial region to extract its spectrum."
+        :hint="'Select a spatial region to extract its '+resulting_product_name+'.'"
       />
 
       <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture">
@@ -138,14 +138,14 @@
         <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
-              <span style="padding: 6px">Export Background Spectrum</span>
+              <span style="padding: 6px">Export Background {{resulting_product_name.title()}}</span>
             </v-expansion-panel-header>
             <v-expansion-panel-content class="plugin-expansion-panel-content">
               <v-row v-if="function_selected === 'Sum'">
                 <v-switch
                   v-model="bg_spec_per_spaxel"
                   label="Normalize per-spaxel"
-                  hint="Whether to normalize the background per spaxel (not shown in preview). Otherwise, the spectrum will be scaled by the ratio between the areas of the extraction aperture to the background aperture."
+                  :hint="'Whether to normalize the background per spaxel (not shown in preview). Otherwise, the '+resulting_product_name+' will be scaled by the ratio between the areas of the extraction aperture to the background aperture.'"
                   persistent-hint
                 ></v-switch>
               </v-row>
@@ -155,11 +155,11 @@
                 :label_auto.sync="bg_spec_results_label_auto"
                 :label_invalid_msg="bg_spec_results_label_invalid_msg"
                 :label_overwrite="bg_spec_results_label_overwrite"
-                label_hint="Label for the background spectrum"
+                :label_hint="'Label for the background '+resulting_product_name+'.'"
                 :add_to_viewer_items="bg_spec_add_to_viewer_items"
                 :add_to_viewer_selected.sync="bg_spec_add_to_viewer_selected"
                 action_label="Export"
-                action_tooltip="Create Background Spectrum"
+                :action_tooltip="'Create Background '+resulting_product_name.title()"
                 @click:action="create_bg_spec"
               ></plugin-add-results>
             </v-expansion-panel-content>
@@ -193,7 +193,7 @@
             :items="aperture_method_items.map(i => i.label)"
             v-model="aperture_method_selected"
             label="Aperture masking method"
-            hint="Extract spectrum using an aperture masking method in place of the subset mask."
+            :hint="'Extract '+resulting_product_name+' using an aperture masking method in place of the subset mask.'"
             persistent-hint
             ></v-select>
           <j-docs-link>
@@ -211,7 +211,7 @@
           :items="function_items.map(i => i.label)"
           v-model="function_selected"
           label="Function"
-          hint="Function for reducing dimensions of spectral cube."
+          :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
           persistent-hint
         ></v-select>
       </v-row>
@@ -233,7 +233,7 @@
         :label_auto.sync="results_label_auto"
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
-        label_hint="Label for the extracted spectrum"
+        :label_hint="'Label for the extracted '+resulting_product_name+'.'"
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
         :auto_update_result.sync="auto_update_result"

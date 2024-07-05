@@ -74,6 +74,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     active_step = Unicode().tag(sync=True)
 
+    resulting_product_name = Unicode("spectrum").tag(sync=True)
+
     wavelength_dependent = Bool(False).tag(sync=True)
     reference_spectral_value = FloatHandleEmpty().tag(sync=True)
     slice_spectral_value = Float().tag(sync=True)
@@ -150,7 +152,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                               'bg_spec_add_to_viewer_items',
                                               'bg_spec_add_to_viewer_selected')
         self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
-        self.bg_spec_results_label_default = 'background-spectrum'
+        self.bg_spec_results_label_default = f'background-{self.resulting_product_name}'
 
         self.function = SelectPluginComponent(
             self,
@@ -234,11 +236,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                   auto_update=True, add_data=True)
                 except Exception:
                     msg = SnackbarMessage(
-                        f"Automatic spectrum extraction for {subset_lbl} failed",
+                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} failed",
                         color='error', sender=self, timeout=10000)
                 else:
                     msg = SnackbarMessage(
-                        f"Automatic spectrum extraction for {subset_lbl} successful",
+                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} successful",
                         color='success', sender=self)
                 self.app.hub.broadcast(msg)
 
@@ -537,7 +539,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.add_results.add_results_from_plugin(spec)
 
             snackbar_message = SnackbarMessage(
-                "Spectrum extracted successfully.",
+                f"{self.resulting_product_name.title()} extracted successfully.",
                 color="success",
                 sender=self)
             self.hub.broadcast(snackbar_message)
@@ -610,7 +612,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not self.export_enabled:
             # this should never be triggered since this is intended for UI-disabling and the
             # UI section is hidden, but would prevent any JS-hacking
-            raise ValueError("Writing out extracted spectrum to file is currently disabled")
+            raise ValueError(f"Writing out extracted {self.resulting_product_name} to file is currently disabled")
 
         # Make sure file does not end up in weird places in standalone mode.
         path = os.path.dirname(self.filename)
@@ -637,7 +639,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(
-            f"Extracted spectrum saved to {os.path.abspath(filename)}",
+            f"Extracted {self.resulting_product_name} saved to {os.path.abspath(filename)}",
                            sender=self, color="success"))
 
     @observe('aperture_selected', 'function_selected')
@@ -645,9 +647,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not hasattr(self, 'aperture'):
             return
         if self.aperture.selected == self.aperture.default_text:
-            self.results_label_default = f"Spectrum ({self.function_selected.lower()})"
+            self.results_label_default = f"{self.resulting_product_name.title()} ({self.function_selected.lower()})"
         else:
-            self.results_label_default = f"Spectrum ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
+            self.results_label_default = f"{self.resulting_product_name.title()} ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
 
     @cached_property
     def marks(self):
