@@ -4491,9 +4491,11 @@ class Table(PluginSubcomponent):
     item_key = Unicode().tag(sync=True)  # Unique field to identify row for selection
     selected_rows = List().tag(sync=True)  # List of selected rows
 
-    def __init__(self, plugin, name='table', *args, **kwargs):
+    def __init__(self, plugin, name='table', selected_rows_changed_callback=None,
+                 *args, **kwargs):
         self._qtable = None
         self._table_name = name
+        self._selected_rows_changed_callback = selected_rows_changed_callback
         super().__init__(plugin, 'Table', *args, **kwargs)
 
         plugin.session.hub.broadcast(PluginTableAddedMessage(sender=self))
@@ -4516,6 +4518,11 @@ class Table(PluginSubcomponent):
     @staticmethod
     def _new_col_visible(colname):
         return True
+
+    @observe('selected_rows')
+    def _selected_rows_changed(self, msg):
+        if self._selected_rows_changed_callback is not None:
+            self._selected_rows_changed_callback(msg)
 
     def add_item(self, item):
         """
