@@ -219,7 +219,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _active_step_changed(self, *args):
         self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'ext'))
         self.background._set_mark_visiblities(self.active_step == 'bg')
-        self.marks['bg_spec'].visible = self.active_step == 'bg'
+        self.marks['bg_ext'].visible = self.active_step == 'bg'
 
     @property
     def slice_plugin(self):
@@ -658,11 +658,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return {}
         # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
         sv = self.slice_indicator_viewers[0]
-        marks = {'spec': PluginLine(sv, visible=self.is_active),
-                 'bg_spec': PluginLine(sv,
+        marks = {'ext': PluginLine(sv, visible=self.is_active),
+                 'bg_ext': PluginLine(sv,
                                        line_style='dotted',
                                        visible=self.is_active and self.active_step == 'bg')}
-        sv.figure.marks = sv.figure.marks + [marks['spec'], marks['bg_spec']]
+        sv.figure.marks = sv.figure.marks + [marks['ext'], marks['bg_ext']]
         return marks
 
     def _clear_marks(self):
@@ -695,17 +695,17 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
 
         try:
-            sp, bg_spec = self.extract(return_bg=True, add_data=False)
+            ext, bg_ext = self.extract(return_bg=True, add_data=False)
         except (ValueError, Exception):
             self._clear_marks()
             return
 
-        self.marks['spec'].update_xy(sp.spectral_axis.value, sp.flux.value)
-        self.marks['spec'].visible = True
+        self.marks['ext'].update_xy(ext.spectral_axis.value, ext.flux.value)
+        self.marks['ext'].visible = True
 
-        if bg_spec is None:
-            self.marks['bg_spec'].clear()
-            self.marks['bg_spec'].visible = False
+        if bg_ext is None:
+            self.marks['bg_ext'].clear()
+            self.marks['bg_ext'].visible = False
         else:
-            self.marks['bg_spec'].update_xy(bg_spec.spectral_axis.value, bg_spec.flux.value)
-            self.marks['bg_spec'].visible = self.active_step == 'bg'
+            self.marks['bg_ext'].update_xy(bg_ext.spectral_axis.value, bg_ext.flux.value)
+            self.marks['bg_ext'].visible = self.active_step == 'bg'
