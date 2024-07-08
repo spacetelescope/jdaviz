@@ -190,6 +190,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed a bug with filename handling for movie exports. [#2942]
+
 Imviz
 ^^^^^
 

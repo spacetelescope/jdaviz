@@ -343,6 +343,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 filename += f".{filetype}"
             filename = Path(filename).expanduser()
 
+        filename = filename.resolve()
         filepath = filename.parent
         if filepath and not filepath.is_dir():
             raise ValueError(f"Invalid path={filepath}")
