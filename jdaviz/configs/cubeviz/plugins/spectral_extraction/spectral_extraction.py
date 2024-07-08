@@ -169,21 +169,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
+        self._update_disabled_msg()
+
         if self.app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
-
-        for data in self.app.data_collection:
-            if len(data.data.shape) == 3:
-                break
-        else:
-            # no cube-like data loaded.  Once loaded, the parser will unset this
-            # TODO: change to an event listener on AddDataMessage
-            self.disabled_msg = (
-                "Spectral Extraction requires a single dataset to be loaded into Cubeviz, "
-                "please load data to enable this plugin."
-            )
 
     @property
     def user_api(self):
@@ -195,6 +186,19 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                   'aperture_method']
 
         return PluginUserApi(self, expose=expose)
+
+    @observe('dataset_items')
+    def _update_disabled_msg(self, msg={}):
+        for data in self.app.data_collection:
+            if len(data.data.shape) == 3:
+                self.disabled_msg = ''
+                break
+        else:
+            # no cube-like data loaded.  Once loaded, the parser will unset this
+            self.disabled_msg = (
+                f"{self.__class__.__name__} requires a single dataset to be loaded, "
+                "please load data to enable this plugin."
+            )
 
     @property
     def live_update_subscriptions(self):
