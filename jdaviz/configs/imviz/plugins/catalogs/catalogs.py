@@ -209,7 +209,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             for row in self.app._catalog_source_table:
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
-                            'Object ID' : row['objid']}
+                            'Object ID': row['objid']}
                 self.table.add_item(row_info)
 
         if self.catalog_selected == 'From File...':
