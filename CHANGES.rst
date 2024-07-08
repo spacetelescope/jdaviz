@@ -187,6 +187,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Display default filepath in Export plugin, re-enable API exporting, enable relative and absolute
+  path exports from the UI. [#2896]
+
 Cubeviz
 ^^^^^^^
 

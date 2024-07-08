@@ -222,6 +222,18 @@
       </v-row>
     </div>
 
+    <v-row class="row-no-outside-padding row-min-bottom-padding">
+      <v-col>
+        <v-text-field
+          :value="default_filepath"
+          label="Filepath"
+          hint="Filepath export location."
+          persistent-hint
+          disabled
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
     <div style="display: grid; position: relative"> <!-- overlay container -->
     <div style="grid-area: 1/1">
 
@@ -231,7 +243,7 @@
       :auto.sync="filename_auto"
       :invalid_msg="filename_invalid_msg"
       label="Filename"
-      hint="Export to a file on disk"
+      hint="Export to a file on disk."
     ></plugin-auto-label>
 
     <v-row justify="end">
@@ -261,7 +273,7 @@
 
       <v-overlay
         absolute
-        opacity=1.0
+        opacity=0.5
         :value="overwrite_warn"
         :zIndex=3
         style="grid-area: 1/1;

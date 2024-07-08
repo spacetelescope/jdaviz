@@ -10,6 +10,7 @@ from glue.core.edit_subset_mode import AndMode, NewMode
 from glue.core.roi import CircularROI, XRangeROI
 from regions import Regions, CircleSkyRegion
 from specutils import Spectrum1D
+from pathlib import Path
 
 
 @pytest.mark.usefixtures('_jail')
@@ -348,3 +349,40 @@ class TestExportPluginPlots:
 
         # just check that it doesn't crash, since we can't download
         export_plugin.export()
+
+    def test_figure_export(self, imviz_helper):
+
+        data = NDData(np.ones((500, 500)) * u.nJy)
+
+        imviz_helper.load_data(data)
+
+        export_plugin = imviz_helper.plugins['Export']._obj
+
+        export_plugin.export(filename=None)
+
+        # attempt to save a figure back to back
+        try:
+            export_plugin.export(filename='img.png')
+        except ValueError as e:
+            assert str(e) == "previous png export is still in progress. Wait to complete before making another call to save_figure"  # noqa: E501
+
+    def test_filepath_convention(self, imviz_helper):
+        data = NDData(np.ones((500, 500)) * u.nJy)
+        imviz_helper.load_data(data)
+        export_plugin = imviz_helper.plugins['Export']._obj
+
+        # Set filename value using OS-independent Path methods
+        export_plugin.filename_value = str(Path('/') / 'img.png')
+        assert os.path.abspath(export_plugin.default_filepath) == os.path.abspath(export_plugin.filename_value)  # noqa: E501
+
+        export_plugin.filename_value = str(Path('~') / 'img.png')
+        expected_path = str(Path('~').expanduser() / 'img.png')
+        assert export_plugin.default_filepath == expected_path
+
+        export_plugin.filename_value = str(Path('..') / 'img.png')
+        expected_path = str((Path('..') / 'img.png').resolve())
+        assert export_plugin.default_filepath == expected_path
+
+        export_plugin.filename_value = str(Path('.') / 'img.png')
+        expected_path = str((Path('.') / 'img.png').resolve())
+        assert export_plugin.default_filepath == expected_path
