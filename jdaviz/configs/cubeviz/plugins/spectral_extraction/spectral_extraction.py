@@ -240,11 +240,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                   auto_update=True, add_data=True)
                 except Exception:
                     msg = SnackbarMessage(
-                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} failed",
+                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} failed",  # noqa
                         color='error', sender=self, timeout=10000)
                 else:
                     msg = SnackbarMessage(
-                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} successful",
+                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} successful",  # noqa
                         color='success', sender=self)
                 self.app.hub.broadcast(msg)
 
@@ -307,7 +307,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def uncert_cube(self):
-        if (hasattr(self._app._jdaviz_helper, '_loaded_flux_cube') and 
+        if (hasattr(self._app._jdaviz_helper, '_loaded_flux_cube') and
                 self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label):
             return self._app._jdaviz_helper._loaded_uncert_cube
         else:
@@ -613,7 +613,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not self.export_enabled:
             # this should never be triggered since this is intended for UI-disabling and the
             # UI section is hidden, but would prevent any JS-hacking
-            raise ValueError(f"Writing out extracted {self.resulting_product_name} to file is currently disabled")
+            raise ValueError(f"Writing out extracted {self.resulting_product_name} to file is currently disabled")  # noqa
 
         # Make sure file does not end up in weird places in standalone mode.
         path = os.path.dirname(self.filename)
@@ -641,14 +641,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(
             f"Extracted {self.resulting_product_name} saved to {os.path.abspath(filename)}",
-                           sender=self, color="success"))
+            sender=self, color="success"))
 
     @observe('aperture_selected', 'function_selected')
     def _set_default_results_label(self, event={}):
         if not hasattr(self, 'aperture'):
             return
         if self.aperture.selected == self.aperture.default_text:
-            self.results_label_default = f"{self.resulting_product_name.title()} ({self.function_selected.lower()})"
+            self.results_label_default = f"{self.resulting_product_name.title()} ({self.function_selected.lower()})"  # noqa
         else:
             self.results_label_default = f"{self.resulting_product_name.title()} ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
 
@@ -656,7 +656,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def marks(self):
         if not self._tray_instance:
             return {}
-        ### TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
+        # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
         sv = self.slice_indicator_viewers[0]
         marks = {'spec': PluginLine(sv, visible=self.is_active),
                  'bg_spec': PluginLine(sv,

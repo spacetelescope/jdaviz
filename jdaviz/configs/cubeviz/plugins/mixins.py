@@ -6,6 +6,7 @@ from jdaviz.core.marks import SliceIndicatorMarks
 
 __all__ = ['WithSliceIndicator', 'WithSliceSelection']
 
+
 class WithSliceIndicator:
     @property
     def slice_component_label(self):

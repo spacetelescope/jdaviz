@@ -617,6 +617,7 @@ def download_uri_to_path(possible_uri, cache=None, local_path=os.curdir, timeout
     # assume this isn't a URI after all:
     return possible_uri
 
+
 def layer_is_2d(layer):
     # returns True for subclasses of BaseData with ndim=2, both for
     # layers that are WCS-only as well as images containing data:
@@ -679,4 +680,3 @@ def get_reference_image_data(app, viewer_id=None):
         return refdata, iref
 
     return None, -1
-

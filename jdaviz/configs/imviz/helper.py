@@ -4,12 +4,12 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-from glue.core import BaseData
 from glue.core.link_helpers import LinkSame
 
 from jdaviz.core.events import SnackbarMessage, NewViewerMessage
 from jdaviz.core.helpers import ImageConfigHelper
-from jdaviz.utils import data_has_valid_wcs, get_wcs_only_layer_labels, get_reference_image_data, _wcs_only_label
+from jdaviz.utils import (data_has_valid_wcs, get_wcs_only_layer_labels,
+                          get_reference_image_data, _wcs_only_label)
 
 __all__ = ['Imviz']
 
