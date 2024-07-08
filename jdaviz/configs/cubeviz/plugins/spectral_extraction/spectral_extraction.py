@@ -100,7 +100,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
-    extracted_spec_available = Bool(False).tag(sync=True)
+    extracted_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
 
     aperture_method_items = List().tag(sync=True)
@@ -530,7 +530,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # stuff for exporting to file
         self.extracted_spec = spec
-        self.extracted_spec_available = True
+        self.extracted_available = True
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"extracted_{selected_func}_{fname_label}.fits"
 
@@ -660,8 +660,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         sv = self.slice_indicator_viewers[0]
         marks = {'ext': PluginLine(sv, visible=self.is_active),
                  'bg_ext': PluginLine(sv,
-                                       line_style='dotted',
-                                       visible=self.is_active and self.active_step == 'bg')}
+                                      line_style='dotted',
+                                      visible=self.is_active and self.active_step == 'bg')}
         sv.figure.marks = sv.figure.marks + [marks['ext'], marks['bg_ext']]
         return marks
 

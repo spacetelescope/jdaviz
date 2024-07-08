@@ -244,11 +244,11 @@
         @click:action="spectral_extraction"
       ></plugin-add-results>
 
-      <j-plugin-section-header v-if="extracted_spec_available && export_enabled">Results</j-plugin-section-header>
+      <j-plugin-section-header v-if="extracted_available && export_enabled">Results</j-plugin-section-header>
 
       <div style="display: grid; position: relative"> <!-- overlay container -->
         <div style="grid-area: 1/1">
-          <div v-if="extracted_spec_available && export_enabled">
+          <div v-if="extracted_available && export_enabled">
 
             <v-row>
               <v-text-field
