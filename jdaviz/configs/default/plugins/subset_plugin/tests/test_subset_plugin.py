@@ -6,8 +6,7 @@ from astropy.nddata import NDData
 import astropy.units as u
 from specutils import SpectralRegion
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI, XRangeROI
-from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
-                                        ReplaceMode, XorMode, NewMode)
+from glue.core.edit_subset_mode import OrMode, NewMode
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
