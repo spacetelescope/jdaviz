@@ -115,11 +115,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     export_enabled = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-
         super().__init__(*args, **kwargs)
 
         self.extracted_spec = None
@@ -151,7 +146,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                               'bg_spec_results_label_overwrite',
                                               'bg_spec_add_to_viewer_items',
                                               'bg_spec_add_to_viewer_selected')
-        self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
+        self.bg_spec_add_results.viewer.filters = ['is_slice_indicator_viewer']
         self.bg_spec_results_label_default = f'background-{self.resulting_product_name}'
 
         self.function = SelectPluginComponent(
@@ -168,7 +163,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             manual_options=self.aperture_method_manual_options
         )
         self._set_default_results_label()
-        self.add_results.viewer.filters = ['is_spectrum_viewer']
+        self.add_results.viewer.filters = ['is_slice_indicator_viewer']
 
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)

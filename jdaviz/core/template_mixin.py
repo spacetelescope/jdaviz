@@ -40,6 +40,7 @@ from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
+from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
@@ -3241,6 +3242,9 @@ class ViewerSelect(SelectPluginComponent):
 
         def is_image_viewer(viewer):
             return 'ImageView' in viewer.__class__.__name__
+
+        def is_slice_indicator_viewer(viewer):
+            return isinstance(viewer, WithSliceIndicator)
 
         def reference_has_wcs(viewer):
             return getattr(viewer.state.reference_data, 'coords', None) is not None
