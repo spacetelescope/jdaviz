@@ -205,18 +205,22 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
 
         # adding in coordinates and Source IDs into the catalog table
-        for row in self.app._catalog_source_table:
-            if self.catalog_selected == "SDSS":
+        if self.catalog_selected == "SDSS":
+            for row in self.app._catalog_source_table:
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
-                            'Object ID': row['objid']}
+                            'Object ID' : row['objid']}
+                self.table.add_item(row_info)
 
-            if self.catalog_selected == 'From File...':
+        if self.catalog_selected == 'From File...':
+            for row in self.app._catalog_source_table:
                 # find new to add in a way to append the source id to the table
                 # 'Object ID': row['label']} ; 'label' is failing tests
                 row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra,
                             'Declination (degrees)': row['sky_centroid'].dec}
-            self.table.add_item(row_info)
+                self.table.add_item(row_info)
+
+        return skycoord_table
 
     def import_catalog(self, catalog):
         """
