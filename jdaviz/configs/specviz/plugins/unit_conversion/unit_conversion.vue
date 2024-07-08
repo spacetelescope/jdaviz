@@ -30,7 +30,7 @@
         persistent-hint
         :disabled="!can_translate"
       ></v-select>
-      <span v-if="!can_translate">Translation is not available due to current settings.</span>
+      <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
     </v-row>
 
     <v-row>
@@ -54,7 +54,9 @@
         label="Surface Brightness Unit"
         hint="Global display unit for y-axis axis."
         persistent-hint
+        :disabled="!can_translate"
       ></v-select>
+      <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
     </v-row>
 
   </j-tray-plugin>

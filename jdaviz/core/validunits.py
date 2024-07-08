@@ -73,6 +73,7 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
                                   'eV / (s m2 Hz)',
                                   'erg / (s cm2)',
                                   'erg / (s cm2 Hz)',
+                                  'erg / (s cm2 Angstrom)',
                                   'ph / (Angstrom s cm2)',
                                   'ph / (Hz s cm2)',
                                   'bol', 'AB', 'ST'
@@ -88,6 +89,7 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
 
     # Concatenate both lists with the local units coming first.
     return sorted(units_to_strings(local_units)) + flux_unit_equivalencies_titles
+
 
 def create_sb_equivalencies_list(sb_unit, spectral_axis_unit):
     """Get all possible conversions for flux from current flux units."""
@@ -106,12 +108,13 @@ def create_sb_equivalencies_list(sb_unit, spectral_axis_unit):
     locally_defined_sb_units = ['Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr', 'Jy / sr',
                                 'W / (Hz sr m2)',
                                 'eV / (Hz s sr m2)',
-                                #'erg / (s cm2 sr)',
-                                #'erg / (s cm2 Angstrom sr)',
-                                #'erg / (s cm2 Hz sr)',
-                                #'ph / (Angstrom s sr cm2)',
-                                #'ph / (s cm2 Hz sr)',
-                                'AB / sr']
+                                'AB / sr'
+                                # 'erg / (s cm2 sr)',
+                                # 'erg / (s cm2 Angstrom sr)',
+                                # 'erg / (s cm2 Hz sr)',
+                                # 'ph / (Angstrom s sr cm2)',
+                                # 'ph / (s cm2 Hz sr)'
+                                ]
 
     local_units = [u.Unit(unit) for unit in locally_defined_sb_units]
 
