@@ -1,7 +1,8 @@
-import pytest
+import os
 import warnings
 
 import photutils
+import pytest
 from asdf.exceptions import AsdfWarning
 from astropy.utils import minversion
 from astropy.wcs import FITSFixedWarning
@@ -49,6 +50,15 @@ def test_url_to_download_imviz_local_path_warning(imviz_helper):
         pytest.warns(UserWarning, match=match_local_path_msg)
     ):
         imviz_helper.load_data(url, cache=True, local_path='horsehead.fits')
+
+
+def test_uri_to_download_specviz_local_path_check():
+    uri = "mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits"
+    local_path = utils.download_uri_to_path(uri, cache=False, dryrun=True)  # No download
+
+    # Wrong: '.\\JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits'
+    # Correct:  '.\\jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits'
+    assert local_path == os.path.join(os.curdir, "jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits")  # noqa: E501
 
 
 @pytest.mark.remote_data

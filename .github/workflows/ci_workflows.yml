@@ -61,7 +61,6 @@ jobs:
             os: windows-latest
             python: '3.10'
             toxenv: py310-test
-            toxposargs: --remote-data
             allow_failure: false
 
           # This also runs on cron but we want to make sure new changes
