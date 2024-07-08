@@ -343,6 +343,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 filename += f".{filetype}"
             filename = Path(filename).expanduser()
 
+        filename = filename.resolve()
         filepath = filename.parent
         if filepath and not filepath.is_dir():
             raise ValueError(f"Invalid path={filepath}")
@@ -673,7 +674,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         if i_end <= i_start:
             raise ValueError(f"No frames to write: i_start={i_start}, i_end={i_end}")
 
-        filename = str(filename.resolve())
         threading.Thread(
             target=lambda: self._save_movie(viewer, i_start, i_end, fps, filename, rm_temp_files)
         ).start()
