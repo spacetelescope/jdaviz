@@ -3,7 +3,11 @@ import pytest
 
 import numpy as np
 from astropy.nddata import NDData
+import astropy.units as u
+from specutils import SpectralRegion
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI, XRangeROI
+from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
+                                        ReplaceMode, XorMode, NewMode)
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
@@ -168,3 +172,23 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     for i, attr in enumerate(subset_info):
         assert subset_defs[0][i+1]['name'] == subset_info[attr]['wcs_name']
         assert_allclose(subset_defs[0][i+1]['value'], true_values_final[i]['value'])
+
+
+@pytest.mark.parametrize(
+    ('spec_regions', 'mode', 'len_subsets', 'len_subregions'),
+    [([SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
+       SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], NewMode, 3, 1),
+     ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
+       SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), OrMode, 1, 3)]
+)
+def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, mode, len_subsets,
+                                len_subregions):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    plg = cubeviz_helper.plugins['Subset Tools']._obj
+    plg._import_spectral_regions(spec_region=spec_regions, mode=mode)
+    subsets = cubeviz_helper.app.get_subsets()
+    assert len(subsets) == len_subsets
+    assert len(subsets['Subset 1']) == len_subregions
