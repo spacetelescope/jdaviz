@@ -6,8 +6,8 @@ from astropy.time import Time
 import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
-                                        ReplaceMode, XorMode)
-from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
+                                        ReplaceMode, XorMode, NewMode)
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
@@ -655,3 +655,23 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if self.subset_definitions[index][i]['name'] == name:
                 self.subset_definitions[index][i]['value'] = new_value
                 break
+
+    def _import_spectral_regions(self, spec_region, mode=NewMode):
+        """
+        Method for importing a SpectralRegion object or list of SpectralRegion objects.
+
+        Parameters
+        ----------
+        spec_region : ~`specutils.SpectralRegion` object or list
+            The object that contains bounds for the spectral region or regions
+        mode : AndMode, AndNotMode, OrMode, ReplaceMode, XorMode, or NewMode
+            By default this is set to NewMode which creates a new subset per subregion.
+            OrMode will create a composite subset with each subregion corresponding
+            to a subregion of a single subset.
+        """
+        for sub_region in spec_region:
+            viewer_name = self.app._jdaviz_helper._default_spectrum_viewer_reference_name
+            spectrum_viewer = self.app.get_viewer(viewer_name)
+            spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
+            self.app.session.edit_subset_mode.mode = mode
+            spectrum_viewer.apply_roi(XRangeROI(sub_region.lower.value, sub_region.upper.value))
