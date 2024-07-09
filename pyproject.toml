@@ -8,7 +8,7 @@ authors = [
 dependencies = [
     "packaging",
     "astropy>=6",
-    "matplotlib>=3.6,<3.9",
+    "matplotlib>=3.6",
     "traitlets>=5.0.5",
     "bqplot>=0.12.37",
     "bqplot-image-gl>=1.4.11",
