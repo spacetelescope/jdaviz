@@ -152,6 +152,7 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
                    dec=[-20.83305528, -20.83222194, -20.83083304], unit='deg')
     tbl = QTable({'sky_centroid': sky})
     tbl_file = str(tmp_path / 'sky_centroid.ecsv')
+    print(tbl_file)
     tbl.write(tbl_file, overwrite=True)
     n_entries = len(tbl)
 
