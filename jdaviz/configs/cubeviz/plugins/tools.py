@@ -13,6 +13,10 @@ from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion
 from jdaviz.core.marks import PluginLine
 
+from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData
+import sounddevice as sd
+
+
 __all__ = []
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
@@ -96,6 +100,9 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         self._mark = None
         self._data = None
 
+        self.audified_cube = None
+        self.stream = None
+
     def _reset_spectrum_viewer_bounds(self):
         sv_state = self._spectrum_viewer.state
         sv_state.x_min = self._previous_bounds[0]
@@ -117,22 +124,28 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         # Store these so we can revert to previous user-set zoom after preview view
         sv_state = self._spectrum_viewer.state
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
+
+        # Create sonified cube
+        self.get_sonified_cube()
         super().activate()
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_move)
         self._reset_spectrum_viewer_bounds()
+        self.stream.stop()
         super().deactivate()
 
     def on_mouse_move(self, data):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
             self._reset_spectrum_viewer_bounds()
+            self.stream.stop()
             return
 
         x = int(np.round(data['domain']['x']))
         y = int(np.round(data['domain']['y']))
 
+        # some alternative scaling
         # Use the selected layer from coords_info as long as it's 3D
         coords_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
         if coords_dataset == 'auto':
@@ -166,6 +179,7 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
             self._reset_spectrum_viewer_bounds()
             self._mark.visible = False
+            self.stream.stop()
         else:
             y_values = spectrum.flux[x, y, :]
             if np.all(np.isnan(y_values)):
@@ -175,3 +189,26 @@ class SpectrumPerSpaxel(SinglePixelRegion):
             self._mark.visible = True
             self._spectrum_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
             self._spectrum_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
+
+            self.stream.start()
+            self.audified_cube.newsig = self.audified_cube.sigcube[:, x, y]
+            self.audified_cube.cbuff = True
+
+    def get_sonified_cube(self):
+        spectrum = self.viewer.active_image_layer.layer.get_object(statistic=None)
+        srate = 44100
+        bsize = 2048
+        assidx = 2.5
+        ssvidx = 0.65
+        wavemin = 15800
+        wavemax = 16000
+
+        clipped_arr = np.clip(spectrum.flux.value.T, 0, np.inf)
+        arr = spectrum[wavemin:wavemax].flux.value.T
+        self.audified_cube = CubeListenerData(clipped_arr ** assidx, spectrum.wavelength.value, duration=0.8,
+                                  samplerate=srate, buffsize=bsize)
+        self.audified_cube.audify_cube()
+        self.audified_cube.sigcube = (self.audified_cube.sigcube * pow(clipped_arr.sum(0) / clipped_arr.sum(0).max(), ssvidx)).astype('int16')
+        self.stream = sd.OutputStream(samplerate=srate, blocksize=bsize, channels=1, dtype='int16', latency='low',
+                                      callback=self.audified_cube.player_callback)
+        self.audified_cube.cbuff = True
