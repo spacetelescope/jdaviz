@@ -360,9 +360,7 @@ def _eqv_pixar_sr(pixar_sr):
     def iconverter_flux(x):  # Flux -> Surface Brightness
         return x / pixar_sr
 
-    return [(u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux),
-            # TODO: This can be removed when we remove SB->flux unit support from Moment Maps
-            (u.MJy * u.m / u.sr, u.MJy * u.m, converter_flux, iconverter_flux)]
+    return [(u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux)]
 
 
 def spectral_axis_conversion(values, original_units, target_units):
