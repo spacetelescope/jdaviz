@@ -73,6 +73,7 @@ class Specviz(ConfigHelper, LineListMixin):
                           format=format,
                           show_in_viewer=show_in_viewer,
                           concat_by_file=concat_by_file,
+                          local_path=local_path,
                           cache=cache)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
