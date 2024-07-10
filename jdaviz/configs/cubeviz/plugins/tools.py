@@ -11,9 +11,8 @@ from specutils import Spectrum1D
 from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion, _MatchedZoomMixin
 from jdaviz.core.marks import PluginLine
+from jdaviz.core.template_mixin import SonifiedCubeMixin
 
-from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData
-import sounddevice as sd
 
 
 __all__ = []
@@ -85,7 +84,7 @@ class SelectSlice(CheckableTool):
 
 
 @viewer_tool
-class SpectrumPerSpaxel(SinglePixelRegion):
+class SpectrumPerSpaxel(SinglePixelRegion, SonifiedCubeMixin):
 
     icon = os.path.join(ICON_DIR, 'pixelspectra.svg')
     tool_id = 'jdaviz:spectrumperspaxel'
@@ -99,7 +98,7 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         self._mark = None
         self._data = None
 
-        self.sonify_data_plg = None
+        # self.sonify_data_plg = None
 
     def _reset_spectrum_viewer_bounds(self):
         sv_state = self._spectrum_viewer.state
@@ -123,22 +122,21 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         sv_state = self._spectrum_viewer.state
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
 
-        # Retrieve sonified cube
-        self.sonify_data_plg = self.viewer._obj.jdaviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
-        self.sonify_data_plg.start_stream()
+        # Retrieve sonified cube if present
+        self.start_stream()
         super().activate()
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_move)
         self._reset_spectrum_viewer_bounds()
-        self.sonify_data_plg.stop_stream()
+        self.stop_stream()
         super().deactivate()
 
     def on_mouse_move(self, data):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
             self._reset_spectrum_viewer_bounds()
-            self.sonify_data_plg.stop_stream()
+            self.stop_stream()
             return
 
         x = int(np.round(data['domain']['x']))
@@ -178,7 +176,7 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
             self._reset_spectrum_viewer_bounds()
             self._mark.visible = False
-            self.sonify_data_plg.stop_stream()
+            self.stop_stream()
         else:
             y_values = spectrum.flux[x, y, :]
             if np.all(np.isnan(y_values)):
@@ -189,8 +187,8 @@ class SpectrumPerSpaxel(SinglePixelRegion):
             self._spectrum_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
             self._spectrum_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
 
-            self.sonify_data_plg.start_stream()
-            self.sonify_data_plg.update_cube(x, y)
+            self.start_stream()
+            self.update_cube(x, y)
 
     # def get_sonified_cube(self):
     #     spectrum = self.viewer.active_image_layer.layer.get_object(statistic=None)

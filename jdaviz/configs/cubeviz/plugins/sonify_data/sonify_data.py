@@ -19,7 +19,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SelectPluginComponent,
                                         SpectralContinuumMixin,
                                         skip_if_no_updates_since_last_active,
-                                        with_spinner)
+                                        with_spinner, SonifiedCubeMixin)
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import flux_conversion
@@ -33,7 +33,7 @@ __all__ = ['SonifyData']
 
 @tray_registry('cubeviz-sonify-data', label="Sonify Data",
                viewer_requirements=['spectrum', 'image'])
-class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
+class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SonifiedCubeMixin):
     template_file = __file__, "sonify_data.vue"
 
     sample_rate = IntHandleEmpty(44100).tag(sync=True)
@@ -45,28 +45,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        self.audified_cube = None
-        self.stream = None
-
-    def start_stream(self):
-        if self.stream:
-            self.stream.start()
-        else:
-            print("unable to start stream")
-
-    def stop_stream(self):
-        if self.stream:
-            self.stream.stop()
-        else:
-            print("unable to stop stream")
-
-    def update_cube(self, x, y):
-        if not self.audified_cube and not hasattr(self.audified_cube, 'newsig') and not hasattr(self.audified_cube, 'sigcube'):
-            print("cube not initialized")
-            return
-        self.audified_cube.newsig = self.audified_cube.sigcube[:, x, y]
-        self.audified_cube.cbuff = True
 
     def vue_sonify_cube(self, *args):
         self.get_sonified_cube()
