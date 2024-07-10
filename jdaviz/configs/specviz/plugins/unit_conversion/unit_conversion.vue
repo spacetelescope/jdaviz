@@ -33,7 +33,7 @@
       <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
     </v-row>
 
-    <v-row>
+    <v-row v-if="specviz_disabler === 'Surface Brightness'">
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -45,7 +45,7 @@
       ></v-select>
     </v-row>
 
-    <v-row>
+    <v-row v-if="specviz_disabler === 'Flux'">
       <v-select
         :menu-props="{ left: true }"
         attach

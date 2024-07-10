@@ -68,6 +68,7 @@ class UnitConversion(PluginTemplateMixin):
     flux_or_sb_items = List().tag(sync=True)
     flux_or_sb_selected = Unicode().tag(sync=True)
 
+    specviz_disabler = Unicode().tag(sync=True)
     can_translate = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -108,7 +109,15 @@ class UnitConversion(PluginTemplateMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_unit', 'sb_unit'))
+        if self.app.config == 'cubeviz':
+            return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_unit', 'sb_unit'))
+        elif self.app.config == 'specviz' and not self.specviz_disabler:
+            return PluginUserApi(self, expose=('spectral_unit', 'flux_unit', 'sb_unit'))
+        if self.specviz_disabler == 'Flux':
+            return PluginUserApi(self, expose=('spectral_unit', 'sb_unit'))
+        if self.specviz_disabler == 'Surface Brightness':
+            return PluginUserApi(self, expose=('spectral_unit', 'flux_unit'))
+        
 
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:
@@ -208,9 +217,24 @@ class UnitConversion(PluginTemplateMixin):
         flux_or_sb = None
         current_y = self.spectrum_viewer.state.y_display_unit
 
+        data_collection_unit = ''
+        if self.app.data_collection[0] and self.app.config == 'specviz':
+            if check_if_unit_is_per_solid_angle(self.app.data_collection[0].get_object()._unit):
+                data_collection_unit = 'Surface Brightness'
+                self.specviz_disabler = 'Flux'
+                self.user_api()
+            else:
+                self.specviz_disabler = 'Surface Brightness'
+                data_collection_unit = 'Flux'
+                self.user_api()
+
         for arg in args:
             # determine if flux or surface brightness unit was changed  by user
             if arg['name'] == 'flux_unit_selected':
+                if data_collection_unit == 'Surface Brightness':
+                    raise ValueError(
+                            f"Unit translation between Flux and Surface Brightness is not supported in Specviz."
+                                    )
                 flux_or_sb = self.flux_unit.selected
                 # update flux or surface brightness dropdown if necessary
                 if check_if_unit_is_per_solid_angle(current_y):
@@ -233,6 +257,10 @@ class UnitConversion(PluginTemplateMixin):
                     self.can_translate = True
 
             elif arg['name'] == 'sb_unit_selected':
+                if data_collection_unit == 'Flux':
+                    raise ValueError(
+                            f"Unit translation between Flux and Surface Brightness is not supported in Specviz."
+                                    )
                 flux_or_sb = self.sb_unit.selected
                 self.can_translate = True
                 # update flux or surface brightness dropdown if necessary
