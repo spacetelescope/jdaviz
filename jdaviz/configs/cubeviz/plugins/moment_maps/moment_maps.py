@@ -22,8 +22,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.utils import _eqv_pixar_sr
-
 
 __all__ = ['MomentMap']
 
@@ -358,9 +356,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 moment_new_unit = flux_or_sb_display_unit
             else:
                 moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
-            # TODO: This can be removed when we remove SB->flux unit support from Moment Maps
-            self.moment = self.moment.to(moment_new_unit, _eqv_pixar_sr(
-                self.moment.size * self.dataset.selected_dc_item.meta.get('PIXAR_SR', 1.0)))
+            self.moment = self.moment.to(moment_new_unit)
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)
