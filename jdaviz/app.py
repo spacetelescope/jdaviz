@@ -326,8 +326,6 @@ class Application(VuetifyTemplate, HubListener):
         # data loading
         self.auto_link = kwargs.pop('auto_link', True)
 
-        self.sonification_enabled = False
-
         # Imviz linking
         self._link_type = 'pixels'
         if self.config == "imviz":

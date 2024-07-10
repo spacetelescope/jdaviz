@@ -125,9 +125,8 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
 
         # Retrieve sonified cube
-        if self.app.sonification_enabled:
-            self.sonify_data_plg = self.viewer.jdaviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
-            self.sonify_data_plg.start_stream()
+        self.sonify_data_plg = self.viewer._obj.jdaviz_helper.app.get_tray_item_from_name('cubeviz-sonify-data')
+        self.sonify_data_plg.start_stream()
         super().activate()
 
     def deactivate(self):
