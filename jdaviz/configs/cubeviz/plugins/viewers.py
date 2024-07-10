@@ -6,8 +6,152 @@ from jdaviz.configs.cubeviz.plugins.mixins import WithSliceIndicator, WithSliceS
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
+from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData
+import sounddevice as sd
 
-__all__ = ['CubevizImageView', 'CubevizProfileView']
+__all__ = ['CubevizImageView', 'CubevizProfileView',
+           'WithSliceIndicator', 'WithSliceSelection']
+
+
+class WithSliceIndicator:
+    @property
+    def slice_component_label(self):
+        return str(self.state.x_att)
+
+    @property
+    def slice_display_unit_name(self):
+        return 'spectral'
+
+    @cached_property
+    def slice_indicator(self):
+        # SliceIndicatorMarks does not yet exist
+        slice_indicator = SliceIndicatorMarks(self)
+        self.figure.marks = self.figure.marks + slice_indicator.marks
+        return slice_indicator
+
+    @property
+    def slice_values(self):
+        # NOTE: these are cached at the slice-plugin level
+        # Retrieve display units
+        slice_display_units = self.jdaviz_app._get_display_unit(
+            self.slice_display_unit_name
+        )
+
+        def _get_component(layer):
+            try:
+                # Retrieve layer data and units
+                data_comp = layer.layer.data.get_component(self.slice_component_label)
+            except (AttributeError, KeyError):
+                # layer either does not have get_component (because its a subset)
+                # or slice_component_label is not a component in this layer
+                # either way, return an empty array and skip this layer
+                return np.array([])
+
+            # Convert axis if display units are set and are different
+            data_units = getattr(data_comp, 'units', None)
+            if slice_display_units and data_units and slice_display_units != data_units:
+                data = np.asarray(data_comp.data, dtype=float) * u.Unit(data_units)
+                return data.to_value(slice_display_units,
+                                     equivalencies=u.spectral())
+            else:
+                return data_comp.data
+        try:
+            return np.asarray(np.unique(np.concatenate([_get_component(layer) for layer in self.layers])),  # noqa
+                              dtype=float)
+        except ValueError:
+            # NOTE: this will result in caching an empty list
+            return np.array([])
+
+    def _set_slice_indicator_value(self, value):
+        # this is a separate method so that viewers can override and map value if necessary
+        # NOTE: on first call, this will initialize the indicator itself
+        self.slice_indicator.value = value
+
+
+class WithSliceSelection:
+    @property
+    def slice_index(self):
+        # index in state.slices corresponding to the slice axis
+        return 2
+
+    @property
+    def slice_component_label(self):
+        slice_plg = self.jdaviz_helper.plugins.get('Slice', None)
+        if slice_plg is None:  # pragma: no cover
+            raise ValueError("slice plugin must be activated to access slice_component_label")
+        return slice_plg._obj.slice_indicator_viewers[0].slice_component_label
+
+    @property
+    def slice_display_unit_name(self):
+        return 'spectral'
+
+    @property
+    def slice_values(self):
+        # NOTE: these are cached at the slice-plugin level
+        # TODO: add support for multiple cubes (but then slice selection needs to be more complex)
+        # if slice_index is 0, then we want the equivalent of [:, 0, 0]
+        # if slice_index is 1, then we want the equivalent of [0, :, 0]
+        # if slice_index is 2, then we want the equivalent of [0, 0, :]
+        take_inds = [2, 1, 0]
+        take_inds.remove(self.slice_index)
+        converted_axis = np.array([])
+        for layer in self.layers:
+            world_comp_ids = layer.layer.data.world_component_ids
+            if self.slice_index >= len(world_comp_ids):
+                # Case where 2D image is loaded in image viewer
+                continue
+
+            # Retrieve display units
+            slice_display_units = self.jdaviz_app._get_display_unit(
+                self.slice_display_unit_name
+            )
+
+            try:
+                # Retrieve layer data and units using the slice index of the world components ids
+                data_comp = layer.layer.data.get_component(world_comp_ids[self.slice_index])
+            except (AttributeError, KeyError):
+                continue
+
+            data = np.asarray(data_comp.data.take(0, take_inds[0]).take(0, take_inds[1]),  # noqa
+                              dtype=float)
+
+            # Convert to display units if applicable
+            data_units = getattr(data_comp, 'units', None)
+            if slice_display_units and data_units and slice_display_units != data_units:
+                converted_axis = (data * u.Unit(data_units)).to_value(
+                    slice_display_units,
+                    equivalencies=u.spectral() + u.pixel_scale(1*u.pix)
+                )
+            else:
+                converted_axis = data
+
+        return converted_axis
+
+    @property
+    def slice(self):
+        return self.state.slices[self.slice_index]
+
+    @slice.setter
+    def slice(self, slice):
+        # NOTE: not intended for user-access - this should be controlled through the slice plugin
+        # in order to sync with all other viewers/slice indicators
+        slices = [0, 0, 0]
+        slices[self.slice_index] = slice
+        self.state.slices = tuple(slices)
+
+    @property
+    def slice_value(self):
+        return self.slice_values[self.slice]
+
+    @slice_value.setter
+    def slice_value(self, slice_value):
+        # NOTE: not intended for user-access - this should be controlled through the slice plugin
+        # in order to sync with all other viewers/slice indicators
+        # find the slice nearest slice_value
+        slice_values = self.slice_values
+        if not len(slice_values):
+            return
+        self.slice = np.argmin(abs(slice_values - slice_value))
 
 
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
@@ -38,6 +182,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         # Hide axes by default
         self.state.show_axes = False
+
+        self.audified_cube = None
+        self.stream = None
 
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -79,6 +226,38 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
+
+    def start_stream(self):
+        if hasattr(self, 'stream') and self.stream:
+            self.stream.start()
+        else:
+            print("unable to start stream")
+
+    def stop_stream(self):
+        if hasattr(self, 'stream') and self.stream:
+            self.stream.stop()
+        else:
+            print("unable to stop stream")
+
+    def update_cube(self, x, y):
+        if not hasattr(self, 'audified_cube') or not self.audified_cube or not hasattr(self.audified_cube, 'newsig') or not hasattr(self.audified_cube, 'sigcube'):
+            print("cube not initialized")
+            return
+        self.audified_cube.newsig = self.audified_cube.sigcube[:, x, y]
+        self.audified_cube.cbuff = True
+
+    def get_sonified_cube(self, sample_rate, buffer_size, assidx, ssvidx):
+        spectrum = self.active_image_layer.layer.get_object(statistic=None)
+
+        clipped_arr = np.clip(spectrum.flux.value.T, 0, np.inf)
+        # arr = spectrum[wavemin:wavemax].flux.value.T
+        self.audified_cube = CubeListenerData(clipped_arr ** assidx, spectrum.wavelength.value, duration=0.8,
+                                  samplerate=sample_rate, buffsize=buffer_size)
+        self.audified_cube.audify_cube()
+        self.audified_cube.sigcube = (self.audified_cube.sigcube * pow(clipped_arr.sum(0) / clipped_arr.sum(0).max(), ssvidx)).astype('int16')
+        self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, channels=1, dtype='int16', latency='low',
+                                      callback=self.audified_cube.player_callback)
+        self.audified_cube.cbuff = True
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
