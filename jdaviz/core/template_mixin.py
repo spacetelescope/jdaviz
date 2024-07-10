@@ -4948,28 +4948,3 @@ class PlotMixin(VuetifyTemplate, HubListener):
         Clear all data from the current plot.
         """
         self.plot.clear_plot()
-
-
-class SonifiedCubeMixin:
-    def __init__(self, *args, **kwargs):
-        self.audified_cube = None
-        self.stream = None
-
-    def start_stream(self):
-        if hasattr(self, 'stream') and self.stream:
-            self.stream.start()
-        else:
-            print("unable to start stream")
-
-    def stop_stream(self):
-        if hasattr(self, 'stream') and self.stream:
-            self.stream.stop()
-        else:
-            print("unable to stop stream")
-
-    def update_cube(self, x, y):
-        if not hasattr(self, 'audified_cube') or not self.audified_cube or not hasattr(self.audified_cube, 'newsig') or not hasattr(self.audified_cube, 'sigcube'):
-            print("cube not initialized")
-            return
-        self.audified_cube.newsig = self.audified_cube.sigcube[:, x, y]
-        self.audified_cube.cbuff = True

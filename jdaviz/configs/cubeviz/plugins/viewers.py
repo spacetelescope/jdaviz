@@ -10,6 +10,9 @@ from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 
+from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData
+import sounddevice as sd
+
 __all__ = ['CubevizImageView', 'CubevizProfileView',
            'WithSliceIndicator', 'WithSliceSelection']
 
@@ -184,6 +187,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Hide axes by default
         self.state.show_axes = False
 
+        self.audified_cube = None
+        self.stream = None
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.jdaviz_helper._default_spectrum_viewer_reference_name
@@ -224,6 +230,38 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 for layer_state in self.state.layers
                 if hasattr(layer_state, 'layer') and
                 isinstance(layer_state.layer, BaseData)]
+
+    def start_stream(self):
+        if hasattr(self, 'stream') and self.stream:
+            self.stream.start()
+        else:
+            print("unable to start stream")
+
+    def stop_stream(self):
+        if hasattr(self, 'stream') and self.stream:
+            self.stream.stop()
+        else:
+            print("unable to stop stream")
+
+    def update_cube(self, x, y):
+        if not hasattr(self, 'audified_cube') or not self.audified_cube or not hasattr(self.audified_cube, 'newsig') or not hasattr(self.audified_cube, 'sigcube'):
+            print("cube not initialized")
+            return
+        self.audified_cube.newsig = self.audified_cube.sigcube[:, x, y]
+        self.audified_cube.cbuff = True
+
+    def get_sonified_cube(self, sample_rate, buffer_size, assidx, ssvidx):
+        spectrum = self.active_image_layer.layer.get_object(statistic=None)
+
+        clipped_arr = np.clip(spectrum.flux.value.T, 0, np.inf)
+        # arr = spectrum[wavemin:wavemax].flux.value.T
+        self.audified_cube = CubeListenerData(clipped_arr ** assidx, spectrum.wavelength.value, duration=0.8,
+                                  samplerate=sample_rate, buffsize=buffer_size)
+        self.audified_cube.audify_cube()
+        self.audified_cube.sigcube = (self.audified_cube.sigcube * pow(clipped_arr.sum(0) / clipped_arr.sum(0).max(), ssvidx)).astype('int16')
+        self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, channels=1, dtype='int16', latency='low',
+                                      callback=self.audified_cube.player_callback)
+        self.audified_cube.cbuff = True
 
 
 @viewer_registry("cubeviz-profile-viewer", label="Profile 1D (Cubeviz)")
