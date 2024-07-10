@@ -62,7 +62,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
             print("unable to stop stream")
 
     def update_cube(self, x, y):
-        if not hasattr(self.audified_cube, 'newsig') and not hasattr(self.audified_cube, 'sigcube'):
+        if not self.audified_cube and not hasattr(self.audified_cube, 'newsig') and not hasattr(self.audified_cube, 'sigcube'):
             print("cube not initialized")
             return
         self.audified_cube.newsig = self.audified_cube.sigcube[:, x, y]
@@ -85,5 +85,3 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
         self.stream = sd.OutputStream(samplerate=self.sample_rate, blocksize=self.buffer_size, channels=1, dtype='int16', latency='low',
                                       callback=self.audified_cube.player_callback)
         self.audified_cube.cbuff = True
-
-        self.app.sonification_enabled = True
