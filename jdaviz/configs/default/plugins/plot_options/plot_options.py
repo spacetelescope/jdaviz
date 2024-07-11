@@ -573,7 +573,8 @@ class PlotOptions(PluginTemplateMixin):
                                                    'stretch_params_value', 'stretch_params_sync',
                                                    state_filter=is_image)
 
-        self.stretch_histogram = Plot(self, name='stretch_hist', viewer_type='histogram')
+        self.stretch_histogram = Plot(self, name='stretch_hist', viewer_type='histogram',
+                                      update_callback=self._update_stretch_histogram)
         # Add the stretch bounds tool to the default Plot viewer.
         self.stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
         self.stretch_histogram._initialize_toolbar(["jdaviz:stretch_bounds"])
@@ -892,8 +893,7 @@ class PlotOptions(PluginTemplateMixin):
     @observe('is_active', 'layer_selected', 'viewer_selected',
              'stretch_hist_zoom_limits')
     @skip_if_no_updates_since_last_active()
-    @with_spinner('stretch_hist_spinner')
-    def _update_stretch_histogram(self, msg={}):
+    def _request_update_stretch_histogram(self, msg={}):
         if not hasattr(self, 'viewer'):  # pragma: no cover
             # plugin hasn't been fully initialized yet
             return
@@ -909,6 +909,14 @@ class PlotOptions(PluginTemplateMixin):
             # its type
             msg = {}
 
+        # NOTE: this method is separate from _update_stretch_histogram so that
+        # _update_stretch_histogram can be called manually (or from the
+        # update_callback on the Plot object itself) without going through
+        # the skip_if_no_updates_since_last_active check
+        self._update_stretch_histogram(msg)
+
+    @with_spinner('stretch_hist_spinner')
+    def _update_stretch_histogram(self, msg={}):
         if not self.stretch_function_sync.get('in_subscribed_states'):  # pragma: no cover
             # no (image) viewer with stretch function options
             return

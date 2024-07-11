@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fixes exporting the stretch histogram from Plot Options before the Plot Options plugin is ever opened. [#2934]
+
 Cubeviz
 ^^^^^^^
 
