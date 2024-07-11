@@ -19,21 +19,7 @@
       ></v-select>
     </v-row>
 
-    <v-row  v-if="config == 'cubeviz' && show_translator">
-      <v-select
-        :menu-props="{ left: true }"
-        attach
-        :items="flux_or_sb_items.map(i => i.label)"
-        v-model="flux_or_sb_selected"
-        label="Flux or Surface Brightness"
-        hint="Select between Flux or Surface Brightness physical type for y-axis."
-        persistent-hint
-        :disabled="!can_translate"
-      ></v-select>
-      <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
-    </v-row>
-
-    <v-row v-if="specviz_disabler === 'Surface Brightness'">
+    <v-row v-if="specviz_disabler === 'Surface Brightness' || config == 'cubeviz'">
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -45,7 +31,7 @@
       ></v-select>
     </v-row>
 
-    <v-row v-if="specviz_disabler === 'Flux'">
+    <v-row v-if="specviz_disabler === 'Flux' || config == 'cubeviz'">
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -53,6 +39,24 @@
         v-model="sb_unit_selected"
         label="Surface Brightness Unit"
         hint="Global display unit for y-axis axis."
+        persistent-hint
+        :disabled="!can_translate"
+      ></v-select>
+      <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
+    </v-row>
+
+    <v-row v-if="config == 'cubeviz'">
+      <v-divider></v-divider>
+    </v-row>
+
+    <v-row  v-if="config == 'cubeviz'">
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="flux_or_sb_items.map(i => i.label)"
+        v-model="flux_or_sb_selected"
+        label="Flux or Surface Brightness"
+        hint="Select the y-axis physical type for the spectrum-viewer."
         persistent-hint
         :disabled="!can_translate"
       ></v-select>
