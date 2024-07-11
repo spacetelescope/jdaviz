@@ -196,7 +196,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             # no cube-like data loaded.  Once loaded, the parser will unset this
             self.disabled_msg = (
-                f"{self.__class__.__name__} requires a single dataset to be loaded, "
+                f"{self.__class__.__name__} requires a 3d cube dataset to be loaded, "
                 "please load data to enable this plugin."
             )
 
