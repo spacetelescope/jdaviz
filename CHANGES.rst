@@ -6,6 +6,8 @@ Bug Fixes
 
 - Fixes exporting the stretch histogram from Plot Options before the Plot Options plugin is ever opened. [#2934]
 
+- Previous zoom tool is optimized to only issue one zoom update to the viewer. [#2949]
+
 Cubeviz
 ^^^^^^^
 
