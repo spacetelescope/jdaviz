@@ -25,6 +25,7 @@
 # Thus, any C-extensions that are needed to build the documentation will *not*
 # be accessible, and the documentation will not build correctly.
 
+import subprocess
 import sys
 import datetime
 
@@ -145,9 +146,23 @@ dev = "dev" in release
 version = '.'.join(release.split('.')[:2])
 
 extensions += ['sphinx.ext.extlinks', 'sphinx_design']  # noqa: F405
-gh_tag = f'v{release}' if '.dev' not in release else 'main'
-extlinks = {'gh-tree': (f'https://github.com/spacetelescope/jdaviz/tree/{gh_tag}/%s', '%s'),
-            'gh-notebook': (f'https://github.com/spacetelescope/jdaviz/blob/{gh_tag}/notebooks/%s.ipynb', '%s notebook')}  # noqa: E501
+
+# get the most recent git commit hash at build time:
+commit_hash = subprocess.run(
+    # git call for the latest commit hash:
+    'git rev-parse HEAD'.split(),
+    capture_output=True
+).stdout.decode().strip()
+
+# inject the most recent commit hash into the github links used in `sample_notebooks.rst`:
+extlinks = {
+    'gh-tree': (
+        f'https://github.com/spacetelescope/jdaviz/tree/{commit_hash}/%s', '%s'
+    ),
+    'gh-notebook': (
+        f'https://github.com/spacetelescope/jdaviz/blob/{commit_hash}/notebooks/%s.ipynb', '%s notebook'
+    )
+}
 
 # -- Options for HTML output --------------------------------------------------
 
