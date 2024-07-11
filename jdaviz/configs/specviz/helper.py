@@ -80,7 +80,7 @@ class Specviz(ConfigHelper, LineListMixin):
                           concat_by_file=concat_by_file,
                           cache=cache,
                           local_path=local_path,
-                          timeout=timeoout)
+                          timeout=timeout)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
