@@ -71,7 +71,7 @@
         persistent-hint
       ></v-text-field>
     </v-row>
-        <v-row>
+    <v-row>
       <v-text-field
         ref="wavemax"
         type="number"
@@ -81,6 +81,17 @@
         persistent-hint
       ></v-text-field>
     </v-row>
+    <v-row>
+      <v-text-field
+        ref="pccut"
+        type="number"
+        label="Flux Percentile Cut"
+        v-model.number="pccut"
+        hint="The minimum flux percentile to be heard."
+        persistent-hint
+      ></v-text-field>
+    </v-row>
+   
     <v-row>
         <plugin-action-button
         @click="sonify_cube"
