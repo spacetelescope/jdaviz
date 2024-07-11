@@ -242,18 +242,29 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     def update_cube(self, x, y):
         if not self.audified_cube or not hasattr(self.audified_cube, 'newsig') or not hasattr(self.audified_cube, 'sigcube'):
             return
-        self.audified_cube.newsig = self.audified_cube.sigcube[:, x, y]
+        self.audified_cube.newsig = self.audified_cube.sigcube[x, y, :]
         self.audified_cube.cbuff = True
 
-    def get_sonified_cube(self, sample_rate, buffer_size, assidx, ssvidx):
+    def get_sonified_cube(self, sample_rate, buffer_size, assidx, ssvidx, pccut):
         spectrum = self.active_image_layer.layer.get_object(statistic=None)
+        pc_cube = np.percentile(np.nan_to_num(spectrum.flux.value), np.clip(pccut,0,99), axis=-1)
 
-        clipped_arr = np.clip(spectrum.flux.value.T, 0, np.inf)
-        # arr = spectrum[wavemin:wavemax].flux.value.T
+        # clip zeros and remove NaNs
+        clipped_arr = np.nan_to_num(np.clip(spectrum.flux.value, 0, np.inf), copy=False)
+
+        # make a rough white-light image from the clipped array
+        whitelight = np.expand_dims(clipped_arr.sum(-1), axis=2)
+
+        # subtract any percentile cut
+        clipped_arr -= np.expand_dims(pc_cube, axis=2)
+
+        # and re-clip
+        clipped_arr = np.clip(clipped_arr, 0, np.inf)
+        
         self.audified_cube = CubeListenerData(clipped_arr ** assidx, spectrum.wavelength.value, duration=0.8,
                                   samplerate=sample_rate, buffsize=buffer_size)
         self.audified_cube.audify_cube()
-        self.audified_cube.sigcube = (self.audified_cube.sigcube * pow(clipped_arr.sum(0) / clipped_arr.sum(0).max(), ssvidx)).astype('int16')
+        self.audified_cube.sigcube = (self.audified_cube.sigcube * pow(whitelight / whitelight.max(), ssvidx)).astype('int16')
         self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, channels=1, dtype='int16', latency='low',
                                       callback=self.audified_cube.player_callback)
         self.audified_cube.cbuff = True

@@ -74,7 +74,7 @@ class CubeListenerData:
         if self.cursig.nbytes * pow(1024,-3) > 2:
             raise Exception("Cube projected to be > 2Gb!")
             
-        self.sigcube = np.zeros((self.siglen, *self.cube.shape[1:]), dtype='int16')
+        self.sigcube = np.zeros((*self.cube.shape[:2], self.siglen), dtype='int16')
         
     def audify_cube(self, fmin=50, fmax=1500):
         """
@@ -82,22 +82,22 @@ class CubeListenerData:
         in class attributes
         """
         lo2hi = self.wlens.argsort()[::-1]
-        for i in tqdm(range(self.cube.shape[1])):
-            for j in range(self.cube.shape[2]):
+        for i in tqdm(range(self.cube.shape[0])):
+            for j in range(self.cube.shape[1]):
                 with suppress_stderr():
-                    sig = audify_spectrum(self.cube[lo2hi,i,j], self.dur, 
+                    sig = audify_spectrum(self.cube[i,j,lo2hi], self.dur, 
                                           srate=self.srate,  
                                           fmin=fmin, fmax=fmax)
                     sig = (sig*self.maxval).astype('int16')
-                    self.sigcube[:,i,j] = sig
-        self.cursig[:] = self.sigcube[:,self.idx1,self.idx2]
+                    self.sigcube[i,j,:] = sig
+        self.cursig[:] = self.sigcube[self.idx1,self.idx2, :]
         self.newsig[:] = self.cursig[:]
 
     def player_callback(self, outdata, frames, time, status):
         cur = self.cursig
         new = self.newsig
         sdx = int(time.outputBufferDacTime*self.srate)
-        dxs = np.arange(sdx, sdx+frames).astype(int) % self.sigcube.shape[0]  
+        dxs = np.arange(sdx, sdx+frames).astype(int) % self.sigcube.shape[-1]  
         if self.cbuff:
             outdata[:,0] = (cur[dxs] * self.ofade).astype('int16')
             outdata[:,0] += (new[dxs] * self.ifade).astype('int16')
