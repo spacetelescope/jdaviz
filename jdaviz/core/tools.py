@@ -149,7 +149,8 @@ class PrevZoom(Tool, _BaseZoomHistory):
             return
         prev_limits = self.viewer._prev_limits
         self.save_prev_zoom()
-        self.viewer.state.x_min, self.viewer.state.x_max, self.viewer.state.y_min, self.viewer.state.y_max = prev_limits  # noqa
+        with delay_callback(self.viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            self.viewer.state.x_min, self.viewer.state.x_max, self.viewer.state.y_min, self.viewer.state.y_max = prev_limits  # noqa
 
 
 @viewer_tool
