@@ -66,6 +66,11 @@ class Specviz(ConfigHelper, LineListMixin):
         local_path : str, optional
             Cache remote files to this path. This is only used if data is
             requested from `astroquery.mast`.
+        timeout : float, optional
+            If downloading from a remote URI, set the timeout limit for
+            remote requests in seconds (passed to
+            `~astropy.utils.data.download_file` or
+            `~astroquery.mast.Conf.timeout`).
         """
         super().load_data(data,
                           parser_reference='specviz-spectrum1d-parser',
@@ -73,8 +78,9 @@ class Specviz(ConfigHelper, LineListMixin):
                           format=format,
                           show_in_viewer=show_in_viewer,
                           concat_by_file=concat_by_file,
+                          cache=cache,
                           local_path=local_path,
-                          cache=cache)
+                          timeout=timeoout)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
