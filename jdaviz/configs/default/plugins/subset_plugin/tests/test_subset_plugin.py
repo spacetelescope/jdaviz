@@ -12,6 +12,19 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.default.plugins.subset_plugin import utils
 from jdaviz.core.region_translators import regions2roi
 
+from photutils.aperture import (CircularAperture, SkyCircularAperture,
+                                EllipticalAperture, SkyEllipticalAperture,
+                                RectangularAperture, SkyRectangularAperture,
+                                CircularAnnulus, SkyCircularAnnulus,
+                                EllipticalAnnulus, SkyEllipticalAnnulus,
+                                RectangularAnnulus, SkyRectangularAnnulus)
+from regions import (CirclePixelRegion, CircleSkyRegion,
+                     EllipsePixelRegion, EllipseSkyRegion,
+                     RectanglePixelRegion, RectangleSkyRegion,
+                     CircleAnnulusPixelRegion, CircleAnnulusSkyRegion,
+                     EllipseAnnulusPixelRegion, EllipseAnnulusSkyRegion,
+                     RectangleAnnulusPixelRegion, RectangleAnnulusSkyRegion, PixCoord)
+
 
 @pytest.mark.filterwarnings('ignore')
 def test_plugin(specviz_helper, spectrum1d):
@@ -191,3 +204,26 @@ def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, m
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == len_subsets
     assert len(subsets['Subset 1']) == len_subregions
+
+
+def test_add_subset_with_import_region(cubeviz_helper, spectrum1d_cube):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']._obj
+    region = [{'name': 'TrueCircularROI',
+               'glue_state': 'RoiSubsetState',
+               'region': CirclePixelRegion(center=PixCoord(x=25.888399124145508, y=22.078184127807617),
+                                           radius=3.7648651881914112),
+               'sky_region': None,
+               'subset_state': ''},
+              {'name': 'TrueCircularROI',
+               'glue_state': 'OrState',
+               'region': CirclePixelRegion(center=PixCoord(x=19.990379333496094, y=30.782743453979492),
+                                           radius=2.756227940196304),
+               'sky_region': None,
+               'subset_state': ''}]
+    plg.import_region(region)
+    subsets = cubeviz_helper.app.get_subsets()
+    assert len(subsets) == 1
+    assert len(subsets['Subset 1']) == 2

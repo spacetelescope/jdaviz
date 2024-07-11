@@ -7,17 +7,20 @@ import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
+
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Any, List, Unicode, Bool, observe
+from specutils import SpectralRegion
 
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.core import region_translators
 from jdaviz.utils import MultiMaskSubsetState
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
@@ -675,3 +678,22 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
             self.app.session.edit_subset_mode.mode = mode
             spectrum_viewer.apply_roi(XRangeROI(sub_region.lower.value, sub_region.upper.value))
+
+    def import_region(self, spec_region):
+        if isinstance(spec_region, list):
+            viewer_name = self.app._jdaviz_helper._default_flux_viewer_reference_name
+            flux_viewer = self.app.get_viewer(viewer_name)
+            if len(spec_region) < 1 or ('region' in spec_region[0] and not spec_region[0]['region']):
+                return
+            for subregion in spec_region:
+                if subregion['glue_state'] == 'RoiSubsetState':
+                    # flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:xrange']
+                    self.app.session.edit_subset_mode.mode = NewMode
+                    flux_viewer.apply_roi(region_translators.regions2roi(subregion['region']))
+                else:
+                    self.app.session.edit_subset_mode.mode = SUBSET_MODES[subregion['glue_state']]
+                    flux_viewer.apply_roi(region_translators.regions2roi(subregion['region']))
+        elif isinstance(spec_region, dict):
+            pass
+        elif isinstance(spec_region, SpectralRegion):
+            pass
