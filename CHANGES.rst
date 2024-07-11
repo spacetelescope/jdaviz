@@ -190,6 +190,8 @@ Bug Fixes
 - Display default filepath in Export plugin, re-enable API exporting, enable relative and absolute
   path exports from the UI. [#2896]
 
+- Fixes exporting the stretch histogram from Plot Options before the Plot Options plugin is ever opened. [#2934]
+
 Cubeviz
 ^^^^^^^
 
