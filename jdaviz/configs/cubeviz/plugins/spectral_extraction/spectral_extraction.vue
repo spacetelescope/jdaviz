@@ -136,11 +136,11 @@
         </div>
       </div>
 
-      <v-row v-if="bg_selected !== 'None'">
+      <v-row v-if="bg_selected !== 'None' && bg_export_available">
         <v-expansion-panels accordion>
           <v-expansion-panel>
             <v-expansion-panel-header v-slot="{ open }">
-              <span style="padding: 6px">Export Background {{resulting_product_name.title()}}</span>
+              <span style="padding: 6px; text-transform: capitalize;">Export Background {{resulting_product_name}}</span>
             </v-expansion-panel-header>
             <v-expansion-panel-content class="plugin-expansion-panel-content">
               <v-row v-if="function_selected === 'Sum'">
@@ -161,7 +161,7 @@
                 :add_to_viewer_items="bg_spec_add_to_viewer_items"
                 :add_to_viewer_selected.sync="bg_spec_add_to_viewer_selected"
                 action_label="Export"
-                :action_tooltip="'Create Background '+resulting_product_name.title()"
+                :action_tooltip="'Create background '+resulting_product_name"
                 @click:action="create_bg_spec"
               ></plugin-add-results>
             </v-expansion-panel-content>
@@ -246,11 +246,11 @@
         @click:action="spectral_extraction"
       ></plugin-add-results>
 
-      <j-plugin-section-header v-if="extracted_available && export_enabled">Results</j-plugin-section-header>
+      <j-plugin-section-header v-if="extraction_available && export_enabled">Results</j-plugin-section-header>
 
       <div style="display: grid; position: relative"> <!-- overlay container -->
         <div style="grid-area: 1/1">
-          <div v-if="extracted_available && export_enabled">
+          <div v-if="extraction_available && export_enabled">
 
             <v-row>
               <v-text-field

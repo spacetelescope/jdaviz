@@ -78,6 +78,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     do_auto_extraction = True
     # whether wavelength dependent options should be exposed to the user (in the UI)
     wavelength_dependent_available = Bool(True).tag(sync=True)
+    bg_export_available = Bool(True).tag(sync=True)
 
     wavelength_dependent = Bool(False).tag(sync=True)
     reference_spectral_value = FloatHandleEmpty().tag(sync=True)
