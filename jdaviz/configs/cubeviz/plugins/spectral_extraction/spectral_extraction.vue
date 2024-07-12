@@ -40,47 +40,49 @@
         :hint="'Select a spatial region to extract its '+resulting_product_name+'.'"
       />
 
-      <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture">
-        <span class="v-messages v-messages__message text--secondary">
-            Aperture: '{{aperture_selected}}' does not support wavelength dependence (cone support): {{aperture_selected_validity.aperture_message}}.
-        </span>
-      </v-row>
-
-      <div v-if="aperture_selected_validity.is_aperture">
-        <v-row>
-          <v-switch
-            v-model="wavelength_dependent"
-            label="Wavelength dependent"
-            hint="Vary aperture linearly with wavelength"
-            persistent-hint>
-          </v-switch>
+      <div v-if="wavelength_dependent_available">
+        <v-row v-if="aperture_selected !== 'Entire Cube' && !aperture_selected_validity.is_aperture">
+          <span class="v-messages v-messages__message text--secondary">
+              Aperture: '{{aperture_selected}}' does not support wavelength dependence (cone support): {{aperture_selected_validity.aperture_message}}.
+          </span>
         </v-row>
-        <div v-if="wavelength_dependent">
-          <v-row justify="end">
-            <j-tooltip tooltipcontent="Adopt the current slice as the reference wavelength">
-              <plugin-action-button :results_isolated_to_plugin="true" @click="adopt_slice_as_reference">
-                Adopt Current Slice
-              </plugin-action-button>
-            </j-tooltip>
-          </v-row>
+
+        <div v-if="aperture_selected_validity.is_aperture">
           <v-row>
-            <v-text-field
-              v-model.number="reference_spectral_value"
-              type="number"
-              :step="0.1"
-              class="mt-0 pt-0"
-              label="Wavelength"
-              hint="Wavelength at which the aperture matches the selected subset."
-              persistent-hint
-            ></v-text-field>
+            <v-switch
+              v-model="wavelength_dependent"
+              label="Wavelength dependent"
+              hint="Vary aperture linearly with wavelength"
+              persistent-hint>
+            </v-switch>
           </v-row>
-          <v-row justify="end">
-            <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
-              <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_spectral_value">
-                Slice to Wavelength
-              </plugin-action-button>
-            </j-tooltip>
-          </v-row>
+          <div v-if="wavelength_dependent">
+            <v-row justify="end">
+              <j-tooltip tooltipcontent="Adopt the current slice as the reference wavelength">
+                <plugin-action-button :results_isolated_to_plugin="true" @click="adopt_slice_as_reference">
+                  Adopt Current Slice
+                </plugin-action-button>
+              </j-tooltip>
+            </v-row>
+            <v-row>
+              <v-text-field
+                v-model.number="reference_spectral_value"
+                type="number"
+                :step="0.1"
+                class="mt-0 pt-0"
+                label="Wavelength"
+                hint="Wavelength at which the aperture matches the selected subset."
+                persistent-hint
+              ></v-text-field>
+            </v-row>
+            <v-row justify="end">
+              <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
+                <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_spectral_value">
+                  Slice to Wavelength
+                </plugin-action-button>
+              </j-tooltip>
+            </v-row>
+          </div>
         </div>
       </div>
     </div>

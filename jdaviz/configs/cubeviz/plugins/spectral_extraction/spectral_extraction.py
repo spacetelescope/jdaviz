@@ -77,6 +77,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     resulting_product_name = Unicode("spectrum").tag(sync=True)
     do_auto_extraction = True
+    # whether wavelength dependent options should be exposed to the user (in the UI)
+    wavelength_dependent_available = Bool(True).tag(sync=True)
 
     wavelength_dependent = Bool(False).tag(sync=True)
     reference_spectral_value = FloatHandleEmpty().tag(sync=True)
@@ -445,7 +447,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         kwargs.setdefault("operation_ignores_mask", True)
         # by default we want to propagate uncertainties:
         kwargs.setdefault("propagate_uncertainties", True)
-
 
         if selected_func == 'mean':
             # Use built-in sum function to collapse NDDataArray
