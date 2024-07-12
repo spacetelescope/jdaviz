@@ -67,7 +67,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._marks = {}
         self._dict = {}  # dictionary representation of current mouseover info
         self._x, self._y = None, None  # latest known cursor positions
-        self.current_unit = None
+        self.current_unit = "MJy/sr"
         self.previous_unit = "MJy/sr"
         self.unit_changed = False
         # subscribe/unsubscribe to mouse events across all existing viewers
