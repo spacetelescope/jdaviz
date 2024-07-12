@@ -171,8 +171,8 @@
 
     </div>
 
-    <div @mouseover="() => active_step='ext'">
-      <j-plugin-section-header :active="active_step==='ext'">Extract</j-plugin-section-header>
+    <div @mouseover="() => active_step='extract'">
+      <j-plugin-section-header :active="active_step==='extract'">Extract</j-plugin-section-header>
 
       <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">

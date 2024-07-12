@@ -20,7 +20,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelectMixin,
                                         ApertureSubsetSelect,
                                         AddResults, AddResultsMixin,
-                                        skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
@@ -103,7 +102,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
-    extracted_available = Bool(False).tag(sync=True)
+    extraction_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
 
     aperture_method_items = List().tag(sync=True)
@@ -193,7 +192,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe('dataset_items')
     def _update_disabled_msg(self, msg={}):
         for data in self.app.data_collection:
-            if len(data.data.shape) == 3:
+            if data.data.ndim == 3:
                 self.disabled_msg = ''
                 break
         else:
@@ -227,9 +226,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @observe('active_step', 'is_active')
     def _active_step_changed(self, *args):
-        self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'ext'))
+        self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'extract'))
         self.background._set_mark_visiblities(self.active_step == 'bg')
-        self.marks['bg_ext'].visible = self.active_step == 'bg'
+        self.marks['bg_extract'].visible = self.active_step == 'bg'
 
     @property
     def slice_plugin(self):
@@ -554,7 +553,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # stuff for exporting to file
         self.extracted_spec = spec
-        self.extracted_available = True
+        self.extraction_available = True
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"extracted_{selected_func}_{fname_label}.fits"
 
@@ -682,11 +681,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return {}
         # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
         sv = self.slice_indicator_viewers[0]
-        marks = {'ext': PluginLine(sv, visible=self.is_active),
-                 'bg_ext': PluginLine(sv,
-                                      line_style='dotted',
-                                      visible=self.is_active and self.active_step == 'bg')}
-        sv.figure.marks = sv.figure.marks + [marks['ext'], marks['bg_ext']]
+        marks = {'extract': PluginLine(sv, visible=self.is_active),
+                 'bg_extract': PluginLine(sv,
+                                          line_style='dotted',
+                                          visible=self.is_active and self.active_step == 'bg')}
+        sv.figure.marks = sv.figure.marks + [marks['extract'], marks['bg_extract']]
         return marks
 
     def _clear_marks(self):
@@ -718,22 +717,22 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
 
         # NOTE: if this becomes expensive, the marks visibility logic and the extraction
-        # should be separated so that the extraction can be wrapped in the 
+        # should be separated so that the extraction can be wrapped in the
         # @skip_if_no_updates_since_last_active decorator
         try:
-            ext, bg_ext = self.extract(return_bg=True, add_data=False)
+            ext, bg_extract = self.extract(return_bg=True, add_data=False)
         except (ValueError, Exception):
             self._clear_marks()
             return
 
-        self.marks['ext'].update_xy(self._preview_x_from_extracted(ext),
-                                    self._preview_y_from_extracted(ext))
-        self.marks['ext'].visible = True
+        self.marks['extract'].update_xy(self._preview_x_from_extracted(ext),
+                                        self._preview_y_from_extracted(ext))
+        self.marks['extract'].visible = True
 
-        if bg_ext is None:
-            self.marks['bg_ext'].clear()
-            self.marks['bg_ext'].visible = False
+        if bg_extract is None:
+            self.marks['bg_extract'].clear()
+            self.marks['bg_extract'].visible = False
         else:
-            self.marks['bg_ext'].update_xy(self._preview_x_from_extracted(bg_ext),
-                                           self._preview_y_from_extracted(bg_ext))
-            self.marks['bg_ext'].visible = self.active_step == 'bg'
+            self.marks['bg_extract'].update_xy(self._preview_x_from_extracted(bg_extract),
+                                               self._preview_y_from_extracted(bg_extract))
+            self.marks['bg_extract'].visible = self.active_step == 'bg'

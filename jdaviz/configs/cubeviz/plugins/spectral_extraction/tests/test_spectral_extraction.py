@@ -151,11 +151,11 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tm
     # make sure export enabled is true, and that before the collapse function
     # is run `collapsed_spec_available` is correctly set to False
     assert extract_plugin._obj.export_enabled
-    assert extract_plugin._obj.extracted_available is False
+    assert extract_plugin._obj.extraction_available is False
 
-    # run extract function, and make sure `extracted_available` was set to True
+    # run extract function, and make sure `extraction_available` was set to True
     extract_plugin._obj.vue_spectral_extraction()
-    assert extract_plugin._obj.extracted_available
+    assert extract_plugin._obj.extraction_available
 
     # check that default filename is correct, then change path
     fname = 'extracted_sum_Unknown spectrum object_FLUX.fits'
@@ -344,13 +344,13 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
 
         # test visiblity of background aperture and preview based on "active step"
         assert extract_plg.background.marks[0].visible
-        assert not extract_plg._obj.marks['bg_ext'].visible
+        assert not extract_plg._obj.marks['bg_extract'].visible
         extract_plg._obj.active_step = 'ap'
         assert not extract_plg.background.marks[0].visible
-        assert not extract_plg._obj.marks['bg_ext'].visible
+        assert not extract_plg._obj.marks['bg_extract'].visible
         extract_plg._obj.active_step = 'bg'
         assert extract_plg.background.marks[0].visible
-        assert extract_plg._obj.marks['bg_ext'].visible
+        assert extract_plg._obj.marks['bg_extract'].visible
 
         bg_spec = extract_plg.extract_bg_spectrum()
         extract_plg.bg_spec_per_spaxel = True
