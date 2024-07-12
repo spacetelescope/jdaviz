@@ -312,6 +312,8 @@ def flux_conversion(spec, values, original_units, target_units):
     result : float array
         Flux values in the target units.
     """
+    if not target_units:
+        target_units = original_units
     # If there are only two values, this is likely the limits being converted, so then
     # in case we need to use the spectral density equivalency, we need to provide only
     # to spectral axis values. If there is only one value

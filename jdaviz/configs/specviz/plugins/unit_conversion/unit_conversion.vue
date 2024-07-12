@@ -26,7 +26,7 @@
         :items="flux_unit_items.map(i => i.label)"
         v-model="flux_unit_selected"
         label="Flux Unit"
-        hint="Global display unit for y-axis axis."
+        hint="Global display unit for flux axis."
         persistent-hint
       ></v-select>
     </v-row>
@@ -38,7 +38,7 @@
         :items="sb_unit_items.map(i => i.label)"
         v-model="sb_unit_selected"
         label="Surface Brightness Unit"
-        hint="Global display unit for y-axis axis."
+        hint="Global display unit for surface brightness axis."
         persistent-hint
         :disabled="!can_translate"
       ></v-select>

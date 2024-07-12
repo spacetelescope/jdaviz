@@ -47,11 +47,11 @@ class UnitConversion(PluginTemplateMixin):
     * ``spectral_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
       Global unit to use for all spectral axes.
     * ``flux_or_sb`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      Y-axis physical type selection. Currently only accessible in Cubeviz.
+      Select the y-axis physical type for the spectrum-viewer.
     * ``flux_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
-      Global flux unit to use for y-axis.
+      Global display unit for flux axis.
     * ``sb_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
-      Global surface brightness unit to use for y-axis.
+      Global display unit for surface brightness axis.
     """
     template_file = __file__, "unit_conversion.vue"
 
@@ -148,7 +148,6 @@ class UnitConversion(PluginTemplateMixin):
             return
         self.spectrum_viewer.set_plot_axes()
 
-        flux_or_sb = ''
         if check_if_unit_is_per_solid_angle(y_unit):
             flux_or_sb = 'Surface Brightness'
         else:
@@ -168,7 +167,7 @@ class UnitConversion(PluginTemplateMixin):
             if self.app.config == 'cubeviz':
                 sb_choices = create_sb_equivalencies_list(y_u / u.sr, x_u)
                 self.sb_unit.choices = sb_choices
-                if not self.sb_unit.selected:
+                if not self.sb_unit.selected and self.flux_unit.selected:
                     self.sb_unit.selected = y_unit + " / sr"
 
             self.flux_unit.choices = flux_choices

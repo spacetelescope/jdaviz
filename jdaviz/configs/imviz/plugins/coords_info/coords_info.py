@@ -562,7 +562,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 if '_pixel_scale_factor' in sp.meta:
                     eqv = [(u.MJy / u.sr,
                             u.MJy,
-                            lambda x: (x * np.array(sp.meta.get('_pixel_scale_factor', 1))),
+                            lambda x: (x * np.asarray(sp.meta.get('_pixel_scale_factor', 1))),
                             lambda x: x)]
                     eqv += u.spectral_density(sp.spectral_axis)
                     disp_flux = sp.flux.to_value(viewer.state.y_display_unit, eqv)
