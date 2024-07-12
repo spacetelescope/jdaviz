@@ -186,7 +186,7 @@
       </v-row>
 
 
-      <div v-if="(aperture_selected === 'Entire Cube' || aperture_selected_validity.is_aperture)
+      <div v-if="((aperture_selected === 'Entire Cube' && bg_selected !== 'None') || aperture_selected_validity.is_aperture)
                  && (bg_selected === 'None' || bg_selected_validity.is_aperture)">
         <v-row>
           <v-select
