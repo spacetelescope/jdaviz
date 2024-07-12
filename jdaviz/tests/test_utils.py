@@ -3,7 +3,6 @@ import pytest
 import warnings
 
 import photutils
-import pytest
 from asdf.exceptions import AsdfWarning
 from astropy import units as u
 from astropy.utils import minversion
