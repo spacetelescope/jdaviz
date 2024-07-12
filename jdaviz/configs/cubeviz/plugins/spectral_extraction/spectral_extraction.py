@@ -76,6 +76,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     active_step = Unicode().tag(sync=True)
 
     resulting_product_name = Unicode("spectrum").tag(sync=True)
+    do_auto_extraction = True
 
     wavelength_dependent = Bool(False).tag(sync=True)
     reference_spectral_value = FloatHandleEmpty().tag(sync=True)
@@ -212,6 +213,13 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return 'spectral'
 
     @property
+    def spatial_axes(self):
+        # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
+        # is always wavelength. This may need adjustment after the following
+        # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
+        return (0, 1)
+
+    @property
     def slice_indicator_viewers(self):
         return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
 
@@ -228,6 +236,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe('aperture_items')
     @skip_if_not_tray_instance()
     def _aperture_items_changed(self, msg):
+        if not self.do_auto_extraction:
+            return
         if not hasattr(self, 'aperture'):
             return
         for item in msg['new']:
@@ -308,6 +318,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def uncert_cube(self):
         if (hasattr(self._app._jdaviz_helper, '_loaded_flux_cube') and
+                hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube') and
                 self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label):
             return self._app._jdaviz_helper._loaded_uncert_cube
         else:
@@ -315,7 +326,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return None
 
     @property
-    def spectral_display_unit(self):
+    def slice_display_unit(self):
         return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
     @property
@@ -342,7 +353,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.aperture.get_mask(
                 self.dataset.selected_obj,
                 self.aperture_method_selected,
-                self.spectral_display_unit,
+                self.slice_display_unit,
+                self.spatial_axes,
                 self.reference_spectral_value if self.wavelength_dependent else None)
         )
 
@@ -357,7 +369,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.background.get_mask(
                 self.dataset.selected_obj,
                 self.aperture_method_selected,
-                self.spectral_display_unit,
+                self.slice_display_unit,
+                self.spatial_axes,
                 self.reference_spectral_value if self.bg_wavelength_dependent else None)
         )
 
@@ -366,11 +379,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Weight mask summed along the spatial axes so that we get area of the aperture, in pixels,
         # as a function of wavelength.
         # To convert to steradians, multiply by self.cube.meta.get('PIXAR_SR', 1.0)
-        return np.sum(self.aperture_weight_mask, axis=(0, 1))
+        return np.sum(self.aperture_weight_mask, axis=self.spatial_axes)
 
     @property
     def bg_area_along_spectral(self):
-        return np.sum(self.bg_weight_mask, axis=(0, 1))
+        return np.sum(self.bg_weight_mask, axis=self.spatial_axes)
 
     def _extract_from_aperture(self, cube, uncert_cube, aperture,
                                weight_mask, wavelength_dependent,
@@ -413,6 +426,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 uncertainties = None
             flux = nddata.data << nddata.unit
             mask = nddata.mask
+
         # Use the spectral coordinate from the WCS:
         if '_orig_spec' in cube.meta:
             wcs = cube.meta['_orig_spec'].wcs.spectral
@@ -432,19 +446,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # by default we want to propagate uncertainties:
         kwargs.setdefault("propagate_uncertainties", True)
 
-        # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
-        # is always wavelength. This may need adjustment after the following
-        # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
-        spatial_axes = (0, 1)
+
         if selected_func == 'mean':
             # Use built-in sum function to collapse NDDataArray
-            collapsed_sum_for_mean = nddata_reshaped.sum(axis=spatial_axes, **kwargs)
+            collapsed_sum_for_mean = nddata_reshaped.sum(axis=self.spatial_axes, **kwargs)
             # But we still need the mean function for everything except flux
-            collapsed_as_mean = nddata_reshaped.mean(axis=spatial_axes, **kwargs)
+            collapsed_as_mean = nddata_reshaped.mean(axis=self.spatial_axes, **kwargs)
 
             # Then normalize the flux based on the fractional pixel array
             flux_for_mean = (collapsed_sum_for_mean.data /
-                             np.sum(weight_mask, axis=spatial_axes)) << nddata_reshaped.unit
+                             np.sum(weight_mask, axis=self.spatial_axes)) << nddata_reshaped.unit
             # Combine that information into a new NDDataArray
             collapsed_nddata = NDDataArray(flux_for_mean, mask=collapsed_as_mean.mask,
                                            uncertainty=collapsed_as_mean.uncertainty,
@@ -452,7 +463,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                            meta=collapsed_as_mean.meta)
         elif selected_func == 'sum':
             collapsed_nddata = getattr(nddata_reshaped, selected_func)(
-                axis=spatial_axes, **kwargs
+                axis=self.spatial_axes, **kwargs
             )  # returns an NDDataArray
             # Remove per steradian denominator
             if astropy.units.sr in collapsed_nddata.unit.bases:
@@ -461,13 +472,19 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                              propagate_uncertainties=True)
         else:
             collapsed_nddata = getattr(nddata_reshaped, selected_func)(
-                axis=spatial_axes, **kwargs
+                axis=self.spatial_axes, **kwargs
             )  # returns an NDDataArray
+
+        return self._return_extracted(cube, wcs, collapsed_nddata)
+
+    def _return_extracted(self, cube, wcs, collapsed_nddata):
         # Convert to Spectrum1D, with the spectral axis in correct units:
         if hasattr(cube.coords, 'spectral_wcs'):
             target_wave_unit = cube.coords.spectral_wcs.world_axis_units[0]
-        else:
+        elif hasattr(cube.coords, 'spectral'):
             target_wave_unit = cube.coords.spectral.world_axis_units[0]
+        else:
+            target_wave_unit = None
 
         if target_wave_unit == '':
             target_wave_unit = 'pix'
@@ -483,6 +500,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask=mask
         )
         return collapsed_spec
+
+    def _preview_x_from_extracted(self, extracted):
+        return extracted.spectral_axis.value
+
+    def _preview_y_from_extracted(self, extracted):
+        return extracted.flux.value
 
     @with_spinner()
     def extract(self, return_bg=False, add_data=True, **kwargs):
@@ -700,12 +723,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self._clear_marks()
             return
 
-        self.marks['ext'].update_xy(ext.spectral_axis.value, ext.flux.value)
+        self.marks['ext'].update_xy(self._preview_x_from_extracted(ext),
+                                    self._preview_y_from_extracted(ext))
         self.marks['ext'].visible = True
 
         if bg_ext is None:
             self.marks['bg_ext'].clear()
             self.marks['bg_ext'].visible = False
         else:
-            self.marks['bg_ext'].update_xy(bg_ext.spectral_axis.value, bg_ext.flux.value)
+            self.marks['bg_ext'].update_xy(self._preview_x_from_extracted(bg_ext),
+                                           self._preview_y_from_extracted(bg_ext))
             self.marks['bg_ext'].visible = self.active_step == 'bg'

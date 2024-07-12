@@ -2443,7 +2443,9 @@ class ApertureSubsetSelect(SubsetSelect):
                 mark.x, mark.y = x_coords, y_coords
 
     def get_mask(self, flux_cube, aperture_method,
-                 spectral_display_unit, reference_spectral_value=None):
+                 slice_display_unit, spatial_axes=(0, 1), reference_spectral_value=None):
+        # slice_axis is the remaining axis (of (0, 1, 2)) not included in spatial_axes
+        slice_axis = 3 - sum(spatial_axes)
         # if subset is a composite subset, skip the other logic:
         if self.is_composite:
             [subset_group] = [
@@ -2458,16 +2460,16 @@ class ApertureSubsetSelect(SubsetSelect):
         aperture = regions2aperture(self.selected_spatial_region)
         aperture.positions = center
 
-        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
+        im_shape = (flux_cube.shape[spatial_axes[0]], flux_cube.shape[spatial_axes[1]])
         aperture_method = aperture_method.lower()
         if reference_spectral_value is not None:
             # wavelength-dependent (cone aperture)
-            if spectral_display_unit.physical_type != 'length':
+            if slice_display_unit.physical_type != 'length':
                 raise ValueError(
-                    f'Spectral axis unit physical type is {spectral_display_unit.physical_type}, '
+                    f'Spectral axis unit physical type is {slice_display_unit.physical_type}, '
                     'must be length for cone aperture')
 
-            fac = flux_cube.spectral_axis.to_value(spectral_display_unit) / reference_spectral_value
+            fac = flux_cube.spectral_axis.to_value(slice_display_unit) / reference_spectral_value
 
             # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
             if isinstance(aperture, CircularAperture):
@@ -2502,7 +2504,7 @@ class ApertureSubsetSelect(SubsetSelect):
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
-            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=2)
+            mask_weights = np.stack([slice_mask] * flux_cube.shape[slice_axis], axis=slice_axis)
         return mask_weights
 
 
@@ -3510,7 +3512,10 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 3
 
         def is_flux_cube(data):
-            uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
+            if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):
+                uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
+            else:
+                uncert_label = None
             return is_cube(data) and not_child_layer(data) and data.label != uncert_label
 
         def is_not_wcs_only(data):
