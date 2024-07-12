@@ -709,7 +709,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
              'function_selected',
              'aperture_method_selected',
              'previews_temp_disabled')
-    @skip_if_no_updates_since_last_active()
     @with_temp_disable(timeout=0.4)
     def _live_update(self, event={}):
         if not self._tray_instance:
@@ -718,6 +717,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self._clear_marks()
             return
 
+        # NOTE: if this becomes expensive, the marks visibility logic and the extraction
+        # should be separated so that the extraction can be wrapped in the 
+        # @skip_if_no_updates_since_last_active decorator
         try:
             ext, bg_ext = self.extract(return_bg=True, add_data=False)
         except (ValueError, Exception):
