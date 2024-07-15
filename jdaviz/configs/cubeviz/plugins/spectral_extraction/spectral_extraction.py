@@ -316,27 +316,47 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
     @property
+    def mask_non_science(self):
+        # Aperture masks begin b removing from consideration any pixel
+        # set to NaN, which corresponds to a pixel on the "non-science" portions
+        # of the detector. For JWST spectral cubes, these pixels are also marked in
+        # the DQ array with flag `513`.
+        return np.logical_not(
+            np.isnan(self.dataset.selected_obj.flux.value)
+        ).astype(float)
+
+    @property
     def aperture_weight_mask(self):
         # Exact slice mask of cone or cylindrical aperture through the cube. `weight_mask` is
         # a 3D array with fractions of each pixel within an aperture at each
         # wavelength, on the range [0, 1].
         if self.aperture.selected == self.aperture.default_text:
             # Entire Cube
-            return np.ones_like(self.dataset.selected_obj.flux.value)
-        return self.aperture.get_mask(self.dataset.selected_obj,
-                                      self.aperture_method_selected,
-                                      self.spectral_display_unit,
-                                      self.reference_spectral_value if self.wavelength_dependent else None)  # noqa
+            return self.mask_non_science
+
+        return (
+            self.mask_non_science *
+            self.aperture.get_mask(
+                self.dataset.selected_obj,
+                self.aperture_method_selected,
+                self.spectral_display_unit,
+                self.reference_spectral_value if self.wavelength_dependent else None)
+        )
 
     @property
     def bg_weight_mask(self):
         if self.background.selected == self.background.default_text:
             # NO background
             return np.zeros_like(self.dataset.selected_obj.flux.value)
-        return self.background.get_mask(self.dataset.selected_obj,
-                                        self.aperture_method_selected,
-                                        self.spectral_display_unit,
-                                        self.reference_spectral_value if self.bg_wavelength_dependent else None)  # noqa
+
+        return (
+            self.mask_non_science *
+            self.background.get_mask(
+                self.dataset.selected_obj,
+                self.aperture_method_selected,
+                self.spectral_display_unit,
+                self.reference_spectral_value if self.bg_wavelength_dependent else None)
+        )
 
     @property
     def aperture_area_along_spectral(self):

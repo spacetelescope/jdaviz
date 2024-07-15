@@ -5,6 +5,7 @@ pytest.importorskip("astropy", minversion="5.3.2")
 import numpy as np
 from astropy import units as u
 from astropy.nddata import NDDataArray, StdDevUncertainty
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.exceptions import AstropyUserWarning
 from glue.core.roi import CircularROI, RectangularROI
 from glue.core.edit_subset_mode import ReplaceMode, AndNotMode, NewMode
@@ -518,3 +519,26 @@ def test_spectral_extraction_with_correct_sum_units(cubeviz_helper,
     )
     assert collapsed.flux.unit == u.Jy
     assert collapsed.uncertainty.unit == u.Jy
+
+
+def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
+    # spacetelescope/jdaviz#3086 reported that the default cube
+    # spectral extraction in cubeviz did not match the spectral extraction
+    # for a spatial subset that captures all data-containing spaxels. this
+    # regression tests make sure that doesn't happen anymore by accounting
+    # for non-science pixels in the sums:
+    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
+    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+
+    # create a spatial subset that spans all spaxels:
+    flux_viewer.apply_roi(CircularROI(1.5, 2, 5))
+
+    # the first and second spectra correspond to the default extraction
+    # and the subset extraction. the fluxes in these extractions should agree:
+    extracted_spectra = list(
+        cubeviz_helper.specviz.get_spectra(apply_slider_redshift=False).values()
+    )
+
+    assert_quantity_allclose(
+        extracted_spectra[0].flux, extracted_spectra[1].flux
+    )
