@@ -21,6 +21,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelect,
                                         AddResults, AddResultsMixin,
                                         skip_if_not_tray_instance,
+                                        skip_if_no_updates_since_last_active,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
@@ -694,7 +695,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             if mark.visible:
                 mark.visible = False
 
-    @observe('is_active', 'show_live_preview')
+    @observe('is_active', 'show_live_preview',
+             'dataset_selected', 'aperture_selected', 'bg_selected',
+             'wavelength_dependent', 'bg_wavelength_dependent', 'reference_spectral_value',
+             'function_selected',
+             'aperture_method_selected',
+             'previews_temp_disabled')
     def _toggle_marks(self, event={}):
         visible = self.show_live_preview and self.is_active
 
@@ -704,27 +710,19 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # then the marks themselves need to be updated
             self._live_update(event)
 
-    @observe('dataset_selected', 'aperture_selected', 'bg_selected',
-             'wavelength_dependent', 'bg_wavelength_dependent', 'reference_spectral_value',
-             'function_selected',
-             'aperture_method_selected',
-             'previews_temp_disabled')
+    @skip_if_no_updates_since_last_active()
     @with_temp_disable(timeout=0.4)
     def _live_update(self, event={}):
         if not self._tray_instance:
             return
         if not self.show_live_preview or not self.is_active:
             self._clear_marks()
-            return
-
-        # NOTE: if this becomes expensive, the marks visibility logic and the extraction
-        # should be separated so that the extraction can be wrapped in the
-        # @skip_if_no_updates_since_last_active decorator
+            return False
         try:
             ext, bg_extract = self.extract(return_bg=True, add_data=False)
         except (ValueError, Exception):
             self._clear_marks()
-            return
+            return False
 
         self.marks['extract'].update_xy(self._preview_x_from_extracted(ext),
                                         self._preview_y_from_extracted(ext))
