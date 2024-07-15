@@ -4524,7 +4524,7 @@ class Table(PluginSubcomponent):
                     # stored in astropy table as a float so we can also store nans,
                     # but should display in the UI without any decimals
                     return f"{item:.0f}"
-                elif column in ('pixel', ):
+                elif column in ('pixel', 'pixel_x', 'pixel_y'):
                     return f"{item:0.3f}"
                 elif column in ('xcenter', 'ycenter'):
                     return f"{item:0.1f}"

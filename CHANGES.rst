@@ -86,6 +86,8 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Markers table can now export to CSV but its columns had to be changed to accomodate this fix. [#3089]
+
 Cubeviz
 ^^^^^^^
 
