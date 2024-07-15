@@ -160,12 +160,27 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                       query_region_result['dec'],
                                       unit='deg')
 
+            #adding in coords + Id's into table
+            for row in self.app._catalog_source_table:
+                row_info = {'Right Ascension (degrees)': row['ra'],
+                            'Declination (degrees)': row['dec'],
+                            'Object ID': row['objid']}
+                self.table.add_item(row_info)
+
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
             # but this exceptions might be raised here if setting from_file from the UI
             table = self.catalog.selected_obj
             self.app._catalog_source_table = table
             skycoord_table = table['sky_centroid']
+
+            for row in self.app._catalog_source_table:
+                # find new to add in a way to append the source id to the table
+                # 'Object ID': row['label']} ; 'label' is failing tests
+                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra,
+                            'Declination (degrees)': row['sky_centroid'].dec,
+                            'Object ID': row.get('label', '')}
+                self.table.add_item(row_info)
 
         else:
             self.results_available = False
@@ -203,22 +218,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
-
-        # adding in coordinates and Source IDs into the catalog table
-        if self.catalog_selected == "SDSS":
-            for row in self.app._catalog_source_table:
-                row_info = {'Right Ascension (degrees)': row['ra'],
-                            'Declination (degrees)': row['dec'],
-                            'Object ID': row['objid']}
-                self.table.add_item(row_info)
-
-        if self.catalog_selected == 'From File...':
-            for row in self.app._catalog_source_table:
-                # find new to add in a way to append the source id to the table
-                # 'Object ID': row['label']} ; 'label' is failing tests
-                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra,
-                            'Declination (degrees)': row['sky_centroid'].dec}
-                self.table.add_item(row_info)
 
         return skycoord_table
 
