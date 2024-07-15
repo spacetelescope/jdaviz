@@ -207,6 +207,9 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
             self.flux_or_sb.selected = 'Surface Brightness'
 
+        self.hub.broadcast(GlobalDisplayUnitChanged('flux',
+                                                    spec_units,
+                                                    sender=self))
         self.spectrum_viewer.reset_limits()
 
     @observe('spectral_unit_selected')
