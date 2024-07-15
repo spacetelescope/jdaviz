@@ -70,8 +70,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                        'pixel_x', 'pixel_y', 'value', 'value:unit', 'viewer']
         elif self.config == 'mosviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
-                       'pixel_x', 'pixel_y', 'world_ra', 'world_dec', 'index', 'value', 'value:unit',
-                       'viewer']
+                       'pixel_x', 'pixel_y', 'world_ra', 'world_dec', 'index',
+                       'value', 'value:unit', 'viewer']
         else:
             # allow downstream configs to override headers
             headers = kwargs.get('headers', [])
