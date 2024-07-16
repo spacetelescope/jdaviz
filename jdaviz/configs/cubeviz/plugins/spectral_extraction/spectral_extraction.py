@@ -317,7 +317,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def mask_non_science(self):
-        # Aperture masks begin b removing from consideration any pixel
+        # Aperture masks begin by removing from consideration any pixel
         # set to NaN, which corresponds to a pixel on the "non-science" portions
         # of the detector. For JWST spectral cubes, these pixels are also marked in
         # the DQ array with flag `513`.
