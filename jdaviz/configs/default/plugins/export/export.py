@@ -457,13 +457,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         elif len(self.plugin_plot.selected):
             plot = self.plugin_plot.selected_obj._obj
             filetype = self.plugin_plot_format.selected
-
-            if len(filename):
-                if not filename.endswith(filetype):
-                    filename += f".{filetype}"
-                filename = Path(filename).expanduser()
-            else:
-                filename = None
+            filename = self._normalize_filename(filename, filetype)
 
             if not plot._plugin.is_active:
                 # force an update to the plot.  This requires the plot to have set
@@ -473,6 +467,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                 # create a copy of the widget shown off screen to enable rendering
                 # in case one was never created in the parent plugin
                 self.plugin_plot_selected_widget = f'IPY_MODEL_{plot.model_id}'
+
+            if self.overwrite_warn and not overwrite:
+                if raise_error_for_overwrite:
+                    raise FileExistsError(f"{filename} exists but overwrite=False")
+                return
 
             self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
 
