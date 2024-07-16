@@ -28,6 +28,18 @@
       <g-file-import id="file-uploader"></g-file-import>
     </plugin-file-import-select>
 
+    <v-row v-if="catalog_selected === 'Gaia'">
+      <v-text-field
+        v-model.number="max_rows"
+        type="number"
+        step="10"
+        :rules="[() => max_rows!=='' || 'This field is required']"
+        label="Max rows"
+        hint="Maximum amount of rows."
+        persistent-hint
+      ></v-text-field>
+    </v-row>
+
     <v-row class="row-no-outside-padding">
        <v-col>
          <plugin-action-button
