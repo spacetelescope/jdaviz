@@ -457,7 +457,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         elif len(self.plugin_plot.selected):
             plot = self.plugin_plot.selected_obj._obj
             filetype = self.plugin_plot_format.selected
-            filename = self._normalize_filename(filename, filetype)
+            filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
 
             if not plot._plugin.is_active:
                 # force an update to the plot.  This requires the plot to have set
@@ -477,7 +477,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
         elif len(self.plugin_table.selected):
             filetype = self.plugin_table_format.selected
-            filename = self._normalize_filename(filename, filetype)
+            filename = self._normalize_filename(filename, filetype, overwrite=overwrite)
             if self.overwrite_warn and not overwrite:
                 if raise_error_for_overwrite:
                     raise FileExistsError(f"{filename} exists but overwrite=False")
@@ -538,6 +538,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if filename is not None:
                 self.hub.broadcast(SnackbarMessage(
                     f"Exported to {filename} (overwrite)", sender=self, color="success"))
+            self.overwrite_warn=False
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
         if filetype == "png":
