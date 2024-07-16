@@ -51,7 +51,10 @@
     <v-row>
        <p class="font-weight-bold">Results:</p>
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
-    <v-row>
+    </v-row>
+
+    <jupyter-widget :widget="table_widget"></jupyter-widget>
+    
 
   </j-tray-plugin>
 </template>

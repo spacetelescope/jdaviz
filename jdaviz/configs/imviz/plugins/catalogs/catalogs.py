@@ -11,11 +11,14 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
                                         with_spinner)
 
+from jdaviz.core.template_mixin import TableMixin
+from jdaviz.core.user_api import PluginUserApi
+
 __all__ = ['Catalogs']
 
 
 @tray_registry('imviz-catalogs', label="Catalog Search")
-class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
+class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, TableMixin):
     """
     See the :ref:`Catalog Search Plugin Documentation <imviz-catalogs>` for more details.
 
@@ -32,9 +35,18 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
 
+    # setting the default table headers and values
+    _default_table_values = {
+            'Right Ascension (degrees)': np.nan,
+            'Declination (degrees)': np.nan,
+            'Object ID': np.nan}
+
+    @property
+    def user_api(self):
+        return PluginUserApi(self, expose=('clear_table', 'export_table',))
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
         self.catalog = FileImportSelectPluginComponent(self,
                                                        items='catalog_items',
                                                        selected='catalog_selected',
@@ -42,8 +54,14 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         # set the custom file parser for importing catalogs
         self.catalog._file_parser = self._file_parser
-
         self._marker_name = 'catalog_results'
+
+        # initializing the headers in the table that is displayed in the UI
+        headers = ['Right Ascension (degrees)', 'Declination (degrees)', 'Object ID']
+
+        self.table.headers_avail = headers
+        self.table.headers_visible = headers
+        self.table._default_values_by_colname = self._default_table_values
 
     @staticmethod
     def _file_parser(path):
@@ -142,12 +160,27 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                       query_region_result['dec'],
                                       unit='deg')
 
+            # adding in coords + Id's into table
+            for row in self.app._catalog_source_table:
+                row_info = {'Right Ascension (degrees)': row['ra'],
+                            'Declination (degrees)': row['dec'],
+                            'Object ID': row['objid']}
+                self.table.add_item(row_info)
+
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
             # but this exceptions might be raised here if setting from_file from the UI
             table = self.catalog.selected_obj
             self.app._catalog_source_table = table
             skycoord_table = table['sky_centroid']
+
+            for row in self.app._catalog_source_table:
+                # find new to add in a way to append the source id to the table
+                # 'Object ID': row['label']} ; 'label' is failing tests
+                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra,
+                            'Declination (degrees)': row['sky_centroid'].dec,
+                            'Object ID': row.get('label', '')}
+                self.table.add_item(row_info)
 
         else:
             self.results_available = False
@@ -180,8 +213,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
         # QTable stores all the filtered sky coordinate points to be marked
         catalog_results = QTable({'coord': filtered_skycoord_table})
-        self.number_of_results = len(catalog_results)
 
+        self.number_of_results = len(catalog_results)
         # markers are added to the viewer based on the table
         viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)

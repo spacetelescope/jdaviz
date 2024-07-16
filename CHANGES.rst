@@ -30,6 +30,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Added a table with catalog search results. [#2915]
+
 Mosviz
 ^^^^^^
 
