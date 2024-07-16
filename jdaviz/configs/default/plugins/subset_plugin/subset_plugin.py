@@ -690,19 +690,15 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self._import_regions_list(spec_region)
         elif isinstance(spec_region, dict):
             for key, value in spec_region.items():
-                print(key)
-                self._import_regions_list(value)
+                self.import_region(value)
         elif isinstance(spec_region, str):
             try:
-                dict_region = json.load(spec_region)
+                dict_region = json.loads(spec_region)
             except ValueError:
                 raise ValueError
             self.import_region(dict_region)
         elif isinstance(spec_region, SpectralRegion):
             self._import_spectral_regions(spec_region)
-
-    def _import_spectral_regions(self, spec_region):
-        raise NotImplementedError
 
     def _import_regions_list(self, spec_region):
         viewer_name = self.app._jdaviz_helper._default_flux_viewer_reference_name
@@ -713,4 +709,3 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             else:
                 self.app.session.edit_subset_mode.mode = SUBSET_MODES[subregion['glue_state']]
             flux_viewer.apply_roi(region_translators.regions2roi(subregion['region']))
-

@@ -1,5 +1,6 @@
 import warnings
 import pytest
+import json
 
 import numpy as np
 from astropy.nddata import NDData
@@ -206,6 +207,7 @@ def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, m
     assert len(subsets) == len_subsets
     assert len(subsets['Subset 1']) == len_subregions
 
+
 test_subset_dict = {'Subset 1': [
     {'name': 'TrueCircularROI',
      'glue_state': 'AndState',
@@ -228,7 +230,8 @@ test_subset_dict = {'Subset 1': [
                             'region': CircleAnnulusPixelRegion(center=PixCoord(x=30.452190399169922, y=22.070573806762695), inner_radius=2.4145185947418213, outer_radius=4.829037189483643),
                             'sky_region': None,
                             'subset_state': None}],
-                       'Subset 3': SpectralRegion(6.939254409861322 * u.um, 7.224590119773996 * u.um) }
+                       'Subset 3': SpectralRegion(6.939254409861322 * u.um, 7.224590119773996 * u.um)
+}
 
 test_subset_string = str(test_subset_dict)
 
@@ -248,9 +251,9 @@ region = [{'name': 'TrueCircularROI',
 
 @pytest.mark.parametrize(
     ('spec_region', 'len_subsets', 'len_subregions'),
-    # [(test_subset_dict, 3, 3),
-    #  (test_subset_string, 3, 3),
-     [(region, 1, 2)]
+    [(test_subset_dict, 3, 3),
+     # (test_subset_string, 3, 3),
+     (region, 1, 2)]
 )
 def test_add_subset_with_import_region(cubeviz_helper, spectrum1d_cube, spec_region, len_subsets, len_subregions):
     with warnings.catch_warnings():
