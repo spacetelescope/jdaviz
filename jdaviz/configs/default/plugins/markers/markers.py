@@ -223,7 +223,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             try:
                 self.table.add_item({k: v for k, v in row_info.items()
                                      if k in self.table.headers_avail})
-            except ValueError as err:
+            except ValueError as err:  # pragma: no cover
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
 
             x, y = row_info['axes_x'], row_info['axes_y']
