@@ -3244,7 +3244,7 @@ class ViewerSelect(SelectPluginComponent):
             return 'ImageView' in viewer.__class__.__name__
 
         def reference_has_wcs(viewer):
-            return getattr(viewer.state.reference_data, 'coords', None) is not None
+            return getattr(getattr(viewer.state, 'reference_data', {}), 'coords', None) is not None
 
         return super()._is_valid_item(viewer, locals())
 

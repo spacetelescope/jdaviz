@@ -16,6 +16,14 @@ from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY, _wcs_only_label, download_uri_to_path
 
+from glue.config import data_translator
+from glue.core import Data, Subset
+from astropy.table import Table
+from glue.core.component_id import ComponentID
+
+
+component_ids = {'ra': ComponentID('ra'), 'dec': ComponentID('dec')}
+
 try:
     from roman_datamodels import datamodels as rdd
 except ImportError:
@@ -27,6 +35,108 @@ __all__ = ['parse_data']
 
 INFO_MSG = ("The file contains more viewable extensions. Add the '[*]' suffix"
             " to the file name to load all of them.")
+
+
+
+@data_translator(Table)
+class TableHandler:
+
+    def to_data(self, obj, reference_time=None):
+        data = Data()
+
+        if hasattr(obj, 'label'):
+            data.label = obj.label
+
+        data.meta.update(obj.meta)
+
+        # LightCurve is a subclass of astropy TimeSeries, so
+        # collect all other columns in the TimeSeries:
+        for component_label in obj.colnames:
+
+            component_data = obj[component_label]
+
+            if component_label not in component_ids:
+                component_ids[component_label] = ComponentID(component_label)
+            cid = component_ids[component_label]
+
+            data[cid] = component_data
+            if hasattr(component_data, 'unit'):
+                try:
+                    data.get_component(cid).units = str(component_data.unit)
+                except KeyError:  # pragma: no cover
+                    continue
+
+        data.meta.update({'uncertainty_type': 'std'})
+
+        # if the anticipated x and y axes are the first two components in the
+        # Data object, the viewer will load those components correctly before
+        # you hit the call to `viewer.set_plot_axes`:
+        reordered_components = {comp.label: comp for comp in data.components}
+        ra_comp = reordered_components.pop('ra')
+        dec_comp = reordered_components.pop('dec')
+        data.reorder_components(
+            [ra_comp, dec_comp] +
+            list(reordered_components.values())
+        )
+
+        return data
+
+    def to_object(self, data_or_subset):
+        """
+        Convert a glue Data object to a lightkurve.LightCurve object.
+
+        Parameters
+        ----------
+        data_or_subset : `glue.core.data.Data` or `glue.core.subset.Subset`
+            The data to convert to a LightCurve object
+        attribute : `glue.core.component_id.ComponentID`
+            The attribute to use for the LightCurve data
+        """
+
+        if isinstance(data_or_subset, Subset):
+            data = data_or_subset.data
+            subset_state = data_or_subset.subset_state
+        else:
+            data = data_or_subset
+            subset_state = None
+
+        # Copy over metadata
+        kwargs = {'meta': data.meta.copy()}
+
+        if subset_state is None:
+            # pass through mask of all True's if no glue subset is chosen
+            glue_mask = np.ones(data.shape[0]).astype(bool)
+        else:
+            # get the subset mask from glue:
+            glue_mask = data.get_mask(subset_state=subset_state)
+
+        component_ids = data.main_components
+
+        # we already handled time separately above, and `dt` is only used internally
+        # in LCviz, so let's skip those IDs below:
+        names = []
+        columns = []
+
+        for component_id in component_ids:
+            component = data.get_component(component_id)
+
+            values = component.data[glue_mask]
+
+            if hasattr(component, 'units') and component.units != "None":
+                try:
+                    values = u.Quantity(values, component.units)
+                except TypeError:
+                    if component.units != "":
+                        raise
+                    # values could have been an array of strings with units ""
+                    values = values
+
+            if component_id.label not in names:
+                columns.append(values)
+                names.append(component_id.label)
+
+        table = Table(columns, names=names, copy=False, **kwargs)
+        return table
 
 
 def prep_data_layer_as_dq(data):
@@ -208,6 +318,9 @@ def get_image_data_iterator(app, file_obj, data_label, ext=None):
     # load ASDF files that may not validate as Roman datamodels:
     elif isinstance(file_obj, asdf.AsdfFile):
         data_iter = _roman_asdf_2d_to_glue_data(file_obj, data_label, ext=ext)
+
+    elif isinstance(file_obj, Table):
+        data_iter = _catalog_from_table(file_obj)
 
     else:
         raise NotImplementedError(f'Imviz does not support {file_obj}')
@@ -540,3 +653,8 @@ def _wcsonly_to_glue_data(ndd, data_label):
     component = Component.autotyped(arr, units="")
     data.add_component(component=component, label="DATA")
     yield (data, data_label)
+
+
+def _catalog_from_table(table):
+    handler, _ = data_translator.get_handler_for(table)
+    yield handler.to_data(table), 'catalog'
