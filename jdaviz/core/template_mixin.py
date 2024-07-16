@@ -218,7 +218,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         obj.config = app.state.settings.get("configuration", "default")
 
         # give the vue templates access to jdaviz version
-        obj.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
+        obj.vdocs = app.vdocs
 
         # store references to all bqplot widgets that need to handle resizing
         obj.bqplot_figs_resize = []
