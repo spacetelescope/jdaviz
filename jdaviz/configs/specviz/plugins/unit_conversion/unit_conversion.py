@@ -167,11 +167,10 @@ class UnitConversion(PluginTemplateMixin):
             if self.app.config == 'cubeviz':
                 sb_choices = create_sb_equivalencies_list(y_u / u.sr, x_u)
                 self.sb_unit.choices = sb_choices
-                if not self.sb_unit.selected and self.flux_unit.selected:
-                    self.sb_unit.selected = y_unit + " / sr"
 
             self.flux_unit.choices = flux_choices
             self.flux_unit.selected = y_unit
+            self.flux_or_sb.selected = 'Flux'
 
         elif flux_or_sb == 'Surface Brightness' and y_unit != self.sb_unit.selected:
             sb_choices = create_sb_equivalencies_list(y_u, x_u)
