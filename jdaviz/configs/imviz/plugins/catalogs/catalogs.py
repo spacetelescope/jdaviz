@@ -178,6 +178,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                         columns=('source_id', 'ra', 'dec'))
             self.app._catalog_source_table = sources
             skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
+            # adding in coords + Id's into table
+            for row in sources:
+                row_info = {'Right Ascension (degrees)': row['ra'],
+                            'Declination (degrees)': row['dec'],
+                            'Object ID': row['SOURCE_ID']}
+                self.table.add_item(row_info)
 
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
