@@ -2601,7 +2601,7 @@ class Application(VuetifyTemplate, HubListener):
         if self.config in ALL_JDAVIZ_CONFIGS:
             self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}/{self.config}/index.html'  # noqa
         else:
-            self.docs_link = 'https://jdaviz.readthedocs.io'
+            self.docs_link = f'https://jdaviz.readthedocs.io/en/{self.vdocs}'
 
         self.state.settings.update(config.get('settings'))
 
