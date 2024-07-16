@@ -538,7 +538,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
             if filename is not None:
                 self.hub.broadcast(SnackbarMessage(
                     f"Exported to {filename} (overwrite)", sender=self, color="success"))
-            self.overwrite_warn=False
+            self.overwrite_warn = False
 
     def save_figure(self, viewer, filename=None, filetype="png", show_dialog=False):
         if filetype == "png":
