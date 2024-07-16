@@ -160,7 +160,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                       query_region_result['dec'],
                                       unit='deg')
 
-            #adding in coords + Id's into table
+            # adding in coords + Id's into table
             for row in self.app._catalog_source_table:
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
