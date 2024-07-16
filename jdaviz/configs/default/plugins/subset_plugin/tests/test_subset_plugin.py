@@ -14,18 +14,8 @@ from numpy.testing import assert_allclose
 from jdaviz.configs.default.plugins.subset_plugin import utils
 from jdaviz.core.region_translators import regions2roi
 
-from photutils.aperture import (CircularAperture, SkyCircularAperture,
-                                EllipticalAperture, SkyEllipticalAperture,
-                                RectangularAperture, SkyRectangularAperture,
-                                CircularAnnulus, SkyCircularAnnulus,
-                                EllipticalAnnulus, SkyEllipticalAnnulus,
-                                RectangularAnnulus, SkyRectangularAnnulus)
-from regions import (CirclePixelRegion, CircleSkyRegion,
-                     EllipsePixelRegion, EllipseSkyRegion,
-                     RectanglePixelRegion, RectangleSkyRegion,
-                     CircleAnnulusPixelRegion, CircleAnnulusSkyRegion,
-                     EllipseAnnulusPixelRegion, EllipseAnnulusSkyRegion,
-                     RectangleAnnulusPixelRegion, RectangleAnnulusSkyRegion, PixCoord)
+from regions import (CirclePixelRegion, EllipsePixelRegion, RectanglePixelRegion,
+                     CircleAnnulusPixelRegion, PixCoord)
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -211,26 +201,34 @@ def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, m
 test_subset_dict = {'Subset 1': [
     {'name': 'TrueCircularROI',
      'glue_state': 'AndState',
-     'region': CirclePixelRegion(center=PixCoord(x=20.6072998046875, y=23.749065399169922), radius=4.079286151278358),
+     'region': CirclePixelRegion(center=PixCoord(x=20.6072998046875, y=23.749065399169922),
+                                 radius=4.079286151278358),
      'sky_region': None,
      'subset_state': None},
-     {'name': 'RectangularROI',
-      'glue_state': 'OrState',
-      'region': RectanglePixelRegion(center=PixCoord(x=20.68303102318066, y=30.615620480255785), width=6.815691577924664, height=4.272523078699049, angle=0.0 * u.rad),
-      'sky_region': None,
-      'subset_state': None},
+    {'name': 'RectangularROI',
+     'glue_state': 'OrState',
+     'region': RectanglePixelRegion(center=PixCoord(x=20.68303102318066, y=30.615620480255785),
+                                    width=6.815691577924664, height=4.272523078699049,
+                                    angle=0.0 * u.rad),
+     'sky_region': None,
+     'subset_state': None},
     {'name': 'EllipticalROI',
      'glue_state': 'AndNotState',
-     'region': EllipsePixelRegion(center=PixCoord(x=20.30438232421875, y=27.716407775878906), width=3.427145004272461, height=8.200210571289062, angle=0.0 * u.rad),
+     'region': EllipsePixelRegion(center=PixCoord(x=20.30438232421875, y=27.716407775878906),
+                                  width=3.427145004272461, height=8.200210571289062,
+                                  angle=0.0 * u.rad),
      'sky_region': None,
      'subset_state': None}],
                        'Subset 2': [
                            {'name': 'CircularAnnulusROI',
                             'glue_state': 'RoiSubsetState',
-                            'region': CircleAnnulusPixelRegion(center=PixCoord(x=30.452190399169922, y=22.070573806762695), inner_radius=2.4145185947418213, outer_radius=4.829037189483643),
+                            'region': CircleAnnulusPixelRegion(
+                                center=PixCoord(x=30.452190399169922, y=22.070573806762695),
+                                inner_radius=2.4145185947418213, outer_radius=4.829037189483643),
                             'sky_region': None,
                             'subset_state': None}],
-                       'Subset 3': SpectralRegion(6.939254409861322 * u.um, 7.224590119773996 * u.um)
+                       'Subset 3': SpectralRegion(6.939254409861322 * u.um,
+                                                  7.224590119773996 * u.um)
 }
 
 test_subset_string = str(test_subset_dict)
@@ -255,7 +253,8 @@ region = [{'name': 'TrueCircularROI',
      # (test_subset_string, 3, 3),
      (region, 1, 2)]
 )
-def test_add_subset_with_import_region(cubeviz_helper, spectrum1d_cube, spec_region, len_subsets, len_subregions):
+def test_add_subset_with_import_region(cubeviz_helper, spectrum1d_cube, spec_region,
+                                       len_subsets, len_subregions):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         cubeviz_helper.load_data(spectrum1d_cube)

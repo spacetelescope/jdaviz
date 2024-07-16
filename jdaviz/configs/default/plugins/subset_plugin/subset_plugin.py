@@ -682,7 +682,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     def import_region(self, spec_region):
         if isinstance(spec_region, list):
-            if len(spec_region) < 1 or ('region' in spec_region[0] and not spec_region[0]['region']):
+            if len(spec_region) < 1 or ('region' in spec_region[0] and
+                                        not spec_region[0]['region']):
                 return
             elif isinstance(spec_region[0], SpectralRegion):
                 self._import_spectral_regions(spec_region)
