@@ -588,6 +588,8 @@ class SelectedSpaxel(Lines):
 class MarkersMark(PluginScatter):
     def __init__(self, viewer, **kwargs):
         kwargs.setdefault('marker', 'circle')
+        kwargs.setdefault('fill', False)
+        kwargs.setdefault('default_size', 128)
         super().__init__(viewer, **kwargs)
 
 
