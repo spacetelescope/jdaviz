@@ -1,6 +1,5 @@
 import warnings
 import pytest
-import json
 
 import numpy as np
 from astropy.nddata import NDData

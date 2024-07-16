@@ -673,10 +673,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             OrMode will create a composite subset with each subregion corresponding
             to a subregion of a single subset.
         """
+        viewer_name = self.app._jdaviz_helper._default_spectrum_viewer_reference_name
+        spectrum_viewer = self.app.get_viewer(viewer_name)
         for sub_region in spec_region:
-            viewer_name = self.app._jdaviz_helper._default_spectrum_viewer_reference_name
-            spectrum_viewer = self.app.get_viewer(viewer_name)
-            spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
             self.app.session.edit_subset_mode.mode = mode
             spectrum_viewer.apply_roi(XRangeROI(sub_region.lower.value, sub_region.upper.value))
 
