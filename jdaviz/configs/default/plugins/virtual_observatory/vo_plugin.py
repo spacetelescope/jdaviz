@@ -25,6 +25,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     viewer_selected = Unicode().tag(sync=True)
 
     wavebands = List().tag(sync=True)
+    resource_filter_coverage = Bool(True).tag(sync=True)
     resources = List([]).tag(sync=True)
     resources_loading= Bool(False).tag(sync=True)
 
@@ -137,7 +138,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         try:
             registry_args = [registry.Servicetype("sia"), registry.Waveband(self.waveband_selected)]
-            if coord != None:
+            if coord != None and self.resource_filter_coverage:
                 registry_args.append(registry.Spatial(coord, self.radius_deg, intersect="overlaps"))
             self._full_registry_results = registry.search(*registry_args)
             self.resources = list(self._full_registry_results.getcolumn("short_name"))

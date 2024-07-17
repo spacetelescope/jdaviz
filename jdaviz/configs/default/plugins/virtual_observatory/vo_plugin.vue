@@ -53,6 +53,17 @@
 
     <j-plugin-section-header>Survey Collections</j-plugin-section-header>
       <v-row>
+        <j-tooltip tipid='plugin-vo-filter-coverage'>
+        <span>
+          <v-btn icon @click.stop="resource_filter_coverage = !resource_filter_coverage">
+            <v-icon>mdi-filter{{ resource_filter_coverage ? '' : '-remove' }}</v-icon>
+          </v-btn>
+          Filter by Coverage
+        </span>
+        </j-tooltip>
+      </v-row>
+      
+      <v-row>
         <v-select
           :menu-props="{ left: true }"
           attach
@@ -89,9 +100,15 @@
       </v-row>
 
     <v-row class="row-no-outside-padding">
-        <v-col>
-            <v-btn color="primary" :loading="results_loading" text @click="query_resource">Query Archive</v-btn>
-        </v-col>
+      <v-col>
+        <v-btn
+          block
+          color="primary"
+          :loading="results_loading"
+          :disabled="this.resource_selected === null"
+          text
+          @click="query_resource">Query Archive</v-btn>
+      </v-col>
     </v-row>
 
     <jupyter-widget :widget="table_widget"></jupyter-widget>
