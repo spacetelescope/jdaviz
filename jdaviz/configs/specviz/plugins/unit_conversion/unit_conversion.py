@@ -167,6 +167,8 @@ class UnitConversion(PluginTemplateMixin):
             if self.app.config == 'cubeviz':
                 sb_choices = create_sb_equivalencies_list(y_u / u.sr, x_u)
                 self.sb_unit.choices = sb_choices
+                # if not self.sb_unit.selected:
+                #    self.sb_unit.selected = y_unit + ' / sr'
 
             self.flux_unit.choices = flux_choices
             self.flux_unit.selected = y_unit
@@ -206,9 +208,9 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
             self.flux_or_sb.selected = 'Surface Brightness'
 
-        self.hub.broadcast(GlobalDisplayUnitChanged('flux',
-                                                    spec_units,
-                                                    sender=self))
+        # self.hub.broadcast(GlobalDisplayUnitChanged('flux',
+        #                                            spec_units,
+        #                                            sender=self))
         self.spectrum_viewer.reset_limits()
 
     @observe('spectral_unit_selected')
@@ -227,7 +229,7 @@ class UnitConversion(PluginTemplateMixin):
 
         data_collection_unit = ''
         # need to determine the input spectrum units to disable the additional
-        # drop down and possiblity of translations
+        # drop down and possiblity of translations in Specviz.
         if self.app.data_collection[0] and self.app.config == 'specviz':
             if check_if_unit_is_per_solid_angle(self.app.data_collection[0].get_object()._unit):
                 data_collection_unit = 'Surface Brightness'
@@ -237,8 +239,11 @@ class UnitConversion(PluginTemplateMixin):
                 data_collection_unit = 'Flux'
 
         for arg in args:
-            # determine if flux or surface brightness unit was changed  by user
+            # determine if flux or surface brightness unit was changed by user
             if arg['name'] == 'flux_unit_selected':
+                # when the configuration is Specviz, translation is not currently supported.
+                # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
+                # have a scale factor assigned in the metadata, enabling translation.
                 if data_collection_unit == 'Surface Brightness':
                     raise ValueError(
                         "Unit translation between Flux and Surface Brightness "
@@ -250,9 +255,9 @@ class UnitConversion(PluginTemplateMixin):
                     self.flux_or_sb.selected = 'Flux'
 
                 untranslatable_units = self.untranslatable_units()
-                # disable translator is flux unit is untranslatable
-                # still can select surface brightness units, just disables
-                # flux -> surface brightnes of particular unit selected.
+                # disable translator if flux unit is untranslatable,
+                # still can convert flux units, this just disables flux
+                # to surface brightnes translation for units in list.
                 if flux_or_sb in untranslatable_units:
                     self.can_translate = False
                 else:
@@ -260,6 +265,9 @@ class UnitConversion(PluginTemplateMixin):
 
             elif arg['name'] == 'sb_unit_selected':
                 if data_collection_unit == 'Flux':
+                    # when the configuration is Specviz, translation is not currently supported.
+                    # If in Cubeviz, all spectra pass through Spectral Xxtraction plugin and will
+                    # have a scale factor assigned in the metadata, enabling translation.
                     raise ValueError(
                         "Unit translation between Flux and Surface Brightness "
                         "is not supported in Specviz."
