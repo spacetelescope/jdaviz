@@ -207,6 +207,8 @@ Imviz
 - Fix multiple footprints bug that prevented footprint updates on changes to the
   viewer orientation. [#2918]
 
+- Exclude subset layers from the orientation options in the Orientation plugin. [#3097]
+
 Mosviz
 ^^^^^^
 
