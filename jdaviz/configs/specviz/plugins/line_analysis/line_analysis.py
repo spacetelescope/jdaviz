@@ -288,6 +288,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # don't need these if statements
             if function == "Line Flux":
                 flux_unit = spec_subtracted.flux.unit
+                add_flux = False
+                if str(flux_unit) == '':
+                    add_flux = True
+                    flux_unit = u.Unit(self.spectrum_viewer.state.y_display_unit)
                 # If the flux unit is equivalent to Jy, or Jy per spaxel for Cubeviz,
                 # enforce integration in frequency space
                 if (flux_unit.is_equivalent(u.Jy) or
@@ -300,7 +304,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         uncertainty=spec_subtracted.uncertainty)
 
                     try:
-                        raw_result = analysis.line_flux(freq_spec)
+                        if add_flux:
+                            raw_result = analysis.line_flux(freq_spec) * flux_unit
+                        else:
+                            raw_result = analysis.line_flux(freq_spec)
                     except ValueError as e:
                         # can happen if interpolation out-of-bounds or any error from specutils
                         # let's avoid the whole app crashing and instead expose the error to the
@@ -332,7 +339,10 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         flux=spec_subtracted.flux,
                         uncertainty=spec_subtracted.uncertainty)
                     try:
-                        raw_result = analysis.line_flux(wave_spec)
+                        if add_flux:
+                            raw_result = analysis.line_flux(wave_spec) * flux_unit
+                        else:
+                            raw_result = raw_result = analysis.line_flux(wave_spec)
                     except ValueError as e:
                         # can happen if interpolation out-of-bounds or any error from specutils
                         # let's avoid the whole app crashing and instead expose the error to the
