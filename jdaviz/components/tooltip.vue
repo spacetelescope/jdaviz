@@ -99,6 +99,11 @@ const tooltips = {
   'plugin-dq-show-all': 'Show all quality flags',
   'plugin-dq-hide-all': 'Hide all quality flags',
   'plugin-dq-color-picker': 'Change the color of this DQ flag',
+  'plugin-vo-filter-coverage': `Only show surveys that report coverage within specified radius of provided coordinates. Queries may take longer to process<br /><br />
+    <div style="border: 1px solid gray;" class="pa-2">
+      <strong>Note:</strong>
+      Surveys which have not implemented coverage information will also be excluded. If you are expecting a survey that doesn't appear, try disabling coverage filtering.
+    </div>`
 }
 
 
