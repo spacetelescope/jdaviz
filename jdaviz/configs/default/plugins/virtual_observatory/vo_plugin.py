@@ -7,19 +7,22 @@ from pyvo.utils import vocabularies
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError
 from requests.exceptions import ConnectionError as RequestConnectionError
-from traitlets import Dict, Bool, Unicode, Any, List, Int
+from traitlets import Dict, Bool, Unicode, Any, List, Int, observe
 
 from jdaviz.core.events import SnackbarMessage, AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, AddResultsMixin, TableMixin, ViewerSelectMixin
+from jdaviz.core.template_mixin import PluginTemplateMixin, AddResultsMixin, TableMixin, ViewerSelect
 
 __all__ = ['VoPlugin']
 
 
 @tray_registry('VoPlugin', label="Virtual Observatory")
-class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin, ViewerSelectMixin):
+class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     """ Plugin to query the Virtual Observatory and load data into Imviz """
     template_file = __file__, "vo_plugin.vue"
+
+    viewer_items = List([]).tag(sync=True)
+    viewer_selected = Unicode().tag(sync=True)
 
     wavebands = List().tag(sync=True)
     resources = List([]).tag(sync=True)
@@ -27,7 +30,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin, ViewerSelectMix
 
     source = Unicode('').tag(sync=True)
     coordframes = List([]).tag(sync=True)
-    coordframe_selected = Unicode('ICRS').tag(sync=True)
+    coordframe_selected = Unicode('icrs').tag(sync=True)
     radius_deg = Int(1).tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
@@ -35,6 +38,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin, ViewerSelectMix
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', manual_options=['Manual'])
 
         # Waveband properties to filter available registry resources
         self.wavebands = [w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]]
@@ -55,21 +59,22 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin, ViewerSelectMix
         self.hub.subscribe(self, AddDataMessage, handler=self._center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._center_on_data)
 
-        self.previous_autogen_source = None
 
-
+    @observe("viewer_selected", "change")
     def _center_on_data(self, _):
         """
         If data is present in the default viewer, center the plugin's coordinates on
-        the viewer's center WCS coordinates. 
+        the viewer's center WCS coordinates.
         """
-        # This plugin should not overwrite existing user input.
-        # Immediately exit if the user has entered a value
-        if self.source not in ('', self.previous_autogen_source):
+        if not hasattr(self, 'viewer'):
+            # mixin object not yet initialized
+            return
+        if self.viewer_selected == "Manual":
             return
 
         # gets the current viewer
-        viewer = self.viewer.selected_obj
+        if self.viewer_selected:
+            viewer = self.viewer.selected_obj
 
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
@@ -89,10 +94,9 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin, ViewerSelectMix
         # Show center value in plugin
         self.source = f"{ra_deg} {dec_deg}"
         self.coordframe_selected = frame
-        self.previous_autogen_source = self.source
 
 
-    def vue_waveband_selected(self,event):
+    def vue_waveband_selected(self, event):
         """ Sync waveband selected
 
         When the user selects a waveband, query Virtual Observatory registry
@@ -100,20 +104,52 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin, ViewerSelectMix
         the dropdown accordingly.
         """
         self.waveband_selected = event
+        self.vue_query_registry_resources()
+
+
+    @observe("source", "change")
+    def vue_query_registry_resources(self, event=None):
+        """
+        Query Virtual Observatory registry
+        for all SIA services that serve data in that waveband around the source.
+        Then update the dropdown accordingly.
+        """
+        # If missing either required fields, immediately quit
+        if not self.source or not self.waveband_selected:
+            return
+
         # Clear existing resources list
         self.resources = []
         self.resource_selected = None
         self.resources_loading = True # Start loading bar
         try:
-            if event is not None:
-                self._full_registry_results = registry.search(registry.Servicetype("sia"), registry.Waveband(self.waveband_selected))
-                self.resources = list(self._full_registry_results.getcolumn("short_name"))
+            # First parse user-provided source as direct coordinates
+            coord = SkyCoord(self.source, unit=u.deg, frame=self.coordframe_selected)
+        except:
+            try:
+                # If that didn't work, try parsing it as an object name
+                coord = SkyCoord.from_name(self.source, frame=self.coordframe_selected)
+            except Exception:
+                self.resources_loading = False # Stop loading bar
+                self.hub.broadcast(SnackbarMessage(
+                        f"Unable to resolve source coordinates: {self.source}", sender=self, color="error"))
+                raise LookupError(f"Unable to resolve source coordinates: {self.source}")
+
+        try:
+            registry_args = [registry.Servicetype("sia"), registry.Waveband(self.waveband_selected)]
+            if coord != None:
+                registry_args.append(registry.Spatial(coord, self.radius_deg, intersect="overlaps"))
+            self._full_registry_results = registry.search(*registry_args)
+            self.resources = list(self._full_registry_results.getcolumn("short_name"))
         except DALFormatError as e:
             if type(e.cause) is RequestConnectionError:
                 self.hub.broadcast(SnackbarMessage(
                         f"Unable to connect to VO registry. Please check your internet connection: {e}", sender=self, color="error"))
             else:
                 raise e
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(
+                        f"An error occured querying the VO Registry: {e}", sender=self, color="error"))
         finally:
             self.resources_loading = False # Stop loading bar
 
