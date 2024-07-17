@@ -39,7 +39,6 @@ from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
 
-from jdaviz import __version__
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
