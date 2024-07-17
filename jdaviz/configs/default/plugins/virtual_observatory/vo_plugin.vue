@@ -82,7 +82,7 @@
             attach
             :items="resources"
             :loading="resources_loading"
-            @change="resource_selected"
+            v-model="resource_selected"
             label="Available Resources"
             hint="Select a SIA resource to query"
             persistent-hint

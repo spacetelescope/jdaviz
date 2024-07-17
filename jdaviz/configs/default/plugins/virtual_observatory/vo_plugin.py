@@ -27,6 +27,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     wavebands = List().tag(sync=True)
     resource_filter_coverage = Bool(True).tag(sync=True)
     resources = List([]).tag(sync=True)
+    resource_selected = Any().tag(sync=True)
     resources_loading= Bool(False).tag(sync=True)
 
     source = Unicode('').tag(sync=True)
@@ -153,10 +154,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         f"An error occured querying the VO Registry: {e}", sender=self, color="error"))
         finally:
             self.resources_loading = False # Stop loading bar
-
-    def vue_resource_selected(self, event):
-        """Sync IVOA resource selected"""
-        self.resource_selected = event
 
     def vue_coordframe_selected(self, event):
         """Sync IVOA resource selected"""
