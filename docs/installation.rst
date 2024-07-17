@@ -108,7 +108,7 @@ You also need the up-to-date tags for proper software versioning:
     git rebase upstream/main
 
 For the rest of contributing workflow, it is very similar to
-`how to make a code contribution to astropy <https://docs.astropy.org/en/latest/development/workflow/development_workflow.html>`_,
+`how to make a code contribution to astropy <https://docs.astropy.org/en/latest/development/quickstart.html>`_,
 including setting up virtual environments, git basics, and more.
 
 An exception is the change log; if your patch requires a change log, see ``CHANGES.rst`` for examples.
