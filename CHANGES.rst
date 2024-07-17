@@ -96,6 +96,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Exclude subset layers from the orientation options in the Orientation plugin. [#3097]
+
 Mosviz
 ^^^^^^
 
