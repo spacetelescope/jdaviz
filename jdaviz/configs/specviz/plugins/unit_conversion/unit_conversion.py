@@ -167,8 +167,8 @@ class UnitConversion(PluginTemplateMixin):
             if self.app.config == 'cubeviz':
                 sb_choices = create_sb_equivalencies_list(y_u / u.sr, x_u)
                 self.sb_unit.choices = sb_choices
-                # if not self.sb_unit.selected:
-                #    self.sb_unit.selected = y_unit + ' / sr'
+                if y_unit + ' / sr' in self.sb_unit.choices:
+                    self.sb_unit.selected = y_unit + ' / sr'
 
             self.flux_unit.choices = flux_choices
             self.flux_unit.selected = y_unit
@@ -193,6 +193,10 @@ class UnitConversion(PluginTemplateMixin):
             spec_units = u.Unit(self.spectrum_viewer.state.y_display_unit)
         else:
             return
+        # on instantiation, we set determine flux choices and selection
+        # after surface brightness
+        if not self.flux_unit.choices:
+            return
         # Surface Brightness -> Flux
         if check_if_unit_is_per_solid_angle(spec_units) and flux_or_sb_selected == 'Flux':
             spec_units *= u.sr
@@ -207,10 +211,13 @@ class UnitConversion(PluginTemplateMixin):
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
             self.flux_or_sb.selected = 'Surface Brightness'
+        # entered the translator when we shouldn't translate
+        else:
+            return
 
-        # self.hub.broadcast(GlobalDisplayUnitChanged('flux',
-        #                                            spec_units,
-        #                                            sender=self))
+        self.hub.broadcast(GlobalDisplayUnitChanged('flux',
+                                                    spec_units,
+                                                    sender=self))
         self.spectrum_viewer.reset_limits()
 
     @observe('spectral_unit_selected')
@@ -277,9 +284,15 @@ class UnitConversion(PluginTemplateMixin):
                 # update flux or surface brightness dropdown if necessary
                 if not check_if_unit_is_per_solid_angle(current_y):
                     self.flux_or_sb.selected = 'Surface Brightness'
+            else:
+                return
 
         yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
 
+        # on instantiation, we set determine flux choices and selection
+        # after surface brightness
+        if not self.flux_unit.choices:
+            return
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
             self.hub.broadcast(GlobalDisplayUnitChanged('flux',

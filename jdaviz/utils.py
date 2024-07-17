@@ -312,6 +312,8 @@ def flux_conversion(spec, values, original_units, target_units):
     result : float array
         Flux values in the target units.
     """
+    # we set surface brightness choices and selection before flux, which can
+    # cause a dimensionless translation attempt at instantiation
     if not target_units:
         target_units = original_units
     # If there are only two values, this is likely the limits being converted, so then
