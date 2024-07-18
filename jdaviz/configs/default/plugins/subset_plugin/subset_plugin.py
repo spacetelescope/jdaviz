@@ -7,7 +7,7 @@ import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
-from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
