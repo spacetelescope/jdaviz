@@ -8,6 +8,8 @@ Bug Fixes
 
 - Previous zoom tool is optimized to only issue one zoom update to the viewer. [#2949]
 
+- Fixes overwrite behavior for plugin plots, and properly closes overwrite warning overlay after confirmation. [#3094]
+
 Cubeviz
 ^^^^^^^
 
