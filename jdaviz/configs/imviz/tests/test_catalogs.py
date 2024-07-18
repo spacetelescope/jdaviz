@@ -106,14 +106,14 @@ class TestCatalogs:
         # test loading from file
         table = imviz_helper.app._catalog_source_table
         skycoord_table = SkyCoord(table['ra'], table['dec'], unit='deg')
-        qtable = QTable({'sky_centroid': skycoord_table})
+        qtable = QTable({'sky_centroid': skycoord_table, 'label': table['objid']})
         tmp_file = tmp_path / 'test.ecsv'
         qtable.write(tmp_file, overwrite=True)
 
         catalogs_plugin.from_file = str(tmp_file)
         # setting filename from API will automatically set catalog to 'From File...'
         assert catalogs_plugin.catalog.selected == 'From File...'
-        catalogs_plugin.vue_do_search()
+        catalogs_plugin.search(error_on_fail=True)
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == prev_results
 

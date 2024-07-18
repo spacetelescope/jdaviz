@@ -177,9 +177,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             for row in self.app._catalog_source_table:
                 # find new to add in a way to append the source id to the table
                 # 'Object ID': row['label']} ; 'label' is failing tests
-                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra,
-                            'Declination (degrees)': row['sky_centroid'].dec,
-                            'Object ID': row.get('label', '')}
+                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
+                            'Declination (degrees)': row['sky_centroid'].dec.deg,
+                            'Object ID': row.get('label', -1)}
                 self.table.add_item(row_info)
 
         else:
