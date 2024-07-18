@@ -67,7 +67,9 @@ class UnitConversion(PluginTemplateMixin):
     flux_or_sb_items = List().tag(sync=True)
     flux_or_sb_selected = Unicode().tag(sync=True)
 
-    specviz_disabler = Unicode().tag(sync=True)
+    # in certain configs, a pixel scale factor will not be in the FITS header
+    # we need to disable translation in the API and UI variables/functions.
+    flux_or_sb_config_disabler = Unicode().tag(sync=True)
     can_translate = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -110,11 +112,11 @@ class UnitConversion(PluginTemplateMixin):
     def user_api(self):
         if self.app.config == 'cubeviz':
             return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_unit', 'sb_unit'))   # noqa
-        elif self.app.config == 'specviz' and not self.specviz_disabler:
+        if self.app.config == 'specviz' and not self.flux_or_sb_config_disabler:
             return PluginUserApi(self, expose=('spectral_unit', 'flux_unit', 'sb_unit'))
-        if self.specviz_disabler == 'Flux':
+        if self.flux_or_sb_config_disabler == 'Flux':
             return PluginUserApi(self, expose=('spectral_unit', 'sb_unit'))
-        if self.specviz_disabler == 'Surface Brightness':
+        if self.flux_or_sb_config_disabler == 'Surface Brightness':
             return PluginUserApi(self, expose=('spectral_unit', 'flux_unit'))
 
     def _on_glue_x_display_unit_changed(self, x_unit):
@@ -240,10 +242,10 @@ class UnitConversion(PluginTemplateMixin):
         if self.app.data_collection[0] and self.app.config == 'specviz':
             if check_if_unit_is_per_solid_angle(self.app.data_collection[0].get_object()._unit):
                 data_collection_unit = 'Surface Brightness'
-                self.specviz_disabler = 'Flux'
+                self.flux_or_sb_config_disabler = 'Flux'
             else:
-                self.specviz_disabler = 'Surface Brightness'
                 data_collection_unit = 'Flux'
+                self.flux_or_sb_config_disabler = 'Surface Brightness'
 
         for arg in args:
             # determine if flux or surface brightness unit was changed by user
@@ -253,8 +255,8 @@ class UnitConversion(PluginTemplateMixin):
                 # have a scale factor assigned in the metadata, enabling translation.
                 if data_collection_unit == 'Surface Brightness':
                     raise ValueError(
-                        "Unit translation between Flux and Surface Brightness "
-                        "is not supported in Specviz."
+                        f"Unit translation between Flux and Surface Brightness "
+                        f"is not supported in {self.app.config}."
                     )
                 flux_or_sb = self.flux_unit.selected
                 # update flux or surface brightness dropdown if necessary
@@ -276,8 +278,8 @@ class UnitConversion(PluginTemplateMixin):
                     # If in Cubeviz, all spectra pass through Spectral Xxtraction plugin and will
                     # have a scale factor assigned in the metadata, enabling translation.
                     raise ValueError(
-                        "Unit translation between Flux and Surface Brightness "
-                        "is not supported in Specviz."
+                        f"Unit translation between Flux and Surface Brightness "
+                        f"is not supported in {self.app.config}."
                     )
                 flux_or_sb = self.sb_unit.selected
                 self.can_translate = True
@@ -312,17 +314,24 @@ class UnitConversion(PluginTemplateMixin):
             # need to check current y_unit to see if we need to translate
             y_unit = self.spectrum_viewer.state.y_display_unit
             for arg in args:
-                if arg['name'] == 'flux_unit_selected':
+                # skip if arg is not a dictionary
+                if not isinstance(arg, dict):
+                    continue
+                # skip if 'name' key is missing
+                name = arg.get('name')
+                if not name:
+                    continue
+                if name == 'flux_unit_selected':
                     # don't translate if self.flux_or_sb == Flux
                     if not check_if_unit_is_per_solid_angle(y_unit):
                         return
                     flux_or_sb = 'Flux'
-                elif arg['name'] == 'sb_unit_selected':
+                elif name == 'sb_unit_selected':
                     # don't translate if self.flux_or_sb == Surface Brightness
                     if check_if_unit_is_per_solid_angle(y_unit):
                         return
                     flux_or_sb = 'Surface Brightness'
-                elif arg['name'] == 'flux_or_sb_selected':
+                elif name == 'flux_or_sb_selected':
                     flux_or_sb = self.flux_or_sb_selected
                 else:
                     return

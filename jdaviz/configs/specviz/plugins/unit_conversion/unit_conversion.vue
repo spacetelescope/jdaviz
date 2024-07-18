@@ -19,7 +19,7 @@
       ></v-select>
     </v-row>
 
-    <v-row v-if="specviz_disabler === 'Surface Brightness' || config == 'cubeviz'">
+    <v-row v-if="flux_or_sb_config_disabler === 'Surface Brightness' || config == 'cubeviz'">
       <v-select
         :menu-props="{ left: true }"
         attach
@@ -31,7 +31,7 @@
       ></v-select>
     </v-row>
 
-    <v-row v-if="specviz_disabler === 'Flux' || config == 'cubeviz'">
+    <v-row v-if="flux_or_sb_config_disabler === 'Flux' || config == 'cubeviz'">
       <v-select
         :menu-props="{ left: true }"
         attach
