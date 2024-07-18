@@ -25,6 +25,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     viewer_selected = Unicode().tag(sync=True)
 
     wavebands = List().tag(sync=True)
+    waveband_selected = Any().tag(sync=True)
     resource_filter_coverage = Bool(True).tag(sync=True)
     resources = List([]).tag(sync=True)
     resource_selected = Any().tag(sync=True)
@@ -98,18 +99,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.coordframe_selected = frame
 
 
-    def vue_waveband_selected(self, event):
-        """ Sync waveband selected
-
-        When the user selects a waveband, query Virtual Observatory registry
-        for all SIA services that serve data in that waveband. Then update
-        the dropdown accordingly.
-        """
-        self.waveband_selected = event
-        self.vue_query_registry_resources()
-
-
-    @observe("source", "change")
+    @observe("waveband_selected", "change")
     def vue_query_registry_resources(self, _=None):
         """
         Query Virtual Observatory registry
