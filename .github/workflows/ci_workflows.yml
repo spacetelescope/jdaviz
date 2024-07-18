@@ -48,7 +48,7 @@ jobs:
             os: ubuntu-latest
             python: '3.11'
             toxenv: py311-test-alldeps-cov
-            toxposargs: --remote-data
+            toxposargs: --remote-data --run-slow
             allow_failure: false
 
           - name: OS X - Python 3.12
