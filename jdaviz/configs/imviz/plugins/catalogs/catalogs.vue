@@ -29,13 +29,19 @@
     </plugin-file-import-select>
 
     <v-row v-if="catalog_selected === 'Gaia'">
+      <j-docs-link>
+        See the <j-external-link link='https://astroquery.readthedocs.io/en/latest/gaia/gaia.html' linktext='astropy.gaia docs'></j-external-link> for details on other configurable features.
+      </j-docs-link>
+    </v-row>
+
+    <v-row v-if="catalog_selected === 'Gaia'">
       <v-text-field
-        v-model.number="max_rows"
+        v-model.number="max_sources"
         type="number"
         step="10"
-        :rules="[() => max_rows!=='' || 'This field is required']"
-        label="Max rows"
-        hint="Maximum amount of rows."
+        :rules="[() => max_sources!=='' || 'This field is required']"
+        label="Max sources"
+        hint="Maximum amount of sources."
         persistent-hint
       ></v-text-field>
     </v-row>

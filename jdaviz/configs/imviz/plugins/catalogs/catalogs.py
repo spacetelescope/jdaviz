@@ -35,7 +35,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     catalog_selected = Unicode("").tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
-    max_rows = IntHandleEmpty(1000).tag(sync=True)
+    max_sources = IntHandleEmpty(1000).tag(sync=True)
 
     # setting the default table headers and values
     _default_table_values = {
@@ -172,17 +172,18 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         elif self.catalog_selected == 'Gaia':
             from astroquery.gaia import Gaia
+            from astroquery.gaia import conf
 
-            Gaia.ROW_LIMIT = self.max_rows
-            sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
-                                        columns=('source_id', 'ra', 'dec'))
+            with conf.set_temp("ROW_LIMIT", self.max_sources):
+                sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
+                                            columns=('source_id', 'ra', 'dec'))
             self.app._catalog_source_table = sources
             skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
             # adding in coords + Id's into table
             for row in sources:
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
-                            'Object ID': row['SOURCE_ID']}
+                            'Source ID': row['SOURCE_ID']}
                 self.table.add_item(row_info)
 
         elif self.catalog_selected == 'From File...':
