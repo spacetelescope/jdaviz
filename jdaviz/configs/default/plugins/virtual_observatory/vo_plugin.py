@@ -205,6 +205,9 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                             f"Unable to get metadata columns. Switching table to URL-only: {e}", sender=self, color="warning"))
                         self.table.headers_visible = ["URL"]
                         self._populate_url_only = True
+                # Table widget only supports JSON-verification for serial table additions.
+                # For improved performance with larger tables, a `table.add_items` that accepts
+                # a table of elements should be implemented
                 self.table.add_item(table_entry)
             self.hub.broadcast(SnackbarMessage(
                     f"{len(sia_results)} SIA results populated!", sender=self, color="success"))
