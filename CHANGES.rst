@@ -32,6 +32,8 @@ Imviz
 
 - Added a table with catalog search results. [#2915]
 
+- Added Gaia catalog to Catalog plugin. [#3090]
+
 Mosviz
 ^^^^^^
 
