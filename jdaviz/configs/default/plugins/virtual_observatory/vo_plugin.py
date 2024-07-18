@@ -63,7 +63,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
 
     @observe("viewer_selected", "change")
-    def _center_on_data(self, _):
+    def _center_on_data(self, _=None):
         """
         If data is present in the default viewer, center the plugin's coordinates on
         the viewer's center WCS coordinates.
@@ -110,7 +110,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
 
     @observe("source", "change")
-    def vue_query_registry_resources(self, event=None):
+    def vue_query_registry_resources(self, _=None):
         """
         Query Virtual Observatory registry
         for all SIA services that serve data in that waveband around the source.
