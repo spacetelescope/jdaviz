@@ -656,7 +656,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self.subset_definitions[index][i]['value'] = new_value
                 break
 
-    def _import_spectral_regions(self, spec_region, mode=NewMode):
+    def _import_spectral_regions(self, spec_region, mode=NewMode, viewer=None):
         """
         Method for importing a SpectralRegion object or list of SpectralRegion objects.
 
@@ -664,14 +664,19 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         ----------
         spec_region : ~`specutils.SpectralRegion` object or list
             The object that contains bounds for the spectral region or regions
-        mode : AndMode, AndNotMode, OrMode, ReplaceMode, XorMode, or NewMode
+        mode : AndMode, AndNotMode, OrMode, ReplaceMode, XorMode, NewMode, or list
             By default this is set to NewMode which creates a new subset per subregion.
             OrMode will create a composite subset with each subregion corresponding
             to a subregion of a single subset.
         """
-        for sub_region in spec_region:
-            viewer_name = self.app._jdaviz_helper._default_spectrum_viewer_reference_name
-            spectrum_viewer = self.app.get_viewer(viewer_name)
-            spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
-            self.app.session.edit_subset_mode.mode = mode
-            spectrum_viewer.apply_roi(XRangeROI(sub_region.lower.value, sub_region.upper.value))
+        viewer_name = viewer or self.app._jdaviz_helper._default_spectrum_viewer_reference_name
+        range_viewer = self.app.get_viewer(viewer_name)
+        for index, sub_region in enumerate(spec_region):
+            if isinstance(mode, list):
+                m = mode[index]
+            else:
+                m = mode
+            self.app.session.edit_subset_mode.mode = m
+            s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
+                                 att=range_viewer.slice_component_label)
+            range_viewer.apply_subset_state(s)
