@@ -3,8 +3,9 @@
     description='Download a data product from the Virtual Observatory'
     :link="'https://www.ivoa.net/astronomers/index.html'"
     :popout_button="popout_button">
+    <v-form v-model="all_fields_filled">
 
-    <j-plugin-section-header>Source Selection</j-plugin-section-header>
+      <j-plugin-section-header>Source Selection</j-plugin-section-header>
 
       <plugin-viewer-select
         :items="viewer_items"
@@ -20,6 +21,7 @@
           label="Source or Coordinates"
           hint="Enter a source name or ICRS coordinates in degrees to center your query on"
           :disabled="viewer_selected !== 'Manual'"
+          :rules="[() => !!source || 'This field is required']"
           persistent-hint>
         </v-text-field>
       </v-row>
@@ -45,7 +47,7 @@
         v-model.number="radius_deg"
         type="number"
         label="Radius"
-        hint="Angular radius of the specified field in degrees"
+        hint="Angular radius, in degrees, around source coordinates, within which to query for data (Default 1 degree)"
         persistent-hint>
         </v-text-field>
       </v-row>
@@ -83,6 +85,7 @@
             :items="resources"
             :loading="resources_loading"
             v-model="resource_selected"
+            :rules="[() => !!resource_selected || 'This field is required']"
             label="Available Resources"
             hint="Select a SIA resource to query"
             persistent-hint
@@ -98,6 +101,7 @@
           </v-btn>
         </div>
       </v-row>
+    </v-form>
 
     <v-row class="row-no-outside-padding">
       <v-col>
@@ -105,7 +109,7 @@
           block
           color="primary"
           :loading="results_loading"
-          :disabled="this.resource_selected === null"
+          :disabled="!all_fields_filled"
           text
           @click="query_resource">Query Archive</v-btn>
       </v-col>
@@ -121,3 +125,13 @@
 
   </j-tray-plugin>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      all_fields_filled: false, // Reactive property for form validity
+    };
+  },
+};
+</script>
