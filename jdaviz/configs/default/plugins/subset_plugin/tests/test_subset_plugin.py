@@ -6,7 +6,7 @@ from astropy.nddata import NDData
 import astropy.units as u
 from specutils import SpectralRegion
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI, XRangeROI
-from glue.core.edit_subset_mode import OrMode, NewMode
+from glue.core.edit_subset_mode import OrMode, NewMode, AndNotMode
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
@@ -180,7 +180,12 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
        SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], NewMode, 3, 1),
      ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
-       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), OrMode, 1, 3)]
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), OrMode, 1, 3),
+     ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
+       SpectralRegion(5.8 * u.um, 5.9 * u.um) +
+       SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
+       SpectralRegion(7 * u.um, 7.2 * u.um)), [AndNotMode, OrMode, OrMode], 1, 4)
+     ]
 )
 def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, mode, len_subsets,
                                 len_subregions):

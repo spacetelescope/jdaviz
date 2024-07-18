@@ -672,8 +672,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         viewer_name = viewer or self.app._jdaviz_helper._default_spectrum_viewer_reference_name
         range_viewer = self.app.get_viewer(viewer_name)
         for index, sub_region in enumerate(spec_region):
-            if isinstance(mode, list):
-                m = mode[index]
+            if isinstance(mode, list) and index == 0:
+                m = NewMode
+            elif isinstance(mode, list):
+                m = mode[index-1]
             else:
                 m = mode
             self.app.session.edit_subset_mode.mode = m
