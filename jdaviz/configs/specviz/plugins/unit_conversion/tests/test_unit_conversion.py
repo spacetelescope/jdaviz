@@ -146,7 +146,6 @@ def test_unit_translation(cubeviz_helper):
 
     # When the dropdown is displayed, this ensures the loaded
     # data collection item units will be used for translations.
-    uc_plg._obj.show_translator = True
     assert uc_plg._obj.flux_or_sb_selected == 'Flux'
 
     # to have access to display units
@@ -178,11 +177,15 @@ def test_sb_unit_conversion(cubeviz_helper):
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()
 
+    # ensure that per solid angle cube defaults to Flux spectrum
+    assert uc_plg.flux_or_sb == 'Flux'
+    # flux choices is populated with flux units
+    assert uc_plg.flux_unit.choices
+
     # to have access to display units
     viewer_1d = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
-    uc_plg._obj.show_translator = True
     uc_plg.flux_or_sb.selected = 'Surface Brightness'
 
     # Surface Brightness conversion
@@ -201,7 +204,6 @@ def test_sb_unit_conversion(cubeviz_helper):
     uc_plg.sb_unit = 'MJy / sr'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
-    uc_plg._obj.show_translator = True
     uc_plg._obj.flux_or_sb_selected = 'Flux'
     uc_plg.flux_unit = 'MJy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
@@ -210,3 +212,13 @@ def test_sb_unit_conversion(cubeviz_helper):
 
     la = cubeviz_helper.plugins['Line Analysis']._obj
     assert la.dataset.get_selected_spectrum(use_display_units=True)
+
+
+def test_translation_disabled_without_pixar_sr(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+
+    uc_plg = specviz_helper.plugins['Unit Conversion']
+    # spectrum loaded is in Flux units, make sure sb_units don't
+    # display in the API and exposed translation isn't possible
+    assert not hasattr(uc_plg, 'sb_unit')
+    assert not hasattr(uc_plg, 'flux_or_sb')
