@@ -673,7 +673,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         range_viewer = self.app.get_viewer(viewer_name)
         for index, sub_region in enumerate(spec_region):
             if isinstance(mode, list):
-                if len(mode) != (len(spec_region) -  1):
+                if len(mode) != (len(spec_region) - 1):
                     raise ValueError("list of mode must be size of spec_region minus one")
                 if index == 0:
                     m = NewMode
