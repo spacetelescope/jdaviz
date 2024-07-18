@@ -88,6 +88,10 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Markers table can now export to CSV but its columns had to be changed to accomodate this fix:
+  world and pixel (previously containing SkyCoord and pixel location tuples, respectively) are now
+  each two separate columns for world_ra/world_dec and pixel_x/pixel_y, respectively. [#3089]
+
 Cubeviz
 ^^^^^^^
 

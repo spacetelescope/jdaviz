@@ -53,10 +53,11 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
                                                       'slice': 1.0,
                                                       'spectral_axis': 4.62360027696835e-07,
                                                       'spectral_axis:unit': 'm',
-                                                      'world': (204.99988776727642,
-                                                                27.000099999955538),
+                                                      'world_ra': 204.99988776727642,
+                                                      'world_dec': 27.000099999955538,
                                                       'world:unreliable': False,
-                                                      'pixel': (0, 0),
+                                                      'pixel_x': 0,
+                                                      'pixel_y': 0,
                                                       'pixel:unreliable': False,
                                                       'value': 8.0,
                                                       'value:unit': 'Jy',
@@ -139,6 +140,13 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     exp.export()
     assert os.path.isfile(filename)
 
+    # Also exports to CSV
+    filename_2 = str(tmp_path / "cubeviz_export.csv")
+    exp.plugin_table_format.selected = 'csv'
+    exp.filename.value = filename_2
+    exp.export()
+    assert os.path.isfile(filename_2)
+
     # clearing table clears markers
     mp.clear_table()
     assert mp.export_table() is None
@@ -170,7 +178,8 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
                                              'axes_y': 5,
                                              'axes_y:unit': 'pix',
                                              'data_label': 'no_wcs[SCI,1]',
-                                             'pixel': (5.0, 5.0),
+                                             'pixel_x': 5.0,
+                                             'pixel_y': 5.0,
                                              'pixel:unreliable': False,
                                              'value': 55.0,
                                              'value:unit': '',
@@ -194,7 +203,8 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
                                              'axes_y': 5,
                                              'axes_y:unit': 'pix',
                                              'data_label': '',
-                                             'pixel': (5.0, 5.0),
+                                             'pixel_x': 5.0,
+                                             'pixel_y': 5.0,
                                              'pixel:unreliable': False}
 
         mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown',
@@ -215,10 +225,11 @@ class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
                                                           'axes_y': 5,
                                                           'axes_y:unit': 'pix',
                                                           'data_label': 'has_wcs[SCI,1]',
-                                                          'world': (337.5187947653852,
-                                                                    -20.831944164705973),
+                                                          'world_ra': 337.5187947653852,
+                                                          'world_dec': -20.831944164705973,
                                                           'world:unreliable': False,
-                                                          'pixel': (5.0, 5.0),
+                                                          'pixel_x': 5.0,
+                                                          'pixel_y': 5.0,
                                                           'pixel:unreliable': False,
                                                           'value': 55.0,
                                                           'value:unit': '',

@@ -391,8 +391,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             self.row3_title = ''
             self.row3_text = f'{world_ra_deg} {world_dec_deg} (deg)'
             self.row3_unreliable = unreliable_world
-            # TODO: use sky directly, but need to figure out how to have a compatible "blank" entry
-            self._dict['world'] = (sky.ra.value, sky.dec.value)
+            self._dict['world_ra'] = sky.ra.value
+            self._dict['world_dec'] = sky.dec.value
             self._dict['world:unreliable'] = unreliable_world
         elif isinstance(viewer, MosvizProfile2DView) and hasattr(getattr(image, 'coords', None),
                                                                  'pixel_to_world'):
@@ -423,7 +423,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.row1a_title = 'Pixel'
         self.row1a_text = (fmt.format(x, y))
         self.row1_unreliable = unreliable_pixel
-        self._dict['pixel'] = (float(x), float(y))
+        self._dict['pixel_x'] = float(x)
+        self._dict['pixel_y'] = float(y)
         self._dict['pixel:unreliable'] = unreliable_pixel
 
         # Extract data values at this position.
