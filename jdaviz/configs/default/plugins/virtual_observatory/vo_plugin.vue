@@ -66,10 +66,10 @@
       
       <v-row>
         <v-select
+          v-model="waveband_selected"
           :menu-props="{ left: true }"
           attach
           :items="wavebands"
-          @change="waveband_selected"
           label="Resource Waveband"
           hint="Select a spectral waveband to filter your surveys"
           persistent-hint
@@ -79,11 +79,11 @@
       <v-row>
         <div class="row-select">
           <v-select
+            v-model="resource_selected"
             :menu-props="{ left: true }"
             attach
             :items="resources"
             :loading="resources_loading"
-            v-model="resource_selected"
             :rules="[() => !!resource_selected || 'This field is required']"
             label="Available Resources"
             hint="Select a SIA resource to query"
