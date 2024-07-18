@@ -155,9 +155,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         finally:
             self.resources_loading = False # Stop loading bar
 
-    def vue_coordframe_selected(self, event):
-        """Sync IVOA resource selected"""
-        self.coordframe_selected = event
 
     def vue_query_resource(self, *args, **kwargs):
         """

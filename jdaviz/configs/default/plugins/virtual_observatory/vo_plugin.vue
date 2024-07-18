@@ -32,7 +32,6 @@
           :menu-props="{ left: true }"
           attach
           :items="coordframes"
-          @change="coordframe_selected"
           label="Coordinate Frame"
           hint="Astronomical Coordinate Frame of the provided Coordinates"
           :disabled="viewer_selected !== 'Manual'"
