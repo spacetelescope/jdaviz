@@ -232,7 +232,7 @@ class UnitConversion(PluginTemplateMixin):
                                sender=self))
 
     @observe('flux_unit_selected', 'sb_unit_selected')
-    def _on_flux_unit_changed(self, *args):
+    def _on_flux_unit_changed(self, msg):
         flux_or_sb = None
         current_y = self.spectrum_viewer.state.y_display_unit
 
@@ -247,47 +247,53 @@ class UnitConversion(PluginTemplateMixin):
                 data_collection_unit = 'Flux'
                 self.flux_or_sb_config_disabler = 'Surface Brightness'
 
-        for arg in args:
-            # determine if flux or surface brightness unit was changed by user
-            if arg['name'] == 'flux_unit_selected':
-                # when the configuration is Specviz, translation is not currently supported.
-                # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
-                # have a scale factor assigned in the metadata, enabling translation.
-                if data_collection_unit == 'Surface Brightness':
-                    raise ValueError(
-                        f"Unit translation between Flux and Surface Brightness "
-                        f"is not supported in {self.app.config}."
-                    )
-                flux_or_sb = self.flux_unit.selected
-                # update flux or surface brightness dropdown if necessary
-                if check_if_unit_is_per_solid_angle(current_y):
-                    self.flux_or_sb.selected = 'Flux'
+        # skip if arg is not a dictionary
+        if not isinstance(msg, dict):
+            raise TypeError("Expected msg to be a dictionary")
+        # skip if 'name' key is missing
+        name = msg.get('name')
+        if not name:
+            raise KeyError("Expected 'name' key in msg")
 
-                untranslatable_units = self.untranslatable_units()
-                # disable translator if flux unit is untranslatable,
-                # still can convert flux units, this just disables flux
-                # to surface brightnes translation for units in list.
-                if flux_or_sb in untranslatable_units:
-                    self.can_translate = False
-                else:
-                    self.can_translate = True
-
-            elif arg['name'] == 'sb_unit_selected':
-                if data_collection_unit == 'Flux':
-                    # when the configuration is Specviz, translation is not currently supported.
-                    # If in Cubeviz, all spectra pass through Spectral Xxtraction plugin and will
-                    # have a scale factor assigned in the metadata, enabling translation.
-                    raise ValueError(
-                        f"Unit translation between Flux and Surface Brightness "
-                        f"is not supported in {self.app.config}."
-                    )
-                flux_or_sb = self.sb_unit.selected
-                self.can_translate = True
-                # update flux or surface brightness dropdown if necessary
-                if not check_if_unit_is_per_solid_angle(current_y):
-                    self.flux_or_sb.selected = 'Surface Brightness'
+        # determine if flux or surface brightness unit was changed by user
+        if name == 'flux_unit_selected':
+            # when the configuration is Specviz, translation is not currently supported.
+            # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
+            # have a scale factor assigned in the metadata, enabling translation.
+            if data_collection_unit == 'Surface Brightness':
+                raise ValueError(
+                    f"Unit translation between Flux and Surface Brightness "
+                    f"is not supported in {self.app.config}."
+                )
+            flux_or_sb = self.flux_unit.selected
+            # update flux or surface brightness dropdown if necessary
+            if check_if_unit_is_per_solid_angle(current_y):
+                self.flux_or_sb.selected = 'Flux'
+            untranslatable_units = self.untranslatable_units()
+            # disable translator if flux unit is untranslatable,
+            # still can convert flux units, this just disables flux
+            # to surface brightnes translation for units in list.
+            if flux_or_sb in untranslatable_units:
+                self.can_translate = False
             else:
-                return
+                self.can_translate = True
+
+        elif name == 'sb_unit_selected':
+            if data_collection_unit == 'Flux':
+                # when the configuration is Specviz, translation is not currently supported.
+                # If in Cubeviz, all spectra pass through Spectral Xxtraction plugin and will
+                # have a scale factor assigned in the metadata, enabling translation.
+                raise ValueError(
+                    f"Unit translation between Flux and Surface Brightness "
+                    f"is not supported in {self.app.config}."
+                )
+            flux_or_sb = self.sb_unit.selected
+            self.can_translate = True
+            # update flux or surface brightness dropdown if necessary
+            if not check_if_unit_is_per_solid_angle(current_y):
+                self.flux_or_sb.selected = 'Surface Brightness'
+        else:
+            return
 
         yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
 
@@ -303,38 +309,38 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.reset_limits()
 
     @observe('flux_or_sb_selected', 'flux_unit_selected', 'sb_unit_selected')
-    def _translate(self, *args):
+    def _translate(self, msg):
         # currently unsupported, can be supported with a scale factor
         if self.app.config == 'specviz':
             return
 
         flux_or_sb = None
 
-        if args:
+        if msg:
             # need to check current y_unit to see if we need to translate
             y_unit = self.spectrum_viewer.state.y_display_unit
-            for arg in args:
-                # skip if arg is not a dictionary
-                if not isinstance(arg, dict):
-                    continue
-                # skip if 'name' key is missing
-                name = arg.get('name')
-                if not name:
-                    continue
-                if name == 'flux_unit_selected':
-                    # don't translate if self.flux_or_sb == Flux
-                    if not check_if_unit_is_per_solid_angle(y_unit):
-                        return
-                    flux_or_sb = 'Flux'
-                elif name == 'sb_unit_selected':
-                    # don't translate if self.flux_or_sb == Surface Brightness
-                    if check_if_unit_is_per_solid_angle(y_unit):
-                        return
-                    flux_or_sb = 'Surface Brightness'
-                elif name == 'flux_or_sb_selected':
-                    flux_or_sb = self.flux_or_sb_selected
-                else:
+
+            # skip if arg is not a dictionary
+            if not isinstance(msg, dict):
+                raise TypeError("Expected msg to be a dictionary")
+            # skip if 'name' key is missing
+            name = msg.get('name')
+            if not name:
+                raise KeyError("Expected 'name' key in msg")
+            if name == 'flux_unit_selected':
+                # don't translate if self.flux_or_sb == Flux
+                if not check_if_unit_is_per_solid_angle(y_unit):
                     return
+                flux_or_sb = 'Flux'
+            elif name == 'sb_unit_selected':
+                # don't translate if self.flux_or_sb == Surface Brightness
+                if check_if_unit_is_per_solid_angle(y_unit):
+                    return
+                flux_or_sb = 'Surface Brightness'
+            elif name == 'flux_or_sb_selected':
+                flux_or_sb = self.flux_or_sb_selected
+            else:
+                return
 
         # we want to raise an error if a user tries to translate with an
         # untranslated Flux unit using the API
