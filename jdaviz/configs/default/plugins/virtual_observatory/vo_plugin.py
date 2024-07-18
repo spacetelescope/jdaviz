@@ -156,7 +156,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             self.resources_loading = False # Stop loading bar
 
 
-    def vue_query_resource(self, *args, **kwargs):
+    def vue_query_resource(self, _=None):
         """
         Once a specific VO resource is selected, query it with the user-specified source target.
         User input for source is first attempted to be parsed as a SkyCoord coordinate. If not,
@@ -223,7 +223,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 f"Unable to populate table for source {self.source}: {e}", sender=self, color="error"))
             raise
 
-    def vue_load_selected_data(self,event):
+    def vue_load_selected_data(self, _=None):
         """Load the files selected by the user in the table"""
         self.data_loading = True # Start loading spinner
         for entry in self.table.selected_rows:
