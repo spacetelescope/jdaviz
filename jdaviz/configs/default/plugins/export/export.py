@@ -470,7 +470,7 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
             if self.overwrite_warn and not overwrite:
                 if raise_error_for_overwrite:
-                    raise FileExistsError(f"{filename} exists but overwrite=False")
+                    raise FileExistsError(f"{filename} exists but overwrite={overwrite}")
                 return
 
             self.save_figure(plot, filename, filetype, show_dialog=show_dialog)
