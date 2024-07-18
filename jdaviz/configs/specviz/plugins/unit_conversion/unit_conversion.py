@@ -273,6 +273,9 @@ class UnitConversion(PluginTemplateMixin):
             return
 
         yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
+        # may need to be updated if translations in other configs going to be supported
+        if not self.flux_unit.choices and self.app.config == 'cubeviz':
+            return
 
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
