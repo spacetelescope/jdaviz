@@ -8,17 +8,23 @@ from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
-from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
+from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
+                              Subset, MaskSubsetState)
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Any, List, Unicode, Bool, observe
 
+from specutils import SpectralRegion
+
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import MultiMaskSubsetState
+from jdaviz.core import region_translators
+from jdaviz.core.helpers import _next_subset_num
+from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.utils import MultiMaskSubsetState, data_has_valid_wcs
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
 
@@ -92,6 +98,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         align_by = getattr(self.app, '_align_by', None)
         self.display_sky_coordinates = (align_by == 'wcs' and not self.multiselect)
+
+        self.combination_mode = None
 
     def _on_link_update(self, *args):
         """When linking is changed pixels<>wcs, change display units of the
@@ -656,6 +664,145 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self.subset_definitions[index][i]['value'] = new_value
                 break
 
+    def import_region(self, region, **kwargs):
+        if isinstance(region, str):
+            if os.path.exists(region):
+                from regions import Regions
+                region_format = kwargs.pop('region_format', None)
+                raw_regs = Regions.read(region, format=region_format)
+                self._load_regions(raw_regs, **kwargs)
+        else:
+            self._load_regions(region, **kwargs)
+        # elif is region
+        # send to handle region method
+
+        # Remove hardcoding
+        # viewer_name = self.app._jdaviz_helper._default_flux_viewer_reference_name
+        # viewer_name = list(self.app._jdaviz_helper.viewers.keys())[0]
+        # flux_viewer = self.app.get_viewer(viewer_name)
+        # data = flux_viewer.state.reference_data
+
+        # # Use Select object with choices/selected options for combination_mode
+        # if self.combination_mode:
+        #     # Add region with mode
+        #     self.app.session.edit_subset_mode.mode = self.combination_mode
+        # else:
+        #     # Add region as new subset
+        #     self.app.session.edit_subset_mode.mode = NewMode
+        # s = region_translators.regions2roi(region, wcs=data.coords)
+        #
+        # flux_viewer.apply_roi(s)
+
+    def _load_regions(self, regions, refdata_label=None, **kwargs):
+        if len(self.app.data_collection) == 0:
+            raise ValueError('Cannot load regions without data.')
+
+        from photutils.aperture import (CircularAperture, SkyCircularAperture,
+                                        EllipticalAperture, SkyEllipticalAperture,
+                                        RectangularAperture, SkyRectangularAperture,
+                                        CircularAnnulus, SkyCircularAnnulus)
+        from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
+                             EllipsePixelRegion, EllipseSkyRegion,
+                             RectanglePixelRegion, RectangleSkyRegion,
+                             CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
+        from jdaviz.core.region_translators import regions2roi, aperture2regions
+
+        # If user passes in one region obj instead of list, try to be smart.
+        # if not isinstance(regions, (list, tuple, Regions)):
+        #     regions = [regions]
+
+        bad_regions = []
+
+        # To keep track of masked subsets.
+        msg_prefix = 'MaskedSubset'
+        msg_count = _next_subset_num(msg_prefix, self.app.data_collection.subset_groups)
+
+        viewer_name = list(self.app._jdaviz_helper.viewers.keys())[0]
+        viewer = self.app.get_viewer(viewer_name)
+        # Subset is global but reference data is viewer-dependent.
+        if refdata_label is None:
+            data = viewer.state.reference_data
+        else:
+            data = self.app.data_collection[refdata_label]
+
+        # TODO: Make this work for data cube.
+        # https://github.com/glue-viz/glue-astronomy/issues/75
+        has_wcs = data_has_valid_wcs(data, ndim=2)
+        for region in regions:
+            if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
+                                    SkyRectangularAperture, SkyCircularAnnulus,
+                                    CircleSkyRegion, EllipseSkyRegion,
+                                    RectangleSkyRegion, CircleAnnulusSkyRegion))
+                    and not has_wcs):
+                bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
+    
+            if (isinstance(region, (CircularAperture, EllipticalAperture,
+                                    RectangularAperture, CircularAnnulus,
+                                    CirclePixelRegion, EllipsePixelRegion,
+                                    RectanglePixelRegion, CircleAnnulusPixelRegion))
+                    and self.app._link_type == "wcs"):
+                bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+    
+            # photutils: Convert to region shape first
+            if isinstance(region, (CircularAperture, SkyCircularAperture,
+                                   EllipticalAperture, SkyEllipticalAperture,
+                                   RectangularAperture, SkyRectangularAperture,
+                                   CircularAnnulus, SkyCircularAnnulus)):
+                region = aperture2regions(region)
+
+            elif isinstance(region, SpectralRegion):
+                self._import_spectral_regions(region)
+    
+            # region: Convert to ROI.
+            # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
+            if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
+                                   EllipsePixelRegion, EllipseSkyRegion,
+                                   RectanglePixelRegion, RectangleSkyRegion,
+                                   CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
+                state = regions2roi(region, wcs=data.coords)
+                # viewer_name = list(self.app._jdaviz_helper.viewers.keys())[0]
+                # viewer = self.app.get_viewer(viewer_name)
+                self._apply_subset_state_to_viewer(state, viewer)
+                # Apply subset to viewer
+                # TODO: Do we want user to specify viewer? Does it matter?
+                # self.app.session.edit_subset_mode._mode = NewMode
+                # self.app._jdaviz_helper.default_viewer._obj.apply_roi(state)
+                # self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+    
+            # Last resort: Masked Subset that is static (if data is not a cube)
+            elif data.ndim == 2:
+                im = None
+                if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
+                    if not has_wcs:
+                        bad_region.append((region, 'Sky region provided but data has no valid WCS'))  # noqa
+                    region = region.to_pixel(data.coords)
+    
+                if hasattr(region, 'to_mask'):
+                    try:
+                        mask = region.to_mask(**kwargs)
+                        im = mask.to_image(data.shape)  # Can be None
+                    except Exception as e:  # pragma: no cover
+                        bad_regions.append((region, f'Failed to load: {repr(e)}'))
+    
+                # Boolean mask as input is supported but not advertised.
+                elif (isinstance(region, np.ndarray) and region.shape == data.shape
+                      and region.dtype == np.bool_):
+                    im = region
+    
+                if im is None:
+                    bad_regions.append((region, 'Mask creation failed'))
+    
+                # NOTE: Region creation info is thus lost.
+                try:
+                    subset_label = f'{msg_prefix} {msg_count}'
+                    state = MaskSubsetState(im, data.pixel_component_ids)
+                    self.app.data_collection.new_subset_group(subset_label, state)
+                    msg_count += 1
+                except Exception as e:  # pragma: no cover
+                    bad_regions.append((region, f'Failed to load: {repr(e)}'))
+            else:
+                bad_regions.append((region, 'Mask creation failed'))
+
     def _import_spectral_regions(self, spec_region, mode=NewMode, viewer=None):
         """
         Method for importing a SpectralRegion object or list of SpectralRegion objects.
@@ -685,3 +832,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
                                  att=range_viewer.slice_component_label)
             range_viewer.apply_subset_state(s)
+
+    def _apply_subset_state_to_viewer(self, state, viewer):
+        if self.combination_mode:
+            # Add region with mode
+            self.app.session.edit_subset_mode.mode = self.combination_mode
+        else:
+            # Add region as new subset
+            self.app.session.edit_subset_mode.mode = NewMode
+        if isinstance(viewer, SpecvizProfileView):
+            pass
+        else:
+            viewer.apply_roi(state)
+        self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
