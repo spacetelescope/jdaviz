@@ -184,3 +184,68 @@ def test_api_after_linking(imviz_helper):
 
         # when wcs linked are any marks displayed
         assert marks_displayed is True
+
+
+def test_footprint_updates_on_rotation(imviz_helper):
+    image_2d_wcs = WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg',
+                        'CRPIX1': 1, 'CRVAL1': 337.5202808,
+                        'CTYPE2': 'DEC--TAN', 'CUNIT2': 'deg',
+                        'CRPIX2': 1, 'CRVAL2': -20.833333059999998,
+                        'CD1_1': 0.0005, 'CD1_2': 0.005,
+                        'CD2_1': -0.005, 'CD2_2': -0.0005})
+
+    arr = np.random.normal(size=(10, 10))
+    ndd = NDData(arr, wcs=image_2d_wcs)
+
+    imviz_helper.load_data(ndd)
+    imviz_helper.link_data(link_type='wcs')
+
+    footprints = imviz_helper.plugins['Footprints']
+    footprints.keep_active = True
+
+    # this is near the pixel origin:
+    rectangle_center = SkyCoord(337.5202808, -20.83333306, unit='deg')
+
+    # this is the opposite corner of the image:
+    opposite_corner = SkyCoord(337.5791498, -20.88832297, unit='deg')
+
+    # Put a MIRI footprint at the far corner:
+    footprints.preset = 'MIRI'
+    footprints.ra = opposite_corner.ra.deg
+    footprints.dec = opposite_corner.dec.deg
+    miri_region = footprints.overlay_regions[0]
+
+    # create a second footprint for a rectangular sky region near the pixel origin:
+    footprints.add_overlay('2')
+
+    rectangle_region = RectangleSkyRegion(
+        center=rectangle_center,
+        height=1 * u.arcmin,
+        width=2 * u.arcmin,
+        angle=45 * u.deg
+    )
+
+    footprints.import_region(rectangle_region)
+
+    # ensure that the footprints are where we expect them:
+    assert rectangle_region.contains(rectangle_center, image_2d_wcs)
+    assert not rectangle_region.contains(opposite_corner, image_2d_wcs)
+
+    assert not miri_region.contains(rectangle_center, image_2d_wcs)
+    assert miri_region.contains(opposite_corner, image_2d_wcs)
+
+    marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+
+    # check that the rectangle region appears near the bottom of the viewer:
+    assert np.concatenate([marks[0].y, marks[1].y]).min() < -3
+
+    # now rotate to north-up east-left:
+    orientation = imviz_helper.plugins['Orientation']._obj
+    orientation.create_north_up_east_left(set_on_create=True)
+
+    # If all footprint orientations have been updated, the lowest
+    # mark should still be centered low. If the footprint
+    # orientations aren't updated, both footprints will be
+    # at the top of the viewer, and this test will fail.
+    marks = _get_markers_from_viewer(imviz_helper.default_viewer)
+    assert np.concatenate([marks[0].y, marks[1].y]).min() < -3
