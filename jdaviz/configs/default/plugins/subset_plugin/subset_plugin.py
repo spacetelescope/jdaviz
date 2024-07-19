@@ -1,4 +1,5 @@
 import os
+import json
 
 import numpy as np
 
@@ -6,18 +7,21 @@ from astropy.time import Time
 import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
-                                        ReplaceMode, XorMode)
-from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
+                                        ReplaceMode, XorMode, NewMode)
+
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Any, List, Unicode, Bool, observe
+from specutils import SpectralRegion
 
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.core import region_translators
 from jdaviz.utils import MultiMaskSubsetState
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
@@ -655,3 +659,53 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if self.subset_definitions[index][i]['name'] == name:
                 self.subset_definitions[index][i]['value'] = new_value
                 break
+
+    def _import_spectral_regions(self, spec_region, mode=NewMode):
+        """
+        Method for importing a SpectralRegion object or list of SpectralRegion objects.
+
+        Parameters
+        ----------
+        spec_region : ~`specutils.SpectralRegion` object or list
+            The object that contains bounds for the spectral region or regions
+        mode : AndMode, AndNotMode, OrMode, ReplaceMode, XorMode, or NewMode
+            By default this is set to NewMode which creates a new subset per subregion.
+            OrMode will create a composite subset with each subregion corresponding
+            to a subregion of a single subset.
+        """
+        viewer_name = self.app._jdaviz_helper._default_spectrum_viewer_reference_name
+        spectrum_viewer = self.app.get_viewer(viewer_name)
+        for sub_region in spec_region:
+            self.app.session.edit_subset_mode.mode = mode
+            spectrum_viewer.apply_roi(XRangeROI(sub_region.lower.value, sub_region.upper.value))
+
+    def import_region(self, spec_region):
+        if isinstance(spec_region, list):
+            if len(spec_region) < 1 or ('region' in spec_region[0] and
+                                        not spec_region[0]['region']):
+                return
+            elif isinstance(spec_region[0], SpectralRegion):
+                self._import_spectral_regions(spec_region)
+            else:
+                self._import_regions_list(spec_region)
+        elif isinstance(spec_region, dict):
+            for key, value in spec_region.items():
+                self.import_region(value)
+        elif isinstance(spec_region, str):
+            try:
+                dict_region = json.loads(spec_region)
+            except ValueError:
+                raise ValueError
+            self.import_region(dict_region)
+        elif isinstance(spec_region, SpectralRegion):
+            self._import_spectral_regions(spec_region)
+
+    def _import_regions_list(self, spec_region):
+        viewer_name = self.app._jdaviz_helper._default_flux_viewer_reference_name
+        flux_viewer = self.app.get_viewer(viewer_name)
+        for subregion in spec_region:
+            if subregion['glue_state'] == 'RoiSubsetState':
+                self.app.session.edit_subset_mode.mode = NewMode
+            else:
+                self.app.session.edit_subset_mode.mode = SUBSET_MODES[subregion['glue_state']]
+            flux_viewer.apply_roi(region_translators.regions2roi(subregion['region']))
