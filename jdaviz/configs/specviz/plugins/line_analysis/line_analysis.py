@@ -288,10 +288,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # don't need these if statements
             if function == "Line Flux":
                 flux_unit = spec_subtracted.flux.unit
-                add_flux = False
-                if str(flux_unit) == '':
+                if flux_unit == u.dimensionless_unscaled:
                     add_flux = True
                     flux_unit = u.Unit(self.spectrum_viewer.state.y_display_unit)
+                else:
+                    add_flux = False
                 # If the flux unit is equivalent to Jy, or Jy per spaxel for Cubeviz,
                 # enforce integration in frequency space
                 if (flux_unit.is_equivalent(u.Jy) or

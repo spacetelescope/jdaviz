@@ -242,7 +242,7 @@ class UnitConversion(PluginTemplateMixin):
             if check_if_unit_is_per_solid_angle(current_y):
                 self._translate('Flux')
                 self.flux_or_sb.selected = 'Flux'
-            untranslatable_units = self.untranslatable_units()
+            untranslatable_units = self._untranslatable_units
             # disable translator if flux unit is untranslatable,
             # still can convert flux units, this just disables flux
             # to surface brightnes translation for units in list.
@@ -291,7 +291,7 @@ class UnitConversion(PluginTemplateMixin):
 
         # we want to raise an error if a user tries to translate with an
         # untranslated Flux unit using the API
-        untranslatable_units = self.untranslatable_units()
+        untranslatable_units = self._untranslatable_units
         untranslatable_units = units_to_strings(untranslatable_units)
 
         if hasattr(self, 'flux_unit'):
@@ -333,13 +333,13 @@ class UnitConversion(PluginTemplateMixin):
                                                     sender=self))
         self.spectrum_viewer.reset_limits()
 
-    def untranslatable_units(self):
-        untranslatable_units = [
-                    u.erg / (u.s * u.cm**2),
-                    u.erg / (u.s * u.cm**2 * u.Angstrom),
-                    u.erg / (u.s * u.cm**2 * u.Hz),
-                    u.ph / (u.Angstrom * u.s * u.cm**2),
-                    u.ph / (u.s * u.cm**2 * u.Hz),
-                    u.ST, u.bol
-                ]
-        return untranslatable_units
+    @property
+    def _untranslatable_units(self):
+        return [
+            u.erg / (u.s * u.cm**2),
+            u.erg / (u.s * u.cm**2 * u.Angstrom),
+            u.erg / (u.s * u.cm**2 * u.Hz),
+            u.ph / (u.Angstrom * u.s * u.cm**2),
+            u.ph / (u.s * u.cm**2 * u.Hz),
+            u.ST, u.bol
+        ]
