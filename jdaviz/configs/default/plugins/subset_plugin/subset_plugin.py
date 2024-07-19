@@ -6,7 +6,7 @@ from astropy.time import Time
 import astropy.units as u
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
-                                        ReplaceMode, XorMode)
+                                        ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
 from glue.icons import icon_path
@@ -655,3 +655,33 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if self.subset_definitions[index][i]['name'] == name:
                 self.subset_definitions[index][i]['value'] = new_value
                 break
+
+    def _import_spectral_regions(self, spec_region, mode=NewMode, viewer=None):
+        """
+        Method for importing a SpectralRegion object or list of SpectralRegion objects.
+
+        Parameters
+        ----------
+        spec_region : ~`specutils.SpectralRegion` object or list
+            The object that contains bounds for the spectral region or regions
+        mode : AndMode, AndNotMode, OrMode, ReplaceMode, XorMode, NewMode, or list
+            By default this is set to NewMode which creates a new subset per subregion.
+            OrMode will create a composite subset with each subregion corresponding
+            to a subregion of a single subset.
+        """
+        viewer_name = viewer or self.app._jdaviz_helper._default_spectrum_viewer_reference_name
+        range_viewer = self.app.get_viewer(viewer_name)
+        for index, sub_region in enumerate(spec_region):
+            if isinstance(mode, list):
+                if len(mode) != (len(spec_region) - 1):
+                    raise ValueError("list of mode must be size of spec_region minus one")
+                if index == 0:
+                    m = NewMode
+                else:
+                    m = mode[index - 1]
+            else:
+                m = mode
+            self.app.session.edit_subset_mode.mode = m
+            s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
+                                 att=range_viewer.slice_component_label)
+            range_viewer.apply_subset_state(s)
