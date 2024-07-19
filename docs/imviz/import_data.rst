@@ -50,7 +50,7 @@ to load regions from a ``.reg`` file; also see :ref:`imviz-import-regions-api`.
 
 Downloading data products through the Virtual Observatory
 ---------------------------------------------------------
-Imviz supports querying and loading data products from the `IVOA's Virtual Observatory (https://ivoa.net/)`_.
+Imviz supports querying and loading data products from the `IVOA's Virtual Observatory <https://ivoa.net/>`_.
 The plugin will search for registered archives that have observations which intersect the circular field
 specified by the user.
 
