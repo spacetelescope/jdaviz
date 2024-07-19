@@ -79,7 +79,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
         # two-pixel region:
         CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)
     ]
-    cubeviz_helper.load_regions(regions)
+    cubeviz_helper.plugins['Subset Tools'].import_region(regions)
 
     extract_plugin = cubeviz_helper.plugins['Spectral Extraction']
     extract_plugin.function = "Sum"
@@ -119,7 +119,7 @@ def test_subset(
     ]
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
-    cubeviz_helper.load_regions(regions)
+    cubeviz_helper.plugins['Subset Tools'].import_region(regions)
 
     plg = cubeviz_helper.plugins['Spectral Extraction']
     plg.function = function
@@ -194,7 +194,7 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tm
 def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
 
     cubeviz_helper.load_data(spectrum1d_cube)
-    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)])
+    cubeviz_helper.plugins['Subset Tools'].import_region([CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
     slice_plg = cubeviz_helper.plugins['Slice']
@@ -246,7 +246,7 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
                                               expected_flux_2400):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     center = PixCoord(5, 10)
-    cubeviz_helper.load_regions([
+    cubeviz_helper.plugins['Subset Tools'].import_region([
         CirclePixelRegion(center, radius=2.5),
         EllipsePixelRegion(center, width=5, height=5)])
 
@@ -278,7 +278,7 @@ def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_
                                                      subset, aperture_method, expected_flux_wav):
     cubeviz_helper.load_data(spectrum1d_cube_largest, data_label="test")
     center = PixCoord(5, 10)
-    cubeviz_helper.load_regions([
+    cubeviz_helper.plugins['Subset Tools'].import_region([
         CirclePixelRegion(center, radius=2.5),
         EllipsePixelRegion(center, width=5, height=5)])
 
@@ -302,7 +302,7 @@ def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_
 # NOTE: Not as thorough as circle and ellipse above but good enough.
 def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.load_regions(RectanglePixelRegion(PixCoord(5, 10), width=4, height=4))
+    cubeviz_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(PixCoord(5, 10), width=4, height=4))
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
@@ -329,7 +329,7 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
     spectrum1d_cube_largest = spectrum1d_cube_largest + 1 * u.Jy
 
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.load_regions([
+    cubeviz_helper.plugins['Subset Tools'].import_region([
         CirclePixelRegion(PixCoord(5, 10), radius=2.5),
         EllipsePixelRegion(PixCoord(13, 10), width=3, height=5)])
 
@@ -382,7 +382,7 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
 def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     center = PixCoord(5, 10)
-    cubeviz_helper.load_regions([
+    cubeviz_helper.plugins['Subset Tools'].import_region([
         CirclePixelRegion(center, radius=2.5),
         CircleAnnulusPixelRegion(center, inner_radius=2.5, outer_radius=4)])
 
@@ -409,7 +409,8 @@ def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
 def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
     data = Spectrum1D(flux=np.ones((128, 129, 256)) * u.nJy, wcs=spectral_cube_wcs)
     cubeviz_helper.load_data(data, data_label="Test Flux")
-    cubeviz_helper.load_regions([CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
+    cubeviz_helper.plugins['Subset Tools'].import_region(
+        [CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
@@ -429,7 +430,8 @@ def test_cube_extraction_with_nan(cubeviz_helper, image_cube_hdu_obj):
     sp = extract_plg.extract()  # Default settings (sum)
     assert_allclose(sp.flux.value, 96)  # (10 x 10) - 4
 
-    cubeviz_helper.load_regions(RectanglePixelRegion(PixCoord(1.5, 1.5), width=4, height=4))
+    cubeviz_helper.plugins['Subset Tools'].import_region(
+        RectanglePixelRegion(PixCoord(1.5, 1.5), width=4, height=4))
     extract_plg.aperture = 'Subset 1'
     sp_subset = extract_plg.extract()  # Default settings but on Subset
     assert_allclose(sp_subset.flux.value, 12)  # (4 x 4) - 4

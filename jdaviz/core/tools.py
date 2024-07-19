@@ -540,7 +540,7 @@ class SinglePixelRegion(CheckableTool):
 
         if data['altKey'] is True:
             reg = self.get_subset(x, y, as_roi=False)
-            self.viewer.jdaviz_helper.load_regions(reg)
+            self.viewer.jdaviz_app.get_tray_item_from_name('g-subset-plugin').import_region(reg)
         else:
             roi = self.get_subset(x, y, as_roi=True)
             self.viewer.apply_roi(roi)

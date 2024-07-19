@@ -13,7 +13,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
-    cubeviz_helper.load_regions(aper)
+    cubeviz_helper.plugins['Subset Tools'].import_region(aper)
 
     # Make sure MASK is not an option even when shown in viewer.
     cubeviz_helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
@@ -86,6 +86,56 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     assert "invalid counts" in plg.result_failed_msg
 
 
+<<<<<<< HEAD
+=======
+def test_cubeviz_aperphot_generated_2d_moment(cubeviz_helper, image_cube_hdu_obj_microns):
+    cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
+    flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1")
+
+    moment_plg = cubeviz_helper.plugins["Moment Maps"]
+    _ = moment_plg.calculate_moment()
+
+    # Need this to make it available for photometry data drop-down.
+    cubeviz_helper.app.add_data_to_viewer("uncert-viewer", "test[FLUX] moment 0")
+
+    aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
+    cubeviz_helper.plugins['Subset Tools'].import_region(aper)
+
+    plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
+    plg.dataset_selected = "test[FLUX] moment 0"
+    plg.aperture_selected = "Subset 1"
+    plg.vue_do_aper_phot()
+    row = cubeviz_helper.get_aperture_photometry_results()[0]
+
+    # Basically, we should recover the input rectangle here.
+    if SPECUTILS_LT_1_15_1:
+        moment_sum = 540 * flux_unit
+        moment_mean = 36 * flux_unit
+    else:
+        moment_unit = flux_unit * u.um
+        moment_sum = 0.54 * moment_unit
+        moment_mean = 0.036 * moment_unit
+    assert_allclose(row["xcenter"], 1 * u.pix)
+    assert_allclose(row["ycenter"], 2 * u.pix)
+    sky = row["sky_center"]
+    assert_allclose(sky.ra.deg, 205.43985906934287)
+    assert_allclose(sky.dec.deg, 27.003490103642033)
+    assert_allclose(row["sum"], moment_sum)  # 3 (w) x 5 (h) x 36 (v)
+    assert_allclose(row["sum_aper_area"], 15 * (u.pix * u.pix))  # 3 (w) x 5 (h)
+    assert_allclose(row["mean"], moment_mean)
+    assert np.isnan(row["slice_wave"])
+
+    # Moment 1 has no compatible unit, so should not be available for photometry.
+    moment_plg.n_moment = 1
+    moment_plg.reference_wavelength = 5
+    _ = moment_plg.calculate_moment()
+    m1_lbl = "test[FLUX] moment 1"
+    cubeviz_helper.app.add_data_to_viewer("uncert-viewer", m1_lbl)
+    assert (m1_lbl in cubeviz_helper.app.data_collection.labels and
+            m1_lbl not in plg.dataset.choices)
+
+
+>>>>>>> 74bc5d06 (Create import_region method for loading region objects)
 def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
     flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1")
@@ -99,7 +149,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
     cubeviz_helper.app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
-    cubeviz_helper.load_regions(aper)
+    cubeviz_helper.plugins['Subset Tools'].import_region(aper)
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     plg.dataset_selected = "test[FLUX] spatial-smooth stddev-1.0"
@@ -125,7 +175,7 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
-    cubeviz_helper.load_regions([aper, bg])
+    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg])
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     plg.dataset_selected = "test[FLUX]"

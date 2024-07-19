@@ -21,7 +21,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         self.imviz.link_data(align_by='wcs')  # They are dithered by 1 pixel on X
 
         reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5).to_sky(self.wcs_1)
-        self.imviz.load_regions(reg)
+        self.imviz.plugins['Subset Tools'].import_region(reg)
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
@@ -116,7 +116,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on an ellipse subset.
         reg = EllipsePixelRegion(center=PixCoord(x=4.5, y=2.0), width=9.0, height=4.0).to_sky(self.wcs_1)  # noqa: E501
-        self.imviz.load_regions(reg)
+        self.imviz.plugins['Subset Tools'].import_region(reg)
 
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 2'
@@ -139,7 +139,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
         reg = RectanglePixelRegion(center=PixCoord(x=4.5, y=4.5), width=9, height=9).to_sky(self.wcs_1)  # noqa: E501
-        self.imviz.load_regions(reg)
+        self.imviz.plugins['Subset Tools'].import_region(reg)
 
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 3'
@@ -276,7 +276,7 @@ class TestAdvancedAperPhot:
         w = imviz_helper.app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
-        imviz_helper.load_regions([
+        imviz_helper.plugins['Subset Tools'].import_region([
             CirclePixelRegion(center=PixCoord(x=145.1, y=168.3), radius=5).to_sky(w),
             CirclePixelRegion(center=PixCoord(x=48.3, y=200.3), radius=5).to_sky(w),
             EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9, angle=2.356 * u.rad).to_sky(w),  # noqa: E501
@@ -356,7 +356,7 @@ def test_annulus_background(imviz_helper):
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(
         PixCoord(x=150, y=25), inner_radius=7, outer_radius=17)
-    imviz_helper.load_regions([circle_1, annulus_1])
+    imviz_helper.plugins['Subset Tools'].import_region([circle_1, annulus_1])
 
     phot_plugin.aperture_selected = 'Subset 1'
     phot_plugin.background_selected = 'Subset 2'
@@ -373,7 +373,7 @@ def test_annulus_background(imviz_helper):
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_2 = CircleAnnulusPixelRegion(
         PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
-    imviz_helper.load_regions([ellipse_1, annulus_2])
+    imviz_helper.plugins['Subset Tools'].import_region([ellipse_1, annulus_2])
 
     # Subset 4 (annulus) should be available in both sets of choices, but invalid for selection as
     # aperture

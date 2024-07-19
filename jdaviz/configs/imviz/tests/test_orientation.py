@@ -197,7 +197,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         # Create rotated shape
         reg = klass(center=SkyCoord(ra=337.51931488, dec=-20.83187472, unit="deg"),
                     width=2.4 * u.arcsec, height=1.2 * u.arcsec, angle=angle)
-        self.imviz.load_regions(reg)
+        self.imviz.plugins['Subset Tools'].import_region(reg)
 
         # Switch to N-up E-right
         lc_plugin._obj.create_north_up_east_right(set_on_create=True)

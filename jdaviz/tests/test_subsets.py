@@ -418,7 +418,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # This rectangle is over a real object in reference image but
     # only the last row in the second image if linked by pixel.
-    imviz_helper.load_regions(
+    imviz_helper.plugins['Subset Tools'].import_region(
         RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w))
 
     subset_plugin = imviz_helper.plugins["Subset Tools"]._obj
@@ -438,7 +438,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
     # Now create a new subset that has a source in the corner and test
     # recentering with multiselect.
 
-    imviz_helper.load_regions(
+    subset_plugin.import_region(
         CirclePixelRegion(center=PixCoord(x=145, y=175), radius=17).to_sky(w))
     subset_plugin.multiselect = True
     subset_plugin.subset_selected = ["Subset 1", "Subset 2"]

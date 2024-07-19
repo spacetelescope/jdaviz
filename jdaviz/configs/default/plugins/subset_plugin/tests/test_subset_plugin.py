@@ -177,23 +177,44 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     ('spec_regions', 'mode', 'len_subsets', 'len_subregions'),
     [([SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
-       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], NewMode, 3, 1),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], 'new', 3, 1),
+     ([SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
+       SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], 'replace', 1, 1),
      ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
-       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), OrMode, 1, 3),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), 'OrState', 1, 3),
      ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
        SpectralRegion(5.8 * u.um, 5.9 * u.um) +
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
-       SpectralRegion(7 * u.um, 7.2 * u.um)), [AndNotMode, OrMode, OrMode], 1, 4),
+       SpectralRegion(7 * u.um, 7.2 * u.um)), ['AndNotState', 'OrState', 'OrState'], 1, 4),
      (SpectralRegion(5.8 * u.um, 5.9 * u.um), None, 1, 1)
      ]
 )
 def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, mode, len_subsets,
                                 len_subregions):
     cubeviz_helper.load_data(spectrum1d_cube)
-    cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
-    plg = cubeviz_helper.plugins['Subset Tools']._obj
-    plg._import_spectral_regions(spec_region=spec_regions, mode=mode)
+    plg = cubeviz_helper.plugins['Subset Tools']
+    plg.import_region(spec_regions, mode=mode)
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == len_subsets
     assert len(subsets['Subset 1']) == len_subregions
+
+
+def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']._obj
+    s = SpectralRegion(5*u.um, 6*u.um)
+    s.write()
+    plg.import_region('spectral_region.ecsv')
+    subsets = cubeviz_helper.app.get_subsets()
+    assert len(subsets) == 1
+
+    plg.combination_mode.selected = 'OrState'
+    plg.import_region(SpectralRegion(7*u.um, 8*u.um))
+
+    subsets = cubeviz_helper.app.get_subsets()
+    assert len(subsets['Subset 1']) == 2
+
+    with pytest.raises(ValueError, match='test not one of'):
+        plg.combination_mode.selected = 'test'

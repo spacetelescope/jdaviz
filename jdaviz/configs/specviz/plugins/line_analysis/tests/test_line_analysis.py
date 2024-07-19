@@ -57,7 +57,8 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
     cubeviz_helper.load_data(image_cube_hdu_obj, data_label="Test Cube")
 
     # add a spatial region
-    cubeviz_helper.load_regions(RectanglePixelRegion(center=PixCoord(x=3, y=5), width=4, height=6))
+    cubeviz_helper.plugins['Subset Tools'].import_region(
+        RectanglePixelRegion(center=PixCoord(x=3, y=5), width=4, height=6))
 
     # create a spectral region
     spectrum_viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')

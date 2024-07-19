@@ -759,6 +759,8 @@ class ImageConfigHelper(ConfigHelper):
             If not requested, return `None`.
 
         """
+        raise ValueError()
+
         if len(self.app.data_collection) == 0:
             raise ValueError('Cannot load regions without data.')
 
