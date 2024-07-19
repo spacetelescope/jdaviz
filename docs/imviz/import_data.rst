@@ -55,12 +55,13 @@ The plugin will search for registered archives that have observations which inte
 specified by the user.
 
 To search the VO, enter a source location and a radius around which to search. The source utilizes
-:class:`~astropy.coordinates.SkyCoord`'s resolver and can accept any string representations of astronomical
-coordinates understood by ``SkyCoord``. For more information, see :ref:`astropy:astropy-coordinates-high-level`.
-If a radius is not provided, a circular field of 1 degree centered on the source will be assumed.
+:class:`~astropy.coordinates.SkyCoord`'s resolver and can accept a common source name (e.g. Messier or NGC) or 
+any string representations of astronomical coordinates understood by ``SkyCoord``. For more information,
+see :ref:`astropy:astropy-coordinates-high-level`. If a radius is not provided, a circular field of 1 degree
+centered on the source will be assumed.
 
 By default, the plugin will limit results to archives which report coverage intersecting the provided cirular
-field. To instead see all available archives on the IVOA registry, toggle the :guilabel:`coverage filter` button.
+field. To instead see all available archives on the IVOA registry, toggle the :guilabel:`Filter by Coverage` button.
 
 .. note::
 
