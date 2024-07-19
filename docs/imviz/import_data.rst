@@ -55,8 +55,8 @@ The plugin will search for registered archives that have observations which inte
 specified by the user.
 
 To search the VO, enter a source location and a radius around which to search. The source utilizes
-:class:`astropy.coordinates.SkyCoord`'s resolver and can accept any string representations of astronomical
-coordinates understood by `SkyCoord`. For more information, see :ref:`astropy:astropy-coordinates-high-level`.
+:class:`~astropy.coordinates.SkyCoord`'s resolver and can accept any string representations of astronomical
+coordinates understood by ``SkyCoord``. For more information, see :ref:`astropy:astropy-coordinates-high-level`.
 If a radius is not provided, a circular field of 1 degree centered on the source will be assumed.
 
 By default, the plugin will limit results to archives which report coverage intersecting the provided cirular
@@ -76,9 +76,9 @@ will be reported. Otherwise, the list will return all available archives and sur
 resource to query and press the :guilabel:`Query Archive` button to search your specified archive with your
 specific target.
 
-Once the query is complete, a table of results will be populated below, with the archive provided `Title`, `Date`,
-and `Instrument` of each result. Select your desired data products to load and click :guilabel:`Load Data` to
-download and import your selected data products to Imviz. 
+Once the query is complete, a table of results will be populated below, with the archive provided ``Title``,
+``Date``, and ``Instrument`` of each result. Select your desired data products to load and click
+:guilabel:`Load Data` to download and import your selected data products to Imviz. 
 
 .. _imviz-virtual-observatory:
 
