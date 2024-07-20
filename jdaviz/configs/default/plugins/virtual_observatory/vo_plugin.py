@@ -19,9 +19,10 @@ from jdaviz.core.template_mixin import (
 )
 
 __all__ = ["VoPlugin"]
+vo_plugin_label = "Virtual Observatory"
 
 
-@tray_registry("VoPlugin", label="Virtual Observatory")
+@tray_registry("VoPlugin", label=vo_plugin_label)
 class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     """Plugin to query the Virtual Observatory and load data into Imviz"""
 
