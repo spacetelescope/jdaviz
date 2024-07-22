@@ -252,34 +252,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             self.results_loading = False  # Stop loading spinner
 
         try:
-            for result in sia_results:
-                table_entry = {"URL": result.getdataurl()}
-                if not self._populate_url_only:
-                    try:
-                        table_entry["Title"] = str(result.title)
-                        table_entry["Instrument"] = str(result.instr)
-                        table_entry["DateObs"] = str(result.dateobs)
-                    except Exception as e:
-                        self.hub.broadcast(
-                            SnackbarMessage(
-                                f"Can't get metadata columns. Switching table to URL-only: {e}",
-                                sender=self,
-                                color="warning",
-                            )
-                        )
-                        self.table.headers_visible = ["URL"]
-                        self._populate_url_only = True
-                # Table widget only supports JSON-verification for serial table additions.
-                # For improved performance with larger tables, a `table.add_items` that accepts
-                # a table of elements should be implemented
-                self.table.add_item(table_entry)
-            self.hub.broadcast(
-                SnackbarMessage(
-                    f"{len(sia_results)} SIA results populated!",
-                    sender=self,
-                    color="success",
-                )
-            )
+            self._populate_table(sia_results)
         except Exception as e:
             self.hub.broadcast(
                 SnackbarMessage(
@@ -289,6 +262,39 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 )
             )
             raise
+
+    def _populate_table(
+        self,
+        sia_results,
+        table_headers={"Title": "title", "Instrument": "instr", "DateObs": "dateobs"},
+    ):
+        for result in sia_results:
+            table_entry = {"URL": result.getdataurl()}
+            if not self._populate_url_only:
+                try:
+                    for header, attr in table_headers.items():
+                        table_entry[header] = str(getattr(result, attr))
+                except Exception as e:
+                    self.hub.broadcast(
+                        SnackbarMessage(
+                            f"Can't get metadata columns. Switching table to URL-only: {e}",
+                            sender=self,
+                            color="warning",
+                        )
+                    )
+                    self.table.headers_visible = ["URL"]
+                    self._populate_url_only = True
+            # Table widget only supports JSON-verification for serial table additions.
+            # For improved performance with larger tables, a `table.add_items` that accepts
+            # a table of elements should be implemented
+            self.table.add_item(table_entry)
+        self.hub.broadcast(
+            SnackbarMessage(
+                f"{len(sia_results)} SIA results populated!",
+                sender=self,
+                color="success",
+            )
+        )
 
     def vue_load_selected_data(self, _=None):
         """Load the files selected by the user in the table"""
