@@ -1816,7 +1816,7 @@ class SubsetSelect(SelectPluginComponent):
     """
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
-                 default_mode='default_text'):
+                 default_mode='default_text', subset_selected_changed_callback=None):
         """
         Parameters
         ----------
@@ -1864,6 +1864,7 @@ class SubsetSelect(SelectPluginComponent):
         self._cached_properties += ["selected_subset_state",
                                     "selected_spatial_region",
                                     "selected_subset_mask"]
+        self._subset_selected_changed_callback = subset_selected_changed_callback
         if dataset is not None:
             # clear selected_subset_mask and selected_spatial_region on change to dataset
             self.add_observe(self.dataset._plugin_traitlets['selected'],
@@ -1928,6 +1929,15 @@ class SubsetSelect(SelectPluginComponent):
         return super()._is_valid_item(subset, locals())
 
     def _update_subset(self, subset, attribute=None):
+        if (attribute == 'subset_state' and
+            ((self.is_multiselect and subset.label in self.selected)
+             or (subset.label == self.selected))):
+            # updated the currently selected subset, clear all cache
+            self._clear_cache()
+            update_has_subregions = True
+        else:
+            update_has_subregions = False
+
         if subset.label not in self.labels:
             # NOTE: this logic will need to be revisited if generic renaming of subsets is added
             # see https://github.com/spacetelescope/jdaviz/pull/1175#discussion_r829372470
@@ -1946,13 +1956,11 @@ class SubsetSelect(SelectPluginComponent):
                               else self._subset_to_dict(subset)
                               for s in self.items]
 
-        if (attribute == 'subset_state' and
-            ((self.is_multiselect and subset.label in self.selected)
-             or (subset.label == self.selected))):
-            # updated the currently selected subset
-            self._clear_cache("selected_obj", "selected_item", "selected_subset_state",
-                              "selected_subset_mask", "selected_subset", "selected_spatial_region")
+        if update_has_subregions:
             self._update_has_subregions()
+
+        if self._subset_selected_changed_callback is not None:
+            self._subset_selected_changed_callback()
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
@@ -2238,7 +2246,8 @@ class ApertureSubsetSelect(SubsetSelect):
     """
     def __init__(self, plugin, items, selected, selected_validity,
                  scale_factor, multiselect=None,
-                 dataset=None, viewers=None, default_text=None):
+                 dataset=None, viewers=None, default_text=None,
+                 subset_selected_changed_callback=None):
         """
         Parameters
         ----------
@@ -2269,7 +2278,8 @@ class ApertureSubsetSelect(SubsetSelect):
                          filters=['is_spatial'],
                          dataset=dataset,
                          viewers=viewers,
-                         default_text=default_text)
+                         default_text=default_text,
+                         subset_selected_changed_callback=subset_selected_changed_callback)
 
         self.add_traitlets(selected_validity=selected_validity,
                            scale_factor=scale_factor)

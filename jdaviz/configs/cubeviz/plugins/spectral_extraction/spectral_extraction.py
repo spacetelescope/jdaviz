@@ -130,6 +130,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.aperture._default_text = 'Entire Cube'
         self.aperture._manual_options = ['Entire Cube']
         self.aperture.items = [{"label": "Entire Cube"}]
+        self.aperture._subset_selected_changed_callback = self._update_extract
         # need to reinitialize choices since we overwrote items and some subsets may already
         # exist.
         self.aperture._initialize_choices()
@@ -142,7 +143,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                'bg_scale_factor',
                                                dataset='dataset',
                                                multiselect=None,
-                                               default_text='None')
+                                               default_text='None',
+                                               subset_selected_changed_callback=self._update_extract)
 
         self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
                                               'bg_spec_results_label_default',
@@ -701,8 +703,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
              'function_selected',
              'aperture_method_selected',
              'previews_temp_disabled')
+    def _live_update_marks(self, event={}):
+        self._update_marks(event)
+
     @skip_if_not_tray_instance()
-    def _toggle_marks(self, event={}):
+    def _update_marks(self, event={}):
         visible = self.show_live_preview and self.is_active
 
         if not visible:
@@ -714,11 +719,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.marks['extract'].visible = True
 
         # _live_update will skip if no updates since last active
-        self._live_update(event)
+        self._live_update_extract(event)
 
     @skip_if_no_updates_since_last_active()
     @with_temp_disable(timeout=0.4)
-    def _live_update(self, event={}):
+    def _live_update_extract(self, event={}):
+        self._update_extract()
+
+    def _update_extract(self):
         try:
             ext, bg_extract = self.extract(return_bg=True, add_data=False)
         except (ValueError, Exception):
