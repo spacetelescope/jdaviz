@@ -71,6 +71,10 @@ class UnitConversion(PluginTemplateMixin):
     # we need to disable translation in the API and UI variables/functions.
     flux_or_sb_config_disabler = Unicode().tag(sync=True)
     can_translate = Bool(True).tag(sync=True)
+    # This is used a warning message if False. This can be changed from
+    # bool to unicode when we eventually handle inputing this value if it
+    # doesn't exist in the FITS header
+    pixar_sr_exists = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -283,6 +287,12 @@ class UnitConversion(PluginTemplateMixin):
                                                         flux_or_sb,
                                                         sender=self))
             self.spectrum_viewer.reset_limits()
+
+        if (
+            len(self.app.data_collection) > 0 and self.app.config == 'cubeviz'
+            and not self.app.data_collection[0].meta.get('PIXAR_SR')
+        ):
+            self.pixar_sr_exists = False
 
     def _translate(self, flux_or_sb=None):
         # currently unsupported, can be supported with a scale factor

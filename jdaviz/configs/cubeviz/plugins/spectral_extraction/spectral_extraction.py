@@ -501,7 +501,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if 'PIXAR_SR' not in self.spectral_cube.meta:
             snackbar_message = SnackbarMessage(
                 ("PIXAR_SR FITS header keyword not found when parsing spectral cube. "
-                 "Flux/Surface Brightness will use default scale factor of 1."),
+                 "Flux/Surface Brightness will use default PIXAR_SR value of 1."),
                 color="warning",
                 sender=self)
             self.hub.broadcast(snackbar_message)

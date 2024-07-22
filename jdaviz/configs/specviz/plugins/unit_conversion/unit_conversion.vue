@@ -63,5 +63,10 @@
       <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
     </v-row>
 
+    <v-alert type="warning" v-if="!pixar_sr_exists">
+          PIXAR_SR FITS header keyword not found when parsing spectral cube.
+          Flux/Surface Brightness will use default PIXAR_SR value of 1.
+    </v-alert>
+
   </j-tray-plugin>
 </template>
