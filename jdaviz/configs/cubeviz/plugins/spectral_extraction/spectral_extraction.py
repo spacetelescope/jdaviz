@@ -453,8 +453,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             )  # returns an NDDataArray
             # Remove per steradian denominator
             if astropy.units.sr in collapsed_nddata.unit.bases:
-                aperture_area = (self.aperture_area_along_spectral
-                                 * self.spectral_cube.meta.get('PIXAR_SR', 1.0) * u.sr)
+                aperture_area = self.spectral_cube.meta.get('PIXAR_SR', 1.0) * u.sr
                 collapsed_nddata = collapsed_nddata.multiply(aperture_area,
                                                              propagate_uncertainties=True)
         else:
@@ -563,9 +562,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                   self.bg_wavelength_dependent,
                                                   self.function_selected.lower(), **kwargs)
             if self.function_selected.lower() == 'sum':
-                if bg_spec_per_spaxel:
-                    bg_spec *= 1 / self.bg_area_along_spectral
-                else:
+                if not bg_spec_per_spaxel:
                     # then scale according to aperture areas across the spectral axis (allowing for
                     # independent wavelength-dependence btwn the aperture and background)
                     bg_spec *= self.aperture_area_along_spectral / self.bg_area_along_spectral

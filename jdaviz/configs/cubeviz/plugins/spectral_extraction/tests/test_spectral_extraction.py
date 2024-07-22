@@ -1,18 +1,25 @@
 import pytest
+import warnings
 
 pytest.importorskip("astropy", minversion="5.3.2")
 
 import numpy as np
 from astropy import units as u
+from astropy.io import fits
 from astropy.nddata import NDDataArray, StdDevUncertainty
+from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.exceptions import AstropyUserWarning
+
 from glue.core.roi import CircularROI, RectangularROI
 from glue.core.edit_subset_mode import ReplaceMode, AndNotMode, NewMode
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
 from specutils import Spectrum1D
+from specutils.manipulation import FluxConservingResampler
+
+calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/"
 
 
 def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncerts):
@@ -320,11 +327,13 @@ def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
 
 
 def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
+    # add constant background:
+    spectrum1d_cube_largest = spectrum1d_cube_largest + 1 * u.Jy
+
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    center = PixCoord(5, 10)
     cubeviz_helper.load_regions([
-        CirclePixelRegion(center, radius=2.5),
-        EllipsePixelRegion(center, width=5, height=5)])
+        CirclePixelRegion(PixCoord(5, 10), radius=2.5),
+        EllipsePixelRegion(PixCoord(13, 10), width=3, height=5)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
     with extract_plg.as_active():
@@ -350,6 +359,26 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
         spec = extract_plg.extract()
 
     assert np.allclose(spec.flux, spec_no_bg.flux - bg_spec.flux)
+
+    # number of pixels in the aperture, background subsets:
+    n_aperture_pixels = cubeviz_helper.app.get_subsets('Subset 1')[0]['region'].to_mask().data.sum()
+    n_bg_pixels = cubeviz_helper.app.get_subsets('Subset 2')[0]['region'].to_mask().data.sum()
+
+    # the background subtracted from each slice in wavelength from the aperture should be equal
+    # to the background -- which is the minimum per spectral slice in this example cube -- divided
+    # by the number of pixels in the aperture:
+    cube_min_per_slice = extract_plg._obj.spectral_cube['flux'].min(axis=(0, 1))
+    np.testing.assert_allclose(
+        bg_spec.flux.value / n_aperture_pixels,
+        cube_min_per_slice
+    )
+
+    # background normalized per spaxel should be equal to the minimum per spectral slice:
+    cube_min_per_slice = extract_plg._obj.spectral_cube['flux'].min(axis=(0, 1))
+    np.testing.assert_allclose(
+        bg_spec_normed.flux.value / n_bg_pixels,
+        cube_min_per_slice
+    )
 
 
 def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
@@ -514,8 +543,7 @@ def test_spectral_extraction_with_correct_sum_units(cubeviz_helper,
     collapsed = spec_extr_plugin.extract()
     np.testing.assert_allclose(
         collapsed.flux.value,
-        [3800., 11800., 19800., 27800., 35800., 43800., 51800., 59800., 67800., 75800.]
-
+        [190., 590., 990., 1390., 1790., 2190., 2590., 2990., 3390., 3790.]
     )
     assert collapsed.flux.unit == u.Jy
     assert collapsed.uncertainty.unit == u.Jy
@@ -542,3 +570,87 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     assert_quantity_allclose(
         extracted_spectra[0].flux, extracted_spectra[1].flux
     )
+
+
+@pytest.mark.remote_data
+@pytest.mark.parametrize(
+    "start_slice, aperture, expected_rtol, uri, calspec_url",
+    (
+        (4.85, (20.5, 17, 12), 1e-5,
+         "mast:jwst/product/jw01524-o003_t002_miri_ch1-shortmediumlong_s3d.fits",
+         calspec_url + "delumi_mod_005.fits"),  # delta UMi
+
+        (4.85, (28, 21, 12), 0.01,
+         "mast:jwst/product/jw01050-o003_t005_miri_ch1-shortmediumlong_s3d.fits",
+         calspec_url + "hd159222_mod_007.fits"),  # HD 159222
+    )
+)
+def test_spectral_extraction_scientific_validation(
+    cubeviz_helper, start_slice,
+    aperture, expected_rtol, uri, calspec_url
+):
+    """
+    Compare the extracted spectrum from MIRI CH1 IFU cubes for
+    delta UMi (A1Van star) and HD 159222 (G1V star) with CALSPEC model
+    spectra. These model spectra are already flux calibrated using other
+    observatories, and are used to compute the flux calibration for JWST.
+    They are available for download at:
+    https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/
+
+    We can compare the spectral extraction results from Cubeviz with these model
+    spectra, without further normalization of the models or data. When comparing
+    any flux-calibrated observation against any model, the expected mismatch can be
+    as large as ~10%. The agreement is much better for stars used to compute
+    the flux calibration, which are the targets selected for this test.
+
+    Both observations in this test are from MIRI. It's likely that the
+    accuracy of the flux calibration of the data products available on MAST will
+    evolve with time. For the latest updates on MIRI flux calibration, see:
+    https://jwst-docs.stsci.edu/jwst-calibration-status/miri-calibration-status/
+    """
+    # Download CALSPEC model spectrum, initialize Spectrum1D.
+    calspec_fitsrec = fits.getdata(calspec_url)
+    column_units = [u.AA] + 2 * [u.Unit('erg s-1 cm-2 AA-1')]
+    spectra_table = QTable(calspec_fitsrec, units=column_units)
+    model_spectrum = Spectrum1D(
+        flux=spectra_table['FLUX'],
+        spectral_axis=spectra_table['WAVELENGTH']
+    )
+
+    # load observations into Cubeviz
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        cubeviz_helper.load_data(uri, cache=True)
+
+    # add a subset with an aperture centered on each source
+    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    flux_viewer.apply_roi(CircularROI(*aperture))
+
+    # set the slice to the blue end of MIRI CH1
+    slice_plugin = cubeviz_helper.plugins['Slice']
+    slice_plugin.value = 4.85
+
+    # run a conical spectral extraction
+    spectral_extraction = cubeviz_helper.plugins['Spectral Extraction']
+    spectral_extraction.aperture = 'Subset 1'
+    spectral_extraction.wavelength_dependent = True
+    spectral_extraction._obj.results_label = 'conical-extraction'
+    extracted_spectrum = spectral_extraction.extract()
+
+    # resample the model spectrum on the same wavelengths as
+    # the observed spectrum:
+    resampled_spectrum = FluxConservingResampler()(
+        model_spectrum, extracted_spectrum.wavelength
+    )
+
+    # load model spectrum:
+    cubeviz_helper.specviz.load_data(resampled_spectrum, data_label='calspec model')
+
+    # compute the relative residual, take the median absolute deviation:
+    median_abs_relative_dev = np.median(
+        abs(
+            extracted_spectrum.flux /
+            resampled_spectrum.flux.to(u.MJy, u.spectral_density(resampled_spectrum.wavelength))
+        ).to_value(u.dimensionless_unscaled) - 1
+    )
+    assert median_abs_relative_dev < expected_rtol
