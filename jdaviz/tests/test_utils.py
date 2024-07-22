@@ -1,8 +1,8 @@
 import os
-import pytest
 import warnings
 
 import photutils
+import pytest
 from asdf.exceptions import AsdfWarning
 from astropy import units as u
 from astropy.utils import minversion
@@ -10,7 +10,6 @@ from astropy.wcs import FITSFixedWarning
 from numpy.testing import assert_allclose
 from specutils import Spectrum1D
 
-from jdaviz import utils
 from jdaviz.utils import alpha_index, download_uri_to_path, flux_conversion
 
 PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
@@ -79,9 +78,9 @@ def test_alpha_index(test_input, expected):
 
 def test_alpha_index_exceptions():
     with pytest.raises(TypeError, match="index must be an integer"):
-        utils.alpha_index(4.2)
+        alpha_index(4.2)
     with pytest.raises(ValueError, match="index must be positive"):
-        utils.alpha_index(-1)
+        alpha_index(-1)
 
 
 def test_uri_to_download_bad_scheme(imviz_helper):

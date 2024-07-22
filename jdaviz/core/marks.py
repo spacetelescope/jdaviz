@@ -116,8 +116,6 @@ class PluginMark:
                 if ('_pixel_scale_factor' in spec.meta):
                     eqv += _eqv_pixar_sr(spec.meta['_pixel_scale_factor'])
                     y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
-                else:
-                    y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
             else:
                 y = (self.y * self.yunit).to_value(unit)
             self.yunit = unit

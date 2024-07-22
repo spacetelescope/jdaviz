@@ -105,15 +105,11 @@ def create_sb_equivalencies_list(sb_unit, spectral_axis_unit):
     except u.core.UnitConversionError:
         return []
 
-    locally_defined_sb_units = ['Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr', 'Jy / sr',
+    locally_defined_sb_units = ['Jy / sr', 'mJy / sr',
+                                'uJy / sr', 'MJy / sr',
                                 'W / (Hz sr m2)',
                                 'eV / (Hz s sr m2)',
                                 'AB / sr'
-                                # 'erg / (s cm2 sr)',
-                                # 'erg / (s cm2 Angstrom sr)',
-                                # 'erg / (s cm2 Hz sr)',
-                                # 'ph / (Angstrom s sr cm2)',
-                                # 'ph / (s cm2 Hz sr)'
                                 ]
 
     local_units = [u.Unit(unit) for unit in locally_defined_sb_units]

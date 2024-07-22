@@ -89,13 +89,27 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
 
-def test_conv_no_data(specviz_helper):
+def test_conv_no_data(specviz_helper, spectrum1d):
     """plugin unit selections won't have valid choices yet, preventing
     attempting to set display units."""
     plg = specviz_helper.plugins["Unit Conversion"]
+    # spectrum not load is in Flux units, sb_unit and flux_unit
+    # should be enabled, flux_or_sb should not be
+    assert hasattr(plg, 'sb_unit')
+    assert hasattr(plg, 'flux_unit')
+    assert not hasattr(plg, 'flux_or_sb')
     with pytest.raises(ValueError, match="no valid unit choices"):
         plg.spectral_unit = "micron"
     assert len(specviz_helper.app.data_collection) == 0
+
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    plg = specviz_helper.plugins["Unit Conversion"]
+
+    # spectrum loaded in Flux units, make sure sb_units don't
+    # display in the API and exposed translation isn't possible
+    assert hasattr(plg, 'flux_unit')
+    assert not hasattr(plg, 'sb_unit')
+    assert not hasattr(plg, 'flux_or_sb')
 
 
 @pytest.mark.skipif(ASTROPY_LT_5_3, reason='this feature relies on astropy v5.3+')
@@ -142,7 +156,7 @@ def test_unit_translation(cubeviz_helper):
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
 
     # test that the scale factor was set
-    assert np.all(cubeviz_helper.app.data_collection[-1].meta['_pixel_scale_factor'] != 1)
+    assert np.all(cubeviz_helper.app.data_collection['Spectrum (sum)'].meta['_pixel_scale_factor'] != 1)  # noqa
 
     # When the dropdown is displayed, this ensures the loaded
     # data collection item units will be used for translations.
@@ -212,13 +226,3 @@ def test_sb_unit_conversion(cubeviz_helper):
 
     la = cubeviz_helper.plugins['Line Analysis']._obj
     assert la.dataset.get_selected_spectrum(use_display_units=True)
-
-
-def test_translation_disabled_without_pixar_sr(specviz_helper, spectrum1d):
-    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
-
-    uc_plg = specviz_helper.plugins['Unit Conversion']
-    # spectrum loaded is in Flux units, make sure sb_units don't
-    # display in the API and exposed translation isn't possible
-    assert not hasattr(uc_plg, 'sb_unit')
-    assert not hasattr(uc_plg, 'flux_or_sb')
