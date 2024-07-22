@@ -1,4 +1,4 @@
-3.10.3 (unreleased)
+3.10.3 (2024-07-22)
 ===================
 
 Bug Fixes
@@ -22,15 +22,6 @@ Imviz
 
 - Fix multiple footprints bug that prevented footprint updates on changes to the
   viewer orientation. [#2918]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
-
-Specviz2d
-^^^^^^^^^
 
 3.10.2 (2024-06-06)
 ===================
