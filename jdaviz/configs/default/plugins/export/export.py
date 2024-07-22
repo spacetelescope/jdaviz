@@ -101,6 +101,10 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
 
     overwrite_warn = Bool(False).tag(sync=True)
 
+    # This is a temporary measure to allow server-installations to disable saving server-side until
+    # saving client-side is supported for all exports.
+    serverside_enabled = Bool(True).tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -174,6 +178,11 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                    handler=self._set_subset_not_supported_msg)
         self.session.hub.subscribe(self, SubsetDeleteMessage,
                                    handler=self._set_subset_not_supported_msg)
+
+        if self.app.state.settings.get('server_is_remote', False):
+            # when the server is remote, saving the file in python would save on the server, not
+            # on the user's machine, so export support in cubeviz should be disabled
+            self.serverside_enabled = False
 
     @property
     def user_api(self):

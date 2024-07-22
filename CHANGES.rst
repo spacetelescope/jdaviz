@@ -10,6 +10,8 @@ Bug Fixes
 
 - Fixes overwrite behavior for plugin plots, and properly closes overwrite warning overlay after confirmation. [#3094]
 
+- Disable all non-image exporting when the server is not running locally, to avoid confusion with the file being saved on the server. [#3096]
+
 Cubeviz
 ^^^^^^^
 
