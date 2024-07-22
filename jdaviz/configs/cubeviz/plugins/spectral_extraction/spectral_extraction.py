@@ -701,23 +701,24 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
              'function_selected',
              'aperture_method_selected',
              'previews_temp_disabled')
+    @skip_if_not_tray_instance()
     def _toggle_marks(self, event={}):
         visible = self.show_live_preview and self.is_active
 
         if not visible:
             self._clear_marks()
-        elif event.get('name', '') in ('is_active', 'show_live_preview'):
-            # then the marks themselves need to be updated
-            self._live_update(event)
+            return
+
+        # ensure the correct visibility, always (whether or not there have been updates)
+        self.marks['bg_extract'].visible = self.active_step == 'bg' and self.bg_selected != self.background.default_text  # noqa
+        self.marks['extract'].visible = True
+
+        # _live_update will skip if no updates since last active
+        self._live_update(event)
 
     @skip_if_no_updates_since_last_active()
     @with_temp_disable(timeout=0.4)
     def _live_update(self, event={}):
-        if not self._tray_instance:
-            return
-        if not self.show_live_preview or not self.is_active:
-            self._clear_marks()
-            return False
         try:
             ext, bg_extract = self.extract(return_bg=True, add_data=False)
         except (ValueError, Exception):
@@ -726,7 +727,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.marks['extract'].update_xy(self._preview_x_from_extracted(ext),
                                         self._preview_y_from_extracted(ext))
-        self.marks['extract'].visible = True
 
         if bg_extract is None:
             self.marks['bg_extract'].clear()
@@ -734,4 +734,3 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.marks['bg_extract'].update_xy(self._preview_x_from_extracted(bg_extract),
                                                self._preview_y_from_extracted(bg_extract))
-            self.marks['bg_extract'].visible = self.active_step == 'bg'
