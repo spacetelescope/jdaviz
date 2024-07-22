@@ -395,7 +395,7 @@ class AstrowidgetsImageViewerMixin:
             {'color': (1, 0, 0)}
 
         The valid properties for Glue markers are listed at
-        https://docs.glueviz.org/en/stable/api/glue.core.visual.VisualAttributes.html
+        https://glue-core.readthedocs.io/en/latest/api/glue.core.visual.VisualAttributes.html
 
         """
         return self._marker_dict
