@@ -9,8 +9,8 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
     def test_autocenter_coords(self):
         # Create a second viewer and put each data in its own viewer
         self.imviz.create_image_viewer()
-        self.imviz.app.remove_data_from_viewer('imviz-0','has_wcs_2[SCI,1]')
-        self.imviz.app.add_data_to_viewer('imviz-1','has_wcs_2[SCI,1]')
+        self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
+        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
 
         # Check default viewer is "Manual"
         vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
@@ -49,11 +49,11 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
 
 
 @pytest.mark.remote_data
-class TestVOImvizRemote():
+class TestVOImvizRemote:
 
     def _init_voplugin(self, imviz_helper):
         vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
-        
+
         # Sets common args for Remote Testing
         vo_plugin.viewer_selected = "Manual"
         vo_plugin.source = "M32"
