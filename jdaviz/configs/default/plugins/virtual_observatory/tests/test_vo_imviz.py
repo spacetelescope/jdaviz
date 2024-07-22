@@ -24,6 +24,29 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         vo_plugin.viewer_selected = "imviz-1"
         assert vo_plugin.source == "337.51924057481 -20.83208305686149"
 
+    def test_populate_table_default_headers(self):
+        class fake_siaresult:
+            def __init__(self):
+                self.title = "Fake Title"
+                self.instr = "Fake Instrument"
+                self.dateobs = "Fake Dateobs"
+
+            def getdataurl(self):
+                return "Fake URL"
+
+        vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
+        fake_result = fake_siaresult()
+        vo_plugin._populate_table([fake_result])
+
+        assert vo_plugin.table.items == [
+            {
+                "URL": fake_result.getdataurl(),
+                "Title": fake_result.title,
+                "Instrument": fake_result.instr,
+                "DateObs": fake_result.dateobs,
+            }
+        ]
+
 
 @pytest.mark.remote_data
 class TestVOImvizRemote():
