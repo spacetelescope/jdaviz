@@ -25,6 +25,33 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         assert vo_plugin.source == "337.51924057481 -20.83208305686149"
 
 
-    @pytest.mark.remote_data
-    def test_M32(self):
-        pass
+@pytest.mark.remote_data
+class TestVOImvizRemote():
+
+    def _init_voplugin(self, imviz_helper):
+        vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
+        
+        # Sets common args for Remote Testing
+        vo_plugin.viewer_selected = "Manual"
+        vo_plugin.source = "M32"
+        vo_plugin.waveband_selected = "infrared"
+
+        return vo_plugin
+
+    def test_coverage_toggle(self, imviz_helper):
+        # Set Common Args
+        vo_plugin = self._init_voplugin(imviz_helper)
+
+        # Retrieve registry options with filtering on
+        vo_plugin.resource_filter_coverage = True
+        vo_plugin.vue_query_registry_resources()
+        filtered_resources = vo_plugin.resources
+        assert len(filtered_resources) > 0
+
+        # Retrieve registry options with filtering off
+        vo_plugin.resource_filter_coverage = False
+        vo_plugin.vue_query_registry_resources()
+        nonfiltered_resources = vo_plugin.resources
+
+        # Nonfiltered resources should be more than filtered resources
+        assert len(nonfiltered_resources) > len(filtered_resources)
