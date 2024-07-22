@@ -123,6 +123,26 @@ def create_sb_equivalencies_list(sb_unit, spectral_axis_unit):
     # Concatenate both lists with the local units coming first.
     return sorted(units_to_strings(local_units)) + sb_unit_equivalencies_titles
 
+def create_angle_equivalencies_list(unit):
+    # first, convert string to u.Unit obj.
+    # this will take care of some formatting consistency like
+    # turning something like Jy / (degree*degree) to Jy / deg**2
+    # and erg sr^1 to erg / sr
+    if isinstance(unit, u.core.Unit) or isinstance(unit, u.core.CompositeUnit):
+        unit_str = unit.to_string()
+    elif isinstance(unit, str):
+        unit = u.Unit(unit)
+        unit_str = unit.to_string()
+    else:
+        raise ValueError('Unit must be u.Unit, or string that can be converted into a u.Unit')
+
+    if '/' in unit_str:
+        # might be comprised of several units in denom.
+        denom = unit_str.split('/')[-1].split()
+        return denom
+    else:
+        # this could be where force / u.pix
+        return ['pix']
 
 def check_if_unit_is_per_solid_angle(unit):
     """

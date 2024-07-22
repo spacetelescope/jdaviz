@@ -30,19 +30,27 @@
         persistent-hint
       ></v-select>
     </v-row>
-
-    <v-row v-if="flux_or_sb_config_disabler === 'Flux' || config == 'cubeviz'">
+  
+    <v-row v-if="flux_or_sb_config_disabler === 'Surface Brightness' || config == 'cubeviz'">
       <v-select
         :menu-props="{ left: true }"
         attach
-        :items="sb_unit_items.map(i => i.label)"
-        v-model="sb_unit_selected"
+        :items="angle_unit_items.map(i => i.label)"
+        v-model="angle_unit_selected"
+        label="Solid Angle Unit"
+        hint="Solid angle unit."
+        persistent-hint
+      ></v-select>
+    </v-row>
+
+    <v-row v-if="flux_or_sb_config_disabler === 'Flux' || config == 'cubeviz'">
+      <v-text-field
+        v-model="sb_unit"
         label="Surface Brightness Unit"
         hint="Global display unit for surface brightness axis."
         persistent-hint
-        :disabled="!can_translate"
-      ></v-select>
-      <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
+        :disabled='true'
+      ></v-text-field>
     </v-row>
 
     <v-row v-if="config == 'cubeviz'">

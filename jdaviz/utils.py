@@ -336,6 +336,9 @@ def flux_conversion(spec, values, original_units, target_units):
     if (('_pixel_scale_factor' in spec.meta) and
             (((u.sr in orig_bases) and (u.sr not in targ_bases)) or
              ((u.sr not in orig_bases) and (u.sr in targ_bases)))):
+        with open('example.txt', 'a') as file:
+            file.write(f'utils {original_units}\n')
+            file.write(f'utils {target_units}\n')
         # Data item in data collection does not update from conversion/translation.
         # App-wide original data units are used for conversion, original and
         # target_units dictate the conversion to take place.
