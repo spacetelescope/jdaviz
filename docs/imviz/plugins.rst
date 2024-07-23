@@ -379,7 +379,12 @@ catalog dropdown menu.
     and works best when you only have a single image loaded in a viewer.
 
 To load a catalog from a supported `JWST ECSV catalog file <https://jwst-pipeline.readthedocs.io/en/latest/jwst/source_catalog/main.html#output-products>`_, choose "From File...".
-The file must be able to be parsed by `astropy.table.Table.read` and contain a column labeled 'sky_centroid'.
+The file must be able to be parsed by `astropy.table.Table.read` and contains the following columns:
+
+* ``'sky_centroid'``: Column with `~astropy.coordinates.SkyCoord` sky coordinates of the sources.
+* ``'label'``: Column with string identifiers of the sources. If you have numerical identifiers,
+  you have to recast them as string first.
+
 Clicking :guilabel:`SEARCH` will show markers for any entry within the filtered zoom window.
 
 If you have multiple viewers open, you will see another dropdown menu to select the active

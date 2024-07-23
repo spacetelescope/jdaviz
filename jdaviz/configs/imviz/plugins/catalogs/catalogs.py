@@ -164,7 +164,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             for row in self.app._catalog_source_table:
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
-                            'Object ID': row['objid']}
+                            'Object ID': row['objid'].astype(str)}
                 self.table.add_item(row_info)
 
         elif self.catalog_selected == 'From File...':
@@ -175,11 +175,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             skycoord_table = table['sky_centroid']
 
             for row in self.app._catalog_source_table:
-                # find new to add in a way to append the source id to the table
-                # 'Object ID': row['label']} ; 'label' is failing tests
                 row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
                             'Declination (degrees)': row['sky_centroid'].dec.deg,
-                            'Object ID': row.get('label', -1)}
+                            'Object ID': row.get('label', 'N/A')}
                 self.table.add_item(row_info)
 
         else:
