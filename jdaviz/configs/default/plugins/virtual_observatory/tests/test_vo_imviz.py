@@ -4,6 +4,15 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 from jdaviz.configs.default.plugins.virtual_observatory.vo_plugin import vo_plugin_label
 
 
+class fake_siaresult:
+    def __init__(self, attrs):
+        for attr, value in attrs.items():
+            self.__setattr__(attr, value)
+
+    def getdataurl(self):
+        return "Fake URL"
+
+
 # TODO: Update all _obj calls to formal API calls once Plugin API is available
 class TestVOImvizLocal(BaseImviz_WCS_WCS):
     def test_autocenter_coords(self):
@@ -25,17 +34,14 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         assert vo_plugin.source == "337.51924057481 -20.83208305686149"
 
     def test_populate_table_default_headers(self):
-        class fake_siaresult:
-            def __init__(self):
-                self.title = "Fake Title"
-                self.instr = "Fake Instrument"
-                self.dateobs = "Fake Dateobs"
-
-            def getdataurl(self):
-                return "Fake URL"
-
         vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
-        fake_result = fake_siaresult()
+        fake_result = fake_siaresult(
+            {
+                "title": "Fake Title",
+                "instr": "Fake Instrument",
+                "dateobs": "Fake Dateobs",
+            }
+        )
         vo_plugin._populate_table([fake_result])
 
         assert vo_plugin.table.items == [
@@ -44,6 +50,28 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
                 "Title": fake_result.title,
                 "Instrument": fake_result.instr,
                 "DateObs": fake_result.dateobs,
+            }
+        ]
+
+    def test_populate_table_customm_headers(self):
+        vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
+        fake_result = fake_siaresult(
+            {
+                "attrA": "Field A",
+                "attrB": "Field B",
+                "attrC": "Field C",
+            }
+        )
+        vo_plugin._populate_table(
+            [fake_result], {"Title A": "attrA", "Title B": "attrB", "Title C": "attrC"}
+        )
+
+        assert vo_plugin.table.items == [
+            {
+                "URL": fake_result.getdataurl(),
+                "Title A": fake_result.attrA,
+                "Title B": fake_result.attrB,
+                "Title C": fake_result.attrC,
             }
         ]
 
