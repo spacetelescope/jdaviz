@@ -222,7 +222,7 @@ class UnitConversion(PluginTemplateMixin):
             self.app.data_collection[0] and
             self.app.config == 'specviz'
         ):
-            if check_if_unit_is_per_solid_angle(self.app.data_collection[0].get_object()._unit):
+            if check_if_unit_is_per_solid_angle(self.app.data_collection[0].get_object().flux.unit):  # noqa
                 data_collection_unit = 'Surface Brightness'
                 self.flux_or_sb_config_disabler = 'Flux'
             else:
