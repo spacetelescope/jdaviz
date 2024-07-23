@@ -8,7 +8,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginCom
                                         SelectPluginComponent, PluginUserApi)
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list,
-                                    create_sb_equivalencies_list,
                                     check_if_unit_is_per_solid_angle,
                                     units_to_strings,
                                     create_angle_equivalencies_list)
@@ -110,22 +109,17 @@ class UnitConversion(PluginTemplateMixin):
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
-        
+
         self.angle_unit = UnitSelectPluginComponent(self,
-                                                 items='angle_unit_items',
-                                                 selected='angle_unit_selected')
+                                                    items='angle_unit_items',
+                                                    selected='angle_unit_selected')
 
     @property
     def user_api(self):
         if self.app.config == 'cubeviz':
-            expose = ('spectral_unit', 'flux_or_sb', 'flux_unit', 'sb_unit')
-        elif self.app.config == 'specviz' and not self.flux_or_sb_config_disabler:
-            expose = ('spectral_unit', 'flux_unit', 'sb_unit')
-        elif self.flux_or_sb_config_disabler == 'Flux':
-            expose = ('spectral_unit', 'sb_unit')
-        else:  # self.flux_or_sb_config_disabler == 'Surface Brightness'
-            expose = ('spectral_unit', 'flux_unit')
-        return PluginUserApi(self, expose=expose)
+            return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_unit', 'angle_unit'))   # noqa
+        else:
+            return PluginUserApi(self, expose=('spectral_unit', 'flux_unit', 'angle_unit'))
 
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:
@@ -166,6 +160,7 @@ class UnitConversion(PluginTemplateMixin):
         x_u = u.Unit(self.spectral_unit.selected)
         y_unit = _valid_glue_display_unit(y_unit, self.spectrum_viewer, 'y')
         y_u = u.Unit(y_unit)
+        sb_unit = self.flux_unit.selected + ' / ' + self.angle_unit.selected
 
         if flux_or_sb == 'Flux' and y_unit != self.flux_unit.selected:
             flux_choices = create_flux_equivalencies_list(y_u, x_u)
@@ -176,17 +171,19 @@ class UnitConversion(PluginTemplateMixin):
 
             self.flux_unit.choices = flux_choices
             self.flux_unit.selected = y_unit
-            
-        ### TODO
-        elif flux_or_sb == 'Surface Brightness' and y_unit != (self.flux_unit.selected + ' \ ' + self.angle_unit.selected):
-            if self.app.config == 'cubeviz':
-                flux_choices = create_flux_equivalencies_list(y_u * u.sr, x_u)
-                self.flux_unit.choices = flux_choices
+
+        elif flux_or_sb == 'Surface Brightness' and y_unit != sb_unit:
+            flux_choices = create_flux_equivalencies_list(y_u * u.sr, x_u)
+            self.flux_unit.choices = flux_choices
 
         if self.app.data_collection[0]:
-            self.angle_unit.choices = create_angle_equivalencies_list(self.app.data_collection[0].get_object()._unit)
+            dc_unit = self.app.data_collection[0].get_object()._unit
+            self.angle_unit.choices = create_angle_equivalencies_list(dc_unit)
             self.angle_unit.selected = self.angle_unit.choices[0]
             self.sb_unit = self.flux_unit.selected + " / " + self.angle_unit.selected
+
+        if check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
+            self.flux_or_sb = 'Flux'
 
     @observe('spectral_unit_selected')
     def _on_spectral_unit_changed(self, *args):
@@ -224,9 +221,6 @@ class UnitConversion(PluginTemplateMixin):
         name = msg.get('name')
         # determine if flux or surface brightness unit was changed by user
         if name == 'flux_unit_selected':
-            with open('example.txt', 'a') as file:
-                if self.app.data_collection and len(self.app.data_collection) > 0:
-                    file.write(f'select flux unit \n')
             # when the configuration is Specviz, translation is not currently supported.
             # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
             # have a scale factor assigned in the metadata, enabling translation.
@@ -235,7 +229,11 @@ class UnitConversion(PluginTemplateMixin):
                     f"Unit translation between Flux and Surface Brightness "
                     f"is not supported in {self.app.config}."
                 )
-            flux_or_sb = self.flux_unit.selected
+            current_y_unit = self.spectrum_viewer.state.y_display_unit
+            if self.angle_unit.selected and check_if_unit_is_per_solid_angle(current_y_unit):
+                flux_or_sb = self.flux_unit.selected + ' / ' + self.angle_unit.selected
+            else:
+                flux_or_sb = self.flux_unit.selected
             untranslatable_units = self._untranslatable_units
             # disable translator if flux unit is untranslatable,
             # still can convert flux units, this just disables flux
@@ -260,10 +258,11 @@ class UnitConversion(PluginTemplateMixin):
                     )
                 )
             self.spectrum_viewer.reset_limits()
-        
-        with open('example.txt', 'a') as file:
-            if self.app.data_collection and len(self.app.data_collection) > 0:
-                file.write(f'post flux unit \n')
+
+        if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
+            self.flux_or_sb.selected = 'Flux'
+        else:
+            self.flux_or_sb = 'Surface Brightness'
 
         if (
             len(self.app.data_collection) > 0
@@ -276,9 +275,6 @@ class UnitConversion(PluginTemplateMixin):
         if self.app.config == 'specviz':
             return
 
-        with open('example.txt', 'a') as file:
-            if self.app.data_collection:
-                file.write(f'{self.flux_or_sb_selected}\n')
         # we want to raise an error if a user tries to translate with an
         # untranslated Flux unit using the API
         untranslatable_units = self._untranslatable_units
@@ -305,7 +301,6 @@ class UnitConversion(PluginTemplateMixin):
             spec_units *= u.sr
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
-            #self.flux_or_sb.selected = 'Flux'
 
         # Flux -> Surface Brightness
         elif (not check_if_unit_is_per_solid_angle(spec_units)
@@ -313,7 +308,6 @@ class UnitConversion(PluginTemplateMixin):
             spec_units /= u.sr
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
-            #self.flux_or_sb.selected = 'Surface Brightness'
         # entered the translator when we shouldn't translate
         else:
             return
