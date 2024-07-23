@@ -33,9 +33,11 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     _default_table_values = {'spectral_axis': np.nan,
                              'spectral_axis:unit': '',
                              'slice': np.nan,
-                             'pixel': (np.nan, np.nan),
+                             'pixel_x': np.nan,
+                             'pixel_y': np.nan,
                              'pixel:unreliable': None,
-                             'world': (np.nan, np.nan),
+                             'world_ra': np.nan,
+                             'world_dec': np.nan,
                              'world:unreliable': None,
                              'value': np.nan,
                              'value:unit': '',
@@ -50,12 +52,12 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         super().__init__(*args, **kwargs)
         if self.config == 'cubeviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
-                       'slice', 'pixel',
-                       'world', 'value', 'value:unit', 'viewer']
+                       'slice', 'pixel_x', 'pixel_y',
+                       'world_ra', 'world_dec', 'value', 'value:unit', 'viewer']
 
         elif self.config == 'imviz':
-            headers = ['pixel', 'pixel:unreliable',
-                       'world', 'world:unreliable',
+            headers = ['pixel_x', 'pixel_y', 'pixel:unreliable',
+                       'world_ra', 'world_dec', 'world:unreliable',
                        'value', 'value:unit', 'value:unreliable',
                        'viewer']
 
@@ -65,11 +67,11 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         elif self.config == 'specviz2d':
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
             headers = ['spectral_axis', 'spectral_axis:unit',
-                       'pixel', 'value', 'value:unit', 'viewer']
+                       'pixel_x', 'pixel_y', 'value', 'value:unit', 'viewer']
         elif self.config == 'mosviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
-                       'pixel', 'world', 'index', 'value', 'value:unit',
-                       'viewer']
+                       'pixel_x', 'pixel_y', 'world_ra', 'world_dec', 'index',
+                       'value', 'value:unit', 'viewer']
         else:
             # allow downstream configs to override headers
             headers = kwargs.get('headers', [])
@@ -107,7 +109,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
     def _recompute_mark_positions(self, viewer):
         if self.table is None or self.table._qtable is None:
             return
-        if 'world' not in self.table.headers_avail:
+        if 'world_ra' not in self.table.headers_avail:
             return
 
         viewer_id = viewer.reference if viewer.reference is not None else viewer.reference_id
@@ -124,8 +126,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             viewer_mark.x, viewer_mark.y = [], []
             return
 
-        orig_world_x = np.asarray(self.table._qtable['world'][:, 0][in_viewer])
-        orig_world_y = np.asarray(self.table._qtable['world'][:, 1][in_viewer])
+        orig_world_x = np.asarray(self.table._qtable['world_ra'][in_viewer])
+        orig_world_y = np.asarray(self.table._qtable['world_dec'][in_viewer])
 
         if self.app._link_type.lower() == 'wcs':
             # convert from the sky coordinates in the table to pixels via the WCS of the current
@@ -162,8 +164,8 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             # TODO: should we rescale these since pixel coordinates when linked by WCS are always
             # on the range 0-1 because of the orientation layer?  Or hide the pixel option in the
             # cycler when WCS-linked?
-            pixel_x = np.asarray(self.table._qtable['pixel'][:, 0])
-            pixel_y = np.asarray(self.table._qtable['pixel'][:, 1])
+            pixel_x = np.asarray(self.table._qtable['pixel_x'])
+            pixel_y = np.asarray(self.table._qtable['pixel_y'])
             new_x = np.append(new_x, pixel_x[pixel_only_inds])
             new_y = np.append(new_y, pixel_y[pixel_only_inds])
 
@@ -208,6 +210,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             else:
                 viewer.remove_event_callback(callback)
 
+    # this is where items are being added to the table
     def _on_viewer_key_event(self, viewer, data):
         if data['event'] == 'keydown' and data['key'] == 'm':
             row_info = self.coords_info.as_dict()
@@ -221,7 +224,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             try:
                 self.table.add_item({k: v for k, v in row_info.items()
                                      if k in self.table.headers_avail})
-            except ValueError as err:
+            except ValueError as err:  # pragma: no cover
                 raise ValueError(f'failed to add {row_info} to table: {repr(err)}')
 
             x, y = row_info['axes_x'], row_info['axes_y']

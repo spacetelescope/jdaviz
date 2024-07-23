@@ -242,16 +242,14 @@ _wcs_only_label = "_WCS_ONLY"
 
 
 def is_wcs_only(layer):
-    # exclude WCS-only layers from the layer choices:
+    # identify WCS-only layers
     if hasattr(layer, 'layer'):
-        state = layer.layer
-    elif hasattr(layer, 'data'):
-        state = layer.data
-    elif hasattr(layer, 'meta'):
-        state = layer
-    else:
-        raise NotImplementedError
-    return getattr(state, 'meta', {}).get(_wcs_only_label, False)
+        layer = layer.layer
+
+    return (
+        # WCS-only layers have a metadata label:
+        getattr(layer, 'meta', {}).get(_wcs_only_label, False)
+    )
 
 
 def is_not_wcs_only(layer):

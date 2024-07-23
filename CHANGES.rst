@@ -5,7 +5,7 @@ New Features
 ------------
 
 - Added flux/surface brightness translation and surface brightness
-  unit conversion in Cubeviz and Specviz. [#2781, #2940]
+  unit conversion in Cubeviz and Specviz. [#2781, #2940, #3088]
 
 - Plugin tray is now open by default. [#2892]
 
@@ -29,6 +29,8 @@ Cubeviz
 
 Imviz
 ^^^^^
+
+- Added a table with catalog search results. [#2915]
 
 Mosviz
 ^^^^^^
@@ -85,6 +87,10 @@ Specviz2d
 
 Bug Fixes
 ---------
+
+- Markers table can now export to CSV but its columns had to be changed to accomodate this fix:
+  world and pixel (previously containing SkyCoord and pixel location tuples, respectively) are now
+  each two separate columns for world_ra/world_dec and pixel_x/pixel_y, respectively. [#3089]
 
 Cubeviz
 ^^^^^^^
@@ -181,7 +187,28 @@ Other Changes and Additions
 
 - Max pinned matplotlib to <3.9 due to standalone build problems. [#2917]
 
-3.10.3 (unreleased)
+3.10.4 (unreleased)
+===================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.10.3 (2024-07-22)
 ===================
 
 Bug Fixes
@@ -194,6 +221,10 @@ Bug Fixes
 
 - Previous zoom tool is optimized to only issue one zoom update to the viewer. [#2949]
 
+- Fixes overwrite behavior for plugin plots, and properly closes overwrite warning overlay after confirmation. [#3094]
+
+- Disable all non-image exporting when the server is not running locally, to avoid confusion with the file being saved on the server. [#3096]
+
 Cubeviz
 ^^^^^^^
 
@@ -204,6 +235,8 @@ Imviz
 
 - Fix multiple footprints bug that prevented footprint updates on changes to the
   viewer orientation. [#2918]
+
+- Exclude subset layers from the orientation options in the Orientation plugin. [#3097]
 
 Mosviz
 ^^^^^^

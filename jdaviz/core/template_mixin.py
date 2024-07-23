@@ -39,7 +39,6 @@ from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
 
-from jdaviz import __version__
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
@@ -218,7 +217,7 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         obj.config = app.state.settings.get("configuration", "default")
 
         # give the vue templates access to jdaviz version
-        obj.vdocs = 'latest' if 'dev' in __version__ else 'v'+__version__
+        obj.vdocs = app.vdocs
 
         # store references to all bqplot widgets that need to handle resizing
         obj.bqplot_figs_resize = []
@@ -4524,7 +4523,7 @@ class Table(PluginSubcomponent):
                     # stored in astropy table as a float so we can also store nans,
                     # but should display in the UI without any decimals
                     return f"{item:.0f}"
-                elif column in ('pixel', ):
+                elif column in ('pixel', 'pixel_x', 'pixel_y'):
                     return f"{item:0.3f}"
                 elif column in ('xcenter', 'ycenter'):
                     return f"{item:0.1f}"
