@@ -115,13 +115,14 @@ class UnitConversion(PluginTemplateMixin):
     @property
     def user_api(self):
         if self.app.config == 'cubeviz':
-            return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_unit', 'sb_unit'))   # noqa
-        if self.app.config == 'specviz' and not self.flux_or_sb_config_disabler:
-            return PluginUserApi(self, expose=('spectral_unit', 'flux_unit', 'sb_unit'))
-        if self.flux_or_sb_config_disabler == 'Flux':
-            return PluginUserApi(self, expose=('spectral_unit', 'sb_unit'))
-        if self.flux_or_sb_config_disabler == 'Surface Brightness':
-            return PluginUserApi(self, expose=('spectral_unit', 'flux_unit'))
+            expose = ('spectral_unit', 'flux_or_sb', 'flux_unit', 'sb_unit')
+        elif self.app.config == 'specviz' and not self.flux_or_sb_config_disabler:
+            expose = ('spectral_unit', 'flux_unit', 'sb_unit')
+        elif self.flux_or_sb_config_disabler == 'Flux':
+            expose = ('spectral_unit', 'sb_unit')
+        else:  # self.flux_or_sb_config_disabler == 'Surface Brightness'
+            expose = ('spectral_unit', 'flux_unit')
+        return PluginUserApi(self, expose=expose)
 
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:
@@ -223,14 +224,7 @@ class UnitConversion(PluginTemplateMixin):
                 data_collection_unit = 'Flux'
                 self.flux_or_sb_config_disabler = 'Surface Brightness'
 
-        # skip if arg is not a dictionary
-        if not isinstance(msg, dict):
-            raise TypeError("Expected msg to be a dictionary")
-        # skip if 'name' key is missing
         name = msg.get('name')
-        if not name:
-            raise KeyError("Expected 'name' key in msg")
-
         # determine if flux or surface brightness unit was changed by user
         if name == 'flux_unit_selected':
             # when the configuration is Specviz, translation is not currently supported.
@@ -289,7 +283,7 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.reset_limits()
 
         if (
-            len(self.app.data_collection) > 0 and self.app.config == 'cubeviz'
+            len(self.app.data_collection) > 0
             and not self.app.data_collection[0].meta.get('PIXAR_SR')
         ):
             self.pixar_sr_exists = False
@@ -305,10 +299,10 @@ class UnitConversion(PluginTemplateMixin):
         untranslatable_units = units_to_strings(untranslatable_units)
 
         if hasattr(self, 'flux_unit'):
-            if (self.flux_unit.selected in untranslatable_units) \
-                 and (flux_or_sb == 'Surface Brightness'):
+            if ((self.flux_unit.selected in untranslatable_units)
+                    and (flux_or_sb == 'Surface Brightness')):
                 raise ValueError(
-                    f"Selected flux unit is not translatable. Please choose a flux unit "
+                    "Selected flux unit is not translatable. Please choose a flux unit "
                     f"that is not in the following list: {untranslatable_units}."
                 )
 

@@ -76,7 +76,6 @@ class UnitConverterWithSpectral:
                     'Jy', 'mJy', 'uJy', 'MJy',
                     'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
                     'eV / (s m2 Hz)', 'eV / (Hz s m2)',
-                    'erg / (s cm2)',
                     'erg / (s cm2 Angstrom)', 'erg / (s cm2 Angstrom)',
                     'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
                     'ph / (Angstrom s cm2)',
