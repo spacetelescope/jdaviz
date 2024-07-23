@@ -329,17 +329,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # during initial init, this can trigger before the component is initialized
             return
 
-        selected_spec = self.dataset.selected_spectrum
+        selected_spec = self.dataset.selected_obj
         if selected_spec is None:
             return
 
         if '_pixel_scale_factor' in selected_spec.meta:
             self._pixel_scale_factor = selected_spec.meta['_pixel_scale_factor']
-        elif '_pixel_scale_factor' in self.dataset.selected_obj.meta:
-            self._pixel_scale_factor = self.dataset.selected_obj.meta['_pixel_scale_factor']
-
-        print(f"Selected spec is {selected_spec}")
-        print(selected_spec.meta)
 
         # Replace NaNs from collapsed Spectrum1D in Cubeviz
         # (won't affect calculations because these locations are masked)
@@ -947,7 +942,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         output_cube = Spectrum1D(flux=fitted_spectrum.flux, wcs=fitted_spectrum.wcs)
         if self._pixel_scale_factor is not None:
-            self._pixel_scale_factor
             output_cube.meta['_pixel_scale_factor'] = self._pixel_scale_factor
 
         # Create new data entry for glue
