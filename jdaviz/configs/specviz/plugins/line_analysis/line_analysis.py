@@ -321,11 +321,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         self.update_results(None)
                         return
 
-                    temp_result = np.mean(raw_result.to(flux_unit,
-                                                        equivalencies=u.spectral_density(freq_spec.spectral_axis)))
+                    temp_result = np.mean(raw_result.to(
+                        flux_unit,
+                        equivalencies=u.spectral_density(freq_spec.spectral_axis)))
                     if getattr(raw_result, 'uncertainty', None) is not None:
-                        temp_result.uncertainty = np.mean(raw_result.uncertainty.to(flux_unit,
-                                                          equivalencies=u.spectral_density(freq_spec.spectral_axis)))
+                        temp_result.uncertainty = np.mean(raw_result.uncertainty.to(
+                            flux_unit,
+                            equivalencies=u.spectral_density(freq_spec.spectral_axis)))
                 # If the flux unit is instead equivalent to power density
                 # (Jy, but defined in wavelength), enforce integration in wavelength space
                 elif (flux_unit.is_equivalent(u.Unit('W/(m2 m)')) or
