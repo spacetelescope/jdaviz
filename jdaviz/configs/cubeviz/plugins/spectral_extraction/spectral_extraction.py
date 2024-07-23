@@ -513,7 +513,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             spec = spec - bg_spec
 
         # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
-        pix_scale_factor = self.aperture_area_along_spectral * self.spectral_cube.meta.get('PIXAR_SR', 1.0)  # noqa
+        pix_scale_factor = self.spectral_cube.meta.get('PIXAR_SR', 1.0)
         spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         # inform the user if scale factor keyword not in metadata
