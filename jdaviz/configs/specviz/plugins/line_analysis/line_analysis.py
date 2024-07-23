@@ -271,7 +271,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             if getattr(result, 'uncertainty', None) is not None:
                 # we'll keep the uncertainty and result in the same unit (so
                 # we only have to show the unit at the end)
-                if np.any(np.isnan(result.uncertainty.value)) or np.any(np.isinf(result.uncertainty.value)):
+                if (np.any(np.isnan(result.uncertainty.value)) or
+                        np.any(np.isinf(result.uncertainty.value))):
                     return ''
                 return str(result.uncertainty.to_value(result.unit))
             else:
@@ -320,10 +321,11 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         self.update_results(None)
                         return
 
-                    final_unit = flux_unit
-                    temp_result = np.mean(raw_result.to(final_unit, equivalencies= u.spectral_density(freq_spec.spectral_axis)))
+                    temp_result = np.mean(raw_result.to(flux_unit,
+                                                        equivalencies=u.spectral_density(freq_spec.spectral_axis)))
                     if getattr(raw_result, 'uncertainty', None) is not None:
-                        temp_result.uncertainty = np.mean(raw_result.uncertainty.to(final_unit, equivalencies= u.spectral_density(freq_spec.spectral_axis)))
+                        temp_result.uncertainty = np.mean(raw_result.uncertainty.to(flux_unit,
+                                                          equivalencies=u.spectral_density(freq_spec.spectral_axis)))
                 # If the flux unit is instead equivalent to power density
                 # (Jy, but defined in wavelength), enforce integration in wavelength space
                 elif (flux_unit.is_equivalent(u.Unit('W/(m2 m)')) or
@@ -349,10 +351,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         self.update_results(None)
                         return
 
-                    final_unit = flux_unit
-                    temp_result = np.mean(raw_result.to(final_unit, equivalencies= u.spectral_density(wave_spec.spectral_axis)))
+                    temp_result = np.mean(raw_result.to(
+                        flux_unit,
+                        equivalencies=u.spectral_density(wave_spec.spectral_axis)))
                     if getattr(raw_result, 'uncertainty', None) is not None:
-                        temp_result.uncertainty = np.mean(raw_result.uncertainty.to(final_unit, equivalencies= u.spectral_density(wave_spec.spectral_axis)))
+                        temp_result.uncertainty = np.mean(raw_result.uncertainty.to(
+                            flux_unit,
+                            equivalencies=u.spectral_density(wave_spec.spectral_axis)))
 
                 # Otherwise, just rely on the default specutils line_flux result
                 else:
