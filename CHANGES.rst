@@ -187,7 +187,28 @@ Other Changes and Additions
 
 - Max pinned matplotlib to <3.9 due to standalone build problems. [#2917]
 
-3.10.3 (unreleased)
+3.10.4 (unreleased)
+===================
+
+Bug Fixes
+---------
+
+Cubeviz
+^^^^^^^
+
+Imviz
+^^^^^
+
+Mosviz
+^^^^^^
+
+Specviz
+^^^^^^^
+
+Specviz2d
+^^^^^^^^^
+
+3.10.3 (2024-07-22)
 ===================
 
 Bug Fixes
