@@ -206,6 +206,11 @@ class UnitConversion(PluginTemplateMixin):
 
     @observe('flux_or_sb_selected', 'flux_unit_selected', 'sb_unit_selected')
     def _on_flux_unit_changed(self, msg):
+        # may need to be updated if translations in other configs going to be supported
+        if not hasattr(self, 'flux_unit'):
+            return
+        if not self.flux_unit.choices and self.app.config == 'cubeviz':
+            return
         flux_or_sb = None
         current_y = self.spectrum_viewer.state.y_display_unit
 
@@ -255,7 +260,7 @@ class UnitConversion(PluginTemplateMixin):
                 # If in Cubeviz, all spectra pass through Spectral Xxtraction plugin and will
                 # have a scale factor assigned in the metadata, enabling translation.
                 raise ValueError(
-                    f"Unit translation between Flux and Surface Brightness "
+                    "Unit translation between Flux and Surface Brightness "
                     f"is not supported in {self.app.config}."
                 )
             flux_or_sb = self.sb_unit.selected
@@ -271,9 +276,6 @@ class UnitConversion(PluginTemplateMixin):
             return
 
         yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
-        # may need to be updated if translations in other configs going to be supported
-        if not self.flux_unit.choices and self.app.config == 'cubeviz':
-            return
 
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
