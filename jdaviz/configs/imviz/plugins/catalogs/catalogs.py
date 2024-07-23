@@ -161,6 +161,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                       unit='deg')
 
             # adding in coords + Id's into table
+            # NOTE: If performance becomes a problem, see
+            # https://docs.astropy.org/en/stable/table/index.html#performance-tips
             for row in self.app._catalog_source_table:
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
@@ -174,10 +176,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             self.app._catalog_source_table = table
             skycoord_table = table['sky_centroid']
 
+            # NOTE: If performance becomes a problem, see
+            # https://docs.astropy.org/en/stable/table/index.html#performance-tips
             for row in self.app._catalog_source_table:
                 row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
                             'Declination (degrees)': row['sky_centroid'].dec.deg,
-                            'Object ID': row.get('label', 'N/A')}
+                            'Object ID': str(row.get('label', 'N/A'))}
                 self.table.add_item(row_info)
 
         else:

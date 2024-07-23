@@ -383,7 +383,7 @@ The file must be able to be parsed by `astropy.table.Table.read` and contains th
 
 * ``'sky_centroid'``: Column with `~astropy.coordinates.SkyCoord` sky coordinates of the sources.
 * ``'label'``: Column with string identifiers of the sources. If you have numerical identifiers,
-  you have to recast them as string first.
+  they will be recast as string.
 
 Clicking :guilabel:`SEARCH` will show markers for any entry within the filtered zoom window.
 

@@ -106,7 +106,7 @@ class TestCatalogs:
         # test loading from file
         table = imviz_helper.app._catalog_source_table
         qtable = QTable({'sky_centroid': SkyCoord(table['ra'], table['dec'], unit='deg'),
-                         'label': table['objid'].astype(str)})
+                         'label': table['objid']})
         tmp_file = tmp_path / 'test.ecsv'
         qtable.write(tmp_file, overwrite=True)
 
