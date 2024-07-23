@@ -516,6 +516,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         pix_scale_factor = self.aperture_area_along_spectral * self.spectral_cube.meta.get('PIXAR_SR', 1.0)  # noqa
         spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
+        # inform the user if scale factor keyword not in metadata
+        if 'PIXAR_SR' not in self.spectral_cube.meta:
+            snackbar_message = SnackbarMessage(
+                ("PIXAR_SR FITS header keyword not found when parsing spectral cube. "
+                 "Flux/Surface Brightness will use default PIXAR_SR value of 1 sr/pix^2."),
+                color="warning",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
+
         # stuff for exporting to file
         self.extracted_spec = spec
         self.extracted_spec_available = True

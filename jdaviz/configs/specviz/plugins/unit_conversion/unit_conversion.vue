@@ -19,28 +19,54 @@
       ></v-select>
     </v-row>
 
-    <v-row  v-if="config == 'cubeviz' && show_translator">
+    <v-row v-if="flux_or_sb_config_disabler === 'Surface Brightness' || config == 'cubeviz'">
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="flux_unit_items.map(i => i.label)"
+        v-model="flux_unit_selected"
+        label="Flux Unit"
+        hint="Global display unit for flux axis."
+        persistent-hint
+      ></v-select>
+    </v-row>
+
+    <v-row v-if="flux_or_sb_config_disabler === 'Flux' || config == 'cubeviz'">
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="sb_unit_items.map(i => i.label)"
+        v-model="sb_unit_selected"
+        label="Surface Brightness Unit"
+        hint="Global display unit for surface brightness axis."
+        persistent-hint
+        :disabled="!can_translate"
+      ></v-select>
+      <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
+    </v-row>
+
+    <v-row v-if="config == 'cubeviz'">
+      <v-divider></v-divider>
+    </v-row>
+
+    <v-row  v-if="config == 'cubeviz'">
       <v-select
         :menu-props="{ left: true }"
         attach
         :items="flux_or_sb_items.map(i => i.label)"
         v-model="flux_or_sb_selected"
         label="Flux or Surface Brightness"
-        hint="Select between Flux or Surface Brightness physical type for y-axis."
+        hint="Select the y-axis physical type for the spectrum-viewer."
         persistent-hint
+        :disabled="!can_translate"
       ></v-select>
+      <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
     </v-row>
 
-    <v-row>
-      <v-select
-        :menu-props="{ left: true }"
-        attach
-        :items="flux_unit_items.map(i => i.label)"
-        v-model="flux_unit_selected"
-        :label="flux_or_sb_selected === 'Flux' ? 'Flux Unit' : 'Surface Brightness Unit'"
-        :hint="flux_or_sb_selected === 'Flux' ? 'Global display unit for flux.' : 'Global display unit for surface brightness.'"
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <v-alert type="warning" v-if="!pixar_sr_exists">
+          PIXAR_SR FITS header keyword not found when parsing spectral cube.
+          Flux/Surface Brightness will use default PIXAR_SR value of 1.
+    </v-alert>
+
   </j-tray-plugin>
 </template>

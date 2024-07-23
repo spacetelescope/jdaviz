@@ -89,13 +89,27 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(new_flux)
 
 
-def test_conv_no_data(specviz_helper):
+def test_conv_no_data(specviz_helper, spectrum1d):
     """plugin unit selections won't have valid choices yet, preventing
     attempting to set display units."""
     plg = specviz_helper.plugins["Unit Conversion"]
+    # spectrum not load is in Flux units, sb_unit and flux_unit
+    # should be enabled, flux_or_sb should not be
+    assert hasattr(plg, 'sb_unit')
+    assert hasattr(plg, 'flux_unit')
+    assert not hasattr(plg, 'flux_or_sb')
     with pytest.raises(ValueError, match="no valid unit choices"):
         plg.spectral_unit = "micron"
     assert len(specviz_helper.app.data_collection) == 0
+
+    specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
+    plg = specviz_helper.plugins["Unit Conversion"]
+
+    # spectrum loaded in Flux units, make sure sb_units don't
+    # display in the API and exposed translation isn't possible
+    assert hasattr(plg, 'flux_unit')
+    assert not hasattr(plg, 'sb_unit')
+    assert not hasattr(plg, 'flux_or_sb')
 
 
 @pytest.mark.skipif(ASTROPY_LT_5_3, reason='this feature relies on astropy v5.3+')
@@ -140,40 +154,21 @@ def test_unit_translation(cubeviz_helper):
     cubeviz_helper.load_regions(CirclePixelRegion(center, radius=2.5))
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
-    # we can get rid of this after all spectra pass through
-    # spectral extraction plugin
-    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
-
-    extract_plg.aperture = extract_plg.aperture.choices[-1]
-    extract_plg.aperture_method.selected = 'Exact'
-    extract_plg.wavelength_dependent = True
-    extract_plg.function = 'Sum'
-    # set so pixel scale factor != 1
-    extract_plg.reference_spectral_value = 0.000001
-
-    # all spectra will pass through spectral extraction,
-    # this will store a scale factor for use in translations.
-    collapsed_spec = extract_plg.extract()
 
     # test that the scale factor was set
-    assert np.all(collapsed_spec.meta['_pixel_scale_factor'] != 1)
+    assert np.all(cubeviz_helper.app.data_collection['Spectrum (sum)'].meta['_pixel_scale_factor'] != 1)  # noqa
 
     # When the dropdown is displayed, this ensures the loaded
     # data collection item units will be used for translations.
-    uc_plg._obj.show_translator = True
     assert uc_plg._obj.flux_or_sb_selected == 'Flux'
 
     # to have access to display units
     viewer_1d = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
-    #  for testing _set_flux_or_sb()
-    uc_plg._obj.show_translator = False
-
     # change global y-units from Flux -> Surface Brightness
     uc_plg._obj.flux_or_sb_selected = 'Surface Brightness'
 
-    uc_plg._obj.show_translator = True
     assert uc_plg._obj.flux_or_sb_selected == 'Surface Brightness'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
@@ -196,42 +191,35 @@ def test_sb_unit_conversion(cubeviz_helper):
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
     uc_plg.open_in_tray()
 
+    # ensure that per solid angle cube defaults to Flux spectrum
+    assert uc_plg.flux_or_sb == 'Flux'
+    # flux choices is populated with flux units
+    assert uc_plg.flux_unit.choices
+
     # to have access to display units
     viewer_1d = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
-    uc_plg._obj.show_translator = True
     uc_plg.flux_or_sb.selected = 'Surface Brightness'
 
     # Surface Brightness conversion
-    uc_plg.flux_or_sb_unit = 'Jy / sr'
+    uc_plg.sb_unit = 'Jy / sr'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.Jy / u.sr
 
     # Try a second conversion
-    uc_plg.flux_or_sb_unit = 'W / Hz sr m2'
+    uc_plg.sb_unit = 'W / Hz sr m2'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.Unit("W / (Hz sr m2)")
 
     # really a translation test, test_unit_translation loads a Flux
     # cube, this test load a Surface Brightness Cube, this ensures
     # two-way translation
-    uc_plg.flux_or_sb_unit = 'MJy / sr'
+    uc_plg.sb_unit = 'MJy / sr'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
-    # we can get rid of this after all spectra pass through
-    # spectral extraction plugin
-    extract_plg = cubeviz_helper.plugins['Spectral Extraction']
-    extract_plg.aperture = extract_plg.aperture.choices[-1]
-    extract_plg.aperture_method.selected = 'Exact'
-    extract_plg.wavelength_dependent = True
-    extract_plg.function = 'Sum'
-    extract_plg.reference_spectral_value = 0.000001
-    extract_plg.extract()
-
-    uc_plg._obj.show_translator = True
     uc_plg._obj.flux_or_sb_selected = 'Flux'
-    uc_plg.flux_or_sb_unit = 'MJy'
+    uc_plg.flux_unit = 'MJy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
     assert y_display_unit == u.MJy
