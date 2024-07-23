@@ -1,6 +1,5 @@
 from astropy.coordinates.builtin_frames import __all__ as all_astropy_frames
 from astropy.coordinates import SkyCoord
-from astropy.io import fits
 from astropy import units as u
 
 from pyvo.utils import vocabularies
@@ -302,7 +301,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         for entry in self.table.selected_rows:
             try:
                 self.app._jdaviz_helper.load_data(
-                    fits.open(str(entry["URL"])),  # Open URL as FITS object
+                    str(entry["URL"]),  # Open URL as FITS object
                     data_label=f"{self.source}_{self.resource_selected}_{entry.get('Title', entry.get('URL', ''))}",  # noqa: E501
                 )
             except Exception as e:
