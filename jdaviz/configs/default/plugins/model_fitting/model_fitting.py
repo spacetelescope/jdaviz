@@ -842,6 +842,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.hub.broadcast(msg)
             return
 
+        selected_spec = self.dataset.selected_obj
         if '_pixel_scale_factor' in selected_spec.meta:
             fitted_spectrum.meta['_pixel_scale_factor'] = selected_spec.meta['_pixel_scale_factor']
 
@@ -935,6 +936,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self.app.fitted_models[temp_label] = m["model"]
 
         output_cube = Spectrum1D(flux=fitted_spectrum.flux, wcs=fitted_spectrum.wcs)
+
+        selected_spec = self.dataset.selected_obj
         if '_pixel_scale_factor' in selected_spec.meta:
             output_cube.meta['_pixel_scale_factor'] = selected_spec.meta['_pixel_scale_factor']
 
