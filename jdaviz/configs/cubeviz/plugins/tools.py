@@ -13,6 +13,7 @@ from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
 from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion
 from jdaviz.core.marks import PluginLine
 
+
 __all__ = []
 
 ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'icons')
@@ -117,22 +118,26 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         # Store these so we can revert to previous user-set zoom after preview view
         sv_state = self._spectrum_viewer.state
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
+
         super().activate()
 
     def deactivate(self):
         self.viewer.remove_event_callback(self.on_mouse_move)
         self._reset_spectrum_viewer_bounds()
+        self.viewer.stop_stream()
         super().deactivate()
 
     def on_mouse_move(self, data):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
             self._reset_spectrum_viewer_bounds()
+            self.viewer.stop_stream()
             return
 
         x = int(np.round(data['domain']['x']))
         y = int(np.round(data['domain']['y']))
 
+        # some alternative scaling
         # Use the selected layer from coords_info as long as it's 3D
         coords_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
         if coords_dataset == 'auto':
@@ -166,6 +171,7 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
             self._reset_spectrum_viewer_bounds()
             self._mark.visible = False
+            self.viewer.stop_stream()
         else:
             y_values = spectrum.flux[x, y, :]
             if np.all(np.isnan(y_values)):
@@ -175,3 +181,6 @@ class SpectrumPerSpaxel(SinglePixelRegion):
             self._mark.visible = True
             self._spectrum_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
             self._spectrum_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
+
+            self.viewer.start_stream()
+            self.viewer.update_cube(x, y)
