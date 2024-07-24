@@ -1,14 +1,10 @@
-import pytest
 import numpy as np
-import astropy
+import pytest
 from astropy import units as u
 from astropy.nddata import InverseVariance
-from specutils import Spectrum1D
-from astropy.utils.introspection import minversion
 from astropy.wcs import WCS
 from regions import PixCoord, CirclePixelRegion
-
-ASTROPY_LT_5_3 = not minversion(astropy, "5.3")
+from specutils import Spectrum1D
 
 
 # On failure, should not crash; essentially a no-op.
@@ -112,7 +108,6 @@ def test_conv_no_data(specviz_helper, spectrum1d):
     assert not hasattr(plg, 'flux_or_sb')
 
 
-@pytest.mark.skipif(ASTROPY_LT_5_3, reason='this feature relies on astropy v5.3+')
 def test_non_stddev_uncertainty(specviz_helper):
     flux = np.ones(10) * u.Jy
     stddev = 0.1

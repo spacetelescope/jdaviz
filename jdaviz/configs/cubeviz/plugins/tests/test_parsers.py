@@ -1,8 +1,6 @@
-import astropy
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.utils.introspection import minversion
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 from glue.core.roi import XRangeROI
@@ -10,8 +8,6 @@ from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 from numpy.testing import assert_allclose, assert_array_equal
 
 from jdaviz.utils import PRIHDR_KEY
-
-ASTROPY_LT_5_3 = not minversion(astropy, "5.3")
 
 
 @pytest.mark.filterwarnings('ignore')
@@ -49,10 +45,7 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    if ASTROPY_LT_5_3:
-        flux_unit_str = "erg / (Angstrom cm2 s)"
-    else:
-        flux_unit_str = "erg / (Angstrom s cm2)"
+    flux_unit_str = "erg / (Angstrom s cm2)"
     assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +5.00000e+00 1e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
                                          '205.4398995981 27.0034178810 (deg)')  # noqa
@@ -105,10 +98,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    if ASTROPY_LT_5_3:
-        flux_unit_str = "erg / (Angstrom cm2 s)"
-    else:
-        flux_unit_str = "erg / (Angstrom s cm2)"
+    flux_unit_str = "erg / (Angstrom s cm2)"
     assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')
@@ -138,10 +128,7 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    if ASTROPY_LT_5_3:
-        flux_unit_str = "erg / (Angstrom cm2 s)"
-    else:
-        flux_unit_str = "erg / (Angstrom s cm2)"
+    flux_unit_str = "erg / (Angstrom s cm2)"
     assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')
