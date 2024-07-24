@@ -2,7 +2,6 @@ import os
 import warnings
 from datetime import datetime, timezone
 
-import astropy
 import numpy as np
 from astropy import units as u
 from astropy.modeling.fitting import LevMarLSQFitter
@@ -11,7 +10,6 @@ from astropy.modeling.models import Gaussian1D
 from astropy.time import Time
 from glue.core.message import SubsetUpdateMessage
 from ipywidgets import widget_serialization
-from packaging.version import Version
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture)
 from traitlets import Any, Bool, Integer, List, Unicode, observe
@@ -26,8 +24,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectM
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
-
-ASTROPY_LT_5_2 = Version(astropy.__version__) < Version('5.2')
 
 
 @tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")
@@ -621,12 +617,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     gs = Gaussian1D(amplitude=y_max, mean=x_mean, stddev=std,
                                     fixed={'amplitude': True},
                                     bounds={'amplitude': (y_max * 0.5, y_max)})
-                    if ASTROPY_LT_5_2:
-                        fitter_kw = {}
-                    else:
-                        fitter_kw = {'filter_non_finite': True}
                     with warnings.catch_warnings(record=True) as warns:
-                        fit_model = fitter(gs, x_data, y_data, **fitter_kw)
+                        fit_model = fitter(gs, x_data, y_data, filter_non_finite=True)
                     if len(warns) > 0:
                         msg = os.linesep.join([str(w.message) for w in warns])
                         self.hub.broadcast(SnackbarMessage(

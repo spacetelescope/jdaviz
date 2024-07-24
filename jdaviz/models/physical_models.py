@@ -3,8 +3,6 @@
 """
 Models that have physical origins.
 """
-# pylint: disable=invalid-name, no-member
-
 import warnings
 
 import numpy as np
@@ -16,9 +14,6 @@ from astropy.modeling.core import Fittable1DModel
 from astropy.modeling.parameters import Parameter
 
 __all__ = ["BlackBody"]
-
-# ASTROPY_LT_5_3
-__doctest_requires__ = {"BlackBody": ["astropy<5.3"]}
 
 
 class BlackBody(Fittable1DModel):
@@ -67,7 +62,7 @@ class BlackBody(Fittable1DModel):
     >>> from astropy import units as u
     >>> bb = models.BlackBody(temperature=5000*u.K)
     >>> bb(6000 * u.AA)  # doctest: +FLOAT_CMP
-    <Quantity 1.53254685e-05 erg / (cm2 Hz s sr)>
+    <Quantity 1.53254685e-05 erg / (Hz s sr cm2)>
 
     .. plot::
         :include-source:
