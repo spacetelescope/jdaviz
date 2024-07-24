@@ -90,7 +90,7 @@
             persistent-hint
           ></v-select>
         </div>
-        <div style="line-height: 64px; width=32px">
+        <div style="line-height: 64px; width:32px">
           <v-btn
             id="querybtn"
             @click="query_registry_resources"
