@@ -19,7 +19,7 @@
         <v-text-field
           v-model="source"
           label="Source or Coordinates"
-          hint="Enter a source name or ICRS coordinates in degrees to center your query on"
+          hint="Enter a source name or coordinates in degrees to center your query on"
           :disabled="viewer_selected !== 'Manual'"
           :rules="[() => !!source || 'This field is required']"
           persistent-hint>
