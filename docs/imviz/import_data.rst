@@ -79,7 +79,12 @@ specific target.
 
 Once the query is complete, a table of results will be populated below, with the archive provided ``Title``,
 ``Date``, and ``Instrument`` of each result. Select your desired data products to load and click
-:guilabel:`Load Data` to download and import your selected data products to Imviz. 
+:guilabel:`Load Data` to download and import your selected data products to Imviz.
+
+.. note::
+
+    Currently only SIA 1.0 services are implemented. VO services which offer only SIA2 endpoints are not
+    supported.
 
 .. _imviz-virtual-observatory:
 
