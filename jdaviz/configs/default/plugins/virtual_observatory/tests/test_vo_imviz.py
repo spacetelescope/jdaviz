@@ -107,7 +107,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         vo_plugin._populate_table(
             [fake_result], {"Title A": "attrA", "Title B": "attrB", "Title C": "attrC"}
         )
-        assert vo_plugin._populate_url_only == True
+        assert vo_plugin._populate_url_only is True
         assert self.table.headers_visible == ["URL"]
 
 
