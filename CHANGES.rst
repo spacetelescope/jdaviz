@@ -30,7 +30,7 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Added a table with catalog search results. [#2915]
+- Added a table with catalog search results. [#2915, #3101]
 
 Mosviz
 ^^^^^^
