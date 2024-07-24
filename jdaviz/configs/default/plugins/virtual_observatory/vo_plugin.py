@@ -303,6 +303,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 self.app._jdaviz_helper.load_data(
                     str(entry["URL"]),  # Open URL as FITS object
                     data_label=f"{self.source}_{self.resource_selected}_{entry.get('Title', entry.get('URL', ''))}",  # noqa: E501
+                    cache=False
                 )
             except Exception as e:
                 self.hub.broadcast(
@@ -312,6 +313,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         color="error",
                     )
                 )
+                raise e
         # Clear selected entries' checkboxes on table
         self.table.selected_rows = []
         self.data_loading = False  # Stop loading spinner
