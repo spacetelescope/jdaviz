@@ -226,6 +226,7 @@ def _parse_hdulist(app, hdulist, file_name=None,
 
     is_loaded = []
     wcs_sci = None
+    bunit_sci = None
 
     # TODO: This needs refactoring to be more robust.
     # Current logic fails if there are multiple EXTVER.
@@ -250,17 +251,26 @@ def _parse_hdulist(app, hdulist, file_name=None,
         else:
             wcs = wcs_sci
 
-        if 'BUNIT' in hdu.header:
+        if data_type == 'mask':  # DQ flags have no unit
+            flux_unit = u.dimensionless_unscaled
+        elif 'BUNIT' in hdu.header:
             try:
                 flux_unit = u.Unit(hdu.header['BUNIT'])
             except Exception:
-                logging.warning("Invalid BUNIT, using count as data unit")
+                if data_type == 'flux':
+                    logging.warning("Invalid BUNIT, using count as data unit")
                 flux_unit = u.count
-        elif data_type == 'mask':  # DQ flags have no unit
-            flux_unit = u.dimensionless_unscaled
         else:
-            logging.warning("Invalid BUNIT, using count as data unit")
+            if data_type == 'flux':
+                logging.warning("Invalid BUNIT, using count as data unit")
             flux_unit = u.count
+
+        # Force uncertainty unit to follow science extension when count detected.
+        if data_type == 'flux':
+            bunit_sci = flux_unit
+        # TODO: Is this assumption safe? There are many types of uncertainty.
+        elif (data_type == 'uncert') and bunit_sci and (flux_unit == u.count):
+            flux_unit = bunit_sci
 
         flux = hdu.data << flux_unit
 
