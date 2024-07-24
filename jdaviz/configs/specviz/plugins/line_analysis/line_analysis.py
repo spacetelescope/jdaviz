@@ -321,13 +321,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         self.update_results(None)
                         return
 
-                    temp_result = np.mean(raw_result.to(
+                    temp_result = raw_result.to(
                         flux_unit,
-                        equivalencies=u.spectral_density(freq_spec.spectral_axis)))
+                        equivalencies=u.spectral_density(freq_spec.spectral_axis.mean()))
                     if getattr(raw_result, 'uncertainty', None) is not None:
-                        temp_result.uncertainty = np.mean(raw_result.uncertainty.to(
+                        temp_result.uncertainty = raw_result.uncertainty.to(
                             flux_unit,
-                            equivalencies=u.spectral_density(freq_spec.spectral_axis)))
+                            equivalencies=u.spectral_density(freq_spec.spectral_axis.mean()))
                 # If the flux unit is instead equivalent to power density
                 # (Jy, but defined in wavelength), enforce integration in wavelength space
                 elif (flux_unit.is_equivalent(u.Unit('W/(m2 m)')) or
@@ -353,13 +353,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         self.update_results(None)
                         return
 
-                    temp_result = np.mean(raw_result.to(
+                    temp_result = raw_result.to(
                         flux_unit,
-                        equivalencies=u.spectral_density(wave_spec.spectral_axis)))
+                        equivalencies=u.spectral_density(wave_spec.spectral_axis.mean()))
                     if getattr(raw_result, 'uncertainty', None) is not None:
-                        temp_result.uncertainty = np.mean(raw_result.uncertainty.to(
+                        temp_result.uncertainty = raw_result.uncertainty.to(
                             flux_unit,
-                            equivalencies=u.spectral_density(wave_spec.spectral_axis)))
+                            equivalencies=u.spectral_density(wave_spec.spectral_axis.mean()))
 
                 # Otherwise, just rely on the default specutils line_flux result
                 else:
