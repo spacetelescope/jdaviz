@@ -107,16 +107,19 @@ class TestVOImvizRemote:
         # Nonfiltered resources should be more than filtered resources
         assert len(nonfiltered_resources) > len(filtered_resources)
 
+    @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
+    @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
     def test_HSTM51_load_data(self, imviz_helper):
         # Set Common Args
         vo_plugin = self._init_voplugin(imviz_helper)
 
         # Select HST.M51 survey
-        vo_plugin.resource_filter_coverage = False  # Coverage not implemented for HST.M51
+        # Coverage not implemented for HST.M51
+        vo_plugin.resource_filter_coverage = False
         vo_plugin.vue_query_registry_resources()
         assert "HST.M51" in vo_plugin.resources
         vo_plugin.resource_selected = "HST.M51"
-        
+
         # Query resource
         vo_plugin.vue_query_resource()
         assert len(vo_plugin.table.items) > 0
@@ -124,6 +127,5 @@ class TestVOImvizRemote:
         # Load first data product:
         vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
         vo_plugin.vue_load_selected_data()
-        import time; time.sleep(10)
         assert len(imviz_helper.app.data_collection) == 1
         assert "M51_HST.M51" in imviz_helper.data_labels[0]
