@@ -271,8 +271,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             if getattr(result, 'uncertainty', None) is not None:
                 # we'll keep the uncertainty and result in the same unit (so
                 # we only have to show the unit at the end)
-                if (np.any(np.isnan(result.uncertainty.value)) or
-                        np.any(np.isinf(result.uncertainty.value))):
+                if not np.all(np.isfinite(result.uncertainty.value)):
                     return ''
                 return str(result.uncertainty.to_value(result.unit))
             else:
