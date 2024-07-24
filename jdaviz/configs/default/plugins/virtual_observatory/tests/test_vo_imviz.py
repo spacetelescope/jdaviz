@@ -91,6 +91,25 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
             }
         ]
 
+    def test_populate_table_url_header_fallback(self):
+        """
+        If a SIAResult is missing a required header,
+        the table should switch to displaying URLs only
+        """
+        vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
+        fake_result = fake_siaresult(
+            {
+                "attrA": "Field A",
+                "attrC": "Field C",
+            }
+        )
+
+        vo_plugin._populate_table(
+            [fake_result], {"Title A": "attrA", "Title B": "attrB", "Title C": "attrC"}
+        )
+        assert vo_plugin._populate_url_only == True
+        assert self.table.headers_visible == ["URL"]
+
 
 @pytest.mark.remote_data
 class TestVOImvizRemote:
