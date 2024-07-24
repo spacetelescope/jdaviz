@@ -5,6 +5,8 @@ from jdaviz.configs.default.plugins.virtual_observatory.vo_plugin import vo_plug
 
 
 class fake_siaresult:
+    """A mock class that simulates a SIAResult"""
+
     def __init__(self, attrs):
         for attr, value in attrs.items():
             self.__setattr__(attr, value)
@@ -16,6 +18,10 @@ class fake_siaresult:
 # TODO: Update all _obj calls to formal API calls once Plugin API is available
 class TestVOImvizLocal(BaseImviz_WCS_WCS):
     def test_autocenter_coords(self):
+        """
+        Loads two data products and checks the plugin correctly adjusts the automatically-derived
+        coordinates of the center of the viewer when the viewer dropdown is changed
+        """
         # Create a second viewer and put each data in its own viewer
         self.imviz.create_image_viewer()
         self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
@@ -34,6 +40,10 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         assert vo_plugin.source == "337.51924057481 -20.83208305686149"
 
     def test_populate_table_default_headers(self):
+        """
+        Tests populating the results table with a mocked SIARsult
+        and verifies the default headers populate the correct fields
+        """
         vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
         fake_result = fake_siaresult(
             {
@@ -54,6 +64,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         ]
 
     def test_populate_table_customm_headers(self):
+        """Tests the ability to control and adjust the table to custom columns"""
         vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
         fake_result = fake_siaresult(
             {
@@ -80,16 +91,37 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
 class TestVOImvizRemote:
 
     def _init_voplugin(self, imviz_helper):
+        """
+        Initialize the vo plugin with common test parameters
+
+        Parameters
+        ----------
+        imviz_helper : `~jdaviz.configs.imviz.helper`
+            Instance of Imviz in which to initialize the VO plugin
+
+        Returns
+        -------
+        vo_plugin : `~jdaviz.configs.default.plugins.virtual_observatory.VoPlugin`
+            The raw VoPlugin class plugin instance
+        """
         vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
 
         # Sets common args for Remote Testing
         vo_plugin.viewer_selected = "Manual"
         vo_plugin.source = "M51"
+        vo_plugin.radius = 1
         vo_plugin.waveband_selected = "optical"
 
         return vo_plugin
 
     def test_coverage_toggle(self, imviz_helper):
+        """
+        Test that disabling the coverage toggle returns more available services
+
+        NOTE: This does assume there exists at least one survey that does NOT report coverage
+        within a 1 degree circle around the above-defined source position. Otherwise the returned
+        resource lists will be identical.
+        """
         # Set Common Args
         vo_plugin = self._init_voplugin(imviz_helper)
 
@@ -110,6 +142,7 @@ class TestVOImvizRemote:
     @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
     @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
     def test_HSTM51_load_data(self, imviz_helper):
+        """Test the full plugin by filling out the form and loading a data product into Imviz"""
         # Set Common Args
         vo_plugin = self._init_voplugin(imviz_helper)
 
