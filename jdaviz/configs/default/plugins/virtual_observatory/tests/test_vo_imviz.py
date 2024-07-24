@@ -108,7 +108,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
             [fake_result], {"Title A": "attrA", "Title B": "attrB", "Title C": "attrC"}
         )
         assert vo_plugin._populate_url_only is True
-        assert self.table.headers_visible == ["URL"]
+        assert vo_plugin.table.headers_visible == ["URL"]
 
 
 @pytest.mark.remote_data
