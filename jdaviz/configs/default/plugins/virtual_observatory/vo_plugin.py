@@ -130,7 +130,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         try:
             # First parse user-provided source as direct coordinates
             coord = SkyCoord(self.source, unit=u.deg, frame=self.coordframe_selected)
-        except:
+        except Exception:
             try:
                 # If that didn't work, try parsing it as an object name
                 coord = SkyCoord.from_name(self.source, frame=self.coordframe_selected)
@@ -152,7 +152,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 registry.Servicetype("sia"),
                 registry.Waveband(self.waveband_selected),
             ]
-            if coord != None and self.resource_filter_coverage:
+            if coord is not None and self.resource_filter_coverage:
                 registry_args.append(
                     registry.Spatial(coord, self.radius_deg, intersect="overlaps")
                 )
@@ -205,7 +205,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 coord = SkyCoord(
                     self.source, unit=u.deg, frame=self.coordframe_selected
                 )
-            except:
+            except Exception:
                 try:
                     # If that didn't work, try parsing it as an object name
                     coord = SkyCoord.from_name(
