@@ -2954,8 +2954,8 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
         if per_pixel:
             if self.app.config != 'cubeviz':
                 raise ValueError("per-pixel only supported for cubeviz")
-            full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected,
-                                                             use_display_units=True)
+
+            full_spectrum = self.app._jdaviz_helper.get_data(self.dataset.selected)
         else:
             full_spectrum = dataset.get_selected_spectrum(use_display_units=True)
 
@@ -2979,8 +2979,7 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
             spectrum = full_spectrum
         else:
             sr = self.app.get_subsets(spectral_subset.selected,
-                                      simplify_spectral=True,
-                                      use_display_units=True)
+                                      simplify_spectral=True)
             spectrum = extract_region(full_spectrum, sr, return_single_spectrum=True)
             sr_lower = np.nanmin(spectrum.spectral_axis[spectrum.spectral_axis >= sr.lower])  # noqa
             sr_upper = np.nanmax(spectrum.spectral_axis[spectrum.spectral_axis <= sr.upper])  # noqa

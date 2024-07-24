@@ -10,7 +10,7 @@ from traitlets import Bool, List, Unicode, observe
 from specutils import manipulation, analysis, Spectrum1D
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
+from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, AddDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         DatasetSelect, DatasetSelectMixin,
@@ -20,7 +20,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralContinuumMixin,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner)
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['MomentMap']
@@ -30,7 +29,7 @@ SPECUTILS_LT_1_15_1 = not minversion(specutils, "1.15.1.dev")
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
-moment_unit_options = {0: ["Surface Brightness", "Flux"],
+moment_unit_options = {0: ["Surface Brightness"],
                        1: ["Velocity", "Spectral Unit"],
                        2: ["Velocity", "Velocity^N"]}
 
@@ -105,18 +104,21 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                                         'layer_in_spectrum_viewer'])
 
         # when plugin is initialized, there won't be a dataset selected, so
-        # call the output unit 'Flux' for now (rather than surface brightness).
         # the appropriate label will be chosen once a dataset is selected, and/or
         # unit conversion is done
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
                                                  selected='output_unit_selected',
-                                                 manual_options=['Flux', 'Spectral Unit',
-                                                                 'Velocity', 'Velocity^N'])
+                                                 manual_options=['Surface Brightness',
+                                                                 'Spectral Unit',
+                                                                 'Velocity',
+                                                                 'Velocity^N'])
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._set_data_units)
+        self.hub.subscribe(self, AddDataMessage,
                            handler=self._set_data_units)
 
         if self.app.state.settings.get('server_is_remote', False):
@@ -169,15 +171,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         if isinstance(self.n_moment, str) or self.n_moment < 0:
             return
-        unit_options_index = 2 if self.n_moment > 2 else self.n_moment
+        unit_options_index = min(self.n_moment, 2)
         if self.output_unit_selected not in moment_unit_options[unit_options_index]:
             self.output_unit_selected = moment_unit_options[unit_options_index][0]
         self.send_state("output_unit_selected")
 
-        # either 'Flux' or 'Surface Brightness'
-        orig_flux_or_sb = self.output_unit_items[0]['label']
-
-        unit_dict = {orig_flux_or_sb: "",
+        unit_dict = {"Surface Brightness": "",
                      "Spectral Unit": "",
                      "Velocity": "km/s",
                      "Velocity^N": f"km{self.n_moment}/s{self.n_moment}"}
@@ -197,28 +196,13 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             self.dataset_spectral_unit = sunit
             unit_dict["Spectral Unit"] = sunit
 
-            # get flux/SB units
-            if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
-                if self.spectrum_viewer.state.y_display_unit is not None:
-                    unit_dict[orig_flux_or_sb] = self.spectrum_viewer.state.y_display_unit
-                else:
-                    # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
-                    # been done if not, get default flux units which should be the units displayed
-                    unit_dict[orig_flux_or_sb] = data.get_component('flux').units
-            else:
-                # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
-                # been done if not, get default flux units which should be the units displayed
-                unit_dict[orig_flux_or_sb] = data.get_component('flux').units
-
-            # figure out if label should say 'Flux' or 'Surface Brightness'
-            sb_or_flux_label = "Flux"
-            is_unit_solid_angle = check_if_unit_is_per_solid_angle(unit_dict[orig_flux_or_sb])
-            if is_unit_solid_angle is True:
-                sb_or_flux_label = "Surface Brightness"
+        if self.output_unit_selected == 'Surface Brightness':
+            unit_dict['Surface Brightness'] = str(self.moment_zero_unit)
 
         # Update units in selection item dictionary
         for item in self.output_unit_items:
             item["unit_str"] = unit_dict[item["label"]]
+
             if item["label"] in ["Flux", "Surface Brightness"] and sb_or_flux_label:
                 # change unit label to reflect if unit is flux or SB
                 item["label"] = sb_or_flux_label
@@ -279,7 +263,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         except ValueError:
             raise ValueError("Moment must be a positive integer")
 
-        unit_options_index = 2 if n_moment > 2 else n_moment
+        unit_options_index = min(n_moment, 2)
         if self.output_unit_selected not in moment_unit_options[unit_options_index]:
             raise ValueError("Selected output units must be in "
                              f"{moment_unit_options[unit_options_index]} for "
@@ -298,14 +282,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # slice out desired region
         # TODO: should we add a warning for a composite spectral subset?
-        spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
-        display_spectral_axis_unit = self.app._get_display_unit(self.slice_display_unit_name)
+        sr = self.spectral_subset.selected_obj
 
-        # Convert units of min and max if necessary
-        if display_spectral_axis_unit and display_spectral_axis_unit != str(spec_min.unit):
-            spec_min = spec_min.to(display_spectral_axis_unit, equivalencies=u.spectral())
-            spec_max = spec_max.to(display_spectral_axis_unit, equivalencies=u.spectral())
-        slab = manipulation.spectral_slab(cube, spec_min, spec_max)
+        if sr is None:
+            slab = cube
+        else:
+            slab = manipulation.extract_region(cube, sr)
 
         # Calculate the moment and convert to CCDData to add to the viewers
         # Need transpose to align JWST mirror shape: This is because specutils
@@ -343,22 +325,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # convert units for moment 0, which is the only currently supported
         # moment for using converted units.
         if n_moment == 0:
-            # get flux/SB units
-            if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
-                if self.spectrum_viewer.state.y_display_unit is not None:
-                    flux_sb_unit = self.spectrum_viewer.state.y_display_unit
-                else:
-                    flux_sb_unit = data.get_component('flux').units
-            else:
-                flux_sb_unit = data.get_component('flux').units
-
-            # convert unit string to u.Unit so moment map data can be converted
-            flux_or_sb_display_unit = u.Unit(flux_sb_unit)
-            if SPECUTILS_LT_1_15_1:
-                moment_new_unit = flux_or_sb_display_unit
-            else:
-                moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
-            self.moment = self.moment.to(moment_new_unit)
+            self.moment = self.moment.to(self.moment_zero_unit)
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)
@@ -376,6 +343,21 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.moment_available = True
 
         return self.moment
+
+    @property
+    def moment_zero_unit(self):
+        unit_conv = self.app.get_tray_item_from_name('g-unit-conversion')
+        if self.spectrum_viewer.state.x_display_unit is not None:
+            return (
+                u.Unit(unit_conv.sb_unit.selected) *
+                self.spectrum_viewer.state.x_display_unit
+            )
+        return ''
+
+    @property
+    def spectral_unit_selected(self):
+        unit_conv = self.app.get_tray_item_from_name('g-unit-conversion')
+        return unit_conv.spectral_unit.selected
 
     def vue_calculate_moment(self, *args):
         self.calculate_moment(add_data=True)
