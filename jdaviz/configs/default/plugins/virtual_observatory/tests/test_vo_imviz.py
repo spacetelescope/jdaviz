@@ -1,3 +1,4 @@
+from numpy.testing import assert_allclose
 import pytest
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
@@ -33,11 +34,15 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
 
         # Switch to first viewer and verify coordinates have switched
         vo_plugin.viewer_selected = "imviz-0"
-        assert vo_plugin.source == "337.51894336761296 -20.832083054811765"
+        ra_str, dec_str = vo_plugin.source.split()
+        assert_allclose(float(ra_str), 337.51894336761296)
+        assert_allclose(float(dec_str), -20.832083054811765)
 
         # Switch to second viewer and verify coordinates
         vo_plugin.viewer_selected = "imviz-1"
-        assert vo_plugin.source == "337.51924057481 -20.83208305686149"
+        ra_str, dec_str = vo_plugin.source.split()
+        assert_allclose(float(ra_str), 337.51924057481)
+        assert_allclose(float(dec_str), -20.83208305686149)
 
     def test_populate_table_default_headers(self):
         """
