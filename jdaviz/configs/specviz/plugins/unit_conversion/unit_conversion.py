@@ -50,8 +50,8 @@ class UnitConversion(PluginTemplateMixin):
       Select the y-axis physical type for the spectrum-viewer.
     * ``flux_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
       Global display unit for flux axis.
-    * ``sb_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
-      Global display unit for surface brightness axis.
+    * ``angle_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
+      Solid angle unit.
     """
     template_file = __file__, "unit_conversion.vue"
 
@@ -69,9 +69,6 @@ class UnitConversion(PluginTemplateMixin):
     flux_or_sb_items = List().tag(sync=True)
     flux_or_sb_selected = Unicode().tag(sync=True)
 
-    # in certain configs, a pixel scale factor will not be in the FITS header
-    # we need to disable translation in the API and UI variables/functions.
-    flux_or_sb_config_disabler = Unicode().tag(sync=True)
     can_translate = Bool(True).tag(sync=True)
     # This is used a warning message if False. This can be changed from
     # bool to unicode when we eventually handle inputing this value if it
@@ -160,7 +157,7 @@ class UnitConversion(PluginTemplateMixin):
         x_u = u.Unit(self.spectral_unit.selected)
         y_unit = _valid_glue_display_unit(y_unit, self.spectrum_viewer, 'y')
         y_u = u.Unit(y_unit)
-        sb_unit = self.flux_unit.selected + ' / ' + self.angle_unit.selected
+        sb_unit = self._append_angle_correctly(self.flux_unit.selected, self.angle_unit.selected)
 
         if flux_or_sb == 'Flux' and y_unit != self.flux_unit.selected:
             flux_choices = create_flux_equivalencies_list(y_u, x_u)
@@ -176,11 +173,21 @@ class UnitConversion(PluginTemplateMixin):
             flux_choices = create_flux_equivalencies_list(y_u * u.sr, x_u)
             self.flux_unit.choices = flux_choices
 
+        '''
+        if self.flux_or_sb_selected == 'Surface Brightness':
+            updated_flux_choices = list(set(create_flux_equivalencies_list(y_u * u.sr, x_u))
+                - set(units_to_strings(self._untranslatable_units)))
+            self.flux_unit.choices = updated_flux_choices
+        '''
+
         if self.app.data_collection[0]:
-            dc_unit = self.app.data_collection[0].get_object()._unit
+            dc_unit = self.app.data_collection[0].get_object().flux.unit
             self.angle_unit.choices = create_angle_equivalencies_list(dc_unit)
             self.angle_unit.selected = self.angle_unit.choices[0]
-            self.sb_unit = self.flux_unit.selected + " / " + self.angle_unit.selected
+            self.sb_unit = self._append_angle_correctly(
+                self.flux_unit.selected,
+                self.angle_unit.selected
+            )
 
         if check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
             self.flux_or_sb = 'Flux'
@@ -203,35 +210,18 @@ class UnitConversion(PluginTemplateMixin):
             return
         flux_or_sb = None
 
-        data_collection_unit = ''
-        # need to determine the input spectrum units to disable the additional
-        # drop down and possiblity of translations in Specviz.
-        if (
-            len(self.app.data_collection) > 0 and
-            self.app.data_collection[0] and
-            self.app.config == 'specviz'
-        ):
-            if check_if_unit_is_per_solid_angle(self.app.data_collection[0].get_object().flux.unit):  # noqa
-                data_collection_unit = 'Surface Brightness'
-                self.flux_or_sb_config_disabler = 'Flux'
-            else:
-                data_collection_unit = 'Flux'
-                self.flux_or_sb_config_disabler = 'Surface Brightness'
-
         name = msg.get('name')
         # determine if flux or surface brightness unit was changed by user
         if name == 'flux_unit_selected':
             # when the configuration is Specviz, translation is not currently supported.
             # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
             # have a scale factor assigned in the metadata, enabling translation.
-            if data_collection_unit == 'Surface Brightness':
-                raise ValueError(
-                    f"Unit translation between Flux and Surface Brightness "
-                    f"is not supported in {self.app.config}."
-                )
             current_y_unit = self.spectrum_viewer.state.y_display_unit
             if self.angle_unit.selected and check_if_unit_is_per_solid_angle(current_y_unit):
-                flux_or_sb = self.flux_unit.selected + ' / ' + self.angle_unit.selected
+                flux_or_sb = self._append_angle_correctly(
+                             self.flux_unit.selected,
+                             self.angle_unit.selected
+                )
             else:
                 flux_or_sb = self.flux_unit.selected
             untranslatable_units = self._untranslatable_units
@@ -260,9 +250,9 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.reset_limits()
 
         if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
-            self.flux_or_sb.selected = 'Flux'
+            self.flux_or_sb_selected = 'Flux'
         else:
-            self.flux_or_sb = 'Surface Brightness'
+            self.flux_or_sb_selected = 'Surface Brightness'
 
         if (
             len(self.app.data_collection) > 0
@@ -277,8 +267,7 @@ class UnitConversion(PluginTemplateMixin):
 
         # we want to raise an error if a user tries to translate with an
         # untranslated Flux unit using the API
-        untranslatable_units = self._untranslatable_units
-        untranslatable_units = units_to_strings(untranslatable_units)
+        untranslatable_units = units_to_strings(self._untranslatable_units)
 
         if hasattr(self, 'flux_unit'):
             if ((self.flux_unit.selected in untranslatable_units)
@@ -327,3 +316,12 @@ class UnitConversion(PluginTemplateMixin):
             u.ph / (u.s * u.cm**2 * u.Hz),
             u.ST, u.bol
         ]
+
+    def _append_angle_correctly(self, flux_unit, angle_unit):
+        if '(' in flux_unit:
+            pos = flux_unit.rfind(')')
+            sb_unit = flux_unit[:pos] + ' ' + angle_unit + flux_unit[pos:]
+        else:
+            # append angle if there are no parentheses
+            sb_unit = flux_unit + ' / ' + angle_unit
+        return sb_unit
