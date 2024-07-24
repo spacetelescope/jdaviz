@@ -367,14 +367,14 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
     # the background subtracted from each slice in wavelength from the aperture should be equal
     # to the background -- which is the minimum per spectral slice in this example cube -- divided
     # by the number of pixels in the aperture:
-    cube_min_per_slice = extract_plg._obj.spectral_cube['flux'].min(axis=(0, 1))
+    cube_min_per_slice = extract_plg._obj.cube['flux'].min(axis=(0, 1))
     np.testing.assert_allclose(
         bg_spec.flux.value / n_aperture_pixels,
         cube_min_per_slice
     )
 
     # background normalized per spaxel should be equal to the minimum per spectral slice:
-    cube_min_per_slice = extract_plg._obj.spectral_cube['flux'].min(axis=(0, 1))
+    cube_min_per_slice = extract_plg._obj.cube['flux'].min(axis=(0, 1))
     np.testing.assert_allclose(
         bg_spec_normed.flux.value / n_bg_pixels,
         cube_min_per_slice

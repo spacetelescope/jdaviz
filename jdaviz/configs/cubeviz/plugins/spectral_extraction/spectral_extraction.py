@@ -144,7 +144,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                dataset='dataset',
                                                multiselect=None,
                                                default_text='None',
-                                               subset_selected_changed_callback=self._update_extract)
+                                               subset_selected_changed_callback=self._update_extract)  # noqa
 
         self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
                                               'bg_spec_results_label_default',
