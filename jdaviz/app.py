@@ -1244,32 +1244,27 @@ class Application(VuetifyTemplate, HubListener):
             elif isinstance(subset_state, MultiMaskSubsetState):
                 return self._get_multi_mask_subset_definition(subset_state)
 
-    def _get_display_unit(self, axis, as_unit=False):
-        def _as_unit(unit):
-            if as_unit:
-                return u.Unit(unit)
-            return str(unit)
-
+    def _get_display_unit(self, axis):
         if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
             # fallback on native units (unit conversion is not enabled)
             if axis == 'spectral':
                 sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
-                return _as_unit(sv.data()[0].spectral_axis.unit)
+                return sv.data()[0].spectral_axis.unit
             elif axis in ('flux', 'sb', 'spectral_y'):
                 sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
                 sv_y_unit = sv.data()[0].flux.unit
                 if axis == 'spectral_y':
-                    return _as_unit(sv_y_unit)
+                    return sv_y_unit
                 elif axis == 'flux':
                     if check_if_unit_is_per_solid_angle(sv_y_unit):
                         # TODO: this will need updating once solid-angle unit can be non-steradian
-                        return _as_unit(sv_y_unit * u.sr)
+                        return sv_y_unit * u.sr
                     return sv_y_unit
                 else:
                     # surface_brightness
                     if check_if_unit_is_per_solid_angle(sv_y_unit):
-                        return _as_unit(sv_y_unit)
-                    return _as_unit(sv_y_unit / u.sr)
+                        return sv_y_unit
+                    return sv_y_unit / u.sr
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
         uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
@@ -1277,7 +1272,7 @@ class Application(VuetifyTemplate, HubListener):
             # translate options from uc.flux_or_sb to the prefix used in uc.??_unit_selected
             axis = {'Surface Brightness': 'sb', 'Flux': 'flux'}[uc.flux_or_sb_selected]
         try:
-            return _as_unit(getattr(uc, f'{axis}_unit_selected'))
+            return getattr(uc, f'{axis}_unit_selected')
         except AttributeError:
             raise ValueError(f"could not find display unit for axis='{axis}'")
 
