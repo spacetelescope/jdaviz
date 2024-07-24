@@ -726,6 +726,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _live_update_extract(self, event={}):
         self._update_extract()
 
+    @skip_if_not_tray_instance()
     def _update_extract(self):
         try:
             ext, bg_extract = self.extract(return_bg=True, add_data=False)
