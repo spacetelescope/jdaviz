@@ -281,8 +281,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                             color="warning",
                         )
                     )
+                    # Hide all other incomplete columns and only load URL for subsequent rows
                     self.table.headers_visible = ["URL"]
                     self._populate_url_only = True
+                    # Reset current entry to URL only
+                    table_entry = {"URL": result.getdataurl()}
             # Table widget only supports JSON-verification for serial table additions.
             # For improved performance with larger tables, a `table.add_items` that accepts
             # a table of elements should be implemented
