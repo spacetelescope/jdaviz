@@ -332,7 +332,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def slice_display_unit(self):
-        return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
+        return self.app._get_display_unit(self.slice_display_unit_name, as_unit=True)
 
     @property
     def mask_non_science(self):

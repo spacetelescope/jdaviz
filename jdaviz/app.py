@@ -1048,7 +1048,7 @@ class Application(VuetifyTemplate, HubListener):
             raise ValueError("Unable to find spectral axis units")
         if use_display_units:
             # converting may result in flipping order (wavelength <-> frequency)
-            ret_units = self._get_display_unit('spectral')
+            ret_units = self._get_display_unit('spectral', as_unit=False)
             subset_bounds = [(subset_state.lo * units).to(ret_units, u.spectral()),
                              (subset_state.hi * units).to(ret_units, u.spectral())]
             spec_region = SpectralRegion(min(subset_bounds), max(subset_bounds))
