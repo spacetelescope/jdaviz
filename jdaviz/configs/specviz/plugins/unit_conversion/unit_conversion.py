@@ -157,11 +157,9 @@ class UnitConversion(PluginTemplateMixin):
         x_u = u.Unit(self.spectral_unit.selected)
         y_unit = _valid_glue_display_unit(y_unit, self.spectrum_viewer, 'y')
         y_u = u.Unit(y_unit)
-        sb_unit = self._append_angle_correctly(self.flux_unit.selected, self.angle_unit.selected)
 
         if flux_or_sb == 'Flux' and y_unit != self.flux_unit.selected:
             flux_choices = create_flux_equivalencies_list(y_u, x_u)
-
             # ensure that original entry is in the list of choices
             if not np.any([y_u == u.Unit(choice) for choice in flux_choices]):
                 flux_choices = [y_unit] + flux_choices
@@ -169,17 +167,14 @@ class UnitConversion(PluginTemplateMixin):
             self.flux_unit.choices = flux_choices
             self.flux_unit.selected = y_unit
 
-        elif flux_or_sb == 'Surface Brightness' and y_unit != sb_unit:
-            flux_choices = create_flux_equivalencies_list(y_u * u.sr, x_u)
-            self.flux_unit.choices = flux_choices
-
-        '''
+        # if the spectral axis is set to surface brightness,
+        # untranslatable units need to be removed from the flux choices
         if self.flux_or_sb_selected == 'Surface Brightness':
             updated_flux_choices = list(set(create_flux_equivalencies_list(y_u * u.sr, x_u))
-                - set(units_to_strings(self._untranslatable_units)))
+                                        - set(units_to_strings(self._untranslatable_units)))
             self.flux_unit.choices = updated_flux_choices
-        '''
 
+        # sets the angle unit drop down and the surface brightness read-only text
         if self.app.data_collection[0]:
             dc_unit = self.app.data_collection[0].get_object().flux.unit
             self.angle_unit.choices = create_angle_equivalencies_list(dc_unit)
@@ -188,6 +183,12 @@ class UnitConversion(PluginTemplateMixin):
                 self.flux_unit.selected,
                 self.angle_unit.selected
             )
+
+        # this is for Specviz, when data collection item is in Surface Brightness
+        '''
+        if not self.flux_unit.selected:
+            self.flux_unit.selected = str(u.Unit(self.spectrum_viewer.state.y_display_unit * u.sr))
+        '''
 
         if check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
             self.flux_or_sb = 'Flux'
@@ -208,6 +209,7 @@ class UnitConversion(PluginTemplateMixin):
             return
         if not self.flux_unit.choices and self.app.config == 'cubeviz':
             return
+
         flux_or_sb = None
 
         name = msg.get('name')
@@ -254,6 +256,7 @@ class UnitConversion(PluginTemplateMixin):
         else:
             self.flux_or_sb_selected = 'Surface Brightness'
 
+        # for displaying message that PIXAR_SR = 1 if it is not found in the FITS header
         if (
             len(self.app.data_collection) > 0
             and not self.app.data_collection[0].meta.get('PIXAR_SR')
