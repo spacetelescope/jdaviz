@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-
+from astropy.nddata import StdDevUncertainty
 from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
@@ -68,11 +68,18 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
     #  generic enough to work with other file types (e.g. ASDF). For now, this
     #  supports MaNGA and JWST data.
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
-        _parse_hdulist(
-            app, file_obj, file_name=data_label,
-            flux_viewer_reference_name=flux_viewer_reference_name,
-            uncert_viewer_reference_name=uncert_viewer_reference_name
-        )
+        try:
+            _parse_spectrum1d_3d(
+                app, Spectrum1D.read(file_obj), data_label=data_label,
+                flux_viewer_reference_name=flux_viewer_reference_name,
+                uncert_viewer_reference_name=uncert_viewer_reference_name
+            )
+        except Exception:  # nosec
+            _parse_hdulist(
+                app, file_obj, file_name=data_label,
+                flux_viewer_reference_name=flux_viewer_reference_name,
+                uncert_viewer_reference_name=uncert_viewer_reference_name
+            )
     elif isinstance(file_obj, str):
         if file_obj.lower().endswith('.gif'):  # pragma: no cover
             _parse_gif(app, file_obj, data_label,
@@ -129,11 +136,18 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
                         flux_viewer_reference_name=flux_viewer_reference_name,
                     )
             else:
-                _parse_hdulist(
-                    app, hdulist, file_name=data_label or file_name,
-                    flux_viewer_reference_name=flux_viewer_reference_name,
-                    uncert_viewer_reference_name=uncert_viewer_reference_name
-                )
+                try:
+                    _parse_spectrum1d_3d(
+                        app, Spectrum1D.read(hdulist), data_label=data_label or file_name,
+                        flux_viewer_reference_name=flux_viewer_reference_name,
+                        uncert_viewer_reference_name=uncert_viewer_reference_name
+                    )
+                except Exception:  # nosec
+                    _parse_hdulist(
+                        app, hdulist, file_name=data_label or file_name,
+                        flux_viewer_reference_name=flux_viewer_reference_name,
+                        uncert_viewer_reference_name=uncert_viewer_reference_name
+                    )
 
     # If the data types are custom data objects, use explicit parsers. Note
     #  that this relies on the glue-astronomy machinery to turn the data object
@@ -412,10 +426,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         if attr == "mask":
             flux = val << u.dimensionless_unscaled  # DQ flags have no unit
         elif attr == "uncertainty":
-            if hasattr(val, "array"):
-                flux = u.Quantity(val.array, file_obj.flux.unit)
-            else:
-                continue
+            flux = val.represent_as(StdDevUncertainty).quantity
         else:
             flux = val
 

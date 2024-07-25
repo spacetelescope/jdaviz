@@ -4546,24 +4546,24 @@ class Table(PluginSubcomponent):
                     return f"{item:0.3f}"
                 elif column in ('xcenter', 'ycenter'):
                     return f"{item:0.1f}"
-                elif column in ('sum', ):
+                elif column in ('sum', 'spectral_axis'):
                     return f"{item:.3e}"
                 else:
                     return f"{item:0.5f}"
 
             if isinstance(item, SkyCoord):
                 return item.to_string('hmsdms', precision=4)
-            if isinstance(item, u.Quantity) and not np.isnan(item):
+            elif isinstance(item, u.Quantity) and not np.isnan(item):
                 return f"{float_precision(column, item.value)} {item.unit.to_string()}"
 
-            if hasattr(item, 'to_string'):
+            elif hasattr(item, 'to_string'):
                 return item.to_string()
-            if isinstance(item, float) and np.isnan(item):
+            elif isinstance(item, float) and np.isnan(item):
                 return ''
-            if isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
+            elif isinstance(item, tuple) and np.all([np.isnan(i) for i in item]):
                 return ''
 
-            if isinstance(item, float):
+            elif isinstance(item, float):
                 return float_precision(column, item)
             elif isinstance(item, (list, tuple)):
                 return [float_precision(column, i) if isinstance(i, float) else i for i in item]
