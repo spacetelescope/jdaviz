@@ -121,10 +121,10 @@ def test_spatial_convolution(cubeviz_helper, spectrum1d_cube):
 
     assert len(dc) == 3
     assert dc[-1].label == f'{data_label}[FLUX] spatial-smooth stddev-3.0'
-    assert dc[-1].shape == (2, 4, 2)  # specutils moved spectral axis to last
+    assert dc[-1].shape == (4, 2, 2)  # specutils moved spectral axis to last
     assert (dc[f'{data_label}[FLUX] spatial-smooth stddev-3.0'].get_object(cls=Spectrum1D,
                                                                            statistic=None).shape
-            == (2, 4, 2))
+            == (4, 2, 2))
 
 
 def test_specviz_smooth(specviz_helper, spectrum1d):
