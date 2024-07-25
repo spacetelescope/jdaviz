@@ -127,32 +127,38 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.resources = []
         self.resource_selected = None
         self.resources_loading = True  # Start loading bar
-        try:
-            # First parse user-provided source as direct coordinates
-            coord = SkyCoord(self.source, unit=u.deg, frame=self.coordframe_selected)
-        except Exception:
-            try:
-                # If that didn't work, try parsing it as an object name
-                coord = SkyCoord.from_name(self.source, frame=self.coordframe_selected)
-            except Exception:
-                self.resources_loading = False  # Stop loading bar
-                self.hub.broadcast(
-                    SnackbarMessage(
-                        f"Unable to resolve source coordinates: {self.source}",
-                        sender=self,
-                        color="error",
-                    )
-                )
-                raise LookupError(
-                    f"Unable to resolve source coordinates: {self.source}"
-                )
 
         try:
             registry_args = [
                 registry.Servicetype("sia"),
                 registry.Waveband(self.waveband_selected),
             ]
-            if coord is not None and self.resource_filter_coverage:
+            # If we have a valid source and coverage filtering is enabled, lookup
+            # current source coordinate and add a Spatial search constraint
+            if self.source is not None and self.resource_filter_coverage:
+                try:
+                    # First parse user-provided source as direct coordinates
+                    coord = SkyCoord(
+                        self.source, unit=u.deg, frame=self.coordframe_selected
+                    )
+                except Exception:
+                    try:
+                        # If that didn't work, try parsing it as an object name
+                        coord = SkyCoord.from_name(
+                            self.source, frame=self.coordframe_selected
+                        )
+                    except Exception:
+                        self.resources_loading = False  # Stop loading bar
+                        self.hub.broadcast(
+                            SnackbarMessage(
+                                f"Unable to resolve source coordinates: {self.source}",
+                                sender=self,
+                                color="error",
+                            )
+                        )
+                        raise LookupError(
+                            f"Unable to resolve source coordinates: {self.source}"
+                        )
                 registry_args.append(
                     registry.Spatial(coord, self.radius_deg, intersect="overlaps")
                 )
@@ -306,7 +312,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 self.app._jdaviz_helper.load_data(
                     str(entry["URL"]),  # Open URL as FITS object
                     data_label=f"{self.source}_{self.resource_selected}_{entry.get('Title', entry.get('URL', ''))}",  # noqa: E501
-                    cache=False
+                    cache=False,
                 )
             except Exception as e:
                 self.hub.broadcast(
