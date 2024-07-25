@@ -423,8 +423,6 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         else:
             flux = val
 
-        flux = np.moveaxis(flux, 1, 0)
-
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 'ignore', message='Input WCS indicates that the spectral axis is not last',
