@@ -67,7 +67,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._marks = {}
         self._dict = {}  # dictionary representation of current mouseover info
         self._x, self._y = None, None  # latest known cursor positions
-        self.current_unit = "MJy/sr"
+        self.current_unit = None
         self.previous_unit = "MJy/sr"
         self.unit_changed = False
         # subscribe/unsubscribe to mouse events across all existing viewers
@@ -482,14 +482,19 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 unit = image.get_component(attribute).units
             elif isinstance(viewer, CubevizImageView):
                 arr = image.get_component(attribute).data
-                unit = self.current_unit
+                unit = image.get_component(attribute).units
                 initial_value = self._get_cube_value(
                     image, arr, x, y, viewer
                 )
-                value = _convert_surface_brightness_units(
-                    initial_value, self.previous_unit, unit
-                )
-                self.unit_changed = False
+                if self.current_unit:
+                    value = _convert_surface_brightness_units(
+                        initial_value, self.previous_unit, unit
+                    )
+                    unit = self.current_unit
+                    self.unit_changed = False
+                else:
+                    self.current_unit = unit
+                    value = initial_value
 
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]
