@@ -119,9 +119,24 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         that serve data in that waveband around the source.
         Then update the dropdown accordingly.
         """
-        # If missing either required fields, immediately quit
-        if not self.source or not self.waveband_selected:
+        # If waveband was changed to nothing, immediately quit
+        # Don't throw an error due to trigger by plugin init
+        if not self.waveband_selected:
             return
+
+        # Can't filter by coverage if we don't have a source to filter on
+        if self.resource_filter_coverage and not self.source:
+            errormsg = (
+                "Source is required for registry querying when coverage filtering is enabled. "
+                + (
+                    "Please enter your coordinates above "
+                    if self.viewer == "Manual"
+                    else f"Load data into viewer {self.viewer} first before querying "
+                )
+                + "or disable coverage filtering."
+            )
+            self.hub.broadcast(SnackbarMessage(errormsg, sender=self, color="error"))
+            raise ValueError(errormsg)
 
         # Clear existing resources list
         self.resources = []
@@ -133,9 +148,9 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 registry.Servicetype("sia"),
                 registry.Waveband(self.waveband_selected),
             ]
-            # If we have a valid source and coverage filtering is enabled, lookup
-            # current source coordinate and add a Spatial search constraint
-            if self.source is not None and self.resource_filter_coverage:
+            # If coverage filtering is enabled, lookup current
+            # source coordinate and add a Spatial search constraint
+            if self.resource_filter_coverage:
                 try:
                     # First parse user-provided source as direct coordinates
                     coord = SkyCoord(
