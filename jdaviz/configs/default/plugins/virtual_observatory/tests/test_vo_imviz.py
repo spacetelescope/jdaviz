@@ -18,6 +18,11 @@ class fake_siaresult:
 
 # TODO: Update all _obj calls to formal API calls once Plugin API is available
 class TestVOImvizLocal(BaseImviz_WCS_WCS):
+    _data_center_coords = {
+        "has_wcs_1[SCI,1]": {'ra': 337.51894336761296, 'dec': -20.832083054811765},
+        "has_wcs_2[SCI,1]": {'ra': 337.51924057481, 'dec': -20.83208305686149}
+    }
+
     def test_autocenter_coords(self):
         """
         Loads two data products and checks the plugin correctly adjusts the automatically-derived
@@ -35,14 +40,14 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         # Switch to first viewer and verify coordinates have switched
         vo_plugin.viewer_selected = "imviz-0"
         ra_str, dec_str = vo_plugin.source.split()
-        assert_allclose(float(ra_str), 337.51894336761296)
-        assert_allclose(float(dec_str), -20.832083054811765)
+        assert_allclose(float(ra_str), self._data_center_coords['has_wcs_1[SCI,1]']['ra'])
+        assert_allclose(float(dec_str), self._data_center_coords['has_wcs_1[SCI,1]']['dec'])
 
         # Switch to second viewer and verify coordinates
         vo_plugin.viewer_selected = "imviz-1"
         ra_str, dec_str = vo_plugin.source.split()
-        assert_allclose(float(ra_str), 337.51924057481)
-        assert_allclose(float(dec_str), -20.83208305686149)
+        assert_allclose(float(ra_str), self._data_center_coords['has_wcs_2[SCI,1]']['ra'])
+        assert_allclose(float(dec_str), self._data_center_coords['has_wcs_2[SCI,1]']['dec'])
 
     def test_populate_table_default_headers(self):
         """
