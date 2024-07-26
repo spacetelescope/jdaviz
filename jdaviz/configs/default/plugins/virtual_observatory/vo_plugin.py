@@ -94,6 +94,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             viewer.state.reference_data is None
             or viewer.state.reference_data.coords is None
         ):
+            self.source = ''
             return
 
         # Obtain center point of the current image and convert into sky coordinates

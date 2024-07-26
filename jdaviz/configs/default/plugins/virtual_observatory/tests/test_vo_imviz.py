@@ -26,16 +26,19 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
     def test_autocenter_coords(self):
         """
         Loads two data products and checks the plugin correctly adjusts the automatically-derived
-        coordinates of the center of the viewer when the viewer dropdown is changed
+        coordinates of the center of the viewer when the viewer dropdown is changed.
+
+        Also verify changing autocoord to a blank viewer with no data properly empties the source
+        field.
         """
-        # Create a second viewer and put each data in its own viewer
+        # Create a second viewer and remove second dataset from first viewer to avoid ambiguity
         self.imviz.create_image_viewer()
         self.imviz.app.remove_data_from_viewer("imviz-0", "has_wcs_2[SCI,1]")
-        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
 
         # Check default viewer is "Manual"
         vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
         assert vo_plugin.viewer_selected == "Manual"
+        assert vo_plugin.source == ''
 
         # Switch to first viewer and verify coordinates have switched
         vo_plugin.viewer_selected = "imviz-0"
@@ -43,8 +46,12 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         assert_allclose(float(ra_str), self._data_center_coords['has_wcs_1[SCI,1]']['ra'])
         assert_allclose(float(dec_str), self._data_center_coords['has_wcs_1[SCI,1]']['dec'])
 
-        # Switch to second viewer and verify coordinates
+        # Switch to second viewer without data and verify autocoord gracefully clears source field
         vo_plugin.viewer_selected = "imviz-1"
+        assert vo_plugin.source == ''
+
+        # Now load second data into second viewer and verify coordinates
+        self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
         ra_str, dec_str = vo_plugin.source.split()
         assert_allclose(float(ra_str), self._data_center_coords['has_wcs_2[SCI,1]']['ra'])
         assert_allclose(float(dec_str), self._data_center_coords['has_wcs_2[SCI,1]']['dec'])
