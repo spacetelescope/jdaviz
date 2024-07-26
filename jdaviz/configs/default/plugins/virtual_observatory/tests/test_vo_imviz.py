@@ -19,8 +19,8 @@ class fake_siaresult:
 # TODO: Update all _obj calls to formal API calls once Plugin API is available
 class TestVOImvizLocal(BaseImviz_WCS_WCS):
     _data_center_coords = {
-        "has_wcs_1[SCI,1]": {'ra': 337.51894336761296, 'dec': -20.832083054811765},
-        "has_wcs_2[SCI,1]": {'ra': 337.51924057481, 'dec': -20.83208305686149}
+        "has_wcs_1[SCI,1]": {"ra": 337.51894336761296, "dec": -20.832083054811765},
+        "has_wcs_2[SCI,1]": {"ra": 337.51924057481, "dec": -20.83208305686149},
     }
 
     def test_autocenter_coords(self):
@@ -38,23 +38,31 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         # Check default viewer is "Manual"
         vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
         assert vo_plugin.viewer_selected == "Manual"
-        assert vo_plugin.source == ''
+        assert vo_plugin.source == ""
 
         # Switch to first viewer and verify coordinates have switched
         vo_plugin.viewer_selected = "imviz-0"
         ra_str, dec_str = vo_plugin.source.split()
-        assert_allclose(float(ra_str), self._data_center_coords['has_wcs_1[SCI,1]']['ra'])
-        assert_allclose(float(dec_str), self._data_center_coords['has_wcs_1[SCI,1]']['dec'])
+        assert_allclose(
+            float(ra_str), self._data_center_coords["has_wcs_1[SCI,1]"]["ra"]
+        )
+        assert_allclose(
+            float(dec_str), self._data_center_coords["has_wcs_1[SCI,1]"]["dec"]
+        )
 
         # Switch to second viewer without data and verify autocoord gracefully clears source field
         vo_plugin.viewer_selected = "imviz-1"
-        assert vo_plugin.source == ''
+        assert vo_plugin.source == ""
 
         # Now load second data into second viewer and verify coordinates
         self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
         ra_str, dec_str = vo_plugin.source.split()
-        assert_allclose(float(ra_str), self._data_center_coords['has_wcs_2[SCI,1]']['ra'])
-        assert_allclose(float(dec_str), self._data_center_coords['has_wcs_2[SCI,1]']['dec'])
+        assert_allclose(
+            float(ra_str), self._data_center_coords["has_wcs_2[SCI,1]"]["ra"]
+        )
+        assert_allclose(
+            float(dec_str), self._data_center_coords["has_wcs_2[SCI,1]"]["dec"]
+        )
 
     def test_populate_table_default_headers(self):
         """
@@ -152,13 +160,13 @@ class TestVOImvizRemote:
 
     def test_query_registry_args(self, imviz_helper):
         """Ensure we don't query registry if we're missing required arguments"""
-        # If we don't choose a waveband, the plugin should ignore our registry query attempts
+        # If waveband isn't selected, plugin should ignore our registry query attempts
         vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
         vo_plugin.waveband_selected = ""
         vo_plugin.vue_query_registry_resources()
         assert len(vo_plugin.resources) == 0
 
-        # If we select a waveband, still can't query if we're filtering by coverage but don't have a source
+        # If waveband selected and coverage filtering, can't query registry if don't have a source
         vo_plugin.resource_filter_coverage = True
         vo_plugin.source = ""
         with pytest.raises(
@@ -168,7 +176,7 @@ class TestVOImvizRemote:
             # Setting the waveband from nothing to something will trigger the query
             vo_plugin.waveband_selected = "optical"
 
-        # If we selet a waveband, and we're NOT filtering by coverage, then we can technically query the registry
+        # If waveband selected, but NOT filtering by coverage, then allow registry query
         vo_plugin.resource_filter_coverage = False
         vo_plugin.vue_query_registry_resources()
         assert len(vo_plugin.resources) > 0
