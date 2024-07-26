@@ -143,6 +143,29 @@ class TestVOImvizRemote:
 
         return vo_plugin
 
+    def test_query_registry_args(self, imviz_helper):
+        """Ensure we don't query registry if we're missing required arguments"""
+        # If we don't choose a waveband, the plugin should ignore our registry query attempts
+        vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
+        vo_plugin.waveband_selected = ""
+        vo_plugin.vue_query_registry_resources()
+        assert len(vo_plugin.resources) == 0
+
+        # If we select a waveband, still can't query if we're filtering by coverage but don't have a source
+        vo_plugin.resource_filter_coverage = True
+        vo_plugin.source = ""
+        with pytest.raises(
+            ValueError,
+            match="Source is required for registry querying when coverage filtering is enabled.",
+        ):
+            # Setting the waveband from nothing to something will trigger the query
+            vo_plugin.waveband_selected = "optical"
+
+        # If we selet a waveband, and we're NOT filtering by coverage, then we can technically query the registry
+        vo_plugin.resource_filter_coverage = False
+        vo_plugin.vue_query_registry_resources()
+        assert len(vo_plugin.resources) > 0
+
     def test_coverage_toggle(self, imviz_helper):
         """
         Test that disabling the coverage toggle returns more available services
