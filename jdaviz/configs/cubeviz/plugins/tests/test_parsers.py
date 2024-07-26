@@ -149,7 +149,7 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper):
     data = cubeviz_helper.app.data_collection[0]
     flux = data.get_component('flux')
     assert data.label.endswith('[FLUX]')
-    assert data.shape == (3, 2, 4)  # y, x, z
+    assert data.shape == (2, 3, 4)  # y, x, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
     assert_array_equal(flux.data, 1)
     assert flux.units == 'nJy'
