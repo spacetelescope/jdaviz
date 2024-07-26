@@ -79,7 +79,8 @@
             label="Background value"
             v-model.number="background_value"
             type="number"
-            hint="Background to subtract, same unit as data"
+            hint="Background to subtract"
+            :suffix="display_flux_or_sb_unit"
             :disabled="background_selected!='Manual'"
             persistent-hint
           >
@@ -99,7 +100,7 @@
             label="Pixel area"
             v-model.number="pixel_area"
             type="number"
-            hint="Pixel area in arcsec squared, only used if sr in data unit"
+            hint="Pixel area in arcsec squared, only used data is in surface brightness."
             persistent-hint
           >
           </v-text-field>
@@ -129,7 +130,8 @@
             label="Flux scaling"
             v-model.number="flux_scaling"
             type="number"
-            hint="Same unit as data, used in -2.5 * log(flux / flux_scaling)"
+            :suffix="flux_scaling_display_unit"
+            hint="Used in -2.5 * log(flux / flux_scaling)"
             persistent-hint
           >
           </v-text-field>
@@ -213,16 +215,16 @@
 
       <v-row no-gutters>
         <v-col cols=6><U>Result</U></v-col>
-        <v-col cols=6><U>Value</U></v-col>
+        <v-col cols=4><U>Value</U></v-col>
+        <v-col cols=2><U>Unit</U></v-col>
       </v-row>
       <v-row
         v-for="item in results"
         :key="item.function"
         no-gutters>
-        <v-col cols=6>
-          {{  item.function  }}
-        </v-col>
-        <v-col cols=6>{{ item.result }}</v-col>
+        <v-col style="font-size: 8pt" cols=6>{{ item.function }}</v-col>
+        <v-col style="font-size: 9pt" cols=4>{{ item.result }}</v-col>
+        <v-col style="font-size: 9pt" cols=2>{{ item.unit }}</v-col>
       </v-row>
     </div>
 

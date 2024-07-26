@@ -27,6 +27,8 @@ Cubeviz
 
 - Background subtraction support within Spectral Extraction. [#2859]
 
+- Aperture photometry plugin now listens to changes in display unit. [#3118]
+
 Imviz
 ^^^^^
 

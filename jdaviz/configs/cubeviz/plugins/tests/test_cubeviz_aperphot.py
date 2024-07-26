@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 from astropy import units as u
+from astropy.table import Table
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
@@ -192,3 +193,76 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
     assert_allclose(row["mean"], 5 * (u.MJy / u.sr))
     # TODO: check if slice plugin has value_unit set correctly
     assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)
+
+
+def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
+    """Make sure outputs of the aperture photometry plugin in Cubeviz
+       reflect the correct choice of display units from the Unit
+       Conversion plugin.
+    """
+
+    # create cube with units of MJy / sr
+    mjy_sr_cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr,
+                                                  shape=(5, 5, 4))
+
+    # create apertures for photometry and background
+    aper = RectanglePixelRegion(center=PixCoord(x=2, y=3), width=1, height=1)
+    bg = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=1, height=1)
+
+    cubeviz_helper.load_data(mjy_sr_cube, data_label="test")
+    cubeviz_helper.load_regions([aper, bg])
+
+    ap = cubeviz_helper.plugins['Aperture Photometry']._obj
+
+    ap.dataset_selected = "test[FLUX]"
+    ap.aperture_selected = "Subset 1"
+    ap.background_selected = "Subset 2"
+    ap.vue_do_aper_phot()
+
+    uc = cubeviz_helper.plugins['Unit Conversion']._obj
+
+    # check that initial units are synced between plugins
+    assert uc.flux_unit.selected == 'MJy'
+    assert uc.angle_unit.selected == 'sr'
+    assert ap.display_flux_or_sb_unit == 'MJy / sr'
+    assert ap.flux_scaling_display_unit == 'MJy'
+
+    # and defaults for inputs are in the correct unit
+    assert ap.flux_scaling == 0.003631
+    assert ap.background_value == 46
+
+    # test output of default curve of growth plot
+    # not sure how to access this from the figure
+    # ap_phot.plot.figure.marks[0].???
+
+    # output table in original units to compare to
+    # outputs after converting units
+    orig_tab = Table(ap.results)
+
+    # change SB units since data is in SB
+    uc.flux_unit.selected = 'Jy'
+
+    # make sure inputs were re-computed in new units
+    # after the unit change
+    assert ap.flux_scaling == 3631
+    assert ap.background_value == 4.6e7
+
+    # re-do photometry and make sure table is in new units
+    # and consists of the same results as before converting units
+    ap.vue_do_aper_phot()
+    new_tab = Table(ap.results)
+
+    # compare tables across units
+    for i, row in enumerate(orig_tab):
+        new_unit = new_tab[i]['unit'] or '-'
+        orig_unit = row['unit'] or '-'
+        if new_unit != '-' and orig_unit != '-':
+
+            new_unit = u.Unit(new_unit)
+            new = float(new_tab[i]['result']) * new_unit
+
+            orig_unit = u.Unit(orig_unit)
+            orig = float(row['result']) * orig_unit
+
+            orig_converted = orig.to(new_unit)
+            assert_quantity_allclose(orig_converted, new)
