@@ -183,12 +183,9 @@ class UnitConversion(PluginTemplateMixin):
                 self.flux_unit.selected,
                 self.angle_unit.selected
             )
-
-        # this is for Specviz, when data collection item is in Surface Brightness
-        '''
-        if not self.flux_unit.selected:
-            self.flux_unit.selected = str(u.Unit(self.spectrum_viewer.state.y_display_unit * u.sr))
-        '''
+            if not self.flux_unit.selected:
+                y_display_unit = self.spectrum_viewer.state.y_display_unit
+                self.flux_unit.selected = (str(u.Unit(y_display_unit * u.sr)))
 
         if check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
             self.flux_or_sb = 'Flux'
