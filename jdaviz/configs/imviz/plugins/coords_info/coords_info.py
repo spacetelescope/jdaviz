@@ -68,8 +68,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._dict = {}  # dictionary representation of current mouseover info
         self._x, self._y = None, None  # latest known cursor positions
         self.current_unit = None
-        self.previous_unit = "MJy/sr"
-        self.unit_changed = False
+
         # subscribe/unsubscribe to mouse events across all existing viewers
         viewer_refs = []
         for viewer in self.app._viewer_store.values():
@@ -132,10 +131,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         new_unit = u.Unit(msg.unit)
         uc = self.app._jdaviz_helper.plugins.get("Unit Conversion", None)
         if self.config == "cubeviz":
-            if new_unit != self.current_unit and new_unit in uc.sb_unit.choices:
-                self.previous_unit = self.current_unit
+            if new_unit in uc.sb_unit.choices:
                 self.current_unit = new_unit
-                self.unit_changed = True
 
     @property
     def marks(self):
@@ -483,18 +480,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             elif isinstance(viewer, CubevizImageView):
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
-                initial_value = self._get_cube_value(
+                value = self._get_cube_value(
                     image, arr, x, y, viewer
                 )
-                if self.current_unit:
+                if self.current_unit is not None:
                     value = _convert_surface_brightness_units(
-                        initial_value, self.previous_unit, unit
+                        value, unit, self.current_unit
                     )
                     unit = self.current_unit
-                    self.unit_changed = False
-                else:
-                    self.current_unit = unit
-                    value = initial_value
 
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]
@@ -511,7 +504,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_text = f' (DQ: {int(dq_value):d})'
             else:
                 dq_text = ''
-            self.row1b_text = f'{value:+10.5e} {self.current_unit}{dq_text}'
+            self.row1b_text = f'{value:+10.5e} {unit}{dq_text}'
             self._dict['value'] = float(value)
             self._dict['value:unit'] = unit
             self._dict['value:unreliable'] = unreliable_pixel
