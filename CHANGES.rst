@@ -105,6 +105,8 @@ Cubeviz
 - Flux units are now correct for collapsed spectra when using the sum function
   when units are in per steradian. [#2873]
 
+- Mouse over coordinates now responds to the selected surface brightness unit. [#2931]
+
 Imviz
 ^^^^^
 
