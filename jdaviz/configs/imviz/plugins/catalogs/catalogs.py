@@ -35,7 +35,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     catalog_selected = Unicode("").tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
-    max_sources = IntHandleEmpty(1000).tag(sync=True)
+    max_gaia_sources = IntHandleEmpty(1000).tag(sync=True)
 
     # setting the default table headers and values
     _default_table_values = {
@@ -128,8 +128,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # conducts search based on SDSS
         if self.catalog_selected == "SDSS":
             from astroquery.sdss import SDSS
-            from astroquery.sdss import conf
-
             r_max = 3 * u.arcmin
 
             # queries the region (based on the provided center point and radius)
@@ -141,9 +139,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                         f"{zoom_radius.to(u.arcmin)}, using {r_max}.",
                         color='warning', sender=self))
                     zoom_radius = r_max
-                with conf.set_temp("ROW_LIMIT", self.max_sources):
-                    query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
-                                                            data_release=17)
+                query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
+                                                        data_release=17)
             except Exception as e:  # nosec
                 errmsg = (f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
                           f"r={zoom_radius}: {repr(e)}")
@@ -177,7 +174,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             from astroquery.gaia import Gaia
             from astroquery.gaia import conf
 
-            with conf.set_temp("ROW_LIMIT", self.max_sources):
+            with conf.set_temp("ROW_LIMIT", self.max_gaia_sources):
                 sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
                                             columns=('source_id', 'ra', 'dec'))
             self.app._catalog_source_table = sources

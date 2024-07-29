@@ -34,12 +34,12 @@
       </j-docs-link>
     </v-row>
 
-    <v-row v-if="catalog_selected === 'Gaia' || catalog_selected === 'SDSS'">
+    <v-row v-if="catalog_selected === 'Gaia'">
       <v-text-field
-        v-model.number="max_sources"
+        v-model.number="max_gaia_sources"
         type="number"
         step="10"
-        :rules="[() => max_sources!=='' || 'This field is required']"
+        :rules="[() => max_gaia_sources!=='' || 'This field is required']"
         label="Max sources"
         hint="Maximum number of sources."
         persistent-hint
