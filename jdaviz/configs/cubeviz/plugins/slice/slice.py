@@ -24,7 +24,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Slice']
 
 
-@tray_registry('cubeviz-slice', label="Slice", viewer_requirements='spectrum')
+@tray_registry('cube-slice', label="Slice", viewer_requirements='spectrum')
 class Slice(PluginTemplateMixin):
     """
     See the :ref:`Slice Plugin Documentation <slice>` for more details.
