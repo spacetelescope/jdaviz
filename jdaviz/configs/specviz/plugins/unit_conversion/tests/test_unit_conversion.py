@@ -206,14 +206,17 @@ def test_sb_unit_conversion(cubeviz_helper):
     uc_plg.sb_unit = 'Jy / sr'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.Jy / u.sr
-    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
-    flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
-    label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
-                                                      'domain': {'x': 1, 'y': 1}})
+    label_mouseover = cubeviz_helper.app.session.application._tools["g-coords-info"]
+    flux_viewer = cubeviz_helper.app.get_viewer(
+        cubeviz_helper._default_flux_viewer_reference_name
+    )
+    label_mouseover._viewer_mouse_event(
+        flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
+    )
     assert label_mouseover.as_text() == (
-            "Pixel x=00001.0 y=00001.0 Value +0.00000e+00 Jy / sr",
-            "World 13h39m59.9461s +27d00m00.7200s (ICRS)",
-            "204.9997755344 27.0001999998 (deg)")
+            "Pixel x=00010.0 y=00008.0 Value +1.00000e+06 Jy / sr",
+            "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
+            "204.9987654313 27.0008999946 (deg)")
 
     # Try a second conversion
     uc_plg.sb_unit = 'W / Hz sr m2'
@@ -221,24 +224,26 @@ def test_sb_unit_conversion(cubeviz_helper):
     assert y_display_unit == u.Unit("W / (Hz sr m2)")
 
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
-                                                      'domain': {'x': 1, 'y': 1}})
+    label_mouseover._viewer_mouse_event(
+        flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
+    )
     assert label_mouseover.as_text() == (
-            "Pixel x=00001.0 y=00001.0 Value +0.00000e+00 W / (Hz sr m2)",
-            "World 13h39m59.9461s +27d00m00.7200s (ICRS)",
-            "204.9997755344 27.0001999998 (deg)")
+            "Pixel x=00010.0 y=00008.0 Value +1.00000e-20 W / (Hz sr m2)",
+            "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
+            "204.9987654313 27.0008999946 (deg)")
 
     # really a translation test, test_unit_translation loads a Flux
     # cube, this test load a Surface Brightness Cube, this ensures
     # two-way translation
     uc_plg.sb_unit = 'MJy / sr'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
-                                                      'domain': {'x': 1, 'y': 1}})
+    label_mouseover._viewer_mouse_event(
+        flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
+    )
     assert label_mouseover.as_text() == (
-            "Pixel x=00001.0 y=00001.0 Value +0.00000e+00 MJy / sr",
-            "World 13h39m59.9461s +27d00m00.7200s (ICRS)",
-            "204.9997755344 27.0001999998 (deg)")
+            "Pixel x=00010.0 y=00008.0 Value +1.00000e+00 MJy / sr",
+            "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
+            "204.9987654313 27.0008999946 (deg)")
 
     uc_plg._obj.flux_or_sb_selected = 'Flux'
     uc_plg.flux_unit = 'MJy'
