@@ -1,9 +1,7 @@
-from jdaviz.core.events import SnackbarMessage
-from jdaviz.core.helpers import ImageConfigHelper
 from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMixin
 from jdaviz.configs.specviz import Specviz
-from jdaviz.core.events import (AddDataMessage,
-                                SliceSelectSliceMessage)
+from jdaviz.core.events import AddDataMessage, SnackbarMessage
+from jdaviz.core.helpers import CubeConfigHelper
 
 __all__ = ['Cubeviz']
 
@@ -12,7 +10,7 @@ _spectral_axis_names = ["Wave", "Wavelength", "Freq", "Frequency",
                         "Wavenumber", "Velocity", "Energy"]
 
 
-class Cubeviz(ImageConfigHelper, LineListMixin):
+class Cubeviz(CubeConfigHelper, LineListMixin):
     """Cubeviz Helper class"""
     _default_configuration = 'cubeviz'
     _default_spectrum_viewer_reference_name = "spectrum-viewer"
@@ -106,8 +104,7 @@ class Cubeviz(ImageConfigHelper, LineListMixin):
         """
         if not isinstance(wavelength, (int, float)):
             raise TypeError("wavelength must be a float or int")
-        msg = SliceSelectSliceMessage(value=wavelength, sender=self)
-        self.app.hub.broadcast(msg)
+        self.select_slice(wavelength)
 
     @property
     def specviz(self):
