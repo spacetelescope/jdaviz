@@ -34,7 +34,7 @@
       </j-docs-link>
     </v-row>
 
-    <v-row v-if="catalog_selected === 'Gaia'">
+    <v-row v-if="catalog_selected === 'Gaia' || catalog_selected === 'SDSS'">
       <v-text-field
         v-model.number="max_sources"
         type="number"
