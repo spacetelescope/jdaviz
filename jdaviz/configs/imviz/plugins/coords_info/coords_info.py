@@ -474,7 +474,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 value = self._get_cube_value(
                     image, arr, x, y, viewer
                 )
-                if image.ndim != 2 and self.current_unit is not None:
+                if self.current_unit is not None and self.current_unit.is_equivalent(unit):
                     value = _convert_surface_brightness_units(
                         value, unit, self.current_unit
                     )
