@@ -17,18 +17,9 @@ from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
-from jdaviz.utils import _eqv_pixar_sr
+from jdaviz.utils import _eqv_pixar_sr, _convert_surface_brightness_units
 
 __all__ = ['CoordsInfo']
-
-
-def _convert_surface_brightness_units(data, from_unit, to_unit):
-    try:
-        quantity = data * u.Unit(from_unit)
-        converted_quantity = quantity.to(u.Unit(to_unit))
-        return converted_quantity.value
-    except u.UnitConversionError:
-        raise ValueError(f"Conversion from {from_unit} to {to_unit} is not possible.")
 
 
 @tool_registry('g-coords-info')
