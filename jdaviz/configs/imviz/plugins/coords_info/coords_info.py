@@ -121,9 +121,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     def _on_global_display_unit_changed(self, msg):
         new_unit = u.Unit(msg.unit)
         uc = self.app._jdaviz_helper.plugins.get("Unit Conversion", None)
-        if self.config == "cubeviz":
-            if new_unit in uc.sb_unit.choices:
-                self.current_unit = new_unit
+        if self.config == "cubeviz" and new_unit in uc.sb_unit.choices:
+            self.current_unit = new_unit
 
     @property
     def marks(self):
@@ -474,7 +473,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 value = self._get_cube_value(
                     image, arr, x, y, viewer
                 )
-                if self.current_unit is not None:
+                if image.ndim != 2 and self.current_unit is not None:
                     value = _convert_surface_brightness_units(
                         value, unit, self.current_unit
                     )
