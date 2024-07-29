@@ -76,9 +76,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
-        self.hub.subscribe(
-            self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
-        )
+        if self.config == "cubeviz":
+            self.hub.subscribe(
+                self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
+            )
 
     def _create_marks_for_viewer(self, viewer, id=None):
         if id is None:
@@ -121,7 +122,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     def _on_global_display_unit_changed(self, msg):
         new_unit = u.Unit(msg.unit)
         uc = self.app._jdaviz_helper.plugins.get("Unit Conversion", None)
-        if self.config == "cubeviz" and new_unit in uc.sb_unit.choices:
+        if new_unit in uc.sb_unit.choices:
             self.current_unit = new_unit
 
     @property
