@@ -320,7 +320,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         x_max = max(x)
         y_min = min(y)
         y_max = max(y)
-        
+
         # extract max and min x and y coords; then add a bit of space around those as well
         # zoom region will be rectangular
         # Adding some padding around the zoom area
