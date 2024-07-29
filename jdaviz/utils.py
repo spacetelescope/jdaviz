@@ -361,7 +361,7 @@ def _convert_surface_brightness_units(data, from_unit, to_unit):
         converted_quantity = quantity.to(u.Unit(to_unit))
         return converted_quantity.value
     except u.UnitConversionError:
-        raise ValueError(f"Conversion from {from_unit} to {to_unit} is not possible.")
+        pass
 
 
 def _eqv_pixar_sr(pixar_sr):
