@@ -32,7 +32,7 @@ from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs, flux_conversion, spectral_axis_conversion
 
 
-__all__ = ['ConfigHelper', 'ImageConfigHelper']
+__all__ = ['ConfigHelper', 'ImageConfigHelper', 'CubeConfigHelper']
 
 
 class ConfigHelper(HubListener):
