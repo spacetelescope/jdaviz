@@ -41,7 +41,7 @@
         step="10"
         :rules="[() => max_sources!=='' || 'This field is required']"
         label="Max sources"
-        hint="Maximum amount of sources."
+        hint="Maximum number of sources."
         persistent-hint
       ></v-text-field>
     </v-row>

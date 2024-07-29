@@ -128,6 +128,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # conducts search based on SDSS
         if self.catalog_selected == "SDSS":
             from astroquery.sdss import SDSS
+            from astroquery.sdss import conf
+
             r_max = 3 * u.arcmin
 
             # queries the region (based on the provided center point and radius)
@@ -139,8 +141,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                         f"{zoom_radius.to(u.arcmin)}, using {r_max}.",
                         color='warning', sender=self))
                     zoom_radius = r_max
-                query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
-                                                        data_release=17)
+                with conf.set_temp("ROW_LIMIT", self.max_sources):
+                    query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
+                                                            data_release=17)
             except Exception as e:  # nosec
                 errmsg = (f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
                           f"r={zoom_radius}: {repr(e)}")
