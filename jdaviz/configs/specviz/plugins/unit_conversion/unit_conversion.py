@@ -9,7 +9,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginCom
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list,
                                     check_if_unit_is_per_solid_angle,
-                                    units_to_strings,
                                     create_angle_equivalencies_list)
 
 __all__ = ['UnitConversion']
@@ -69,7 +68,6 @@ class UnitConversion(PluginTemplateMixin):
     flux_or_sb_items = List().tag(sync=True)
     flux_or_sb_selected = Unicode().tag(sync=True)
 
-    can_translate = Bool(True).tag(sync=True)
     # This is used a warning message if False. This can be changed from
     # bool to unicode when we eventually handle inputing this value if it
     # doesn't exist in the FITS header
@@ -280,18 +278,6 @@ class UnitConversion(PluginTemplateMixin):
         if self.app.config == 'specviz':
             return
 
-        # we want to raise an error if a user tries to translate with an
-        # untranslated Flux unit using the API
-        untranslatable_units = units_to_strings(self._untranslatable_units)
-
-        if hasattr(self, 'flux_unit'):
-            if ((self.flux_unit.selected in untranslatable_units)
-                    and (flux_or_sb == 'Surface Brightness')):
-                raise ValueError(
-                    "Selected flux unit is not translatable. Please choose a flux unit "
-                    f"that is not in the following list: {untranslatable_units}."
-                )
-
         if self.spectrum_viewer.state.y_display_unit:
             spec_units = u.Unit(self.spectrum_viewer.state.y_display_unit)
         else:
@@ -324,17 +310,6 @@ class UnitConversion(PluginTemplateMixin):
                                                     spec_units,
                                                     sender=self))
         self.spectrum_viewer.reset_limits()
-
-    @property
-    def _untranslatable_units(self):
-        return [
-            u.erg / (u.s * u.cm**2),
-            u.erg / (u.s * u.cm**2 * u.Angstrom),
-            u.erg / (u.s * u.cm**2 * u.Hz),
-            u.ph / (u.Angstrom * u.s * u.cm**2),
-            u.ph / (u.s * u.cm**2 * u.Hz),
-            u.ST, u.bol
-        ]
 
     def _append_angle_correctly(self, flux_unit, angle_unit):
         if angle_unit not in ['pix', 'sr']:
