@@ -24,6 +24,7 @@ def on_kernel_start():
     # we simply ignore that
     if "dummy" in solara.get_kernel_id():
         return
+
     def on_kernel_close():
         # for some reason, sys.exit(0) does not work here
         # see https://github.com/encode/uvicorn/discussions/1103
