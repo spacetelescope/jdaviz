@@ -134,7 +134,7 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
 @pytest.mark.remote_data
 class TestVOImvizRemote:
 
-    def _init_voplugin(self, imviz_helper):
+    def _init_voplugin_M51(self, imviz_helper):
         """
         Initialize the vo plugin with common test parameters
 
@@ -175,6 +175,11 @@ class TestVOImvizRemote:
         ):
             # Setting the waveband from nothing to something will trigger the query
             vo_plugin.waveband_selected = "optical"
+            # Also verify we get a snackbar message for it
+            assert any(
+                "Source is required" in d["text"]
+                for d in imviz_helper.app.state.snackbar_history
+            )
 
         # If waveband selected, but NOT filtering by coverage, then allow registry query
         vo_plugin.resource_filter_coverage = False
@@ -186,11 +191,11 @@ class TestVOImvizRemote:
         Test that disabling the coverage toggle returns more available services
 
         NOTE: This does assume there exists at least one survey that does NOT report coverage
-        within a 1 degree circle around the above-defined source position. Otherwise the returned
+        within a 1 degree circle around the above-defined source position. Otherwise, returned
         resource lists will be identical.
         """
         # Set Common Args
-        vo_plugin = self._init_voplugin(imviz_helper)
+        vo_plugin = self._init_voplugin_M51(imviz_helper)
 
         # Retrieve registry options with filtering on
         vo_plugin.resource_filter_coverage = True
@@ -211,7 +216,7 @@ class TestVOImvizRemote:
     def test_HSTM51_load_data(self, imviz_helper):
         """Test the full plugin by filling out the form and loading a data product into Imviz"""
         # Set Common Args
-        vo_plugin = self._init_voplugin(imviz_helper)
+        vo_plugin = self._init_voplugin_M51(imviz_helper)
 
         # Select HST.M51 survey
         # Coverage not implemented for HST.M51
@@ -229,3 +234,45 @@ class TestVOImvizRemote:
         vo_plugin.vue_load_selected_data()
         assert len(imviz_helper.app.data_collection) == 1
         assert "M51_HST.M51" in imviz_helper.data_labels[0]
+
+    def test_target_lookup_warnings(self, imviz_helper):
+        """
+        Tests that appropriate errors and guardrails protect the user
+        when a provided source is inresolvable
+        """
+        expected_error_msg = "Unable to resolve source coordinates"
+        vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
+
+        # Manually set the source to a fake target
+        vo_plugin.viewer_selected = "Manual"
+        vo_plugin.source = "ThisIsAFakeTargetThatWontResolveToAnything"
+        vo_plugin.radius = 1
+
+        # If we have coverage filtering on, we should get an error
+        vo_plugin.resource_filter_coverage = True
+        with pytest.raises(LookupError, match=expected_error_msg):
+            vo_plugin.waveband_selected = "optical"
+            vo_plugin.vue_query_registry_resources()
+            assert any(
+                expected_error_msg in d["text"]
+                for d in imviz_helper.app.state.snackbar_history
+            )
+            assert len(vo_plugin.resources) == 0
+
+        # By clearing coverage filtering, we should now be able to query the registry
+        # and return the full list of available resources:
+        vo_plugin.resource_filter_coverage = False
+        vo_plugin.vue_query_registry_resources()
+        assert len(vo_plugin.resources) > 0
+
+        # However, if we try to query a resource, we should be prevented
+        # since the source still isn't resolvable.
+        # Clear existing messages
+        imviz_helper.app.state.snackbar_history = []
+        vo_plugin.resource_selected = "HST.M51"
+        with pytest.raises(LookupError, match=expected_error_msg):
+            vo_plugin.vue_query_resource()
+            assert any(
+                expected_error_msg in d["text"]
+                for d in imviz_helper.app.state.snackbar_history
+            )
