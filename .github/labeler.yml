@@ -60,3 +60,8 @@ specviz2d:
 - changed-files:
   - any-glob-to-any-file:
     - jdaviz/configs/specviz2d/**/*
+
+rampviz:
+- changed-files:
+  - any-glob-to-any-file:
+    - jdaviz/configs/rampviz/**/*
