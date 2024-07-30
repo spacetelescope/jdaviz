@@ -58,7 +58,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._marks = {}
         self._dict = {}  # dictionary representation of current mouseover info
         self._x, self._y = None, None  # latest known cursor positions
-        self.current_unit = None
+        self.image_unit = None
 
         # subscribe/unsubscribe to mouse events across all existing viewers
         viewer_refs = []
@@ -120,10 +120,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
     def _on_global_display_unit_changed(self, msg):
-        new_unit = u.Unit(msg.unit)
-        uc = self.app._jdaviz_helper.plugins.get("Unit Conversion", None)
-        if new_unit in uc.sb_unit.choices:
-            self.current_unit = new_unit
+        if msg.axis == "sb":
+            self.image_unit = u.Unit(msg.unit)
 
     @property
     def marks(self):
@@ -474,11 +472,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 value = self._get_cube_value(
                     image, arr, x, y, viewer
                 )
-                if self.current_unit is not None and self.current_unit.is_equivalent(unit):
+                if self.image_unit is not None and self.image_unit.is_equivalent(unit):
                     value = _convert_surface_brightness_units(
-                        value, unit, self.current_unit
+                        value, unit, self.image_unit
                     )
-                    unit = self.current_unit
+                    unit = self.image_unit
 
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]
