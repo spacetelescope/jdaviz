@@ -1,8 +1,6 @@
 import pytest
 import warnings
 
-pytest.importorskip("astropy", minversion="5.3.2")
-
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
@@ -572,6 +570,7 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     )
 
 
+@pytest.mark.usefixtures('_jail')
 @pytest.mark.remote_data
 @pytest.mark.parametrize(
     "start_slice, aperture, expected_rtol, uri, calspec_url",

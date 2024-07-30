@@ -46,7 +46,11 @@ def open(filename, show=True, **kwargs):
         The autoidentified ConfigHelper for the given data
     '''
     # first catch URIs and download them, or return filename unchanged:
-    filename = download_uri_to_path(filename, cache=True)
+    if "local_path" in kwargs:
+        fn_dl_kw = {"local_path": kwargs["local_path"]}
+    else:
+        fn_dl_kw = {}
+    filename = download_uri_to_path(filename, cache=True, **fn_dl_kw)
 
     # Identify the correct config
     compatible_helpers, hdul = identify_helper(filename)
