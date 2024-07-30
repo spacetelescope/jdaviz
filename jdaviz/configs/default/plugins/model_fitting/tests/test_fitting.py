@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.io import fits
-from astropy.io.registry.base import IORegistryError
 from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
@@ -251,7 +250,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
 
     # Check I/O roundtrip.
     out_fn = tmp_path / "fitted_cube.fits"
-    fitted_spectrum.write(out_fn, format="jdaviz-cube", overwrite=True)
+    fitted_spectrum.write(out_fn, format="wcs1d-fits", hdu=1, flux_name="SCI", overwrite=True)
     flux_unit_str = fitted_spectrum.flux.unit.to_string(format="fits")
     coo_expected = fitted_spectrum.wcs.pixel_to_world(1, 0, 2)
     with fits.open(out_fn) as pf:
@@ -268,12 +267,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
         assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
                         [coo_expected[1].ra.deg, coo_expected[1].dec.deg])
 
-    # Our custom format is not registered to readers, just writers.
-    # You can read it back in without custom read. See "Cubeviz roundtrip" below.
-    with pytest.raises(IORegistryError, match="No reader defined"):
-        Spectrum1D.read(out_fn, format="jdaviz-cube")
-
-    # Check Cubeviz roundtrip.
+    # Check Cubeviz roundtrip. This should automatically go through wcs1d-fits reader.
     cubeviz_helper.load_data(out_fn)
     assert len(cubeviz_helper.app.data_collection) == 3
     data_sci = cubeviz_helper.app.data_collection["fitted_cube.fits[SCI]"]

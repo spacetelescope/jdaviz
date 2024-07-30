@@ -74,7 +74,7 @@ where the mask (if available) is as defined in
 
 .. code-block:: python
 
-    mydata.write("mydata.fits", format="jdaviz-cube")
+    mydata.write("mydata.fits", format="wcs1d-fits", hdu=1)
 
 
 .. _cubeviz-export-model:
