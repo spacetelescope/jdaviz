@@ -12,12 +12,12 @@ from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import ViewerAddedMessage
+from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
-from jdaviz.utils import _eqv_pixar_sr
+from jdaviz.utils import _eqv_pixar_sr, _convert_surface_brightness_units
 
 __all__ = ['CoordsInfo']
 
@@ -34,7 +34,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     _viewer_classes_with_marker = (SpecvizProfileView, MosvizProfile2DView)
 
-    dataset_icon = Unicode("").tag(sync=True)  # option for layer (auto, none, or specific layer)
+    dataset_icon = Unicode("").tag(
+        sync=True
+    )  # option for layer (auto, none, or specific layer)
     icon = Unicode("").tag(sync=True)  # currently exposed layer
 
     row1a_title = Unicode("").tag(sync=True)
@@ -56,6 +58,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._marks = {}
         self._dict = {}  # dictionary representation of current mouseover info
         self._x, self._y = None, None  # latest known cursor positions
+        self.image_unit = None
 
         # subscribe/unsubscribe to mouse events across all existing viewers
         viewer_refs = []
@@ -73,6 +76,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         # subscribe to mouse events on any new viewers
         self.hub.subscribe(self, ViewerAddedMessage, handler=self._on_viewer_added)
+        if self.config == "cubeviz":
+            self.hub.subscribe(
+                self, GlobalDisplayUnitChanged, handler=self._on_global_display_unit_changed
+            )
 
     def _create_marks_for_viewer(self, viewer, id=None):
         if id is None:
@@ -111,6 +118,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+
+    def _on_global_display_unit_changed(self, msg):
+        if msg.axis == "sb":
+            self.image_unit = u.Unit(msg.unit)
 
     @property
     def marks(self):
@@ -458,7 +469,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             elif isinstance(viewer, CubevizImageView):
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
-                value = self._get_cube_value(image, arr, x, y, viewer)
+                value = self._get_cube_value(
+                    image, arr, x, y, viewer
+                )
+                if self.image_unit is not None and self.image_unit.is_equivalent(unit):
+                    value = _convert_surface_brightness_units(
+                        value, unit, self.image_unit
+                    )
+                    unit = self.image_unit
 
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]

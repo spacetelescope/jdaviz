@@ -357,6 +357,11 @@ def flux_conversion(spec, values, original_units, target_units):
     return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 
 
+def _convert_surface_brightness_units(data, from_unit, to_unit):
+    quantity = data * u.Unit(from_unit)
+    return quantity.to_value(u.Unit(to_unit))
+
+
 def _eqv_pixar_sr(pixar_sr):
     def converter_flux(x):  # Surface Brightness -> Flux
         return x * pixar_sr
