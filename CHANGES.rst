@@ -74,6 +74,9 @@ Cubeviz
 - Generic FITS parsing now goes through ``specutils`` loaders first, if possible.
   If a ``specutils`` loader is used, uncertainty is converted to standard deviation type. [#3119]
 
+- Custom Spectrum1D writer format ``jdaviz-cube`` is removed. Use ``wcs1d-fits`` from
+  ``specutils`` instead. [#2094]
+
 Imviz
 ^^^^^
 
