@@ -151,11 +151,11 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tm
     # make sure export enabled is true, and that before the collapse function
     # is run `collapsed_spec_available` is correctly set to False
     assert extract_plugin._obj.export_enabled
-    assert extract_plugin._obj.extracted_spec_available is False
+    assert extract_plugin._obj.extraction_available is False
 
-    # run extract function, and make sure `extracted_spec_available` was set to True
+    # run extract function, and make sure `extraction_available` was set to True
     extract_plugin._obj.vue_spectral_extraction()
-    assert extract_plugin._obj.extracted_spec_available
+    assert extract_plugin._obj.extraction_available
 
     # check that default filename is correct, then change path
     fname = 'extracted_sum_Unknown spectrum object_FLUX.fits'
@@ -344,13 +344,13 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
 
         # test visiblity of background aperture and preview based on "active step"
         assert extract_plg.background.marks[0].visible
-        assert not extract_plg._obj.marks['bg_spec'].visible
+        assert not extract_plg._obj.marks['bg_extract'].visible
         extract_plg._obj.active_step = 'ap'
         assert not extract_plg.background.marks[0].visible
-        assert not extract_plg._obj.marks['bg_spec'].visible
+        assert not extract_plg._obj.marks['bg_extract'].visible
         extract_plg._obj.active_step = 'bg'
         assert extract_plg.background.marks[0].visible
-        assert extract_plg._obj.marks['bg_spec'].visible
+        assert extract_plg._obj.marks['bg_extract'].visible
 
         bg_spec = extract_plg.extract_bg_spectrum()
         extract_plg.bg_spec_per_spaxel = True
@@ -367,14 +367,14 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
     # the background subtracted from each slice in wavelength from the aperture should be equal
     # to the background -- which is the minimum per spectral slice in this example cube -- divided
     # by the number of pixels in the aperture:
-    cube_min_per_slice = extract_plg._obj.spectral_cube['flux'].min(axis=(0, 1))
+    cube_min_per_slice = extract_plg._obj.cube['flux'].min(axis=(0, 1))
     np.testing.assert_allclose(
         bg_spec.flux.value / n_aperture_pixels,
         cube_min_per_slice
     )
 
     # background normalized per spaxel should be equal to the minimum per spectral slice:
-    cube_min_per_slice = extract_plg._obj.spectral_cube['flux'].min(axis=(0, 1))
+    cube_min_per_slice = extract_plg._obj.cube['flux'].min(axis=(0, 1))
     np.testing.assert_allclose(
         bg_spec_normed.flux.value / n_bg_pixels,
         cube_min_per_slice

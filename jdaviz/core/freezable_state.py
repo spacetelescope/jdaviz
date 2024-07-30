@@ -6,7 +6,7 @@ from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
 
-from jdaviz.configs.imviz.helper import get_reference_image_data
+from jdaviz.utils import get_reference_image_data
 
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 

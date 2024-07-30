@@ -1,6 +1,6 @@
 from numpy.testing import assert_allclose
 
-from jdaviz.configs.imviz.helper import get_top_layer_index
+from jdaviz.utils import get_top_layer_index
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
 

@@ -9,7 +9,6 @@ from glue.core.subset_group import GroupedSubset
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
 from traitlets import List, Unicode, Bool, Dict, observe
 
-from jdaviz.configs.imviz.helper import get_reference_image_data, layer_is_2d
 from jdaviz.configs.imviz.wcs_utils import (
     get_compass_info, _get_rotated_nddata_from_label
 )
@@ -25,7 +24,7 @@ from jdaviz.core.template_mixin import (
     PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
 )
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.utils import _wcs_only_label
+from jdaviz.utils import get_reference_image_data, layer_is_2d, _wcs_only_label
 
 __all__ = ['Orientation']
 

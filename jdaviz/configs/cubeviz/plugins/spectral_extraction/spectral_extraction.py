@@ -20,11 +20,12 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         ApertureSubsetSelectMixin,
                                         ApertureSubsetSelect,
                                         AddResults, AddResultsMixin,
-                                        skip_if_no_updates_since_last_active,
                                         skip_if_not_tray_instance,
+                                        skip_if_no_updates_since_last_active,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
+from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
 
 __all__ = ['SpectralExtraction']
@@ -74,6 +75,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     active_step = Unicode().tag(sync=True)
 
+    resulting_product_name = Unicode("spectrum").tag(sync=True)
+    do_auto_extraction = True
+    # whether wavelength dependent options should be exposed to the user (in the UI)
+    wavelength_dependent_available = Bool(True).tag(sync=True)
+    bg_export_available = Bool(True).tag(sync=True)
+
     wavelength_dependent = Bool(False).tag(sync=True)
     reference_spectral_value = FloatHandleEmpty().tag(sync=True)
     slice_spectral_value = Float().tag(sync=True)
@@ -97,7 +104,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     function_items = List().tag(sync=True)
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
-    extracted_spec_available = Bool(False).tag(sync=True)
+    extraction_available = Bool(False).tag(sync=True)
     overwrite_warn = Bool(False).tag(sync=True)
 
     aperture_method_items = List().tag(sync=True)
@@ -113,11 +120,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     export_enabled = Bool(True).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
-
-        self._default_spectrum_viewer_reference_name = kwargs.get(
-            "spectrum_viewer_reference_name", "spectrum-viewer"
-        )
-
         super().__init__(*args, **kwargs)
 
         self.extracted_spec = None
@@ -128,6 +130,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.aperture._default_text = 'Entire Cube'
         self.aperture._manual_options = ['Entire Cube']
         self.aperture.items = [{"label": "Entire Cube"}]
+        self.aperture._subset_selected_changed_callback = self._update_extract
         # need to reinitialize choices since we overwrote items and some subsets may already
         # exist.
         self.aperture._initialize_choices()
@@ -140,7 +143,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                'bg_scale_factor',
                                                dataset='dataset',
                                                multiselect=None,
-                                               default_text='None')
+                                               default_text='None',
+                                               subset_selected_changed_callback=self._update_extract)  # noqa
 
         self.bg_spec_add_results = AddResults(self, 'bg_spec_results_label',
                                               'bg_spec_results_label_default',
@@ -149,8 +153,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                               'bg_spec_results_label_overwrite',
                                               'bg_spec_add_to_viewer_items',
                                               'bg_spec_add_to_viewer_selected')
-        self.bg_spec_add_results.viewer.filters = ['is_spectrum_viewer']
-        self.bg_spec_results_label_default = 'background-spectrum'
+        self.bg_spec_add_results.viewer.filters = ['is_slice_indicator_viewer']
+        self.bg_spec_results_label_default = f'background-{self.resulting_product_name}'
 
         self.function = SelectPluginComponent(
             self,
@@ -166,26 +170,17 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             manual_options=self.aperture_method_manual_options
         )
         self._set_default_results_label()
-        self.add_results.viewer.filters = ['is_spectrum_viewer']
+        self.add_results.viewer.filters = ['is_slice_indicator_viewer']
 
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
+
+        self._update_disabled_msg()
 
         if self.app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
-
-        for data in self.app.data_collection:
-            if len(data.data.shape) == 3:
-                break
-        else:
-            # no cube-like data loaded.  Once loaded, the parser will unset this
-            # TODO: change to an event listener on AddDataMessage
-            self.disabled_msg = (
-                "Spectral Extraction requires a single dataset to be loaded into Cubeviz, "
-                "please load data to enable this plugin."
-            )
 
     @property
     def user_api(self):
@@ -198,6 +193,19 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         return PluginUserApi(self, expose=expose)
 
+    @observe('dataset_items')
+    def _update_disabled_msg(self, msg={}):
+        for data in self.app.data_collection:
+            if data.data.ndim == 3:
+                self.disabled_msg = ''
+                break
+        else:
+            # no cube-like data loaded.  Once loaded, the parser will unset this
+            self.disabled_msg = (
+                f"{self.__class__.__name__} requires a 3d cube dataset to be loaded, "
+                "please load data to enable this plugin."
+            )
+
     @property
     def live_update_subscriptions(self):
         return {'data': ('dataset',), 'subset': ('aperture', 'background')}
@@ -209,11 +217,22 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def slice_display_unit_name(self):
         return 'spectral'
 
+    @property
+    def spatial_axes(self):
+        # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
+        # is always wavelength. This may need adjustment after the following
+        # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
+        return (0, 1)
+
+    @property
+    def slice_indicator_viewers(self):
+        return [v for v in self.app._viewer_store.values() if isinstance(v, WithSliceIndicator)]
+
     @observe('active_step', 'is_active')
     def _active_step_changed(self, *args):
-        self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'ext'))
+        self.aperture._set_mark_visiblities(self.active_step in ('', 'ap', 'extract'))
         self.background._set_mark_visiblities(self.active_step == 'bg')
-        self.marks['bg_spec'].visible = self.active_step == 'bg'
+        self.marks['bg_extract'].visible = self.active_step == 'bg'
 
     @property
     def slice_plugin(self):
@@ -222,6 +241,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @observe('aperture_items')
     @skip_if_not_tray_instance()
     def _aperture_items_changed(self, msg):
+        if not self.do_auto_extraction:
+            return
         if not hasattr(self, 'aperture'):
             return
         for item in msg['new']:
@@ -234,11 +255,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                                   auto_update=True, add_data=True)
                 except Exception:
                     msg = SnackbarMessage(
-                        f"Automatic spectrum extraction for {subset_lbl} failed",
+                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} failed",  # noqa
                         color='error', sender=self, timeout=10000)
                 else:
                     msg = SnackbarMessage(
-                        f"Automatic spectrum extraction for {subset_lbl} successful",
+                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} successful",  # noqa
                         color='success', sender=self)
                 self.app.hub.broadcast(msg)
 
@@ -246,12 +267,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                  auto_update=False, add_data=False):
         # create a new instance of the Spectral Extraction plugin (to not affect the instance in
         # the tray) and extract the entire cube with defaults.
-        if dataset is None:
-            if self._app._jdaviz_helper._loaded_flux_cube is None:
-                return
-            dataset = self._app._jdaviz_helper._loaded_flux_cube.label
         plg = self.new()
-        plg.dataset.selected = dataset
+        plg.dataset.selected = self.dataset.selected
         if subset_lbl is not None:
             plg.aperture.selected = subset_lbl
         plg.aperture_method.selected = 'Center'
@@ -300,19 +317,21 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.conflicting_aperture_and_function = False
 
     @property
-    def spectral_cube(self):
+    def cube(self):
         return self.dataset.selected_dc_item
 
     @property
     def uncert_cube(self):
-        if self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label:
+        if (hasattr(self._app._jdaviz_helper, '_loaded_flux_cube') and
+                hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube') and
+                self.dataset.selected == self._app._jdaviz_helper._loaded_flux_cube.label):
             return self._app._jdaviz_helper._loaded_uncert_cube
         else:
             # TODO: allow selecting or associating an uncertainty cube?
             return None
 
     @property
-    def spectral_display_unit(self):
+    def slice_display_unit(self):
         return astropy.units.Unit(self.app._get_display_unit(self.slice_display_unit_name))
 
     @property
@@ -339,7 +358,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.aperture.get_mask(
                 self.dataset.selected_obj,
                 self.aperture_method_selected,
-                self.spectral_display_unit,
+                self.slice_display_unit,
+                self.spatial_axes,
                 self.reference_spectral_value if self.wavelength_dependent else None)
         )
 
@@ -354,7 +374,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.background.get_mask(
                 self.dataset.selected_obj,
                 self.aperture_method_selected,
-                self.spectral_display_unit,
+                self.slice_display_unit,
+                self.spatial_axes,
                 self.reference_spectral_value if self.bg_wavelength_dependent else None)
         )
 
@@ -362,14 +383,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def aperture_area_along_spectral(self):
         # Weight mask summed along the spatial axes so that we get area of the aperture, in pixels,
         # as a function of wavelength.
-        # To convert to steradians, multiply by self.spectral_cube.meta.get('PIXAR_SR', 1.0)
-        return np.sum(self.aperture_weight_mask, axis=(0, 1))
+        # To convert to steradians, multiply by self.cube.meta.get('PIXAR_SR', 1.0)
+        return np.sum(self.aperture_weight_mask, axis=self.spatial_axes)
 
     @property
     def bg_area_along_spectral(self):
-        return np.sum(self.bg_weight_mask, axis=(0, 1))
+        return np.sum(self.bg_weight_mask, axis=self.spatial_axes)
 
-    def _extract_from_aperture(self, spectral_cube, uncert_cube, aperture,
+    def _extract_from_aperture(self, cube, uncert_cube, aperture,
                                weight_mask, wavelength_dependent,
                                selected_func, **kwargs):
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
@@ -379,7 +400,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not isinstance(aperture, ApertureSubsetSelect):
             raise ValueError("aperture must be an ApertureSubsetSelect object")
         if aperture.selected != aperture.default_text:
-            nddata = spectral_cube.get_subset_object(
+            nddata = cube.get_subset_object(
                 subset_id=aperture.selected, cls=NDDataArray
             )
             if uncert_cube:
@@ -403,18 +424,19 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 mask &= nddata.mask
 
         else:
-            nddata = spectral_cube.get_object(cls=NDDataArray)
+            nddata = cube.get_object(cls=NDDataArray)
             if uncert_cube:
                 uncertainties = uncert_cube.get_object(cls=StdDevUncertainty)
             else:
                 uncertainties = None
             flux = nddata.data << nddata.unit
             mask = nddata.mask
+
         # Use the spectral coordinate from the WCS:
-        if '_orig_spec' in spectral_cube.meta:
-            wcs = spectral_cube.meta['_orig_spec'].wcs.spectral
-        elif hasattr(spectral_cube.coords, 'spectral'):
-            wcs = spectral_cube.coords.spectral
+        if '_orig_spec' in cube.meta:
+            wcs = cube.meta['_orig_spec'].wcs.spectral
+        elif hasattr(cube.coords, 'spectral'):
+            wcs = cube.coords.spectral
         else:
             wcs = None
 
@@ -429,19 +451,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # by default we want to propagate uncertainties:
         kwargs.setdefault("propagate_uncertainties", True)
 
-        # Collapse an e.g. 3D spectral cube to 1D spectrum, assuming that last axis
-        # is always wavelength. This may need adjustment after the following
-        # specutils PR is merged: https://github.com/astropy/specutils/pull/1033
-        spatial_axes = (0, 1)
         if selected_func == 'mean':
             # Use built-in sum function to collapse NDDataArray
-            collapsed_sum_for_mean = nddata_reshaped.sum(axis=spatial_axes, **kwargs)
+            collapsed_sum_for_mean = nddata_reshaped.sum(axis=self.spatial_axes, **kwargs)
             # But we still need the mean function for everything except flux
-            collapsed_as_mean = nddata_reshaped.mean(axis=spatial_axes, **kwargs)
+            collapsed_as_mean = nddata_reshaped.mean(axis=self.spatial_axes, **kwargs)
 
             # Then normalize the flux based on the fractional pixel array
             flux_for_mean = (collapsed_sum_for_mean.data /
-                             np.sum(weight_mask, axis=spatial_axes)) << nddata_reshaped.unit
+                             np.sum(weight_mask, axis=self.spatial_axes)) << nddata_reshaped.unit
             # Combine that information into a new NDDataArray
             collapsed_nddata = NDDataArray(flux_for_mean, mask=collapsed_as_mean.mask,
                                            uncertainty=collapsed_as_mean.uncertainty,
@@ -449,22 +467,28 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                            meta=collapsed_as_mean.meta)
         elif selected_func == 'sum':
             collapsed_nddata = getattr(nddata_reshaped, selected_func)(
-                axis=spatial_axes, **kwargs
+                axis=self.spatial_axes, **kwargs
             )  # returns an NDDataArray
             # Remove per steradian denominator
             if astropy.units.sr in collapsed_nddata.unit.bases:
-                aperture_area = self.spectral_cube.meta.get('PIXAR_SR', 1.0) * u.sr
+                aperture_area = self.cube.meta.get('PIXAR_SR', 1.0) * u.sr
                 collapsed_nddata = collapsed_nddata.multiply(aperture_area,
                                                              propagate_uncertainties=True)
         else:
             collapsed_nddata = getattr(nddata_reshaped, selected_func)(
-                axis=spatial_axes, **kwargs
+                axis=self.spatial_axes, **kwargs
             )  # returns an NDDataArray
+
+        return self._return_extracted(cube, wcs, collapsed_nddata)
+
+    def _return_extracted(self, cube, wcs, collapsed_nddata):
         # Convert to Spectrum1D, with the spectral axis in correct units:
-        if hasattr(spectral_cube.coords, 'spectral_wcs'):
-            target_wave_unit = spectral_cube.coords.spectral_wcs.world_axis_units[0]
+        if hasattr(cube.coords, 'spectral_wcs'):
+            target_wave_unit = cube.coords.spectral_wcs.world_axis_units[0]
+        elif hasattr(cube.coords, 'spectral'):
+            target_wave_unit = cube.coords.spectral.world_axis_units[0]
         else:
-            target_wave_unit = spectral_cube.coords.spectral.world_axis_units[0]
+            target_wave_unit = None
 
         if target_wave_unit == '':
             target_wave_unit = 'pix'
@@ -480,6 +504,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mask=mask
         )
         return collapsed_spec
+
+    def _preview_x_from_extracted(self, extracted):
+        return extracted.spectral_axis.value
+
+    def _preview_y_from_extracted(self, extracted):
+        return extracted.flux.value
 
     @with_spinner()
     def extract(self, return_bg=False, add_data=True, **kwargs):
@@ -503,7 +533,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError("aperture and background cannot be set to the same subset")
 
         selected_func = self.function_selected.lower()
-        spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
+        spec = self._extract_from_aperture(self.cube, self.uncert_cube,
                                            self.aperture, self.aperture_weight_mask,
                                            self.wavelength_dependent,
                                            selected_func, **kwargs)
@@ -513,11 +543,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             spec = spec - bg_spec
 
         # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
-        pix_scale_factor = self.spectral_cube.meta.get('PIXAR_SR', 1.0)
+        pix_scale_factor = self.cube.meta.get('PIXAR_SR', 1.0)
         spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
         # inform the user if scale factor keyword not in metadata
-        if 'PIXAR_SR' not in self.spectral_cube.meta:
+        if 'PIXAR_SR' not in self.cube.meta:
             snackbar_message = SnackbarMessage(
                 ("PIXAR_SR FITS header keyword not found when parsing spectral cube. "
                  "Flux/Surface Brightness will use default PIXAR_SR value of 1 sr/pix^2."),
@@ -527,7 +557,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # stuff for exporting to file
         self.extracted_spec = spec
-        self.extracted_spec_available = True
+        self.extraction_available = True
         fname_label = self.dataset_selected.replace("[", "_").replace("]", "")
         self.filename = f"extracted_{selected_func}_{fname_label}.fits"
 
@@ -537,7 +567,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.add_results.add_results_from_plugin(spec)
 
             snackbar_message = SnackbarMessage(
-                "Spectrum extracted successfully.",
+                f"{self.resulting_product_name.title()} extracted successfully.",
                 color="success",
                 sender=self)
             self.hub.broadcast(snackbar_message)
@@ -566,7 +596,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # allow internal calls to override the behavior of the bg_spec_per_spaxel traitlet
         bg_spec_per_spaxel = kwargs.pop('bg_spec_per_spaxel', self.bg_spec_per_spaxel)
         if self.background.selected != self.background.default_text:
-            bg_spec = self._extract_from_aperture(self.spectral_cube, self.uncert_cube,
+            bg_spec = self._extract_from_aperture(self.cube, self.uncert_cube,
                                                   self.background, self.bg_weight_mask,
                                                   self.bg_wavelength_dependent,
                                                   self.function_selected.lower(), **kwargs)
@@ -610,7 +640,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not self.export_enabled:
             # this should never be triggered since this is intended for UI-disabling and the
             # UI section is hidden, but would prevent any JS-hacking
-            raise ValueError("Writing out extracted spectrum to file is currently disabled")
+            raise ValueError(f"Writing out extracted {self.resulting_product_name} to file is currently disabled")  # noqa
 
         # Make sure file does not end up in weird places in standalone mode.
         path = os.path.dirname(self.filename)
@@ -637,28 +667,29 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Let the user know where we saved the file.
         self.hub.broadcast(SnackbarMessage(
-            f"Extracted spectrum saved to {os.path.abspath(filename)}",
-                           sender=self, color="success"))
+            f"Extracted {self.resulting_product_name} saved to {os.path.abspath(filename)}",
+            sender=self, color="success"))
 
     @observe('aperture_selected', 'function_selected')
     def _set_default_results_label(self, event={}):
         if not hasattr(self, 'aperture'):
             return
         if self.aperture.selected == self.aperture.default_text:
-            self.results_label_default = f"Spectrum ({self.function_selected.lower()})"
+            self.results_label_default = f"{self.resulting_product_name.title()} ({self.function_selected.lower()})"  # noqa
         else:
-            self.results_label_default = f"Spectrum ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
+            self.results_label_default = f"{self.resulting_product_name.title()} ({self.aperture_selected}, {self.function_selected.lower()})"  # noqa
 
     @cached_property
     def marks(self):
         if not self._tray_instance:
             return {}
-        sv = self.spectrum_viewer
-        marks = {'spec': PluginLine(sv, visible=self.is_active),
-                 'bg_spec': PluginLine(sv,
-                                       line_style='dotted',
-                                       visible=self.is_active and self.active_step == 'bg')}
-        sv.figure.marks = sv.figure.marks + [marks['spec'], marks['bg_spec']]
+        # TODO: iterate over self.slice_indicator_viewers and handle adding/removing viewers
+        sv = self.slice_indicator_viewers[0]
+        marks = {'extract': PluginLine(sv, visible=self.is_active),
+                 'bg_extract': PluginLine(sv,
+                                          line_style='dotted',
+                                          visible=self.is_active and self.active_step == 'bg')}
+        sv.figure.marks = sv.figure.marks + [marks['extract'], marks['bg_extract']]
         return marks
 
     def _clear_marks(self):
@@ -666,42 +697,49 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             if mark.visible:
                 mark.visible = False
 
-    @observe('is_active', 'show_live_preview')
-    def _toggle_marks(self, event={}):
-        visible = self.show_live_preview and self.is_active
-
-        if not visible:
-            self._clear_marks()
-        elif event.get('name', '') in ('is_active', 'show_live_preview'):
-            # then the marks themselves need to be updated
-            self._live_update(event)
-
-    @observe('dataset_selected', 'aperture_selected', 'bg_selected',
+    @observe('is_active', 'show_live_preview',
+             'dataset_selected', 'aperture_selected', 'bg_selected',
              'wavelength_dependent', 'bg_wavelength_dependent', 'reference_spectral_value',
              'function_selected',
              'aperture_method_selected',
              'previews_temp_disabled')
+    def _live_update_marks(self, event={}):
+        self._update_marks(event)
+
+    @skip_if_not_tray_instance()
+    def _update_marks(self, event={}):
+        visible = self.show_live_preview and self.is_active
+
+        if not visible:
+            self._clear_marks()
+            return
+
+        # ensure the correct visibility, always (whether or not there have been updates)
+        self.marks['bg_extract'].visible = self.active_step == 'bg' and self.bg_selected != self.background.default_text  # noqa
+        self.marks['extract'].visible = True
+
+        # _live_update will skip if no updates since last active
+        self._live_update_extract(event)
+
     @skip_if_no_updates_since_last_active()
     @with_temp_disable(timeout=0.4)
-    def _live_update(self, event={}):
-        if not self._tray_instance:
-            return
-        if not self.show_live_preview or not self.is_active:
-            self._clear_marks()
-            return
+    def _live_update_extract(self, event={}):
+        self._update_extract()
 
+    @skip_if_not_tray_instance()
+    def _update_extract(self):
         try:
-            sp, bg_spec = self.extract(return_bg=True, add_data=False)
+            ext, bg_extract = self.extract(return_bg=True, add_data=False)
         except (ValueError, Exception):
             self._clear_marks()
-            return
+            return False
 
-        self.marks['spec'].update_xy(sp.spectral_axis.value, sp.flux.value)
-        self.marks['spec'].visible = True
+        self.marks['extract'].update_xy(self._preview_x_from_extracted(ext),
+                                        self._preview_y_from_extracted(ext))
 
-        if bg_spec is None:
-            self.marks['bg_spec'].clear()
-            self.marks['bg_spec'].visible = False
+        if bg_extract is None:
+            self.marks['bg_extract'].clear()
+            self.marks['bg_extract'].visible = False
         else:
-            self.marks['bg_spec'].update_xy(bg_spec.spectral_axis.value, bg_spec.flux.value)
-            self.marks['bg_spec'].visible = self.active_step == 'bg'
+            self.marks['bg_extract'].update_xy(self._preview_x_from_extracted(bg_extract),
+                                               self._preview_y_from_extracted(bg_extract))

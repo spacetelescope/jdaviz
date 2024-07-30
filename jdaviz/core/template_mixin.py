@@ -40,6 +40,7 @@ from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
+from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
@@ -1815,7 +1816,7 @@ class SubsetSelect(SelectPluginComponent):
     """
     def __init__(self, plugin, items, selected, multiselect=None, selected_has_subregions=None,
                  dataset=None, viewers=None, default_text=None, manual_options=[], filters=[],
-                 default_mode='default_text'):
+                 default_mode='default_text', subset_selected_changed_callback=None):
         """
         Parameters
         ----------
@@ -1863,6 +1864,7 @@ class SubsetSelect(SelectPluginComponent):
         self._cached_properties += ["selected_subset_state",
                                     "selected_spatial_region",
                                     "selected_subset_mask"]
+        self._subset_selected_changed_callback = subset_selected_changed_callback
         if dataset is not None:
             # clear selected_subset_mask and selected_spatial_region on change to dataset
             self.add_observe(self.dataset._plugin_traitlets['selected'],
@@ -1927,6 +1929,15 @@ class SubsetSelect(SelectPluginComponent):
         return super()._is_valid_item(subset, locals())
 
     def _update_subset(self, subset, attribute=None):
+        if (attribute == 'subset_state' and
+            ((self.is_multiselect and subset.label in self.selected)
+             or (subset.label == self.selected))):
+            # updated the currently selected subset, clear all cache
+            self._clear_cache()
+            update_has_subregions = True
+        else:
+            update_has_subregions = False
+
         if subset.label not in self.labels:
             # NOTE: this logic will need to be revisited if generic renaming of subsets is added
             # see https://github.com/spacetelescope/jdaviz/pull/1175#discussion_r829372470
@@ -1945,13 +1956,11 @@ class SubsetSelect(SelectPluginComponent):
                               else self._subset_to_dict(subset)
                               for s in self.items]
 
-        if (attribute == 'subset_state' and
-            ((self.is_multiselect and subset.label in self.selected)
-             or (subset.label == self.selected))):
-            # updated the currently selected subset
-            self._clear_cache("selected_obj", "selected_item", "selected_subset_state",
-                              "selected_subset_mask", "selected_subset", "selected_spatial_region")
+        if update_has_subregions:
             self._update_has_subregions()
+
+        if self._subset_selected_changed_callback is not None:
+            self._subset_selected_changed_callback()
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
@@ -2237,7 +2246,8 @@ class ApertureSubsetSelect(SubsetSelect):
     """
     def __init__(self, plugin, items, selected, selected_validity,
                  scale_factor, multiselect=None,
-                 dataset=None, viewers=None, default_text=None):
+                 dataset=None, viewers=None, default_text=None,
+                 subset_selected_changed_callback=None):
         """
         Parameters
         ----------
@@ -2268,7 +2278,8 @@ class ApertureSubsetSelect(SubsetSelect):
                          filters=['is_spatial'],
                          dataset=dataset,
                          viewers=viewers,
-                         default_text=default_text)
+                         default_text=default_text,
+                         subset_selected_changed_callback=subset_selected_changed_callback)
 
         self.add_traitlets(selected_validity=selected_validity,
                            scale_factor=scale_factor)
@@ -2442,7 +2453,9 @@ class ApertureSubsetSelect(SubsetSelect):
                 mark.x, mark.y = x_coords, y_coords
 
     def get_mask(self, flux_cube, aperture_method,
-                 spectral_display_unit, reference_spectral_value=None):
+                 slice_display_unit, spatial_axes=(0, 1), reference_spectral_value=None):
+        # slice_axis is the remaining axis (of (0, 1, 2)) not included in spatial_axes
+        slice_axis = 3 - sum(spatial_axes)
         # if subset is a composite subset, skip the other logic:
         if self.is_composite:
             [subset_group] = [
@@ -2457,16 +2470,16 @@ class ApertureSubsetSelect(SubsetSelect):
         aperture = regions2aperture(self.selected_spatial_region)
         aperture.positions = center
 
-        im_shape = (flux_cube.shape[0], flux_cube.shape[1])
+        im_shape = (flux_cube.shape[spatial_axes[0]], flux_cube.shape[spatial_axes[1]])
         aperture_method = aperture_method.lower()
         if reference_spectral_value is not None:
             # wavelength-dependent (cone aperture)
-            if spectral_display_unit.physical_type != 'length':
+            if slice_display_unit.physical_type != 'length':
                 raise ValueError(
-                    f'Spectral axis unit physical type is {spectral_display_unit.physical_type}, '
+                    f'Spectral axis unit physical type is {slice_display_unit.physical_type}, '
                     'must be length for cone aperture')
 
-            fac = flux_cube.spectral_axis.to_value(spectral_display_unit) / reference_spectral_value
+            fac = flux_cube.spectral_axis.to_value(slice_display_unit) / reference_spectral_value
 
             # TODO: Use flux_cube.spectral_axis.to_value(display_unit) when we have unit conversion.
             if isinstance(aperture, CircularAperture):
@@ -2501,7 +2514,7 @@ class ApertureSubsetSelect(SubsetSelect):
             # Cylindrical aperture
             slice_mask = aperture.to_mask(method=aperture_method).to_image(im_shape)
             # Turn 2D slice_mask into 3D array that is the same shape as the flux cube
-            mask_weights = np.stack([slice_mask] * len(flux_cube.spectral_axis), axis=2)
+            mask_weights = np.stack([slice_mask] * flux_cube.shape[slice_axis], axis=slice_axis)
         return mask_weights
 
 
@@ -3242,6 +3255,9 @@ class ViewerSelect(SelectPluginComponent):
         def is_image_viewer(viewer):
             return 'ImageView' in viewer.__class__.__name__
 
+        def is_slice_indicator_viewer(viewer):
+            return isinstance(viewer, WithSliceIndicator)
+
         def reference_has_wcs(viewer):
             return getattr(viewer.state.reference_data, 'coords', None) is not None
 
@@ -3506,7 +3522,10 @@ class DatasetSelect(SelectPluginComponent):
             return len(data.shape) == 3
 
         def is_flux_cube(data):
-            uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
+            if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):
+                uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
+            else:
+                uncert_label = None
             return is_cube(data) and not_child_layer(data) and data.label != uncert_label
 
         def is_not_wcs_only(data):
