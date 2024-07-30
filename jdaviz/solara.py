@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
+import signal
 
 import solara
+import solara.lab
 import ipygoldenlayout
 import ipysplitpanes
 import ipyvue
@@ -14,6 +16,19 @@ data_list = []
 load_data_kwargs = {}
 jdaviz_verbosity = 'error'
 jdaviz_history_verbosity = 'info'
+
+
+@solara.lab.on_kernel_start
+def on_kernel_start():
+    # at import time, solara runs with a dummy kernel
+    # we simply ignore that
+    if "dummy" in solara.get_kernel_id():
+        return
+    def on_kernel_close():
+        # for some reason, sys.exit(0) does not work here
+        # see https://github.com/encode/uvicorn/discussions/1103
+        signal.raise_signal(signal.SIGINT)
+    return on_kernel_close
 
 
 @solara.component
