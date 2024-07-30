@@ -18,7 +18,7 @@ defaults:
 jobs:
   build_binary_not_osx:
     runs-on: ${{ matrix.os }}-latest
-    if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
+    # if: (github.repository == 'spacetelescope/jdaviz' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'Build standalone')))
     strategy:
       matrix:
         os: [ubuntu, windows]
@@ -54,7 +54,7 @@ jobs:
     - name: Wait for Voila to get online
       uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
       with:
-        resource: tcp:8866
+        resource: tcp:8765
         timeout: 60000
 
     - name: Test standalone
