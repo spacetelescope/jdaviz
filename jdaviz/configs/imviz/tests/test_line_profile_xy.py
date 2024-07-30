@@ -9,7 +9,7 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 class TestLineProfileXY(BaseImviz_WCS_NoWCS):
     def test_plugin_linked_by_pixel(self):
         """Go through plugin logic but does not check plot contents."""
-        lp_plugin = self.imviz.plugins['Imviz Line Profiles (XY)']._obj
+        lp_plugin = self.imviz.plugins['Image Profiles (XY)']._obj
         lp_plugin.plugin_opened = True
 
         assert lp_plugin.viewer.labels == ['imviz-0']
@@ -79,7 +79,7 @@ def test_line_profile_with_nan(imviz_helper):
     arr[5, 5] = np.nan
     imviz_helper.load_data(arr)
 
-    lp_plugin = imviz_helper.plugins['Imviz Line Profiles (XY)']._obj
+    lp_plugin = imviz_helper.plugins['Image Profiles (XY)']._obj
     lp_plugin.plugin_opened = True
     lp_plugin.selected_x = 5
     lp_plugin.selected_y = 5

@@ -137,13 +137,20 @@ class ConfigHelper(HubListener):
 
         # handle renamed plugins during deprecation
         if 'Orientation' in plugins:
+            # renamed in 3.9
             plugins['Links Control'] = plugins['Orientation']._obj.user_api
             plugins['Links Control']._deprecation_msg = 'in the future, the formerly named \"Links Control\" plugin will only be available by its new name: \"Orientation\".'  # noqa
         if 'Canvas Rotation' in plugins:
+            # removed in 3.9
             plugins['Canvas Rotation']._deprecation_msg = 'this functionality will be removed in favor of the implementation for rotation in the \"Orientation\" plugin.'  # noqa
         if 'Export' in plugins:
+            # renamed in 3.9
             plugins['Export Plot'] = plugins['Export']._obj.user_api
             plugins['Export Plot']._deprecation_msg = 'in the future, the formerly named \"Export Plot\" plugin will only be available by its new name: \"Export\".'  # noqa
+        if 'Image Profiles (XY)' in plugins:
+            # renamed in 4.0
+            plugins['Imviz Line Profiles (XY)'] = plugins['Image Profiles (XY)']._obj.user_api
+            plugins['Imviz Line Profiles (XY)']._deprecation_msg = 'in the future, the formerly named \"Imviz Line Profiles (XY)\" plugin will only be available by its new name: \"Image Profiles (XY)\".'  # noqa
 
         return plugins
 
