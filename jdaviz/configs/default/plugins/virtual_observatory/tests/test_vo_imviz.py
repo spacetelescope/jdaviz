@@ -130,6 +130,25 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         assert vo_plugin._populate_url_only is True
         assert vo_plugin.table.headers_visible == ["URL"]
 
+    def test_load_data_error_msgs(self):
+        """Tests user gets properly notified when a load_data error occurs"""
+        vo_plugin = self.imviz.plugins[vo_plugin_label]._obj
+        fake_result = fake_siaresult(
+            {
+                "title": "Fake Title",
+                "instr": "Fake Instrument",
+                "dateobs": "Fake Dateobs",
+            }
+        )
+        vo_plugin._populate_table([fake_result])
+        vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
+        with pytest.raises(ValueError):
+            vo_plugin.vue_load_selected_data()
+            assert any(
+                "Unable to load file to viewer" in d["text"]
+                for d in self.imviz.app.state.snackbar_history
+            )
+
 
 @pytest.mark.remote_data
 class TestVOImvizRemote:
