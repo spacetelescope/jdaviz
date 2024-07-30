@@ -32,7 +32,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
     wavebands = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
-    resource_filter_coverage = Bool(True).tag(sync=True)
+    resource_filter_coverage = Bool(False).tag(sync=True)
     resources = List([]).tag(sync=True)
     resource_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resources_loading = Bool(False).tag(sync=True)
