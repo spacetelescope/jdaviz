@@ -279,9 +279,11 @@ class UnitConversion(PluginTemplateMixin):
 
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
-            self.hub.broadcast(GlobalDisplayUnitChanged('flux' if name == "flux_unit_selected" else 'sb',
-                                                        flux_or_sb,
-                                                        sender=self))
+            self.hub.broadcast(
+                GlobalDisplayUnitChanged(
+                    "flux" if name == "flux_unit_selected" else "sb", flux_or_sb, sender=self
+                    )
+                )
             self.spectrum_viewer.reset_limits()
 
         if (
