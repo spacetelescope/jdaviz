@@ -174,6 +174,18 @@ def test_fit_cube_no_wcs(cubeviz_helper):
     assert fitted_data.shape == output_cube.shape
 
 
+def test_toggle_cube_fit_subset(cubeviz_helper):
+    sp = Spectrum1D(flux=np.ones((7, 8, 9)) * u.nJy)  # ny, nx, nz
+    cubeviz_helper.load_data(sp, data_label="test_cube")
+    mf = cubeviz_helper.plugins['Model Fitting']
+
+    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    sv.apply_roi(XRangeROI(7.5, 8))
+
+    mf.spectral_subset = 'Subset 1'
+    mf.cube_fit = True
+
+
 def test_refit_plot_options(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     modelfit_plugin = specviz_helper.plugins['Model Fitting']
@@ -284,6 +296,7 @@ def test_reestimate_parameters(specviz_helper, spectrum1d):
     sv.apply_roi(XRangeROI(7500, 8000))
 
     mf.spectral_subset = 'Subset 1'
+
     mf.reestimate_model_parameters()
     mc = mf.get_model_component('G')
 
