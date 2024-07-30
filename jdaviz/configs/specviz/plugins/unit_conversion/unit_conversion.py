@@ -114,9 +114,10 @@ class UnitConversion(PluginTemplateMixin):
     @property
     def user_api(self):
         if self.app.config == 'cubeviz':
-            return PluginUserApi(self, expose=('spectral_unit', 'flux_or_sb', 'flux_unit', 'angle_unit'))   # noqa
+            expose = ('spectral_unit', 'flux_or_sb', 'flux_unit', 'angle_unit')
         else:
-            return PluginUserApi(self, expose=('spectral_unit', 'flux_unit', 'angle_unit'))
+            expose = ('spectral_unit', 'flux_unit', 'angle_unit')
+        return PluginUserApi(self, expose=expose)
 
     def _on_glue_x_display_unit_changed(self, x_unit):
         if x_unit is None:
@@ -176,7 +177,7 @@ class UnitConversion(PluginTemplateMixin):
 
         # sets the angle unit drop down and the surface brightness read-only text
         if self.app.data_collection[0]:
-            dc_unit = self.app.data_collection[0].get_object().flux.unit
+            dc_unit = self.app.data_collection[0].get_component("flux").units
             self.angle_unit.choices = create_angle_equivalencies_list(dc_unit)
             self.angle_unit.selected = self.angle_unit.choices[0]
             self.sb_unit = self._append_angle_correctly(
