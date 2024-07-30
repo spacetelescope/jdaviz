@@ -271,7 +271,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             if getattr(result, 'uncertainty', None) is not None:
                 # we'll keep the uncertainty and result in the same unit (so
                 # we only have to show the unit at the end)
-                if np.isnan(result.uncertainty.value) or np.isinf(result.uncertainty.value):
+                if not np.all(np.isfinite(result.uncertainty.value)):
                     return ''
                 return str(result.uncertainty.to_value(result.unit))
             else:
@@ -287,7 +287,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
             # TODO: update specutils to allow ALL analysis to take regions and continuum so we
             # don't need these if statements
             if function == "Line Flux":
-                flux_unit = spec_subtracted.flux.unit
+                flux_unit = self.app._get_display_unit('flux')
                 if flux_unit == u.dimensionless_unscaled:
                     add_flux = True
                     flux_unit = u.Unit(self.spectrum_viewer.state.y_display_unit)
@@ -295,6 +295,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     add_flux = False
                 # If the flux unit is equivalent to Jy, or Jy per spaxel for Cubeviz,
                 # enforce integration in frequency space
+                flux_unit = u.Unit(flux_unit)
                 if (flux_unit.is_equivalent(u.Jy) or
                         flux_unit.is_equivalent(u.Jy/u.sr)):
                     # Perform integration in frequency space
@@ -319,16 +320,13 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         self.update_results(None)
                         return
 
-                    # When flux is equivalent to Jy, lineflux result should be shown in W/m2
-                    if flux_unit.is_equivalent(u.Jy/u.sr):
-                        final_unit = u.Unit('W/(m2 sr)')
-                    else:
-                        final_unit = u.Unit('W/m2')
-
-                    temp_result = raw_result.to(final_unit)
+                    temp_result = raw_result.to(
+                        flux_unit,
+                        equivalencies=u.spectral_density(freq_spec.spectral_axis.mean()))
                     if getattr(raw_result, 'uncertainty', None) is not None:
-                        temp_result.uncertainty = raw_result.uncertainty.to(final_unit)
-
+                        temp_result.uncertainty = raw_result.uncertainty.to(
+                            flux_unit,
+                            equivalencies=u.spectral_density(freq_spec.spectral_axis.mean()))
                 # If the flux unit is instead equivalent to power density
                 # (Jy, but defined in wavelength), enforce integration in wavelength space
                 elif (flux_unit.is_equivalent(u.Unit('W/(m2 m)')) or
@@ -353,15 +351,14 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                             color="warning"))
                         self.update_results(None)
                         return
-                    # When flux is equivalent to Jy, lineflux result should be shown in W/m2
-                    if flux_unit.is_equivalent(u.Unit('W/(m2 m)'/u.sr)):
-                        final_unit = u.Unit('W/(m2 sr)')
-                    else:
-                        final_unit = u.Unit('W/m2')
 
-                    temp_result = raw_result.to(final_unit)
+                    temp_result = raw_result.to(
+                        flux_unit,
+                        equivalencies=u.spectral_density(wave_spec.spectral_axis.mean()))
                     if getattr(raw_result, 'uncertainty', None) is not None:
-                        temp_result.uncertainty = raw_result.uncertainty.to(final_unit)
+                        temp_result.uncertainty = raw_result.uncertainty.to(
+                            flux_unit,
+                            equivalencies=u.spectral_density(wave_spec.spectral_axis.mean()))
 
                 # Otherwise, just rely on the default specutils line_flux result
                 else:
