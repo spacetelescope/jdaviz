@@ -12,7 +12,7 @@ from jdaviz.utils import get_top_layer_index
 __all__ = ['LineProfileXY']
 
 
-@tray_registry('imviz-line-profile-xy', label="Imviz Line Profiles (XY)")
+@tray_registry('imviz-line-profile-xy', label="Image Profiles (XY)")
 class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
     template_file = __file__, "line_profile_xy.vue"
     uses_active_status = Bool(True).tag(sync=True)
