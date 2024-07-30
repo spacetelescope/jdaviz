@@ -5,7 +5,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
 from glue.core.subset_group import GroupedSubset
-from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
+from glue.core.edit_subset_mode import AndMode, AndNotMode, NewMode, OrMode, XorMode
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, RectanglePixelRegion,
                      EllipsePixelRegion, CircleAnnulusPixelRegion)
 from numpy.testing import assert_allclose
@@ -566,20 +566,26 @@ def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
 
-    viewer.apply_roi(XRangeROI(6400, 6600))
+    viewer.apply_roi(XRangeROI(6200, 6800))
     specviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(XRangeROI(7200, 7400))
-
-    viewer.apply_roi(XRangeROI(7600, 7800))
+    viewer.apply_roi(XRangeROI(7200, 7600))
 
     specviz_helper.app.session.edit_subset_mode.mode = XorMode
-    viewer.apply_roi(XRangeROI(6700, 7700))
+    viewer.apply_roi(XRangeROI(6100, 7600))
     reg = specviz_helper.app.get_subsets("Subset 1")
 
-    assert reg[0].lower.value == 6400 and reg[0].upper.value == 6600
-    assert reg[1].lower.value == 6700 and reg[1].upper.value == 7200
-    assert reg[2].lower.value == 7400 and reg[2].upper.value == 7600
-    assert reg[3].lower.value == 7700 and reg[3].upper.value == 7800
+    assert reg[0].lower.value == 6100 and reg[0].upper.value == 6200
+    assert reg[1].lower.value == 6800 and reg[1].upper.value == 7200
+
+    specviz_helper.app.session.edit_subset_mode.mode = NewMode
+    viewer.apply_roi(XRangeROI(7000, 7200))
+    specviz_helper.app.session.edit_subset_mode.mode = XorMode
+    viewer.apply_roi(XRangeROI(7100, 7300))
+    specviz_helper.app.session.edit_subset_mode.mode = AndMode
+    viewer.apply_roi(XRangeROI(6900, 7105))
+    reg = specviz_helper.app.get_subsets("Subset 2")
+    assert reg[0].lower.value == 6900 and reg[0].upper.value == 7105
+    assert reg[1].lower.value == 7200 and reg[1].upper.value == 7300
 
 
 def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
