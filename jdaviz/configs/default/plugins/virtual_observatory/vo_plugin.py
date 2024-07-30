@@ -199,6 +199,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     color="error",
                 )
             )
+            raise
         finally:
             self.resources_loading = False  # Stop loading bar
 
