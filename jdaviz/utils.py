@@ -369,7 +369,14 @@ def _eqv_pixar_sr(pixar_sr):
     def iconverter_flux(x):  # Flux -> Surface Brightness
         return x / pixar_sr
 
-    return [(u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux)]
+    return [
+        (u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux),
+        (u.erg / (u.s * u.cm**2 * u.Angstrom), u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr), converter_flux, iconverter_flux),  # noqa
+        (u.ph / (u.Angstrom * u.s * u.cm**2), u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), converter_flux, iconverter_flux),  # noqa
+        (u.ph / (u.Hz * u.s * u.cm**2), u.ph / (u.Hz * u.s * u.cm**2 * u.sr), converter_flux, iconverter_flux),  # noqa
+        (u.bol, u.bol / u.sr, converter_flux, iconverter_flux),
+        (u.ST, u.ST / u.sr, converter_flux, iconverter_flux),
+    ]
 
 
 def spectral_axis_conversion(values, original_units, target_units):
