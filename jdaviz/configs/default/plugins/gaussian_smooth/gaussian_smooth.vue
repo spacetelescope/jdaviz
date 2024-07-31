@@ -2,12 +2,12 @@
   <j-tray-plugin
     :description="docs_description || 'Smooth data with a Gaussian kernel.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
-    :show_api_hints.sync="show_api_hints"
+    :api_hints.sync="api_hints"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
 
-      <v-alert v-if="show_api_hints"
+      <v-alert v-if="api_hints"
           color="orange"
           dense
           text
@@ -37,18 +37,18 @@
         :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
         label="Data"
         api_hint='plg.dataset='
-        :show_api_hints="show_api_hints"
+        :api_hints="api_hints"
         hint="Select the data to be smoothed."
       />
 
       <v-row>
         <v-text-field
           ref="stddev"
-          :label="show_api_hints ? 'plg.stddev=' : 'Standard deviation'"
+          :label="api_hints ? 'plg.stddev=' : 'Standard deviation'"
           v-model.number="stddev"
           type="number"
           hint="The stddev of the kernel, in pixels."
-          :class="show_api_hints ? 'api_hint' : null"
+          :class="api_hints ? 'api_hint' : null"
           persistent-hint
           :rules="[() => !!stddev || 'This field is required',
                    () => stddev > 0 || 'Kernel must be greater than zero']"
@@ -69,7 +69,7 @@
         action_tooltip="Smooth data"
         :action_spinner="spinner"
         action_api_hint='plg.smooth(add_data=True)'
-        :show_api_hints="show_api_hints"
+        :api_hints="api_hints"
         @click:action="apply"
       ></plugin-add-results>
     </j-tray-plugin>

@@ -5,7 +5,7 @@
         <j-docs-link :link="link">{{ description }}</j-docs-link>
       </div>
       <div style="width: 32px">
-        <v-btn icon @click="() => {$emit('update:show_api_hints', !show_api_hints)}">
+        <v-btn icon @click="() => {$emit('update:api_hints', !api_hints)}">
           <v-icon>mdi-code-tags</v-icon>
         </v-btn>
       </div>
@@ -34,7 +34,7 @@
 
 <script>
 module.exports = {
-  props: ['irrelevant_msg', 'disabled_msg', 'description', 'show_api_hints', 'link', 'popout_button',
+  props: ['irrelevant_msg', 'disabled_msg', 'description', 'api_hints', 'link', 'popout_button',
           'uses_active_status', 'keep_active', 'scroll_to'],
   methods: {
     isDisabled() {
