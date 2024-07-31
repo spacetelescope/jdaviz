@@ -562,7 +562,7 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
         specviz_helper.app.get_subsets("Subset 1")
 
 
-def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
+def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
 
@@ -581,11 +581,27 @@ def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
     viewer.apply_roi(XRangeROI(7000, 7200))
     specviz_helper.app.session.edit_subset_mode.mode = XorMode
     viewer.apply_roi(XRangeROI(7100, 7300))
-    specviz_helper.app.session.edit_subset_mode.mode = AndMode
+    specviz_helper.app.session.edit_subset_mode.mode = OrMode
     viewer.apply_roi(XRangeROI(6900, 7105))
     reg = specviz_helper.app.get_subsets("Subset 2")
     assert reg[0].lower.value == 6900 and reg[0].upper.value == 7105
     assert reg[1].lower.value == 7200 and reg[1].upper.value == 7300
+
+    specviz_helper.app.session.edit_subset_mode.mode = NewMode
+    viewer.apply_roi(XRangeROI(6000, 6500))
+    specviz_helper.app.session.edit_subset_mode.mode = XorMode
+    viewer.apply_roi(XRangeROI(6100, 6200))
+    reg = specviz_helper.app.get_subsets("Subset 3")
+    assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
+    assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
+
+    specviz_helper.app.session.edit_subset_mode.mode = NewMode
+    viewer.apply_roi(XRangeROI(6100, 6200))
+    specviz_helper.app.session.edit_subset_mode.mode = XorMode
+    viewer.apply_roi(XRangeROI(6000, 6500))
+    reg = specviz_helper.app.get_subsets("Subset 4")
+    assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
+    assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
 
 
 def test_overlapping_spectral_regions(specviz_helper, spectrum1d):

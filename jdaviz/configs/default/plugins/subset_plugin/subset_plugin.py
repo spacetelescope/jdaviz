@@ -305,11 +305,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         # types cannot be simplified so subsets contained that are skipped.
         if 'Mask' in self.subset_types:
             self.can_simplify = False
-        elif (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
-                and len(simplifiable_states - set(self.glue_state_types)) < 3):
-            self.can_simplify = True
-        elif (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
-              and self.app.is_there_overlap_spectral_subset(self.subset_selected)):
+        elif ((len(self.subset_states) > 1) and isinstance(self.subset_states[0], RangeSubsetState)
+              and ((len(simplifiable_states - set(self.glue_state_types)) < 3)
+                   or self.app.is_there_overlap_spectral_subset(self.subset_selected))):
             self.can_simplify = True
         else:
             self.can_simplify = False
