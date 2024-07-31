@@ -8,6 +8,9 @@ from pyvo.dal.exceptions import DALFormatError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Unicode, Any, List, Int, observe
 
+from jdaviz.configs.imviz.plugins.orientation.orientation import (
+    orientation_plugin_label,
+)
 from jdaviz.core.events import SnackbarMessage, AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
@@ -94,7 +97,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             viewer.state.reference_data is None
             or viewer.state.reference_data.coords is None
         ):
-            self.source = ''
+            self.source = ""
             return
 
         # Obtain center point of the current image and convert into sky coordinates
@@ -127,7 +130,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         # Can't filter by coverage if we don't have a source to filter on
         if self.resource_filter_coverage and not self.source:
-            errormsg = (
+            error_msg = (
                 "Source is required for registry querying when coverage filtering is enabled. "
                 + (
                     "Please enter your coordinates above "
@@ -136,8 +139,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 )
                 + "or disable coverage filtering."
             )
-            self.hub.broadcast(SnackbarMessage(errormsg, sender=self, color="error"))
-            raise ValueError(errormsg)
+            self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="error"))
+            raise ValueError(error_msg)
 
         # Clear existing resources list
         self.resources = []
@@ -323,6 +326,16 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
     def vue_load_selected_data(self, _=None):
         """Load the files selected by the user in the table"""
+        if (
+            self.app._jdaviz_helper.plugins[orientation_plugin_label].link_type != "WCS"
+            and len(self.app.data_collection) > 0
+        ):
+            error_msg = (
+                "WCS linking is not enabled; data layers may not be aligned. To align, "
+                f"switch link type to WCS in the {orientation_plugin_label} plugin"
+            )
+            self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="warning"))
+
         self.data_loading = True  # Start loading spinner
         for entry in self.table.selected_rows:
             try:
