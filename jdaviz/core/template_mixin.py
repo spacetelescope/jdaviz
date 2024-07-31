@@ -2694,7 +2694,7 @@ class DatasetSpectralSubsetValidMixin(VuetifyTemplate, HubListener):
 
     @observe("dataset_selected", "spectral_subset_selected")
     def _check_dataset_spectral_subset_valid(self, event={}, return_ranges=False):
-        if not hasattr(self, 'dataset'):
+        if not hasattr(self, 'dataset') or self.dataset.selected_obj is None:
             # plugin not fully initialized
             return
         if self.spectral_subset_selected == "Entire Spectrum":
