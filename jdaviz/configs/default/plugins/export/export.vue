@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Export"
+    :api_hints_enabled.sync="api_hints_enabled"
     description='Export data or plots from the app to a file.'
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#export'"
     :popout_button="popout_button"
@@ -22,6 +25,8 @@
         :selected.sync="viewer_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
+        api_hint="plg.viewer ="
+        :api_hints_enabled="api_hints_enabled"
       >
       </plugin-inline-select>
       <v-row class="row-min-bottom-padding">
@@ -31,7 +36,7 @@
           attach
           v-model="viewer_format_selected"
           :items="viewer_format_items.map(i => i.label)"
-          label="Format"
+          :label="api_hints_enabled ? 'plg.viewer_format =' : 'Format'"
           hint="Image format for exporting viewers."
           :disabled="viewer_selected.length == 0"
           persistent-hint
@@ -101,6 +106,8 @@
         :selected.sync="dataset_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
+        api_hint="plg.dataset ="
+        :api_hints_enabled="api_hints_enabled"
       >
       </plugin-inline-select>
 
@@ -116,7 +123,7 @@
             attach
             v-model="dataset_format_selected"
             :items="dataset_format_items.map(i => i.label)"
-            label="Format"
+            :label="api_hints_enabled ? 'plg.dataset_format =' : 'Format'"
             hint="Format for exporting datasets."
             :disabled="dataset_selected.length == 0"
             persistent-hint
@@ -135,6 +142,8 @@
         :selected.sync="subset_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
+        api_hint="plg.subset ="
+        :api_hints_enabled="api_hints_enabled"
       >
       </plugin-inline-select>
 
@@ -153,7 +162,7 @@
           :items="subset_format_items"
           item-text="label"
           item-disabled="disabled"
-          label="Format"
+          :label="api_hints_enabled ? 'plg.subset_format =' : 'Format'"
           hint="Format for exporting subsets."
           :disabled="subset_selected == null || subset_selected.length == 0"
           persistent-hint
@@ -172,6 +181,8 @@
         :selected.sync="plugin_table_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
+        api_hint="plg.table ="
+        :api_hints_enabled="api_hints_enabled"
       >
       </plugin-inline-select>
       <v-row class="row-min-bottom-padding">
@@ -181,7 +192,7 @@
           attach
           v-model="plugin_table_format_selected"
           :items="plugin_table_format_items.map(i => i.label)"
-          label="Format"
+          :label="api_hints_enabled ? 'plg.plugin_table_format =' : 'Format'"
           hint="File format for exporting plugin tables."
           :disabled="plugin_table_selected.length == 0"
           persistent-hint
@@ -200,6 +211,8 @@
         :selected.sync="plugin_plot_selected"
         :multiselect="multiselect"
         :single_select_allow_blank="false"
+        api_hint="plg.plugin_plot ="
+        :api_hints_enabled="api_hints_enabled"
       >
       </plugin-inline-select>
       <jupyter-widget
@@ -213,7 +226,7 @@
           attach
           v-model="plugin_plot_format_selected"
           :items="plugin_plot_format_items.map(i => i.label)"
-          label="Format"
+          :label="api_hints_enabled ? 'plg.plugin_plot_format =' : 'Format'"
           hint="File format for exporting plugin plots."
           :disabled="plugin_plot_selected.length == 0"
           persistent-hint
@@ -228,6 +241,7 @@
           :value="default_filepath"
           label="Filepath"
           hint="Filepath export location."
+          class="ignore-api-hints"
           persistent-hint
           disabled
         ></v-text-field>
@@ -242,7 +256,7 @@
       :default="filename_default"
       :auto.sync="filename_auto"
       :invalid_msg="filename_invalid_msg"
-      label="Filename"
+      :label="api_hints_enabled ? 'plg.filename =' : 'Filename'"
       hint="Export to a file on disk."
     ></plugin-auto-label>
 
@@ -267,7 +281,11 @@
                    viewer_invalid_msg.length > 0 ||
                    (viewer_selected.length > 0 && viewer_format_selected == 'mp4' && !movie_enabled)"
       >
-        Export
+        {{ api_hints_enabled ?
+          'plg.export()'
+          :
+          'Export'
+        }}
       </plugin-action-button>
     </div>
 

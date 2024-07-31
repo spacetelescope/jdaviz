@@ -13,7 +13,6 @@
       :chips="multiselect"
       item-text="label"
       item-value="label"
-      :class="api_hints_enabled ? 'api_hint' : null"
       persistent-hint
     >
       <template slot="selection" slot-scope="data">
@@ -62,7 +61,8 @@
 </template>
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect', 'api_hint', 'api_hints_enabled'],
+  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
+          'api_hint', 'api_hints_enabled'],
   methods: {
     isWCSOnlyLayer(item) {
       const wcsOnly = Object.keys(this.$props.viewer.wcs_only_layers).includes(item.name)

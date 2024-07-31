@@ -2,7 +2,6 @@
   <v-btn :disabled="spinner || disabled"
     text
     :color=buttonColor
-    class="api_hint"
     @click="$emit('click')"
   >
     <v-progress-circular

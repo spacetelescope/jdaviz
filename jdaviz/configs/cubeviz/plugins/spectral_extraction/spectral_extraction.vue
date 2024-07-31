@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Spectral Extraction"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Extract a '+resulting_product_name+' from a spectral cube.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :uses_active_status="uses_active_status"
@@ -17,12 +20,13 @@
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
             <v-row>
-              <v-switch
-                v-model="show_live_preview"
+              <plugin-switch
+                :value.sync="show_live_preview"
                 label="Show live-extraction"
+                api_hint="plg.show_live_preview = "
+                :api_hints_enabled="api_hints_enabled"
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
-                persistent-hint
-              ></v-switch>
+              />
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
@@ -37,6 +41,8 @@
         :selected.sync="aperture_selected"
         :show_if_single_entry="true"
         label="Spatial aperture"
+        api_hint="plg.aperture ="
+        :api_hints_enabled="api_hints_enabled"
         :hint="'Select a spatial region to extract its '+resulting_product_name+'.'"
       />
 
@@ -48,13 +54,14 @@
         </v-row>
 
         <div v-if="aperture_selected_validity.is_aperture">
-          <v-row>
-            <v-switch
-              v-model="wavelength_dependent"
+          <v-row class="ignore-api-hints">
+            <plugin-switch
+              :value.sync="wavelength_dependent"
               label="Wavelength dependent"
+              api_hint="plg.wavelength_dependent = "
+              :api_hints_enabled="api_hints_enabled"
               hint="Vary aperture linearly with wavelength"
-              persistent-hint>
-            </v-switch>
+            />
           </v-row>
           <div v-if="wavelength_dependent">
             <v-row justify="end">
@@ -70,12 +77,12 @@
                 type="number"
                 :step="0.1"
                 class="mt-0 pt-0"
-                label="Wavelength"
+                :label="api_hints_enabled ? 'plg.reference_spectral_value =' : 'Wavelength'"
                 hint="Wavelength at which the aperture matches the selected subset."
                 persistent-hint
               ></v-text-field>
             </v-row>
-            <v-row justify="end">
+            <v-row justify="end" class="ignore-api-hints">
               <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
                 <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_spectral_value">
                   Slice to Wavelength
@@ -94,6 +101,8 @@
         :selected.sync="bg_selected"
         :show_if_single_entry="true"
         label="Background"
+        api_hint="plg.background ="
+        :api_hints_enabled="api_hints_enabled"
         hint="Select a spatial region to use for background subtraction."
       />
 
@@ -113,12 +122,13 @@
                  && bg_selected_validity.is_aperture
                  && wavelength_dependent">
         <v-row>
-          <v-switch
-            v-model="bg_wavelength_dependent"
+          <plugin-switch
+            :value.sync="bg_wavelength_dependent"
             label="Wavelength dependent"
+            api_hint="bg_wavelength_dependent ="
+            :api_hints_enabled="api_hints_enabled"
             hint="Vary background linearly with wavelength"
-            persistent-hint>
-          </v-switch>
+          />
         </v-row>
         <div v-if="bg_wavelength_dependent">
           <v-row>
@@ -127,7 +137,7 @@
               type="number"
               :step="0.1"
               class="mt-0 pt-0"
-              label="Wavelength"
+              :label="api_hints_enabled ? 'plg.reference_spectral_value =' : 'Wavelength'"
               hint="Wavelength at which the background matches the selected subset (fixed at same value as for aperture above)."
               persistent-hint
               disabled
@@ -144,12 +154,13 @@
             </v-expansion-panel-header>
             <v-expansion-panel-content class="plugin-expansion-panel-content">
               <v-row v-if="function_selected === 'Sum'">
-                <v-switch
-                  v-model="bg_spec_per_spaxel"
+                <plugin-switch
+                  :value.sync="bg_spec_per_spaxel"
                   label="Normalize per-spaxel"
+                  api_hint="bg_spec_per_spaxel ="
+                  :api_hints_enabled="api_hints_enabled"
                   :hint="'Whether to normalize the background per spaxel (not shown in preview). Otherwise, the '+resulting_product_name+' will be scaled by the ratio between the areas of the extraction aperture to the background aperture.'"
-                  persistent-hint
-                ></v-switch>
+                />
               </v-row>
               <plugin-add-results
                 :label.sync="bg_spec_results_label"
@@ -162,6 +173,9 @@
                 :add_to_viewer_selected.sync="bg_spec_add_to_viewer_selected"
                 action_label="Export"
                 :action_tooltip="'Create background '+resulting_product_name"
+                add_results_api_hint='plg.bg_spec_results'
+                action_api_hint='plg.extract_bg_spectrum(add_data=True)'
+                :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_spec"
               ></plugin-add-results>
             </v-expansion-panel-content>
@@ -194,7 +208,7 @@
             attach
             :items="aperture_method_items.map(i => i.label)"
             v-model="aperture_method_selected"
-            label="Aperture masking method"
+            :label="api_hints_enabled ? 'plg.aperture_method =' : 'Aperture masking method'"
             :hint="'Extract '+resulting_product_name+' using an aperture masking method in place of the subset mask.'"
             persistent-hint
             ></v-select>
@@ -212,7 +226,7 @@
           attach
           :items="function_items.map(i => i.label)"
           v-model="function_selected"
-          label="Function"
+          :label="api_hints_enabled ? 'plg.function =' : 'Function'"
           :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
           persistent-hint
         ></v-select>
@@ -242,13 +256,16 @@
         action_label="Extract"
         action_tooltip="Run spectral extraction with error and mask propagation"
         :action_spinner="spinner"
+        add_results_api_hint='plg.add_results'
+        action_api_hint='plg.extract(add_data=True)'
+        :api_hints_enabled="api_hints_enabled"
         :action_disabled="aperture_selected === bg_selected || conflicting_aperture_and_function"
         @click:action="spectral_extraction"
       ></plugin-add-results>
 
       <j-plugin-section-header v-if="extraction_available && export_enabled">Results</j-plugin-section-header>
 
-      <div style="display: grid; position: relative"> <!-- overlay container -->
+      <div class="ignore-api-hint" style="display: grid; position: relative"> <!-- overlay container -->
         <div style="grid-area: 1/1">
           <div v-if="extraction_available && export_enabled">
 

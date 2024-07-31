@@ -1,17 +1,12 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Gaussian Smooth"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Smooth data with a Gaussian kernel.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
-    :api_hints_enabled.sync="api_hints_enabled"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
-
-
-      <v-row v-if="api_hints_enabled">
-        <span class="api_hint">
-          plg = {{config}}.plugins['Gaussian Smooth']
-        </span>
-      </v-row>
 
       <v-row v-if="show_modes">
         <v-select
@@ -20,7 +15,6 @@
           :items="mode_items.map(i => i.label)"
           v-model="mode_selected"
           :label="api_hints_enabled ? 'plg.mode =' : 'Mode'"
-          :class="api_hints_enabled ? 'api_hint' : null"
           hint="Smooth data spectrally or spatially."
           persistent-hint
         ></v-select>
@@ -43,7 +37,6 @@
         <v-text-field
           ref="stddev"
           :label="api_hints_enabled ? 'plg.stddev =' : 'Standard deviation'"
-          :class="api_hints_enabled ? 'api_hint' : null"
           v-model.number="stddev"
           type="number"
           hint="The stddev of the kernel, in pixels."

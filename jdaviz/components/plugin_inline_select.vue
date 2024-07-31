@@ -1,5 +1,10 @@
 <template>
   <div>
+    <v-row v-if="api_hints_enabled && api_hint">
+      <span class="api-hint">
+        {{ api_hint }}
+      </span>
+    </v-row>
     <v-row v-for="item in items" class="row-min-bottom-padding">
       <plugin-inline-select-item
         :item="item"
@@ -14,7 +19,7 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'multiselect', 'single_select_allow_blank']
+  props: ['items', 'selected', 'multiselect', 'single_select_allow_blank', 'api_hint', 'api_hints_enabled']
 };
 </script>
 

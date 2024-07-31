@@ -1,5 +1,5 @@
 <template>
-  <div :class="api_hints_enabled ? 'api_hint' : ''">
+  <div>
     <plugin-auto-label
       :value="label"
       @change="$emit('update:label', $event)"
@@ -10,7 +10,6 @@
       :invalid_msg="label_invalid_msg"
       :label="api_hints_enabled && add_results_api_hint ? add_results_api_hint + '.label =' : label_label ? label_label : 'Output Data Label'"
       :hint="label_hint ? label_hint : 'Label for the resulting data item.'"
-      :class="api_hints_enabled ? 'api_hint' : null"
     ></plugin-auto-label>   
 
     <div v-if="add_to_viewer_items.length > 2">

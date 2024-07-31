@@ -1,13 +1,13 @@
 <template>
   <div>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry">
+  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       :menu-props="{ left: true }"
       attach
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
-      :label="label ? label : 'Subset'"
+      :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Subset')"
       :hint="hint ? hint : 'Select subset.'"
       :rules="rules ? rules : []"
       :multiple="multiselect"
@@ -75,7 +75,9 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules', 'show_if_single_entry', 'multiselect']
+  props: ['items', 'selected', 'label', 'has_subregions', 'has_subregions_warning', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
+          'api_hint', 'api_hints_enabled'
+  ]
 };
 </script>
 

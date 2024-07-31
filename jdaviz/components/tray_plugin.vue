@@ -1,19 +1,31 @@
 <template>
-  <v-container class="tray-plugin" style="padding-left: 24px; padding-right: 24px; padding-top: 12px">
+  <v-container 
+    :class="api_hints_enabled ? 'tray-plugin api-hint' : 'tray-plugin'"
+    style="padding-left: 24px; padding-right: 24px; padding-top: 12px" >
     <v-row>
       <div style="width: calc(100% - 64px)">
         <j-docs-link :link="link">{{ description }}</j-docs-link>
       </div>
       <div style="width: 32px">
-        <v-btn icon @click="() => {$emit('update:api_hints_enabled', !api_hints_enabled)}">
+        <v-btn
+          v-if="api_hints_enabled !== undefined && config && plugin_key" 
+          icon 
+          @click="() => {$emit('update:api_hints_enabled', !api_hints_enabled)}"
+        >
           <v-icon>mdi-code-tags</v-icon>
         </v-btn>
       </div>
-      <div style="width: 32px">
+      <div style="width: 32px" class="ignore-api-hint">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </div>
     </v-row>
-    
+
+    <v-row v-if="api_hints_enabled">
+        <span class="api-hint-header">
+          plg = {{ config }}.plugins['{{ plugin_key }}']
+        </span>
+      </v-row>
+
     <v-row v-if="isDisabled()">
       <span> {{ getDisabledMsg() }}</span>
     </v-row>
@@ -22,11 +34,12 @@
         <v-switch
           v-model="keep_active"
           @change="$emit('update:keep_active', $event)"
-          label="Keep active"
+          :label="api_hints_enabled ? 'plg.keep_active = '+boolToString(keep_active) : 'Keep active'"
           hint="Consider plugin active (showing any previews and enabling all keypress events) even when not opened"
           persistent-hint>
         </v-switch>
       </v-row>
+
       <slot></slot>
     </div>
   </v-container>
@@ -34,9 +47,17 @@
 
 <script>
 module.exports = {
-  props: ['irrelevant_msg', 'disabled_msg', 'description', 'api_hints_enabled', 'link', 'popout_button',
+  props: ['config', 'plugin_key', 'irrelevant_msg', 'disabled_msg', 'description',
+          'api_hints_enabled', 'link', 'popout_button',
           'uses_active_status', 'keep_active', 'scroll_to'],
   methods: {
+    boolToString(b) {
+      if (b) {
+        return 'True'
+      } else {
+        return 'False'
+      }
+    },
     isDisabled() {
       return this.getDisabledMsg().length > 0
     },
