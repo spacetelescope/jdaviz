@@ -7,14 +7,11 @@
     :scroll_to.sync="scroll_to">
 
 
-      <v-alert v-if="api_hints"
-          color="orange"
-          dense
-          text
-          class="api_hint"
-      >
+      <v-row v-if="api_hints">
+        <span class="api_hint">
           plg = {{config}}.plugins['Gaussian Smooth']
-      </v-alert>
+        </span>
+      </v-row>
 
       <v-row v-if="show_modes">
         <v-select
@@ -22,7 +19,8 @@
           attach
           :items="mode_items.map(i => i.label)"
           v-model="mode_selected"
-          label="Mode"
+          :label="api_hints ? 'plg.mode =' : 'Mode'"
+          :class="api_hints ? 'api_hint' : null"
           hint="Smooth data spectrally or spatially."
           persistent-hint
         ></v-select>
@@ -36,7 +34,7 @@
         :selected.sync="dataset_selected"
         :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
         label="Data"
-        api_hint='plg.dataset='
+        api_hint='plg.dataset ='
         :api_hints="api_hints"
         hint="Select the data to be smoothed."
       />
@@ -44,11 +42,11 @@
       <v-row>
         <v-text-field
           ref="stddev"
-          :label="api_hints ? 'plg.stddev=' : 'Standard deviation'"
+          :label="api_hints ? 'plg.stddev =' : 'Standard deviation'"
+          :class="api_hints ? 'api_hint' : null"
           v-model.number="stddev"
           type="number"
           hint="The stddev of the kernel, in pixels."
-          :class="api_hints ? 'api_hint' : null"
           persistent-hint
           :rules="[() => !!stddev || 'This field is required',
                    () => stddev > 0 || 'Kernel must be greater than zero']"
@@ -62,12 +60,12 @@
         :label_invalid_msg="results_label_invalid_msg"
         :label_overwrite="results_label_overwrite"
         label_hint="Label for the smoothed data"
-        label_api_hint='plg.add_results.label='
         :add_to_viewer_items="add_to_viewer_items"
         :add_to_viewer_selected.sync="add_to_viewer_selected"
         action_label="Smooth"
         action_tooltip="Smooth data"
         :action_spinner="spinner"
+        add_results_api_hint='plg.add_results'
         action_api_hint='plg.smooth(add_data=True)'
         :api_hints="api_hints"
         @click:action="apply"

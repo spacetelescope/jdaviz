@@ -262,4 +262,33 @@ a:active {
   font-family: Roboto, sans-serif !important;
   font-weight: 500 !important;
 }
+
+span.api_hint {
+  color: #c75109 !important;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.api_hint :is(.v-select__slot, .v-text-field__slot, .v-input__slot) > label.v-label {
+    color: #c75109 !important;
+    font-family: monospace;
+    font-size: 12px;
+    overflow-wrap: break-word;
+}
+
+.api_hint .v-alert__content {
+  color: #c75109 !important;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.api_hint .v-btn {
+  color: #c75109 !important;
+  font-family: monospace !important;
+  font-size: 12px !important;
+  overflow-wrap: break-word;
+  text-transform: none !important;
+}
+
 </style>

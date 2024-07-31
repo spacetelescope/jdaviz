@@ -2,6 +2,7 @@
   <v-btn :disabled="spinner || disabled"
     text
     :color=buttonColor
+    class="api_hint"
     @click="$emit('click')"
   >
     <v-progress-circular
@@ -19,7 +20,7 @@
 
 <script>
 module.exports = {
-  props: ['spinner', 'disabled', 'results_isolated_to_plugin'],
+  props: ['spinner', 'disabled', 'results_isolated_to_plugin', 'class'],
   computed: {
     buttonColor() {
       if (this.results_isolated_to_plugin) {

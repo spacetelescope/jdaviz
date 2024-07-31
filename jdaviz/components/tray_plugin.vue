@@ -113,9 +113,4 @@ module.exports = {
     margin-top: 2px !important;
     margin-bottom: 2px !important;
   }
-
-  .api_hint :is(.v-select__slot, .v-text-field__slot) > label.v-label {
-    color: orange !important;
-    font-family: monospace;
-  }
 </style>

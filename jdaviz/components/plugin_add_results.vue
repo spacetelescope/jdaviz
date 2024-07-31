@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :class="api_hints ? 'api_hint' : ''">
     <plugin-auto-label
       :value="label"
       @change="$emit('update:label', $event)"
@@ -8,7 +8,7 @@
       :auto="label_auto"
       @update:auto="$emit('update:label_auto', $event)"
       :invalid_msg="label_invalid_msg"
-      :label="api_hints && label_api_hint ? label_api_hint : label_label ? label_label : 'Output Data Label'"
+      :label="api_hints && add_results_api_hint ? add_results_api_hint + '.label =' : label_label ? label_label : 'Output Data Label'"
       :hint="label_hint ? label_hint : 'Label for the resulting data item.'"
       :class="api_hints ? 'api_hint' : null"
     ></plugin-auto-label>   
@@ -27,7 +27,7 @@
         :selected="add_to_viewer_selected"
         @update:selected="$emit('update:add_to_viewer_selected', $event)"
         show_if_single_entry="true"
-        label='Plot in Viewer'
+        :label="api_hints && add_results_api_hint ? add_results_api_hint+'.viewer =' : 'Plot in Viewer'"
         :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
       ></plugin-viewer-select>
     </div>
@@ -35,7 +35,7 @@
     <v-row v-else>
       <v-switch v-if="label_overwrite"
         class="hide-input"
-        :label="'Show in '+add_to_viewer_items[1].label"
+        :label="addToViewerText"
         :disabled="true"
         :hint="'Visibility of the modified entry will be adopted from the current \''+label+'\' data entry.'"
         persistent-hint
@@ -44,7 +44,7 @@
       <v-switch v-else
         v-model="add_to_viewer_selected == this.add_to_viewer_items[1].label"
         @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
-        :label="'Show in '+add_to_viewer_items[1].label"
+        :label="addToViewerText"
         hint='Immediately plot results.  Data entry will be available to toggle in the data dropdown'
         persistent-hint
       >
@@ -74,18 +74,9 @@
           :disabled="label_invalid_msg.length > 0 || action_disabled"
           :results_isolated_to_plugin="false"
           @click="$emit('click:action')">
-
-          {{action_label}}{{label_overwrite ? ' (Overwrite)' : ''}}
+          {{ actionButtonText }}
         </plugin-action-button>
       </j-tooltip>
-      <v-alert v-if="api_hints && action_api_hint"
-          color="orange"
-          dense
-          text
-          class="api_hint"
-      >
-          {{action_api_hint}}
-      </v-alert>
     </v-row>
   </div>
 </template>
@@ -97,9 +88,28 @@
 </style>
 
 <script>
-module.exports = {
-  props: ['label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint', 'label_api_hint',
-          'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'auto_update_result', 'add_to_viewer_hint',
-          'action_disabled', 'action_spinner', 'action_label', 'action_api_hint', 'action_tooltip', 'api_hints']
+  module.exports = {
+    props: ['add_results_api_hint',
+            'label', 'label_default', 'label_auto', 'label_invalid_msg', 'label_overwrite', 'label_label', 'label_hint',
+            'add_to_viewer_items', 'add_to_viewer_selected', 'add_to_viewer_hint', 'auto_update_result',
+            'action_disabled', 'action_spinner', 'action_label', 'action_api_hint', 'action_tooltip', 'api_hints'],
+    computed: {
+      actionButtonText() {
+        if (this.api_hints && this.action_api_hint) {
+          return this.action_api_hint;
+        } else if (this.label_overwrite) {
+          return this.action_label + ' (Overwrite)';
+        } else {
+          return this.action_label;
+        }
+      },
+      addToViewerText() {
+        if (this.api_hints && this.add_results_api_hint) {
+          return this.add_results_api_hint + '.viewer = \'' + this.add_to_viewer_selected+'\'';
+        } else {
+          return 'Show in ' + this.add_to_viewer_items[1].label;
+        }
+      }
+    }
 };
 </script>
