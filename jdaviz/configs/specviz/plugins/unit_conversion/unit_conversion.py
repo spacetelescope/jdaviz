@@ -180,10 +180,14 @@ class UnitConversion(PluginTemplateMixin):
             dc_unit = self.app.data_collection[0].get_component("flux").units
             self.angle_unit.choices = create_angle_equivalencies_list(dc_unit)
             self.angle_unit.selected = self.angle_unit.choices[0]
-            self.sb_unit = self._append_angle_correctly(
+            sb_unit = self._append_angle_correctly(
                 self.flux_unit.selected,
                 self.angle_unit.selected
             )
+            self.hub.broadcast(GlobalDisplayUnitChanged('sb',
+                                                        sb_unit,
+                                                        sender=self))
+
             if not self.flux_unit.selected:
                 y_display_unit = self.spectrum_viewer.state.y_display_unit
                 self.flux_unit.selected = (str(u.Unit(y_display_unit * u.sr)))
@@ -242,13 +246,12 @@ class UnitConversion(PluginTemplateMixin):
 
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
+            self.spectrum_viewer.reset_limits()
             self.hub.broadcast(
                 GlobalDisplayUnitChanged(
                     "flux" if name == "flux_unit_selected" else "sb", flux_or_sb, sender=self
                     )
                 )
-            self.spectrum_viewer.reset_limits()
-
         if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
             self.flux_or_sb_selected = 'Flux'
         else:
@@ -325,4 +328,7 @@ class UnitConversion(PluginTemplateMixin):
         else:
             # append angle if there are no parentheses
             sb_unit = flux_unit + ' / ' + angle_unit
+
+        if sb_unit:
+            self.sb_unit = sb_unit
         return sb_unit
