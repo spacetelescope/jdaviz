@@ -208,6 +208,9 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Fixed the data menu in Model Fitting not being populated if Cube Fit was toggled
+  while a spectral subset was selected. [#3123]
+
 Cubeviz
 ^^^^^^^
 
