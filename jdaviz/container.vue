@@ -118,8 +118,8 @@
   border-top-left-radius: 4px;
 }
 .imviz div.v-card.v-card--flat.v-sheet.v-sheet--tile {
-  /* black background beyond edges of canvas for canvas rotation */
-  background-color: black
+  /* this used to be a black background beyond edges of canvas for canvas rotation */
+  background-color: white
 }
 </style>
 
