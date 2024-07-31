@@ -71,6 +71,9 @@ Cubeviz
 
 - Spectral Extraction: renamed ``collapse_to_spectrum(...)`` to ``extract(...)``. [#2859]
 
+- Generic FITS parsing now goes through ``specutils`` loaders first, if possible.
+  If a ``specutils`` loader is used, uncertainty is converted to standard deviation type. [#3119]
+
 - Custom Spectrum1D writer format ``jdaviz-cube`` is removed. Use ``wcs1d-fits`` from
   ``specutils`` instead. [#2094]
 
@@ -111,6 +114,11 @@ Cubeviz
   when units are in per steradian. [#2873]
 
 - Mouse over coordinates now responds to the selected surface brightness unit. [#2931]
+
+- Fixed MaNGA cube loading. Uncertainty type is also handled properly now. [#3119]
+
+- Fixed spectral axis value display in Markers plugin. Previously, it failed to display
+  very small values, resulting in zeroes. [#3119]
 
 Imviz
 ^^^^^
