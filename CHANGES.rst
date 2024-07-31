@@ -45,6 +45,8 @@ Mosviz
 Specviz
 ^^^^^^^
 
+- Fixed ``viz.app.get_subsets()`` for XOR mode. [#3124]
+
 Specviz2d
 ^^^^^^^^^
 
@@ -226,8 +228,6 @@ Mosviz
 
 Specviz
 ^^^^^^^
-
-- Fixed ``viz.app.get_subsets()`` for XOR mode. [#3124]
 
 Specviz2d
 ^^^^^^^^^
