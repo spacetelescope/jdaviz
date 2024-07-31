@@ -102,7 +102,7 @@ class UserApiWrapper:
             return item
 
         return {k: _value(getattr(self, k)) for k in self._expose
-                if k not in ('api_hints', 'keep_active')
+                if k not in ('api_hints_enabled', 'keep_active')
                 and k not in self._exclude_from_dict
                 and not hasattr(getattr(self, k), '__call__')}
 
@@ -130,7 +130,7 @@ class PluginUserApi(UserApiWrapper):
       help(plugin_object.show)
     """
     def __init__(self, plugin, expose=[], readonly=[], excl_from_dict=[]):
-        expose = list(set(list(expose) + ['open_in_tray', 'close_in_tray', 'show', 'api_hints']))
+        expose = list(set(list(expose) + ['open_in_tray', 'close_in_tray', 'show', 'api_hints_enabled']))
         if plugin.uses_active_status:
             expose += ['keep_active', 'as_active']
         self._deprecation_msg = None

@@ -1,19 +1,19 @@
 <template>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints">
+  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       :menu-props="{ left: true }"
       attach
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
-      :label="api_hints && api_hint ? api_hint : (label ? label : 'Data')"
+      :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Data')"
       :hint="hint ? hint : 'Select data.'"
       :rules="rules ? rules : []"
       :multiple="multiselect"
       :chips="multiselect"
       item-text="label"
       item-value="label"
-      :class="api_hints ? 'api_hint' : null"
+      :class="api_hints_enabled ? 'api_hint' : null"
       persistent-hint
     >
       <template slot="selection" slot-scope="data">
@@ -62,7 +62,7 @@
 </template>
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect', 'api_hint', 'api_hints'],
+  props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect', 'api_hint', 'api_hints_enabled'],
   methods: {
     isWCSOnlyLayer(item) {
       const wcsOnly = Object.keys(this.$props.viewer.wcs_only_layers).includes(item.name)
