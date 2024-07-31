@@ -180,12 +180,12 @@ class UnitConversion(PluginTemplateMixin):
             dc_unit = self.app.data_collection[0].get_component("flux").units
             self.angle_unit.choices = create_angle_equivalencies_list(dc_unit)
             self.angle_unit.selected = self.angle_unit.choices[0]
-            sb_unit = self._append_angle_correctly(
+            self.sb_unit = self._append_angle_correctly(
                 self.flux_unit.selected,
                 self.angle_unit.selected
             )
             self.hub.broadcast(GlobalDisplayUnitChanged('sb',
-                                                        sb_unit,
+                                                        self.sb_unit,
                                                         sender=self))
 
             if not self.flux_unit.selected:
@@ -322,6 +322,9 @@ class UnitConversion(PluginTemplateMixin):
         ]
 
     def _append_angle_correctly(self, flux_unit, angle_unit):
+        if angle_unit not in ['pix', 'sr']:
+            self.sb_unit = flux_unit
+            return flux_unit
         if '(' in flux_unit:
             pos = flux_unit.rfind(')')
             sb_unit = flux_unit[:pos] + ' ' + angle_unit + flux_unit[pos:]
@@ -331,4 +334,5 @@ class UnitConversion(PluginTemplateMixin):
 
         if sb_unit:
             self.sb_unit = sb_unit
+
         return sb_unit
