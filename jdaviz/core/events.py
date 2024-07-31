@@ -343,11 +343,11 @@ class SliceToolStateMessage(Message):
 
 class LinkUpdatedMessage(Message):
     '''Message generated when the WCS/pixel linking is changed'''
-    def __init__(self, link_type, wcs_use_fallback, wcs_use_affine, *args, **kwargs):
+    def __init__(self, link_type, wcs_use_fallback, fast_approximation, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._link_type = link_type
         self._wcs_use_fallback = wcs_use_fallback
-        self._wcs_use_affine = wcs_use_affine
+        self._fast_approximation = fast_approximation
 
     @property
     def link_type(self):
@@ -358,8 +358,8 @@ class LinkUpdatedMessage(Message):
         return self._wcs_use_fallback
 
     @property
-    def wcs_use_affine(self):
-        return self._wcs_use_affine
+    def fast_approximation(self):
+        return self._fast_approximation
 
 
 class ExitBatchLoadMessage(Message):

@@ -193,7 +193,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                 self._change_overlay(overlay_selected=choice, center_the_overlay=False)
 
     def vue_link_by_wcs(self, *args):
-        # call other plugin so that other options (wcs_use_affine, wcs_use_fallback)
+        # call other plugin so that other options (fast_approximation, wcs_use_fallback)
         # are retained.  Remove this method if support for plotting footprints
         # when pixel-linked is reintroduced.
         self.app._jdaviz_helper.plugins['Orientation'].link_type = 'WCS'

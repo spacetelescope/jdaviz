@@ -14,12 +14,12 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
         lc_plugin = self.imviz.plugins['Orientation']
 
         lc_plugin.link_type = 'WCS'
-        lc_plugin.wcs_use_affine = False
+        lc_plugin.fast_approximation = False
         assert self.imviz.get_link_type("Default orientation", "has_wcs_2[SCI,1]") == "wcs"
 
-        # wcs_use_affine should revert/default to True when change back to Pixels.
+        # fast_approximation should revert/default to True when change back to Pixels.
         lc_plugin.link_type = 'Pixels'
-        assert lc_plugin.wcs_use_affine is True
+        assert lc_plugin.fast_approximation is True
         assert self.imviz.get_link_type("has_wcs_1[SCI,1]", "has_wcs_2[SCI,1]") == "pixels"
 
         assert self.imviz.get_link_type("has_wcs_1[SCI,1]", "has_wcs_1[SCI,1]") == "self"
