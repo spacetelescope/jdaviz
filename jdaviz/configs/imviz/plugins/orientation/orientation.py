@@ -1,3 +1,5 @@
+import logging
+
 from astropy import units as u
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from glue.core.link_helpers import LinkSame
@@ -141,11 +143,35 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         return PluginUserApi(
             self,
             expose=(
-                'align_by', 'fast_approximation', 'delete_subsets',
-                'viewer', 'orientation',
+                'align_by', 'link_type', 'fast_approximation', 'wcs_use_affine',
+                'delete_subsets', 'viewer', 'orientation',
                 'rotation_angle', 'east_left', 'add_orientation'
             )
         )
+
+    @property
+    def link_type(self):
+        logging.warning("DeprecationWarning: link_type has been replaced by align_by and will "
+                        "be removed in a future version")
+        return self.align_by
+
+    @link_type.setter
+    def link_type(self, link_type):
+        logging.warning("DeprecationWarning: link_type has been replaced by align_by and will "
+                        "be removed in a future version")
+        self.align_by = link_type
+
+    @property
+    def wcs_use_affine(self):
+        logging.warning("DeprecationWarning: wcs_use_affine has been replaced by "
+                        "fast_approximation and will be removed in a future version")
+        return self.fast_approximation
+
+    @wcs_use_affine.setter
+    def wcs_use_affine(self, wcs_use_affine):
+        logging.warning("DeprecationWarning: wcs_use_affine has been replaced by "
+                        "fast_approximation and will be removed in a future version")
+        self.fast_approximation = wcs_use_affine
 
     def _link_image_data(self):
         self.linking_in_progress = True
