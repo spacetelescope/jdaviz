@@ -17,3 +17,6 @@ Parsers API
 
 .. automodapi:: jdaviz.configs.specviz2d.plugins.parsers
    :no-inheritance-diagram:
+
+.. automodapi:: jdaviz.configs.rampviz.plugins.parsers
+   :no-inheritance-diagram:

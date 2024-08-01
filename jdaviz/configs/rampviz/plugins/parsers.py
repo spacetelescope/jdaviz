@@ -17,6 +17,8 @@ except ImportError:
 else:
     HAS_ROMAN_DATAMODELS = True
 
+__all__ = ['parse_data']
+
 
 @data_parser_registry("ramp-data-parser")
 def parse_data(app, file_obj, data_type=None, data_label=None,
