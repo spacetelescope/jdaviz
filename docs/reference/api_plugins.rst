@@ -86,3 +86,6 @@ Plugins API
 
 .. automodapi:: jdaviz.configs.specviz2d.plugins.spectral_extraction.spectral_extraction
    :no-inheritance-diagram:
+
+.. automodapi:: jdaviz.configs.rampviz.plugins.ramp_extraction.ramp_extraction
+   :no-inheritance-diagram:

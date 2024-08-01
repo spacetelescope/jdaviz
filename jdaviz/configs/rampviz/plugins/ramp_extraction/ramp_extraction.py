@@ -30,7 +30,7 @@ __all__ = ['RampExtraction']
 class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                      DatasetSelectMixin, AddResultsMixin):
     """
-    See the :ref:`Ramp Extraction Plugin Documentation <rampex>` for more details.
+    See the :ref:`Ramp Extraction Plugin Documentation <ramp-extraction>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
@@ -43,7 +43,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Method to use for extracting a ramp profile
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
-    * :meth:`collapse`
+    * :meth:`extract`
     """
     template_file = __file__, "ramp_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)

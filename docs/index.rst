@@ -55,6 +55,16 @@ Jdaviz
 
          Jump to Mosviz
 
+   .. grid-item-card::
+      :img-top: logos/cube.svg
+
+      .. button-ref:: rampviz/index
+         :expand:
+         :color: primary
+         :click-parent:
+
+         Jump to Rampviz
+
 ``jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work

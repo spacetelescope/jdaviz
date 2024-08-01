@@ -37,7 +37,7 @@ __all__ = ['SpectralExtraction']
 class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                          DatasetSelectMixin, AddResultsMixin):
     """
-    See the :ref:`Spectral Extraction Plugin Documentation <spex>` for more details.
+    See the :ref:`Spectral Extraction Plugin Documentation <spectral-extraction>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
