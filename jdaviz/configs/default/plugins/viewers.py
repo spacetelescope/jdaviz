@@ -241,7 +241,10 @@ class JdavizViewerMixin(WithCache):
             )
             if layer.visible and not layer_is_wcs_only:
                 prefix_icon, subset_type = _get_layer_info(layer)
-                if self.__class__.__name__ == 'CubevizProfileView' and subset_type == 'spatial':
+                if (
+                    subset_type == 'spatial' and
+                    self.__class__.__name__ in ('CubevizProfileView', 'RampvizProfileView')
+                ):
                     # do not show spatial subsets in spectral-viewer
                     continue
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),
@@ -531,8 +534,9 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         else:
             # Check if the new data flux unit is actually compatible since flux not linked.
             try:
-                uc.to_unit(data, data.find_component_id("flux"), [1, 1],
-                           u.Unit(self.state.y_display_unit))  # Error if incompatible
+                if self.state.y_display_unit not in ['None', None, 'DN']:
+                    uc.to_unit(data, data.find_component_id("flux"), [1, 1],
+                               u.Unit(self.state.y_display_unit))  # Error if incompatible
             except Exception as err:
                 # Raising exception here introduces a dirty state that messes up next load_data
                 # but not raising exception also causes weird behavior unless we remove the data
@@ -550,7 +554,12 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         if reset_plot_axes:
             x_units = data.get_component(self.state.x_att.label).units
-            y_units = data.get_component("flux").units
+
+            y_axis_component = (
+                'flux' if 'flux' in [comp.label for comp in self.state.layers[0].layer.components]
+                else 'data'
+            )
+            y_units = data.get_component(y_axis_component).units
             with delay_callback(self.state, "x_display_unit", "y_display_unit"):
                 self.state.x_display_unit = x_units if len(x_units) else None
                 self.state.y_display_unit = y_units if len(y_units) else None
@@ -712,7 +721,10 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
     def set_plot_axes(self):
         # Set y axes labels for the spectrum viewer
         y_display_unit = self.state.y_display_unit
-        y_unit = u.Unit(y_display_unit) if y_display_unit else u.dimensionless_unscaled
+        y_unit = (
+            u.Unit(y_display_unit) if y_display_unit and y_display_unit != 'None'
+            else u.dimensionless_unscaled
+        )
 
         # Get local units.
         locally_defined_flux_units = [
@@ -735,7 +747,11 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
             flux_unit_type = "Surface Brightness"
         elif any(y_unit.is_equivalent(unit) for unit in locally_defined_flux_units):
             flux_unit_type = 'Flux'
-        elif y_unit.is_equivalent(u.electron / u.s) or y_unit.physical_type == 'dimensionless':
+        elif (
+                y_unit.is_equivalent(u.DN) or
+                y_unit.is_equivalent(u.electron / u.s) or
+                y_unit.physical_type == 'dimensionless'
+        ):
             # electron / s or 'dimensionless_unscaled' should be labeled counts
             flux_unit_type = "Counts"
         elif y_unit.is_equivalent(u.W):
@@ -758,12 +774,21 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
             spectral_axis_unit_type = "Frequency"
         elif x_unit.is_equivalent(u.pixel):
             spectral_axis_unit_type = "Pixel"
+        elif x_unit.is_equivalent(u.dimensionless_unscaled):
+            # case for rampviz
+            spectral_axis_unit_type = "Group"
         else:
             spectral_axis_unit_type = str(x_unit.physical_type).title()
 
         with self.figure.hold_sync():
-            self.figure.axes[0].label = f"{spectral_axis_unit_type} [{self.state.x_display_unit}]"
-            self.figure.axes[1].label = f"{flux_unit_type} [{self.state.y_display_unit}]"
+            self.figure.axes[0].label = f"{spectral_axis_unit_type}" + (
+                f" [{self.state.x_display_unit}]"
+                if self.state.x_display_unit not in ["None", None] else ""
+            )
+            self.figure.axes[1].label = f"{flux_unit_type}" + (
+                f"[{self.state.y_display_unit}]"
+                if self.state.y_display_unit not in ["None", None] else ""
+            )
 
             # Make it so axis labels are not covering tick numbers.
             self.figure.fig_margin["left"] = 95
