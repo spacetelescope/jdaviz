@@ -41,7 +41,7 @@ Instrument footprints and data quality arrays, from JWebbinar 05/2024
 
         <iframe width="560" height="315" src="https://www.youtube.com/embed/3O5ZzDAJR4o?si=suMS2cW7Tmr2Vz5j" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
-Interact with the viewer form the notebook, from JWebbinar 02/2023
+Interact with the viewer from the notebook, from JWebbinar 02/2023
 ----------------------------------------------------------------------
 
 .. raw:: html
