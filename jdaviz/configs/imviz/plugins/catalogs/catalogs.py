@@ -171,8 +171,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 self.table.add_item(row_info)
 
         elif self.catalog_selected == 'Gaia':
-            from astroquery.gaia import Gaia
-            from astroquery.gaia import conf
+            from astroquery.gaia import Gaia, conf
 
             with conf.set_temp("ROW_LIMIT", self.max_gaia_sources):
                 sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
