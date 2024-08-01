@@ -150,16 +150,11 @@ class UnitConversion(PluginTemplateMixin):
             return
         self.spectrum_viewer.set_plot_axes()
 
-        if check_if_unit_is_per_solid_angle(y_unit):
-            flux_or_sb = 'Surface Brightness'
-        else:
-            flux_or_sb = 'Flux'
-
         x_u = u.Unit(self.spectral_unit.selected)
         y_unit = _valid_glue_display_unit(y_unit, self.spectrum_viewer, 'y')
         y_u = u.Unit(y_unit)
 
-        if flux_or_sb == 'Flux' and y_unit != self.flux_unit.selected:
+        if not check_if_unit_is_per_solid_angle(y_unit) and y_unit != self.flux_unit.selected:
             flux_choices = create_flux_equivalencies_list(y_u, x_u)
             # ensure that original entry is in the list of choices
             if not np.any([y_u == u.Unit(choice) for choice in flux_choices]):
@@ -168,9 +163,9 @@ class UnitConversion(PluginTemplateMixin):
             self.flux_unit.choices = flux_choices
             self.flux_unit.selected = y_unit
 
-        # if the spectral axis is set to surface brightness,
+        # if the y-axis is set to surface brightness,
         # untranslatable units need to be removed from the flux choices
-        if self.flux_or_sb_selected == 'Surface Brightness':
+        if check_if_unit_is_per_solid_angle(y_unit):
             updated_flux_choices = list(set(create_flux_equivalencies_list(y_u * u.sr, x_u))
                                         - set(units_to_strings(self._untranslatable_units)))
             self.flux_unit.choices = updated_flux_choices
@@ -191,9 +186,6 @@ class UnitConversion(PluginTemplateMixin):
             if not self.flux_unit.selected:
                 y_display_unit = self.spectrum_viewer.state.y_display_unit
                 self.flux_unit.selected = (str(u.Unit(y_display_unit * u.sr)))
-
-        if check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
-            self.flux_or_sb = 'Flux'
 
     @observe('spectral_unit_selected')
     def _on_spectral_unit_changed(self, *args):
