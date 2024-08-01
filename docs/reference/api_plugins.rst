@@ -48,6 +48,9 @@ Plugins API
 .. automodapi:: jdaviz.configs.cubeviz.plugins.slice.slice
    :no-inheritance-diagram:
 
+.. automodapi:: jdaviz.configs.cubeviz.plugins.spectral_extraction.spectral_extraction
+   :no-inheritance-diagram:
+
 .. automodapi:: jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple
    :no-inheritance-diagram:
 
