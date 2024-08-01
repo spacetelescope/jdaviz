@@ -88,23 +88,18 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
 def test_conv_no_data(specviz_helper, spectrum1d):
     """plugin unit selections won't have valid choices yet, preventing
     attempting to set display units."""
-    plg = specviz_helper.plugins["Unit Conversion"]
     # spectrum not load is in Flux units, sb_unit and flux_unit
     # should be enabled, flux_or_sb should not be
-    assert hasattr(plg, 'sb_unit')
-    assert hasattr(plg, 'flux_unit')
-    assert not hasattr(plg, 'flux_or_sb')
+    plg = specviz_helper.plugins["Unit Conversion"]
     with pytest.raises(ValueError, match="no valid unit choices"):
         plg.spectral_unit = "micron"
     assert len(specviz_helper.app.data_collection) == 0
 
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
-    plg = specviz_helper.plugins["Unit Conversion"]
 
-    # spectrum loaded in Flux units, make sure sb_units don't
-    # display in the API and exposed translation isn't possible
+    # make sure we don't expose translations in Specviz
     assert hasattr(plg, 'flux_unit')
-    assert not hasattr(plg, 'sb_unit')
+    assert hasattr(plg, 'angle_unit')
     assert not hasattr(plg, 'flux_or_sb')
 
 
@@ -198,7 +193,7 @@ def test_sb_unit_conversion(cubeviz_helper):
     uc_plg.flux_or_sb.selected = 'Surface Brightness'
 
     # Surface Brightness conversion
-    uc_plg.sb_unit = 'Jy / sr'
+    uc_plg.flux_unit = 'Jy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.Jy / u.sr
     label_mouseover = cubeviz_helper.app.session.application._tools["g-coords-info"]
@@ -214,7 +209,7 @@ def test_sb_unit_conversion(cubeviz_helper):
             "204.9987654313 27.0008999946 (deg)")
 
     # Try a second conversion
-    uc_plg.sb_unit = 'W / Hz sr m2'
+    uc_plg.flux_unit = 'W / Hz m2'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     assert y_display_unit == u.Unit("W / (Hz sr m2)")
 
@@ -230,7 +225,7 @@ def test_sb_unit_conversion(cubeviz_helper):
     # really a translation test, test_unit_translation loads a Flux
     # cube, this test load a Surface Brightness Cube, this ensures
     # two-way translation
-    uc_plg.sb_unit = 'MJy / sr'
+    uc_plg.flux_unit = 'MJy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     label_mouseover._viewer_mouse_event(
         flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
@@ -241,10 +236,10 @@ def test_sb_unit_conversion(cubeviz_helper):
             "204.9987654313 27.0008999946 (deg)")
 
     uc_plg._obj.flux_or_sb_selected = 'Flux'
-    uc_plg.flux_unit = 'MJy'
+    uc_plg.flux_unit = 'Jy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
-    assert y_display_unit == u.MJy
+    assert y_display_unit == u.Jy
 
     la = cubeviz_helper.plugins['Line Analysis']._obj
     assert la.dataset.get_selected_spectrum(use_display_units=True)

@@ -334,7 +334,7 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
 
     # now change surface brightness units in the unit conversion plugin
 
-    uc.sb_unit = 'Jy / sr'
+    uc.flux_unit = 'Jy'
 
     # and make sure this change is propogated
     output_unit_moment_0 = mm.output_unit_items[0]

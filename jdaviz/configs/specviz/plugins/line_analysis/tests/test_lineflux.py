@@ -115,10 +115,12 @@ def test_unit_gaussian_mixed_units_per_steradian(specviz_helper):
     '''
     # unit-flux gaussian in wavelength space, mixed units, per steradian
     lam_a = np.arange(1, 2, 0.001)*u.Angstrom
-    flx_wave = _gauss_with_unity_area(lam_a.value, mn, sig)*1E3*u.erg/u.s/u.cm**2/u.Angstrom/u.sr
+    # test changed from Surface Brightness to Flux,
+    # u.erg/u.s/u.cm**2/u.Angstrom/u.sr in untranslatable units (check unit_conversion.py)
+    flx_wave = _gauss_with_unity_area(lam_a.value, mn, sig)*1E3*u.erg/u.s/u.cm**2/u.Angstrom
     fl_wave = Spectrum1D(spectral_axis=lam_a, flux=flx_wave)
 
     specviz_helper.load_data(fl_wave)
     lineflux_result = _calculate_line_flux(specviz_helper)
     assert_quantity_allclose(float(lineflux_result['result']) * u.Unit(lineflux_result['unit']),
-                             1*u.Unit('W/(m2sr)'))
+                             1*u.Unit('W/(m2)'))

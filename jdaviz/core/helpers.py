@@ -486,14 +486,21 @@ class ConfigHelper(HubListener):
                     else:
                         # if not specified as NDUncertainty, assume stddev:
                         new_uncert = uncertainty
-                    new_uncert_converted = flux_conversion(data, new_uncert.quantity.value,
-                                                           new_uncert.unit, flux_unit)
-                    new_uncert = StdDevUncertainty(new_uncert_converted, unit=flux_unit)
+                    if ('_pixel_scale_factor' in data.meta):
+                        new_uncert_converted = flux_conversion(data, new_uncert.quantity.value,
+                                                               new_uncert.unit, flux_unit)
+                        new_uncert = StdDevUncertainty(new_uncert_converted, unit=flux_unit)
+                    else:
+                        new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
+
                 else:
                     new_uncert = None
-
-                new_flux = flux_conversion(data, data.flux.value, data.flux.unit,
-                                           flux_unit) * u.Unit(flux_unit)
+                if ('_pixel_scale_factor' in data.meta):
+                    new_flux = flux_conversion(data, data.flux.value, data.flux.unit,
+                                               flux_unit) * u.Unit(flux_unit)
+                else:
+                    new_flux = flux_conversion(data, data.flux.value, data.flux.unit,
+                                               data.flux.unit) * u.Unit(data.flux.unit)
                 new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                      data.spectral_axis.unit,
                                                      spectral_unit)

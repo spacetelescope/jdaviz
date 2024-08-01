@@ -90,38 +90,28 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     return sorted(units_to_strings(local_units)) + flux_unit_equivalencies_titles
 
 
-def create_sb_equivalencies_list(sb_unit, spectral_axis_unit):
-    """Get all possible conversions for flux from current flux units."""
-    if ((sb_unit in (u.count, u.dimensionless_unscaled))
-            or (spectral_axis_unit in (u.pix, u.dimensionless_unscaled))):
-        return []
+def create_angle_equivalencies_list(unit):
+    # first, convert string to u.Unit obj.
+    # this will take care of some formatting consistency like
+    # turning something like Jy / (degree*degree) to Jy / deg**2
+    # and erg sr^1 to erg / sr
+    if isinstance(unit, u.core.Unit) or isinstance(unit, u.core.CompositeUnit):
+        unit_str = unit.to_string()
+    elif isinstance(unit, str):
+        unit = u.Unit(unit)
+        unit_str = unit.to_string()
+    elif unit == 'ct':
+        return ['pix']
+    else:
+        raise ValueError('Unit must be u.Unit, or string that can be converted into a u.Unit')
 
-    # Get unit equivalencies. Value passed into u.spectral_density() is irrelevant.
-    try:
-        curr_sb_unit_equivalencies = sb_unit.find_equivalent_units(
-            equivalencies=u.spectral_density(1 * spectral_axis_unit),
-            include_prefix_units=False)
-    except u.core.UnitConversionError:
-        return []
-
-    locally_defined_sb_units = ['Jy / sr', 'mJy / sr',
-                                'uJy / sr', 'MJy / sr',
-                                'W / (Hz sr m2)',
-                                'eV / (Hz s sr m2)',
-                                'AB / sr'
-                                ]
-
-    local_units = [u.Unit(unit) for unit in locally_defined_sb_units]
-
-    # Remove overlap units.
-    curr_sb_unit_equivalencies = list(set(curr_sb_unit_equivalencies)
-                                      - set(local_units))
-
-    # Convert equivalencies into readable versions of the units and sort them alphabetically.
-    sb_unit_equivalencies_titles = sorted(units_to_strings(curr_sb_unit_equivalencies))
-
-    # Concatenate both lists with the local units coming first.
-    return sorted(units_to_strings(local_units)) + sb_unit_equivalencies_titles
+    if '/' in unit_str:
+        # might be comprised of several units in denom.
+        denom = unit_str.split('/')[-1].split()
+        return denom
+    else:
+        # this could be where force / u.pix
+        return ['pix']
 
 
 def check_if_unit_is_per_solid_angle(unit):
