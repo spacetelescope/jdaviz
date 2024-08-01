@@ -95,9 +95,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 
         self.align_by = SelectPluginComponent(self,
-                                               items='align_by_items',
-                                               selected='align_by_selected',
-                                               manual_options=['Pixels', 'WCS'])
+                                              items='align_by_items',
+                                              selected='align_by_selected',
+                                              manual_options=['Pixels', 'WCS'])
 
         self.orientation = LayerSelect(
             self, 'orientation_layer_items', 'orientation_layer_selected', 'viewer_selected',

@@ -36,6 +36,9 @@ Imviz
 
 - Added Gaia catalog to Catalog plugin. [#3090]
 
+- Updated `link_type` to `align_by` and `wcs_use_affine` to `fast_approximation` in
+  Orientation plugin API to better match UI text. [#3128]
+
 Mosviz
 ^^^^^^
 
