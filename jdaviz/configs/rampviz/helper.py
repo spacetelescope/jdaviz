@@ -1,50 +1,101 @@
-from jdaviz.core.helpers import CubeConfigHelper
 from jdaviz.core.events import SliceSelectSliceMessage
+from jdaviz.core.events import AddDataMessage, SnackbarMessage
+from jdaviz.core.helpers import CubeConfigHelper
+from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
 
 __all__ = ['Rampviz']
+
+_temporal_axis_names = ['group', 'groups']
 
 
 class Rampviz(CubeConfigHelper):
     """Rampviz Helper class"""
     _default_configuration = 'rampviz'
-    _default_profile_viewer_reference_name = "integration-viewer"
-    _default_diff_viewer_reference_name = "diff-viewer"
     _default_group_viewer_reference_name = "group-viewer"
-    _default_image_viewer_reference_name = "image-viewer"
+    _default_diff_viewer_reference_name = "diff-viewer"
+    _default_integration_viewer_reference_name = "integration-viewer"
 
     _loaded_flux_cube = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def load_data(self, data, data_label=None, override_cube_limit=False, **kwargs):
+        self.cube_cache = {}
+
+        self._update_slice_defaults()
+
+    def _update_slice_defaults(self):
+        available_plugins = [
+            tray_item['name'] for tray_item in self.app.state.tray_items
+        ]
+        if 'cube-slice' in available_plugins:
+            slice_plugin = self.app.get_tray_item_from_name('cube-slice')
+            slice_plugin._cube_viewer_default_label = self._default_group_viewer_reference_name
+            slice_plugin._cube_viewer_cls = RampvizImageView
+
+    def load_data(self, data, data_label=None, **kwargs):
         """
         Load and parse a data cube with Cubeviz.
         (Note that only one cube may be loaded per Cubeviz instance.)
 
         Parameters
         ----------
-        data : str, `~astropy.io.fits.HDUList`, or ndarray
-            A string file path, astropy FITS object pointing to the
-            data cube, a spectrum object, or a Numpy array cube.
+        data : str, `~roman_datamodels.datamodels.DataModel`,
+               `~astropy.nddata.NDDataArray` or ndarray
+            A string file path, Roman DataModel object pointing to the
+            data cube, an NDDataArray, or a Numpy array.
             If plain array is given, axes order must be ``(x, y, z)``.
         data_label : str or `None`
             Data label to go with the given data. If not given,
             one will be automatically generated.
-        override_cube_limit : bool
-            Override internal cube count limitation and load the data anyway.
-            Setting this to `True` is not recommended unless you know what
-            you are doing.
         **kwargs : dict
             Extra keywords accepted by Jdaviz application-level parser.
 
         """
-        if not override_cube_limit and len(self.app.state.data_items) != 0:
-            raise RuntimeError('Only one cube may be loaded per Cubeviz instance')
         if data_label:
             kwargs['data_label'] = data_label
 
-        super().load_data(data, parser_reference="cubeviz-data-parser", **kwargs)
+        super().load_data(data, parser_reference="ramp-data-parser", **kwargs)
+
+        self.app.hub.subscribe(self, AddDataMessage,
+                               handler=self._set_x_axis)
+
+        if 'Ramp Extraction' not in self.plugins:  # pragma: no cover
+            msg = SnackbarMessage(
+                "Automatic ramp extraction requires the Ramp Extraction plugin to be enabled",  # noqa
+                color='error', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
+        else:
+            try:
+                self.plugins['Ramp Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
+            except Exception as err:
+                msg = SnackbarMessage(
+                    "Automatic ramp extraction for the entire cube failed."
+                    f" See the ramp extraction plugin to perform a custom extraction: {err}",
+                    color='error', sender=self, timeout=10000)
+            else:
+                msg = SnackbarMessage(
+                    "The extracted ramp profile was generated automatically for the entire cube."
+                    " See the ramp extraction plugin for details or to"
+                    " perform a custom extraction.",
+                    color='warning', sender=self, timeout=10000)
+            self.app.hub.broadcast(msg)
+
+    def _set_x_axis(self, msg):
+        viewer = self.app.get_viewer(self._default_integration_viewer_reference_name)
+        if msg.viewer_id != viewer.reference_id:
+            return
+        ref_data = viewer.state.reference_data
+        if ref_data and ref_data.ndim == 3:
+            for att_name in _temporal_axis_names:
+                if att_name in ref_data.component_ids():
+                    if viewer.state.x_att != ref_data.id[att_name]:
+                        viewer.state.x_att = ref_data.id[att_name]
+                        viewer.state.reset_limits()
+                    break
+            else:
+                viewer.state.x_att = ref_data.id["Pixel Axis 2 [x]"]
+                viewer.state.reset_limits()
 
     def select_group(self, group_index):
         """
@@ -69,7 +120,7 @@ class Rampviz(CubeConfigHelper):
                  temporal_subset=None, cls=None, use_display_units=False):
         """
         Returns data with name equal to ``data_label`` of type ``cls`` with subsets applied from
-        ``spectral_subset``, if applicable.
+        ``temporal_subset``, if applicable.
 
         Parameters
         ----------

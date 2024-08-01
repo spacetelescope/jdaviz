@@ -1,12 +1,14 @@
+import logging
 import os
 import numpy as np
+import astropy.units as u
 from astropy.io import fits
+from astropy.nddata import NDData, NDDataArray
+from astropy.time import Time
 
-from jdaviz.utils import download_uri_to_path
-from jdaviz.configs.cubeviz.plugins.parsers import (
-    _parse_ndarray, _parse_hdulist, _parse_gif
-)
 from jdaviz.core.registries import data_parser_registry
+from jdaviz.configs.cubeviz.plugins.parsers import _get_data_type_by_hdu
+from jdaviz.utils import standardize_metadata, download_uri_to_path
 
 try:
     from roman_datamodels import datamodels as rdd
@@ -16,7 +18,7 @@ else:
     HAS_ROMAN_DATAMODELS = True
 
 
-@data_parser_registry("rampviz-data-parser")
+@data_parser_registry("ramp-data-parser")
 def parse_data(app, file_obj, data_type=None, data_label=None,
                parent=None, cache=None, local_path=None, timeout=None):
     """
@@ -48,9 +50,11 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         `~astroquery.mast.Conf.timeout`).
     """
 
-    flux_viewer_reference_name = app._jdaviz_helper._default_group_viewer_reference_name
-    uncert_viewer_reference_name = app._jdaviz_helper._default_diff_viewer_reference_name
-    spectrum_viewer_reference_name = app._jdaviz_helper._default_profile_viewer_reference_name
+    group_viewer_reference_name = app._jdaviz_helper._default_group_viewer_reference_name
+    diff_viewer_reference_name = app._jdaviz_helper._default_diff_viewer_reference_name
+    integration_viewer_reference_name = (
+        app._jdaviz_helper._default_integration_viewer_reference_name
+    )
 
     if data_type is not None and data_type.lower() not in ('flux', 'mask', 'uncert'):
         raise TypeError("Data type must be one of 'flux', 'mask', or 'uncert' "
@@ -64,25 +68,22 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
     if isinstance(file_obj, fits.hdu.hdulist.HDUList):
         _parse_hdulist(
             app, file_obj, file_name=data_label,
-            flux_viewer_reference_name=flux_viewer_reference_name,
-            uncert_viewer_reference_name=uncert_viewer_reference_name
+            group_viewer_reference_name=group_viewer_reference_name,
+            diff_viewer_reference_name=diff_viewer_reference_name,
+            integration_viewer_reference_name=integration_viewer_reference_name
         )
     elif isinstance(file_obj, str):
-        if file_obj.lower().endswith('.gif'):  # pragma: no cover
-            _parse_gif(app, file_obj, data_label,
-                       flux_viewer_reference_name=flux_viewer_reference_name)
-            return
-        elif file_obj.lower().endswith('.asdf'):
+        if file_obj.lower().endswith('.asdf'):
             if not HAS_ROMAN_DATAMODELS:
                 raise ImportError(
                     "ASDF detected but roman-datamodels is not installed."
                 )
             with rdd.open(file_obj) as pf:
                 _roman_3d_to_glue_data(
-                    app, pf, data_label,
-                    flux_viewer_reference_name=flux_viewer_reference_name,
-                    spectrum_viewer_reference_name=spectrum_viewer_reference_name,
-                    uncert_viewer_reference_name=uncert_viewer_reference_name
+                    app, pf, data_label, parent=parent,
+                    group_viewer_reference_name=group_viewer_reference_name,
+                    diff_viewer_reference_name=diff_viewer_reference_name,
+                    integration_viewer_reference_name=integration_viewer_reference_name
                 )
             return
 
@@ -96,24 +97,34 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         with fits.open(file_obj) as hdulist:
             _parse_hdulist(
                 app, hdulist, file_name=data_label or file_name,
-                flux_viewer_reference_name=flux_viewer_reference_name,
-                uncert_viewer_reference_name=uncert_viewer_reference_name
+                group_viewer_reference_name=group_viewer_reference_name,
+                diff_viewer_reference_name=diff_viewer_reference_name,
+                integration_viewer_reference_name=integration_viewer_reference_name
             )
 
     elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
-        _parse_ndarray(app, file_obj, data_label=data_label, data_type=data_type,
-                       flux_viewer_reference_name=flux_viewer_reference_name,
-                       uncert_viewer_reference_name=uncert_viewer_reference_name)
+        # load 3D cube to group viewer
+        _parse_ndarray(
+            app, file_obj, data_label=data_label, data_type=data_type,
+            viewer_reference_name=group_viewer_reference_name,
+        )
 
-        app.get_tray_item_from_name("Spectral Extraction").disabled_msg = ""
+    elif isinstance(file_obj, (np.ndarray, NDData)) and file_obj.ndim in (1, 2):
+        if file_obj.ndim == 2:
+            app.get_viewer(integration_viewer_reference_name).is2d = True
+        # load 1D profile(s) to integration_viewer
+        _parse_ndarray(
+            app, file_obj, data_label=data_label,
+            viewer_reference_name=integration_viewer_reference_name
+        )
 
     elif HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
         with rdd.open(file_obj) as pf:
             _roman_3d_to_glue_data(
                 app, pf, data_label,
-                flux_viewer_reference_name=flux_viewer_reference_name,
-                spectrum_viewer_reference_name=spectrum_viewer_reference_name,
-                uncert_viewer_reference_name=uncert_viewer_reference_name
+                group_viewer_reference_name=group_viewer_reference_name,
+                diff_viewer_reference_name=diff_viewer_reference_name,
+                integration_viewer_reference_name=integration_viewer_reference_name
             )
 
     else:
@@ -121,8 +132,8 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
 
 
 def _roman_3d_to_glue_data(
-    app, file_obj, data_label,
-    flux_viewer_reference_name=None,
+    app, file_obj, data_label, parent=None,
+    group_viewer_reference_name=None,
     diff_viewer_reference_name=None,
     integration_viewer_reference_name=None,
 ):
@@ -152,26 +163,158 @@ def _roman_3d_to_glue_data(
         np.diff(data, axis=0)
     ])
 
-    # load the `data` cube into what's usually the "flux-viewer"
+    ramp_cube_data_label = f"{data_label}[DATA]"
     _parse_ndarray(
         app,
         file_obj=_swap_axes(data),
-        data_label=f"{data_label}[DATA]",
-        data_type="flux",
-        flux_viewer_reference_name=flux_viewer_reference_name,
+        data_label=ramp_cube_data_label,
+        viewer_reference_name=group_viewer_reference_name,
     )
 
+    app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(_swap_axes(data))
+
     # load the diff of the data cube
-    # into what's usually the "uncert-viewer"
+    ramp_diff_data_label = f"{data_label}[DIFF]"
     _parse_ndarray(
         app,
         file_obj=_swap_axes(diff_data),
-        data_type="uncert",
-        data_label=f"{data_label}[DIFF]",
-        uncert_viewer_reference_name=diff_viewer_reference_name,
+        data_label=ramp_diff_data_label,
+        viewer_reference_name=diff_viewer_reference_name,
     )
+    app._jdaviz_helper.cube_cache[ramp_diff_data_label] = NDDataArray(_swap_axes(diff_data))
 
     # the default collapse function in the profile viewer is "sum",
     # but for ramp files, "median" is more useful:
     viewer = app.get_viewer('integration-viewer')
     viewer.state.function = 'median'
+
+
+def _parse_hdulist(
+    app, hdulist, file_name=None,
+    group_viewer_reference_name=None,
+    diff_viewer_reference_name=None,
+    integration_viewer_reference_name=None
+):
+    if file_name is None and hasattr(hdulist, 'file_name'):
+        file_name = hdulist.file_name
+    else:
+        file_name = file_name or "Unknown HDU object"
+
+    is_loaded = []
+
+    # TODO: This needs refactoring to be more robust.
+    # Current logic fails if there are multiple EXTVER.
+    for hdu in hdulist:
+        if hdu.data is None or not hdu.is_image or hdu.data.ndim != 3:
+            continue
+
+        data_type = _get_data_type_by_hdu(hdu)
+        if not data_type:
+            continue
+
+        # Only load each type once.
+        if data_type in is_loaded:
+            continue
+
+        is_loaded.append(data_type)
+        data_label = app.return_data_label(file_name, hdu.name)
+
+        if 'BUNIT' in hdu.header:
+            try:
+                flux_unit = u.Unit(hdu.header['BUNIT'])
+            except Exception:
+                logging.warning("Invalid BUNIT, using count as data unit")
+                flux_unit = u.count
+        elif data_type == 'mask':  # DQ flags have no unit
+            flux_unit = u.dimensionless_unscaled
+        else:
+            logging.warning("Invalid BUNIT, using count as data unit")
+            flux_unit = u.count
+
+        # flux = hdu.data << flux_unit
+        #
+        # metadata = standardize_metadata(hdu.header)
+        # if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+        #     metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
+        #
+        # # store original WCS in metadata. this is a hacky workaround for converting subsets
+        # # to sky regions, where the parent data of the subset might have dropped spatial WCS info
+        # metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
+        #
+        # sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+        #
+        # app.add_data(sc, data_label)
+
+        # if data_type == 'mask':
+        #     # We no longer auto-populate the mask cube into a viewer
+        #     pass
+        #
+        # elif data_type == 'uncert':
+        #     app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
+        #     app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
+        #
+        # else:  # flux
+        if data_type == 'flux':
+            # Forced wave unit conversion made it lose stuff, so re-add
+            app.data_collection[data_label].get_component("data").units = flux_unit
+            # Add flux to top left image viewer
+            app.add_data_to_viewer(group_viewer_reference_name, data_label)
+            app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
+
+
+def _parse_jwst_level1(
+    app, hdulist, data_label, ext='SCI',
+    viewer_name=None,
+):
+    hdu = hdulist[ext]
+    data_type = _get_data_type_by_hdu(hdu)
+
+    # Manually inject MJD-OBS until we can support GWCS, see
+    # https://github.com/spacetelescope/jdaviz/issues/690 and
+    # https://github.com/glue-viz/glue-astronomy/issues/59
+    if ext == 'SCI' and 'MJD-OBS' not in hdu.header:
+        for key in ('MJD-BEG', 'DATE-OBS'):  # Possible alternatives
+            if key in hdu.header:
+                if key.startswith('MJD'):
+                    hdu.header['MJD-OBS'] = hdu.header[key]
+                    break
+                else:
+                    t = Time(hdu.header[key])
+                    hdu.header['MJD-OBS'] = t.mjd
+                    break
+
+    unit = u.Unit(hdu.header.get('BUNIT', 'count'))
+    flux = hdu.data << unit
+
+    metadata = standardize_metadata(hdu.header)
+    app.data_collection[data_label] = NDData(data=flux, meta=metadata)
+
+    if data_type == 'flux':
+        app.data_collection[-1].get_component("data").units = flux.unit
+
+    if viewer_name is not None:
+        app.add_data_to_viewer(viewer_name, data_label)
+
+    if data_type == 'flux':
+        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
+
+
+def _parse_ndarray(
+    app, file_obj, data_label=None,
+    viewer_reference_name=None,
+    meta=None
+):
+    if data_label is None:
+        data_label = app.return_data_label(file_obj)
+
+    # Cannot change axis to ensure roundtripping within Rampviz.
+    # Axes must already be (x, y, z) at this point.
+
+    if isinstance(file_obj, NDData):
+        ndd = file_obj
+    else:
+        ndd = NDDataArray(data=file_obj, meta=meta)
+    app.add_data(ndd, data_label)
+
+    app.add_data_to_viewer(viewer_reference_name, data_label)
+    app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]

@@ -22,10 +22,9 @@ tray:
   - g-plot-options
   - g-data-quality
   - g-subset-plugin
+  - ramp-extraction
   - g-markers
   - cube-slice
-  - g-unit-conversion
-  - g-collapse
   - export
   - about
 viewer_area:
@@ -34,10 +33,10 @@ viewer_area:
       - container: row
         viewers:
           - name: Flux
-            plot: cubeviz-image-viewer
+            plot: rampviz-image-viewer
             reference: group-viewer
           - name: Difference
-            plot: cubeviz-image-viewer
+            plot: rampviz-image-viewer
             reference: diff-viewer
       - container: row
         viewers:

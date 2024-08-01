@@ -2,6 +2,7 @@ from jdaviz.configs.default.plugins.line_lists.line_list_mixin import LineListMi
 from jdaviz.configs.specviz import Specviz
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.helpers import CubeConfigHelper
+from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 
 __all__ = ['Cubeviz']
 
@@ -23,8 +24,20 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.app.hub.subscribe(self, AddDataMessage,
                                handler=self._set_spectrum_x_axis)
+
+        self._update_slice_defaults()
+
+    def _update_slice_defaults(self):
+        available_plugins = [
+            tray_item['name'] for tray_item in self.app.state.tray_items
+        ]
+        if 'cube-slice' in available_plugins:
+            slice_plugin = self.app.get_tray_item_from_name('cube-slice')
+            slice_plugin._cube_viewer_default_label = self._default_flux_viewer_reference_name
+            slice_plugin._cube_viewer_cls = CubevizImageView
 
     def _set_spectrum_x_axis(self, msg):
         viewer = self.app.get_viewer(self._default_spectrum_viewer_reference_name)

@@ -21,7 +21,7 @@ from ipywidgets.widgets import widget_serialization
 
 import astropy.units as u
 from astropy.io import fits, registry as io_registry
-from astropy.nddata import CCDData, StdDevUncertainty
+from astropy.nddata import NDDataArray, CCDData, StdDevUncertainty
 from regions.core.core import Region
 from specutils import Spectrum1D, SpectralRegion
 from specutils.io.registers import _astropy_has_priorities
@@ -517,7 +517,7 @@ class ConfigHelper(HubListener):
         return data
 
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
-                  mask_subset=None, cls=None, use_display_units=False):
+                  temporal_subset=None, mask_subset=None, cls=None, use_display_units=False):
         list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
         for subset in (spatial_subset, spectral_subset, mask_subset):
             if subset and subset not in list_of_valid_subset_names:
@@ -544,6 +544,11 @@ class ConfigHelper(HubListener):
             # apps which would then need to do their own type checks, if necessary)
             mask_subset = spectral_subset
 
+        if temporal_subset:
+            if mask_subset is not None:
+                raise ValueError("cannot use both mask_subset and spectral_subset")
+            mask_subset = temporal_subset
+
         # End validity checks and start data retrieval
         data = self.app.data_collection[data_label]
 
@@ -555,7 +560,11 @@ class ConfigHelper(HubListener):
             elif data.ndim == 2:
                 cls = CCDData
             elif data.ndim in [1, 3]:
-                cls = Spectrum1D
+                if self.app.config == 'rampviz':
+                    cls = NDDataArray
+                else:
+                    # for cubeviz, specviz, mosviz, this must be a spectrum:
+                    cls = Spectrum1D
 
         object_kwargs = {}
         if cls == Spectrum1D:

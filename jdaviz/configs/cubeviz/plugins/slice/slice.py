@@ -8,9 +8,12 @@ from astropy import units as u
 from astropy.units import UnitsWarning
 from traitlets import Bool, Int, Unicode, observe
 
-from jdaviz.configs.cubeviz.plugins.viewers import (WithSliceIndicator, WithSliceSelection,
-                                                    CubevizImageView)
+from jdaviz.configs.cubeviz.plugins.viewers import (
+    WithSliceIndicator, WithSliceSelection, CubevizImageView
+)
 from jdaviz.configs.cubeviz.helper import _spectral_axis_names
+from jdaviz.configs.rampviz.helper import _temporal_axis_names
+from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (AddDataMessage, RemoveDataMessage, SliceToolStateMessage,
                                 SliceSelectSliceMessage, SliceValueUpdatedMessage,
@@ -24,7 +27,7 @@ from jdaviz.core.user_api import PluginUserApi
 __all__ = ['Slice']
 
 
-@tray_registry('cube-slice', label="Slice", viewer_requirements='spectrum')
+@tray_registry('cube-slice', label="Slice")
 class Slice(PluginTemplateMixin):
     """
     See the :ref:`Slice Plugin Documentation <slice>` for more details.
@@ -44,8 +47,9 @@ class Slice(PluginTemplateMixin):
     * ``show_value``
       Whether to show slice value in label to right of indicator.
     """
-    _cube_viewer_cls = CubevizImageView
-    _cube_viewer_default_label = 'flux-viewer'
+    _cube_viewer_cls = (CubevizImageView, RampvizImageView)
+    _cube_viewer_default_label = None  # must be filled in by helper on initialization
+
     cube_viewer_exists = Bool(True).tag(sync=True)
 
     allow_disable_snapping = Bool(False).tag(sync=True)  # noqa internal use to show and allow disabling snap-to-slice
@@ -137,11 +141,17 @@ class Slice(PluginTemplateMixin):
     @property
     def slice_display_unit_name(self):
         # global display unit "axis" corresponding to the slice axis
-        return 'spectral'
+        if self.app.config == 'cubeviz':
+            return 'spectral'
+        elif self.app.config == 'rampviz':
+            return 'temporal'
 
     @property
     def valid_slice_att_names(self):
-        return _spectral_axis_names + ['Pixel Axis 2 [x]', 'World 0']
+        if self.app.config == 'cubeviz':
+            return _spectral_axis_names + ['Pixel Axis 2 [x]', 'World 0']
+        elif self.app.config == 'rampviz':
+            return _temporal_axis_names + ['Pixel Axis 2 [x]']
 
     @property
     def slice_selection_viewers(self):
@@ -166,7 +176,8 @@ class Slice(PluginTemplateMixin):
         self.cube_viewer_exists = False
 
     def vue_create_cube_viewer(self, *args):
-        self.app._on_new_viewer(NewViewerMessage(self._cube_viewer_cls, data=None, sender=self.app),
+        cls = RampvizImageView if self.app.config == 'rampviz' else CubevizImageView
+        self.app._on_new_viewer(NewViewerMessage(cls, data=None, sender=self.app),
                                 vid=self._cube_viewer_default_label,
                                 name=self._cube_viewer_default_label)
 
@@ -207,6 +218,9 @@ class Slice(PluginTemplateMixin):
             self.value = msg.value
 
     def _on_global_display_unit_changed(self, msg):
+        if not self.app.config == 'cubeviz':
+            return
+
         if msg.axis != self.slice_display_unit_name:
             return
         if not self.value_unit:
