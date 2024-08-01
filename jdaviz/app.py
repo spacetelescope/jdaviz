@@ -325,7 +325,7 @@ class Application(VuetifyTemplate, HubListener):
         self.auto_link = kwargs.pop('auto_link', True)
 
         # Imviz linking
-        self._link_type = 'pixels'
+        self._align_by = 'pixels'
         if self.config == "imviz":
             self._fast_approximation = None
 
@@ -1938,7 +1938,7 @@ class Application(VuetifyTemplate, HubListener):
 
                     # Translate bounds through WCS if needed
                     if (self.config == "imviz" and
-                            self._jdaviz_helper.plugins["Orientation"].link_type == "WCS"):
+                            self._jdaviz_helper.plugins["Orientation"].align_by == "WCS"):
 
                         # Default shape for WCS-only layers is 10x10, but it doesn't really matter
                         # since we only need the angles.
@@ -2219,7 +2219,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
         for viewer_id, viewer in self._viewer_store.items():
-            if orientation_plugin is not None and self._link_type == 'wcs':
+            if orientation_plugin is not None and self._align_by == 'wcs':
                 if viewer.state.reference_data.label == data_label:
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
@@ -2506,12 +2506,12 @@ class Application(VuetifyTemplate, HubListener):
             msg.cls, data=msg.data, show=False)
         viewer.figure_widget.layout.height = '100%'
 
-        linked_by_wcs = self._link_type == 'wcs'
+        linked_by_wcs = self._align_by == 'wcs'
 
         if hasattr(viewer.state, 'linked_by_wcs'):
             orientation_plugin = self._jdaviz_helper.plugins.get('Orientation', None)
             if orientation_plugin is not None:
-                linked_by_wcs = orientation_plugin.link_type.selected == 'WCS'
+                linked_by_wcs = orientation_plugin.align_by.selected == 'WCS'
             elif len(self._viewer_store) and hasattr(self._jdaviz_helper, 'default_viewer'):
                 # The plugin would only not exist for instances of Imviz where the user has
                 # intentionally removed the Orientation plugin, but in that case we will

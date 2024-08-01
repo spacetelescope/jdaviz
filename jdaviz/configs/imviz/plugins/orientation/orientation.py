@@ -448,7 +448,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
             # don't select until reference data are available:
             if ref_data is not None:
-                align_by = viewer.get_align_by(ref_data.label)
+                align_by = viewer.get_alignment_method(ref_data.label)
                 if align_by != 'self':
                     self.align_by_selected = align_by_msg_to_trait[align_by]
             elif not len(viewer.data()):
