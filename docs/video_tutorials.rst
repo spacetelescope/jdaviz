@@ -34,6 +34,13 @@ Create a color-composite image
 
     <iframe width="560" height="315" src="https://www.youtube.com/embed/lAU8QdPXZ14?si=07t2UCJsjvYgwBBQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
+Instrument footprints and data quality arrays, from JWebbinar 05/2024
+---------------------------------------------------------------------
+
+.. raw:: html
+
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/3O5ZzDAJR4o?si=suMS2cW7Tmr2Vz5j" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 Interact with the viewer form the notebook, from the JWebbinar 02/2023
 ----------------------------------------------------------------------
 
@@ -81,6 +88,20 @@ Aperture photometry (old version)
 
 Cubeviz
 =======
+
+Measure distances on the sky
+----------------------------
+
+.. raw:: html
+
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/Sg8WVP0swPI?si=v5Vc8rlHTxzKSr9A" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+Create moment maps, from JWebbinar 05/2024
+------------------------------------------
+
+.. raw:: html
+
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/Ha9aK-bSUWY?si=8TbkiO3UodyiuDY3" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Measure emission line properties, from the JWebbinar 02/2023
 ------------------------------------------------------------
@@ -155,6 +176,13 @@ Line analysis (old version)
 
 Specviz2d
 =========
+
+Extraction and basic analysis, from JWebbinar 05/2024
+-----------------------------------------------------
+
+.. raw:: html
+
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/StAlPSeSPxM?si=PO7u7OjsDtjxbxuO" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Spectral extraction, from the JWebbinar 02/2023
 -----------------------------------------------
