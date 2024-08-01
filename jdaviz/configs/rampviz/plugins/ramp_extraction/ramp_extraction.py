@@ -72,7 +72,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported
-    export_enabled = Bool(True).tag(sync=True)
+    export_enabled = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
