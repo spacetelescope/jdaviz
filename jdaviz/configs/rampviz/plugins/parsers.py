@@ -8,7 +8,7 @@ from astropy.time import Time
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.configs.cubeviz.plugins.parsers import _get_data_type_by_hdu
-from jdaviz.utils import standardize_metadata, download_uri_to_path
+from jdaviz.utils import standardize_metadata, download_uri_to_path, PRIHDR_KEY
 
 try:
     from roman_datamodels import datamodels as rdd
@@ -193,9 +193,7 @@ def _roman_3d_to_glue_data(
 
 def _parse_hdulist(
     app, hdulist, file_name=None,
-    group_viewer_reference_name=None,
-    diff_viewer_reference_name=None,
-    integration_viewer_reference_name=None
+    viewer_reference_name=None
 ):
     if file_name is None and hasattr(hdulist, 'file_name'):
         file_name = hdulist.file_name
@@ -225,43 +223,21 @@ def _parse_hdulist(
             try:
                 flux_unit = u.Unit(hdu.header['BUNIT'])
             except Exception:
-                logging.warning("Invalid BUNIT, using count as data unit")
-                flux_unit = u.count
-        elif data_type == 'mask':  # DQ flags have no unit
-            flux_unit = u.dimensionless_unscaled
+                logging.warning("Invalid BUNIT, using DN as data unit")
+                flux_unit = u.DN
         else:
-            logging.warning("Invalid BUNIT, using count as data unit")
-            flux_unit = u.count
+            logging.warning("Invalid BUNIT, using DN as data unit")
+            flux_unit = u.DN
 
-        # flux = hdu.data << flux_unit
-        #
-        # metadata = standardize_metadata(hdu.header)
-        # if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-        #     metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
-        #
-        # # store original WCS in metadata. this is a hacky workaround for converting subsets
-        # # to sky regions, where the parent data of the subset might have dropped spatial WCS info
-        # metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
-        #
-        # sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
-        #
-        # app.add_data(sc, data_label)
+        flux = hdu.data << flux_unit
+        metadata = standardize_metadata(hdu.header)
+        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+            metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-        # if data_type == 'mask':
-        #     # We no longer auto-populate the mask cube into a viewer
-        #     pass
-        #
-        # elif data_type == 'uncert':
-        #     app.add_data_to_viewer(uncert_viewer_reference_name, data_label)
-        #     app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
-        #
-        # else:  # flux
-        if data_type == 'flux':
-            # Forced wave unit conversion made it lose stuff, so re-add
-            app.data_collection[data_label].get_component("data").units = flux_unit
-            # Add flux to top left image viewer
-            app.add_data_to_viewer(group_viewer_reference_name, data_label)
-            app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
+        app.add_data(flux, data_label)
+        app.data_collection[data_label].get_component("data").units = flux_unit
+        app.add_data_to_viewer(viewer_reference_name, data_label)
+        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
 
 
 def _parse_jwst_level1(
