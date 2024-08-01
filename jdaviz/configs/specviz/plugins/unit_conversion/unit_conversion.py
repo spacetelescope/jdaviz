@@ -61,7 +61,7 @@ class UnitConversion(PluginTemplateMixin):
     flux_unit_items = List().tag(sync=True)
     flux_unit_selected = Unicode().tag(sync=True)
 
-    sb_unit = Unicode().tag(sync=True)
+    sb_unit_selected = Unicode().tag(sync=True)
 
     angle_unit_items = List().tag(sync=True)
     angle_unit_selected = Unicode().tag(sync=True)
@@ -175,12 +175,12 @@ class UnitConversion(PluginTemplateMixin):
             dc_unit = self.app.data_collection[0].get_component("flux").units
             self.angle_unit.choices = create_angle_equivalencies_list(dc_unit)
             self.angle_unit.selected = self.angle_unit.choices[0]
-            self.sb_unit = self._append_angle_correctly(
+            self.sb_unit_selected = self._append_angle_correctly(
                 self.flux_unit.selected,
                 self.angle_unit.selected
             )
             self.hub.broadcast(GlobalDisplayUnitChanged('sb',
-                                                        self.sb_unit,
+                                                        self.sb_unit_selected,
                                                         sender=self))
 
             if not self.flux_unit.selected:
@@ -315,16 +315,16 @@ class UnitConversion(PluginTemplateMixin):
 
     def _append_angle_correctly(self, flux_unit, angle_unit):
         if angle_unit not in ['pix', 'sr']:
-            self.sb_unit = flux_unit
+            self.sb_unit_selected = flux_unit
             return flux_unit
         if '(' in flux_unit:
             pos = flux_unit.rfind(')')
-            sb_unit = flux_unit[:pos] + ' ' + angle_unit + flux_unit[pos:]
+            sb_unit_selected = flux_unit[:pos] + ' ' + angle_unit + flux_unit[pos:]
         else:
             # append angle if there are no parentheses
-            sb_unit = flux_unit + ' / ' + angle_unit
+            sb_unit_selected = flux_unit + ' / ' + angle_unit
 
-        if sb_unit:
-            self.sb_unit = sb_unit
+        if sb_unit_selected:
+            self.sb_unit_selected = sb_unit_selected
 
-        return sb_unit
+        return sb_unit_selected

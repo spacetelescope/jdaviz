@@ -40,12 +40,13 @@
         label="Solid Angle Unit"
         hint="Solid angle unit."
         persistent-hint
+        
       ></v-select>
     </v-row>
 
     <v-row>
       <v-text-field
-        v-model="sb_unit"
+        v-model="sb_unit_selected"
         label="Surface Brightness Unit"
         hint="Global display unit for surface brightness axis."
         persistent-hint
