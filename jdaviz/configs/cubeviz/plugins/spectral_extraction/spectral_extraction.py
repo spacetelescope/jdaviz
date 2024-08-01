@@ -52,7 +52,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
       to intersect ``aperture`` at ``reference_spectral_value``.
     * ``reference_spectral_value``:
       The wavelength that will be used to calculate the radius of the cone through the cube.
-    * ``background`` (:class:`~jdaviz.comre.template_mixin.ApertureSubsetSelect`):
+    * ``background`` (:class:`~jdaviz.core.template_mixin.ApertureSubsetSelect`):
       Subset to use for background subtraction, or ``None``.
     * ``bg_wavelength_dependent``:
       Whether the ``background`` aperture should be considered wavelength-dependent (requires
@@ -67,7 +67,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Method to use for extracting spectrum (and background, if applicable).
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
-    * :meth:`collapse`
+    * :meth:`extract`
     """
     template_file = __file__, "spectral_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)

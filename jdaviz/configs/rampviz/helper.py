@@ -40,8 +40,7 @@ class Rampviz(CubeConfigHelper):
 
         Parameters
         ----------
-        data : str, `~roman_datamodels.datamodels.DataModel`,
-               `~astropy.nddata.NDDataArray` or ndarray
+        data : str, `~roman_datamodels.datamodels.DataModel`, `~astropy.nddata.NDDataArray` or ndarray
             A string file path, Roman DataModel object pointing to the
             data cube, an NDDataArray, or a Numpy array.
             If plain array is given, axes order must be ``(x, y, z)``.
@@ -50,8 +49,7 @@ class Rampviz(CubeConfigHelper):
             one will be automatically generated.
         **kwargs : dict
             Extra keywords accepted by Jdaviz application-level parser.
-
-        """
+        """  # noqa
         if data_label:
             kwargs['data_label'] = data_label
 
