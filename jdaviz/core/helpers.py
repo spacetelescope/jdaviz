@@ -797,7 +797,7 @@ class ImageConfigHelper(ConfigHelper):
                                     RectangularAperture, CircularAnnulus,
                                     CirclePixelRegion, EllipsePixelRegion,
                                     RectanglePixelRegion, CircleAnnulusPixelRegion))
-                    and self.app._link_type == "wcs"):
+                    and self.app._align_by == "wcs"):
                 bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
                 continue
 
@@ -898,7 +898,7 @@ class ImageConfigHelper(ConfigHelper):
 
         regions = {}
         failed_regs = set()
-        to_sky = self.app._link_type == 'wcs'
+        to_sky = self.app._align_by == 'wcs'
 
         # Subset is global, so we just use default viewer.
         for lyr in self.default_viewer._obj.layers:

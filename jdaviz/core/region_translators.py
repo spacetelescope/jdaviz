@@ -30,7 +30,7 @@ def _get_region_from_spatial_subset(plugin_obj, subset_state):
     plugin_obj : obj
         Plugin instance that needs this translation.
         The plugin is assumed to have a special setup that gives
-        it access to these attributes: ``app`` and ``app._link_type``.
+        it access to these attributes: ``app`` and ``app._align_by``.
 
     subset_state : obj
         ROI subset state to translate.
@@ -52,9 +52,9 @@ def _get_region_from_spatial_subset(plugin_obj, subset_state):
     # the current viewer reference data, which can be changed.
 
     # Mixed link types no longer allowed, so just check app setting.
-    link_type = plugin_obj.app._link_type
+    align_by = plugin_obj.app._align_by
 
-    return roi_subset_state_to_region(subset_state, to_sky=(link_type == 'wcs'))
+    return roi_subset_state_to_region(subset_state, to_sky=(align_by == 'wcs'))
 
 
 def regions2roi(region_shape, wcs=None):

@@ -105,7 +105,7 @@ class TestExportSubsets:
         imviz_helper.load_data(data)  # load data twice so we can link them
         imviz_helper.load_data(data)
 
-        imviz_helper.link_data(link_type='wcs')
+        imviz_helper.link_data(align_by='wcs')
 
         imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(xc=8,
                                                                      yc=6,

@@ -728,12 +728,12 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
         """
 
         # type of region saved depends on link type
-        link_type = getattr(self.app, '_link_type', None)
+        align_by = getattr(self.app, '_align_by', None)
 
         region = self.app.get_subsets(subset_name=selected_subset_label,
-                                      include_sky_region=link_type == 'wcs')
+                                      include_sky_region=align_by == 'wcs')
 
-        region = region[0][f'{"sky_" if link_type == "wcs" else ""}region']
+        region = region[0][f'{"sky_" if align_by == "wcs" else ""}region']
 
         region.write(str(filename), overwrite=True)
 

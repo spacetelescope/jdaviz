@@ -67,8 +67,8 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
         t_linkedpan.deactivate()
 
 
-@pytest.mark.parametrize("link_type", ["Pixels", "WCS"])
-def test_panzoom_click_center_linking(imviz_helper, link_type):
+@pytest.mark.parametrize("align_by", ["Pixels", "WCS"])
+def test_panzoom_click_center_linking(imviz_helper, align_by):
     """https://github.com/spacetelescope/jdaviz/issues/2749"""
     v = imviz_helper.default_viewer._obj
 
@@ -85,11 +85,11 @@ def test_panzoom_click_center_linking(imviz_helper, link_type):
     imviz_helper.load_data(NDData(arr_small, wcs=w_small), data_label="small")
 
     lc_plugin = imviz_helper.plugins['Orientation']
-    lc_plugin.link_type = link_type
+    lc_plugin.align_by = align_by
 
     coo = SkyCoord(ra=197.89262754541807, dec=-1.3644568140486624, unit="deg")
 
-    if link_type == "WCS":
+    if align_by == "WCS":
         mouseover_loc = v.state.reference_data.coords.world_to_pixel(coo)
     else:  # Pixels
         mouseover_loc = w_small.world_to_pixel(coo)
