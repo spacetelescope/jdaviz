@@ -34,6 +34,8 @@ Imviz
 
 - "Imviz Line Profiles (XY)" plugin is renamed to "Image Profiles (XY)". [#3121]
 
+- Added Gaia catalog to Catalog plugin. [#3090]
+
 Mosviz
 ^^^^^^
 

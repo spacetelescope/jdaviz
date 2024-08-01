@@ -10,6 +10,7 @@ from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
                                         with_spinner)
+from jdaviz.core.custom_traitlets import IntHandleEmpty
 
 from jdaviz.core.template_mixin import TableMixin
 from jdaviz.core.user_api import PluginUserApi
@@ -34,6 +35,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     catalog_selected = Unicode("").tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
+    max_gaia_sources = IntHandleEmpty(1000).tag(sync=True)
 
     # setting the default table headers and values
     _default_table_values = {
@@ -50,7 +52,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.catalog = FileImportSelectPluginComponent(self,
                                                        items='catalog_items',
                                                        selected='catalog_selected',
-                                                       manual_options=['SDSS', 'From File...'])
+                                                       manual_options=['SDSS', 'Gaia',
+                                                                       'From File...'])
 
         # set the custom file parser for importing catalogs
         self.catalog._file_parser = self._file_parser
@@ -167,6 +170,21 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
                             'Object ID': row['objid'].astype(str)}
+                self.table.add_item(row_info)
+
+        elif self.catalog_selected == 'Gaia':
+            from astroquery.gaia import Gaia, conf
+
+            with conf.set_temp("ROW_LIMIT", self.max_gaia_sources):
+                sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
+                                            columns=('source_id', 'ra', 'dec'))
+            self.app._catalog_source_table = sources
+            skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
+            # adding in coords + Id's into table
+            for row in sources:
+                row_info = {'Right Ascension (degrees)': row['ra'],
+                            'Declination (degrees)': row['dec'],
+                            'Source ID': row['SOURCE_ID']}
                 self.table.add_item(row_info)
 
         elif self.catalog_selected == 'From File...':

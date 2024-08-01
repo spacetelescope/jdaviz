@@ -28,6 +28,24 @@
       <g-file-import id="file-uploader"></g-file-import>
     </plugin-file-import-select>
 
+    <v-row v-if="catalog_selected === 'Gaia'">
+      <j-docs-link>
+        See the <j-external-link link='https://astroquery.readthedocs.io/en/latest/gaia/gaia.html' linktext='astropy.gaia docs'></j-external-link> for details on the query defaults.
+      </j-docs-link>
+    </v-row>
+
+    <v-row v-if="catalog_selected === 'Gaia'">
+      <v-text-field
+        v-model.number="max_gaia_sources"
+        type="number"
+        step="10"
+        :rules="[() => max_gaia_sources!=='' || 'This field is required']"
+        label="Max sources"
+        hint="Maximum number of sources."
+        persistent-hint
+      ></v-text-field>
+    </v-row>
+
     <v-row class="row-no-outside-padding">
        <v-col>
          <plugin-action-button
