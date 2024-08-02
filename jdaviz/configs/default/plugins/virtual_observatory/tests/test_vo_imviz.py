@@ -203,12 +203,14 @@ class TestVOImvizRemote:
         # Retrieve registry options with filtering on
         vo_plugin.resource_filter_coverage = True
         vo_plugin.vue_query_registry_resources()
+        assert vo_plugin.resources_loading is False
         filtered_resources = vo_plugin.resources
         assert len(filtered_resources) > 0
 
         # Retrieve registry options with filtering off
         vo_plugin.resource_filter_coverage = False
         vo_plugin.vue_query_registry_resources()
+        assert vo_plugin.resources_loading is False
         nonfiltered_resources = vo_plugin.resources
 
         # Nonfiltered resources should be more than filtered resources
@@ -296,6 +298,7 @@ class TestVOImvizRemote:
 
         # Load first data product and fake result
         vo_plugin.vue_load_selected_data()
+        assert vo_plugin.data_loading is False
         # Test that user was warned about failed file loading on fake result
         assert any(
             "Unable to load file to viewer" in d["text"]
@@ -315,6 +318,7 @@ class TestVOImvizRemote:
         )
         vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
         vo_plugin.vue_load_selected_data()
+        assert vo_plugin.data_loading is False
         assert any(
             "WCS linking is not enabled; data layers may not be aligned" in d["text"]
             for d in imviz_helper.app.state.snackbar_history
@@ -327,6 +331,7 @@ class TestVOImvizRemote:
         imviz_helper.plugins[orientation_plugin_label].link_type = "WCS"
         vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
         vo_plugin.vue_load_selected_data()
+        assert vo_plugin.data_loading is False
         assert all(
             "WCS linking is not enabled; data layers may not be aligned" not in d["text"]
             for d in imviz_helper.app.state.snackbar_history
