@@ -352,7 +352,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         color="error",
                     )
                 )
-                raise e
         # Clear selected entries' checkboxes on table
         self.table.selected_rows = []
         self.data_loading = False  # Stop loading spinner
