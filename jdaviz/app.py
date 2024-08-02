@@ -1203,7 +1203,23 @@ class Application(VuetifyTemplate, HubListener):
                     if isinstance(two, SpectralRegion):
                         # This is the main application of XOR to other regions
                         if one.lower > two.lower and one.upper < two.upper:
-                            inverted_region = one.invert(two.lower, two.upper)
+                            if len(two) < 2:
+                                inverted_region = one.invert(two.lower, two.upper)
+                            else:
+                                two_2 = None
+                                for subregion in two:
+                                    temp_region = None
+                                    # No overlap
+                                    if subregion.lower > one.upper or subregion.upper < one.lower:
+                                        continue
+                                    temp_lo = subregion.lower if (subregion.lower > one.lower) else one.lower  # noqa: E501
+                                    temp_hi = subregion.upper if (subregion.upper < one.upper) else one.upper  # noqa: E501
+                                    temp_region = SpectralRegion(temp_lo, temp_hi)
+                                    if two_2:
+                                        two_2 += temp_region
+                                    else:
+                                        two_2 = temp_region
+                                inverted_region = two_2.invert(one.lower, one.upper)
                         else:
                             inverted_region = two.invert(one.lower, one.upper)
 

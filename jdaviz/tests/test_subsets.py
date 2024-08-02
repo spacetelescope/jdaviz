@@ -603,6 +603,48 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
     assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
 
+    specviz_helper.app.session.edit_subset_mode.mode = NewMode
+    viewer.apply_roi(XRangeROI(7500, 7600))
+    specviz_helper.app.session.edit_subset_mode.mode = XorMode
+    viewer.apply_roi(XRangeROI(6000, 6010))
+    reg = specviz_helper.app.get_subsets("Subset 5")
+    assert reg[0].lower.value == 6000 and reg[0].upper.value == 6010
+    assert reg[1].lower.value == 7500 and reg[1].upper.value == 7600
+
+
+def test_composite_spectral_with_xor_complicated(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+
+    viewer.apply_roi(XRangeROI(6100, 6700))
+
+    # (6100, 6200), (6300, 6700)
+    specviz_helper.app.session.edit_subset_mode.mode = AndNotMode
+    viewer.apply_roi(XRangeROI(6200, 6300))
+
+    # (6050, 6100), (6200, 6300), (6700, 6800)
+    specviz_helper.app.session.edit_subset_mode.mode = XorMode
+    viewer.apply_roi(XRangeROI(6050, 6800))
+
+    # (6050, 6100), (6200, 6300), (6700, 6800), (7000, 7200)
+    specviz_helper.app.session.edit_subset_mode.mode = OrMode
+    viewer.apply_roi(XRangeROI(7000, 7200))
+
+    # (6010, 6020), (6050, 6100), (6200, 6300), (6700, 6800), (7000, 7200)
+    viewer.apply_roi(XRangeROI(6010, 6020))
+
+    # (6010, 6020), (6050, 6090), (6100, 6200), (6300, 6700), (6800, 6850), (7000, 7200)
+    specviz_helper.app.session.edit_subset_mode.mode = XorMode
+    viewer.apply_roi(XRangeROI(6090, 6850))
+
+    reg = specviz_helper.app.get_subsets("Subset 1")
+    assert reg[0].lower.value == 6010 and reg[0].upper.value == 6020
+    assert reg[1].lower.value == 6050 and reg[1].upper.value == 6090
+    assert reg[2].lower.value == 6100 and reg[2].upper.value == 6200
+    assert reg[3].lower.value == 6300 and reg[3].upper.value == 6700
+    assert reg[4].lower.value == 6800 and reg[4].upper.value == 6850
+    assert reg[5].lower.value == 7000 and reg[5].upper.value == 7200
+
 
 def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
