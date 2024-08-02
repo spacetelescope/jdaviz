@@ -1,6 +1,5 @@
-import logging
-
 from astropy import units as u
+from astropy.utils import deprecated
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (
@@ -150,27 +149,23 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
     @property
+    @deprecated(since="4.0", alternative="align_by")
     def link_type(self):
-        logging.warning("DeprecationWarning: link_type has been replaced by align_by and will "
-                        "be removed in a future version")
         return self.align_by
 
     @link_type.setter
+    @deprecated(since="4.0", alternative="align_by")
     def link_type(self, link_type):
-        logging.warning("DeprecationWarning: link_type has been replaced by align_by and will "
-                        "be removed in a future version")
         self.align_by = link_type
 
     @property
+    @deprecated(since="4.0", alternative="fast_approximation")
     def wcs_use_affine(self):
-        logging.warning("DeprecationWarning: wcs_use_affine has been replaced by "
-                        "fast_approximation and will be removed in a future version")
         return self.fast_approximation
 
     @wcs_use_affine.setter
+    @deprecated(since="4.0", alternative="fast_approximation")
     def wcs_use_affine(self, wcs_use_affine):
-        logging.warning("DeprecationWarning: wcs_use_affine has been replaced by "
-                        "fast_approximation and will be removed in a future version")
         self.fast_approximation = wcs_use_affine
 
     def _link_image_data(self):
