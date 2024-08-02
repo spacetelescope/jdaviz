@@ -119,29 +119,29 @@ class UnitConversion(PluginTemplateMixin):
             expose = ('spectral_unit', 'flux_unit', 'angle_unit')
         return PluginUserApi(self, expose=expose)
 
-    def _on_glue_x_display_unit_changed(self, x_unit):
-        if x_unit is None:
+    def _on_glue_x_display_unit_changed(self, x_unit_str):
+        if x_unit_str is None:
             return
         self.spectrum_viewer.set_plot_axes()
-        if x_unit != self.spectral_unit.selected:
-            x_unit = _valid_glue_display_unit(x_unit, self.spectrum_viewer, 'x')
-            x_u = u.Unit(x_unit)
-            choices = create_spectral_equivalencies_list(x_u)
+        if x_unit_str != self.spectral_unit.selected:
+            x_unit_str = _valid_glue_display_unit(x_unit_str, self.spectrum_viewer, 'x')
+            x_unit = u.Unit(x_unit_str)
+            choices = create_spectral_equivalencies_list(x_unit)
             # ensure that original entry is in the list of choices
-            if not np.any([x_u == u.Unit(choice) for choice in choices]):
-                choices = [x_unit] + choices
+            if not np.any([x_unit == u.Unit(choice) for choice in choices]):
+                choices = [x_unit_str] + choices
             self.spectral_unit.choices = choices
             # in addition to the jdaviz options, allow the user to set any glue-valid unit
             # which would then be appended on to the list of choices going forward
             self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)  # noqa
-            self.spectral_unit.selected = x_unit
+            self.spectral_unit.selected = x_unit_str
             if not len(self.flux_unit.choices) or not len(self.angle_unit.choices):
                 # in case flux_unit was triggered first (but could not be set because there
                 # as no spectral_unit to determine valid equivalencies)
                 self._on_glue_y_display_unit_changed(self.spectrum_viewer.state.y_display_unit)
 
-    def _on_glue_y_display_unit_changed(self, y_unit):
-        if y_unit is None:
+    def _on_glue_y_display_unit_changed(self, y_unit_str):
+        if y_unit_str is None:
             return
         if self.spectral_unit.selected == "":
             # no spectral unit set yet, cannot determine equivalencies
@@ -150,23 +150,23 @@ class UnitConversion(PluginTemplateMixin):
             return
         self.spectrum_viewer.set_plot_axes()
 
-        x_u = u.Unit(self.spectral_unit.selected)
-        y_unit = _valid_glue_display_unit(y_unit, self.spectrum_viewer, 'y')
-        y_u = u.Unit(y_unit)
+        x_unit = u.Unit(self.spectral_unit.selected)
+        y_unit_str = _valid_glue_display_unit(y_unit_str, self.spectrum_viewer, 'y')
+        y_unit = u.Unit(y_unit_str)
 
-        if not check_if_unit_is_per_solid_angle(y_unit) and y_unit != self.flux_unit.selected:
-            flux_choices = create_flux_equivalencies_list(y_u, x_u)
+        if not check_if_unit_is_per_solid_angle(y_unit_str) and y_unit_str != self.flux_unit.selected:  # noqa
+            flux_choices = create_flux_equivalencies_list(y_unit, x_unit)
             # ensure that original entry is in the list of choices
-            if not np.any([y_u == u.Unit(choice) for choice in flux_choices]):
-                flux_choices = [y_unit] + flux_choices
+            if not np.any([y_unit == u.Unit(choice) for choice in flux_choices]):
+                flux_choices = [y_unit_str] + flux_choices
 
             self.flux_unit.choices = flux_choices
-            self.flux_unit.selected = y_unit
+            self.flux_unit.selected = y_unit_str
 
         # if the y-axis is set to surface brightness,
         # untranslatable units need to be removed from the flux choices
-        if check_if_unit_is_per_solid_angle(y_unit):
-            updated_flux_choices = list(set(create_flux_equivalencies_list(y_u * u.sr, x_u))
+        if check_if_unit_is_per_solid_angle(y_unit_str):
+            updated_flux_choices = list(set(create_flux_equivalencies_list(y_unit * u.sr, x_unit))
                                         - set(units_to_strings(self._untranslatable_units)))
             self.flux_unit.choices = updated_flux_choices
 
