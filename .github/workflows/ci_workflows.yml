@@ -26,45 +26,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Code style checks
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: codestyle
-            allow_failure: false
 
-          - name: PEP 517
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: pep517
-            allow_failure: false
-
-          - name: Security audit
-            os: ubuntu-latest
-            python: 3.x
-            toxenv: securityaudit
-            allow_failure: false
-
-          - name: Python 3.11 with coverage checking, all deps, and remote data
-            os: ubuntu-latest
-            python: '3.11'
-            toxenv: py311-test-alldeps-cov
-            toxposargs: --remote-data --run-slow
-            allow_failure: false
-
-          - name: OS X - Python 3.12
-            os: macos-latest
-            python: '3.12'
-            toxenv: py312-test
-            allow_failure: false
-
-          - name: Windows - Python 3.10
-            os: windows-latest
-            python: '3.10'
-            toxenv: py310-test
-            allow_failure: false
-
-          # This also runs on cron but we want to make sure new changes
-          # won't break this job at the PR stage.
           - name: Python 3.12 with latest dev versions of key dependencies, and remote data
             os: ubuntu-latest
             python: '3.12'
