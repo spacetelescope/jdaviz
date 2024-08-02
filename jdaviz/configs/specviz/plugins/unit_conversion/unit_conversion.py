@@ -154,8 +154,8 @@ class UnitConversion(PluginTemplateMixin):
         y_unit_str = _valid_glue_display_unit(y_unit_str, self.spectrum_viewer, 'y')
         y_unit = u.Unit(y_unit_str)
 
-        if not check_if_unit_is_per_solid_angle(y_unit_str) and y_unit_str != self.flux_unit.selected:
-            flux_choices = create_flux_equivalencies_list(y_u, x_u)
+        if not check_if_unit_is_per_solid_angle(y_unit_str) and y_unit_str != self.flux_unit.selected:  # noqa
+            flux_choices = create_flux_equivalencies_list(y_unit, x_unit)
             # ensure that original entry is in the list of choices
             if not np.any([y_unit == u.Unit(choice) for choice in flux_choices]):
                 flux_choices = [y_unit_str] + flux_choices
