@@ -214,86 +214,10 @@ class TestVOImvizRemote:
         # Nonfiltered resources should be more than filtered resources
         assert len(nonfiltered_resources) > len(filtered_resources)
 
-    @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
-    @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
-    def test_HSTM51_load_data(self, imviz_helper):
-        """
-        Tests the following:
-        * The full plugin by filling out the form and loading a data product into Imviz.
-        * The plugin warns user about potentially misaligned data layers
-            when loading data and WCS linking is not enabled.
-        * User gets properly notified when a load_data error occurs
-        """
-        # Set Common Args
-        vo_plugin = self._init_voplugin_M51(imviz_helper)
-
-        # Select HST.M51 survey
-        # Coverage not implemented for HST.M51
-        vo_plugin.resource_filter_coverage = False
-        vo_plugin.vue_query_registry_resources()
-        assert "HST.M51" in vo_plugin.resources
-        vo_plugin.resource_selected = "HST.M51"
-
-        # Query resource
-        vo_plugin.vue_query_resource()
-        assert len(vo_plugin.table.items) > 0
-
-        # Add poisoned fake result
-        fake_result = fake_siaresult(
-            {
-                "title": "Fake Title",
-                "instr": "Fake Instrument",
-                "dateobs": "Fake Dateobs",
-            }
-        )
-        vo_plugin._populate_table([fake_result])
-
-        # Put the fake result first to make sure we hit the fake result before the real one
-        vo_plugin.table.selected_rows = [vo_plugin.table.items[-1], vo_plugin.table.items[0]]  # Select first entry
-        assert vo_plugin.table.selected_rows[0]['URL'] == fake_result.getdataurl()
-
-       # Load first data product and fake result
-        vo_plugin.vue_load_selected_data()
-        # Test that user was warned about failed file loading on fake result
-        assert any(
-            "Unable to load file to viewer" in d["text"]
-            for d in imviz_helper.app.state.snackbar_history
-        )
-        # But also test that didn't prevent us from loading the valid results
-        assert len(imviz_helper.app.data_collection) == 1
-        assert "M51_HST.M51" in imviz_helper.data_labels[0]
-
-        # Load second data product
-        imviz_helper.app.state.snackbar_history = []  # Clear snackbar warnings
-        # User should be warned about misaligned data if WCS linking isn't set
-        # and there's already data in the data collection
-        assert (
-            imviz_helper.plugins[orientation_plugin_label].link_type.selected_item["label"]
-            == "Pixels"
-        )
-        vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
-        vo_plugin.vue_load_selected_data()
-        assert any(
-            "WCS linking is not enabled; data layers may not be aligned" in d["text"]
-            for d in imviz_helper.app.state.snackbar_history
-        )
-
-        # Load third data product
-        imviz_helper.app.state.snackbar_history = []  # Clear snackbar warnings
-        # If we switch to WCS linking, we shouldn't get a warning anymore
-        # since the data will be aligned
-        imviz_helper.plugins[orientation_plugin_label].link_type = "WCS"
-        vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
-        vo_plugin.vue_load_selected_data()
-        assert all(
-            "WCS linking is not enabled; data layers may not be aligned" not in d["text"]
-            for d in imviz_helper.app.state.snackbar_history
-        )
-
     def test_target_lookup_warnings(self, imviz_helper):
         """
         Tests that appropriate errors and guardrails protect the user
-        when a provided source is inresolvable
+        when a provided source is irresolvable
         """
         expected_error_msg = "Unable to resolve source coordinates"
         vo_plugin = imviz_helper.plugins[vo_plugin_label]._obj
@@ -331,3 +255,79 @@ class TestVOImvizRemote:
                 expected_error_msg in d["text"]
                 for d in imviz_helper.app.state.snackbar_history
             )
+
+    @pytest.mark.filterwarnings("ignore::astropy.wcs.wcs.FITSFixedWarning")
+    @pytest.mark.filterwarnings("ignore:Some non-standard WCS keywords were excluded")
+    def test_HSTM51_load_data(self, imviz_helper):
+        """
+        Tests the following:
+        * The full plugin by filling out the form and loading a data product into Imviz.
+        * The plugin warns user about potentially misaligned data layers
+            when loading data and WCS linking is not enabled.
+        * User gets properly notified when a load_data error occurs
+        """
+        # Set Common Args
+        vo_plugin = self._init_voplugin_M51(imviz_helper)
+
+        # Select HST.M51 survey
+        # Coverage not implemented for HST.M51
+        vo_plugin.resource_filter_coverage = False
+        vo_plugin.vue_query_registry_resources()
+        assert "HST.M51" in vo_plugin.resources
+        vo_plugin.resource_selected = "HST.M51"
+
+        # Query resource
+        vo_plugin.vue_query_resource()
+        assert len(vo_plugin.table.items) > 0
+
+        # Add poisoned fake result
+        fake_result = fake_siaresult(
+            {
+                "title": "Fake Title",
+                "instr": "Fake Instrument",
+                "dateobs": "Fake Dateobs",
+            }
+        )
+        vo_plugin._populate_table([fake_result])
+
+        # Put the fake result first to make sure we hit the fake result before the real one
+        vo_plugin.table.selected_rows = [vo_plugin.table.items[-1], vo_plugin.table.items[0]]
+        assert vo_plugin.table.selected_rows[0]['URL'] == fake_result.getdataurl()
+
+        # Load first data product and fake result
+        vo_plugin.vue_load_selected_data()
+        # Test that user was warned about failed file loading on fake result
+        assert any(
+            "Unable to load file to viewer" in d["text"]
+            for d in imviz_helper.app.state.snackbar_history
+        )
+        # But also test that didn't prevent us from loading the valid results
+        assert len(imviz_helper.app.data_collection) == 1
+        assert "M51_HST.M51" in imviz_helper.data_labels[0]
+
+        # Load second data product
+        imviz_helper.app.state.snackbar_history = []  # Clear snackbar warnings
+        # User should be warned about misaligned data if WCS linking isn't set
+        # and there's already data in the data collection
+        assert (
+            imviz_helper.plugins[orientation_plugin_label].link_type.selected_item["label"]
+            == "Pixels"
+        )
+        vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
+        vo_plugin.vue_load_selected_data()
+        assert any(
+            "WCS linking is not enabled; data layers may not be aligned" in d["text"]
+            for d in imviz_helper.app.state.snackbar_history
+        )
+
+        # Load third data product
+        imviz_helper.app.state.snackbar_history = []  # Clear snackbar warnings
+        # If we switch to WCS linking, we shouldn't get a warning anymore
+        # since the data will be aligned
+        imviz_helper.plugins[orientation_plugin_label].link_type = "WCS"
+        vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
+        vo_plugin.vue_load_selected_data()
+        assert all(
+            "WCS linking is not enabled; data layers may not be aligned" not in d["text"]
+            for d in imviz_helper.app.state.snackbar_history
+        )
