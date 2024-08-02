@@ -62,14 +62,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (non-OSX)
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: |
@@ -185,14 +185,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos') }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: standalone/dist/jdaviz.dmg
