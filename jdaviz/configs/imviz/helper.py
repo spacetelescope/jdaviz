@@ -1,9 +1,9 @@
-import logging
 import os
 import re
 import warnings
 from copy import deepcopy
 
+from astropy.utils import deprecated
 import numpy as np
 from glue.core.link_helpers import LinkSame
 
@@ -252,9 +252,8 @@ class Imviz(ImageConfigHelper):
         plg.fast_approximation = fast_approximation
         plg.align_by = align_by_msg_to_trait[align_by]
 
+    @deprecated(since="4.0", alternative="get_alignment_method")
     def get_link_type(self, data_label_1, data_label_2):
-        logging.warning("DeprecationWarning: get_link_type has been replaced by "
-                        "get_alignment_method and will be removed in the future.")
         return self.get_alignment_method(data_label_1, data_label_2)
 
     def get_alignment_method(self, data_label_1, data_label_2):
