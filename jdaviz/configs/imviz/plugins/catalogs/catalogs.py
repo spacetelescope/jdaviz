@@ -274,7 +274,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         self.number_of_results = len(catalog_results)
         # markers are added to the viewer based on the table
-        viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 30, 'fill': False}
+        viewer.marker = {'color': 'blue', 'alpha': 0.8, 'markersize': 30, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
         return skycoord_table
 
@@ -317,21 +317,23 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
 
-        x_min = min(x)
-        x_max = max(x)
-        y_min = min(y)
-        y_max = max(y)
+        # this works with single selected points
+        # zooming when the range is too large is not performing correctly
+        x_min = min(x) - 50
+        x_max = max(x) + 50
+        y_min = min(y) - 50
+        y_max = max(y) + 50
 
         # extract max and min x and y coords; then add a bit of space around those as well
         # zoom region will be rectangular
         # Adding some padding around the zoom area
-        padding_factor = 0.1  # 10% padding
-        x_range = x_max - x_min
-        y_range = y_max - y_min
-        x_min -= x_range * padding_factor
-        x_max += x_range * padding_factor
-        y_min -= y_range * padding_factor
-        y_max += y_range * padding_factor
+        #padding_factor = 0.1  # 10% padding
+        #x_range = x_max - x_min + 100
+        #y_range = y_max - y_min + 100
+        #x_min -= x_range * padding_factor
+        #x_max += x_range * padding_factor
+        #y_min -= y_range * padding_factor
+        #y_max += y_range * padding_factor
 
         imview = self.app._jdaviz_helper._default_viewer
 
