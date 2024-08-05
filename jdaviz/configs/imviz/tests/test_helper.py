@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 
 
-@pytest.mark.filterwarnings(r"ignore:The .* function is deprecated")
+@pytest.mark.filterwarnings(r"ignore:The link_type function is deprecated")
+@pytest.mark.filterwarnings(r"ignore:The wcs_use_affine function is deprecated")
 def test_plugin_user_apis(imviz_helper):
     for plugin_name, plugin_api in imviz_helper.plugins.items():
         plugin = plugin_api._obj
