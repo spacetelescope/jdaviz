@@ -470,7 +470,7 @@ class ConfigHelper(HubListener):
                 spectral_unit = self.app._get_display_unit('spectral')
                 if not spectral_unit:
                     return data
-                flux_unit = self.app._get_display_unit('flux')
+                y_unit = self.app._get_display_unit('spectral_y')
                 # TODO: any other attributes (meta, wcs, etc)?
                 # TODO: implement uncertainty.to upstream
                 uncertainty = data.uncertainty
@@ -488,26 +488,26 @@ class ConfigHelper(HubListener):
                         new_uncert = uncertainty
                     if ('_pixel_scale_factor' in data.meta):
                         new_uncert_converted = flux_conversion(data, new_uncert.quantity.value,
-                                                               new_uncert.unit, flux_unit)
-                        new_uncert = StdDevUncertainty(new_uncert_converted, unit=flux_unit)
+                                                               new_uncert.unit, y_unit)
+                        new_uncert = StdDevUncertainty(new_uncert_converted, unit=y_unit)
                     else:
                         new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
 
                 else:
                     new_uncert = None
                 if ('_pixel_scale_factor' in data.meta):
-                    new_flux = flux_conversion(data, data.flux.value, data.flux.unit,
-                                               flux_unit) * u.Unit(flux_unit)
+                    new_y = flux_conversion(data, data.flux.value, data.flux.unit,
+                                            y_unit) * u.Unit(y_unit)
                 else:
-                    new_flux = flux_conversion(data, data.flux.value, data.flux.unit,
-                                               data.flux.unit) * u.Unit(data.flux.unit)
+                    new_y = flux_conversion(data, data.flux.value, data.flux.unit,
+                                            data.flux.unit) * u.Unit(data.flux.unit)
                 new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                      data.spectral_axis.unit,
                                                      spectral_unit)
                             * u.Unit(spectral_unit))
 
                 data = Spectrum1D(spectral_axis=new_spec,
-                                  flux=new_flux,
+                                  flux=new_y,
                                   uncertainty=new_uncert,
                                   mask=data.mask)
             else:  # pragma: nocover

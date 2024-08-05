@@ -137,7 +137,7 @@ def test_unit_translation(cubeviz_helper):
     w = WCS(wcs_dict)
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.MJy, wcs=w, meta=wcs_dict)
+    cube = Spectrum1D(flux=flux * u.MJy / u.sr, wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     center = PixCoord(5, 10)
@@ -152,6 +152,10 @@ def test_unit_translation(cubeviz_helper):
     # data collection item units will be used for translations.
     assert uc_plg._obj.flux_or_sb_selected == 'Flux'
 
+    # accessing from get_data(use_display_units=True) should return flux-like units
+    assert cubeviz_helper.app._get_display_unit('spectral_y') == u.MJy
+    assert cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True).unit == u.MJy
+
     # to have access to display units
     viewer_1d = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
@@ -164,6 +168,10 @@ def test_unit_translation(cubeviz_helper):
 
     # check if units translated
     assert y_display_unit == u.MJy / u.sr
+
+    # get_data(use_display_units=True) should return surface brightness-like units
+    assert cubeviz_helper.app._get_display_unit('spectral_y') == u.MJy / u.sr
+    assert cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True).unit == u.MJy / u.sr
 
 
 def test_sb_unit_conversion(cubeviz_helper):
