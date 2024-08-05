@@ -14,24 +14,15 @@ class Rampviz(CubeConfigHelper):
     _default_group_viewer_reference_name = "group-viewer"
     _default_diff_viewer_reference_name = "diff-viewer"
     _default_integration_viewer_reference_name = "integration-viewer"
+    _cube_viewer_default_label = _default_group_viewer_reference_name
 
     _loaded_flux_cube = None
+    _cube_viewer_cls = RampvizImageView
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.cube_cache = {}
-
-        self._update_slice_defaults()
-
-    def _update_slice_defaults(self):
-        available_plugins = [
-            tray_item['name'] for tray_item in self.app.state.tray_items
-        ]
-        if 'cube-slice' in available_plugins:
-            slice_plugin = self.app.get_tray_item_from_name('cube-slice')
-            slice_plugin._cube_viewer_default_label = self._default_group_viewer_reference_name
-            slice_plugin._cube_viewer_cls = RampvizImageView
 
     def load_data(self, data, data_label=None, **kwargs):
         """
