@@ -327,13 +327,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # extract max and min x and y coords; then add a bit of space around those as well
         # zoom region will be rectangular
         # Adding some padding around the zoom area
-        #padding_factor = 0.1  # 10% padding
-        #x_range = x_max - x_min + 100
-        #y_range = y_max - y_min + 100
-        #x_min -= x_range * padding_factor
-        #x_max += x_range * padding_factor
-        #y_min -= y_range * padding_factor
-        #y_max += y_range * padding_factor
+        # padding_factor = 0.1  # 10% padding
+        # x_range = x_max - x_min + 100
+        # y_range = y_max - y_min + 100
+        # x_min -= x_range * padding_factor
+        # x_max += x_range * padding_factor
+        # y_min -= y_range * padding_factor
+        # y_max += y_range * padding_factor
 
         imview = self.app._jdaviz_helper._default_viewer
 
