@@ -228,7 +228,10 @@ class UnitConversion(PluginTemplateMixin):
                 self.can_translate = False
             else:
                 self.can_translate = True
-        elif name == 'flux_or_sb_selected':
+        # Traitlet to translate has been changed. However, when a cube
+        # is in u.count, we set flux_or_sb_selected to 'Flux', entering
+        # the translator, the second condition ensures we don't.
+        elif name == 'flux_or_sb_selected' and self.spectrum_viewer.state.y_display_unit != 'ct':
             self._translate(self.flux_or_sb_selected)
             return
         else:
@@ -310,7 +313,7 @@ class UnitConversion(PluginTemplateMixin):
             u.erg / (u.s * u.cm**2 * u.Hz),
             u.ph / (u.Angstrom * u.s * u.cm**2),
             u.ph / (u.s * u.cm**2 * u.Hz),
-            u.ST, u.bol
+            u.ST, u.bol, u.count
         ]
 
     def _append_angle_correctly(self, flux_unit, angle_unit):
