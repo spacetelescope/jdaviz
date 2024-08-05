@@ -498,8 +498,8 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
 
-    lower_aperture = RectangularROI(-0.5, 1.5, -0.5, 0.5)
-    upper_aperture = RectangularROI(-0.5, 1.5, 2.5, 3.5)
+    lower_aperture = RectangularROI(-0.5, 0.5, -0.5, 1.5)
+    upper_aperture = RectangularROI(2.5, 3.5, -0.5, 1.5)
 
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
     flux_viewer.apply_roi(lower_aperture)
@@ -514,14 +514,14 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     spectrum_2 = spec_extr_plugin.extract()
 
     subset_plugin.subset_selected = 'Create New'
-    rectangle = RectangularROI(-0.5, 1.5, -0.5, 3.5)
+    rectangle = RectangularROI(-0.5, 3.5, -0.5, 1.5)
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
     flux_viewer.apply_roi(rectangle)
 
     flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:truecircle']
     subset_plugin.subset_selected = 'Subset 3'
     cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    circle = CircularROI(0.5, 1.5, 1.1)
+    circle = CircularROI(1.5, 0.5, 1.1)
     flux_viewer.apply_roi(circle)
 
     spec_extr_plugin.aperture_selected = 'Subset 3'
