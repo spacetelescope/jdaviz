@@ -168,7 +168,8 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         assert len(self.viewer._marktags) == 0
 
     def test_wcslink_fullblown(self):
-        self.imviz.link_data(align_by='wcs', wcs_fallback_scheme=None, fast_approximation=False)
+        self.imviz.link_data(align_by='wcs', wcs_fallback_scheme=None,
+                             wcs_fast_approximation=False)
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 2
         assert isinstance(links[0], WCSLink)

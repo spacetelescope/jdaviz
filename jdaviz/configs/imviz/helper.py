@@ -224,7 +224,7 @@ class Imviz(ImageConfigHelper):
                     if (has_wcs and linked_by_wcs) or not linked_by_wcs:
                         self.app.add_data_to_viewer(show_in_viewer, applied_label, visible=visible)
 
-    def link_data(self, align_by='pixels', wcs_fallback_scheme=None, fast_approximation=True):
+    def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.
         All existing links will be replaced.
 
@@ -238,7 +238,7 @@ class Imviz(ImageConfigHelper):
             This is only used when ``align_by='wcs'``.
             Choosing `None` may result in some Imviz functionality not working properly.
 
-        fast_approximation : bool
+        wcs_fast_approximation : bool
             Use an affine transform to represent the offset between images if possible
             (requires that the approximation is accurate to within 1 pixel with the
             full WCS transformations). If approximation fails, it will automatically
@@ -249,7 +249,7 @@ class Imviz(ImageConfigHelper):
         from jdaviz.configs.imviz.plugins.orientation.orientation import align_by_msg_to_trait
         plg = self.plugins["Orientation"]
         plg._obj.wcs_use_fallback = wcs_fallback_scheme == 'pixels'
-        plg.fast_approximation = fast_approximation
+        plg.wcs_fast_approximation = wcs_fast_approximation
         plg.align_by = align_by_msg_to_trait[align_by]
 
     @deprecated(since="4.0", alternative="get_alignment_method")

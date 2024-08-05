@@ -52,7 +52,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``align_by`` (`~jdaviz.core.template_mixin.SelectPluginComponent`)
-    * ``fast_approximation``
+    * ``wcs_fast_approximation``
     * ``delete_subsets``
     * ``viewer``
     * ``orientation``
@@ -65,7 +65,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     align_by_items = List().tag(sync=True)
     align_by_selected = Unicode().tag(sync=True)
     wcs_use_fallback = Bool(True).tag(sync=True)
-    fast_approximation = Bool(True).tag(sync=True)
+    wcs_fast_approximation = Bool(True).tag(sync=True)
     wcs_linking_available = Bool(False).tag(sync=True)
 
     need_clear_astrowidget_markers = Bool(False).tag(sync=True)
@@ -142,7 +142,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         return PluginUserApi(
             self,
             expose=(
-                'align_by', 'link_type', 'fast_approximation', 'wcs_use_affine',
+                'align_by', 'link_type', 'wcs_fast_approximation', 'wcs_use_affine',
                 'delete_subsets', 'viewer', 'orientation',
                 'rotation_angle', 'east_left', 'add_orientation'
             )
@@ -159,14 +159,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.align_by = link_type
 
     @property
-    @deprecated(since="4.0", alternative="fast_approximation")
+    @deprecated(since="4.0", alternative="wcs_fast_approximation")
     def wcs_use_affine(self):
-        return self.fast_approximation
+        return self.wcs_fast_approximation
 
     @wcs_use_affine.setter
-    @deprecated(since="4.0", alternative="fast_approximation")
+    @deprecated(since="4.0", alternative="wcs_fast_approximation")
     def wcs_use_affine(self, wcs_use_affine):
-        self.fast_approximation = wcs_use_affine
+        self.wcs_fast_approximation = wcs_use_affine
 
     def _link_image_data(self):
         self.linking_in_progress = True
@@ -176,14 +176,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                 self.app,
                 align_by=align_by,
                 wcs_fallback_scheme='pixels' if self.wcs_use_fallback else None,
-                fast_approximation=self.fast_approximation,
+                wcs_fast_approximation=self.wcs_fast_approximation,
                 error_on_fail=False)
         except Exception:  # pragma: no cover
             raise
         else:
             # Only broadcast after success.
             self.app.hub.broadcast(LinkUpdatedMessage(
-                align_by, self.wcs_use_fallback, self.fast_approximation, sender=self.app))
+                align_by, self.wcs_use_fallback, self.wcs_fast_approximation, sender=self.app))
         finally:
             self.linking_in_progress = False
 
@@ -214,14 +214,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def _on_markers_plugin_update(self, msg):
         self.plugin_markers_exist = msg.table_length > 0
 
-    @observe('align_by_selected', 'wcs_use_fallback', 'fast_approximation')
+    @observe('align_by_selected', 'wcs_use_fallback', 'wcs_fast_approximation')
     def _update_link(self, msg={}):
         """Run link_image_data with the selected parameters."""
         if not hasattr(self, 'align_by'):
             # could happen before plugin is fully initialized
             return
 
-        if msg.get('name', None) == 'fast_approximation' and self.align_by.selected == 'Pixels':
+        if msg.get('name', None) == 'wcs_fast_approximation' and self.align_by.selected == 'Pixels':  # noqa
             # approximation doesn't apply, avoid updating when not necessary!
             return
 
@@ -244,7 +244,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
                              f"'{msg.get('old')}'), call viewer.reset_markers()")
 
         if self.align_by.selected == 'Pixels':
-            self.fast_approximation = True
+            self.wcs_fast_approximation = True
 
         self.linking_in_progress = False
         self._link_image_data()
@@ -566,7 +566,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
 
-def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, fast_approximation=True,
+def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True,
                     error_on_fail=False):
     """(Re)link loaded data in Imviz with the desired link type.
 
@@ -590,7 +590,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, fast_appro
         This is only used when ``align_by='wcs'``.
         Choosing `None` may result in some Imviz functionality not working properly.
 
-    fast_approximation : bool
+    wcs_fast_approximation : bool
         Use an affine transform to represent the offset between images if possible
         (requires that the approximation is accurate to within 1 pixel with the
         full WCS transformations). If approximation fails, it will automatically
@@ -644,7 +644,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, fast_appro
     # data1 = reference, data2 = actual data
     data_already_linked = []
     if (align_by == old_align_by and
-            (align_by == "pixels" or fast_approximation == app._fast_approximation)):
+            (align_by == "pixels" or wcs_fast_approximation == app._wcs_fast_approximation)):
         # We are only here to link new data with existing configuration,
         # so no need to relink existing data.
         for link in app.data_collection.external_links:
@@ -660,7 +660,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, fast_appro
     # set internal tracking of align_by before changing reference data for anything that is
     # subscribed to a change in reference data
     app._align_by = align_by
-    app._fast_approximation = fast_approximation
+    app._wcs_fast_approximation = wcs_fast_approximation
 
     # wcs -> pixels: First loaded real data will be reference.
     if align_by == 'pixels' and old_align_by == 'wcs':
@@ -731,7 +731,7 @@ def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, fast_appro
                 new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
             else:  # wcs
                 wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
-                if fast_approximation:
+                if wcs_fast_approximation:
                     try:
                         new_links = [wcslink.as_affine_link()]
                     except NoAffineApproximation:  # pragma: no cover

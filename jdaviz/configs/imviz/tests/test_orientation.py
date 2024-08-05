@@ -14,12 +14,12 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
         lc_plugin = self.imviz.plugins['Orientation']
 
         lc_plugin.align_by = 'WCS'
-        lc_plugin.fast_approximation = False
+        lc_plugin.wcs_fast_approximation = False
         assert self.imviz.get_alignment_method("Default orientation", "has_wcs_2[SCI,1]") == "wcs"
 
-        # fast_approximation should revert/default to True when change back to Pixels.
+        # wcs_fast_approximation should revert/default to True when change back to Pixels.
         lc_plugin.align_by = 'Pixels'
-        assert lc_plugin.fast_approximation is True
+        assert lc_plugin.wcs_fast_approximation is True
         assert self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "has_wcs_2[SCI,1]") == "pixels"
 
         assert self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "has_wcs_1[SCI,1]") == "self"

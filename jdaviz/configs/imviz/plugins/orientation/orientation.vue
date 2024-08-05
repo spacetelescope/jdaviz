@@ -58,7 +58,7 @@
           <v-switch
             label="Fast approximation"
             hint="Use fast approximation for WCS image alignment, if possible (accurate to <1 pixel)."
-            v-model="fast_approximation"
+            v-model="wcs_fast_approximation"
             v-if="align_by_selected == 'WCS'"
             persistent-hint>
           </v-switch>

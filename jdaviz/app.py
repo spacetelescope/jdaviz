@@ -327,7 +327,7 @@ class Application(VuetifyTemplate, HubListener):
         # Imviz linking
         self._align_by = 'pixels'
         if self.config == "imviz":
-            self._fast_approximation = None
+            self._wcs_fast_approximation = None
 
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
