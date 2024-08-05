@@ -741,7 +741,7 @@ class PlotOptions(PluginTemplateMixin):
         self.send_state('display_units')
 
     def _on_refdata_change(self, *args):
-        if self.app._link_type.lower() == 'wcs':
+        if self.app._align_by.lower() == 'wcs':
             self.display_units['image'] = 'deg'
         else:
             self.display_units['image'] = 'pix'

@@ -3,6 +3,7 @@ import re
 import warnings
 from copy import deepcopy
 
+from astropy.utils import deprecated
 import numpy as np
 from glue.core.link_helpers import LinkSame
 
@@ -190,7 +191,7 @@ class Imviz(ImageConfigHelper):
             show_in_viewer = f"{self.app.config}-0"
 
         if show_in_viewer:
-            linked_by_wcs = self.app._link_type == 'wcs'
+            linked_by_wcs = self.app._align_by == 'wcs'
             if linked_by_wcs:
                 for applied_label, visible, is_wcs_only, has_wcs in zip(
                         applied_labels, applied_visible, layer_is_wcs_only, layer_has_wcs
@@ -211,7 +212,7 @@ class Imviz(ImageConfigHelper):
         else:
             if 'Orientation' not in self.plugins.keys():
                 # otherwise plugin will handle linking automatically with DataCollectionAddMessage
-                self.link_data(link_type='wcs')
+                self.link_data(align_by='wcs')
 
             # One input might load into multiple Data objects.
             # NOTE: If the batch_load context manager was used, it will
@@ -223,35 +224,39 @@ class Imviz(ImageConfigHelper):
                     if (has_wcs and linked_by_wcs) or not linked_by_wcs:
                         self.app.add_data_to_viewer(show_in_viewer, applied_label, visible=visible)
 
-    def link_data(self, link_type='pixels', wcs_fallback_scheme=None, wcs_use_affine=True):
+    def link_data(self, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True):
         """(Re)link loaded data in Imviz with the desired link type.
         All existing links will be replaced.
 
         Parameters
         ----------
-        link_type : {'pixels', 'wcs'}
+        align_by : {'pixels', 'wcs'}
             Choose to link by pixels or WCS.
 
         wcs_fallback_scheme : {None, 'pixels'}
             If WCS linking failed, choose to fall back to linking by pixels or not at all.
-            This is only used when ``link_type='wcs'``.
+            This is only used when ``align_by='wcs'``.
             Choosing `None` may result in some Imviz functionality not working properly.
 
-        wcs_use_affine : bool
+        wcs_fast_approximation : bool
             Use an affine transform to represent the offset between images if possible
             (requires that the approximation is accurate to within 1 pixel with the
             full WCS transformations). If approximation fails, it will automatically
-            fall back to full WCS transformation. This is only used when ``link_type='wcs'``.
+            fall back to full WCS transformation. This is only used when ``align_by='wcs'``.
             Affine approximation is much more performant at the cost of accuracy.
 
         """
-        from jdaviz.configs.imviz.plugins.orientation.orientation import link_type_msg_to_trait
+        from jdaviz.configs.imviz.plugins.orientation.orientation import align_by_msg_to_trait
         plg = self.plugins["Orientation"]
         plg._obj.wcs_use_fallback = wcs_fallback_scheme == 'pixels'
-        plg.wcs_use_affine = wcs_use_affine
-        plg.link_type = link_type_msg_to_trait[link_type]
+        plg.wcs_fast_approximation = wcs_fast_approximation
+        plg.align_by = align_by_msg_to_trait[align_by]
 
+    @deprecated(since="4.0", alternative="get_alignment_method")
     def get_link_type(self, data_label_1, data_label_2):
+        return self.get_alignment_method(data_label_1, data_label_2)
+
+    def get_alignment_method(self, data_label_1, data_label_2):
         """Find the type of ``glue`` linking between the given
         data labels. A link is bi-directional. If there are
         more than 2 data in the collection, one of the given
@@ -264,7 +269,7 @@ class Imviz(ImageConfigHelper):
 
         Returns
         -------
-        link_type : {'pixels', 'wcs', 'self'}
+        align_by : {'pixels', 'wcs', 'self'}
             One of the link types accepted by the Orientation plugin
             or ``'self'`` if the labels are identical.
 
@@ -277,23 +282,23 @@ class Imviz(ImageConfigHelper):
         if data_label_1 == data_label_2:
             return "self"
 
-        link_type = None
+        align_by = None
         for elink in self.app.data_collection.external_links:
             elink_labels = (elink.data1.label, elink.data2.label)
             if data_label_1 in elink_labels and data_label_2 in elink_labels:
                 if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
-                    link_type = 'pixels'
+                    align_by = 'pixels'
                 else:  # If not pixels, must be WCS
-                    link_type = 'wcs'
+                    align_by = 'wcs'
                 break  # Might have duplicate, just grab first match
 
-        if link_type is None:
+        if align_by is None:
             avail_links = [f"({elink.data1.label}, {elink.data2.label})"
                            for elink in self.app.data_collection.external_links]
             raise ValueError(f'{data_label_1} and {data_label_2} combo not found '
                              f'in data collection external links: {avail_links}')
 
-        return link_type
+        return align_by
 
     def get_aperture_photometry_results(self):
         """Return aperture photometry results, if any.

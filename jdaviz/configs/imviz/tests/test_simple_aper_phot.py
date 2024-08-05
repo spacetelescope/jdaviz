@@ -18,7 +18,7 @@ from jdaviz.tests.test_utils import PHOTUTILS_LT_1_12_1
 
 class TestSimpleAperPhot(BaseImviz_WCS_WCS):
     def test_plugin_wcs_dithered(self):
-        self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
+        self.imviz.link_data(align_by='wcs')  # They are dithered by 1 pixel on X
 
         reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5).to_sky(self.wcs_1)
         self.imviz.load_regions(reg)
@@ -206,7 +206,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
                              'flux_scaling': 3}]
 
     def test_batch_phot(self):
-        self.imviz.link_data(link_type='wcs')  # They are dithered by 1 pixel on X
+        self.imviz.link_data(align_by='wcs')  # They are dithered by 1 pixel on X
         self.imviz._apply_interactive_region('bqplot:truecircle', (0, 0), (9, 9))  # Draw a circle
 
         # TODO: remove ._obj when API is made public
@@ -272,7 +272,7 @@ class TestAdvancedAperPhot:
         imviz_helper.load_data(get_pkg_data_filename('data/gauss100_fits_wcs_block_reduced_rotated.fits'))  # noqa: E501
 
         # Link them by WCS
-        imviz_helper.link_data(link_type='wcs')
+        imviz_helper.link_data(align_by='wcs')
         w = imviz_helper.app.data_collection[0].coords
 
         # Regions to be used for aperture photometry

@@ -25,7 +25,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         hdu3 = NDData(arr, wcs=self.wcs_1)
         self.imviz.load_data(hdu3, data_label='has_wcs_3')
 
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
+        self.imviz.link_data(align_by='wcs', wcs_fallback_scheme=None)
 
         # Add a subset
         reg = CirclePixelRegion(PixCoord(2, 2), 3).to_sky(self.wcs_1)
@@ -82,7 +82,7 @@ class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
     """Regression test for https://jira.stsci.edu/browse/JDAT-3958"""
     def test_delete_wcs_layer_with_subset(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
         lc_plugin._obj.create_north_up_east_left(set_on_create=True)

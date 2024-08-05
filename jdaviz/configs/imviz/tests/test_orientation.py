@@ -13,23 +13,23 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
     def test_affine_reset_and_linktype(self):
         lc_plugin = self.imviz.plugins['Orientation']
 
-        lc_plugin.link_type = 'WCS'
-        lc_plugin.wcs_use_affine = False
-        assert self.imviz.get_link_type("Default orientation", "has_wcs_2[SCI,1]") == "wcs"
+        lc_plugin.align_by = 'WCS'
+        lc_plugin.wcs_fast_approximation = False
+        assert self.imviz.get_alignment_method("Default orientation", "has_wcs_2[SCI,1]") == "wcs"
 
-        # wcs_use_affine should revert/default to True when change back to Pixels.
-        lc_plugin.link_type = 'Pixels'
-        assert lc_plugin.wcs_use_affine is True
-        assert self.imviz.get_link_type("has_wcs_1[SCI,1]", "has_wcs_2[SCI,1]") == "pixels"
+        # wcs_fast_approximation should revert/default to True when change back to Pixels.
+        lc_plugin.align_by = 'Pixels'
+        assert lc_plugin.wcs_fast_approximation is True
+        assert self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "has_wcs_2[SCI,1]") == "pixels"
 
-        assert self.imviz.get_link_type("has_wcs_1[SCI,1]", "has_wcs_1[SCI,1]") == "self"
+        assert self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "has_wcs_1[SCI,1]") == "self"
 
         with pytest.raises(ValueError, match=".*combo not found"):
-            self.imviz.get_link_type("has_wcs_1[SCI,1]", "foo")
+            self.imviz.get_alignment_method("has_wcs_1[SCI,1]", "foo")
 
     def test_astrowidgets_markers_disable_relinking(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'Pixels'
+        lc_plugin.align_by = 'Pixels'
 
         # Adding markers should disable changing linking from both UI and API.
         assert lc_plugin._obj.need_clear_astrowidget_markers is False
@@ -38,17 +38,17 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
 
         assert lc_plugin._obj.need_clear_astrowidget_markers is True
         with pytest.raises(ValueError, match="cannot change linking"):
-            lc_plugin.link_type = 'WCS'
-        assert lc_plugin.link_type == 'Pixels'
+            lc_plugin.align_by = 'WCS'
+        assert lc_plugin.align_by == 'Pixels'
 
         lc_plugin._obj.vue_reset_astrowidget_markers()
 
         assert lc_plugin._obj.need_clear_astrowidget_markers is False
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
 
     def test_markers_plugin_recompute_positions_pixels_to_wcs(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'Pixels'
+        lc_plugin.align_by = 'Pixels'
 
         # Blink to second image, if we have to.
         if self.viewer.top_visible_data_label != "has_wcs_2[SCI,1]":
@@ -69,7 +69,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
                 self.viewer, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
             mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
 
-            lc_plugin.link_type = 'WCS'
+            lc_plugin.align_by = 'WCS'
 
             # Both marks stay the same in sky, so this means X and Y w.r.t. reference
             # same on both entries.
@@ -84,7 +84,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
 
     def test_markers_plugin_recompute_positions_wcs_to_pixels(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
 
         # Blink to second image, if we have to.
         if self.viewer.top_visible_data_label != "has_wcs_2[SCI,1]":
@@ -105,7 +105,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
                 self.viewer, {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
             mp._obj._on_viewer_key_event(self.viewer, {'event': 'keydown', 'key': 'm'})
 
-            lc_plugin.link_type = 'Pixels'
+            lc_plugin.align_by = 'Pixels'
 
             # Both marks now get separated, so this means X and Y w.r.t. reference
             # are different on both entries.
@@ -122,7 +122,7 @@ class TestDefaultOrientation(BaseImviz_WCS_WCS):
 class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
     def test_N_up_multi_viewer(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
         lc_plugin._obj.create_north_up_east_left(set_on_create=True)
@@ -143,17 +143,17 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
         assert lc_plugin.orientation.selected == "North-up, East-left"
 
         # Both viewers should revert back to same reference when pixel-linked.
-        lc_plugin.link_type = 'Pixels'
+        lc_plugin.align_by = 'Pixels'
         assert self.viewer.state.reference_data.label == "has_wcs_1[SCI,1]"
         assert viewer_2.state.reference_data.label == "has_wcs_1[SCI,1]"
 
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
         assert self.viewer.state.reference_data.label == "Default orientation"
         assert viewer_2.state.reference_data.label == "Default orientation"
 
     def test_custom_orientation(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
         lc_plugin.viewer = "imviz-0"
 
         lc_plugin.rotation_angle = 42  # Triggers auto-label
@@ -166,7 +166,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
 
     def test_delete_orientation_multi_viewer(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
         lc_plugin._obj.create_north_up_east_left(set_on_create=True)
@@ -189,7 +189,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
          (-0.5 * u.rad, 3.641589)])
     def test_delete_orientation_with_subset(self, klass, angle, sbst_theta):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
         lc_plugin._obj.create_north_up_east_left(set_on_create=True)
@@ -228,7 +228,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
 class TestOrientationNoData(BaseImviz_WCS_WCS):
     def test_create_no_data(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
 
         self.imviz.create_image_viewer()
         lc_plugin.viewer = "imviz-1"
@@ -238,7 +238,7 @@ class TestOrientationNoData(BaseImviz_WCS_WCS):
 
     def test_select_no_data(self):
         lc_plugin = self.imviz.plugins['Orientation']
-        lc_plugin.link_type = 'WCS'
+        lc_plugin.align_by = 'WCS'
 
         lc_plugin._obj.create_north_up_east_left(set_on_create=True)
 

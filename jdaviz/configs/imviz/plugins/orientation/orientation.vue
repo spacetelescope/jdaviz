@@ -40,13 +40,13 @@
           <v-radio-group
             label="Align by"
             hint="Align individual image layers by pixels or on the sky by WCS."
-            v-model="link_type_selected"
+            v-model="align_by_selected"
             @change="delete_subsets($event)"
             :disabled="!wcs_linking_available || need_clear_astrowidget_markers || need_clear_subsets"
             persistent-hint
             row>
             <v-radio
-              v-for="item in link_type_items"
+              v-for="item in align_by_items"
               :key="item.label"
               :label="item.label == 'WCS' ? 'WCS (Sky)' : item.label"
               :value="item.label"
@@ -58,8 +58,8 @@
           <v-switch
             label="Fast approximation"
             hint="Use fast approximation for WCS image alignment, if possible (accurate to <1 pixel)."
-            v-model="wcs_use_affine"
-            v-if="link_type_selected == 'WCS'"
+            v-model="wcs_fast_approximation"
+            v-if="align_by_selected == 'WCS'"
             persistent-hint>
           </v-switch>
         </v-row>
@@ -73,7 +73,7 @@
           </v-switch>
         </v-row>
 
-        <div v-if="link_type_selected == 'WCS'">
+        <div v-if="align_by_selected == 'WCS'">
 
           <j-plugin-section-header>Orientation</j-plugin-section-header>
           <plugin-viewer-select
@@ -165,7 +165,7 @@
       </div>
       <div v-if="linking_in_progress"
            class="text-center"
-           style="grid-area: 1/1; 
+           style="grid-area: 1/1;
                   z-index:2;
                   margin-left: -24px;
                   margin-right: -24px;

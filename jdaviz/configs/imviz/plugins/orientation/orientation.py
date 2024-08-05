@@ -1,4 +1,5 @@
 from astropy import units as u
+from astropy.utils import deprecated
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (
@@ -29,7 +30,7 @@ from jdaviz.utils import get_reference_image_data, layer_is_2d, _wcs_only_label
 __all__ = ['Orientation']
 
 base_wcs_layer_label = 'Default orientation'
-link_type_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
+align_by_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
 @tray_registry('imviz-orientation', label="Orientation", viewer_requirements="image")
@@ -50,8 +51,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * ``link_type`` (`~jdaviz.core.template_mixin.SelectPluginComponent`)
-    * ``wcs_use_affine``
+    * ``align_by`` (`~jdaviz.core.template_mixin.SelectPluginComponent`)
+    * ``wcs_fast_approximation``
     * ``delete_subsets``
     * ``viewer``
     * ``orientation``
@@ -61,10 +62,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     """
     template_file = __file__, "orientation.vue"
 
-    link_type_items = List().tag(sync=True)
-    link_type_selected = Unicode().tag(sync=True)
+    align_by_items = List().tag(sync=True)
+    align_by_selected = Unicode().tag(sync=True)
     wcs_use_fallback = Bool(True).tag(sync=True)
-    wcs_use_affine = Bool(True).tag(sync=True)
+    wcs_fast_approximation = Bool(True).tag(sync=True)
     wcs_linking_available = Bool(False).tag(sync=True)
 
     need_clear_astrowidget_markers = Bool(False).tag(sync=True)
@@ -94,10 +95,10 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 
-        self.link_type = SelectPluginComponent(self,
-                                               items='link_type_items',
-                                               selected='link_type_selected',
-                                               manual_options=['Pixels', 'WCS'])
+        self.align_by = SelectPluginComponent(self,
+                                              items='align_by_items',
+                                              selected='align_by_selected',
+                                              manual_options=['Pixels', 'WCS'])
 
         self.orientation = LayerSelect(
             self, 'orientation_layer_items', 'orientation_layer_selected', 'viewer_selected',
@@ -141,28 +142,48 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         return PluginUserApi(
             self,
             expose=(
-                'link_type', 'wcs_use_affine', 'delete_subsets',
-                'viewer', 'orientation',
+                'align_by', 'link_type', 'wcs_fast_approximation', 'wcs_use_affine',
+                'delete_subsets', 'viewer', 'orientation',
                 'rotation_angle', 'east_left', 'add_orientation'
             )
         )
 
+    @property
+    @deprecated(since="4.0", alternative="align_by")
+    def link_type(self):
+        return self.align_by
+
+    @link_type.setter
+    @deprecated(since="4.0", alternative="align_by")
+    def link_type(self, link_type):
+        self.align_by = link_type
+
+    @property
+    @deprecated(since="4.0", alternative="wcs_fast_approximation")
+    def wcs_use_affine(self):
+        return self.wcs_fast_approximation
+
+    @wcs_use_affine.setter
+    @deprecated(since="4.0", alternative="wcs_fast_approximation")
+    def wcs_use_affine(self, wcs_use_affine):
+        self.wcs_fast_approximation = wcs_use_affine
+
     def _link_image_data(self):
         self.linking_in_progress = True
         try:
-            link_type = self.link_type.selected.lower()
+            align_by = self.align_by.selected.lower()
             link_image_data(
                 self.app,
-                link_type=link_type,
+                align_by=align_by,
                 wcs_fallback_scheme='pixels' if self.wcs_use_fallback else None,
-                wcs_use_affine=self.wcs_use_affine,
+                wcs_fast_approximation=self.wcs_fast_approximation,
                 error_on_fail=False)
         except Exception:  # pragma: no cover
             raise
         else:
             # Only broadcast after success.
             self.app.hub.broadcast(LinkUpdatedMessage(
-                link_type, self.wcs_use_fallback, self.wcs_use_affine, sender=self.app))
+                align_by, self.wcs_use_fallback, self.wcs_fast_approximation, sender=self.app))
         finally:
             self.linking_in_progress = False
 
@@ -193,14 +214,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def _on_markers_plugin_update(self, msg):
         self.plugin_markers_exist = msg.table_length > 0
 
-    @observe('link_type_selected', 'wcs_use_fallback', 'wcs_use_affine')
+    @observe('align_by_selected', 'wcs_use_fallback', 'wcs_fast_approximation')
     def _update_link(self, msg={}):
         """Run link_image_data with the selected parameters."""
-        if not hasattr(self, 'link_type'):
+        if not hasattr(self, 'align_by'):
             # could happen before plugin is fully initialized
             return
 
-        if msg.get('name', None) == 'wcs_use_affine' and self.link_type.selected == 'Pixels':
+        if msg.get('name', None) == 'wcs_fast_approximation' and self.align_by.selected == 'Pixels':  # noqa
             # approximation doesn't apply, avoid updating when not necessary!
             return
 
@@ -222,8 +243,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             raise ValueError(f"cannot change linking with markers present (value reverted to "
                              f"'{msg.get('old')}'), call viewer.reset_markers()")
 
-        if self.link_type.selected == 'Pixels':
-            self.wcs_use_affine = True
+        if self.align_by.selected == 'Pixels':
+            self.wcs_fast_approximation = True
 
         self.linking_in_progress = False
         self._link_image_data()
@@ -231,7 +252,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # load data into the viewer that are now compatible with the
         # new link type, remove data from the viewer that are now
         # incompatible:
-        wcs_linked = self.link_type.selected == 'WCS'
+        wcs_linked = self.align_by.selected == 'WCS'
         viewer_selected = self.app.get_viewer(self.viewer.selected)
 
         data_in_viewer = self.app.get_viewer(viewer_selected.reference).data()
@@ -332,7 +353,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def _add_orientation(self, rotation_angle=None, east_left=None, label=None,
                          set_on_create=True, wrt_data=None, from_ui=False):
 
-        if self.link_type_selected != 'WCS':
+        if self.align_by_selected != 'WCS':
             raise ValueError("must be aligned by WCS to add orientation options")
 
         if wrt_data is None:
@@ -406,14 +427,14 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
         for viewer_ref in viewers_to_update:
             self.viewer.selected = viewer_ref
-            self.orientation.update_wcs_only_filter(wcs_only=self.link_type_selected == 'WCS')
+            self.orientation.update_wcs_only_filter(wcs_only=self.align_by_selected == 'WCS')
             for wcs_layer in wcs_only_layers:
                 if wcs_layer not in self.viewer.selected_obj.layers:
                     self.app.add_data_to_viewer(viewer_ref, wcs_layer)
             if (
                 self.orientation.selected not in
                     self.viewer.selected_obj.state.wcs_only_layers and
-                    self.link_type_selected == 'WCS'
+                    self.align_by_selected == 'WCS'
             ):
                 self.orientation.selected = base_wcs_layer_label
 
@@ -448,11 +469,11 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
             # don't select until reference data are available:
             if ref_data is not None:
-                link_type = viewer.get_link_type(ref_data.label)
-                if link_type != 'self':
-                    self.link_type_selected = link_type_msg_to_trait[link_type]
+                align_by = viewer.get_alignment_method(ref_data.label)
+                if align_by != 'self':
+                    self.align_by_selected = align_by_msg_to_trait[align_by]
             elif not len(viewer.data()):
-                self.link_type_selected = link_type_msg_to_trait['pixels']
+                self.align_by_selected = align_by_msg_to_trait['pixels']
 
             if msg.data.label not in self.orientation.choices:
                 return
@@ -545,7 +566,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         )
 
 
-def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_affine=True,
+def link_image_data(app, align_by='pixels', wcs_fallback_scheme=None, wcs_fast_approximation=True,
                     error_on_fail=False):
     """(Re)link loaded data in Imviz with the desired link type.
 
@@ -561,19 +582,19 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     app : `~jdaviz.app.Application`
         Application associated with Imviz, e.g., ``imviz.app``.
 
-    link_type : {'pixels', 'wcs'}
+    align_by : {'pixels', 'wcs'}
         Choose to link by pixels or WCS.
 
     wcs_fallback_scheme : {None, 'pixels'}
         If WCS linking failed, choose to fall back to linking by pixels or not at all.
-        This is only used when ``link_type='wcs'``.
+        This is only used when ``align_by='wcs'``.
         Choosing `None` may result in some Imviz functionality not working properly.
 
-    wcs_use_affine : bool
+    wcs_fast_approximation : bool
         Use an affine transform to represent the offset between images if possible
         (requires that the approximation is accurate to within 1 pixel with the
         full WCS transformations). If approximation fails, it will automatically
-        fall back to full WCS transformation. This is only used when ``link_type='wcs'``.
+        fall back to full WCS transformation. This is only used when ``align_by='wcs'``.
         Affine approximation is much more performant at the cost of accuracy.
 
     error_on_fail : bool
@@ -588,15 +609,15 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         Invalid inputs or reference data.
 
     """
-    if len(app.data_collection) <= 1 and link_type != 'wcs':  # No need to link, we are done.
+    if len(app.data_collection) <= 1 and align_by != 'wcs':  # No need to link, we are done.
         return
 
-    if link_type not in ('pixels', 'wcs'):  # pragma: no cover
-        raise ValueError(f"link_type must be 'pixels' or 'wcs', got {link_type}")
-    if link_type == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):  # pragma: no cover
+    if align_by not in ('pixels', 'wcs'):  # pragma: no cover
+        raise ValueError(f"align_by must be 'pixels' or 'wcs', got {align_by}")
+    if align_by == 'wcs' and wcs_fallback_scheme not in (None, 'pixels'):  # pragma: no cover
         raise ValueError("wcs_fallback_scheme must be None or 'pixels', "
                          f"got {wcs_fallback_scheme}")
-    if link_type == 'wcs':
+    if align_by == 'wcs':
         at_least_one_data_have_wcs = len([
             hasattr(d, 'coords') and isinstance(d.coords, BaseHighLevelWCS)
             for d in app.data_collection
@@ -604,15 +625,15 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         if not at_least_one_data_have_wcs:  # pragma: no cover
             if wcs_fallback_scheme is None:
                 if error_on_fail:
-                    raise ValueError("link_type can only be 'wcs' when wcs_fallback_scheme "
+                    raise ValueError("align_by can only be 'wcs' when wcs_fallback_scheme "
                                      "is 'None' if at least one image has a valid WCS.")
                 else:
                     return
             else:
                 # fall back on pixel linking
-                link_type = 'pixels'
+                align_by = 'pixels'
 
-    old_link_type = getattr(app, '_link_type', None)
+    old_align_by = getattr(app, '_align_by', None)
 
     # In WCS linking, changing orientation layer is done within Orientation plugin,
     # so here we assume viewer.state.reference_data is already the desired
@@ -622,8 +643,8 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
     #
     # data1 = reference, data2 = actual data
     data_already_linked = []
-    if (link_type == old_link_type and
-            (link_type == "pixels" or wcs_use_affine == app._wcs_use_affine)):
+    if (align_by == old_align_by and
+            (align_by == "pixels" or wcs_fast_approximation == app._wcs_fast_approximation)):
         # We are only here to link new data with existing configuration,
         # so no need to relink existing data.
         for link in app.data_collection.external_links:
@@ -632,17 +653,17 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         # Everything has to be relinked.
         for viewer in app._viewer_store.values():
             if len(viewer._marktags):
-                raise ValueError(f"cannot change link_type (from '{app._link_type}' to "
-                                 f"'{link_type}') when markers are present. "
+                raise ValueError(f"cannot change align_by (from '{app._align_by}' to "
+                                 f"'{align_by}') when markers are present. "
                                  f" Clear markers with viewer.reset_markers() first")
 
-    # set internal tracking of link_type before changing reference data for anything that is
+    # set internal tracking of align_by before changing reference data for anything that is
     # subscribed to a change in reference data
-    app._link_type = link_type
-    app._wcs_use_affine = wcs_use_affine
+    app._align_by = align_by
+    app._wcs_fast_approximation = wcs_fast_approximation
 
     # wcs -> pixels: First loaded real data will be reference.
-    if link_type == 'pixels' and old_link_type == 'wcs':
+    if align_by == 'pixels' and old_align_by == 'wcs':
         # default reference layer is the first-loaded image in default viewer:
         refdata = app._jdaviz_helper.default_viewer._obj.first_loaded_data
         if refdata is None:  # No data in viewer, just use first in collection  # pragma: no cover
@@ -656,7 +677,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
             app._change_reference_data(refdata.label, viewer_id=viewer_id)
 
     # pixels -> wcs: Always the default orientation
-    elif link_type == 'wcs' and old_link_type == 'pixels':
+    elif align_by == 'wcs' and old_align_by == 'pixels':
         # Have to create the default orientation first.
         if base_wcs_layer_label not in app.data_collection.labels:
             default_reference_layer = (app._jdaviz_helper.default_viewer._obj.first_loaded_data
@@ -699,18 +720,18 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         # 4. We are not touching fake WCS layers in pixel linking.
         # 5. We are not touching data without WCS in WCS linking.
         if ((i == iref) or (not layer_is_2d(data)) or (data in data_already_linked) or
-                (link_type == "pixels" and data.meta.get(_wcs_only_label)) or
-                (link_type == "wcs" and not hasattr(data.coords, 'pixel_to_world'))):
+                (align_by == "pixels" and data.meta.get(_wcs_only_label)) or
+                (align_by == "wcs" and not hasattr(data.coords, 'pixel_to_world'))):
             continue
 
         ids1 = data.pixel_component_ids
         new_links = []
         try:
-            if link_type == 'pixels':
+            if align_by == 'pixels':
                 new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
             else:  # wcs
                 wcslink = WCSLink(data1=refdata, data2=data, cids1=ids0, cids2=ids1)
-                if wcs_use_affine:
+                if wcs_fast_approximation:
                     try:
                         new_links = [wcslink.as_affine_link()]
                     except NoAffineApproximation:  # pragma: no cover
@@ -718,7 +739,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
                 else:
                     new_links = [wcslink]
         except Exception as e:  # pragma: no cover
-            if link_type == 'wcs' and wcs_fallback_scheme == 'pixels':
+            if align_by == 'wcs' and wcs_fallback_scheme == 'pixels':
                 try:
                     new_links = [LinkSame(ids0[i], ids1[i]) for i in ndim_range]
                 except Exception as e:  # pragma: no cover
@@ -750,7 +771,7 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
             'Images successfully relinked', color='success', timeout=8000, sender=app))
 
     for viewer in app._viewer_store.values():
-        wcs_linked = link_type == 'wcs'
+        wcs_linked = align_by == 'wcs'
         # viewer-state needs to know link type for reset_limits behavior
         viewer.state.linked_by_wcs = wcs_linked
         # also need to store a copy in the viewer item for the data dropdown to access
@@ -760,5 +781,5 @@ def link_image_data(app, link_type='pixels', wcs_fallback_scheme=None, wcs_use_a
         viewer_item['linked_by_wcs'] = wcs_linked
 
         # if changing from one link type to another, reset the limits:
-        if link_type != old_link_type:
+        if align_by != old_align_by:
             viewer.state.reset_limits()

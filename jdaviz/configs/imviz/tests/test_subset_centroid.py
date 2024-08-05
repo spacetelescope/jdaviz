@@ -37,7 +37,7 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
     def test_centroiding_wcs(self):
         # FITS WCS and GWCS are rotated from each other.
         # Plain array always by pixel wrt FITS WCS.
-        self.imviz.link_data(link_type='wcs')
+        self.imviz.link_data(align_by='wcs')
 
         reg = CirclePixelRegion(PixCoord(2, 2), 3).to_sky(self.wcs_1)
         self.imviz.load_regions(reg)
