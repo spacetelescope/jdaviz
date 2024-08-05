@@ -47,8 +47,6 @@ class Slice(PluginTemplateMixin):
     * ``show_value``
       Whether to show slice value in label to right of indicator.
     """
-    _cube_viewer_cls = (CubevizImageView, RampvizImageView)
-    _cube_viewer_default_label = None  # must be filled in by helper on initialization
 
     cube_viewer_exists = Bool(True).tag(sync=True)
 
@@ -104,6 +102,18 @@ class Slice(PluginTemplateMixin):
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_global_display_unit_changed)
         self._initialize_location()
+
+    @property
+    def _cube_viewer_default_label(self):
+        if hasattr(self.app, '_jdaviz_helper') and self.app._jdaviz_helper is not None:
+            return getattr(self.app._jdaviz_helper, '_cube_viewer_default_label')
+        return tuple()
+
+    @property
+    def _cube_viewer_cls(self):
+        if hasattr(self.app, '_jdaviz_helper') and self.app._jdaviz_helper is not None:
+            return getattr(self.app._jdaviz_helper, '_cube_viewer_cls')
+        return tuple()
 
     def _initialize_location(self, *args):
         # initialize value_unit (this has to wait until data is loaded to an existing
