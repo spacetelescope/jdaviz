@@ -2,7 +2,6 @@
   <v-alert
     v-if="previews_temp_disabled && show_live_preview"
     type='warning'
-    class="ignore-api-hint"
     style="margin-left: -12px; margin-right: -12px">
     Live-updating is temporarily disabled (last update took {{previews_last_time}}s)
     <v-row justify='center'>

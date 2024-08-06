@@ -14,6 +14,7 @@
           attach
           :items="mode_items.map(i => i.label)"
           v-model="mode_selected"
+          :class="api_hints_enabled ? 'api-hint' : null"
           :label="api_hints_enabled ? 'plg.mode =' : 'Mode'"
           hint="Smooth data spectrally or spatially."
           persistent-hint
@@ -37,6 +38,7 @@
         <v-text-field
           ref="stddev"
           :label="api_hints_enabled ? 'plg.stddev =' : 'Standard deviation'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           v-model.number="stddev"
           type="number"
           hint="The stddev of the kernel, in pixels."

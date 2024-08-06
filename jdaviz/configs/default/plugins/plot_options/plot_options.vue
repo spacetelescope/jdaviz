@@ -58,6 +58,7 @@
               <glue-float-field
                 ref="x_min"
                 :label="api_hints_enabled ? 'plg.x_min =' : 'X Min'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="x_min_value"
                 type="number"
                 :step="x_bound_step"
@@ -68,6 +69,7 @@
               <glue-float-field
                 ref="x_max"
                 :label="api_hints_enabled ? 'plg.x_max =' : 'X Max'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="x_max_value"
                 type="number"
                 :step="x_bound_step"
@@ -78,6 +80,7 @@
               <glue-float-field
                 ref="y_min"
                 :label="api_hints_enabled ? 'plg.y_min =' : 'Y Min'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="y_min_value"
                 type="number"
                 :step="y_bound_step"
@@ -88,6 +91,7 @@
               <glue-float-field
                 ref="y_max"
                 :label="api_hints_enabled ? 'plg.y_max =' : 'Y Max'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="y_max_value"
                 type="number"
                 :step="y_bound_step"
@@ -98,6 +102,7 @@
               <glue-float-field
                 ref="zoom_center_x"
                 :label="api_hints_enabled ? 'plg.zoom_center_x =' : 'X Center'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="zoom_center_x_value"
                 type="number"
                 :step="zoom_step"
@@ -108,6 +113,7 @@
               <glue-float-field
                 ref="zoom_center_y"
                 :label="api_hints_enabled ? 'plg.zoom_center_y =' : 'Y Center'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="zoom_center_y_value"
                 type="number"
                 :step="zoom_step"
@@ -118,6 +124,7 @@
               <glue-float-field
                 ref="zoom_radius"
                 :label="api_hints_enabled ? 'plg.zoom_radius =' : 'Zoom-radius'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="zoom_radius_value"
                 type="number"
                 :step="zoom_step"
@@ -127,6 +134,7 @@
             <v-row justify="end">
               <plugin-action-button
                 :results_isolated_to_plugin="false"
+                :api_hints_enabled="api_hints_enabled"
                 @click="reset_viewer_bounds"
               >
                 {{api_hints_enabled ? 
@@ -149,6 +157,7 @@
           :items="image_color_mode_sync.choices"
           v-model="image_color_mode_value"
           :label="api_hints_enabled ? 'plg.image_color_mode = ' : 'Color Mode'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           hint="Whether each layer gets a single color or colormap."
           persistent-hint
           dense
@@ -358,6 +367,7 @@
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_width_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_width')">
         <glue-float-field
           :label="api_hints_enabled ? 'plg.line_width =' : 'Line Width'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           :value.sync="line_width_value"
         />
       </glue-state-sync-wrapper>
@@ -416,7 +426,7 @@
             :items="marker_size_mode_sync.choices"
             v-model="marker_size_mode_value"
             :label="api_hints_enabled ? 'plg.marker_size_mode =' : 'Size Mode'"
-            class="no-hint"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
@@ -453,7 +463,7 @@
             :items="marker_size_col_sync.choices"
             v-model="marker_size_col_value"
             :label="api_hints_enabled ? 'plg.marker_size_col =' : 'Column'"
-            class="no-hint"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
@@ -461,6 +471,7 @@
           <v-text-field
             ref="marker_size_vmin"
             :label="api_hints_enabled ? 'plg.marker_size_vmin =' : 'vmin'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="marker_size_vmin_value"
             type="number"
             step="0.01"
@@ -471,6 +482,7 @@
           <v-text-field
             ref="marker_size_vmax"
             :label="api_hints_enabled ? 'plg.marker_size_vmax =' : 'vmax'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="marker_size_vmax_value"
             type="number"
             step="0.01"
@@ -485,7 +497,7 @@
             :items="marker_color_mode_sync.choices"
             v-model="marker_color_mode_value"
             :label="api_hints_enabled ? 'plg.marker_color_mode =' : 'Color Mode'"
-            class="no-hint"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
@@ -520,7 +532,7 @@
             :items="marker_color_col_sync.choices"
             v-model="marker_color_col_value"
             :label="api_hints_enabled ? 'plg.marker_color_col =' : 'Column'"
-            class="no-hint"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
@@ -531,7 +543,7 @@
             :items="marker_colormap_sync.choices"
             v-model="marker_colormap_value"
             :label="api_hints_enabled ? 'plg.marker_colormap =' : 'Colormap'"
-            class="no-hint"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
@@ -539,6 +551,7 @@
           <v-text-field
             ref="marker_colormap_vmin"
             :label="api_hints_enabled ? 'plg.marker_colormap_vmin =' : 'vmin'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="marker_colormap_vmin_value"
             type="number"
             step="0.01"
@@ -549,6 +562,7 @@
           <v-text-field
             ref="marker_colormap_vmax"
             :label="api_hints_enabled ? 'plg.marker_colormap_vmax =' : 'vmax'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="marker_colormap_vmax_value"
             type="number"
             step="0.01"
@@ -580,6 +594,7 @@
             :items="image_colormap_sync.choices"
             v-model="image_colormap_value"
             :label="api_hints_enabled ? 'plg.image_colormap =' : 'Colormap'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             dense
           >
             <template v-slot:selection="{ item, index }">
@@ -686,7 +701,7 @@
           :items="stretch_function_sync.choices"
           v-model="stretch_function_value"
           :label="api_hints_enabled ? 'plg.stretch_function =' : 'Stretch Function'"
-          class="no-hint"
+          :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
         ></v-select>
       </glue-state-sync-wrapper>
 
@@ -697,7 +712,7 @@
           :items="stretch_preset_sync.choices"
           v-model="stretch_preset_value"
           :label="api_hints_enabled ? 'plg.stretch_preset =' : 'Stretch Percentile Preset'"
-          class="no-hint"
+          :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
         ></v-select>
       </glue-state-sync-wrapper>
 
@@ -706,6 +721,7 @@
         <v-text-field
           ref="stretch_vmin"
           :label="api_hints_enabled ? 'plg.stretch_vmin =' : 'Stretch VMin'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           v-model.number="stretch_vmin_value"
           type="number"
           :step="stretch_vstep"
@@ -716,6 +732,7 @@
         <v-text-field
           ref="stretch_vmax"
           :label="api_hints_enabled ? 'plg.stretch_vmax =' : 'Stretch VMax'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           v-model.number="stretch_vmax_value"
           type="number"
           :step="stretch_vstep"
@@ -762,6 +779,7 @@
                   <v-text-field
                       ref="stretch_hist_nbins"
                       :label="api_hints_enabled ? 'plg.stretch_hist_nbins =' : 'Number of Bins'"
+                      :class="api_hints_enabled ? 'api-hint' : null"
                       v-model.number="stretch_hist_nbins"
                       type="number"
                       hint="The amount of bins used in the histogram."
@@ -793,6 +811,7 @@
                   <v-text-field
                     ref="stretch_vmin"
                     :label="api_hints_enabled ? 'plg.stretch_vmin =' : 'Stretch VMin'"
+                    :class="api_hints_enabled ? 'api-hint' : null"
                     v-model.number="stretch_vmin_value"
                     type="number"
                     :step="stretch_vstep"
@@ -802,6 +821,7 @@
                   <v-text-field
                     ref="stretch_vmax"
                     :label="api_hints_enabled ? 'plg.stretch_vmax =' : 'Stretch VMax'"
+                    :class="api_hints_enabled ? 'api-hint' : null"
                     v-model.number="stretch_vmax_value"
                     type="number"
                     :step="stretch_vstep"
@@ -857,7 +877,8 @@
             <div v-if="contour_mode_value === 'Linear'">
               <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_min')">
                 <glue-float-field 
-                  :label="api_hints_enabled ? 'plg.contour_min =' : 'Contour Min'" 
+                  :label="api_hints_enabled ? 'plg.contour_min =' : 'Contour Min'"
+                  :class="api_hints_enabled ? 'api-hint' : null"
                   :value.sync="contour_min_value"
                 />
               </glue-state-sync-wrapper>
@@ -865,6 +886,7 @@
               <glue-state-sync-wrapper :sync="contour_max_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_max')">
                 <glue-float-field
                   :label="api_hints_enabled ? 'plg.contour_max = ' : 'Contour Max'"
+                  :class="api_hints_enabled ? 'api-hint' : null"
                   :value.sync="contour_max_value"
                 />
               </glue-state-sync-wrapper>
@@ -872,6 +894,7 @@
               <glue-state-sync-wrapper :sync="contour_nlevels_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_nlevels')">
                 <glue-float-field
                   :label="api_hints_enabled ? 'plg.contour_nlevels =' : 'Number of Contour Levels'"
+                  :class="api_hints_enabled ? 'api-hint' : null"
                   :value.sync="contour_nlevels_value"
                 />
               </glue-state-sync-wrapper>
@@ -880,6 +903,7 @@
               <glue-state-sync-wrapper :sync="contour_custom_levels_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_levels')">
                 <v-text-field
                   :label="api_hints_enabled ? 'plg.contour_custom_levels =' : 'Contour Levels'"
+                  :class="api_hints_enabled ? 'api-hint' : null"
                   :value="contour_custom_levels_txt"
                   @focus="contour_custom_levels_focus"
                   @blur="contour_custom_levels_blur"

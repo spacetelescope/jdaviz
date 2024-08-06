@@ -18,7 +18,6 @@
             :rounded="item.is_subset"
             @click="() => {if (!multiselect){$emit('update:selected', item.label)} else if(!selectedAsList.includes(item.label)) {$emit('update:selected', selected.concat(item.label))} else if (selected.length > 1) {$emit('update:selected', selected.filter(select => select != item.label))} }"
             :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityStyle(item)+', '+colorStyle(item)"
-            class="ignore-api-hint"
             width="30px"
             min-width="30px"
             height="30px"

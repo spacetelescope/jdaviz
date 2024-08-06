@@ -8,7 +8,9 @@
       :auto="label_auto"
       @update:auto="$emit('update:label_auto', $event)"
       :invalid_msg="label_invalid_msg"
-      :label="api_hints_enabled && add_results_api_hint ? add_results_api_hint + '.label =' : label_label ? label_label : 'Output Data Label'"
+      :label="label_label ? label_label : 'Output Data Label'"
+      :api_hint="add_results_api_hint && add_results_api_hint + '.label ='"
+      :api_hints_enabled="api_hints_enabled && add_results_api_hint"
       :hint="label_hint ? label_hint : 'Label for the resulting data item.'"
     ></plugin-auto-label>   
 
@@ -26,15 +28,17 @@
         :selected="add_to_viewer_selected"
         @update:selected="$emit('update:add_to_viewer_selected', $event)"
         show_if_single_entry="true"
-        :label="api_hints_enabled && add_results_api_hint ? add_results_api_hint+'.viewer =' : 'Plot in Viewer'"
+        label="Plot in Viewer"
+        :api_hint="add_results_api_hint && add_results_api_hint+'.viewer ='"
+        :api_hints_enabled="api_hints_enabled && add_results_api_hint"
         :hint="add_to_viewer_hint ? add_to_viewer_hint : 'Plot results in the specified viewer.  Data entry will be available in the data dropdown for all applicable viewers.'"
       ></plugin-viewer-select>
     </div>
 
     <v-row v-else>
       <v-switch v-if="label_overwrite"
-        class="hide-input"
         :label="addToViewerText"
+        :class="api_hints_enabled && add_results_api_hint ? 'api-hint hide-input' : 'hide-input'"
         :disabled="true"
         :hint="'Visibility of the modified entry will be adopted from the current \''+label+'\' data entry.'"
         persistent-hint
@@ -44,6 +48,7 @@
         v-model="add_to_viewer_selected == this.add_to_viewer_items[1].label"
         @change="(e) => {$emit('update:add_to_viewer_selected', this.$props.add_to_viewer_items[Number(e)].label)}"
         :label="addToViewerText"
+        :class="api_hints_enabled && add_results_api_hint ? 'api-hint' : null"
         hint='Immediately plot results.  Data entry will be available to toggle in the data dropdown'
         persistent-hint
       >
@@ -72,6 +77,7 @@
           :spinner="action_spinner"
           :disabled="label_invalid_msg.length > 0 || action_disabled"
           :results_isolated_to_plugin="false"
+          :api_hints_enabled="api_hints_enabled && action_api_hint"
           @click="$emit('click:action')">
           {{ actionButtonText }}
         </plugin-action-button>

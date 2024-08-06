@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-row v-if="show_multiselect_toggle && api_hints_enabled && api_hint_multiselect"> 
-      <span class="api-hint">
+      <span :class="api_hints_enabled && api_hint_multiselect ? 'api-hint' : null">
         {{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}
       </span>
     </v-row>
@@ -23,6 +23,7 @@
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
+      :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Viewer')"
       :hint="hint ? hint : 'Select viewer.'"
       :rules="rules ? rules : []"

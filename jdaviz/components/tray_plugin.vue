@@ -1,6 +1,6 @@
 <template>
   <v-container 
-    :class="api_hints_enabled ? 'tray-plugin api-hint' : 'tray-plugin'"
+    class="tray_plugin"
     style="padding-left: 24px; padding-right: 24px; padding-top: 12px" >
     <v-row>
       <div style="width: calc(100% - 64px)">
@@ -10,12 +10,13 @@
         <v-btn
           v-if="api_hints_enabled !== undefined && config && plugin_key" 
           icon 
+          :class="api_hints_enabled ? 'api-hint' : null"
           @click="() => {$emit('update:api_hints_enabled', !api_hints_enabled)}"
         >
           <v-icon>mdi-code-tags</v-icon>
         </v-btn>
       </div>
-      <div style="width: 32px" class="ignore-api-hint">
+      <div style="width: 32px">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </div>
     </v-row>

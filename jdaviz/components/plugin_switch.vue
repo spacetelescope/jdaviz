@@ -1,6 +1,7 @@
 <template>
   <v-switch
     :label="api_hints_enabled && api_hint ? api_hint+' '+boolToString(value) : label"
+    :class="api_hints_enabled && api_hint ? 'api-hint' : null"
     :hint="hint"
     v-model="value"
     @change="$emit('update:value', $event)"

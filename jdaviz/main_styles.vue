@@ -263,7 +263,7 @@ a:active {
   font-weight: 500 !important;
 }
 
-span.api-hint:not(.ignore-api-hint), span.api-hint-header {
+span.api-hint, span.api-hint-header {
   color: #c75109 !important;
   font-family: monospace;
   font-size: 12px;  
@@ -273,25 +273,25 @@ span.api-hint-header {
   font-weight: bold;
 }
 
-.api-hint:not(.ignore-api-hint) :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
+.api-hint :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
     color: #c75109 !important;
     font-family: monospace;
     font-size: 10px !important;
     overflow-wrap: break-word;
 }
 
-.api-hint:not(.ignore-api-hint) :is(.v-select__slot, .v-text-field__slot) > .v-label {
+.api-hint :is(.v-select__slot, .v-text-field__slot) > .v-label {
     font-size: 13px !important;
 }
 
 
-.api-hint:not(.ignore-api-hint) .v-alert__content, .api-hint:not(.ignore-api-hint) .v-subheader {
+.api-hint .v-alert__content, .api-hint .v-subheader {
   color: #c75109 !important;
   font-family: monospace;
   font-size: 10px !important;
 }
 
-.api-hint:not(.ignore-api-hint) .v-btn {
+.api-hint.v-btn {
   color: #c75109 !important;
   font-family: monospace !important;
   font-size: 12px !important;

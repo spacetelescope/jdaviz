@@ -6,6 +6,7 @@
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
+      :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Data')"
       :hint="hint ? hint : 'Select data.'"
       :rules="rules ? rules : []"
