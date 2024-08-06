@@ -3391,6 +3391,7 @@ class DatasetSelect(SelectPluginComponent):
         self.app.state.add_callback('layer_icons', lambda _: self._on_data_changed())
         # initialize items from original viewers
         self._on_data_changed()
+
     def to_script(self, as_string=False):
         script = [f"{self.app.config}.load_data({self.selected_obj}, data_label='{self.selected})'"]
         script += [f"plg.selected = '{self.selected}'"]

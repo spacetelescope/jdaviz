@@ -93,8 +93,6 @@ class UserApiWrapper:
 
     def to_dict(self):
         def _value(item):
-            if include_hidden and hasattr(item, '_hidden_to_dict'):
-                return _value(item._hidden_to_dict())
             if hasattr(item, 'to_dict'):
                 return _value(item.to_dict())
             if hasattr(item, 'selected'):
@@ -130,7 +128,8 @@ class PluginUserApi(UserApiWrapper):
       help(plugin_object.show)
     """
     def __init__(self, plugin, expose=[], readonly=[], excl_from_dict=[]):
-        expose = list(set(list(expose) + ['open_in_tray', 'close_in_tray', 'show', 'api_hints_enabled']))
+        expose = list(set(list(expose) + ['open_in_tray', 'close_in_tray',
+                                          'show', 'api_hints_enabled']))
         if plugin.uses_active_status:
             expose += ['keep_active', 'as_active']
         self._deprecation_msg = None
