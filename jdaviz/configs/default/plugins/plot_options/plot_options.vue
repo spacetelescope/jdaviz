@@ -249,42 +249,30 @@
     <div v-else class='layer-tab-selected' style="margin-left: -24px; padding-left: 24px; margin-top: -42px; margin-right: -24px; padding-right: 24px; border-bottom: 2px solid #00617E">
       <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_visible')">
-        <span>
-          <v-btn icon @click.stop="marker_visible_value = !marker_visible_value">
-            <v-icon>mdi-eye{{ marker_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          {{ api_hints_enabled ?
-            'plg.marker_visible = ' + boolToString(marker_visible_value)
-            :
-            'Show Scatter Layer'
-          }}
-        </span>
+        <plugin-switch
+          value.sync="marker_visible_value"
+          label="Show Scatter Layer"
+          api_hint='plg.marker_visible = '
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="!marker_visible_sync.in_subscribed_states" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
-        <span>
-          <v-btn icon @click.stop="line_visible_value = !line_visible_value">
-            <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          {{ api_hints_enabled ?
-            'plg.line_visible = ' + boolToString(line_visible_value)
-            :
-            'Show Line'
-          }}
-        </span>
+        <plugin-switch
+          value.sync="line_visible_value"
+          label="Show Line"
+          api_hint='plg.line_visible = '
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper :sync="subset_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_visible')">
-        <span>
-          <v-btn icon @click.stop="subset_visible_value = !subset_visible_value">
-            <v-icon>mdi-eye{{ subset_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          {{ api_hints_enabled ?
-            'plg.subset_visible = ' + boolToString(subset_visible_value)
-            :
-            'Show Subset'
-          }}
-        </span>
+        <plugin-switch
+          value.sync="subset_visible_value"
+          label="Show Subset"
+          api_hint='plg.subset_visible = '
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="subset_visible_value" :sync="subset_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_color')">
@@ -328,16 +316,12 @@
       <!-- PROFILE/LINE -->
       <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && ((!marker_visible_sync.in_subscribed_states && line_visible_value) || (marker_visible_sync.in_subscribed_states && marker_visible_value)))">Line</j-plugin-section-header>
       <glue-state-sync-wrapper v-if="marker_visible_sync.in_subscribed_states && marker_visible_value" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
-        <span>
-          <v-btn icon @click.stop="line_visible_value = !line_visible_value">
-            <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          {{ api_hints_enabled ?
-            'plg.line_visible = ' + boolToString(line_visible_value)
-            :
-            'Show Line'
-           }}
-        </span>
+        <plugin-switch
+          value.sync="line_visible_value"
+          label="Show Line"
+          api_hint='plg.line_visible = '
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_color')">
@@ -574,16 +558,12 @@
       <!-- IMAGE:IMAGE -->
       <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="image_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_visible')">
-        <span>
-          <v-btn icon @click.stop="image_visible_value = !image_visible_value">
-            <v-icon>mdi-eye{{ image_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          {{ api_hints_enabled ?
-            'plg.image_visible = ' + boolToString(image_visible_value)
-            :
-            'Show Image'
-          }}
-        </span>
+        <plugin-switch
+          value.sync="image_visible_value"
+          label="Show Image"
+          api_hint='plg.image_visible = '
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <div v-if="image_visible_sync.in_subscribed_states && (image_visible_value || image_visible_sync['mixed'])">
@@ -839,16 +819,12 @@
       <div style="display: grid"> <!-- overlay container -->
         <div style="grid-area: 1/1">
           <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_visible')">
-            <span>
-              <v-btn icon @click.stop="contour_visible_value = !contour_visible_value">
-                <v-icon>mdi-eye{{ contour_visible_value ? '' : '-off' }}</v-icon>
-              </v-btn>
-              {{ api_hints_enabled ?
-                'plg.contour_visible = ' + boolToString(contour_visible_value)
-                :
-                'Show Contours'
-              }}
-            </span>
+            <plugin-switch
+              value.sync="contour_visible_value"
+              label="Show Contours"
+              api_hint='plg.contour_visible = '
+              :use_eye_icon="true"
+            />
           </glue-state-sync-wrapper>
 
           <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">

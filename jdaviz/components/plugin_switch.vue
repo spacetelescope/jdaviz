@@ -1,4 +1,14 @@
 <template>
+  <span v-if="use_eye_icon">
+    <v-btn icon @click.stop="$emit('update:value', !value)">
+      <v-icon>mdi-eye{{ value ? '' : '-off' }}</v-icon>
+    </v-btn>
+    {{ api_hints_enabled && api_hint ?
+      api_hint + boolToString(value)
+      :
+      label
+    }}
+  </span>
   <v-switch
     :label="api_hints_enabled && api_hint ? api_hint+' '+boolToString(value) : label"
     :class="api_hints_enabled && api_hint ? 'api-hint' : null"
@@ -11,7 +21,7 @@
 
 <script>
   module.exports = {
-    props: ['value', 'label', 'hint', 'api_hint', 'api_hints_enabled'],
+    props: ['value', 'label', 'hint', 'api_hint', 'api_hints_enabled', 'use_eye_icon'],
     methods: {
       boolToString(b) {
         if (b) {
