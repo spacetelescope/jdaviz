@@ -2,7 +2,7 @@ import numpy as np
 from astropy import units as u
 from traitlets import List, Unicode, observe, Bool
 
-from jdaviz.core.events import GlobalDisplayUnitChanged
+from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataToViewerMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
@@ -91,6 +91,9 @@ class UnitConversion(PluginTemplateMixin):
 
         self.spectrum_viewer.state.add_callback('y_display_unit',
                                                 self._on_glue_y_display_unit_changed)
+
+        self.session.hub.subscribe(self, AddDataToViewerMessage,
+                                   handler=self._find_and_convert_contour_units)
 
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
@@ -269,12 +272,29 @@ class UnitConversion(PluginTemplateMixin):
         else:
             self.flux_or_sb_selected = 'Surface Brightness'
 
+        self._find_and_convert_contour_units(yunit)
+
         # for displaying message that PIXAR_SR = 1 if it is not found in the FITS header
         if (
             len(self.app.data_collection) > 0
             and not self.app.data_collection[0].meta.get('PIXAR_SR')
         ):
             self.pixar_sr_exists = False
+
+    def _find_and_convert_contour_units(self, yunit=None):
+        print("Converting contour units")
+        if not yunit:
+            print("Getting y unit")
+            if self.flux_or_sb == "Flux":
+                yunit = _valid_glue_display_unit(self.flux_unit.selected, self.spectrum_viewer, 'y')
+            else:
+                yunit = _valid_glue_display_unit(self.sb_unit_selected, self.spectrum_viewer, 'y')
+        print(f"y unit is {yunit}")
+        for name, viewer in self._app._jdaviz_helper.viewers.items():
+            for layer in viewer._obj.state.layers:
+                if hasattr(layer, 'attribute_display_unit'):
+                    print(f"Found attribute_display_unit for {'layer.layer.label'}")
+                    layer.attribute_display_unit = yunit
 
     def _translate(self, flux_or_sb=None):
         # currently unsupported, can be supported with a scale factor
