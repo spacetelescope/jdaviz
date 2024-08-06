@@ -205,8 +205,8 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
     assert ap.flux_scaling_display_unit == 'MJy'
 
     # and defaults for inputs are in the correct unit
-    assert ap.flux_scaling == 0.003631
-    assert ap.background_value == 46
+    assert_allclose(ap.flux_scaling, 0.003631)
+    assert_allclose(ap.background_value, 46)
 
     # output table in original units to compare to
     # outputs after converting units
@@ -217,7 +217,7 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
 
     # make sure inputs were re-computed in new units
     # after the unit change
-    assert ap.flux_scaling == 3631
+    assert_allclose(ap.flux_scaling, 3631)
     assert_allclose(ap.background_value, 4.6e7)
 
     # re-do photometry and make sure table is in new units
@@ -240,8 +240,8 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
     uc.flux_unit.selected = 'MJy'
 
     # make sure background input in Jy/sr is now in MJy/sr
-    assert ap.background_value == 10.
-    assert ap.flux_scaling == 0.001
+    assert_allclose(ap.background_value, 10)
+    assert_allclose(ap.flux_scaling, 0.001)
 
     # and that photometry results match those before unit converson,
     # but with units converted

@@ -100,7 +100,7 @@
             label="Pixel area"
             v-model.number="pixel_area"
             type="number"
-            hint="Pixel area in arcsec squared, only used data is in surface brightness."
+            hint="Pixel area in arcsec squared, only used if data is in units of surface brightness."
             persistent-hint
           >
           </v-text-field>
