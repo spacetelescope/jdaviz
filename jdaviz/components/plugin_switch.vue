@@ -3,13 +3,15 @@
     <v-btn icon @click.stop="$emit('update:value', !value)">
       <v-icon>mdi-eye{{ value ? '' : '-off' }}</v-icon>
     </v-btn>
-    {{ api_hints_enabled && api_hint ?
-      api_hint + boolToString(value)
-      :
+    <span v-if="api_hints_enabled && api_hint" class="api-hint">
+      {{ api_hint + boolToString(value) }}
+    </span>
+    <span v-else>
       label
-    }}
+    </span>
   </span>
   <v-switch
+    v-else
     :label="api_hints_enabled && api_hint ? api_hint+' '+boolToString(value) : label"
     :class="api_hints_enabled && api_hint ? 'api-hint' : null"
     :hint="hint"

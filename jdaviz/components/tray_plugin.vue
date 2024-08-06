@@ -32,13 +32,15 @@
     </v-row>
     <div v-else>
       <v-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
-        <v-switch
-          v-model="keep_active"
-          @change="$emit('update:keep_active', $event)"
-          :label="api_hints_enabled ? 'plg.keep_active = '+boolToString(keep_active) : 'Keep active'"
+        <!-- TODO: update:keep_active is not working!!! -->
+        <plugin-switch
+          value.sync="keep_active"
+          @update:keep_active="$emit('update:keep_active', $event)"
+          label="Keep active"
+          api_hint="plg.keep_active = "
+          :api_hints_enabled="api_hints_enabled"
           hint="Consider plugin active (showing any previews and enabling all keypress events) even when not opened"
-          persistent-hint>
-        </v-switch>
+        />
       </v-row>
 
       <slot></slot>

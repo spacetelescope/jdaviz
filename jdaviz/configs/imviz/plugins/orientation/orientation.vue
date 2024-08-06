@@ -57,7 +57,8 @@
 
         <v-row class="row-min-bottom-padding">
           <v-radio-group
-            :label="api_hints_enabled ? 'plg.link_type =' : 'Align by'"
+            :label="api_hints_enabled ? 'plg.align_by =' : 'Align by'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Align individual image layers by pixels or on the sky by WCS."
             v-model="align_by_selected"
             @change="delete_subsets($event)"
@@ -150,6 +151,7 @@
                       v-model.number="rotation_angle"
                       type="number"
                       :label="api_hints_enabled ? 'plg.rotation_angle =' : 'Rotation angle'"
+                      :class="api_hints_enabled ? 'api-hint' : null"
                       hint="Degrees counterclockwise from default orientation"
                       :rules="[() => rotation_angle !== '' || 'This field is required']"
                       persistent-hint
@@ -169,7 +171,9 @@
                     :value.sync="new_layer_label"
                     :default="new_layer_label_default"
                     :auto.sync="new_layer_label_auto"
-                    :label="api_hints_enabled ? 'plg.new_layer =' : 'Name for orientation option'"
+                    label="Name for orientation option"
+                    api_hint="plg.new_layer = "
+                    :api_hints_enabled="api_hints_enabled"
                     hint="Label for this new orientation option."
                   ></plugin-auto-label>
                   <v-row justify="end">
@@ -178,6 +182,7 @@
                         color="primary"
                         color="accent"
                         :disabled="rotation_angle===''"
+                        :class="api_hints_enabled ? 'api-hint' : null"
                         @click="add_orientation"
                         text
                       >

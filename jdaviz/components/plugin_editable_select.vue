@@ -9,6 +9,7 @@
       v-model="selected"
       @change="$emit('update:selected', $event)"
       :label="api_hints_enabled && api_hint ? api_hint : label"
+      :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :hint="hint"
       :rules="rules ? rules : []"
       item-text="label"

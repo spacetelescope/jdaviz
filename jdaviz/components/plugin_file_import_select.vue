@@ -8,6 +8,7 @@
         v-model="selected"
         @change="$emit('update:selected', $event)"
         :label="api_hints_enabled && api_hint ? api_hint : label"
+        :class="api_hints_enabled && api_hint ? 'api-hint' : null"
         :hint="hint"
         persistent-hint
       ></v-select>

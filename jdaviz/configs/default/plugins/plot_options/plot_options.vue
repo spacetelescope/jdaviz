@@ -253,6 +253,7 @@
           value.sync="marker_visible_value"
           label="Show Scatter Layer"
           api_hint='plg.marker_visible = '
+          :api_hints_enabled="api_hints_enabled"
           :use_eye_icon="true"
         />
       </glue-state-sync-wrapper>
@@ -262,6 +263,7 @@
           value.sync="line_visible_value"
           label="Show Line"
           api_hint='plg.line_visible = '
+          :api_hints_enabled="api_hints_enabled"
           :use_eye_icon="true"
         />
       </glue-state-sync-wrapper>
@@ -271,6 +273,7 @@
           value.sync="subset_visible_value"
           label="Show Subset"
           api_hint='plg.subset_visible = '
+          :api_hints_enabled="api_hints_enabled"
           :use_eye_icon="true"
         />
       </glue-state-sync-wrapper>
@@ -320,6 +323,7 @@
           value.sync="line_visible_value"
           label="Show Line"
           api_hint='plg.line_visible = '
+          :api_hints_enabled="api_hints_enabled"
           :use_eye_icon="true"
         />
       </glue-state-sync-wrapper>
@@ -562,6 +566,7 @@
           value.sync="image_visible_value"
           label="Show Image"
           api_hint='plg.image_visible = '
+          :api_hints_enabled="api_hints_enabled"
           :use_eye_icon="true"
         />
       </glue-state-sync-wrapper>
@@ -823,6 +828,7 @@
               value.sync="contour_visible_value"
               label="Show Contours"
               api_hint='plg.contour_visible = '
+              :api_hints_enabled="api_hints_enabled"
               :use_eye_icon="true"
             />
           </glue-state-sync-wrapper>

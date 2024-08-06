@@ -8,6 +8,7 @@
       v-model="selected"
       @change="$emit('update:selected', $event)"
       :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Subset')"
+      :class="api_hints_enabled && api_hint ? 'api-hint' : null"
       :hint="hint ? hint : 'Select subset.'"
       :rules="rules ? rules : []"
       :multiple="multiselect"
