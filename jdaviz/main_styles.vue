@@ -285,7 +285,7 @@ span.api-hint-header {
 }
 
 
-.api-hint .v-alert__content, .api-hint .v-subheader {
+.api-hint .v-alert__content, .api-hint.slider-label {
   color: #c75109 !important;
   font-family: monospace;
   font-size: 10px !important;
