@@ -775,7 +775,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     if not has_wcs:
                         bad_region.append((region, 'Sky region provided but data has no valid WCS'))  # noqa
                     region = region.to_pixel(data.coords)
-    
+
                 if hasattr(region, 'to_mask'):
                     try:
                         mask = region.to_mask(**kwargs)
