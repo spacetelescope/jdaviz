@@ -210,7 +210,7 @@ class UnitConversion(PluginTemplateMixin):
         Observes changes in selected flux unit.
 
         When the selected flux unit changes, a GlobalDisplayUnitChange needs
-        to be broadcasted indicating that the flux unit has changed. 
+        to be broadcasted indicating that the flux unit has changed.
 
         Note: The 'axis' of the broadcast should always be 'flux', even though a
         change in flux unit indicates a change in surface brightness unit, because
@@ -258,7 +258,7 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.state.y_display_unit = yunit
             self.spectrum_viewer.reset_limits()
 
-            # and broacast that there has been a change in flux 
+            # and broacast that there has been a change in flux
             self.hub.broadcast(GlobalDisplayUnitChanged("flux", flux_or_sb, sender=self))
 
         if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
