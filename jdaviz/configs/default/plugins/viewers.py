@@ -191,7 +191,7 @@ class JdavizViewerMixin(WithCache):
             layer_state.add_callback('as_steps', self._show_uncertainty_changed)
 
     def _expected_subset_layer_default(self, layer_state):
-        if self.__class__.__name__ == 'CubevizImageView':
+        if self.__class__.__name__ in ('CubevizImageView', 'RampvizImageView'):
             # Do not override default for subsets as for some reason
             # this isn't getting called when they're first added, but rather when
             # the next state change is made (for example: manually changing the visibility)

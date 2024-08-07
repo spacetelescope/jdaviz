@@ -4,6 +4,7 @@ from astropy.nddata import NDDataArray
 
 from functools import cached_property
 from traitlets import Bool, Float, List, Unicode, observe
+from glue.core.message import DataCollectionAddMessage, SubsetUpdateMessage
 
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
 from jdaviz.core.marks import PluginLine
@@ -102,12 +103,60 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
 
+        self.session.hub.subscribe(self, DataCollectionAddMessage,
+                                   handler=self._on_data_added)
+
+        self.session.hub.subscribe(self, SubsetUpdateMessage,
+                                   handler=self._on_subset_update)
+
         self._update_disabled_msg()
 
         if self.app.state.settings.get('server_is_remote', False):
             # when the server is remote, saving the file in python would save on the server, not
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
+
+    @property
+    def integration_viewer(self):
+        viewer = self.app.get_viewer(
+            self.app._jdaviz_helper._default_integration_viewer_reference_name
+        )
+        return viewer
+
+    def _on_data_added(self, msg={}):
+        if msg.data.label.endswith('[DATA]'):
+            self.extract(add_data=True)
+            self.integration_viewer._initialize_x_axis()
+
+    def _on_subset_update(self, msg={}):
+
+        if not hasattr(self, 'aperture') or not hasattr(self.app._jdaviz_helper, 'cube_cache'):
+            return
+
+        cube_cache = self.app._jdaviz_helper.cube_cache
+        cube = cube_cache[list(cube_cache.keys())[0]]
+
+        subset_lbl = msg.subset.label
+        color = msg.subset.style.color
+
+        subset = self.app.get_subsets(subset_lbl)[0]
+        region = subset['region']
+        # glue region has transposed coords relative to cached cube:
+        region_mask = region.to_mask().to_image(cube.shape[:-1]).astype(bool).T
+        cube_subset = cube[region_mask]
+
+        mark = [
+            PluginLine(self.integration_viewer, x=np.arange(cube_subset.shape[1]), y=y,
+                       stroke_width=1.5, colors=[color], opacities=[0.3], label=subset_lbl)
+            for y in cube_subset
+        ]
+
+        self.integration_viewer.figure.marks = [
+            mark for mark in self.integration_viewer.figure.marks
+            if getattr(mark, 'label', None) != subset_lbl
+        ] + mark
+
+        self.integration_viewer.reset_limits()
 
     @property
     def user_api(self):
@@ -157,31 +206,6 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     @property
     def slice_plugin(self):
         return self.app._jdaviz_helper.plugins['Slice']
-
-    @observe('aperture_items')
-    @skip_if_not_tray_instance()
-    def _aperture_items_changed(self, msg):
-        if not self.do_auto_extraction:
-            return
-        if not hasattr(self, 'aperture'):
-            return
-        for item in msg['new']:
-            if item not in msg['old']:
-                if item.get('type') != 'spatial':
-                    continue
-                subset_lbl = item.get('label')
-                try:
-                    self._extract_in_new_instance(subset_lbl=subset_lbl,
-                                                  auto_update=True, add_data=True)
-                except Exception as err:
-                    msg = SnackbarMessage(
-                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} failed: {err}",  # noqa
-                        color='error', sender=self, timeout=10000)
-                else:
-                    msg = SnackbarMessage(
-                        f"Automatic {self.resulting_product_name} extraction for {subset_lbl} successful",  # noqa
-                        color='success', sender=self)
-                self.app.hub.broadcast(msg)
 
     def _extract_in_new_instance(self, dataset=None, function='Mean', subset_lbl=None,
                                  auto_update=False, add_data=False):
@@ -261,9 +285,13 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         collapsed = getattr(np, selected_func)(
             nddata.data, **collapse_kwargs
         ) << nddata.unit
+
+        def expand(x):
+            return np.expand_dims(x, axis=(0, 1))
+
         return NDDataArray(
-            data=collapsed,
-            mask=mask.all(axis=self.spatial_axes),
+            data=expand(collapsed),
+            mask=expand(mask.all(axis=self.spatial_axes)),
             meta=nddata.meta
         )
 

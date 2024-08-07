@@ -112,8 +112,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         )
 
     elif isinstance(file_obj, (np.ndarray, NDData)) and file_obj.ndim in (1, 2):
-        if file_obj.ndim == 2:
-            app.get_viewer(integration_viewer_reference_name).is2d = True
         # load 1D profile(s) to integration_viewer
         _parse_ndarray(
             app, file_obj, data_label=data_label,
@@ -166,24 +164,25 @@ def _roman_3d_to_glue_data(
     ])
 
     ramp_cube_data_label = f"{data_label}[DATA]"
+    ramp_diff_data_label = f"{data_label}[DIFF]"
+
+    # load these cubes into the cache:
+    app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(_swap_axes(data))
+    app._jdaviz_helper.cube_cache[ramp_diff_data_label] = NDDataArray(_swap_axes(diff_data))
+
+    # load these cubes into the app:
     _parse_ndarray(
         app,
         file_obj=_swap_axes(data),
         data_label=ramp_cube_data_label,
         viewer_reference_name=group_viewer_reference_name,
     )
-
-    app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(_swap_axes(data))
-
-    # load the diff of the data cube
-    ramp_diff_data_label = f"{data_label}[DIFF]"
     _parse_ndarray(
         app,
         file_obj=_swap_axes(diff_data),
         data_label=ramp_diff_data_label,
         viewer_reference_name=diff_viewer_reference_name,
     )
-    app._jdaviz_helper.cube_cache[ramp_diff_data_label] = NDDataArray(_swap_axes(diff_data))
 
     # the default collapse function in the profile viewer is "sum",
     # but for ramp files, "median" is more useful:
