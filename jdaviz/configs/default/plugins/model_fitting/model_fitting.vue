@@ -52,10 +52,10 @@
       <v-row v-if="model_comp_items">
         <v-select
           attach
-          :menu-props="{ left: true }"
           :items="model_comp_items.map(i => i.label)"
           v-model="model_comp_selected"
           :label="api_hints_enabled ? 'plg.model_component =' : 'Model Component'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           hint="Select a model component to add."
           persistent-hint
         ></v-select>
@@ -63,9 +63,10 @@
 
       <v-row v-if="display_order">
         <v-text-field
-          label="Order"
           type="number"
           v-model.number="poly_order"
+          :label="api_hints_enabled ? 'plg.poly_order' : 'Order'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           :rules="[() => poly_order!=='' || 'This field is required']"
           hint="Order of polynomial to fit."
           persistent-hint
@@ -79,7 +80,8 @@
         :default="comp_label_default"
         :auto.sync="comp_label_auto"
         :invalid_msg="comp_label_invalid_msg"
-        :label="api_hints_enabled ? 'plg.model_component_label =' : null"
+        api_hint="plg.model_component_label ="
+        :api_hints_enabled="api_hints_enabled"
         hint="Label for this new model component."
       ></plugin-auto-label>
 
@@ -88,6 +90,7 @@
           <plugin-action-button
             :disabled="!form_valid_model_component || comp_label_invalid_msg.length > 0"
             :results_isolated_to_plugin="true"
+            :api_hints_enabled="api_hints_enabled"
             @click="add_model"
           >
             {{ api_hints_enabled ?
@@ -112,7 +115,6 @@
             color="turquoise"
             dark
             style="padding-left: 8px; padding-right: 6px;"
-            class="ignore-api-hints"
             @click="reestimate_model_parameters(null)">
             <v-icon left small dense style="margin-right: 2px">mdi-restart</v-icon>
             Re-estimate free parameters
@@ -247,6 +249,7 @@
         :auto.sync="model_equation_auto"
         :invalid_msg="model_equation_invalid_msg"
         :label="api_hints_enabled ? 'plg.equation =' : null"
+        :class="api_hints_enabled ? 'api-hint' : null"
         hint="Enter an equation specifying how to combine the component models, using their model IDs and basic arithmetic operators (ex. component1+component2)."
       ></plugin-auto-label>
 
@@ -294,6 +297,8 @@
             :auto.sync="residuals_label_auto"
             :invalid_msg="residuals_label_invalid_msg"
             label="Residuals Data Label"
+            api_hint="plg.residuals ="
+            :api_hints_enabled="api_hints_enabled"
             hint="Label for the residuals.  Data entry will not be loaded into the viewer automatically."
           ></plugin-auto-label>
 

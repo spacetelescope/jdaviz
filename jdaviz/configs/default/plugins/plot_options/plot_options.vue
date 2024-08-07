@@ -328,13 +328,11 @@
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_color')">
         <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">
-            {{ api_hints_enabled ?
-              'plg.line_color = \''+line_color_value +'\''
-              :
-              'Line Color'
-            }}
-          </v-subheader>
+          <plot-options-slider-header
+              label='Line Color'
+              :api_hint="'plg.line_color = ' + line_color_value"
+              :api_hints_enabled="api_hints_enabled"
+            />
           <v-menu>
             <template v-slot:activator="{ on }">
                 <span class="color-menu"
@@ -481,13 +479,11 @@
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value==='Fixed'" :sync="marker_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color')">
           <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">
-              {{ api_hints_enabled ?
-                'plg.marker_color = \''+marker_color_value +'\''
-                :
-                'Color'
-              }}
-            </v-subheader>
+            <plot-options-slider-header
+              label='Color'
+              :api_hint="'plg.marker_color = ' + marker_color_value"
+              :api_hints_enabled="api_hints_enabled"
+            />
             <v-menu>
               <template v-slot:activator="{ on }">
                   <span class="color-menu"
@@ -602,13 +598,11 @@
         </glue-state-sync-wrapper>
         <glue-state-sync-wrapper v-if="image_color_mode_value !== 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_color')">
           <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">
-              {{ api_hints_enabled ?
-                'plg.image_color = '+image_color_value
-                :
-                'Image Color'
-              }}
-            </v-subheader>
+            <plot-options-slider-header
+              label='Image Color'
+              :api_hint="'plg.image_color = ' + image_color_value"
+              :api_hints_enabled="api_hints_enabled"
+            />
             <v-menu>
               <template v-slot:activator="{ on }">
                   <span class="color-menu"

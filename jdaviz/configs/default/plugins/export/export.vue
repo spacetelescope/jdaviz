@@ -31,12 +31,11 @@
       </plugin-inline-select>
       <v-row class="row-min-bottom-padding">
         <v-select
-          class="category-content"
-          :menu-props="{ left: true }"
           attach
           v-model="viewer_format_selected"
           :items="viewer_format_items.map(i => i.label)"
           :label="api_hints_enabled ? 'plg.viewer_format =' : 'Format'"
+          :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
           hint="Image format for exporting viewers."
           :disabled="viewer_selected.length == 0"
           persistent-hint
@@ -118,12 +117,11 @@
       </v-row>
       <v-row class="row-min-bottom-padding">
           <v-select
-            class="category-content"
-            :menu-props="{ left: true }"
             attach
             v-model="dataset_format_selected"
             :items="dataset_format_items.map(i => i.label)"
             :label="api_hints_enabled ? 'plg.dataset_format =' : 'Format'"
+            :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
             hint="Format for exporting datasets."
             :disabled="dataset_selected.length == 0"
             persistent-hint
@@ -155,14 +153,13 @@
 
       <v-row class="row-min-bottom-padding">
         <v-select
-          class="category-content"
-          :menu-props="{ left: true }"
           attach
           v-model="subset_format_selected"
           :items="subset_format_items"
           item-text="label"
           item-disabled="disabled"
           :label="api_hints_enabled ? 'plg.subset_format =' : 'Format'"
+          :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
           hint="Format for exporting subsets."
           :disabled="subset_selected == null || subset_selected.length == 0"
           persistent-hint
@@ -187,12 +184,11 @@
       </plugin-inline-select>
       <v-row class="row-min-bottom-padding">
         <v-select
-          class="category-content"
-          :menu-props="{ left: true }"
           attach
           v-model="plugin_table_format_selected"
           :items="plugin_table_format_items.map(i => i.label)"
           :label="api_hints_enabled ? 'plg.plugin_table_format =' : 'Format'"
+          :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
           hint="File format for exporting plugin tables."
           :disabled="plugin_table_selected.length == 0"
           persistent-hint
@@ -221,12 +217,11 @@
           :widget="plugin_plot_selected_widget"/>
       <v-row class="row-min-bottom-padding">
         <v-select
-          class="category-content"
-          :menu-props="{ left: true }"
           attach
           v-model="plugin_plot_format_selected"
           :items="plugin_plot_format_items.map(i => i.label)"
           :label="api_hints_enabled ? 'plg.plugin_plot_format =' : 'Format'"
+          :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
           hint="File format for exporting plugin plots."
           :disabled="plugin_plot_selected.length == 0"
           persistent-hint
@@ -241,7 +236,6 @@
           :value="default_filepath"
           label="Filepath"
           hint="Filepath export location."
-          class="ignore-api-hints"
           persistent-hint
           disabled
         ></v-text-field>
@@ -256,7 +250,9 @@
       :default="filename_default"
       :auto.sync="filename_auto"
       :invalid_msg="filename_invalid_msg"
-      :label="api_hints_enabled ? 'plg.filename =' : 'Filename'"
+      label="Filename"
+      api_hint="plg.filename ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Export to a file on disk."
     ></plugin-auto-label>
 
@@ -275,6 +271,7 @@
         :results_isolated_to_plugin="true"
         @click="export_from_ui"
         :spinner="spinner"
+        :api_hints_enabled="api_hints_enabled"
         :disabled="filename_value.length === 0 ||
                    movie_recording ||
                    subset_invalid_msg.length > 0 || data_invalid_msg.length > 0 ||

@@ -54,7 +54,7 @@
         </v-row>
 
         <div v-if="aperture_selected_validity.is_aperture">
-          <v-row class="ignore-api-hints">
+          <v-row>
             <plugin-switch
               :value.sync="wavelength_dependent"
               label="Wavelength dependent"
@@ -82,7 +82,7 @@
                 persistent-hint
               ></v-text-field>
             </v-row>
-            <v-row justify="end" class="ignore-api-hints">
+            <v-row justify="end">
               <j-tooltip tooltipcontent="Select the slice nearest the reference wavelength">
                 <plugin-action-button :results_isolated_to_plugin="true" @click="goto_reference_spectral_value">
                   Slice to Wavelength
@@ -222,11 +222,11 @@
 
       <v-row>
         <v-select
-          :menu-props="{ left: true }"
           attach
           :items="function_items.map(i => i.label)"
           v-model="function_selected"
           :label="api_hints_enabled ? 'plg.function =' : 'Function'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
           persistent-hint
         ></v-select>
@@ -265,7 +265,7 @@
 
       <j-plugin-section-header v-if="extraction_available && export_enabled">Results</j-plugin-section-header>
 
-      <div class="ignore-api-hint" style="display: grid; position: relative"> <!-- overlay container -->
+      <div style="display: grid; position: relative"> <!-- overlay container -->
         <div style="grid-area: 1/1">
           <div v-if="extraction_available && export_enabled">
 

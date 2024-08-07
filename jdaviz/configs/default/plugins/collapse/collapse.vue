@@ -20,11 +20,11 @@
 
     <v-row>
       <v-select
-        :menu-props="{ left: true }"
         attach
         :items="function_items.map(i => i.label)"
         v-model="function_selected"
         :label="api_hints_enabled ? 'plg.function =' : 'Function'"
+        :class="api_hints_enabled ? 'api-hint' : null"
         hint="Function to use in the collapse."
         persistent-hint
       ></v-select>
@@ -62,7 +62,7 @@
 
     <j-plugin-section-header v-if="collapsed_spec_available && export_enabled">Results</j-plugin-section-header>
 
-    <div style="display: grid; position: relative" class="ignore-api-hints"> <!-- overlay container -->
+    <div style="display: grid; position: relative"> <!-- overlay container -->
       <div style="grid-area: 1/1">
         <div v-if="collapsed_spec_available && export_enabled">
 

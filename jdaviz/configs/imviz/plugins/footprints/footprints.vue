@@ -30,7 +30,6 @@
     <v-alert
       v-if="is_pixel_linked"
       type='warning'
-      class="ignore-api-hints"
       style="margin-left: -12px; margin-right: -12px"
     >
       cannot plot footprint when aligned by pixels (see Orientation plugin).
@@ -59,16 +58,13 @@
       />
 
       <v-row>
-        <span>
-          <v-btn icon @click.stop="visible = !visible">
-            <v-icon>mdi-eye{{ visible ? '' : '-off' }}</v-icon>
-          </v-btn>
-          {{ api_hints_enabled ?
-            'plg.visible = ' + boolToString(visible)
-            :
-            'Show Overlay'
-          }}
-        </span>
+        <plugin-switch
+          :value.sync="visible"
+          label="Visible"
+          api_hint="plg.visible = "
+          :api_hints_enabled="api_hints_enabled"
+          :use_eye_icon="true"
+        />
       </v-row>
 
       <v-row>
@@ -84,7 +80,7 @@
                             @update:color="throttledSetColor($event.hexa)"></v-color-picker>
             </div>
           </v-menu>
-        <span style="padding-left: 12px; padding-top: 3px">
+        <span style="padding-left: 12px; padding-top: 3px" :class="api_hints_enabled ? 'api-hint' : null">
           {{  api_hints_enabled ?
               'plg.color = '+color
               :
@@ -93,13 +89,11 @@
         </span>
       </v-row>
       <div>
-        <v-subheader class="pl-0 slider-label" style="height: 12px">
-          {{ api_hints_enabled ?
-              'plg.fill_opacity = '+fill_opacity
-              :
-              'Fill Opacity' 
-             }}
-        </v-subheader>
+        <plot-options-slider-header
+          label="Fill Opacity"
+          :api_hint="'plg.fill_opacity = ' + fill_opacity"
+          :api_hints_enabled="api_hints_enabled"
+        />
         <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="fill_opacity" hide-details class="no-hint" />
       </div>
 
@@ -129,7 +123,10 @@
         <v-row>
           <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
           <j-tooltip v-for="viewer_ref in viewer_selected" :tooltipcontent="'center RA/DEC on current zoom-limits of '+viewer_ref">
-          <v-btn @click="() => center_on_viewer(viewer_ref)">
+          <v-btn
+            @click="() => center_on_viewer(viewer_ref)"
+            :class="api_hints_enabled ? 'api-hint' : null"
+          >
             {{ api_hints_enabled ?
                 'plg.center_on_viewer(\''+viewer_ref+'\')'
                 :
@@ -146,6 +143,7 @@
             step="0.01"
             :rules="[() => ra!=='' || 'This field is required']"
             :label="api_hints_enabled ? 'plg.ra = ' : 'RA'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Right Ascension (degrees)"
             persistent-hint
           ></v-text-field>
@@ -158,6 +156,7 @@
             step="0.01"
             :rules="[() => dec!=='' || 'This field is required']"
             :label="api_hints_enabled ? 'plg.dec = ' : 'Dec'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Declination (degrees)"
             persistent-hint
           ></v-text-field>
@@ -169,6 +168,7 @@
             type="number"
             :rules="[() => pa!=='' || 'This field is required']"
             :label="api_hints_enabled ? 'plg.pa = ' : 'Position Angle'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Position Angle (degrees) measured from North
                   to central vertical axis in North to East direction."
             persistent-hint
@@ -181,6 +181,7 @@
             type="number"
             :rules="[() => v2_offset!=='' || 'This field is required']"
             :label="api_hints_enabled ? 'plg.v2_offset = ' : 'V2 Offset'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Additional V2 offset in telescope coordinates to apply to instrument
                   center, as from a dither pattern."
             persistent-hint
@@ -193,6 +194,7 @@
             type="number"
             :rules="[() => v3_offset!=='' || 'This field is required']"
             :label="api_hints_enabled ? 'plg.v3_offset = ' : 'V3 Offset'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Additional V3 offset in telescope coordinates to apply to instrument
                   center, as from a dither pattern."
             persistent-hint
