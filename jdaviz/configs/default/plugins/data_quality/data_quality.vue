@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Data Quality"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Data Quality layer visualization options.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#data-quality'"
     @plugin-ping="plugin_ping($event)"
@@ -11,17 +14,21 @@
       :multiselect="science_layer_multiselect"
       :icons="icons"
       :show_if_single_entry="true"
-      :label="'Science data'"
-      :hint="'Select the science data'"
+      label="Science data"
+      api_hint="plg.science_layer ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Select the science data"
     />
 
     <plugin-layer-select
       :items="dq_layer_items"
       :selected.sync="dq_layer_selected"
       :multiselect="dq_layer_multiselect"
-      :label="'Data quality'"
+      label="Data quality"
+      api_hint="plg.dq_layer ="
+      :api_hints_enabled="api_hints_enabled"
       :show_if_single_entry="true"
-      :hint="'Select the data quality'"
+      hint="Select the data quality"
       :icons="icons"
     />
 
@@ -37,7 +44,11 @@
 
     <v-row class="row-no-padding">
       <v-col>
-        <v-subheader class="pl-0 slider-label" style="height: 12px">Data quality relative opacity</v-subheader>
+        <plot-options-slider-header
+          label="Data quality relative opacity"
+          :api_hint="'plg.dq_layer_opacity = ' + dq_layer_opacity"
+          :api_hints_enabled="api_hints_enabled"
+        />
         <glue-throttled-slider wait="300" min="0" max="1" step="0.01" :value.sync="dq_layer_opacity"/>
       </v-col>
     </v-row>
@@ -78,7 +89,7 @@
       </v-col>
     </v-row>
 
-    <v-col style="...">
+    <v-col>
       <v-row>
       <v-select
         :menu-props="{ left: true }"
