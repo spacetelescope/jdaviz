@@ -20,7 +20,7 @@
           <v-expansion-panel-content class="plugin-expansion-panel-content">
             <v-row>
               <plugin-switch
-                value.sync="interactive_extract"
+                :value.sync="interactive_extract"
                 label="Show live-extraction"
                 api_hint="plg.interactive_extract = "
                 :api_hints_enabled="api_hints_enabled"

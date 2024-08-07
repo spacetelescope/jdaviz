@@ -37,8 +37,8 @@
       <v-row v-if="uses_active_status && keep_active !== undefined" style="padding-bottom: 24px">
         <!-- TODO: update:keep_active is not working!!! -->
         <plugin-switch
-          value.sync="keep_active"
-          @update:keep_active="$emit('update:keep_active', $event)"
+          :value.sync="keep_active"
+          @update:value="$emit('update:keep_active', $event)"
           label="Keep active"
           api_hint="plg.keep_active = "
           :api_hints_enabled="api_hints_enabled"

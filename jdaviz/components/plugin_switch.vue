@@ -7,7 +7,7 @@
       {{ api_hint + boolToString(value) }}
     </span>
     <span v-else>
-      label
+      {{ label }}
     </span>
   </span>
   <v-switch

@@ -209,7 +209,7 @@
 
     <glue-state-sync-wrapper v-if="uncertainty_visible_sync.in_subscribed_states" :sync="uncertainty_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('uncertainty_visible')">
       <plugin-switch
-        value.sync="uncertainty_visible_value"
+        :value.sync="uncertainty_visible_value"
         label="Plot uncertainties"
         api_hint='plg.uncertainty_visible = '
         :api_hints_enabled="api_hints_enabled"
@@ -250,7 +250,7 @@
       <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_visible')">
         <plugin-switch
-          value.sync="marker_visible_value"
+          :value.sync="marker_visible_value"
           label="Show Scatter Layer"
           api_hint='plg.marker_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -260,7 +260,7 @@
 
       <glue-state-sync-wrapper v-if="!marker_visible_sync.in_subscribed_states" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
         <plugin-switch
-          value.sync="line_visible_value"
+          :value.sync="line_visible_value"
           label="Show Line"
           api_hint='plg.line_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -270,7 +270,7 @@
 
       <glue-state-sync-wrapper :sync="subset_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_visible')">
         <plugin-switch
-          value.sync="subset_visible_value"
+          :value.sync="subset_visible_value"
           label="Show Subset"
           api_hint='plg.subset_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -320,7 +320,7 @@
       <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && ((!marker_visible_sync.in_subscribed_states && line_visible_value) || (marker_visible_sync.in_subscribed_states && marker_visible_value)))">Line</j-plugin-section-header>
       <glue-state-sync-wrapper v-if="marker_visible_sync.in_subscribed_states && marker_visible_value" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
         <plugin-switch
-          value.sync="line_visible_value"
+          :value.sync="line_visible_value"
           label="Show Line"
           api_hint='plg.line_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -375,7 +375,7 @@
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_as_steps_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_as_steps')">
         <plugin-switch
-          value.sync="line_as_steps_value"
+          :value.sync="line_as_steps_value"
           label="Plot profile as steps"
           api_hint="plg.line_as_steps = "
           :api_hints_enabled="api_hints_enabled"
@@ -563,7 +563,7 @@
       <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="image_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_visible')">
         <plugin-switch
-          value.sync="image_visible_value"
+          :value.sync="image_visible_value"
           label="Show Image"
           api_hint='plg.image_visible = '
           :api_hints_enabled="api_hints_enabled"
@@ -825,7 +825,7 @@
         <div style="grid-area: 1/1">
           <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_visible')">
             <plugin-switch
-              value.sync="contour_visible_value"
+              :value.sync="contour_visible_value"
               label="Show Contours"
               api_hint='plg.contour_visible = '
               :api_hints_enabled="api_hints_enabled"
