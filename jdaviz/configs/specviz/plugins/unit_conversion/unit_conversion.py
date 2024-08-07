@@ -179,9 +179,6 @@ class UnitConversion(PluginTemplateMixin):
                 self.flux_unit.selected,
                 self.angle_unit.selected
             )
-            self.hub.broadcast(GlobalDisplayUnitChanged('sb',
-                                                        self.sb_unit_selected,
-                                                        sender=self))
 
             if not self.flux_unit.selected:
                 y_display_unit = self.spectrum_viewer.state.y_display_unit
