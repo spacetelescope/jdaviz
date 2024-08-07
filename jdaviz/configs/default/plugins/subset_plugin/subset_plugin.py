@@ -672,25 +672,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self._load_regions(raw_regs, **kwargs)
         else:
             self._load_regions(region, **kwargs)
-        # elif is region
-        # send to handle region method
-
-        # Remove hardcoding
-        # viewer_name = self.app._jdaviz_helper._default_flux_viewer_reference_name
-        # viewer_name = list(self.app._jdaviz_helper.viewers.keys())[0]
-        # flux_viewer = self.app.get_viewer(viewer_name)
-        # data = flux_viewer.state.reference_data
-
-        # # Use Select object with choices/selected options for combination_mode
-        # if self.combination_mode:
-        #     # Add region with mode
-        #     self.app.session.edit_subset_mode.mode = self.combination_mode
-        # else:
-        #     # Add region as new subset
-        #     self.app.session.edit_subset_mode.mode = NewMode
-        # s = region_translators.regions2roi(region, wcs=data.coords)
-        #
-        # flux_viewer.apply_roi(s)
 
     def _load_regions(self, regions, refdata_label=None, **kwargs):
         if len(self.app.data_collection) == 0:
@@ -700,15 +681,18 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                         EllipticalAperture, SkyEllipticalAperture,
                                         RectangularAperture, SkyRectangularAperture,
                                         CircularAnnulus, SkyCircularAnnulus)
-        from regions import (CirclePixelRegion, CircleSkyRegion,
+        from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
                              EllipsePixelRegion, EllipseSkyRegion,
                              RectanglePixelRegion, RectangleSkyRegion,
                              CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
         from jdaviz.core.region_translators import regions2roi, aperture2regions
 
         # If user passes in one region obj instead of list, try to be smart.
-        # if not isinstance(regions, (list, tuple, Regions)):
-        #     regions = [regions]
+        if (isinstance(regions, SpectralRegion) or
+                (isinstance(regions, list) and isinstance(regions[0], SpectralRegion))):
+            self._import_spectral_regions(regions)
+        elif not isinstance(regions, (list, tuple, Regions)):
+            regions = [regions]
 
         bad_regions = []
 
@@ -739,7 +723,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                     RectangularAperture, CircularAnnulus,
                                     CirclePixelRegion, EllipsePixelRegion,
                                     RectanglePixelRegion, CircleAnnulusPixelRegion))
-                    and self.app._link_type == "wcs"):
+                    and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
                 bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
 
             # photutils: Convert to region shape first
@@ -749,9 +733,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                    CircularAnnulus, SkyCircularAnnulus)):
                 region = aperture2regions(region)
 
-            elif isinstance(region, SpectralRegion):
-                self._import_spectral_regions(region)
-
             # region: Convert to ROI.
             # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
             if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
@@ -759,14 +740,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                    RectanglePixelRegion, RectangleSkyRegion,
                                    CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
                 state = regions2roi(region, wcs=data.coords)
-                # viewer_name = list(self.app._jdaviz_helper.viewers.keys())[0]
-                # viewer = self.app.get_viewer(viewer_name)
                 self._apply_subset_state_to_viewer(state, viewer)
-                # Apply subset to viewer
-                # TODO: Do we want user to specify viewer? Does it matter?
-                # self.app.session.edit_subset_mode._mode = NewMode
-                # self.app._jdaviz_helper.default_viewer._obj.apply_roi(state)
-                # self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
 
             # Last resort: Masked Subset that is static (if data is not a cube)
             elif data.ndim == 2:
@@ -829,7 +803,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 m = mode
             self.app.session.edit_subset_mode.mode = m
             s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
-                                 att=range_viewer.slice_component_label)
+                                 att=range_viewer.state.x_att)
             range_viewer.apply_subset_state(s)
 
     def _apply_subset_state_to_viewer(self, state, viewer):
