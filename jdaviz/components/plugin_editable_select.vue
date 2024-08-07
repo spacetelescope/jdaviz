@@ -34,7 +34,7 @@
       type="warning"
       style="width: 100%; padding-top: 16px; padding-bottom: 16px"
     >
-      <span v-if="api_hints_enabled && api_hint_remove">
+      <span v-if="api_hints_enabled && api_hint_remove" class="api-hint">
         {{api_hint_remove}}('{{selected}}')
       </span>
       <span v-else>
@@ -54,6 +54,7 @@
       v-model="edit_value"
       @keyup="$emit('update:edit_value', $event.target.value)"
       :label="textFieldLabel"
+      :class="textFieldClass"
       :hint="mode == 'rename' ? 'Rename '+label.toLowerCase() : 'Add '+label.toLowerCase()"
       persistent-hint
     >
@@ -91,6 +92,15 @@ module.exports = {
         return this.api_hint_add+'(\''+this.edit_value+'\')';
       } else {
         return this.label;
+      }
+    },
+    textFieldClass() {
+      if (this.api_hints_enabled && this.mode == 'rename' && this.api_hint_rename) {
+        return 'api-hint';
+      } else if (this.api_hints_enabled && this.mode == 'add' && this.api_hint_add) {
+        return 'api-hint';
+      } else {
+        return null;
       }
     }
   },
