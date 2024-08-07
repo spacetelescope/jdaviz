@@ -209,9 +209,21 @@ class UnitConversion(PluginTemplateMixin):
     @observe('flux_unit_selected')
     def _on_flux_unit_changed(self, msg):
 
-        """ Handle changes in selected flux unit."""
+        """
+        Observes changes in selected flux unit.
 
-        # may need to be updated if translations in other configs going to be supported
+        When the selected flux unit changes, a GlobalDisplayUnitChange needs
+        to be broadcasted indicating that the flux unit has changed. 
+
+        Note: The 'axis' of the broadcast should always be 'flux', even though a
+        change in flux unit indicates a change in surface brightness unit, because
+        SB is read only, so anything observing for changes in surface brightness
+        should be looking for a change in 'flux' (as well as angle).
+        """
+
+        if msg.get('name') != 'flux_unit_selected':
+            # not sure when this would be encountered but keeping as a safeguard
+            return
         if not hasattr(self, 'flux_unit'):
             return
         if not self.flux_unit.choices and self.app.config == 'cubeviz':
@@ -219,14 +231,12 @@ class UnitConversion(PluginTemplateMixin):
 
         flux_or_sb = None
 
-        if msg.get('name') != 'flux_unit_selected':
-            # not sure when this would be encountered but keeping as a safeguard
-            return
-
         # when the configuration is Specviz, translation is not currently supported.
         # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
         # have a scale factor assigned in the metadata, enabling translation.
         current_y_unit = self.spectrum_viewer.state.y_display_unit
+
+        # if the current y display unit is a surface brightness unit,
         if self.angle_unit.selected and check_if_unit_is_per_solid_angle(current_y_unit):
             flux_or_sb = self._append_angle_correctly(
                          self.flux_unit.selected,
@@ -234,10 +244,11 @@ class UnitConversion(PluginTemplateMixin):
             )
         else:
             flux_or_sb = self.flux_unit.selected
+
         untranslatable_units = self._untranslatable_units
         # disable translator if flux unit is untranslatable,
         # still can convert flux units, this just disables flux
-        # to surface brightnes translation for units in list.
+        # to surface brightness translation for units in list.
         if flux_or_sb in untranslatable_units:
             self.can_translate = False
         else:
@@ -245,9 +256,12 @@ class UnitConversion(PluginTemplateMixin):
 
         yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
 
+        # update spectrum viewer with new y display unit
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
             self.spectrum_viewer.reset_limits()
+
+            # and broacast that there has been a change in flux 
             self.hub.broadcast(GlobalDisplayUnitChanged("flux", flux_or_sb, sender=self))
 
         if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
