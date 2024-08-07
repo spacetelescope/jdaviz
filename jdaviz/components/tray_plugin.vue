@@ -9,7 +9,8 @@
       <div style="width: 32px">
         <j-tooltip tipid='plugin-api-hints'>
           <v-btn
-            v-if="api_hints_enabled !== undefined && config && plugin_key" 
+            v-if="api_hints_enabled !== undefined && config && plugin_key && checkNotebookContext()" 
+            id="api-hints-button"
             icon 
             :class="api_hints_enabled ? 'api-hint' : null"
             @click="() => {$emit('update:api_hints_enabled', !api_hints_enabled)}"
@@ -87,7 +88,14 @@ module.exports = {
       setTimeout(() => {
         this.sendPing(true)          
       }, 200)  // ms
-    }
+    },
+    checkNotebookContext() {
+      // copied from app.vue
+      this.notebook_context = document.getElementById("ipython-main-app")
+        || document.querySelector('.jp-LabShell')
+        || document.querySelector(".lm-Widget#main"); /* Notebook 7 */
+      return this.notebook_context;
+    },
   },
   mounted() {
     this.sendPing(true);
