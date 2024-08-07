@@ -1,5 +1,5 @@
 from jdaviz.core.events import SliceSelectSliceMessage
-from jdaviz.core.events import AddDataMessage, SnackbarMessage
+from jdaviz.core.events import AddDataMessage
 from jdaviz.core.helpers import CubeConfigHelper
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
 
@@ -49,42 +49,11 @@ class Rampviz(CubeConfigHelper):
         self.app.hub.subscribe(self, AddDataMessage,
                                handler=self._set_x_axis)
 
-        if 'Ramp Extraction' not in self.plugins:  # pragma: no cover
-            msg = SnackbarMessage(
-                "Automatic ramp extraction requires the Ramp Extraction plugin to be enabled",  # noqa
-                color='error', sender=self, timeout=10000)
-            self.app.hub.broadcast(msg)
-        else:
-            try:
-                self.plugins['Ramp Extraction']._obj._extract_in_new_instance(auto_update=False, add_data=True)  # noqa
-            except Exception as err:
-                msg = SnackbarMessage(
-                    "Automatic ramp extraction for the entire cube failed."
-                    f" See the ramp extraction plugin to perform a custom extraction: {err}",
-                    color='error', sender=self, timeout=10000)
-            else:
-                msg = SnackbarMessage(
-                    "The extracted ramp profile was generated automatically for the entire cube."
-                    " See the ramp extraction plugin for details or to"
-                    " perform a custom extraction.",
-                    color='warning', sender=self, timeout=10000)
-            self.app.hub.broadcast(msg)
-
     def _set_x_axis(self, msg):
-        viewer = self.app.get_viewer(self._default_integration_viewer_reference_name)
-        if msg.viewer_id != viewer.reference_id:
-            return
+        viewer = self.app.get_viewer(self._default_group_viewer_reference_name)
         ref_data = viewer.state.reference_data
-        if ref_data and ref_data.ndim == 3:
-            for att_name in _temporal_axis_names:
-                if att_name in ref_data.component_ids():
-                    if viewer.state.x_att != ref_data.id[att_name]:
-                        viewer.state.x_att = ref_data.id[att_name]
-                        viewer.state.reset_limits()
-                    break
-            else:
-                viewer.state.x_att = ref_data.id["Pixel Axis 2 [x]"]
-                viewer.state.reset_limits()
+        viewer.state.x_att = ref_data.id["Pixel Axis 2 [x]"]
+        viewer.state.reset_limits()
 
     def select_group(self, group_index):
         """

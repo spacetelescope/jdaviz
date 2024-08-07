@@ -542,6 +542,7 @@ class PluginLine(Lines, PluginMark, HubListener):
         self.viewer = viewer
         # color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
+        self.label = kwargs.get('label')
         super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
 
 

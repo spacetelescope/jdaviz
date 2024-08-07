@@ -1,3 +1,4 @@
+import numpy as np
 from astropy.nddata import NDDataArray
 from glue.core import BaseData
 from glue_jupyter.bqplot.image import BqplotImageView
@@ -5,7 +6,7 @@ from glue_jupyter.bqplot.image import BqplotImageView
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin, JdavizProfileView
 from jdaviz.configs.cubeviz.plugins.mixins import WithSliceSelection, WithSliceIndicator
 from jdaviz.core.registries import viewer_registry
-from jdaviz.core.freezable_state import FreezableBqplotImageViewerState, FreezableProfileViewerState
+from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 
 __all__ = ['RampvizProfileView', 'RampvizImageView']
 
@@ -23,12 +24,56 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
                 ]
 
     default_class = NDDataArray
-    _state_cls = FreezableProfileViewerState
     _default_profile_subset_type = 'temporal'
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('default_tool_priority', ['jdaviz:selectslice'])
         super().__init__(*args, **kwargs)
+
+    def _initialize_x_axis(self):
+        self.state.x_att = self.state.x_att_helper.choices[-1]
+        self.set_plot_axes()
+        self.reset_limits()
+
+    def reset_limits(self):
+        super().reset_limits()
+
+        # override to reset to the global y limits including marks:
+        global_y_min = float(self.state.y_min)
+        global_y_max = float(self.state.y_max)
+        for mark in self.figure.marks:
+            if len(mark.y):
+                global_y_min = min(global_y_min, np.nanmin(mark.y))
+                global_y_max = max(global_y_max, np.nanmax(mark.y))
+
+        if global_y_min != self.state.y_min or global_y_max != self.state.y_max:
+            self.set_limits(
+                y_min=global_y_min * 0.9,
+                y_max=global_y_max * 1.1
+            )
+
+    def set_plot_axes(self):
+
+        with self.figure.hold_sync():
+            self.figure.axes[0].label = "Group"
+            self.figure.axes[1].label = self.state.y_display_unit
+
+            # Make it so axis labels are not covering tick numbers.
+            self.figure.fig_margin["left"] = 95
+            self.figure.fig_margin["bottom"] = 60
+            self.figure.send_state('fig_margin')  # Force update
+            self.figure.axes[0].label_offset = "40"
+            self.figure.axes[1].label_offset = "-70"
+            # NOTE: with tick_style changed below, the default responsive ticks in bqplot result
+            # in overlapping tick labels.  For now we'll hardcode at 8, but this could be removed
+            # (default to None) if/when bqplot auto ticks react to styling options.
+            self.figure.axes[1].num_ticks = 8
+
+            # Set Y-axis to scientific notation
+            self.figure.axes[1].tick_format = '0.1e'
+
+            for i in (0, 1):
+                self.figure.axes[i].tick_style = {'font-size': 15, 'font-weight': 600}
 
 
 @viewer_registry("rampviz-image-viewer", label="Image 2D (Rampviz)")
@@ -42,6 +87,7 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                     ['jdaviz:pixelpanzoommatch', 'jdaviz:panzoom'],
                     ['bqplot:truecircle', 'bqplot:rectangle', 'bqplot:ellipse',
                      'bqplot:circannulus'],
+                    ['jdaviz:rampperpixel'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
 
