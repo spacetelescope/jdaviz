@@ -343,6 +343,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     str(entry["URL"]),  # Open URL as FITS object
                     data_label=f"{self.source}_{self.resource_selected}_{entry.get('Title', entry.get('URL', ''))}",  # noqa: E501
                     cache=False,
+                    timeout=1e6  # Set to arbitrarily large value to prevent timeouts
                 )
             except Exception as e:
                 self.hub.broadcast(
