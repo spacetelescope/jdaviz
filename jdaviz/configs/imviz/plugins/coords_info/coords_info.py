@@ -11,6 +11,7 @@ from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
 from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
                                                    MosvizProfile2DView)
+from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
@@ -29,10 +30,12 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     _supported_viewer_classes = (SpecvizProfileView,
                                  ImvizImageView,
                                  CubevizImageView,
+                                 RampvizImageView,
+                                 RampvizProfileView,
                                  MosvizImageView,
                                  MosvizProfile2DView)
 
-    _viewer_classes_with_marker = (SpecvizProfileView, MosvizProfile2DView)
+    _viewer_classes_with_marker = (RampvizProfileView, SpecvizProfileView, MosvizProfile2DView)
 
     dataset_icon = Unicode("").tag(
         sync=True
@@ -240,10 +243,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def update_display(self, viewer, x, y):
         self._dict = {}
-        if isinstance(viewer, SpecvizProfileView):
+        if isinstance(viewer, (SpecvizProfileView, RampvizProfileView)):
             self._spectrum_viewer_update(viewer, x, y)
         elif isinstance(viewer,
-                        (ImvizImageView, CubevizImageView, MosvizImageView, MosvizProfile2DView)):
+                        (ImvizImageView, CubevizImageView,
+                         MosvizImageView, MosvizProfile2DView,
+                         RampvizImageView)
+                        ):
             self._image_viewer_update(viewer, x, y)
 
     def _image_shape_inds(self, image):
@@ -376,6 +382,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 self._dict['spectral_axis'] = slice_plugin.value
                 self._dict['spectral_axis:unit'] = slice_plugin._obj.value_unit
 
+        elif isinstance(viewer, RampvizImageView):
+            coords_status = False
+
         elif isinstance(viewer, MosvizImageView):
 
             if data_has_valid_wcs(image, ndim=2):
@@ -476,7 +485,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_data = associated_dq_layer.layer.get_data(dq_attribute)
                     dq_value = dq_data[int(round(y)), int(round(x))]
                 unit = image.get_component(attribute).units
-            elif isinstance(viewer, CubevizImageView):
+            elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
                 value = self._get_cube_value(
