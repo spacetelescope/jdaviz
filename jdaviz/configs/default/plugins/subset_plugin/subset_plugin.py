@@ -9,7 +9,7 @@ from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
-                              Subset, MaskSubsetState)
+                              MaskSubsetState)
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
@@ -21,7 +21,6 @@ from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUp
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core import region_translators
 from jdaviz.core.helpers import _next_subset_num
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.utils import MultiMaskSubsetState, data_has_valid_wcs
@@ -701,7 +700,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                         EllipticalAperture, SkyEllipticalAperture,
                                         RectangularAperture, SkyRectangularAperture,
                                         CircularAnnulus, SkyCircularAnnulus)
-        from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
+        from regions import (CirclePixelRegion, CircleSkyRegion,
                              EllipsePixelRegion, EllipseSkyRegion,
                              RectanglePixelRegion, RectangleSkyRegion,
                              CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
@@ -735,14 +734,14 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                     RectangleSkyRegion, CircleAnnulusSkyRegion))
                     and not has_wcs):
                 bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
-    
+
             if (isinstance(region, (CircularAperture, EllipticalAperture,
                                     RectangularAperture, CircularAnnulus,
                                     CirclePixelRegion, EllipsePixelRegion,
                                     RectanglePixelRegion, CircleAnnulusPixelRegion))
                     and self.app._link_type == "wcs"):
                 bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
-    
+
             # photutils: Convert to region shape first
             if isinstance(region, (CircularAperture, SkyCircularAperture,
                                    EllipticalAperture, SkyEllipticalAperture,
@@ -752,7 +751,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
             elif isinstance(region, SpectralRegion):
                 self._import_spectral_regions(region)
-    
+
             # region: Convert to ROI.
             # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
             if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
@@ -768,7 +767,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 # self.app.session.edit_subset_mode._mode = NewMode
                 # self.app._jdaviz_helper.default_viewer._obj.apply_roi(state)
                 # self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
-    
+
             # Last resort: Masked Subset that is static (if data is not a cube)
             elif data.ndim == 2:
                 im = None
@@ -783,15 +782,15 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         im = mask.to_image(data.shape)  # Can be None
                     except Exception as e:  # pragma: no cover
                         bad_regions.append((region, f'Failed to load: {repr(e)}'))
-    
+
                 # Boolean mask as input is supported but not advertised.
                 elif (isinstance(region, np.ndarray) and region.shape == data.shape
                       and region.dtype == np.bool_):
                     im = region
-    
+
                 if im is None:
                     bad_regions.append((region, 'Mask creation failed'))
-    
+
                 # NOTE: Region creation info is thus lost.
                 try:
                     subset_label = f'{msg_prefix} {msg_count}'
