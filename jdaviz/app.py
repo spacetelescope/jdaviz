@@ -1212,8 +1212,8 @@ class Application(VuetifyTemplate, HubListener):
                                     # No overlap
                                     if subregion.lower > one.upper or subregion.upper < one.lower:
                                         continue
-                                    temp_lo = subregion.lower if (subregion.lower > one.lower) else one.lower  # noqa: E501
-                                    temp_hi = subregion.upper if (subregion.upper < one.upper) else one.upper  # noqa: E501
+                                    temp_lo = max(subregion.lower, one.lower)
+                                    temp_hi = min(subregion.upper, one.upper)
                                     temp_region = SpectralRegion(temp_lo, temp_hi)
                                     if two_2:
                                         two_2 += temp_region
