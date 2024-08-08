@@ -9,7 +9,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginCom
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list,
                                     check_if_unit_is_per_solid_angle,
-                                    create_angle_equivalencies_list)
+                                    create_angle_equivalencies_list,
+                                    units_to_strings)
 
 __all__ = ['UnitConversion']
 
@@ -164,9 +165,8 @@ class UnitConversion(PluginTemplateMixin):
         # if the y-axis is set to surface brightness,
         # untranslatable units need to be removed from the flux choices
         if check_if_unit_is_per_solid_angle(y_unit_str):
-            updated_flux_choices = list(set(create_flux_equivalencies_list(y_unit * u.sr, x_unit))
-                                        - set(units_to_strings(self._untranslatable_units)))
-            self.flux_unit.choices = updated_flux_choices
+            flux_choices = create_flux_equivalencies_list(y_unit * u.sr, x_unit)
+            self.flux_unit.choices = flux_choices
 
         # sets the angle unit drop down and the surface brightness read-only text
         if self.app.data_collection[0]:
@@ -226,7 +226,6 @@ class UnitConversion(PluginTemplateMixin):
 
         flux_or_sb = None
 
-<<<<<<< HEAD
         # when the configuration is Specviz, translation is not currently supported.
         # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
         # have a scale factor assigned in the metadata, enabling translation.
@@ -238,37 +237,10 @@ class UnitConversion(PluginTemplateMixin):
                          self.flux_unit.selected,
                          self.angle_unit.selected
             )
-=======
-        name = msg.get('name')
-        # determine if flux or surface brightness unit was changed by user
-        if name == 'flux_unit_selected':
-            # when the configuration is Specviz, translation is not currently supported.
-            # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
-            # have a scale factor assigned in the metadata, enabling translation.
-            current_y_unit = self.spectrum_viewer.state.y_display_unit
-            if self.angle_unit.selected and check_if_unit_is_per_solid_angle(current_y_unit):
-                flux_or_sb = self._append_angle_correctly(
-                             self.flux_unit.selected,
-                             self.angle_unit.selected
-                )
-            else:
-                flux_or_sb = self.flux_unit.selected
-
-        elif name == 'flux_or_sb_selected':
-            self._translate(self.flux_or_sb_selected)
-            return
->>>>>>> c76c4970 (re-add untranslatable units, add translation equivalencies)
         else:
             flux_or_sb = self.flux_unit.selected
 
-        untranslatable_units = self._untranslatable_units
-        # disable translator if flux unit is untranslatable,
-        # still can convert flux units, this just disables flux
-        # to surface brightness translation for units in list.
-        if flux_or_sb in untranslatable_units:
-            self.can_translate = False
-        else:
-            self.can_translate = True
+
 
         yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
 
