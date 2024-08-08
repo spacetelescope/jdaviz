@@ -67,6 +67,10 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     except u.core.UnitConversionError:
         return []
 
+    mag_units = ['bol', 'AB', 'ST']
+    # remove magnitude units from list
+    curr_flux_unit_equivalencies = [unit for unit in curr_flux_unit_equivalencies if not any(mag in unit.name for mag in mag_units)]  # noqa
+
     # Get local flux units.
     locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy',
                                   'W / (Hz m2)',
@@ -75,7 +79,6 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
                                   'erg / (s cm2 Angstrom)',
                                   'ph / (Angstrom s cm2)',
                                   'ph / (Hz s cm2)',
-                                  'bol', 'AB', 'ST'
                                   ]
     local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
 
