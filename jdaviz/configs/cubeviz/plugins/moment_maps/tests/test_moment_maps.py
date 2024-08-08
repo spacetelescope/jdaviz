@@ -109,7 +109,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     )
 
     result = dc[-1].get_object(cls=CCDData)
-    assert result.shape == (4, 2)  # Cube shape is (2, 2, 4)
+    assert result.shape == (2, 4)  # Cube shape is (2, 2, 4), moment transposes
     assert isinstance(dc[-1].coords, WCS)
 
     # Make sure coordinate display now show moment map info (no WCS)

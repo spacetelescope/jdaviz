@@ -88,10 +88,10 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
         plugin.calculate_fit()
 
     params = cubeviz_helper.get_model_parameters()
-    slope_res = np.zeros((4, 3))
+    slope_res = np.zeros((3, 4))
     slope_res[2, 2] = 1.0
     slope_res = slope_res * u.nJy / u.Hz
-    intercept_res = np.ones((4, 3))
+    intercept_res = np.ones((3, 4))
     intercept_res[2, 2] = 0
     intercept_res = intercept_res * u.nJy
     assert_quantity_allclose(params['model']['slope'], slope_res,

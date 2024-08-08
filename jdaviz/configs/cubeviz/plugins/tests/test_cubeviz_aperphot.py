@@ -166,8 +166,8 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr)
     cubeviz_helper.load_data(cube, data_label="test")
 
-    aper = RectanglePixelRegion(center=PixCoord(x=1, y=3), width=1, height=1)
-    bg = RectanglePixelRegion(center=PixCoord(x=0, y=2), width=1, height=1)
+    aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
+    bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
     cubeviz_helper.load_regions([aper, bg])
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
@@ -183,8 +183,8 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
     row = cubeviz_helper.get_aperture_photometry_results()[0]
 
     # Basically, we should recover the input rectangle here, minus background.
-    assert_allclose(row["xcenter"], 1 * u.pix)
-    assert_allclose(row["ycenter"], 3 * u.pix)
+    assert_allclose(row["xcenter"], 3 * u.pix)
+    assert_allclose(row["ycenter"], 1 * u.pix)
     assert_allclose(row["sum"], 1.1752215e-12 * u.MJy)  # (15 - 10) MJy/sr x 2.3504431e-13 sr
     assert_allclose(row["sum_aper_area"], 1 * (u.pix * u.pix))
     assert_allclose(row["pixarea_tot"], 2.350443053909789e-13 * u.sr)

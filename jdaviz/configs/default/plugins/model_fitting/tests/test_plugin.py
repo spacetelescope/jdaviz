@@ -158,7 +158,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
 def test_fit_cube_no_wcs(cubeviz_helper):
     # This is like when user do something to a cube outside of Jdaviz
     # and then load it back into a new instance of Cubeviz for further analysis.
-    sp = Spectrum1D(flux=np.ones((7, 8, 9)) * u.nJy)  # ny, nx, nz
+    sp = Spectrum1D(flux=np.ones((7, 8, 9)) * u.nJy)  # nx, ny, nz
     cubeviz_helper.load_data(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
@@ -169,7 +169,7 @@ def test_fit_cube_no_wcs(cubeviz_helper):
     assert len(fitted_model) == 56  # ny * nx
     # Make sure shapes are all self-consistent within Cubeviz instance.
     fitted_data = cubeviz_helper.app.data_collection["model"]
-    assert fitted_data.shape == (8, 7, 9)  # nx, ny, nz
+    assert fitted_data.shape == (7, 8, 9)  # nx, ny, nz
     assert fitted_data.shape == cubeviz_helper.app.data_collection[0].shape
     assert fitted_data.shape == output_cube.shape
 

@@ -246,8 +246,8 @@ def spectrum1d_cube_largest():
                 "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
                 "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
     w = WCS(wcs_dict)
-    flux = np.zeros((30, 20, 3001), dtype=np.float32)  # nx=20 ny=30 nz=3001
-    flux[5:15, 1:11, :] = 1  # Bright corner
+    flux = np.zeros((20, 30, 3001), dtype=np.float32)  # nx=20 ny=30 nz=3001
+    flux[1:11, 5:15, :] = 1  # Bright corner
     return Spectrum1D(flux=flux * u.Jy, wcs=w, meta=wcs_dict)
 
 

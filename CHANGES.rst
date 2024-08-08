@@ -216,6 +216,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- No longer incorrectly swap RA and Dec axes when loading Spectrum1D objects. [#3133]
+
 Imviz
 ^^^^^
 
