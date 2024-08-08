@@ -284,11 +284,9 @@ class UnitConversion(PluginTemplateMixin):
     def _find_and_convert_contour_units(self, yunit=None):
         print("Converting contour units")
         if not yunit:
-            print("Getting y unit")
-            if self.flux_or_sb == "Flux":
-                yunit = _valid_glue_display_unit(self.flux_unit.selected, self.spectrum_viewer, 'y')
-            else:
-                yunit = _valid_glue_display_unit(self.sb_unit_selected, self.spectrum_viewer, 'y')
+            yunit = _valid_glue_display_unit(self.sb_unit_selected, self.spectrum_viewer, 'y')
+        else:
+            yunit = self._append_angle_correctly(yunit, self.angle_unit.selected)
         print(f"y unit is {yunit}")
         for name, viewer in self._app._jdaviz_helper.viewers.items():
             for layer in viewer._obj.state.layers:

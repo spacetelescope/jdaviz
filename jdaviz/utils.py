@@ -360,6 +360,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     targ_units = u.Unit(target_units)
     targ_bases = targ_units.bases
 
+    print("checking for pixel scale factor")
     # Ensure a spectrum passed through Spectral Extraction plugin
     if (((spec and ('_pixel_scale_factor' in spec.meta))) and
             (((u.sr in orig_bases) and (u.sr not in targ_bases)) or
@@ -380,6 +381,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         else:
             eqv_in = fac
         eqv += _eqv_pixar_sr(np.array(eqv_in))
+        print("Found it, set equivalency")
 
         # indirect units cannot be directly converted, and require
         # additional conversions to reach the desired end unit.
