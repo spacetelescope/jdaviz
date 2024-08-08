@@ -9,8 +9,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginCom
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list,
                                     check_if_unit_is_per_solid_angle,
-                                    create_angle_equivalencies_list,
-                                    units_to_strings)
+                                    create_angle_equivalencies_list)
 
 __all__ = ['UnitConversion']
 
