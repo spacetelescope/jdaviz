@@ -4,6 +4,7 @@ import numpy as np
 
 from astropy.time import Time
 import astropy.units as u
+from astropy.io.registry import IORegistryError
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
@@ -664,16 +665,27 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 break
 
     def import_region(self, region, **kwargs):
+        return_bad_regions = kwargs.pop('return_bad_regions', None)
+        max_num_regions = kwargs.pop('max_num_regions', None)
+        refdata_label = kwargs.pop('refdata_label', None)
+
         if isinstance(region, str):
             if os.path.exists(region):
                 from regions import Regions
                 region_format = kwargs.pop('region_format', None)
-                raw_regs = Regions.read(region, format=region_format)
-                self._load_regions(raw_regs, **kwargs)
-        else:
-            self._load_regions(region, **kwargs)
+                try:
+                    raw_regs = Regions.read(region, format=region_format)
+                except:
+                    raw_regs = SpectralRegion.read(region)
 
-    def _load_regions(self, regions, refdata_label=None, **kwargs):
+                return self._load_regions(raw_regs, max_num_regions, refdata_label,
+                                          return_bad_regions, **kwargs)
+        else:
+            return self._load_regions(region, max_num_regions, refdata_label,
+                                      return_bad_regions, **kwargs)
+
+    def _load_regions(self, regions, max_num_regions=None, refdata_label=None,
+                      return_bad_regions=False, **kwargs):
         if len(self.app.data_collection) == 0:
             raise ValueError('Cannot load regions without data.')
 
@@ -694,6 +706,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         elif not isinstance(regions, (list, tuple, Regions)):
             regions = [regions]
 
+        n_loaded = 0
         bad_regions = []
 
         # To keep track of masked subsets.
@@ -718,6 +731,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                     RectangleSkyRegion, CircleAnnulusSkyRegion))
                     and not has_wcs):
                 bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
+                continue
 
             if (isinstance(region, (CircularAperture, EllipticalAperture,
                                     RectangularAperture, CircularAnnulus,
@@ -725,6 +739,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                     RectanglePixelRegion, CircleAnnulusPixelRegion))
                     and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
                 bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+                continue
 
             # photutils: Convert to region shape first
             if isinstance(region, (CircularAperture, SkyCircularAperture,
@@ -748,6 +763,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
                     if not has_wcs:
                         bad_region.append((region, 'Sky region provided but data has no valid WCS'))  # noqa
+                        continue
                     region = region.to_pixel(data.coords)
 
                 if hasattr(region, 'to_mask'):
@@ -756,6 +772,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                         im = mask.to_image(data.shape)  # Can be None
                     except Exception as e:  # pragma: no cover
                         bad_regions.append((region, f'Failed to load: {repr(e)}'))
+                        continue
 
                 # Boolean mask as input is supported but not advertised.
                 elif (isinstance(region, np.ndarray) and region.shape == data.shape
@@ -764,6 +781,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
                 if im is None:
                     bad_regions.append((region, 'Mask creation failed'))
+                    continue
 
                 # NOTE: Region creation info is thus lost.
                 try:
@@ -773,8 +791,27 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     msg_count += 1
                 except Exception as e:  # pragma: no cover
                     bad_regions.append((region, f'Failed to load: {repr(e)}'))
+                    continue
             else:
                 bad_regions.append((region, 'Mask creation failed'))
+                continue
+            n_loaded += 1
+            if max_num_regions is not None and n_loaded >= max_num_regions:
+                break
+
+        n_reg_in = len(regions)
+        n_reg_bad = len(bad_regions)
+        if n_loaded == 0:
+            snack_color = "error"
+        elif n_reg_bad > 0:
+            snack_color = "warning"
+        else:
+            snack_color = "success"
+        self.app.hub.broadcast(SnackbarMessage(
+            f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
+            f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
+        if return_bad_regions:
+            return bad_regions
 
     def _import_spectral_regions(self, spec_region, mode=NewMode, viewer=None):
         """
