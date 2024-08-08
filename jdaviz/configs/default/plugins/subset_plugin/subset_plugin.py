@@ -4,7 +4,6 @@ import numpy as np
 
 from astropy.time import Time
 import astropy.units as u
-from astropy.io.registry import IORegistryError
 from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
@@ -675,7 +674,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 region_format = kwargs.pop('region_format', None)
                 try:
                     raw_regs = Regions.read(region, format=region_format)
-                except:
+                except:  # noqa
                     raw_regs = SpectralRegion.read(region)
 
                 return self._load_regions(raw_regs, max_num_regions, refdata_label,
