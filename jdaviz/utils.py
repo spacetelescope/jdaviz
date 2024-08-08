@@ -20,6 +20,7 @@ from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
 from ipyvue import watch
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type',
@@ -331,6 +332,34 @@ def flux_conversion(spec, values, original_units, target_units):
     orig_bases = orig_units.bases
     targ_units = u.Unit(target_units)
     targ_bases = targ_units.bases
+    spec_unit = str(spec.flux.unit)
+
+    with open('example.txt', 'a') as file:
+        file.write(f'orig : {orig_units}\n')
+        file.write(f'targ : {targ_units}')
+
+    untranslatable_units =[
+        u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
+        u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
+        u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr),
+        u.ph / (u.s * u.cm**2 * u.Hz * u.sr)
+    ]
+    
+    '''
+    if spec_unit in [original_units, target_units] and ('_pixel_scale_factor' in spec.meta):
+        eqv += _eqv_pixar_sr(np.array(spec.meta['_pixel_scale_factor']))
+        
+        if u.Unit(targ_units) in untranslatable_units:
+            temp_targ = targ_units * u.sr
+            values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
+            orig_units = u.Unit(temp_targ)
+            orig_bases = orig_units.bases
+        elif u.Unit(orig_units) in untranslatable_units:
+            temp_orig = orig_units * u.sr
+            values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
+            targ_units = u.Unit(temp_orig)
+            targ_bases = targ_units.bases
+    '''
 
     # Ensure a spectrum passed through Spectral Extraction plugin
     if (('_pixel_scale_factor' in spec.meta) and
@@ -353,6 +382,18 @@ def flux_conversion(spec, values, original_units, target_units):
             eqv_in = fac
 
         eqv += _eqv_pixar_sr(np.array(eqv_in))
+
+        if spec_unit in [original_units, target_units]:
+            if u.Unit(targ_units) in untranslatable_units:
+                temp_targ = targ_units * u.sr
+                values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
+                orig_units = u.Unit(temp_targ)
+                orig_bases = orig_units.bases
+            elif u.Unit(orig_units) in untranslatable_units:
+                temp_orig = orig_units * u.sr
+                values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
+                targ_units = u.Unit(temp_orig)
+                targ_bases = targ_units.bases
 
     return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 

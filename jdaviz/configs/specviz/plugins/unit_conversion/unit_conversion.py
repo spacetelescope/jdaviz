@@ -9,7 +9,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginCom
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list,
                                     check_if_unit_is_per_solid_angle,
-                                    create_angle_equivalencies_list)
+                                    create_angle_equivalencies_list,
+                                    units_to_strings)
 
 __all__ = ['UnitConversion']
 
@@ -168,9 +169,8 @@ class UnitConversion(PluginTemplateMixin):
         # if the y-axis is set to surface brightness,
         # untranslatable units need to be removed from the flux choices
         if check_if_unit_is_per_solid_angle(y_unit_str):
-            updated_flux_choices = list(set(create_flux_equivalencies_list(y_unit * u.sr, x_unit))
-                                        - set(units_to_strings(self._untranslatable_units)))
-            self.flux_unit.choices = updated_flux_choices
+            flux_choices = create_flux_equivalencies_list(y_unit * u.sr, x_unit)
+            self.flux_unit.choices = flux_choices
 
         # sets the angle unit drop down and the surface brightness read-only text
         if self.app.data_collection[0]:
@@ -240,14 +240,7 @@ class UnitConversion(PluginTemplateMixin):
 
         spectral_y = sb_unit if self.flux_or_sb == 'Surface Brightness' else flux_unit
 
-        untranslatable_units = self._untranslatable_units
-        # disable translator if flux unit is untranslatable,
-        # still can convert flux units, this just disables flux
-        # to surface brightness translation for units in list.
-        if spectral_y in untranslatable_units:
-            self.can_translate = False
-        else:
-            self.can_translate = True
+
 
         yunit = _valid_glue_display_unit(spectral_y, self.spectrum_viewer, 'y')
 
