@@ -125,6 +125,8 @@ Cubeviz
 - Fixed spectral axis value display in Markers plugin. Previously, it failed to display
   very small values, resulting in zeroes. [#3119]
 
+- No longer incorrectly swap RA and Dec axes when loading Spectrum1D objects. [#3133]
+
 Imviz
 ^^^^^
 
@@ -215,8 +217,6 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
-
-- No longer incorrectly swap RA and Dec axes when loading Spectrum1D objects. [#3133]
 
 Imviz
 ^^^^^
