@@ -44,12 +44,16 @@
 
     <v-row class="row-no-padding">
       <v-col>
-        <plot-options-slider-header
+        <plugin-slider
           label="Data quality relative opacity"
-          :api_hint="'plg.dq_layer_opacity = ' + dq_layer_opacity"
+          api_hint="plg.dq_layer_opacity = "
           :api_hints_enabled="api_hints_enabled"
+          :wait="300"
+          min="0"
+          max="1"
+          step="0.01"
+          :value.sync="dq_layer_opacity"
         />
-        <glue-throttled-slider wait="300" min="0" max="1" step="0.01" :value.sync="dq_layer_opacity"/>
       </v-col>
     </v-row>
 
@@ -142,49 +146,40 @@
       <v-expansion-panels accordion>
         <v-expansion-panel v-for="(item, index) in decoded_flags" key=":item">
           <div v-if="flagVisible(item, item.decomposed, flags_filter)">
-          <v-expansion-panel-header v-slot="{ open }">
-            <v-row no-gutters align="center" style="...">
-              <v-col cols=1>
-              </v-col>
-                <v-col cols=2>
-                <j-tooltip tipid='plugin-dq-color-picker'>
-                  <v-menu>
-                    <template v-slot:activator="{ on }">
-                        <span class="color-menu"
-                              :style="`background:${item.color}; cursor: pointer`"
-                              @click.stop="on.click"
-                        > </span>
-                    </template>
-                    <div @click.stop="" style="text-align: end; background-color: white">
-                        <v-color-picker v-model="decoded_flags[index].color"
-                                        @update:color="throttledSetColor(index, $event.hexa)">
-                        ></v-color-picker>
-                    </div>
-                  </v-menu>
-                </j-tooltip>
-              </v-col>
-              <v-col cols=8>
-                <div><strong>{{item.flag}}</strong> ({{Object.keys(item.decomposed).join(', ')}})</div>
-              </v-col>
-          </v-row>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content>
-            <v-row no-gutters style="..." align="center">
-              <v-col cols=2 align="left">
-                <v-btn :color="item.show ? 'accent' : 'default'" icon @click="toggleVisibility(index)">
-                  <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
-                </v-btn>
-              </v-col>
-            <v-col cols=8 align="left" style="...">
-              <v-row v-for="(item, key, index) in item.decomposed">
-                <span v-if="item.name !== null && item.name.length > 0"><strong>{{item.name}}</strong> ({{key}}): {{item.description}}</span>
-                <span v-else><strong>{{key}}</strong>: {{item.description}}</span>
-              </v-row>
-            </v-col>
+            <v-expansion-panel-header v-slot="{ open }">
+              <v-row no-gutters align="center">
+                <v-col cols=1>
+                </v-col>
+                  <v-col cols=2>
+                  <j-tooltip tipid='plugin-dq-color-picker'>
+                    <plugin-color-picker
+                      :value="decoded_flags[index].color"
+                      @color-update="throttledSetColor(index, $event.hexa)"
+                    />
+                  </j-tooltip>
+                </v-col>
+                <v-col cols=8>
+                  <div><strong>{{item.flag}}</strong> ({{Object.keys(item.decomposed).join(', ')}})</div>
+                </v-col>
             </v-row>
-          </v-expansion-panel-content>
-        </div>
-        <v-expansion-panel>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-row no-gutters align="center">
+                <v-col cols=2 align="left">
+                  <v-btn :color="item.show ? 'accent' : 'default'" icon @click="toggleVisibility(index)">
+                    <v-icon>{{item.show ? "mdi-eye" : "mdi-eye-off"}}</v-icon>
+                  </v-btn>
+                </v-col>
+              <v-col cols=8 align="left">
+                <v-row v-for="(item, key, index) in item.decomposed">
+                  <span v-if="item.name !== null && item.name.length > 0"><strong>{{item.name}}</strong> ({{key}}): {{item.description}}</span>
+                  <span v-else><strong>{{key}}</strong>: {{item.description}}</span>
+                </v-row>
+              </v-col>
+              </v-row>
+            </v-expansion-panel-content>
+          </div>
+        </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
   </j-tray-plugin>

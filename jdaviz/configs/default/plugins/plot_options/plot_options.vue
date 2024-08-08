@@ -279,38 +279,25 @@
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="subset_visible_value" :sync="subset_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_color')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">
-            {{ api_hints_enabled ?
-              'plg.subset_color = \''+subset_color_value +'\''
-              :
-              'Subset Color'
-            }}
-          </v-subheader>
-          <v-menu>
-            <template v-slot:activator="{ on }">
-                <span class="color-menu"
-                      :style="`background:${subset_color_value}; cursor: pointer`"
-                      @click.stop="on.click"
-                >&nbsp;</span>
-            </template>
-            <div @click.stop="" style="text-align: end; background-color: white">
-                <v-color-picker :value="subset_color_value"
-                                @update:color="throttledSetValue('subset_color_value', $event.hexa)"></v-color-picker>
-            </div>
-          </v-menu>
-        </div>
+        <plugin-color-picker
+          label='Subset Color'
+          api_hint="plg.subset_color = "
+          :api_hints_enabled="api_hints_enabled"
+          :value="subset_color_value"
+          @color-update="throttledSetValue('subset_color_value', $event.hexa)"
+        />
       </glue-state-sync-wrapper>
 
-      <glue-state-sync-wrapper :sync="subset_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_opacity')">
-        <div>
-          <plot-options-slider-header
-              label='Subset Opacity'
-              :api_hint="'plg.subset_opacity = ' + subset_opacity_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="subset_opacity_value" hide-details class="no-hint" />
-        </div>
+      <glue-state-sync-wrapper v-if="subset_visible_value" :sync="subset_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_opacity')">
+        <plugin-slider
+            label='Subset Opacity'
+            api_hint="plg.subset_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01" 
+            :value.sync="subset_opacity_value"
+          />
       </glue-state-sync-wrapper>
 
 
@@ -327,25 +314,13 @@
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_color')">
-        <div>
-          <plot-options-slider-header
-              label='Line Color'
-              :api_hint="'plg.line_color = ' + line_color_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-          <v-menu>
-            <template v-slot:activator="{ on }">
-                <span class="color-menu"
-                      :style="`background:${line_color_value}; cursor: pointer`"
-                      @click.stop="on.click"
-                >&nbsp;</span>
-            </template>
-            <div @click.stop="" style="text-align: end; background-color: white">
-                <v-color-picker :value="line_color_value"
-                                @update:color="throttledSetValue('line_color_value', $event.hexa)"></v-color-picker>
-            </div>
-          </v-menu>
-        </div>
+        <plugin-color-picker
+          label='Line Color'
+          api_hint="plg.line_color = "
+          :api_hints_enabled="api_hints_enabled"
+          :value="line_color_value"
+          @color-update="throttledSetValue('line_color_value', $event.hexa)"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_width_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_width')">
@@ -357,14 +332,15 @@
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_opacity')">
-        <div>
-          <plot-options-slider-header
-              label='Line Opacity'
-              :api_hint="'plg.line_opacity = ' + line_opacity_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="line_opacity_value" hide-details class="no-hint" />
-        </div>
+        <plugin-slider
+            label='Line Opacity'
+            api_hint="plg.line_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="line_opacity_value"
+          />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_as_steps_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_as_steps')">
@@ -389,14 +365,15 @@
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_opacity')">
-          <div>
-            <plot-options-slider-header
-              label='Opacity'
-              :api_hint="'plg.marker_opacity = ' + marker_opacity_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-            <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="marker_opacity_value" hide-details class="no-hint" />
-          </div>
+          <plugin-slider
+            label='Opacity'
+            api_hint="plg.marker_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="marker_opacity_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_size_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_mode')">
@@ -411,25 +388,27 @@
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value==='Fixed'" :sync="marker_size_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size')">
-          <div>
-            <plot-options-slider-header
-              label='Size'
-              :api_hint="'plg.marker_size = ' + marker_size_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-            <glue-throttled-slider wait="300" max="10" step="0.1" :value.sync="marker_size_value" hide-details class="no-hint" />
-          </div>
+          <plugin-slider
+            label='Size'
+            api_hint="plg.marker_size = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="10"
+            step="0.1"
+            :value.sync="marker_size_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_size_scale_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_scale')">
-          <div>
-            <plot-options-slider-header
-              label='Scale'
-              :api_hint="'plg.marker_size_scale = ' + marker_size_scale_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-            <glue-throttled-slider wait="300" max="10" step="0.1" :value.sync="marker_size_scale_value" hide-details class="no-hint" />
-          </div>
+          <plugin-slider
+            label='Scale'
+            api_hint="plg.marker_size_scale = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="10"
+            step="0.1"
+            :value.sync="marker_size_scale_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_col_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_col')">
@@ -478,25 +457,13 @@
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value==='Fixed'" :sync="marker_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color')">
-          <div>
-            <plot-options-slider-header
-              label='Color'
-              :api_hint="'plg.marker_color = ' + marker_color_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-            <v-menu>
-              <template v-slot:activator="{ on }">
-                  <span class="color-menu"
-                        :style="`background:${marker_color_value}; cursor: pointer`"
-                        @click.stop="on.click"
-                  >&nbsp;</span>
-              </template>
-              <div @click.stop="" style="text-align: end; background-color: white">
-                  <v-color-picker :value="marker_color_value"
-                                  @update:color="throttledSetValue('marker_color_value', $event.hexa)"></v-color-picker>
-              </div>
-            </v-menu>
-          </div>
+          <plugin-color-picker
+            label='Color'
+            api_hint="plg.marker_color = "
+            :api_hints_enabled="api_hints_enabled"
+            :value="marker_color_value"
+            @color-update="throttledSetValue('marker_color_value', $event.hexa)"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_color_col_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color_col')">
@@ -597,61 +564,49 @@
 
         </glue-state-sync-wrapper>
         <glue-state-sync-wrapper v-if="image_color_mode_value !== 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_color')">
-          <div>
-            <plot-options-slider-header
-              label='Image Color'
-              :api_hint="'plg.image_color = ' + image_color_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-            <v-menu>
-              <template v-slot:activator="{ on }">
-                  <span class="color-menu"
-                        :style="`background:${image_color_value}; cursor: pointer`"
-                        @click.stop="on.click"
-                  >&nbsp;</span>
-              </template>
-              <div @click.stop="" style="text-align: end; background-color: white">
-                  <v-color-picker :value="image_color_value"
-                                  :swatches="swatches_palette"
-                                  show-swatches
-                                  @update:color="throttledSetValue('image_color_value', $event.hexa)"
-                                  ></v-color-picker>
-              </div>
-            </v-menu>
-          </div>
+          <plugin-color-picker
+            label='Image Color'
+            api_hint="plg.image_color = "
+            :api_hints_enabled="api_hints_enabled"
+            :value="image_color_value"
+            @color-update="throttledSetValue('image_color_value', $event.hexa)"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper :sync="image_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_opacity')">
-          <div>
-            <plot-options-slider-header
-              label='Image Opacity'
-              :api_hint="'plg.image_opacity = ' + image_opacity_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-            <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_opacity_value" hide-details class="no-hint" />
-          </div>
+          <plugin-slider
+            label='Image Opacity'
+            api_hint="plg.image_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="image_opacity_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper :sync="image_contrast_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_contrast')">
-          <div>
-            <plot-options-slider-header
-              label='Contrast'
-              :api_hint="'plg.image_contrast = ' + image_contrast_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-            <glue-throttled-slider wait="300" max="4" step="0.01" :value.sync="image_contrast_value" hide-details />
-          </div>
+          <plugin-slider
+            label='Contrast'
+            api_hint="plg.image_contrast = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="4"
+            step="0.01"
+            :value.sync="image_contrast_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper :sync="image_bias_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_bias')">
-          <div>
-            <plot-options-slider-header
-              label='Bias'
-              :api_hint="'plg.image_bias = ' + image_bias_value"
-              :api_hints_enabled="api_hints_enabled"
-            />
-            <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_bias_value" hide-details />
-          </div>
+          <plugin-slider
+            label='Bias'
+            api_hint="plg.image_bias = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="image_bias_value"
+          />
         </glue-state-sync-wrapper>
       </div>
 

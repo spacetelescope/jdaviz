@@ -68,34 +68,26 @@
       </v-row>
 
       <v-row>
-          <v-menu>
-            <template v-slot:activator="{ on }">
-                <span class="color-menu"
-                      :style="`background:${color}; cursor: pointer; margin-left: 6px`"
-                      @click.stop="on.click"
-                >&nbsp;</span>
-            </template>
-            <div @click.stop="" style="text-align: end; background-color: white">
-                <v-color-picker :value="color"
-                            @update:color="throttledSetColor($event.hexa)"></v-color-picker>
-            </div>
-          </v-menu>
-        <span style="padding-left: 12px; padding-top: 3px" :class="api_hints_enabled ? 'api-hint' : null">
-          {{  api_hints_enabled ?
-              'plg.color = '+color
-              :
-              'Overlay Color'
-          }}
-        </span>
-      </v-row>
-      <div>
-        <plot-options-slider-header
-          label="Fill Opacity"
-          :api_hint="'plg.fill_opacity = ' + fill_opacity"
+        <plugin-color-picker
+          label='Overlay Color'
+          label_inline="true"
+          api_hint="plg.color = "
           :api_hints_enabled="api_hints_enabled"
+          :value="color"
+          @color-update="throttledSetColor($event.hexa)"
         />
-        <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="fill_opacity" hide-details class="no-hint" />
-      </div>
+      </v-row>
+      <v-row>
+        <plugin-slider
+          label="Fill Opacity"
+          api_hint="plg.fill_opacity = "
+          :api_hints_enabled="api_hints_enabled"
+          :wait="300"
+          max="1"
+          step="0.01"
+          :value.sync="fill_opacity"
+        />
+      </v-row>
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
       <v-alert v-if="!has_pysiaf" type="warning" style="margin-left: -12px; margin-right: -12px">
