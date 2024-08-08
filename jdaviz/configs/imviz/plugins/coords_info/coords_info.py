@@ -120,7 +120,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
     def _on_global_display_unit_changed(self, msg):
-        if msg.axis == "sb":
+        # eventually should observe change in flux OR angle
+        if msg.axis == "flux":
             self.image_unit = u.Unit(msg.unit)
 
     @property
