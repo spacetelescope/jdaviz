@@ -1102,6 +1102,11 @@ class Application(VuetifyTemplate, HubListener):
                 two = self.get_sub_regions(subset_state.state2,
                                            simplify_spectral, use_display_units,
                                            get_sky_regions=get_sky_regions)
+                if simplify_spectral and isinstance(two, SpectralRegion):
+                    merge_func = self._merge_overlapping_spectral_regions_worker
+                else:
+                    def merge_func(spectral_region):  # noop
+                        return spectral_region
 
                 if isinstance(one, list) and "glue_state" in one[0]:
                     one[0]["glue_state"] = subset_state.__class__.__name__
@@ -1135,9 +1140,7 @@ class Application(VuetifyTemplate, HubListener):
                     else:
                         if isinstance(two, list):
                             two[0]['glue_state'] = "AndNotState"
-                        # Return two first so that we preserve the chronology of how
-                        # subset regions are applied.
-                        return one + two
+                        return merge_func(one + two)
                 elif subset_state.op is operator.and_:
                     # This covers the AND subset mode
 
@@ -1163,18 +1166,18 @@ class Application(VuetifyTemplate, HubListener):
 
                         return oppo.invert(one.lower, one.upper)
                     else:
-                        return two + one
+                        return merge_func(two + one)
                 elif subset_state.op is operator.or_:
                     # This covers the ADD subset mode
                     # one + two works for both Range and ROI subsets
                     if one and two:
-                        return two + one
+                        return merge_func(two + one)
                     elif one:
                         return one
                     elif two:
                         return two
                 elif subset_state.op is operator.xor:
-                    # This covers the ADD subset mode
+                    # This covers the XOR subset mode
 
                     # Example of how this works, with "one" acting
                     # as the XOR region and "two" as two ranges joined
@@ -1198,34 +1201,55 @@ class Application(VuetifyTemplate, HubListener):
                     #   (4.0 um, 4.5 um)    (5.0 um, 6.0 um)    (9.0 um, 12.0 um)
 
                     if isinstance(two, SpectralRegion):
+                        # This is the main application of XOR to other regions
+                        if one.lower > two.lower and one.upper < two.upper:
+                            if len(two) < 2:
+                                inverted_region = one.invert(two.lower, two.upper)
+                            else:
+                                two_2 = None
+                                for subregion in two:
+                                    temp_region = None
+                                    # No overlap
+                                    if subregion.lower > one.upper or subregion.upper < one.lower:
+                                        continue
+                                    temp_lo = max(subregion.lower, one.lower)
+                                    temp_hi = min(subregion.upper, one.upper)
+                                    temp_region = SpectralRegion(temp_lo, temp_hi)
+                                    if two_2:
+                                        two_2 += temp_region
+                                    else:
+                                        two_2 = temp_region
+                                inverted_region = two_2.invert(one.lower, one.upper)
+                        else:
+                            inverted_region = two.invert(one.lower, one.upper)
+
                         new_region = None
-                        temp_region = None
                         for subregion in two:
+                            temp_region = None
                             # Add all subregions that do not intersect with XOR region
                             # to a new SpectralRegion object
                             if subregion.lower > one.upper or subregion.upper < one.lower:
-                                if not new_region:
-                                    new_region = subregion
-                                else:
-                                    new_region += subregion
-                            # All other subregions are added to temp_region
+                                temp_region = subregion
+                            # Partial overlap
+                            elif subregion.lower < one.lower and subregion.upper < one.upper:
+                                temp_region = SpectralRegion(subregion.lower, one.lower)
+                            elif subregion.upper > one.upper and subregion.lower > one.lower:
+                                temp_region = SpectralRegion(one.upper, subregion.upper)
+
+                            if not temp_region:
+                                continue
+
+                            if new_region:
+                                new_region += temp_region
                             else:
-                                if not temp_region:
-                                    temp_region = subregion
-                                else:
-                                    temp_region += subregion
-                        # This is the main application of XOR to other regions
-                        if not new_region:
-                            new_region = temp_region.invert(one.lower, one.upper)
-                        else:
-                            new_region = new_region + temp_region.invert(one.lower, one.upper)
+                                new_region = temp_region
+
                         # This adds the edge regions that are otherwise not included
-                        if not (one.lower == temp_region.lower and one.upper == temp_region.upper):
-                            new_region = new_region + one.invert(temp_region.lower,
-                                                                 temp_region.upper)
-                        return new_region
+                        if new_region:
+                            return merge_func(new_region + inverted_region)
+                        return inverted_region
                     else:
-                        return two + one
+                        return merge_func(two + one)
             else:
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
@@ -1319,13 +1343,32 @@ class Application(VuetifyTemplate, HubListener):
         Returns True if the spectral subset with subset_name has overlapping
         subregions.
         """
-        spectral_region = self.get_subsets(subset_name, spectral_only=True)
-        if not spectral_region or len(spectral_region) < 2:
+        spectral_region = self.get_subsets(subset_name, simplify_spectral=False, spectral_only=True)
+        n_reg = len(spectral_region)
+        if not spectral_region or n_reg < 2:
             return False
-        for index in range(0, len(spectral_region) - 1):
-            if spectral_region[index].upper.value >= spectral_region[index + 1].lower.value:
+        for index in range(n_reg - 1):
+            if spectral_region[index]['region'].upper.value >= spectral_region[index + 1]['region'].lower.value:  # noqa: E501
                 return True
         return False
+
+    @staticmethod
+    def _merge_overlapping_spectral_regions_worker(spectral_region):
+        if len(spectral_region) < 2:  # noop
+            return spectral_region
+
+        merged_regions = spectral_region[0]  # Instantiate merged regions
+        for cur_reg in spectral_region[1:]:
+            # If the lower value of the current subregion is less than or equal to the upper
+            # value of the last subregion added to merged_regions, update last region in
+            # merged_regions with the max upper value between the two regions.
+            if cur_reg.lower <= merged_regions.upper:
+                merged_regions._subregions[-1] = (
+                    merged_regions._subregions[-1][0],
+                    max(cur_reg.upper, merged_regions._subregions[-1][1]))
+            else:
+                merged_regions += cur_reg
+        return merged_regions
 
     def merge_overlapping_spectral_regions(self, subset_name, att):
         """
@@ -1339,34 +1382,15 @@ class Application(VuetifyTemplate, HubListener):
         att : str
             Attribute that the subset uses to apply to data.
         """
-        spectral_region = self.get_subsets(subset_name, spectral_only=True)
-        merged_regions = None
-        # Convert SpectralRegion object into a list with tuples representing
-        # the lower and upper values of each region.
-        reg_as_tup = [(sr.lower.value, sr.upper.value) for sr in spectral_region]
-        for index in range(0, len(spectral_region)):
-            # Instantiate merged regions
-            if not merged_regions:
-                merged_regions = [reg_as_tup[index]]
-            else:
-                last_merged = merged_regions[-1]
-                # If the lower value of the current subregion is less than or equal to the upper
-                # value of the last subregion added to merged_regions, update last_merged
-                # with the max upper value between the two regions.
-                if reg_as_tup[index][0] <= last_merged[1]:
-                    last_merged = (last_merged[0], max(last_merged[1], reg_as_tup[index][1]))
-                    merged_regions = merged_regions[:-1]
-                    merged_regions.append(last_merged)
-                else:
-                    merged_regions.append(reg_as_tup[index])
+        merged_regions = self.get_subsets(subset_name, spectral_only=True)
 
         new_state = None
         for region in reversed(merged_regions):
-            convert_to_range = RangeSubsetState(region[0], region[1], att)
-            if new_state is None:
-                new_state = convert_to_range
-            else:
+            convert_to_range = RangeSubsetState(region.lower.value, region.upper.value, att)
+            if new_state:
                 new_state = new_state | convert_to_range
+            else:
+                new_state = convert_to_range
 
         return new_state
 
