@@ -84,7 +84,7 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
 
     # Remove overlap units.
     curr_flux_unit_equivalencies = list(set(curr_flux_unit_equivalencies)
-                                        - set(local_units) - set(mag_units))
+                                        - set(local_units))
 
     # Convert equivalencies into readable versions of the units and sort them alphabetically.
     flux_unit_equivalencies_titles = sorted(units_to_strings(curr_flux_unit_equivalencies))
