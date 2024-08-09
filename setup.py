@@ -116,8 +116,7 @@ def user_dir():
 
 class DevelopCmd(develop):
     prefix_targets = [
-        (os.path.join("nbconvert", "templates"), 'jdaviz-default'),
-        (os.path.join("voila", "templates"), 'jdaviz-default')
+        (os.path.join("nbconvert", "templates"), 'jdaviz-default')
     ]
 
     def run(self):
