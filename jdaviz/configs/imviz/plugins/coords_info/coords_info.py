@@ -496,7 +496,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 dq_text = ''
             self.row1b_text = f'{value:+10.5e} {unit}{dq_text}'
             self._dict['value'] = float(value)
-            self._dict['value:unit'] = unit
+            self._dict['value:unit'] = str(unit)
             self._dict['value:unreliable'] = unreliable_pixel
         else:
             self.row1b_title = ''
@@ -519,9 +519,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
     def _spectrum_viewer_update(self, viewer, x, y):
         def _cursor_fallback():
             self._dict['axes_x'] = x
-            self._dict['axes_x:unit'] = viewer.state.x_display_unit
+            self._dict['axes_x:unit'] = str(viewer.state.x_display_unit)
             self._dict['axes_y'] = y
-            self._dict['axes_y:unit'] = viewer.state.y_display_unit
+            self._dict['axes_y:unit'] = str(viewer.state.y_display_unit)
             self._dict['data_label'] = ''
 
         def _copy_axes_to_spectral():
@@ -643,7 +643,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self.row3_title = 'Flux'
         self.row3_text = f'{closest_flux:10.5e} {flux_unit}'
         self._dict['axes_y'] = closest_flux
-        self._dict['axes_y:unit'] = viewer.state.y_display_unit
+        self._dict['axes_y:unit'] = str(viewer.state.y_display_unit)
 
         if closest_icon is not None:
             self.icon = closest_icon
