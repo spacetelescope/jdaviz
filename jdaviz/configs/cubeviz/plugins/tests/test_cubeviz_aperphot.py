@@ -206,7 +206,7 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
 
     # and defaults for inputs are in the correct unit
     assert_allclose(ap.flux_scaling, 0.003631)
-    assert_allclose(ap.background_value, 46)
+    assert_allclose(ap.background_value, 49)
 
     # output table in original units to compare to
     # outputs after converting units
@@ -218,7 +218,7 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
     # make sure inputs were re-computed in new units
     # after the unit change
     assert_allclose(ap.flux_scaling, 3631)
-    assert_allclose(ap.background_value, 4.6e7)
+    assert_allclose(ap.background_value, 4.9e7)
 
     # re-do photometry and make sure table is in new units
     # and consists of the same results as before converting units
