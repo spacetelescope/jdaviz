@@ -73,12 +73,12 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
 
     # Get local flux units.
     locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy',
-                                  'W / (Hz m2)',
-                                  'eV / (s m2 Hz)',
-                                  'erg / (s cm2 Hz)',
-                                  'erg / (s cm2 Angstrom)',
+                                  'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3  # noqa
+                                  'eV / (s m2 Hz)', 'eV / (Hz s m2)',
+                                  'erg / (s cm2 Angstrom)', 'erg / (s cm2 Angstrom)',
+                                  'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
                                   'ph / (Angstrom s cm2)',
-                                  'ph / (Hz s cm2)',
+                                  'ph / (Hz s cm2)', 'ph / (Hz s cm2)'
                                   ]
     local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
 

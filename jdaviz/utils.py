@@ -286,6 +286,15 @@ def standardize_metadata(metadata):
     return out_meta
 
 
+def untranslatable_units():
+    return [
+        u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
+        u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
+        u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr),
+        u.ph / (u.s * u.cm**2 * u.Hz * u.sr)
+    ]
+
+
 def flux_conversion(spec, values, original_units, target_units):
     """
     Given a Spectrum1D object, flux values, original flux units, and target units,
@@ -331,6 +340,7 @@ def flux_conversion(spec, values, original_units, target_units):
     orig_bases = orig_units.bases
     targ_units = u.Unit(target_units)
     targ_bases = targ_units.bases
+    spec_unit = str(spec.flux.unit)
 
     # Ensure a spectrum passed through Spectral Extraction plugin
     if (('_pixel_scale_factor' in spec.meta) and
@@ -354,6 +364,16 @@ def flux_conversion(spec, values, original_units, target_units):
 
         eqv += _eqv_pixar_sr(np.array(eqv_in))
 
+        if spec_unit in [original_units, target_units]:
+            if u.Unit(targ_units) in untranslatable_units():
+                temp_targ = targ_units * u.sr
+                values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
+                orig_units = u.Unit(temp_targ)
+            elif u.Unit(orig_units) in untranslatable_units():
+                temp_orig = orig_units * u.sr
+                values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
+                targ_units = u.Unit(temp_orig)
+
     return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 
 
@@ -369,7 +389,14 @@ def _eqv_pixar_sr(pixar_sr):
     def iconverter_flux(x):  # Flux -> Surface Brightness
         return x / pixar_sr
 
-    return [(u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux)]
+    return [
+        (u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux),
+        (u.erg / (u.s * u.cm**2 * u.Angstrom), u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr), converter_flux, iconverter_flux),  # noqa
+        (u.ph / (u.Angstrom * u.s * u.cm**2), u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), converter_flux, iconverter_flux),  # noqa
+        (u.ph / (u.Hz * u.s * u.cm**2), u.ph / (u.Hz * u.s * u.cm**2 * u.sr), converter_flux, iconverter_flux),  # noqa
+        (u.bol, u.bol / u.sr, converter_flux, iconverter_flux),
+        (u.ST, u.ST / u.sr, converter_flux, iconverter_flux),
+    ]
 
 
 def spectral_axis_conversion(values, original_units, target_units):

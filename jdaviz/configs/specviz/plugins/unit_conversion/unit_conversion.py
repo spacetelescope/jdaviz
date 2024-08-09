@@ -9,7 +9,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginCom
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list,
                                     check_if_unit_is_per_solid_angle,
-                                    units_to_strings,
                                     create_angle_equivalencies_list)
 
 __all__ = ['UnitConversion']
@@ -69,7 +68,6 @@ class UnitConversion(PluginTemplateMixin):
     flux_or_sb_items = List().tag(sync=True)
     flux_or_sb_selected = Unicode().tag(sync=True)
 
-    can_translate = Bool(True).tag(sync=True)
     # This is used a warning message if False. This can be changed from
     # bool to unicode when we eventually handle inputing this value if it
     # doesn't exist in the FITS header
@@ -166,9 +164,8 @@ class UnitConversion(PluginTemplateMixin):
         # if the y-axis is set to surface brightness,
         # untranslatable units need to be removed from the flux choices
         if check_if_unit_is_per_solid_angle(y_unit_str):
-            updated_flux_choices = list(set(create_flux_equivalencies_list(y_unit * u.sr, x_unit))
-                                        - set(units_to_strings(self._untranslatable_units)))
-            self.flux_unit.choices = updated_flux_choices
+            flux_choices = create_flux_equivalencies_list(y_unit * u.sr, x_unit)
+            self.flux_unit.choices = flux_choices
 
         # sets the angle unit drop down and the surface brightness read-only text
         if self.app.data_collection[0]:
@@ -242,15 +239,6 @@ class UnitConversion(PluginTemplateMixin):
         else:
             flux_or_sb = self.flux_unit.selected
 
-        untranslatable_units = self._untranslatable_units
-        # disable translator if flux unit is untranslatable,
-        # still can convert flux units, this just disables flux
-        # to surface brightness translation for units in list.
-        if flux_or_sb in untranslatable_units:
-            self.can_translate = False
-        else:
-            self.can_translate = True
-
         yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
 
         # update spectrum viewer with new y display unit
@@ -277,18 +265,6 @@ class UnitConversion(PluginTemplateMixin):
         # currently unsupported, can be supported with a scale factor
         if self.app.config == 'specviz':
             return
-
-        # we want to raise an error if a user tries to translate with an
-        # untranslated Flux unit using the API
-        untranslatable_units = units_to_strings(self._untranslatable_units)
-
-        if hasattr(self, 'flux_unit'):
-            if ((self.flux_unit.selected in untranslatable_units)
-                    and (flux_or_sb == 'Surface Brightness')):
-                raise ValueError(
-                    "Selected flux unit is not translatable. Please choose a flux unit "
-                    f"that is not in the following list: {untranslatable_units}."
-                )
 
         if self.spectrum_viewer.state.y_display_unit:
             spec_units = u.Unit(self.spectrum_viewer.state.y_display_unit)
@@ -318,17 +294,6 @@ class UnitConversion(PluginTemplateMixin):
                                                     spec_units,
                                                     sender=self))
         self.spectrum_viewer.reset_limits()
-
-    @property
-    def _untranslatable_units(self):
-        return [
-            u.erg / (u.s * u.cm**2),
-            u.erg / (u.s * u.cm**2 * u.Angstrom),
-            u.erg / (u.s * u.cm**2 * u.Hz),
-            u.ph / (u.Angstrom * u.s * u.cm**2),
-            u.ph / (u.s * u.cm**2 * u.Hz),
-            u.ST, u.bol
-        ]
 
     def _append_angle_correctly(self, flux_unit, angle_unit):
         if angle_unit not in ['pix', 'sr']:
