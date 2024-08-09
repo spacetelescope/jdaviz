@@ -15,12 +15,14 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, LinkUpdatedMessage, SliceValueUpdatedMessage
+from jdaviz.core.events import (GlobalDisplayUnitChanged, SnackbarMessage,
+                                LinkUpdatedMessage, SliceValueUpdatedMessage)
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectMixin,
                                         SubsetSelect, ApertureSubsetSelectMixin,
                                         TableMixin, PlotMixin, MultiselectMixin, with_spinner)
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
@@ -66,6 +68,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     # Cubeviz only
     cube_slice = Unicode("").tag(sync=True)
     is_cube = Bool(False).tag(sync=True)
+    display_flux_or_sb_unit = Unicode("").tag(sync=True)
+    flux_scaling_display_unit = Unicode("").tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -109,8 +113,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 acceptable_types = ['spectral flux density wav',
                                     'photon flux density wav',
                                     'spectral flux density',
-                                    'photon flux density',
-                                    'energy flux']  # Moment map 0
+                                    'photon flux density']
                 return ((data.ndim in (2, 3)) and
                         ((img_unit == (u.MJy / u.sr)) or
                          (img_unit.physical_type in acceptable_types)))
@@ -118,6 +121,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.dataset.add_filter(valid_cubeviz_datasets)
             self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                        handler=self._on_slice_changed)
+
+            self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                               handler=self._on_display_units_changed)
 
 # TODO: expose public API once finalized
 #    @property
@@ -144,6 +150,87 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.is_cube = False
 
+    def _on_display_units_changed(self, event={}):
+
+        """
+        Handle change of display units from Unit Conversion plugin (for now,
+        cubeviz only). If new display units differ from input data units, input
+        parameters for ap. phot. (i.e background, flux scaling) are converted
+        to the new units. Photometry will remain in previous unit until
+        'calculate' is pressed again.
+        """
+
+        if self.config == 'cubeviz':
+
+            # get previously selected display units
+            prev_display_flux_or_sb_unit = self.display_flux_or_sb_unit
+            prev_flux_scale_unit = self.flux_scaling_display_unit
+
+            # update display unit traitlets to new selection
+            self._set_display_unit_of_selected_dataset()
+
+            # convert the previous background and flux scaling values to new unit so
+            # re-calculating photometry with the current selections will produce
+            # the previous output with the new unit.
+            if prev_display_flux_or_sb_unit != '':
+
+                # convert background to new unit
+                if self.background_value is not None:
+
+                    prev_unit = u.Unit(prev_display_flux_or_sb_unit)
+                    new_unit = u.Unit(self.display_flux_or_sb_unit)
+
+                    bg = self.background_value * prev_unit
+                    self.background_value = bg.to_value(
+                        new_unit, u.spectral_density(self._cube_wave))
+
+                # convert flux scaling to new unit
+                if self.flux_scaling is not None:
+                    prev_unit = u.Unit(prev_flux_scale_unit)
+                    new_unit = u.Unit(self.flux_scaling_display_unit)
+
+                    fs = self.flux_scaling * prev_unit
+                    self.flux_scaling = fs.to_value(
+                        new_unit, u.spectral_density(self._cube_wave))
+
+    def _set_display_unit_of_selected_dataset(self):
+
+        """
+        Set the display_flux_or_sb_unit and flux_scaling_display_unit traitlets,
+        which depend on if the selected data set is flux or surface brightness,
+        and the corresponding global display unit for either flux or
+        surface brightness.
+        """
+
+        if not self.dataset_selected or not self.aperture_selected:
+            self.display_flux_or_sb_unit = ''
+            self.flux_scaling_display_unit = ''
+            return
+
+        data = self.dataset.selected_dc_item
+        comp = data.get_component(data.main_components[0])
+        if comp.units:
+            # if data is something-per-solid-angle, its a SB unit and we should
+            # use the selected global display unit for SB
+            if check_if_unit_is_per_solid_angle(comp.units):
+                flux_or_sb = 'sb'
+            else:
+                flux_or_sb = 'flux'
+
+            disp_unit = self.app._get_display_unit(flux_or_sb)
+
+            self.display_flux_or_sb_unit = disp_unit
+
+            # now get display unit for flux_scaling_display_unit. this unit will always
+            # be in flux, but it will not be derived from the global flux display unit
+            # note : need to generalize this for non-sr units eventually
+            fs_unit = u.Unit(disp_unit) * u.sr
+            self.flux_scaling_display_unit = fs_unit.to_string()
+
+        else:
+            self.display_flux_or_sb_unit = ''
+            self.flux_scaling_display_unit = ''
+
     def _get_defaults_from_metadata(self, dataset=None):
         defaults = {}
         if dataset is None:
@@ -162,6 +249,12 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if telescope == 'JWST':
             # Hardcode the flux conversion factor from MJy to ABmag
             mjy2abmag = 0.003631
+
+            # if display unit is different, translate
+            if (self.config == 'cubeviz') and (self.display_flux_or_sb_unit != ''):
+                disp_unit = u.Unit(self.display_flux_or_sb_unit)
+                mjy2abmag = (mjy2abmag * u.Unit("MJy/sr")).to_value(disp_unit)
+
             if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
                 defaults['pixel_area'] = meta['photometry']['pixelarea_arcsecsq']
                 if 'bunit_data' in meta and meta['bunit_data'] == u.Unit("MJy/sr"):
@@ -242,6 +335,11 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 f"Failed to extract {self.dataset_selected}: {repr(e)}",
                 color='error', sender=self))
 
+        # get correct display unit for newly selected dataset
+        if self.config == 'cubeviz':
+            # set display_flux_or_sb_unit and flux_scaling_display_unit
+            self._set_display_unit_of_selected_dataset()
+
         # auto-populate background, if applicable.
         self._aperture_selected_changed()
 
@@ -276,6 +374,10 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.multiselect:
             self._background_selected_changed()
             return
+
+        if self.config == 'cubeviz':
+            self._set_display_unit_of_selected_dataset()
+
         # NOTE: aperture_selected can be triggered here before aperture_selected_validity is updated
         # so we'll still allow the snackbar to be raised as a second warning to the user and to
         # avoid acting on outdated information
@@ -331,7 +433,15 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         img_stat = aper_mask_stat.get_values(comp_data, mask=None)
 
         # photutils/background/_utils.py --> nanmedian()
-        return np.nanmedian(img_stat)  # Naturally in data unit
+        bg_md = np.nanmedian(img_stat)  # Naturally in data unit
+
+        # convert to display unit, if necessary (cubeviz only)
+
+        if (self.config == 'cubeviz') and (self.display_flux_or_sb_unit != '') and comp.units:
+            bg_md = (bg_md * u.Unit(comp.units)).to_value(
+                u.Unit(self.display_flux_or_sb_unit), u.spectral_density(self._cube_wave))
+
+        return bg_md
 
     @observe('background_selected')
     def _background_selected_changed(self, event={}):
@@ -359,8 +469,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                              background_value=None, pixel_area=None, counts_factor=None,
                              flux_scaling=None, add_to_table=True, update_plots=True):
         """
-        Calculate aperture photometry given the values set in the plugin or any overrides provided
-        as arguments here (which will temporarily override plugin values for this calculation only).
+        Calculate aperture photometry given the values set in the plugin or
+        any overrides provided as arguments here (which will temporarily
+        override plugin values for this calculation only).
+
+        Note: Values set in the plugin in Cubeviz are in the selected display unit
+        from the Unit conversion plugin. Overrides are, as the docstrings note,
+        assumed to be in the units of the selected dataset.
 
         Parameters
         ----------
@@ -421,6 +536,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             del self.app.fitted_models[self._fitted_model_name]
 
         comp = data.get_component(data.main_components[0])
+        if comp.units:
+            img_unit = u.Unit(comp.units)
+        else:
+            img_unit = None
+
+        if self.config == 'cubeviz':
+            display_unit = u.Unit(self.display_flux_or_sb_unit)
 
         if background is not None and background not in self.background.choices:  # pragma: no cover
             raise ValueError(f"background must be one of {self.background.choices}")
@@ -430,14 +552,35 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 raise ValueError("cannot provide background_value with background!='Manual'")
         elif (background == 'Manual'
                 or (background is None and self.background.selected == 'Manual')):
+
             background_value = self.background_value
+
+            # cubeviz: background_value set in plugin is in display units
+            # convert temporarily to image units for calculations
+            if (self.config == 'cubeviz') and (img_unit is not None):
+                background_value = (background_value * display_unit).to_value(
+                    img_unit, u.spectral_density(self._cube_wave))
+
         elif background is None and dataset is None:
+
             # use the previously-computed value in the plugin
             background_value = self.background_value
+
+            # cubeviz: background_value set in plugin is in display units
+            # convert temporarily to image units for calculations
+            if (self.config == 'cubeviz') and (img_unit is not None):
+                background_value = (background_value * display_unit).to_value(
+                    img_unit, u.spectral_density(self._cube_wave))
         else:
             bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
                                                        dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
             background_value = self._calc_background_median(bg_reg, data=data)
+
+            # cubeviz: computed background median will be in display units,
+            # convert temporarily back to image units for calculations
+            if (self.config == 'cubeviz') and (img_unit is not None):
+                background_value = (background_value * display_unit).to_value(
+                    img_unit, u.spectral_density(self._cube_wave))
         try:
             bg = float(background_value)
         except ValueError:  # Clearer error message
@@ -476,11 +619,16 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         include_counts_fac = False
         include_flux_scale = False
         if comp.units:
-            img_unit = u.Unit(comp.units)
-            bg = bg * img_unit
-            comp_data = comp_data << img_unit
 
-            if u.sr in img_unit.bases:  # TODO: Better way to detect surface brightness unit?
+            # work for now in units of currently selected dataset (which may or
+            # may not be the desired output units, depending on the display
+            # units selected in the Unit Conversion plugin. background value
+            # has already been converted to image units above, and flux scaling
+            # will be converted from display unit > img_unit
+            comp_data = comp_data << img_unit
+            bg = bg * img_unit
+
+            if check_if_unit_is_per_solid_angle(img_unit):  # if units are surface brightness
                 try:
                     pixarea = float(pixel_area if pixel_area is not None else self.pixel_area)
                 except ValueError:  # Clearer error message
@@ -494,12 +642,30 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     raise ValueError('Missing or invalid counts conversion factor')
                 if not np.allclose(ctfac, 0):
                     include_counts_fac = True
+
+            # if cubeviz and flux_scaling is provided as override, it is in the data units
+            # if set in the app, it is in the display units and needs to be converted
+            # if provided as an override keyword arg, it is assumed to be in the
+            # data units and does not need to be converted
+            if ((self.config == 'cubeviz') and (flux_scaling is None) and
+                    (self.flux_scaling is not None)):
+                # update eventaully to handle non-sr SB units
+                flux_scaling = (self.flux_scaling * u.Unit(self.flux_scaling_display_unit)).to_value(  # noqa: E501
+                    img_unit * u.sr, u.spectral_density(self._cube_wave))
+
             try:
                 flux_scale = float(flux_scaling if flux_scaling is not None else self.flux_scaling)
             except ValueError:  # Clearer error message
                 raise ValueError('Missing or invalid flux scaling')
             if not np.allclose(flux_scale, 0):
                 include_flux_scale = True
+
+            # from now, we will just need the image unit as a string for display
+            img_unit = img_unit.to_string()
+
+        else:
+            img_unit = None
+
         phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords, local_bkg=bg)
         phot_table = phot_aperstats.to_table(columns=(
             'id', 'sum', 'sum_aper_area',
@@ -511,6 +677,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if include_pixarea_fac:
             pixarea = pixarea * (u.arcsec * u.arcsec / (u.pix * u.pix))
             # NOTE: Sum already has npix value encoded, so we simply apply the npix unit here.
+
+            # note: need to generalize this to non-steradian surface brightness units
             pixarea_fac = (u.pix * u.pix) * pixarea.to(u.sr / (u.pix * u.pix))
             phot_table['sum'] = [rawsum * pixarea_fac]
         else:
@@ -548,7 +716,33 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 slice_val = self._cube_wave
             else:
                 slice_val = u.Quantity(np.nan, self._cube_wave.unit)
+
             phot_table.add_column(slice_val, name="slice_wave", index=29)
+
+            if comp.units:  # convert phot. results from image unit to display unit
+                display_unit = u.Unit(self.display_flux_or_sb_unit)
+                # convert units of certain columns in aperture phot. output table
+                # to reflect display units (i.e if data units are MJy / sr, but
+                # Jy / sr is selected in Unit Conversion plugin)
+                phot_table['background'] = phot_table['background'].to(
+                    display_unit, u.spectral_density(self._cube_wave))
+
+                if include_pixarea_fac:
+                    phot_table['sum'] = phot_table['sum'].to(
+                        (display_unit * pixarea_fac).unit, u.spectral_density(self._cube_wave))
+                else:
+                    phot_table['sum'] = phot_table['sum'].to(
+                        display_unit, u.spectral_density(self._cube_wave))
+                for key in ['min', 'max', 'mean', 'median', 'mode', 'std',
+                            'mad_std', 'biweight_location']:
+                    phot_table[key] = phot_table[key].to(
+                        display_unit, u.spectral_density(self._cube_wave))
+                for key in ['var', 'biweight_midvariance']:
+                    try:
+                        phot_table[key] = phot_table[key].to(display_unit**2)
+                    # FIXME: Can fail going between per-wave and per-freq
+                    except u.UnitConversionError:
+                        pass
 
         if add_to_table:
             try:
@@ -564,14 +758,24 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Plots.
         if update_plots:
+
+            # for cubeviz unit conversion display units
+            if self.display_flux_or_sb_unit != '':
+                plot_display_unit = self.display_flux_or_sb_unit
+            else:
+                plot_display_unit = None
+
             if self.current_plot_type == "Curve of Growth":
                 if self.config == "cubeviz" and data.ndim > 2:
                     self.plot.figure.title = f'Curve of growth from aperture center at {slice_val:.4e}'  # noqa: E501
+                    eqv = u.spectral_density(self._cube_wave)
                 else:
                     self.plot.figure.title = 'Curve of growth from aperture center'
+                    eqv = []
                 x_arr, sum_arr, x_label, y_label = _curve_of_growth(
                     comp_data, (xcenter, ycenter), aperture, phot_table['sum'][0],
-                    wcs=data.coords, background=bg, pixarea_fac=pixarea_fac)
+                    wcs=data.coords, background=bg, pixarea_fac=pixarea_fac,
+                    display_unit=plot_display_unit, equivalencies=eqv)
                 self.plot._update_data('profile', x=x_arr, y=sum_arr, reset_lims=True)
                 self.plot.update_style('profile', line_visible=True, color='gray', size=32)
                 self.plot.update_style('fit', visible=False)
@@ -580,16 +784,22 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             else:  # Radial profile
                 self.plot.figure.axes[0].label = 'pix'
-                self.plot.figure.axes[1].label = comp.units or 'Value'
+                if plot_display_unit:
+                    self.plot.figure.axes[1].label = plot_display_unit
+                else:
+                    self.plot.figure.axes[1].label = img_unit or 'Value'
 
                 if self.current_plot_type == "Radial Profile":
                     if self.config == "cubeviz" and data.ndim > 2:
                         self.plot.figure.title = f'Radial profile from aperture center at {slice_val:.4e}'  # noqa: E501
+                        eqv = u.spectral_density(self._cube_wave)
                     else:
                         self.plot.figure.title = 'Radial profile from aperture center'
+                        eqv = []
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
-                        raw=False)
+                        raw=False, display_unit=plot_display_unit, image_unit=img_unit,
+                        equivalencies=eqv)
                     self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
                     self.plot.update_style('profile', line_visible=True, color='gray', size=32)
 
@@ -600,7 +810,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                         self.plot.figure.title = 'Raw radial profile from aperture center'
                     x_data, y_data = _radial_profile(
                         phot_aperstats.data_cutout, phot_aperstats.bbox, (xcenter, ycenter),
-                        raw=True)
+                        raw=True, display_unit=plot_display_unit, image_unit=img_unit)
 
                     self.plot._update_data('profile', x=x_data, y=y_data, reset_lims=True)
                     self.plot.update_style('profile', line_visible=False, color='gray', size=10)
@@ -637,26 +847,40 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             if key in ('id', 'data_label', 'subset_label', 'background', 'pixarea_tot',
                        'counts_fac', 'aperture_sum_counts_err', 'flux_scaling', 'timestamp'):
                 continue
+
             x = phot_table[key][0]
-            if (isinstance(x, (int, float, u.Quantity)) and
+
+            if isinstance(x, u.Quantity):  # split up unit and value to put in different cols
+                unit = x.unit.to_string()
+                if unit == '':  # for eccentricity which is a quantity with an empty unit
+                    unit = '-'
+                x = x.value
+            else:
+                unit = '-'
+
+            if (isinstance(x, (int, float)) and
                     key not in ('xcenter', 'ycenter', 'sky_center', 'sum_aper_area',
                                 'aperture_sum_counts', 'aperture_sum_mag', 'slice_wave')):
-                tmp.append({'function': key, 'result': f'{x:.4e}'})
+                if x == 0:
+                    tmp.append({'function': key, 'result': f'{x:.1f}', 'unit': unit})
+                else:
+                    tmp.append({'function': key, 'result': f'{x:.3e}', 'unit': unit})
             elif key == 'sky_center' and x is not None:
-                tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f} deg'})
-                tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f} deg'})
+                tmp.append({'function': 'RA center', 'result': f'{x.ra.deg:.6f}', 'unit': 'deg'})
+                tmp.append({'function': 'Dec center', 'result': f'{x.dec.deg:.6f}', 'unit': 'deg'})
             elif key in ('xcenter', 'ycenter', 'sum_aper_area'):
-                tmp.append({'function': key, 'result': f'{x:.1f}'})
+                tmp.append({'function': key, 'result': f'{x:.1f}', 'unit': unit})
             elif key == 'aperture_sum_counts' and x is not None:
                 tmp.append({'function': key, 'result':
-                            f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})'})
+                            f'{x:.4e} ({phot_table["aperture_sum_counts_err"][0]:.4e})',
+                            'unit': unit})
             elif key == 'aperture_sum_mag' and x is not None:
-                tmp.append({'function': key, 'result': f'{x:.3f}'})
+                tmp.append({'function': key, 'result': f'{x:.3f}', 'unit': unit})
             elif key == 'slice_wave':
                 if data.ndim > 2:
-                    tmp.append({'function': key, 'result': f'{slice_val:.4e}'})
+                    tmp.append({'function': key, 'result': f'{slice_val.value:.4e}', 'unit': slice_val.unit.to_string()})  # noqa: E501
             else:
-                tmp.append({'function': key, 'result': str(x)})
+                tmp.append({'function': key, 'result': str(x), 'unit': unit})
 
         if update_plots:
             # Also display fit results
@@ -855,7 +1079,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 # NOTE: These are hidden because the APIs are for internal use only
 # but we need them as a separate functions for unit testing.
 
-def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
+def _radial_profile(radial_cutout, reg_bb, centroid, raw=False,
+                    image_unit=None, display_unit=None, equivalencies=[]):
     """Calculate radial profile.
 
     Parameters
@@ -872,6 +1097,15 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
     raw : bool
         If `True`, returns raw data points for scatter plot.
         Otherwise, use ``imexam`` algorithm for a clean plot.
+
+    image_unit : str or None
+        (For cubeviz only to deal with display unit conversion). Unit of input
+        'radial cutout', used with `display_unit` to convert output to desired
+        display unit.
+
+    display_unit : str or None
+        (For cubeviz only to deal with display unit conversion). Desired unit
+        for output.
 
     """
     reg_ogrid = np.ogrid[reg_bb.iymin:reg_bb.iymax, reg_bb.ixmin:reg_bb.ixmax]
@@ -897,11 +1131,16 @@ def _radial_profile(radial_cutout, reg_bb, centroid, raw=False):
         y_arr = np.bincount(radial_r, radial_img) / np.bincount(radial_r)
         x_arr = np.arange(y_arr.size)
 
+    if display_unit is not None:
+        if image_unit is None:
+            raise ValueError('Must provide image_unit with display_unit.')
+        y_arr = (y_arr * u.Unit(image_unit)).to_value(u.Unit(display_unit), equivalencies)
+
     return x_arr, y_arr
 
 
-def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0, n_datapoints=10,
-                     pixarea_fac=None):
+def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0,
+                     n_datapoints=10, pixarea_fac=None, display_unit=None, equivalencies=[]):
     """Calculate curve of growth for aperture photometry.
 
     Parameters
@@ -934,6 +1173,11 @@ def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0
     pixarea_fac : float or `None`
         For ``flux_unit/sr`` to ``flux_unit`` conversion.
 
+    display_unit : str or None
+        (For cubeviz only to deal with display unit conversion). Desired unit
+        for output. If unit is a surface brightness, a Flux unit will be
+        returned if pixarea_fac is provided.
+
     Returns
     -------
     x_arr : ndarray
@@ -952,6 +1196,18 @@ def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0
 
     """
     n_datapoints += 1  # n + 1
+
+    # determined desired unit for output sum array and y label
+    # cubeviz only to handle unit conversion display unit changes
+    if display_unit is not None:
+        sum_unit = u.Unit(display_unit)
+    else:
+        if isinstance(data, u.Quantity):
+            sum_unit = data.unit
+        else:
+            sum_unit = None
+    if sum_unit and pixarea_fac is not None:
+        sum_unit *= pixarea_fac.unit
 
     if hasattr(aperture, 'to_pixel'):
         aperture = aperture.to_pixel(wcs)
@@ -985,12 +1241,14 @@ def _curve_of_growth(data, centroid, aperture, final_sum, wcs=None, background=0
         sum_arr = np.array(sum_arr)
     if pixarea_fac is not None:
         sum_arr = sum_arr * pixarea_fac
+    if isinstance(final_sum, u.Quantity):
+        final_sum = final_sum.to(sum_arr.unit, equivalencies)
     sum_arr = np.append(sum_arr, final_sum)
 
-    if isinstance(sum_arr, u.Quantity):
-        y_label = sum_arr.unit.to_string()
-        sum_arr = sum_arr.value  # bqplot does not like Quantity
-    else:
+    if sum_unit is None:
         y_label = 'Value'
+    else:
+        y_label = sum_unit.to_string()
+        sum_arr = sum_arr.to_value(sum_unit, equivalencies)  # bqplot does not like Quantity
 
     return x_arr, sum_arr, x_label, y_label
