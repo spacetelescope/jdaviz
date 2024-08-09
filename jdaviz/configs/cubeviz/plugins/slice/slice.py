@@ -215,6 +215,7 @@ class Slice(PluginTemplateMixin):
         self._check_if_cube_viewer_exists()
 
     def _on_add_data(self, msg):
+        self._check_if_cube_viewer_exists()
         self._clear_cache()
         self._initialize_location()
         if isinstance(msg.viewer, WithSliceSelection):

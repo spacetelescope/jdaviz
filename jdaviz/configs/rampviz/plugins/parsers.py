@@ -8,7 +8,10 @@ from astropy.time import Time
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.configs.cubeviz.plugins.parsers import _get_data_type_by_hdu
-from jdaviz.utils import standardize_metadata, download_uri_to_path, PRIHDR_KEY
+from jdaviz.utils import (
+    standardize_metadata, download_uri_to_path,
+    PRIHDR_KEY, standardize_roman_metadata
+)
 
 try:
     from roman_datamodels import datamodels as rdd
@@ -82,10 +85,10 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
                 )
             with rdd.open(file_obj) as pf:
                 _roman_3d_to_glue_data(
-                    app, pf, data_label, parent=parent,
+                    app, pf, data_label,
                     group_viewer_reference_name=group_viewer_reference_name,
                     diff_viewer_reference_name=diff_viewer_reference_name,
-                    integration_viewer_reference_name=integration_viewer_reference_name
+                    meta=dict(pf.meta)
                 )
             return
 
@@ -101,7 +104,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
                 app, hdulist, file_name=data_label or file_name,
                 group_viewer_reference_name=group_viewer_reference_name,
                 diff_viewer_reference_name=diff_viewer_reference_name,
-                integration_viewer_reference_name=integration_viewer_reference_name
             )
 
     elif isinstance(file_obj, np.ndarray) and file_obj.ndim == 3:
@@ -109,19 +111,21 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         _parse_ndarray(
             app, file_obj, data_label=data_label, data_type=data_type,
             viewer_reference_name=group_viewer_reference_name,
+            meta=getattr(file_obj, 'meta')
         )
 
     elif isinstance(file_obj, (np.ndarray, NDData)) and file_obj.ndim in (1, 2):
         # load 1D profile(s) to integration_viewer
         _parse_ndarray(
             app, file_obj, data_label=data_label,
-            viewer_reference_name=integration_viewer_reference_name
+            viewer_reference_name=integration_viewer_reference_name,
+            meta=getattr(file_obj, 'meta')
         )
 
     elif HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
         with rdd.open(file_obj) as pf:
             _roman_3d_to_glue_data(
-                app, pf, data_label,
+                app, pf, data_label, meta=pf.meta,
                 group_viewer_reference_name=group_viewer_reference_name,
                 diff_viewer_reference_name=diff_viewer_reference_name,
                 integration_viewer_reference_name=integration_viewer_reference_name
@@ -132,10 +136,10 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
 
 
 def _roman_3d_to_glue_data(
-    app, file_obj, data_label, parent=None,
+    app, file_obj, data_label,
     group_viewer_reference_name=None,
     diff_viewer_reference_name=None,
-    integration_viewer_reference_name=None,
+    meta=None
 ):
     """
     Parse a Roman 3D ramp cube file (Level 1),
@@ -170,18 +174,23 @@ def _roman_3d_to_glue_data(
     app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(_swap_axes(data))
     app._jdaviz_helper.cube_cache[ramp_diff_data_label] = NDDataArray(_swap_axes(diff_data))
 
+    if meta is not None:
+        meta = standardize_roman_metadata(file_obj)
+
     # load these cubes into the app:
     _parse_ndarray(
         app,
         file_obj=_swap_axes(data),
         data_label=ramp_cube_data_label,
         viewer_reference_name=group_viewer_reference_name,
+        meta=meta
     )
     _parse_ndarray(
         app,
         file_obj=_swap_axes(diff_data),
         data_label=ramp_diff_data_label,
         viewer_reference_name=diff_viewer_reference_name,
+        meta=meta
     )
 
     # the default collapse function in the profile viewer is "sum",

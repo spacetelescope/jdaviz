@@ -4,7 +4,9 @@ from astropy.nddata import NDDataArray
 
 from functools import cached_property
 from traitlets import Bool, Float, List, Unicode, observe
-from glue.core.message import DataCollectionAddMessage, SubsetUpdateMessage
+from glue.core.message import (
+    DataCollectionAddMessage, SubsetUpdateMessage, SubsetDeleteMessage
+)
 
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
 from jdaviz.core.marks import PluginLine
@@ -49,6 +51,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     template_file = __file__, "ramp_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)
     show_live_preview = Bool(True).tag(sync=True)
+    show_subset_preview = Bool(True).tag(sync=True)
 
     active_step = Unicode().tag(sync=True)
 
@@ -109,6 +112,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SubsetUpdateMessage,
                                    handler=self._on_subset_update)
 
+        self.session.hub.subscribe(self, SubsetDeleteMessage,
+                                   handler=self._on_subset_delete)
+
         self._update_disabled_msg()
 
         if self.app.state.settings.get('server_is_remote', False):
@@ -124,17 +130,20 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return viewer
 
     def _on_data_added(self, msg={}):
-        if msg.data.label.endswith('[DATA]'):
+        # only perform the default collapse after the first data load:
+        if len(self.app.data_collection) == 2:
             self.extract(add_data=True)
             self.integration_viewer._initialize_x_axis()
 
     def _on_subset_update(self, msg={}):
 
         if not hasattr(self, 'aperture') or not hasattr(self.app._jdaviz_helper, 'cube_cache'):
+            # if called before fully initialized
             return
 
-        cube_cache = self.app._jdaviz_helper.cube_cache
-        cube = cube_cache[list(cube_cache.keys())[0]]
+        if not self.show_live_preview:
+            # don't update subset previews if live preview is disabled:
+            return
 
         subset_lbl = msg.subset.label
         color = msg.subset.style.color
@@ -142,12 +151,12 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         subset = self.app.get_subsets(subset_lbl)[0]
         region = subset['region']
         # glue region has transposed coords relative to cached cube:
-        region_mask = region.to_mask().to_image(cube.shape[:-1]).astype(bool).T
-        cube_subset = cube[region_mask]
+        region_mask = region.to_mask().to_image(self.cube.shape[:-1]).astype(bool).T
+        cube_subset = self.cube[region_mask]  # shape: (N pixels extracted, M groups)
 
         mark = [
             PluginLine(self.integration_viewer, x=np.arange(cube_subset.shape[1]), y=y,
-                       stroke_width=1.5, colors=[color], opacities=[0.3], label=subset_lbl)
+                       stroke_width=1, colors=[color], opacities=[0.25], label=subset_lbl)
             for y in cube_subset
         ]
 
@@ -157,6 +166,25 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         ] + mark
 
         self.integration_viewer.reset_limits()
+
+    def _on_subset_delete(self, msg={}):
+        subset_lbl = msg.subset.label
+        self.integration_viewer.figure.marks = [
+            mark for mark in self.integration_viewer.figure.marks
+            if getattr(mark, 'label', None) != subset_lbl
+        ]
+
+    @observe('is_active', 'show_subset_preview', 'aperture_selected')
+    def _update_subset_previews(self, msg={}):
+        # remove preview marks for non-selected subsets
+
+        if not hasattr(self.app._jdaviz_helper, '_default_integration_viewer_reference_name'):
+            return
+
+        visible = self.show_subset_preview and (self.is_active or self.keep_active)
+        for mark in self.integration_viewer.figure.marks:
+            if isinstance(mark, PluginLine):
+                mark.visible = visible and self.aperture.selected == mark.label
 
     @property
     def user_api(self):
@@ -244,15 +272,18 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def aperture_weight_mask(self):
+        cube_shape = self.cube.shape
         if self.aperture.selected != self.aperture.default_text:
+
+            # note: glue subset mask is transposed relative to cube
             region_mask = self.app.get_subsets(
                 subset_name=self.aperture.selected
-            )[0]['region'].to_mask()
-            return np.expand_dims(
-                region_mask.to_image(self.cube.shape[:2]),
-                axis=2
-            ).astype(bool)
-        return np.ones_like(self.cube.data[..., :1]).astype(bool)
+            )[0]['region'].to_mask().to_image(
+                cube_shape[:-1]
+            ).astype(bool).T
+            return region_mask
+
+        return np.ones(cube_shape[:-1]).astype(bool)
 
     def _extract_from_aperture(self, **kwargs):
         # This plugin collapses over the *spatial axes* (optionally over a spatial subset,
@@ -265,33 +296,26 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             raise ValueError("aperture must be an ApertureSubsetSelect object")
 
         nddata = self.cube
-        mask = (
-            ~self.aperture_weight_mask &
-            ~np.isnan(nddata.data)
-        )
+        mask = self.aperture_weight_mask
+
         if nddata.mask is not None:
-            mask &= nddata.mask
-
-        # use the numpy function for this operation:
-        collapse_kwargs = dict(
-            axis=self.spatial_axes
-        )
-
-        # include the `where` kwarg in numpy
-        # calls for efficiency when available:
-        if selected_func.lower() != 'median':
-            collapse_kwargs['where'] = ~mask
+            mask = mask & ~nddata.mask
 
         collapsed = getattr(np, selected_func)(
-            nddata.data, **collapse_kwargs
+            nddata.data[mask],
+            # after the fancy indexing above, axis=1 corresponds to groups, and
+            # operations over axis=0 corresponds to individual pixels:
+            axis=0
         ) << nddata.unit
 
         def expand(x):
+            # put the resulting 1D profile (counts vs. groups) into the
+            # third dimension, which is the group dimension in the
+            # original 3D cube:
             return np.expand_dims(x, axis=(0, 1))
 
         return NDDataArray(
             data=expand(collapsed),
-            mask=expand(mask.all(axis=self.spatial_axes)),
             meta=nddata.meta
         )
 

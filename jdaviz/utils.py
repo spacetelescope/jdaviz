@@ -28,7 +28,8 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type',
            'download_uri_to_path', 'flux_conversion', 'spectral_axis_conversion',
            'layer_is_2d', 'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
-           'get_wcs_only_layer_labels', 'get_top_layer_index', 'get_reference_image_data']
+           'get_wcs_only_layer_labels', 'get_top_layer_index', 'get_reference_image_data',
+           'standardize_roman_metadata']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 
@@ -287,6 +288,24 @@ def standardize_metadata(metadata):
         raise TypeError('metadata must be dictionary or FITS header')
 
     return out_meta
+
+
+def standardize_roman_metadata(data_model):
+    """
+    Metadata standardization for Roman datamodels `meta` attributes. Converts
+    to a flat dictionary and strips the redundant top-level tags ("roman", and "meta").
+    """
+    import roman_datamodels.datamodels as rdm
+    if isinstance(data_model, rdm.DataModel):
+        # Roman metadata are in nested dicts that we flatten:
+        flat_dict_meta = data_model.to_flat_dict()
+
+        # split off the redundant parts of the metadata:
+        return {
+            k.split('roman.meta.')[1]: v
+            for k, v in flat_dict_meta.items()
+            if 'roman.meta' in k
+        }
 
 
 def indirect_units():

@@ -14,7 +14,10 @@ from stdatamodels import asdf_in_fits
 
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.events import SnackbarMessage
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY, _wcs_only_label, download_uri_to_path
+from jdaviz.utils import (
+    standardize_metadata, standardize_roman_metadata,
+    PRIHDR_KEY, _wcs_only_label, download_uri_to_path
+)
 
 try:
     from roman_datamodels import datamodels as rdd
@@ -400,8 +403,8 @@ def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
     else:
         ext_list = (ext, )
 
-    meta = getattr(file_obj, 'meta', {})
-    coords = getattr(meta, 'wcs', None)
+    meta = standardize_roman_metadata(file_obj)
+    coords = getattr(getattr(file_obj, 'meta', {}), 'wcs', None)
 
     for cur_ext in ext_list:
         comp_label = cur_ext.upper()
@@ -413,7 +416,7 @@ def _roman_2d_to_glue_data(file_obj, data_label, ext=None):
         bunit = getattr(ext_values, 'unit', '')
         component = Component.autotyped(np.array(ext_values), units=bunit)
         data.add_component(component=component, label=comp_label)
-        data.meta.update(standardize_metadata(dict(meta)))
+        data.meta.update(meta)
 
         if comp_label == 'dq':
             prep_data_layer_as_dq(data)
