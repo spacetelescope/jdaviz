@@ -292,8 +292,20 @@ def standardize_metadata(metadata):
 
 def standardize_roman_metadata(data_model):
     """
-    Metadata standardization for Roman datamodels `meta` attributes. Converts
-    to a flat dictionary and strips the redundant top-level tags ("roman", and "meta").
+    Metadata standardization for Roman datamodels ``meta`` attributes.
+
+    Converts to a flat dictionary and strips the redundant top-level
+    tags ("roman", and "meta").
+
+    Parameters
+    ----------
+    data_model : `~roman_datamodels.datamodels.DataModel`
+        Roman datamodel.
+
+    Returns
+    -------
+    d : dict
+        Flattened dictionary of metadata
     """
     import roman_datamodels.datamodels as rdm
     if isinstance(data_model, rdm.DataModel):
