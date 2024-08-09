@@ -160,7 +160,11 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
     def _update_reference_data(self, reference_data):
         if reference_data is None:
             return
-        self._update_unit(reference_data.get_object(cls=Spectrum1D).spectral_axis.unit)
+        try:
+            self._update_unit(reference_data.get_object(cls=Spectrum1D).spectral_axis.unit)
+        except (TypeError, ValueError):
+            # don't update x units for rampviz, which doesn't convert to Spectrum1D
+            pass
 
     def _update_unit(self, new_unit):
         # the x-units may have changed.  We want to convert the internal self.x
@@ -538,6 +542,7 @@ class PluginLine(Lines, PluginMark, HubListener):
         self.viewer = viewer
         # color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
+        self.label = kwargs.get('label')
         super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
 
 

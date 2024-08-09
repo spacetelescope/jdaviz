@@ -17,3 +17,6 @@ Viewers API
 
 .. automodapi:: jdaviz.configs.specviz.plugins.viewers
    :no-inheritance-diagram:
+
+.. automodapi:: jdaviz.configs.rampviz.plugins.viewers
+   :no-inheritance-diagram:

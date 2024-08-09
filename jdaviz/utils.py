@@ -19,13 +19,15 @@ from glue.config import settings
 from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
+from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from ipyvue import watch
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type',
            'download_uri_to_path', 'flux_conversion', 'spectral_axis_conversion',
            'layer_is_2d', 'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
-           'get_wcs_only_layer_labels', 'get_top_layer_index', 'get_reference_image_data']
+           'get_wcs_only_layer_labels', 'get_top_layer_index', 'get_reference_image_data',
+           'standardize_roman_metadata']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 
@@ -286,6 +288,24 @@ def standardize_metadata(metadata):
     return out_meta
 
 
+def standardize_roman_metadata(data_model):
+    """
+    Metadata standardization for Roman datamodels `meta` attributes. Converts
+    to a flat dictionary and strips the redundant top-level tags ("roman", and "meta").
+    """
+    import roman_datamodels.datamodels as rdm
+    if isinstance(data_model, rdm.DataModel):
+        # Roman metadata are in nested dicts that we flatten:
+        flat_dict_meta = data_model.to_flat_dict()
+
+        # split off the redundant parts of the metadata:
+        return {
+            k.split('roman.meta.')[1]: v
+            for k, v in flat_dict_meta.items()
+            if 'roman.meta' in k
+        }
+
+
 def flux_conversion(spec, values, original_units, target_units):
     """
     Given a Spectrum1D object, flux values, original flux units, and target units,
@@ -427,7 +447,7 @@ def get_subset_type(subset):
     Returns
     -------
     subset_type : str or None
-        'spatial', 'spectral', or None
+        'spatial', 'spectral', 'temporal', or None
     """
     if not hasattr(subset, 'subset_state'):
         return None
@@ -440,7 +460,40 @@ def get_subset_type(subset):
     if isinstance(subset.subset_state, RoiSubsetState):
         return 'spatial'
     elif isinstance(subset.subset_state, RangeSubsetState):
-        return 'spectral'
+        # look within a SubsetGroup, or a single Subset
+        subset_list = getattr(subset, 'subsets', [subset])
+
+        for ss in subset_list:
+            if hasattr(ss, 'data'):
+                ss_data = ss.data
+            elif hasattr(ss.att, 'parent'):
+                # if `ss` is a subset state, it won't have a `data` attr,
+                # check the world coordinate's parent data:
+                ss_data = ss.att.parent
+            else:
+                # if we reach this `else`, continue searching
+                # through other subsets in the group to identify the
+                # subset type:
+                continue
+
+            # check for a spectral coordinate in FITS WCS:
+            wcs_coords = (
+                ss_data.coords.wcs.ctype if hasattr(ss_data.coords, 'wcs')
+                else []
+            )
+
+            has_spectral_coords = (
+                any(str(coord).startswith('WAVE') for coord in wcs_coords) or
+
+                # also check for a spectral coordinate from the glue_astronomy translator:
+                isinstance(ss_data.coords, SpectralCoordinates)
+            )
+
+            if has_spectral_coords:
+                return 'spectral'
+
+        # otherwise, assume temporal:
+        return 'temporal'
     else:
         return None
 

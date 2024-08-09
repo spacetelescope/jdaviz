@@ -20,3 +20,6 @@ Helpers API
 
 .. automodapi:: jdaviz.configs.specviz2d.helper
    :no-inheritance-diagram:
+
+.. automodapi:: jdaviz.configs.rampviz.helper
+   :no-inheritance-diagram:

@@ -10,7 +10,6 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
-from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
@@ -342,7 +341,11 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     app.add_data(data, data_label, parent=parent)
 
     # get glue data and update if DQ:
+
     if ext == 'DQ':
+        # prevent circular import:
+        from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
+
         data = app.data_collection[-1]
         prep_data_layer_as_dq(data)
 

@@ -123,7 +123,7 @@ def test_list_configurations():
     """ test correct configurations are listed """
     configs = list_configurations()
     assert set(configs).issubset({'default', 'cubeviz', 'specviz', 'mosviz',
-                                  'imviz', 'specviz2d'})
+                                  'imviz', 'specviz2d', 'rampviz'})
 
 
 @pytest.mark.parametrize('name, expconf, expstat',
