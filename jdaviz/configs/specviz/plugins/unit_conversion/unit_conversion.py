@@ -272,7 +272,7 @@ class UnitConversion(PluginTemplateMixin):
         else:
             self.flux_or_sb_selected = 'Surface Brightness'
 
-        self._find_and_convert_contour_units(yunit)
+        #self._find_and_convert_contour_units(yunit)
 
         # for displaying message that PIXAR_SR = 1 if it is not found in the FITS header
         if (
@@ -282,16 +282,20 @@ class UnitConversion(PluginTemplateMixin):
             self.pixar_sr_exists = False
 
     def _find_and_convert_contour_units(self, yunit=None):
-        print("Converting contour units")
         if not yunit:
-            yunit = _valid_glue_display_unit(self.sb_unit_selected, self.spectrum_viewer, 'y')
-        else:
-            yunit = self._append_angle_correctly(yunit, self.angle_unit.selected)
+            yunit = self.flux_unit.selected
+
+        if self.angle_unit_selected is None or self.angle_unit_selected == '':
+            # Can't do this before the plugin is initialized completely
+            return
+
+        yunit = self._append_angle_correctly(yunit, self.angle_unit.selected)
         print(f"y unit is {yunit}")
         for name, viewer in self._app._jdaviz_helper.viewers.items():
+            print(f"Checking layers in {name}")
             for layer in viewer._obj.state.layers:
                 if hasattr(layer, 'attribute_display_unit'):
-                    print(f"Found attribute_display_unit for {'layer.layer.label'}")
+                    print(f"Found attribute_display_unit for {layer.layer.label}")
                     layer.attribute_display_unit = yunit
 
     def _translate(self, flux_or_sb=None):
