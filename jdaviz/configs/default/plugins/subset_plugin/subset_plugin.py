@@ -701,7 +701,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         # If user passes in one region obj instead of list, try to be smart.
         if (isinstance(regions, SpectralRegion) or
                 (isinstance(regions, list) and isinstance(regions[0], SpectralRegion))):
-            self._import_spectral_regions(regions)
+            mode = kwargs.pop('mode', None)
+            self._import_spectral_regions(regions, mode)
         elif not isinstance(regions, (list, tuple, Regions)):
             regions = [regions]
 

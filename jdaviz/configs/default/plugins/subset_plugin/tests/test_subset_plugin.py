@@ -191,9 +191,18 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
 def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, mode, len_subsets,
                                 len_subregions):
     cubeviz_helper.load_data(spectrum1d_cube)
-    cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     plg = cubeviz_helper.plugins['Subset Tools']._obj
-    plg._import_spectral_regions(spec_region=spec_regions, mode=mode)
+    plg.import_region(spec_regions, mode=mode)
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == len_subsets
     assert len(subsets['Subset 1']) == len_subregions
+
+
+def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']._obj
+    s = SpectralRegion(5*u.um, 6*u.um)
+    s.write()
+    plg.import_region('spectral_region.ecsv')
+    subsets = cubeviz_helper.app.get_subsets()
+    assert len(subsets) == 1
