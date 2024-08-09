@@ -24,6 +24,14 @@
                 persistent-hint
               ></v-switch>
             </v-row>
+            <v-row>
+              <v-switch
+                v-model="show_subset_preview"
+                label="Show ramp profiles from each pixel in a subset"
+                hint="Show ramps extracted from each pixel within subsets."
+                persistent-hint
+              ></v-switch>
+            </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>

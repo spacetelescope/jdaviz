@@ -245,7 +245,7 @@ class JdavizViewerMixin(WithCache):
                     subset_type == 'spatial' and
                     self.__class__.__name__ in ('CubevizProfileView', 'RampvizProfileView')
                 ):
-                    # do not show spatial subsets in spectral-viewer
+                    # do not show spatial subsets in profile viewer
                     continue
                 visible_layers[layer.layer.label] = {'color': _get_layer_color(layer),
                                                      'linewidth': _get_layer_linewidth(layer),

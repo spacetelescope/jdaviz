@@ -31,9 +31,10 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
         super().__init__(*args, **kwargs)
 
     def _initialize_x_axis(self):
-        self.state.x_att = self.state.x_att_helper.choices[-1]
-        self.set_plot_axes()
-        self.reset_limits()
+        if len(self.state.x_att_helper.choices):
+            self.state.x_att = self.state.x_att_helper.choices[-1]
+            self.set_plot_axes()
+            self.reset_limits()
 
     def reset_limits(self):
         super().reset_limits()
@@ -121,8 +122,7 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # Make sure that the x_att is correct on data load
         ref_data = self.state.reference_data
         if ref_data and ref_data.ndim == 3:
-            x_att = "Pixel Axis 0 [z]"
-            self.state.x_att = ref_data.id[x_att]
+            self.state.x_att = ref_data.id["Pixel Axis 0 [z]"]
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None
