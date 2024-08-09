@@ -2,6 +2,9 @@
   <j-tray-plugin
     :description="docs_description || 'Queries an area encompassed by the viewer using a specified catalog and marks all the objects found within the area.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#catalog-search'"
+    :uses_active_status="uses_active_status"
+    @plugin-ping="plugin_ping($event)"
+    :keept_active_sync="keep_active"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
@@ -71,8 +74,7 @@
        <span style='padding-left: 4px' v-if="results_available">{{number_of_results}}</span>
     </v-row>
 
-    <jupyter-widget :widget="table_widget"></jupyter-widget>
-    
+    <jupyter-widget :widget="table_widget"></jupyter-widget> 
 
   </j-tray-plugin>
 </template>
