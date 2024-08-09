@@ -132,18 +132,10 @@
               </v-col>
               <v-col cols=2>
                 <j-tooltip tipid='plugin-line-lists-color-picker'>
-                  <v-menu>
-                    <template v-slot:activator="{ on }">
-                        <span class="linelist-color-menu"
-                              :style="`background:${list_contents[item].color}; cursor: pointer`"
-                              @click.stop="on.click"
-                        >&nbsp;</span>
-                    </template>
-                    <div @click.stop="" style="text-align: end; background-color: white">
-                        <v-color-picker :value="list_contents[item].color"
-                                    @update:color="throttledSetColor({listname:item, color: $event.hexa})"></v-color-picker>
-                    </div>
-                  </v-menu>
+                  <plugin-color-picker
+                    :value="list_contents[item].color"
+                    @color-update="throttledSetColor({listname:item, color: $event.hexa})"
+                  />
                 </j-tooltip>
               </v-col>
               <v-col cols=8>

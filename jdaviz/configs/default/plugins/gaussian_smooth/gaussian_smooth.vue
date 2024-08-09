@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Gaussian Smooth"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Smooth data with a Gaussian kernel.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
     :popout_button="popout_button"
@@ -11,7 +14,8 @@
           attach
           :items="mode_items.map(i => i.label)"
           v-model="mode_selected"
-          label="Mode"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          :label="api_hints_enabled ? 'plg.mode =' : 'Mode'"
           hint="Smooth data spectrally or spatially."
           persistent-hint
         ></v-select>
@@ -25,13 +29,16 @@
         :selected.sync="dataset_selected"
         :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
         label="Data"
+        api_hint='plg.dataset ='
+        :api_hints_enabled="api_hints_enabled"
         hint="Select the data to be smoothed."
       />
 
       <v-row>
         <v-text-field
           ref="stddev"
-          label="Standard deviation"
+          :label="api_hints_enabled ? 'plg.stddev =' : 'Standard deviation'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           v-model.number="stddev"
           type="number"
           hint="The stddev of the kernel, in pixels."
@@ -53,6 +60,9 @@
         action_label="Smooth"
         action_tooltip="Smooth data"
         :action_spinner="spinner"
+        add_results_api_hint='plg.add_results'
+        action_api_hint='plg.smooth(add_data=True)'
+        :api_hints_enabled="api_hints_enabled"
         @click:action="apply"
       ></plugin-add-results>
     </j-tray-plugin>

@@ -190,8 +190,6 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
     def user_api(self):
         # TODO: backwards compat for save_figure, save_movie,
         # i_start, i_end, movie_fps, movie_filename
-        # TODO: expose export method once API is finalized
-        # is the above comment still needed or can it be removed?
         expose = ['viewer', 'viewer_format',
                   'dataset', 'dataset_format',
                   'subset', 'subset_format',

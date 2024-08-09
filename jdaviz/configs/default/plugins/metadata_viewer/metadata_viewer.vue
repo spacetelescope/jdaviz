@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Metadata"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'View metadata.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#metadata-viewer'"
     :popout_button="popout_button"
@@ -12,20 +15,28 @@
       :selected.sync="dataset_selected"
       :show_if_single_entry="config!='specviz'"
       label="Data"
+      api_hint='plg.dataset ='
+      :api_hints_enabled="api_hints_enabled"
       hint="Select the data to see metadata."
     />
 
-    <v-row v-if="has_primary">
-      <v-switch
-        label="Show primary header"
+    <v-row v-if="has_primary || api_hints_enabled">
+      <plugin-switch
+        :value.sync="show_primary"
+        label='Show primary header'
+        api_hint='plg.show_primary = '
+        :api_hints_enabled="api_hints_enabled"
         hint="Show MEF primary header metadata instead."
-        v-model="show_primary"
-        persistent-hint>
-      </v-switch>
+      />
     </v-row>
 
     <j-plugin-section-header>Metadata</j-plugin-section-header>
     <div v-if="has_metadata">
+      <v-row v-if="api_hints_enabled">
+        <span class="api-hint">
+          plg.metadata
+        </span>
+      </v-row>
       <v-row>
         <v-text-field
           v-model='metadata_filter'

@@ -114,10 +114,14 @@ class UnitConversion(PluginTemplateMixin):
     @property
     def user_api(self):
         if self.app.config == 'cubeviz':
-            expose = ('spectral_unit', 'flux_or_sb', 'flux_unit', 'angle_unit')
+            expose = ('spectral_unit', 'flux_or_sb', 'flux_unit', 'angle_unit', 'sb_unit')
         else:
             expose = ('spectral_unit', 'flux_unit', 'angle_unit')
         return PluginUserApi(self, expose=expose)
+
+    @property
+    def sb_unit(self):
+        return self.sb_unit_selected
 
     def _on_glue_x_display_unit_changed(self, x_unit_str):
         if x_unit_str is None:

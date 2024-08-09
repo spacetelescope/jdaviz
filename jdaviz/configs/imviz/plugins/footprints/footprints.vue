@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Footprints"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Show instrument footprints as overlays on image viewers.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#footprints'"
     :uses_active_status="uses_active_status"
@@ -15,11 +18,20 @@
       :items="overlay_items"
       :selected.sync="overlay_selected"
       label="Overlay"
+      api_hint="plg.overlay ="
+      api_hint_add="plg.add_overlay"
+      api_hint_rename="plg.rename_overlay"
+      api_hint_remove="plg.remove_overlay"
+      :api_hints_enabled="api_hints_enabled"
       hint="Select an overlay to modify."
       >
     </plugin-editable-select>
 
-    <v-alert v-if="is_pixel_linked" type='warning' style="margin-left: -12px; margin-right: -12px">
+    <v-alert
+      v-if="is_pixel_linked"
+      type='warning'
+      style="margin-left: -12px; margin-right: -12px"
+    >
       cannot plot footprint when aligned by pixels (see Orientation plugin).
       <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
         <v-btn @click="link_by_wcs">
@@ -39,40 +51,43 @@
         :selected.sync="viewer_selected"
         :multiselect="true"
         label="Viewers"
+        api_hint="plg.viewer ="
+        :api_hints_enabled="api_hints_enabled"
         :show_if_single_entry="false"
         hint="Select viewers to display this overlay"
       />
 
       <v-row>
-        <span>
-          <v-btn icon @click.stop="visible = !visible">
-            <v-icon>mdi-eye{{ visible ? '' : '-off' }}</v-icon>
-          </v-btn>
-          Show Overlay
-        </span>
+        <plugin-switch
+          :value.sync="visible"
+          label="Visible"
+          api_hint="plg.visible = "
+          :api_hints_enabled="api_hints_enabled"
+          :use_eye_icon="true"
+        />
       </v-row>
 
       <v-row>
-          <v-menu>
-            <template v-slot:activator="{ on }">
-                <span class="color-menu"
-                      :style="`background:${color}; cursor: pointer; margin-left: 6px`"
-                      @click.stop="on.click"
-                >&nbsp;</span>
-            </template>
-            <div @click.stop="" style="text-align: end; background-color: white">
-                <v-color-picker :value="color"
-                            @update:color="throttledSetColor($event.hexa)"></v-color-picker>
-            </div>
-          </v-menu>
-        <span style="padding-left: 12px; padding-top: 3px">
-          Overlay Color
-        </span>
+        <plugin-color-picker
+          label='Overlay Color'
+          label_inline="true"
+          api_hint="plg.color = "
+          :api_hints_enabled="api_hints_enabled"
+          :value="color"
+          @color-update="throttledSetColor($event.hexa)"
+        />
       </v-row>
-      <div>
-        <v-subheader class="pl-0 slider-label" style="height: 12px">Fill Opacity</v-subheader>
-        <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="fill_opacity" hide-details class="no-hint" />
-      </div>
+      <v-row>
+        <plugin-slider
+          label="Fill Opacity"
+          api_hint="plg.fill_opacity = "
+          :api_hints_enabled="api_hints_enabled"
+          :wait="300"
+          max="1"
+          step="0.01"
+          :value.sync="fill_opacity"
+        />
+      </v-row>
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
       <v-alert v-if="!has_pysiaf" type="warning" style="margin-left: -12px; margin-right: -12px">
@@ -84,6 +99,8 @@
         :selected.sync="preset_selected"
         label="Preset"
         hint="Preset instrument or import from a file."
+        api_hint="plg.preset ="
+        :api_hints_enabled="api_hints_enabled"
         :from_file.sync="from_file"
         :from_file_message="from_file_message"
         dialog_title="Import Region"
@@ -98,8 +115,15 @@
         <v-row>
           <span style="line-height: 36px; font-size: 12px; color: #666666; width: 100%">Center RA/Dec</span>
           <j-tooltip v-for="viewer_ref in viewer_selected" :tooltipcontent="'center RA/DEC on current zoom-limits of '+viewer_ref">
-          <v-btn @click="() => center_on_viewer(viewer_ref)">
-            {{viewer_ref}}
+          <v-btn
+            @click="() => center_on_viewer(viewer_ref)"
+            :class="api_hints_enabled ? 'api-hint' : null"
+          >
+            {{ api_hints_enabled ?
+                'plg.center_on_viewer(\''+viewer_ref+'\')'
+                :
+                viewer_ref
+            }}
           </v-btn>
           </j-tooltip>
         </v-row>
@@ -110,7 +134,8 @@
             type="number"
             step="0.01"
             :rules="[() => ra!=='' || 'This field is required']"
-            label="RA"
+            :label="api_hints_enabled ? 'plg.ra = ' : 'RA'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Right Ascension (degrees)"
             persistent-hint
           ></v-text-field>
@@ -122,7 +147,8 @@
             type="number"
             step="0.01"
             :rules="[() => dec!=='' || 'This field is required']"
-            label="Dec"
+            :label="api_hints_enabled ? 'plg.dec = ' : 'Dec'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Declination (degrees)"
             persistent-hint
           ></v-text-field>
@@ -133,7 +159,8 @@
             v-model.number="pa"
             type="number"
             :rules="[() => pa!=='' || 'This field is required']"
-            label="Position Angle"
+            :label="api_hints_enabled ? 'plg.pa = ' : 'Position Angle'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Position Angle (degrees) measured from North
                   to central vertical axis in North to East direction."
             persistent-hint
@@ -145,7 +172,8 @@
             v-model.number="v2_offset"
             type="number"
             :rules="[() => v2_offset!=='' || 'This field is required']"
-            label="V2 Offset"
+            :label="api_hints_enabled ? 'plg.v2_offset = ' : 'V2 Offset'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Additional V2 offset in telescope coordinates to apply to instrument
                   center, as from a dither pattern."
             persistent-hint
@@ -157,7 +185,8 @@
             v-model.number="v3_offset"
             type="number"
             :rules="[() => v3_offset!=='' || 'This field is required']"
-            label="V3 Offset"
+            :label="api_hints_enabled ? 'plg.v3_offset = ' : 'V3 Offset'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             hint="Additional V3 offset in telescope coordinates to apply to instrument
                   center, as from a dither pattern."
             persistent-hint
@@ -175,7 +204,16 @@
       this.throttledSetColor = _.throttle(
         (v) => { this.color = v },
         100);
-    }
+    },
+    methods: {
+      boolToString(b) {
+        if (b) {
+          return 'True'
+        } else {
+          return 'False'
+        }
+      },
+    } 
   }
 </script>
 

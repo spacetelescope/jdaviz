@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Line Analysis"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Return statistics for a single spectral line.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-analysis'"
     :uses_active_status="uses_active_status"
@@ -21,6 +24,8 @@
       :selected.sync="dataset_selected"
       :show_if_single_entry="config=='mosviz'"
       label="Data"
+      api_hint="plg.dataset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select the data set to be analysed."
     />
 
@@ -29,6 +34,8 @@
       :selected.sync="spectral_subset_selected"
       :show_if_single_entry="true"
       label="Spectral region"
+      api_hint="plg.spectral_subset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the line."
     />
 
@@ -53,6 +60,8 @@
       :show_if_single_entry="true"
       :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
+      api_hint="plg.continuum ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the continuum."
     />
 
@@ -60,7 +69,7 @@
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
       <v-text-field
-        label="Width"
+        :label="api_hints_enabled ? 'plg.continuum_width =' : 'Width'"
         type="number"
         v-model.number="continuum_width"
         step="0.1"
@@ -80,6 +89,12 @@
         See the <j-external-link link='https://specutils.readthedocs.io/en/stable/analysis.html' linktext='specutils docs'></j-external-link> for more details on the available analysis functions.
       </j-docs-link>
     </v-row>
+
+    <v-row v-if="api_hints_enabled">
+        <span class="api-hint">
+          plg.get_results()
+        </span>
+      </v-row>
 
     <div style="display: grid"> <!-- overlay container -->
       <div style="grid-area: 1/1">

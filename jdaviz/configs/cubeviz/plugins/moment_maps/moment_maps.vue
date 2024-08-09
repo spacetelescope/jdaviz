@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Moment Maps"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Create a 2D image from a data cube.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'"
     :uses_active_status="uses_active_status"
@@ -18,6 +21,8 @@
       :selected.sync="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
+      api_hint="plg.dataset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select the data set."
     />
 
@@ -28,6 +33,8 @@
       :show_if_single_entry="true"
       has_subregions_warning="The selected selected subset has subregions, the entire range will be used, ignoring any gaps."
       label="Spectral region"
+      api_hint="plg.spectral_subset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Spectral region to compute the moment map."
     />
 
@@ -50,6 +57,8 @@
       :show_if_single_entry="true"
       :rules="[() => continuum_subset_selected!==spectral_subset_selected || 'Must not match line selection.']"
       label="Continuum"
+      api_hint="plg.continuum_subset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the continuum."
     />
 
@@ -59,6 +68,8 @@
       :selected.sync="continuum_dataset_selected"
       :show_if_single_entry="false"
       label="Continuum Spectrum"
+      api_hint="plg.continuum_dataset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select the spectrum used to visualize the continuum inputs.  The continuum will be recomputed on the input cube when computing the moment map."
     />
 
@@ -66,7 +77,8 @@
       <!-- DEV NOTE: if changing the validation rules below, also update the logic to clear the results
            in line_analysis.py  -->
       <v-text-field
-        label="Width"
+        :label="api_hints_enabled ? 'plg.continuum_width =' : 'Width'"
+        :class="api_hints_enabled ? 'api-hint' : null"
         type="number"
         v-model.number="continuum_width"
         step="0.1"
@@ -88,7 +100,8 @@
       <v-text-field
         ref="n_moment"
         type="number"
-        label="Moment"
+        :label="api_hints_enabled ? 'plg.n_moment =' : 'Moment'"
+        :class="api_hints_enabled ? 'api-hint' : null"
         v-model.number="n_moment"
         hint="The desired moment."
         persistent-hint
@@ -100,7 +113,8 @@
     <div v-if="dataset_spectral_unit !== ''">
       <v-row>
         <v-radio-group
-          label="Output Units"
+          :label="api_hints_enabled ? 'plg.output_unit =' : 'Output Units'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           hint="Choose the output units for calculated moment."
           v-model="output_unit_selected"
           column
@@ -117,7 +131,8 @@
         <v-text-field
         ref="reference_wavelength"
         type="number"
-        label="Reference Wavelength"
+        :label="api_hints_enabled ? 'plg.reference_wavelength =' : 'Reference Wavelength'"
+        :class="api_hints_enabled ? 'api-hint' : null"
         v-model.number="reference_wavelength"
         :suffix="dataset_spectral_unit.replace('Angstrom', 'A')"
         hint="Observed wavelength of the line of interest"
@@ -141,6 +156,9 @@
       action_tooltip="Calculate moment map"
       :action_spinner="spinner"
       :action_disabled="n_moment > 0 && output_unit_selected !== 'Spectral Unit' && reference_wavelength === 0"
+      add_results_api_hint = 'plg.add_results'
+      action_api_hint='plg.calculate_moment(add_data=True)'
+      :api_hints_enabled="api_hints_enabled"
       @click:action="calculate_moment"
     ></plugin-add-results>
 

@@ -676,7 +676,7 @@ class PlotOptions(PluginTemplateMixin):
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
-                  'select_all', 'subset_visible']
+                  'select_all', 'subset_visible', 'reset_viewer_bounds']
         if self.config == "cubeviz":
             expose += ['uncertainty_visible']
         if self.config != "imviz":
@@ -866,6 +866,9 @@ class PlotOptions(PluginTemplateMixin):
         self.zoom_step, _ = _round_step(max(x_max-x_min, y_max-y_min) / 100.)
 
     def vue_reset_viewer_bounds(self, _):
+        self.reset_viewer_bounds()
+
+    def reset_viewer_bounds(self):
         # This button is currently only exposed if only the spectrum viewer is selected
         viewers = [self.viewer.selected_obj] if not self.viewer_multiselect else self.viewer.selected_obj # noqa
         for viewer in viewers:
