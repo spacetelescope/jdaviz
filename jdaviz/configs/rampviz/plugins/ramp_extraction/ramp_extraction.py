@@ -155,8 +155,11 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         cube_subset = self.cube[region_mask]  # shape: (N pixels extracted, M groups)
 
         mark = [
-            PluginLine(self.integration_viewer, x=np.arange(cube_subset.shape[1]), y=y,
-                       stroke_width=1, colors=[color], opacities=[0.25], label=subset_lbl)
+            PluginLine(
+                self.integration_viewer, x=np.arange(cube_subset.shape[1]), y=y,
+                stroke_width=1, colors=[color], opacities=[0.25], label=subset_lbl,
+                visible=False
+            )
             for y in cube_subset
         ]
 
@@ -183,13 +186,14 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         visible = self.show_subset_preview and (self.is_active or self.keep_active)
         for mark in self.integration_viewer.figure.marks:
-            if isinstance(mark, PluginLine):
+            if isinstance(mark, PluginLine) and mark.label is not None:
                 mark.visible = visible and self.aperture.selected == mark.label
 
     @property
     def user_api(self):
-        expose = ['dataset', 'function', 'aperture',
-                  'add_results', 'extract']
+        expose = [
+            'dataset', 'function', 'aperture', 'add_results', 'extract'
+        ]
 
         return PluginUserApi(self, expose=expose)
 

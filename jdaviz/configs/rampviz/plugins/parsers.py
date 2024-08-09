@@ -75,7 +75,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
             app, file_obj, file_name=data_label,
             group_viewer_reference_name=group_viewer_reference_name,
             diff_viewer_reference_name=diff_viewer_reference_name,
-            integration_viewer_reference_name=integration_viewer_reference_name
         )
     elif isinstance(file_obj, str):
         if file_obj.lower().endswith('.asdf'):
@@ -128,7 +127,6 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
                 app, pf, data_label, meta=pf.meta,
                 group_viewer_reference_name=group_viewer_reference_name,
                 diff_viewer_reference_name=diff_viewer_reference_name,
-                integration_viewer_reference_name=integration_viewer_reference_name
             )
 
     else:
