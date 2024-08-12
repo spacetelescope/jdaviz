@@ -764,11 +764,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         x_disp_unit = self.state.x_display_unit
         x_unit = u.Unit(x_disp_unit) if x_disp_unit else u.dimensionless_unscaled
 
-        if self._state_cls == NDDataArray:
-            # enter this case for ramps:
-            spectral_axis_unit_type = "Sample"
-            self.state.x_display_unit = ''
-        elif x_unit.is_equivalent(u.m):
+        if x_unit.is_equivalent(u.m):
             spectral_axis_unit_type = "Wavelength"
         elif x_unit.is_equivalent(u.Hz):
             spectral_axis_unit_type = "Frequency"

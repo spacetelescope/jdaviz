@@ -55,4 +55,3 @@ def test_previews(rampviz_helper, roman_level_1_ramp):
                     if mark.visible and isinstance(mark, Lines) and
                     len(mark.x) == n_groups
                 ]) == int(show_subset_preview) * n_pixels_in_subset + int(show_live_preview)
-

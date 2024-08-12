@@ -1,5 +1,8 @@
+import pytest
+from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
 
+@pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
 def test_load_data(rampviz_helper, roman_level_1_ramp):
     rampviz_helper.load_data(roman_level_1_ramp)
 

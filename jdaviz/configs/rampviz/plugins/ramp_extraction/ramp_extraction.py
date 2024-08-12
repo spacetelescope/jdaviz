@@ -168,8 +168,6 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             if getattr(mark, 'label', None) != subset_lbl
         ] + mark
 
-        self.integration_viewer.reset_limits()
-
     def _on_subset_delete(self, msg={}):
         subset_lbl = msg.subset.label
         self.integration_viewer.figure.marks = [
@@ -188,6 +186,8 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         for mark in self.integration_viewer.figure.marks:
             if isinstance(mark, PluginLine) and mark.label is not None:
                 mark.visible = visible and self.aperture.selected == mark.label
+
+        self.integration_viewer.reset_limits()
 
     @property
     def user_api(self):

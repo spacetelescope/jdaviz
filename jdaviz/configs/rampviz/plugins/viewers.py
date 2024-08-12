@@ -43,7 +43,7 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
         global_y_min = float(self.state.y_min)
         global_y_max = float(self.state.y_max)
         for mark in self.figure.marks:
-            if len(mark.y):
+            if len(mark.y) and mark.visible:
                 global_y_min = min(global_y_min, np.nanmin(mark.y))
                 global_y_max = max(global_y_max, np.nanmax(mark.y))
 
