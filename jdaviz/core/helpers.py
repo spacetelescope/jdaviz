@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from inspect import isclass
 
 import numpy as np
+from astropy.utils import deprecated
 from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
@@ -671,6 +672,7 @@ class ImageConfigHelper(ConfigHelper):
         (e.g., "imviz-0" or "cubeviz-0")."""
         return self._default_viewer.user_api
 
+    @deprecated(since="4.0", alternative="subset_plugin.import_region")
     def load_regions_from_file(self, region_file, region_format='ds9', max_num_regions=20,
                                **kwargs):
         """Load regions defined in the given file.
@@ -703,6 +705,7 @@ class ImageConfigHelper(ConfigHelper):
         raw_regs = Regions.read(region_file, format=region_format)
         return self.load_regions(raw_regs, max_num_regions=max_num_regions, **kwargs)
 
+    @deprecated(since="4.0", alternative="subset_plugin.import_region")
     def load_regions(self, regions, max_num_regions=None, refdata_label=None,
                      return_bad_regions=False, **kwargs):
         """Load given region(s) into the viewer.
@@ -759,8 +762,6 @@ class ImageConfigHelper(ConfigHelper):
             If not requested, return `None`.
 
         """
-        raise ValueError()
-
         if len(self.app.data_collection) == 0:
             raise ValueError('Cannot load regions without data.')
 
