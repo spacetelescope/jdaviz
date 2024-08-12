@@ -128,7 +128,7 @@ def _round_step(step):
     decimals = -int(np.log10(abs(step))) + 1 if step != 0 else 6
     if decimals < 0:
         decimals = 0
-    return np.round(step, decimals), decimals
+    return float(np.round(step, decimals)), decimals
 
 
 @tray_registry('g-plot-options', label="Plot Options")
