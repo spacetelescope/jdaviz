@@ -1,5 +1,6 @@
-import numpy as np
 from astropy import units as u
+from glue_jupyter.bqplot.image import BqplotImageView
+import numpy as np
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataToViewerMessage
@@ -272,7 +273,10 @@ class UnitConversion(PluginTemplateMixin):
         else:
             self.flux_or_sb_selected = 'Surface Brightness'
 
-        #self._find_and_convert_contour_units(yunit)
+        # Always send a surface brightness unit to contours
+        if self.flux_or_sb_selected == 'Flux':
+            yunit = self._append_angle_correctly(yunit, self.angle_unit.selected)
+        self._find_and_convert_contour_units(yunit)
 
         # for displaying message that PIXAR_SR = 1 if it is not found in the FITS header
         if (
@@ -283,20 +287,23 @@ class UnitConversion(PluginTemplateMixin):
 
     def _find_and_convert_contour_units(self, yunit=None):
         if not yunit:
-            yunit = self.flux_unit.selected
+            yunit = self.sb_unit_selected
 
         if self.angle_unit_selected is None or self.angle_unit_selected == '':
             # Can't do this before the plugin is initialized completely
             return
 
-        yunit = self._append_angle_correctly(yunit, self.angle_unit.selected)
         print(f"y unit is {yunit}")
         for name, viewer in self._app._jdaviz_helper.viewers.items():
+            if not isinstance(viewer._obj, BqplotImageView):
+                continue
             print(f"Checking layers in {name}")
             for layer in viewer._obj.state.layers:
                 if hasattr(layer, 'attribute_display_unit'):
                     print(f"Found attribute_display_unit for {layer.layer.label}")
                     layer.attribute_display_unit = yunit
+                    # Flux should be the first layer, DQ will error
+                    break
 
     def _translate(self, flux_or_sb=None):
         # currently unsupported, can be supported with a scale factor
