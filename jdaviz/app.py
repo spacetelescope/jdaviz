@@ -739,36 +739,6 @@ class Application(VuetifyTemplate, HubListener):
             dc.add_link(links)
             return
 
-        elif self.config == 'rampviz':
-            if linked_data.ndim == 1:
-                # load a 1D ramp profile:
-                ref_group_component = dc[0].components[-2]
-                ref_flux_component = dc[0].components[-1]
-                linked_group_component = dc[-1].components[0]
-                linked_flux_component = dc[-1].components[1]
-
-                links = [
-                    LinkSame(ref_group_component, linked_group_component),
-                    LinkSame(ref_flux_component, linked_flux_component)
-                ]
-
-                dc.add_link(links)
-                return
-            elif linked_data.ndim == 2:
-                # load a several 1D ramp profiles from a 2D NDDataArray:
-                ref_group_component = dc[0].components[-2]
-                ref_flux_component = dc[0].components[-1]
-                linked_group_component = dc[-1].components[1]
-                linked_flux_component = dc[-1].components[2]
-
-                links = [
-                    LinkSame(ref_group_component, linked_group_component),
-                    LinkSame(ref_flux_component, linked_flux_component)
-                ]
-
-                dc.add_link(links)
-                return
-
         elif (linked_data.meta.get('Plugin', None) == 'Spectral Extraction' or
                 (linked_data.meta.get('Plugin', None) == ('Gaussian Smooth') and
                  linked_data.ndim < 3 and  # Cube linking requires special logic. See below

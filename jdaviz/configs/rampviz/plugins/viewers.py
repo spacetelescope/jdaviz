@@ -18,7 +18,6 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
                     ['jdaviz:homezoom', 'jdaviz:prevzoom'],
                     ['jdaviz:boxzoom', 'jdaviz:xrangezoom', 'jdaviz:yrangezoom'],
                     ['jdaviz:panzoom', 'jdaviz:panzoom_x', 'jdaviz:panzoom_y'],
-                    ['bqplot:xrange'],
                     ['jdaviz:selectslice'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]

@@ -67,12 +67,12 @@ class Rampviz(CubeConfigHelper):
             The nearest group will be selected if "snap to slice" is enabled
             in the slice plugin.
         """
-        if not isinstance(group_index, int):
-            raise TypeError("group_index must be an integer")
-        if slice < 0:
+        if not isinstance(group_index, (int, float)):
+            raise TypeError("group_index must be convertible to an integer")
+        if group_index < 0:
             raise ValueError("group_index must be positive")
 
-        msg = SliceSelectSliceMessage(value=group_index, sender=self)
+        msg = SliceSelectSliceMessage(value=int(group_index), sender=self)
         self.app.hub.broadcast(msg)
 
     def get_data(self, data_label=None, spatial_subset=None,
