@@ -194,7 +194,8 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tm
 def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
 
     cubeviz_helper.load_data(spectrum1d_cube)
-    cubeviz_helper.plugins['Subset Tools'].import_region([CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)])
+    cubeviz_helper.plugins['Subset Tools'].import_region(
+        [CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
     slice_plg = cubeviz_helper.plugins['Slice']
@@ -302,7 +303,8 @@ def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_
 # NOTE: Not as thorough as circle and ellipse above but good enough.
 def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.plugins['Subset Tools'].import_region(RectanglePixelRegion(PixCoord(5, 10), width=4, height=4))
+    cubeviz_helper.plugins['Subset Tools'].import_region(
+        RectanglePixelRegion(PixCoord(5, 10), width=4, height=4))
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 

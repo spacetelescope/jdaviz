@@ -34,7 +34,6 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         reg = RectanglePixelRegion(PixCoord(1, 1), 2, 2).to_sky(self.wcs_1)
         self.imviz.plugins['Subset Tools'].import_region(reg)
 
-
         assert len(self.imviz.app.data_collection.subset_groups) == 2
 
         # by default the parent will be the reference data layer, which
