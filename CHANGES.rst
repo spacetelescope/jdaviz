@@ -16,6 +16,8 @@ New Features
 
 - The colormap menu for image layers now shows in-line previews of the colormaps. [#2900]
 
+- Plugins can now expose in-UI API hints. [#3137]
+
 Cubeviz
 ^^^^^^^
 

@@ -184,7 +184,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def user_api(self):
-        expose = ['dataset', 'function', 'aperture',
+        expose = ['show_live_preview', 'dataset', 'function', 'aperture',
                   'background', 'bg_wavelength_dependent',
                   'bg_spec_per_spaxel', 'bg_spec_add_results', 'extract_bg_spectrum',
                   'add_results', 'extract',

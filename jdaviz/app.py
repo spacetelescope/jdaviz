@@ -142,10 +142,14 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-editable-select': 'components/plugin_editable_select.vue',
                      'plugin-inline-select': 'components/plugin_inline_select.vue',
                      'plugin-inline-select-item': 'components/plugin_inline_select_item.vue',
+                     'plugin-switch': 'components/plugin_switch.vue',
                      'plugin-action-button': 'components/plugin_action_button.vue',
                      'plugin-add-results': 'components/plugin_add_results.vue',
                      'plugin-auto-label': 'components/plugin_auto_label.vue',
                      'plugin-file-import-select': 'components/plugin_file_import_select.vue',
+                     'plugin-slider': 'components/plugin_slider.vue',
+                     'plugin-color-picker': 'components/plugin_color_picker.vue',
+                     'plugin-input-header': 'components/plugin_input_header.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')

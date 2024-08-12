@@ -7,7 +7,8 @@
         @keyup="if(auto) {if ($event.srcElement._value === displayValue) {return}; $emit('update:auto', false)}; $emit('update:value', $event.srcElement._value)"
         @mouseenter="showIcon = true"
         @mouseleave="showIcon = false"
-        :label="label"
+        :label="api_hints_enabled && api_hint ? api_hint : label"
+        :class="api_hints_enabled && api_hint ? 'api-hint' : null"
         :hint="hint"
         :rules="[(e) => invalid_msg || true]"
         persistent-hint
@@ -25,7 +26,7 @@
 </template>
 <script>
 module.exports = {
-  props: ['value', 'default', 'auto', 'label', 'hint', 'invalid_msg'],
+  props: ['value', 'default', 'auto', 'label', 'hint', 'invalid_msg', 'api_hint', 'api_hints_enabled'],
   data: function() {
       return {
           displayValue: this.auto ? this.default : this.value,

@@ -7,7 +7,8 @@
         :items="items.map(i => i.label)"
         v-model="selected"
         @change="$emit('update:selected', $event)"
-        :label="label"
+        :label="api_hints_enabled && api_hint ? api_hint : label"
+        :class="api_hints_enabled && api_hint ? 'api-hint' : null"
         :hint="hint"
         persistent-hint
       ></v-select>
@@ -60,7 +61,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'from_file', 'from_file_message',
-          'dialog_title', 'dialog_hint']
+          'dialog_title', 'dialog_hint', 'api_hint', 'api_hints_enabled']
 };
 </script>
 

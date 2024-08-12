@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Collapse"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Collapse a spectral cube along one axis.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'"
     :popout_button="popout_button"
@@ -10,16 +13,18 @@
       :selected.sync="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
+      api_hint="plg.dataset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select the data set to collapse."
     />
 
     <v-row>
       <v-select
-        :menu-props="{ left: true }"
         attach
         :items="function_items.map(i => i.label)"
         v-model="function_selected"
-        label="Function"
+        :label="api_hints_enabled ? 'plg.function =' : 'Function'"
+        :class="api_hints_enabled ? 'api-hint' : null"
         hint="Function to use in the collapse."
         persistent-hint
       ></v-select>
@@ -32,6 +37,8 @@
       :show_if_single_entry="true"
       has_subregions_warning="The selected selected subset has subregions, the entire range will be used, ignoring any gaps."
       label="Spectral region"
+      api_hint="plg.spectral_subset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region to apply the collapse."
     />
 
@@ -47,6 +54,9 @@
       action_label="Collapse"
       action_tooltip="Collapse data"
       :action_spinner="spinner"
+      add_results_api_hint='plg.add_results'
+      action_api_hint='plg.collapse(add_data=True)'
+      :api_hints_enabled="api_hints_enabled"
       @click:action="collapse"
     ></plugin-add-results>
 

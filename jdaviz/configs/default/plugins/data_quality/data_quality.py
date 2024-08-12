@@ -33,6 +33,24 @@ telescope_names = {
 
 @tray_registry('g-data-quality', label="Data Quality", viewer_requirements="image")
 class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
+    """
+    See the :ref:`Data Quality Plugin Documentation <imviz-data-quality>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``science_layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`)
+    * ``dq_layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
+        data quality layer corresponding to the science data in ``science_layer``
+    * ``dq_layer_opacity``: Opacity of the data quality layer.
+    * ``decoded_flags``: List of decoded flags from the selected flag map.
+    * ``flags_filter``: List of flags to display.
+    * ``flag_map``: Name of the selected flag map.
+    * ``flag_map_definitions_selected``: Dictionary of the selected flag map.
+    """
     template_file = __file__, "data_quality.vue"
 
     irrelevant_msg = Unicode("").tag(sync=True)
@@ -43,7 +61,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     science_layer_selected = Any().tag(sync=True)  # Any needed for multiselect
 
     # `dq_layer` is the data quality layer corresponding to the
-    # science data in `layer`
+    # science data in `science_layer`
     dq_layer_multiselect = Bool(False).tag(sync=True)
     dq_layer_items = List().tag(sync=True)
     dq_layer_selected = Any().tag(sync=True)  # Any needed for multiselect
