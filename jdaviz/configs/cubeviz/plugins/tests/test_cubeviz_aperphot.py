@@ -192,7 +192,7 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
     bg = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=1, height=1)
 
     cubeviz_helper.load_data(mjy_sr_cube, data_label="test")
-    cubeviz_helper.load_regions([aper, bg])
+    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg])
 
     ap = cubeviz_helper.plugins['Aperture Photometry']._obj
 
