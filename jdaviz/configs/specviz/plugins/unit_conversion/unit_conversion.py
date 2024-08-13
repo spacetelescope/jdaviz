@@ -299,11 +299,12 @@ class UnitConversion(PluginTemplateMixin):
                 continue
             print(f"Checking layers in {name}")
             for layer in viewer._obj.state.layers:
+                # DQ layer doesn't play nicely with this attribute
+                if "DQ" in layer.layer.label:
+                    continue
                 if hasattr(layer, 'attribute_display_unit'):
                     print(f"Found attribute_display_unit for {layer.layer.label}")
                     layer.attribute_display_unit = yunit
-                    # Flux should be the first layer, DQ will error
-                    break
 
     def _translate(self, flux_or_sb=None):
         # currently unsupported, can be supported with a scale factor

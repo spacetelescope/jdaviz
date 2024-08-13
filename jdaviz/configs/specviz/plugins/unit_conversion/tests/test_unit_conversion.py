@@ -251,3 +251,22 @@ def test_sb_unit_conversion(cubeviz_helper):
 
     la = cubeviz_helper.plugins['Line Analysis']._obj
     assert la.dataset.get_selected_spectrum(use_display_units=True)
+
+
+def test_contour_unit_conversion(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
+    # custom cube to have Surface Brightness units
+    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test")
+
+    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg.open_in_tray()
+
+    po_plg = cubeviz_helper.plugins['Plot Options']
+    # Make sure that the contour values get updated
+    po_plg.contour_visible = True
+
+    assert np.allclose(po_plg.contour_max.value, 199)
+
+    uc_plg._obj.flux_or_sb_selected = 'Surface Brightness'
+    uc_plg.flux_unit = 'MJy'
+
+    assert np.allclose(po_plg.contour_max.value, 1.99e-4)
