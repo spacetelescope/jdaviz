@@ -180,6 +180,19 @@ class UnitConversion(PluginTemplateMixin):
                 self.flux_unit.selected,
                 self.angle_unit.selected
             )
+            if self.angle_unit.selected == 'pix':
+                mouseover_unit = self.flux_unit.selected
+            else:
+                mouseover_unit = self.sb_unit_selected
+            self.hub.broadcast(GlobalDisplayUnitChanged("sb", mouseover_unit, sender=self))
+
+        else:
+            # if cube was loaded in flux units, we still need to broadcast
+            # a 'sb' message for mouseover info. this should be removed when
+            # unit change messaging is improved and is a temporary fix
+            self.hub.broadcast(GlobalDisplayUnitChanged('sb',
+                                                        self.flux_unit.selected,
+                                                        sender=self))
 
             if not self.flux_unit.selected:
                 y_display_unit = self.spectrum_viewer.state.y_display_unit

@@ -86,13 +86,11 @@ class UnitConverterWithSpectral:
                     'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
                     'W / (Hz sr m2)',
                     'eV / (Hz s sr m2)',
-                    'erg / (s sr cm2)',
-                    'AB / sr', 'bol / sr', 'ST / sr',
-                    'erg / (s cm2 Angstrom sr)', 'erg / (Hz s sr cm2)',
-                    'erg / (Angstrom s sr cm2)',
-                    'ph / (Angstrom s cm2 sr)',
+                    'erg / (s sr cm2)', 'erg / (Hz s sr cm2)',
+                    'erg / (Angstrom s sr cm2)', 'erg / (s cm2 Angstrom sr)',
+                    'ph / (Angstrom s cm2 sr)', 'ph / (Angstrom s sr cm2)',
                     'ph / (Hz s cm2 sr)', 'ph / (Hz s cm2 sr)',
-                    'ph / (Hz s sr cm2)', 'ph / (Angstrom s sr cm2)'
+                    'ph / (Hz s sr cm2)'
                 ])
         else:  # spectral axis
             # prefer Hz over Bq and um over micron
@@ -114,7 +112,7 @@ class UnitConverterWithSpectral:
             except RuntimeError:
                 data = data.get_object(cls=NDDataArray)
                 spec = Spectrum1D(flux=data.data * u.Unit(original_units))
-            return flux_conversion(spec, values, original_units, target_units)
+            return flux_conversion(values, original_units, target_units, spec)
         else:  # spectral axis
             return spectral_axis_conversion(values, original_units, target_units)
 

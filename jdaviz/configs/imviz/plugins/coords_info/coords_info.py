@@ -17,8 +17,7 @@ from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
-from jdaviz.utils import _convert_surface_brightness_units, flux_conversion
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+from jdaviz.utils import _convert_surface_brightness_units, flux_conversion, _eqv_pixar_sr
 
 __all__ = ['CoordsInfo']
 
@@ -484,17 +483,21 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     image, arr, x, y, viewer
                 )
                 if self.image_unit is not None:
-                    if self.image_unit.is_equivalent(unit):
+                    if 'PIXAR_SR' in self.app.data_collection[0].meta:
+                        # Need current slice value and associated unit to use to compute
+                        # spectral density equivalencies that enable Flux to Flux conversions.
+                        # This is needed for units that are not directly convertible/translatable.
+                        slice = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
+
+                        value = flux_conversion(
+                                values=value, original_units=unit, target_units=self.image_unit, spec=None, eqv=_eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR']), slice=slice  # noqa
+                                )
+                        unit = self.image_unit
+
+                    elif self.image_unit.is_equivalent(unit):
                         value = _convert_surface_brightness_units(
                             value, unit, self.image_unit
                         )
-                        unit = self.image_unit
-                    # need to generalize flux_conversion so image data can go through it too,
-                    # not just spectra
-                    elif self.app.config == 'cubeviz' and not check_if_unit_is_per_solid_angle(u.Unit(self.image_unit)):  # noqa
-                        self.image_unit /= u.sr
-                        value = _convert_surface_brightness_units(
-                            value, unit, self.image_unit)
                         unit = self.image_unit
 
                 if associated_dq_layers is not None:
@@ -599,7 +602,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 # temporarily here, may be removed after upstream units handling
                 # or will be generalized for any sb <-> flux
                 if '_pixel_scale_factor' in sp.meta:
-                    disp_flux = flux_conversion(sp, sp.flux.value, sp.flux.unit, viewer.state.y_display_unit)  # noqa
+                    disp_flux = flux_conversion(sp.flux.value, sp.flux.unit, viewer.state.y_display_unit, sp)  # noqa
                 else:
                     disp_flux = sp.flux.to_value(viewer.state.y_display_unit,
                                                  u.spectral_density(sp.spectral_axis))
