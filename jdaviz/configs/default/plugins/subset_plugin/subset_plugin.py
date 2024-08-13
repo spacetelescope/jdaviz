@@ -114,7 +114,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     @property
     def user_api(self):
-        expose = ['import_region']
+        expose = ['import_region', 'combination_mode']
         return PluginUserApi(self, expose)
 
     def _on_link_update(self, *args):
@@ -718,6 +718,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 (isinstance(regions, list) and isinstance(regions[0], SpectralRegion))):
             mode = kwargs.pop('mode', None)
             self._import_spectral_regions(regions, mode)
+            return
         elif not isinstance(regions, (list, tuple, Regions)):
             regions = [regions]
 
