@@ -27,6 +27,14 @@ def test_spec_sb_flux_conversion():
     assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 2, 3])
     assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), [100, 200, 300])
 
+    # complex translation Jy / sr -> erg / (Angstrom s cm2 sr)
+    targ = [2.99792458e-12, 1.49896229e-12, 9.99308193e-13] * (u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr))  # noqa: E501
+    assert_allclose(flux_conversion(values, u.Jy / u.sr, u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr), spec), targ.value)  # noqa: E501
+
+    # complex translation erg / (Angstrom s cm2 sr) -> Jy / sr
+    targ = [3.33564095e+13, 2.66851276e+14, 9.00623057e+14] * (u.Jy / u.sr)
+    assert_allclose(flux_conversion(values, u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr), u.Jy / u.sr, spec), targ.value)  # noqa: E501
+
     # Quantity scalar pixel scale factor
     spec.meta["_pixel_scale_factor"] = 0.1 * (u.sr / u.pix)
     assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 2, 3])
