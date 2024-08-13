@@ -24,50 +24,50 @@ def test_spec_sb_flux_conversion():
 
     # Float scalar pixel scale factor
     spec.meta["_pixel_scale_factor"] = 0.1
-    assert_allclose(flux_conversion(spec, values, u.Jy / u.sr, u.Jy), [1, 2, 3])
-    assert_allclose(flux_conversion(spec, values, u.Jy, u.Jy / u.sr), [100, 200, 300])
+    assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 2, 3])
+    assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), [100, 200, 300])
 
     # Quantity scalar pixel scale factor
     spec.meta["_pixel_scale_factor"] = 0.1 * (u.sr / u.pix)
-    assert_allclose(flux_conversion(spec, values, u.Jy / u.sr, u.Jy), [1, 2, 3])
-    assert_allclose(flux_conversion(spec, values, u.Jy, u.Jy / u.sr), [100, 200, 300])
+    assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 2, 3])
+    assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), [100, 200, 300])
 
     # values == 2
     values = [10, 20]
-    assert_allclose(flux_conversion(spec, values, u.Jy / u.sr, u.Jy), [1, 2])
-    assert_allclose(flux_conversion(spec, values, u.Jy, u.Jy / u.sr), [100, 200])
+    assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 2])
+    assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), [100, 200])
 
     # float array pixel scale factor
     spec.meta["_pixel_scale_factor"] = [0.1, 0.2, 0.3]  # min_max = [0.1, 0.3]
-    assert_allclose(flux_conversion(spec, values, u.Jy / u.sr, u.Jy), [1, 6])
-    assert_allclose(flux_conversion(spec, values, u.Jy, u.Jy / u.sr), [100, 66.66666666666667])
+    assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 6])
+    assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), [100, 66.66666666666667])
 
     # Quantity array pixel scale factor
     spec.meta["_pixel_scale_factor"] = [0.1, 0.2, 0.3] * (u.sr / u.pix)  # min_max = [0.1, 0.3]
-    assert_allclose(flux_conversion(spec, values, u.Jy / u.sr, u.Jy), [1, 6])
-    assert_allclose(flux_conversion(spec, values, u.Jy, u.Jy / u.sr), [100, 66.66666666666667])
+    assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 6])
+    assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), [100, 66.66666666666667])
 
     # values != 2
     values = [10, 20, 30]
     spec.meta["_pixel_scale_factor"] = [0.1, 0.2, 0.3]
-    assert_allclose(flux_conversion(spec, values, u.Jy / u.sr, u.Jy), [1, 4, 9])
-    assert_allclose(flux_conversion(spec, values, u.Jy, u.Jy / u.sr), 100)
+    assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 4, 9])
+    assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), 100)
 
     # values != 2 but _pixel_scale_factor size mismatch
     with pytest.raises(ValueError, match="operands could not be broadcast together"):
         spec.meta["_pixel_scale_factor"] = [0.1, 0.2, 0.3, 0.4]
-        flux_conversion(spec, values, u.Jy / u.sr, u.Jy)
+        flux_conversion(values, u.Jy / u.sr, u.Jy, spec)
 
     # Other kind of flux conversion unrelated to _pixel_scale_factor.
     # The answer was obtained from synphot unit conversion.
     spec.meta["_pixel_scale_factor"] = 0.1
     targ = [2.99792458e-12, 1.49896229e-12, 9.99308193e-13] * (u.erg / (u.AA * u.cm * u.cm * u.s))  # FLAM  # noqa: E501
-    assert_allclose(flux_conversion(spec, values, u.Jy, targ.unit), targ.value)
+    assert_allclose(flux_conversion(values, u.Jy, targ.unit, spec), targ.value)
 
     # values == 2 (only used spec.spectral_axis[0] for some reason)
     values = [10, 20]
     targ = [2.99792458e-12, 5.99584916e-12] * (u.erg / (u.AA * u.cm * u.cm * u.s))  # FLAM
-    assert_allclose(flux_conversion(spec, values, u.Jy, targ.unit), targ.value)
+    assert_allclose(flux_conversion(values, u.Jy, targ.unit, spec), targ.value)
 
 
 @pytest.mark.parametrize("test_input,expected", [(0, 'a'), (1, 'b'), (25, 'z'), (26, 'aa'),
