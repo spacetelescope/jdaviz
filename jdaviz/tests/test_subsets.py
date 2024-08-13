@@ -437,7 +437,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # Now create a new subset that has a source in the corner and test
     # recentering with multiselect.
-    subset_plugin.combination_mode.selected = 'new'
+    # subset_plugin.combination_mode.selected = 'new'
     subset_plugin.import_region(
         CirclePixelRegion(center=PixCoord(x=145, y=175), radius=17).to_sky(w))
     subset_plugin.multiselect = True

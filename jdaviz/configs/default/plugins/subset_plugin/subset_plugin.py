@@ -35,6 +35,16 @@ __all__ = ['SubsetPlugin']
 SUBSET_MODES = {
     'new': NewMode,
     'replace': ReplaceMode,
+    'OrState': OrMode,
+    'AndState': AndMode,
+    'XorState': XorMode,
+    'AndNotState': AndNotMode,
+    'RangeSubsetState': RangeSubsetState,
+    'RoiSubsetState': RoiSubsetState
+}
+SUBSET_MODES_PRETTY = {
+    'new': NewMode,
+    'replace': ReplaceMode,
     'or': OrMode,
     'and': AndMode,
     'xor': XorMode,
@@ -44,6 +54,19 @@ SUBSET_MODES = {
 
 @tray_registry('g-subset-plugin', label="Subset Tools")
 class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
+    """
+    See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``combination_mode`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      The method used for adding or combining subsets.
+    * :meth:`import_region`
+    """
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
@@ -73,7 +96,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     combination_items = List([]).tag(sync=True)
-    combination_selected = Any('replace').tag(sync=True)
+    combination_selected = Any().tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,13 +125,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         align_by = getattr(self.app, '_align_by', None)
         self.display_sky_coordinates = (align_by == 'wcs' and not self.multiselect)
 
-        self.combination_options = list(set([key for key, value in SUBSET_MODES.items()]) -
-                                        set(['RangeSubsetState', 'RoiSubsetState']))
+        combination_options = [key for key, value in SUBSET_MODES_PRETTY.items()] + [None]
 
         self.combination_mode = SelectPluginComponent(self,
                                                       items='combination_items',
                                                       selected='combination_selected',
-                                                      manual_options=self.combination_options)
+                                                      manual_options=combination_options)
 
     @property
     def user_api(self):
@@ -678,6 +700,30 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 break
 
     def import_region(self, region, **kwargs):
+        """
+        Method for creating subsets from regions or region files.
+
+        Parameters
+        ----------
+        region : region, list of region objects, or str
+            A region object can be one of the following:
+
+            * Astropy ``regions`` object
+            * ``photutils`` apertures (limited support until ``photutils``
+              fully supports ``regions``)
+            * specutils ``SpectralRegion`` object
+
+            A string which represents a ``regions`` or ``SpectralRegion`` file
+
+        Returns
+        -------
+        bad_regions : list of (obj, str) or `None`
+            If requested (see ``return_bad_regions`` option), return a
+            list of ``(region, reason)`` tuples for region objects that failed to load.
+            If all the regions loaded successfully, this list will be empty.
+            If not requested, return `None`.
+
+        """
         return_bad_regions = kwargs.pop('return_bad_regions', None)
         max_num_regions = kwargs.pop('max_num_regions', None)
         refdata_label = kwargs.pop('refdata_label', None)
@@ -699,6 +745,61 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     def _load_regions(self, regions, max_num_regions=None, refdata_label=None,
                       return_bad_regions=False, **kwargs):
+        """Load given region(s) into the viewer.
+        WCS-to-pixel translation and mask creation, if needed, is relative
+        to the image defined by ``refdata_label``. Meanwhile, the rest of
+        the Subset operations are based on reference image as defined by Glue.
+
+        .. note:: Loading too many regions will affect performance.
+
+        A valid region can be loaded into one of the following categories:
+
+        * An interactive Subset, as if it was drawn by hand. This is
+          always done for supported shapes. Its label will be
+          ``'Subset N'``, where ``N`` is an integer.
+        * A masked Subset that will display on the image but cannot be
+          modified once loaded. This is done if the shape cannot be
+          made interactive. Its label will be ``'MaskedSubset N'``,
+          where ``N`` is an integer.
+
+        Parameters
+        ----------
+        regions : list of obj
+            A list of region objects. A region object can be one of the following:
+
+            * Astropy ``regions`` object
+            * ``photutils`` apertures (limited support until ``photutils``
+              fully supports ``regions``)
+            * specutils ``SpectralRegion`` object
+
+        max_num_regions : int or `None`
+            Maximum number of regions to load, starting from top of the list.
+            Default is to load everything.
+
+        refdata_label : str or `None`
+            Label of data to use for sky-to-pixel conversion for a region, or
+            mask creation. Data must already be loaded into Jdaviz.
+            If `None`, defaults to the reference data in the default viewer.
+            Choice of this data is particularly important when sky
+            region is involved.
+
+        return_bad_regions : bool
+            If `True`, return the regions that failed to load (see ``bad_regions``);
+            This is useful for debugging. If `False`, do not return anything (`None`).
+
+        kwargs : dict
+            Extra keywords to be passed into the region's ``to_mask`` method.
+            **This is ignored if the region can be made interactive.**
+
+        Returns
+        -------
+        bad_regions : list of (obj, str) or `None`
+            If requested (see ``return_bad_regions`` option), return a
+            list of ``(region, reason)`` tuples for region objects that failed to load.
+            If all the regions loaded successfully, this list will be empty.
+            If not requested, return `None`.
+
+        """
         if len(self.app.data_collection) == 0:
             raise ValueError('Cannot load regions without data.')
 
@@ -836,9 +937,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         ----------
         spec_region : ~`specutils.SpectralRegion` object or list
             The object that contains bounds for the spectral region or regions
-        mode : AndMode, AndNotMode, OrMode, ReplaceMode, XorMode, NewMode, or list
-            By default this is set to NewMode which creates a new subset per subregion.
-            OrMode will create a composite subset with each subregion corresponding
+        mode : str or list
+            By default this is set to 'new' which creates a new subset per subregion.
+            'or' will create a composite subset with each subregion corresponding
             to a subregion of a single subset.
         """
         viewer_name = viewer or self.app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -848,32 +949,37 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 if len(mode) != (len(spec_region) - 1):
                     raise ValueError("list of mode must be size of spec_region minus one")
                 if index == 0:
-                    m = NewMode
+                    m = SUBSET_MODES_PRETTY['new']
                 else:
-                    m = SUBSET_MODES[mode[index - 1]]
+                    m = SUBSET_MODES_PRETTY[mode[index - 1]]
             elif mode:
-                m = SUBSET_MODES[mode]
+                m = SUBSET_MODES_PRETTY[mode]
             else:
-                m = SUBSET_MODES[self.combination_mode.selected]
+                m = SUBSET_MODES_PRETTY[self.combination_mode.selected]
             self.app.session.edit_subset_mode.mode = m
             s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
                                  att=range_viewer.state.x_att)
             range_viewer.apply_subset_state(s)
 
     def _apply_subset_state_to_viewer(self, state, viewer):
-        self.app.session.edit_subset_mode.mode = SUBSET_MODES[self.combination_mode.selected]
+        # print(self.app.session.edit_subset_mode.mode, self.combination_mode.selected)
+        # self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[self.combination_mode.selected]
+        if self.combination_mode.selected is None:
+            self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['new']
         if isinstance(viewer, SpecvizProfileView):
             raise NotImplementedError("This method is currently only for image viewers")
         else:
             viewer.apply_roi(state)
-        self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+        # self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+        if self.combination_mode.selected is None:
+            self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['replace']
 
     @observe('combination_selected')
     def _combination_selected_updated(self, change):
-        self.app.session.edit_subset_mode.mode = SUBSET_MODES[self.combination_mode.selected]
+        self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[self.combination_mode.selected]
 
     def _update_combination_mode(self):
-        for key, value in SUBSET_MODES.items():
+        for key, value in SUBSET_MODES_PRETTY.items():
             if self.app.session.edit_subset_mode.mode == value:
                 self.combination_mode.selected = key
                 return
