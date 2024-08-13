@@ -963,7 +963,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     def _apply_subset_state_to_viewer(self, state, viewer):
         # print(self.app.session.edit_subset_mode.mode, self.combination_mode.selected)
-        # self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[self.combination_mode.selected]
         if self.combination_mode.selected is None:
             self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['new']
         if isinstance(viewer, SpecvizProfileView):
