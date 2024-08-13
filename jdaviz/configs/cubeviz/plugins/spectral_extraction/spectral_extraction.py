@@ -643,7 +643,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         try:
             self.extract(add_data=True)
         except Exception as e:
-            raise(e)
             self.hub.broadcast(SnackbarMessage(
                 f"Extraction failed: {repr(e)}",
                 sender=self, color="error"))
