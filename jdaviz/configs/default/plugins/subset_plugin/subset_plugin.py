@@ -145,6 +145,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     self._sync_available_from_state()
                 self.subset_selected = self.session.edit_subset_mode.edit_subset[0].label
                 self.show_region_info = True
+        self._update_combination_mode()
 
     def _on_subset_update(self, *args):
         self._sync_selected_from_state(*args)
@@ -872,3 +873,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     @observe('combination_selected')
     def _combination_selected_updated(self, change):
         self.app.session.edit_subset_mode.mode = SUBSET_MODES[self.combination_mode.selected]
+
+    def _update_combination_mode(self):
+        for key, value in SUBSET_MODES.items():
+            if self.app.session.edit_subset_mode.mode == value:
+                self.combination_mode.selected = key
+                return
