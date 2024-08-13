@@ -699,7 +699,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self.subset_definitions[index][i]['value'] = new_value
                 break
 
-    def import_region(self, region, **kwargs):
+    def import_region(self, region, max_num_regions=None, refdata_label=None,
+                      return_bad_regions=False, **kwargs):
         """
         Method for creating subsets from regions or region files.
 
@@ -715,6 +716,21 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
             A string which represents a ``regions`` or ``SpectralRegion`` file
 
+        max_num_regions : int or `None`
+            Maximum number of regions to load, starting from top of the list.
+            Default is to load everything.
+
+        refdata_label : str or `None`
+            Label of data to use for sky-to-pixel conversion for a region, or
+            mask creation. Data must already be loaded into Jdaviz.
+            If `None`, defaults to the reference data in the default viewer.
+            Choice of this data is particularly important when sky
+            region is involved.
+
+        return_bad_regions : bool
+            If `True`, return the regions that failed to load (see ``bad_regions``);
+            This is useful for debugging. If `False`, do not return anything (`None`).
+
         Returns
         -------
         bad_regions : list of (obj, str) or `None`
@@ -724,9 +740,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             If not requested, return `None`.
 
         """
-        return_bad_regions = kwargs.pop('return_bad_regions', None)
-        max_num_regions = kwargs.pop('max_num_regions', None)
-        refdata_label = kwargs.pop('refdata_label', None)
 
         if isinstance(region, str):
             if os.path.exists(region):
@@ -734,7 +747,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 region_format = kwargs.pop('region_format', None)
                 try:
                     raw_regs = Regions.read(region, format=region_format)
-                except:  # noqa
+                except Exception:  # nosec
                     raw_regs = SpectralRegion.read(region)
 
                 return self._load_regions(raw_regs, max_num_regions, refdata_label,
@@ -818,7 +831,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 (isinstance(regions, list) and isinstance(regions[0], SpectralRegion))):
             mode = kwargs.pop('mode', None)
             self._import_spectral_regions(regions, mode)
-            return
+            return None
         elif not isinstance(regions, (list, tuple, Regions)):
             regions = [regions]
 

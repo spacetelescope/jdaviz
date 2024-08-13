@@ -200,12 +200,13 @@ def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, m
     assert len(subsets['Subset 1']) == len_subregions
 
 
-def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube):
+def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path):
     cubeviz_helper.load_data(spectrum1d_cube)
     plg = cubeviz_helper.plugins['Subset Tools']._obj
     s = SpectralRegion(5*u.um, 6*u.um)
-    s.write()
-    plg.import_region('spectral_region.ecsv')
+    local_path = str(tmp_path / 'spectral_region.ecsv')
+    s.write(local_path)
+    plg.import_region(local_path)
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == 1
 
