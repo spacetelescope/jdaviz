@@ -35,12 +35,10 @@ __all__ = ['SubsetPlugin']
 SUBSET_MODES = {
     'new': NewMode,
     'replace': ReplaceMode,
-    'OrState': OrMode,
-    'AndState': AndMode,
-    'XorState': XorMode,
-    'AndNotState': AndNotMode,
-    'RangeSubsetState': RangeSubsetState,
-    'RoiSubsetState': RoiSubsetState
+    'or': OrMode,
+    'and': AndMode,
+    'xor': XorMode,
+    'andnot': AndNotMode,
 }
 
 
@@ -75,7 +73,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
     combination_items = List([]).tag(sync=True)
-    combination_selected = Any('new').tag(sync=True)
+    combination_selected = Any('replace').tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
