@@ -261,7 +261,15 @@
         :api_hints_enabled="api_hints_enabled"
         :action_disabled="aperture_selected === bg_selected || conflicting_aperture_and_function"
         @click:action="spectral_extraction"
-      ></plugin-add-results>
+      >
+        <v-alert
+          v-if="results_units !== spectrum_y_units"
+          type='warning'
+          style="margin-left: -12px; margin-right: -12px"
+        >
+          function='{{ function_selected }}' will result in units of {{ results_units }}, but will be displayed as {{ spectrum_y_units }}.  To change plotted units, see the Unit Conversion plugin
+        </v-alert>
+      </plugin-add-results>
 
       <j-plugin-section-header v-if="extraction_available && export_enabled">Results</j-plugin-section-header>
 
