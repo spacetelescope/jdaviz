@@ -12,7 +12,7 @@ from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
+from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged, SnackbarMessage
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
@@ -120,8 +120,15 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
     def _on_global_display_unit_changed(self, msg):
-        # eventually should observe change in flux OR angle
-        if msg.axis == "flux":
+
+        # display units of mouseover should reflect choice of selected flux and
+        # angle unit, as well as the toggled display unit type for the spectrum
+        # viewer (flux or sb). e.g if data loaded is in MJy / sr, and the spectrum
+        # viewer is toggled to 'flux', mouseover should show data in MJy. 
+
+        self.hub.broadcast(SnackbarMessage(f"In _on_global_display_unit_changed, msg = {msg.axis} unit = {msg.unit}", color='error', sender=self))
+
+        if msg.axis == "spectral_y":
             self.image_unit = u.Unit(msg.unit)
 
     @property

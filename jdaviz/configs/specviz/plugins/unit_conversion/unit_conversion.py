@@ -262,7 +262,8 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.state.y_display_unit = yunit
             self.spectrum_viewer.reset_limits()
 
-            # and broacast that there has been a change in flux
+            # and broacast that there has been a change in the spectral axis y unit
+            # to either a flux or surface brightness unit
             self.hub.broadcast(GlobalDisplayUnitChanged("spectral_y", flux_or_sb, sender=self))
 
         if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
