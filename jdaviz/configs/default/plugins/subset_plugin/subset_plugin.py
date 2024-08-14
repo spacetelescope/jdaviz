@@ -125,7 +125,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         align_by = getattr(self.app, '_align_by', None)
         self.display_sky_coordinates = (align_by == 'wcs' and not self.multiselect)
 
-        combination_options = [key for key, value in SUBSET_MODES_PRETTY.items()] + [None]
+        combination_options = [key for key, value in SUBSET_MODES_PRETTY.items()]
 
         self.combination_mode = SelectPluginComponent(self,
                                                       items='combination_items',
@@ -967,28 +967,27 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     m = SUBSET_MODES_PRETTY[mode[index - 1]]
             elif mode:
                 m = SUBSET_MODES_PRETTY[mode]
-            else:
+            elif self.combination_mode.selected is not None:
                 m = SUBSET_MODES_PRETTY[self.combination_mode.selected]
+            else:
+                m = self.app.session.edit_subset_mode.mode
             self.app.session.edit_subset_mode.mode = m
             s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
                                  att=range_viewer.state.x_att)
             range_viewer.apply_subset_state(s)
 
     def _apply_subset_state_to_viewer(self, state, viewer):
-        # print(self.app.session.edit_subset_mode.mode, self.combination_mode.selected)
-        if self.combination_mode.selected is None:
-            self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['new']
+        if self.combination_mode.selected is not None:
+            self.app.session.edit_subset_mode.mode = SUBSET_MODES[self.combination_mode.selected]
         if isinstance(viewer, SpecvizProfileView):
             raise NotImplementedError("This method is currently only for image viewers")
         else:
             viewer.apply_roi(state)
-        # self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
-        if self.combination_mode.selected is None:
-            self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['replace']
+        self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
 
     @observe('combination_selected')
     def _combination_selected_updated(self, change):
-        self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[self.combination_mode.selected]
+        self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
 
     def _update_combination_mode(self):
         for key, value in SUBSET_MODES_PRETTY.items():

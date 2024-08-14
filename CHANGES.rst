@@ -23,6 +23,8 @@ New Features
 
 - New configuration for ramp/Level 1 data products from Roman WFI and JWST [#3120, #3148, #3167, #3171]
 
+- Refactor ``load_regions`` methods into one ``import_region`` method in the subset plugin [#3104]
+
 Cubeviz
 ^^^^^^^
 
