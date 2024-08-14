@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Stretch histogram in zoom limits no longer attempts unnecessary updates when zoom limits are changed. [#3151]
+
 Cubeviz
 ^^^^^^^
 
