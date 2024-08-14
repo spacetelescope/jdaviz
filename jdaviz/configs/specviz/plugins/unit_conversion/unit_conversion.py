@@ -293,17 +293,14 @@ class UnitConversion(PluginTemplateMixin):
             # Can't do this before the plugin is initialized completely
             return
 
-        print(f"y unit is {yunit}")
         for name, viewer in self._app._jdaviz_helper.viewers.items():
             if not isinstance(viewer._obj, BqplotImageView):
                 continue
-            print(f"Checking layers in {name}")
             for layer in viewer._obj.state.layers:
                 # DQ layer doesn't play nicely with this attribute
                 if "DQ" in layer.layer.label:
                     continue
                 if hasattr(layer, 'attribute_display_unit'):
-                    print(f"Found attribute_display_unit for {layer.layer.label}")
                     layer.attribute_display_unit = yunit
 
     def _translate(self, flux_or_sb=None):
