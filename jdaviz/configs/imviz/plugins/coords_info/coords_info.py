@@ -18,6 +18,7 @@ from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.utils import _eqv_pixar_sr, _convert_surface_brightness_units
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 __all__ = ['CoordsInfo']
 
@@ -126,10 +127,15 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         # viewer (flux or sb). e.g if data loaded is in MJy / sr, and the spectrum
         # viewer is toggled to 'flux', mouseover should show data in MJy. 
 
-        self.hub.broadcast(SnackbarMessage(f"In _on_global_display_unit_changed, msg = {msg.axis} unit = {msg.unit}", color='error', sender=self))
-
         if msg.axis == "spectral_y":
             self.image_unit = u.Unit(msg.unit)
+
+            # if the data unit is a surface brightness, but the spectral y
+            # axis is a 'flux' with no solid angle, we must convert the display
+            # unit to a SB. this will be changed when angle selection to generalize
+            # to non-steradian units is implemented.
+            if not check_if_unit_is_per_solid_angle(self.image_unit):
+
 
     @property
     def marks(self):
