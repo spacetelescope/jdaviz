@@ -183,8 +183,8 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
 
 
 class TestLoadRegionsFromFile(BaseRegionHandler):
-    @pytest.fixture(autouse=True)
-    def setup_class(self, imviz_helper):
+
+    def setup_class(self):
         self.region_file = get_pkg_data_filename(
             'data/ds9.fits.reg', package='regions.io.ds9.tests')
         self.arr = np.ones((1024, 1024))
