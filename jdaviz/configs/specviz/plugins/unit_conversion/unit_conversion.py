@@ -230,21 +230,22 @@ class UnitConversion(PluginTemplateMixin):
         if not self.flux_unit.choices and self.app.config == 'cubeviz':
             return
 
-        flux_or_sb = None
-
         # when the configuration is Specviz, translation is not currently supported.
         # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
         # have a scale factor assigned in the metadata, enabling translation.
         current_y_unit = self.spectrum_viewer.state.y_display_unit
 
-        # if the current y display unit is a surface brightness unit,
-        if self.angle_unit.selected and check_if_unit_is_per_solid_angle(current_y_unit):
-            flux_or_sb = self._append_angle_correctly(
-                         self.flux_unit.selected,
-                         self.angle_unit.selected
-            )
-        else:
-            flux_or_sb = self.flux_unit.selected
+        # various plugins are listening for changes in either flux or sb and 
+        # need to be able to filter messages accordingly, so broadcast both when
+        # flux unit is updated. if data was loaded in a flux unit (i.e MJy), it
+        # can be reperesented as a per-pixel surface brightness unit
+        flux_unit = self.flux_unit.selected
+        sb_unit = self._append_angle_correctly(flux_unit, self.angle_unit.selected)
+
+        self.hub.broadcast(GlobalDisplayUnitChanged("flux", flux_unit, sender=self))
+        self.hub.broadcast(GlobalDisplayUnitChanged("sb", sb_unit, sender=self))
+
+        flux_or_sb = sb_unit if check_if_unit_is_per_solid_angle(current_y_unit) else flux_unit
 
         untranslatable_units = self._untranslatable_units
         # disable translator if flux unit is untranslatable,
@@ -263,7 +264,8 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.reset_limits()
 
             # and broacast that there has been a change in the spectral axis y unit
-            # to either a flux or surface brightness unit
+            # to either a flux or surface brightness unit, for plugins that specifically
+            # care about this toggle selection
             self.hub.broadcast(GlobalDisplayUnitChanged("spectral_y", flux_or_sb, sender=self))
 
         if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
@@ -299,10 +301,12 @@ class UnitConversion(PluginTemplateMixin):
             spec_units = u.Unit(self.spectrum_viewer.state.y_display_unit)
         else:
             return
+
         # on instantiation, we set determine flux choices and selection
         # after surface brightness
         if not self.flux_unit.choices:
             return
+
         # Surface Brightness -> Flux
         if check_if_unit_is_per_solid_angle(spec_units) and flux_or_sb == 'Flux':
             spec_units *= u.sr
@@ -319,6 +323,8 @@ class UnitConversion(PluginTemplateMixin):
         else:
             return
 
+        # broadcast that there has been a change in the spectrum viewer y axis,
+        # if translation was completed
         self.hub.broadcast(GlobalDisplayUnitChanged('spectral_y',
                                                     spec_units,
                                                     sender=self))

@@ -122,20 +122,17 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def _on_global_display_unit_changed(self, msg):
 
-        # display units of mouseover should reflect choice of selected flux and
-        # angle unit, as well as the toggled display unit type for the spectrum
-        # viewer (flux or sb). e.g if data loaded is in MJy / sr, and the spectrum
-        # viewer is toggled to 'flux', mouseover should show data in MJy. 
+        # should only listen to changes in surface brightness. even if data
+        # loaded is in 'flux' it can be represented as a per-pixel surface
+        # brightness unit.
+        if msg.axis == "sb":
+            image_unit = u.Unit(msg.unit)
 
-        if msg.axis == "spectral_y":
-            self.image_unit = u.Unit(msg.unit)
+            # temporarily, until non-sr units are suppported, strip 'pix' from unit
+            if 'pix' in image_unit.bases:
+                image_unit = image_unit * u.pix
 
-            # if the data unit is a surface brightness, but the spectral y
-            # axis is a 'flux' with no solid angle, we must convert the display
-            # unit to a SB. this will be changed when angle selection to generalize
-            # to non-steradian units is implemented.
-            if not check_if_unit_is_per_solid_angle(self.image_unit):
-
+            self.image_unit = u.Unit(image_unit)
 
     @property
     def marks(self):
