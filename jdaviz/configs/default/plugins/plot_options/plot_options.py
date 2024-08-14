@@ -568,7 +568,7 @@ class PlotOptions(PluginTemplateMixin):
                                                    state_filter=is_image)
 
         self.stretch_histogram = Plot(self, name='stretch_hist', viewer_type='histogram',
-                                      update_callback=self._update_stretch_histogram)
+                                      update_callback=self._request_update_stretch_histogram)
         # Add the stretch bounds tool to the default Plot viewer.
         self.stretch_histogram.tools_nested.append(["jdaviz:stretch_bounds"])
         self.stretch_histogram._initialize_toolbar(["jdaviz:stretch_bounds"])
@@ -938,7 +938,7 @@ class PlotOptions(PluginTemplateMixin):
                 or not self.stretch_hist_zoom_limits):
             vs = viewer.state
             for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
-                vs.add_callback(attr, self._update_stretch_histogram)
+                vs.add_callback(attr, self._request_update_stretch_histogram)
         if isinstance(msg, dict) and msg.get('name') == 'viewer_selected':
             viewer_label_old = msg.get('old')
             if isinstance(viewer_label_old, list):
@@ -947,7 +947,7 @@ class PlotOptions(PluginTemplateMixin):
             if viewer_label_old in self.app._viewer_store:
                 vs_old = self.app.get_viewer(viewer_label_old).state
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
-                    vs_old.remove_callback(attr, self._update_stretch_histogram)
+                    vs_old.remove_callback(attr, self._request_update_stretch_histogram)
 
         if not len(self.layer.selected_obj):
             # skip further updates if no data are available:
