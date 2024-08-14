@@ -3547,7 +3547,7 @@ class DatasetSelect(SelectPluginComponent):
         self._clear_cache(*self._cached_properties)
 
     def _on_global_display_unit_changed(self, msg=None):
-        if msg.axis in ('spectral', 'flux'):
+        if msg.axis in ('spectral', 'spectral_y'):
             self._clear_cache('selected_spectrum')
 
 
