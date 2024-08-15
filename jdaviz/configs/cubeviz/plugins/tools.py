@@ -117,7 +117,10 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         # Store these so we can revert to previous user-set zoom after preview view
         sv_state = self._spectrum_viewer.state
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
-
+        # update listener bounds
+        print(sv_state.x_min, sv_state.x_display_unit)
+        self.viewer.audification_wl_bounds = (sv_state.x_min, sv_state.x_max)
+        self.viewer.audification_wl_unit = sv_state.x_display_unit
         super().activate()
 
     def deactivate(self):
@@ -140,7 +143,7 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         # Use the selected layer from coords_info as long as it's 3D
         coords_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
         if coords_dataset == 'auto':
-            cube_data = self.viewer.active_image_layer.layer
+           cube_data = self.viewer.active_image_layer.layer
         elif coords_dataset == 'none':
             if len(self.viewer.layers):
                 cube_data = self.viewer.layers[0].layer

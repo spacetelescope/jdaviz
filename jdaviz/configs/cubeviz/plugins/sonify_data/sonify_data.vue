@@ -43,6 +43,26 @@
     </v-row>
     <v-row>
       <v-text-field
+        ref="audfrqmin"
+        type="number"
+        label="Minimum Audio Frequency"
+        v-model.number="audfrqmin"
+        hint="The minimum audio frequency used to represent the spectra (Hz)"
+        persistent-hint
+      ></v-text-field>
+    </v-row>
+    <v-row>
+      <v-text-field
+        ref="audfrqmax"
+        type="number"
+        label="Maximum Audio Frequency"
+        v-model.number="audfrqmax"
+        hint="The maximum audio frequency used to represent the spectra (Hz)"
+        persistent-hint
+      ></v-text-field>
+    </v-row>
+    <v-row>
+      <v-text-field
         ref="assidx"
         type="number"
         label="Audio Spectrum Scaling Index"
@@ -91,7 +111,14 @@
         persistent-hint
       ></v-text-field>
     </v-row>
-   
+    <v-row>
+       <v-switch
+         v-model="eln"
+         label="Equal Loudness Equalisation"
+         hint="Whether to equalise for uniform perceived loudness"
+         persistent-hint
+        ></v-switch>
+    </v-row>
     <v-row>
         <plugin-action-button
         @click="sonify_cube"

@@ -9,6 +9,7 @@ from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData
 import numpy as np
 import sounddevice as sd
+from astropy import units as u
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
 
@@ -32,6 +33,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
         # provide reference from state back to viewer to use for zoom syncing
         self.state._viewer = self
 
@@ -43,7 +45,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         self.audified_cube = None
         self.stream = None
-
+        self.audification_wl_bounds = None
+        self.audification_wl_unit = None
+        
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.jdaviz_helper._default_spectrum_viewer_reference_name
@@ -99,12 +103,29 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.audified_cube.newsig = self.audified_cube.sigcube[x, y, :]
         self.audified_cube.cbuff = True
 
-    def get_sonified_cube(self, sample_rate, buffer_size, assidx, ssvidx, pccut):
+    def update_listener_wl_bounds(self, w1,w2):
+        if not self.audified_cube:
+            return
+        self.audified_cube.set_wl_bounds(w1, w2)
+        
+    def get_sonified_cube(self, sample_rate, buffer_size, assidx, ssvidx, pccut, audfrqmin, audfrqmax, eln):
         spectrum = self.active_image_layer.layer.get_object(statistic=None)
-        pc_cube = np.percentile(np.nan_to_num(spectrum.flux.value), np.clip(pccut,0,99), axis=-1)
+
+        wlens = spectrum.wavelength.to('m').value
+        flux  = spectrum.flux.value
+        
+        if self.audification_wl_bounds:
+            wl_unit = getattr(u, self.audification_wl_unit)
+            si_wl_bounds = (self.audification_wl_bounds * wl_unit).to('m')
+            wdx = np.logical_and(wlens >= si_wl_bounds[0].value,
+                                 wlens <= si_wl_bounds[1].value)
+            wlens = wlens[wdx]
+            flux = flux[:,:,wdx]
+            
+        pc_cube = np.percentile(np.nan_to_num(flux), np.clip(pccut,0,99), axis=-1)
 
         # clip zeros and remove NaNs
-        clipped_arr = np.nan_to_num(np.clip(spectrum.flux.value, 0, np.inf), copy=False)
+        clipped_arr = np.nan_to_num(np.clip(flux, 0, np.inf), copy=False)
 
         # make a rough white-light image from the clipped array
         whitelight = np.expand_dims(clipped_arr.sum(-1), axis=2)
@@ -114,9 +135,12 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
         # and re-clip
         clipped_arr = np.clip(clipped_arr, 0, np.inf)
-        
-        self.audified_cube = CubeListenerData(clipped_arr ** assidx, spectrum.wavelength.value, duration=0.8,
-                                  samplerate=sample_rate, buffsize=buffer_size)
+
+        # print(self.state.x_min, self.state.x_max, self._spectrum_viewer.state.x_min,  self._spectrum_viewer.state.x_maX)
+        print(f"making cube with {self.audification_wl_bounds}")
+        self.audified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
+                                              samplerate=sample_rate, buffsize=buffer_size, wl_bounds=self.audification_wl_bounds,
+                                              wl_unit=self.audification_wl_unit, audfrqmin=audfrqmin, audfrqmax=audfrqmax)
         self.audified_cube.audify_cube()
         self.audified_cube.sigcube = (self.audified_cube.sigcube * pow(whitelight / whitelight.max(), ssvidx)).astype('int16')
         self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, channels=1, dtype='int16', latency='low',

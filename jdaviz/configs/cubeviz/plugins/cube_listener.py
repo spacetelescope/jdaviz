@@ -7,6 +7,8 @@ import numpy as np
 from tqdm import tqdm
 from contextlib import contextmanager
 import sys, os
+import time
+from astropy import units as u
 
 # some beginner utility functions for STRAUSS + CubeViz
 
@@ -20,7 +22,7 @@ def suppress_stderr():
         finally:
             sys.stderr = old_stderr
             
-def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fmin=40, fmax=1300):
+def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fmin=40, fmax=1300, eln=False):
     notes = [["A2"]]
     score =  Score(notes, duration)
     
@@ -28,7 +30,10 @@ def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
     generator = Spectralizer(samprate=srate)
 
     # Lets pick the mapping frequency range for the spectrum...
-    generator.modify_preset({'min_freq':fmin, 'max_freq':fmax})
+    generator.modify_preset({'min_freq':fmin, 'max_freq':fmax,
+                             'fit_spec_multiples': False,
+                             'interpolation_type': 'preserve_power',
+                             'equal_loudness_normalisation': eln})
 
     data = {'spectrum':[spec], 'pitch':[1]}
     
@@ -49,7 +54,8 @@ def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
     return soni.loop_channels['0'].values
 
 class CubeListenerData:
-    def __init__(self, cube, wlens, samplerate=44100, duration=1, overlap=0.05, buffsize=1024, bdepth=16):
+    def __init__(self, cube, wlens, samplerate=44100, duration=1, overlap=0.05, buffsize=1024, bdepth=16,
+                 wl_bounds=None, wl_unit=None, audfrqmin=50, audfrqmax=1500, eln=False):
         self.siglen = int(samplerate*(duration-overlap))
         self.cube = cube
         self.dur = duration
@@ -57,13 +63,22 @@ class CubeListenerData:
         self.srate = samplerate
         self.maxval = pow(2,bdepth-1) - 1
         self.fadedx = 0
-        
+
+        self.wl_bounds = wl_bounds
+        self.wl_unit = wl_unit
         self.wlens = wlens
         
         # control fades
         fade = np.linspace(0,1, buffsize+1)
         self.ifade = fade[:-1]
         self.ofade = fade[::-1][:-1]
+
+        # mapping frequency limits in Hz
+        self.audfrqmin = audfrqmin
+        self.audfrqmax = audfrqmax
+
+        # do we normalise for equal loudness?
+        self.eln = eln
         
         self.idx1 = 0
         self.idx2 = 0
@@ -75,23 +90,46 @@ class CubeListenerData:
             raise Exception("Cube projected to be > 2Gb!")
             
         self.sigcube = np.zeros((*self.cube.shape[:2], self.siglen), dtype='int16')
+
+    def set_wl_bounds(self, w1, w2):
+        """
+        set the wavelength bounds for indexing spectra
+        """
+        wsrt = np.sort([w1,w2])
+        self.wl_bounds = tuple(wsrt)
+        print(w1,w2,'test')
+        print(self.wl_bounds)
         
-    def audify_cube(self, fmin=50, fmax=1500):
+    def audify_cube(self):
         """
         Iterate through the cube, convert each spectrum to a signal, and store
         in class attributes
         """
         lo2hi = self.wlens.argsort()[::-1]
+        # if self.wl_bounds:
+        #     si_wl_bounds = (self.wl_bounds * getattr(u, self.wl_unit)).to('m')
+        #     wdx = np.logical_and(self.wlens >= si_wl_bounds[0].value,
+        #                          self.wlens <= si_wl_bounds[1].value)
+        #     lo2hi = lo2hi[wdx]
+        #     print (wdx, self.wlens, dir(self.wlens))
+        t0 = time.time()
         for i in tqdm(range(self.cube.shape[0])):
             for j in range(self.cube.shape[1]):
                 with suppress_stderr():
-                    sig = audify_spectrum(self.cube[i,j,lo2hi], self.dur, 
-                                          srate=self.srate,  
-                                          fmin=fmin, fmax=fmax)
-                    sig = (sig*self.maxval).astype('int16')
-                    self.sigcube[i,j,:] = sig
+                    if self.cube[i,j,lo2hi].any():
+                        sig = audify_spectrum(self.cube[i,j,lo2hi], self.dur, 
+                                              srate=self.srate,  
+                                              fmin=self.audfrqmin,
+                                              fmax=self.audfrqmax,
+                                              eln=self.eln)
+                        sig = (sig*self.maxval).astype('int16')
+                        self.sigcube[i,j,:] = sig
+                    else:
+                        continue
         self.cursig[:] = self.sigcube[self.idx1,self.idx2, :]
         self.newsig[:] = self.cursig[:]
+        t1 = time.time()
+        print(f"Took {t1-t0}s to process {self.cube.shape[0]*self.cube.shape[1]} spaxels")
 
     def player_callback(self, outdata, frames, time, status):
         cur = self.cursig
