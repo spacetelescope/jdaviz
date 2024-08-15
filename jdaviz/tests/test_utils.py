@@ -11,7 +11,7 @@ from numpy.testing import assert_allclose
 from specutils import Spectrum1D
 
 from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
-                          _transitive_conversion, _eqv_pixar_sr)
+                          _indirect_conversion, _eqv_pixar_sr)
 
 PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
 
@@ -43,7 +43,7 @@ def test_spec_sb_flux_conversion():
     # test spectrum when target unit in untranslatable unit list
     target_values = [5.03411657e-05, 2.01364663e-04, 4.53070491e-04]
     expected_units = (u.ph / (u.Hz * u.s * u.cm**2))
-    returned_values, return_units, unit_flag = _transitive_conversion(
+    returned_values, return_units, unit_flag = _indirect_conversion(
                                                     values=values, orig_units=(u.MJy),
                                                     targ_units=(u.ph / (u.s * u.cm**2 * u.Hz * u.sr)),  # noqa
                                                     eqv=eqv, spec_unit=spec_unit, image_data=None
@@ -55,7 +55,7 @@ def test_spec_sb_flux_conversion():
     # test spectrum when original unit in untranslatable unit list
     target_values = [1., 2., 3.]
     expected_units = (u.ph / (u.Angstrom * u.s * u.cm**2))
-    returned_values, return_units, unit_flag = _transitive_conversion(
+    returned_values, return_units, unit_flag = _indirect_conversion(
                                                     values=values,
                                                     orig_units=(u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr)),  # noqa
                                                     targ_units=(u.MJy), eqv=eqv,
@@ -68,7 +68,7 @@ def test_spec_sb_flux_conversion():
     # test the default case where units are translatable
     target_values = [10, 20, 30]
     expected_units = (u.MJy)
-    returned_values, return_units, unit_flag = _transitive_conversion(
+    returned_values, return_units, unit_flag = _indirect_conversion(
                                                     values=values, orig_units=(u.Jy/u.sr),
                                                     targ_units=(u.MJy), eqv=eqv,
                                                     spec_unit=spec_unit, image_data=None
@@ -80,7 +80,7 @@ def test_spec_sb_flux_conversion():
     # test image viewer data units are untranslatable
     target_value = 1.e-18
     expected_units = (u.erg / (u.s * u.cm**2 * u.Hz))
-    returned_values, return_units = _transitive_conversion(
+    returned_values, return_units = _indirect_conversion(
                                         values=1, orig_units=(u.MJy/u.sr),
                                         targ_units=(u.erg / (u.s * u.cm**2 * u.Hz * u.sr)),
                                         eqv=eqv, spec_unit=None, image_data=True
@@ -91,7 +91,7 @@ def test_spec_sb_flux_conversion():
     # test image viewer data units are translatable
     target_value = 10
     expected_units = (u.MJy / u.sr)
-    returned_values, return_units = _transitive_conversion(
+    returned_values, return_units = _indirect_conversion(
                                         values=10, orig_units=(u.MJy/u.sr), targ_units=(u.Jy/u.sr),
                                         eqv=eqv, spec_unit=None, image_data=True
                                     )
