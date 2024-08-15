@@ -3,9 +3,9 @@ import astropy.units as u
 from astropy.nddata import NDDataArray
 
 from functools import cached_property
-from traitlets import Bool, Float, List, Unicode, observe
+from traitlets import Bool, Float, List, Unicode, observe, Int
 from glue.core.message import (
-    DataCollectionAddMessage, SubsetUpdateMessage, SubsetDeleteMessage
+    DataCollectionAddMessage, SubsetCreateMessage, SubsetDeleteMessage, SubsetUpdateMessage
 )
 
 from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
@@ -25,6 +25,8 @@ from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
 
 __all__ = ['RampExtraction']
+
+rng = np.random.default_rng(seed=42)
 
 
 @tray_registry(
@@ -50,8 +52,10 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     """
     template_file = __file__, "ramp_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)
-    show_live_preview = Bool(True).tag(sync=True)
+    show_live_preview = Bool(False).tag(sync=True)
     show_subset_preview = Bool(True).tag(sync=True)
+    subset_preview_warning = Bool(False).tag(sync=True)
+    subset_preview_limit = Int(250).tag(sync=True)
 
     active_step = Unicode().tag(sync=True)
 
@@ -109,6 +113,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, DataCollectionAddMessage,
                                    handler=self._on_data_added)
 
+        self.session.hub.subscribe(self, SubsetCreateMessage,
+                                   handler=self._on_subset_update)
+
         self.session.hub.subscribe(self, SubsetUpdateMessage,
                                    handler=self._on_subset_update)
 
@@ -136,37 +143,46 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.integration_viewer._initialize_x_axis()
 
     def _on_subset_update(self, msg={}):
-
-        if not hasattr(self, 'aperture') or not hasattr(self.app._jdaviz_helper, 'cube_cache'):
+        if not hasattr(self.app._jdaviz_helper, 'cube_cache'):
             # if called before fully initialized
-            return
-
-        if not self.show_live_preview:
-            # don't update subset previews if live preview is disabled:
             return
 
         subset_lbl = msg.subset.label
         color = msg.subset.style.color
-
         subset = self.app.get_subsets(subset_lbl)[0]
         region = subset['region']
+
+        if region is None:
+            return
+
         # glue region has transposed coords relative to cached cube:
         region_mask = region.to_mask().to_image(self.cube.shape[:-1]).astype(bool).T
         cube_subset = self.cube[region_mask]  # shape: (N pixels extracted, M groups)
 
-        mark = [
+        n_pixels_in_extraction = cube_subset.shape[0]
+
+        if n_pixels_in_extraction < self.subset_preview_limit:
+            self.subset_preview_warning = False
+            select_from_cube_subset = Ellipsis
+        else:
+            self.subset_preview_warning = True
+            select_from_cube_subset = rng.integers(
+                0, n_pixels_in_extraction, size=self.subset_preview_limit
+            )
+
+        marks = [
             PluginLine(
                 self.integration_viewer, x=np.arange(cube_subset.shape[1]), y=y,
                 stroke_width=1, colors=[color], opacities=[0.25], label=subset_lbl,
-                visible=False
+                visible=self._subset_preview_visible and subset_lbl == self.aperture.selected
             )
-            for y in cube_subset
+            for y in cube_subset[select_from_cube_subset]
         ]
 
         self.integration_viewer.figure.marks = [
             mark for mark in self.integration_viewer.figure.marks
             if getattr(mark, 'label', None) != subset_lbl
-        ] + mark
+        ] + marks
 
     def _on_subset_delete(self, msg={}):
         subset_lbl = msg.subset.label
@@ -182,12 +198,23 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not hasattr(self.app._jdaviz_helper, '_default_integration_viewer_reference_name'):
             return
 
-        visible = self.show_subset_preview and (self.is_active or self.keep_active)
+        redraw_limits = False
         for mark in self.integration_viewer.figure.marks:
             if isinstance(mark, PluginLine) and mark.label is not None:
-                mark.visible = visible and self.aperture.selected == mark.label
+                new_visibility = (
+                    self._subset_preview_visible and
+                    self.aperture.selected == mark.label
+                )
+                if mark.visible != new_visibility:
+                    mark.visible = new_visibility
+                    redraw_limits = True
 
-        self.integration_viewer.reset_limits()
+        if redraw_limits:
+            self.integration_viewer.reset_limits()
+
+    @property
+    def _subset_preview_visible(self):
+        return self.show_subset_preview and self.is_active
 
     @property
     def user_api(self):

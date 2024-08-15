@@ -19,7 +19,7 @@
             <v-row>
               <v-switch
                 v-model="show_live_preview"
-                label="Show live-extraction"
+                label="Show live ramp extraction"
                 hint="Whether to compute/show extraction when making changes to input parameters.  Disable if live-preview becomes laggy."
                 persistent-hint
               ></v-switch>
@@ -47,7 +47,10 @@
         label="Spatial aperture"
         :hint="'Select a spatial region to extract its '+resulting_product_name+'.'"
       />
-
+      <v-alert v-if="subset_preview_warning" type='warning' style="margin-left: -12px; margin-right: -12px">
+        For subsets with >{{subset_preview_limit}} pixels, subset ramp previews will be shown
+        for {{subset_preview_limit}} randomly drawn pixels from within the subset.
+      </v-alert>
     </div>
 
     <div @mouseover="() => active_step='extract'">

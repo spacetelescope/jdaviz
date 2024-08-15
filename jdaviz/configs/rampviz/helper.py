@@ -51,10 +51,6 @@ class Rampviz(CubeConfigHelper):
         ref_data = group_viewer.state.reference_data
         group_viewer.state.x_att = ref_data.id["Pixel Axis 0 [z]"]
         group_viewer.state.y_att = ref_data.id["Pixel Axis 1 [y]"]
-        group_viewer.state.reset_limits()
-
-        integration_viewer = self.app.get_viewer(self._default_integration_viewer_reference_name)
-        integration_viewer._initialize_x_axis()
 
     def select_group(self, group_index):
         """
