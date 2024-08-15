@@ -286,7 +286,7 @@ def standardize_metadata(metadata):
     return out_meta
 
 
-def transitive_units():
+def indirect_units():
     return [
         u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
         u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
@@ -379,20 +379,20 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
             eqv_in = fac
         eqv += _eqv_pixar_sr(np.array(eqv_in))
 
-        # transitive units cannot be directly converted, and require
+        # indirect units cannot be directly converted, and require
         # additional conversions to reach the desired end unit.
         # if spec_unit in [original_units, target_units]:
-        values, updated_units, unit_type = _transitive_conversion(
+        values, updated_units, selected_unit_updated = _indirect_conversion(
             values=values, orig_units=orig_units, targ_units=targ_units,
             eqv=eqv, spec_unit=spec_unit
             )
-        if unit_type and unit_type == 'targ':
+        if selected_unit_updated == 'targ':
             targ_units = updated_units
-        elif unit_type and unit_type == 'orig':
+        elif selected_unit_updated == 'orig':
             orig_units = updated_units
 
     elif image_data:
-        values, orig_units = _transitive_conversion(
+        values, orig_units = _indirect_conversion(
             values=values, orig_units=orig_units, targ_units=targ_units,
             eqv=eqv, image_data=image_data
             )
@@ -400,16 +400,16 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 
 
-def _transitive_conversion(values, orig_units, targ_units, eqv, spec_unit=None, image_data=None):  # noqa
-    # transitive units cannot be directly converted, and require
+def _indirect_conversion(values, orig_units, targ_units, eqv, spec_unit=None, image_data=None):  # noqa
+    # indirect units cannot be directly converted, and require
     # additional conversions to reach the desired end unit.
     if spec_unit and spec_unit in [orig_units, targ_units]:
-        if u.Unit(targ_units) in transitive_units():
+        if u.Unit(targ_units) in indirect_units():
             temp_targ = targ_units * u.sr
             values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
             orig_units = u.Unit(temp_targ)
             return values, orig_units, 'orig'
-        elif u.Unit(orig_units) in transitive_units():
+        elif u.Unit(orig_units) in indirect_units():
             temp_orig = orig_units * u.sr
             values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
             targ_units = u.Unit(temp_orig)
@@ -418,8 +418,8 @@ def _transitive_conversion(values, orig_units, targ_units, eqv, spec_unit=None, 
         return values, targ_units, 'targ'
 
     elif image_data:
-        if ((u.Unit(targ_units) in transitive_units()) or
-           (u.Unit(orig_units) in transitive_units())):
+        if ((u.Unit(targ_units) in indirect_units()) or
+           (u.Unit(orig_units) in indirect_units())):
             # SB -> Flux -> Flux -> SB
             temp_orig = orig_units * u.sr
             temp_targ = targ_units * u.sr
@@ -432,11 +432,6 @@ def _transitive_conversion(values, orig_units, targ_units, eqv, spec_unit=None, 
             return values, orig_units
 
         return values, orig_units
-
-
-def _convert_surface_brightness_units(data, original_units, target_units):
-    quantity = data * u.Unit(original_units)
-    return quantity.to_value(u.Unit(target_units))
 
 
 def _eqv_pixar_sr(pixar_sr):

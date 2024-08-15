@@ -17,7 +17,7 @@ from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
-from jdaviz.utils import _convert_surface_brightness_units, flux_conversion, _eqv_pixar_sr
+from jdaviz.utils import flux_conversion, _eqv_pixar_sr
 
 __all__ = ['CoordsInfo']
 
@@ -496,9 +496,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                         unit = self.image_unit
 
                     elif self.image_unit.is_equivalent(unit):
-                        value = _convert_surface_brightness_units(
-                            value, unit, self.image_unit
-                        )
+                        value = (value * u.Unit(unit)).to_value(u.Unit(self.image_unit))
                         unit = self.image_unit
 
                 if associated_dq_layers is not None:
