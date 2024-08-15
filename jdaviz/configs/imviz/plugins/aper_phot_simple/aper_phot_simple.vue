@@ -116,6 +116,11 @@
           >
           </v-text-field>
         </v-row>
+        <v-row v-if="counts_factor < 0">
+          <span class="v-messages v-messages__message text--secondary" style="color: red !important">
+            Counts conversion factor cannot be negative.
+          </span>
+        </v-row>
 
         <v-row v-if="multiselect">
           <v-switch

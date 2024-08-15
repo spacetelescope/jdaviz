@@ -80,6 +80,11 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     assert_allclose(row["mean"], 36 * flux_unit)
     assert np.isnan(row["slice_wave"])
 
+    # Invalid counts conversion factor
+    plg.counts_factor = -1
+    plg.vue_do_aper_phot()
+    assert "invalid counts" in plg.result_failed_msg
+
 
 def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
