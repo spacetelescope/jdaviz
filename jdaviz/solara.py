@@ -34,6 +34,8 @@ def on_kernel_start():
 
 @solara.component
 def Page():
+    solara.Title("Jdaviz")
+
     if config is None:
         solara.Text("No config defined")
         return
