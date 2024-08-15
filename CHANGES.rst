@@ -5,7 +5,7 @@ New Features
 ------------
 
 - Added flux/surface brightness translation and surface brightness
-  unit conversion in Cubeviz and Specviz. [#2781, #2940, #3088, #3111, #3113, #3129]
+  unit conversion in Cubeviz and Specviz. [#2781, #2940, #3088, #3111, #3113, #3129, #3155]
 
 - Plugin tray is now open by default. [#2892]
 
@@ -133,8 +133,6 @@ Cubeviz
 
 - No longer incorrectly swap RA and Dec axes when loading Spectrum1D objects. [#3133]
 
-- Improved messaging from unit conversion plugin to handle changes to flux, surface brightness,
-  and spectral y axis independently. This fixes an issue with mouseover units in cubeviz. [#3155]
 
 Imviz
 ^^^^^

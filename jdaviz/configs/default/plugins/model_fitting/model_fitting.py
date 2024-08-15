@@ -528,7 +528,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._check_model_equation_invalid()
 
     def _on_global_display_unit_changed(self, msg):
-        axis = {'spectral': 'x', 'spectral_y': 'y'}.get(msg.axis)
+        if 'spectral' in msg.axis:
+            axis = msg.axis.replace('spectral_', '')  # get 'x' or 'y'
+        else:
+            return
 
         # update internal tracking of current units
         self._units[axis] = str(msg.unit)
