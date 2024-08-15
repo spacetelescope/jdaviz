@@ -336,7 +336,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.results_units = self.sb_unit
 
-
     @observe('function_selected', 'aperture_method_selected')
     def _update_aperture_method_on_function_change(self, *args):
         if (self.function_selected.lower() in ('min', 'max') and

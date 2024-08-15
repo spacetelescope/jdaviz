@@ -12,13 +12,12 @@ from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged, SnackbarMessage
+from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.utils import _eqv_pixar_sr, _convert_surface_brightness_units
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 __all__ = ['CoordsInfo']
 
