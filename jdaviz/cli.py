@@ -64,6 +64,7 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     solara.data_list = file_list
     if layout == 'mosviz':
         solara.load_data_kwargs = {'instrument': instrument}
+    solara.theme = theme
     solara.jdaviz_verbosity = verbosity
     solara.jdaviz_history_verbosity = history_verbosity
     args = []
