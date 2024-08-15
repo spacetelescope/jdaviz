@@ -233,8 +233,8 @@ to change the active viewer that it tracks.
 
 .. _line-profile-xy:
 
-Line Profiles
-=============
+Image Profiles (XY)
+===================
 
 This plugin plots line profiles across X and Y for the pixel under cursor
 when ``l`` key is pressed on the image viewer. You can also manually type in the
