@@ -76,20 +76,21 @@ class UnitConverterWithSpectral:
                 + [
                     'Jy', 'mJy', 'uJy', 'MJy',
                     'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
-                    'eV / (s m2 Hz)', 'eV / (Hz s m2)',
-                    'erg / (s cm2 Angstrom)', 'erg / (s cm2 Angstrom)',
-                    'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
-                    'ph / (Angstrom s cm2)', 'erg / (s cm2 Angstrom)',
-                    'ph / (Hz s cm2)', 'ph / (Hz s cm2)', 'erg / (Angstrom s cm2)'
+                    'eV / (Hz s m2)',
+                    'erg / (Hz s cm2)',
+                    'erg / (Angstrom s cm2)',
+                    'ph / (Angstrom s cm2)',
+                    'ph / (Hz s cm2)'
                 ]
                 + [
-                    'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
+                    'Jy / sr', 'mJy / sr',
+                    'uJy / sr', 'MJy / sr',
                     'W / (Hz sr m2)',
                     'eV / (Hz s sr m2)',
-                    'erg / (s sr cm2)', 'erg / (Hz s sr cm2)',
-                    'erg / (Angstrom s sr cm2)', 'erg / (s cm2 Angstrom sr)',
-                    'ph / (Angstrom s cm2 sr)', 'ph / (Angstrom s sr cm2)',
-                    'ph / (Hz s cm2 sr)', 'ph / (Hz s cm2 sr)',
+                    'erg / (s sr cm2)',
+                    'erg / (Hz s sr cm2)',
+                    'erg / (Angstrom s sr cm2)',
+                    'ph / (Angstrom s sr cm2)',
                     'ph / (Hz s sr cm2)'
                 ])
         else:  # spectral axis

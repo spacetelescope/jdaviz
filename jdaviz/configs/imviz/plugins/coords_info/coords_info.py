@@ -489,9 +489,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                         # This is needed for units that are not directly convertible/translatable.
                         slice = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
 
-                        value = flux_conversion(
-                                values=value, original_units=unit, target_units=self.image_unit, spec=None, eqv=_eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR']), slice=slice  # noqa
-                                )
+                        value = flux_conversion(values=value, original_units=unit,
+                                                target_units=self.image_unit, spec=None,
+                                                eqv=_eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR']),  # noqa
+                                                slice=slice)
                         unit = self.image_unit
 
                     elif self.image_unit.is_equivalent(unit):

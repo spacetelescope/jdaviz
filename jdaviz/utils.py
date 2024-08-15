@@ -286,7 +286,7 @@ def standardize_metadata(metadata):
     return out_meta
 
 
-def untranslatable_units():
+def transitive_units():
     return [
         u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
         u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
@@ -343,6 +343,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         else:
             spectral_values = spec.spectral_axis
 
+        # the unit of the data collection item object, could be flux or surface brightness
         spec_unit = str(spec.flux.unit)
 
         # Need this for setting the y-limits
@@ -378,22 +379,47 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
             eqv_in = fac
         eqv += _eqv_pixar_sr(np.array(eqv_in))
 
-        # untranslatable units cannot be directly converted, and require
+        # transitive units cannot be directly converted, and require
         # additional conversions to reach the desired end unit.
-        if spec_unit in [original_units, target_units]:
-            if u.Unit(targ_units) in untranslatable_units():
-                temp_targ = targ_units * u.sr
-                values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
-                orig_units = u.Unit(temp_targ)
-            elif u.Unit(orig_units) in untranslatable_units():
-                temp_orig = orig_units * u.sr
-                values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
-                targ_units = u.Unit(temp_orig)
+        # if spec_unit in [original_units, target_units]:
+        values, updated_units, unit_type = _transitive_conversion(
+            values=values, orig_units=orig_units, targ_units=targ_units,
+            eqv=eqv, spec_unit=spec_unit
+            )
+        if unit_type and unit_type == 'targ':
+            targ_units = updated_units
+        elif unit_type and unit_type == 'orig':
+            orig_units = updated_units
+
     elif image_data:
-        # untranslatable units cannot be directly converted, and require
-        # additional conversions to reach the desired end unit.
-        if ((u.Unit(targ_units) in untranslatable_units()) or
-           (u.Unit(orig_units) in untranslatable_units())):
+        values, orig_units = _transitive_conversion(
+            values=values, orig_units=orig_units, targ_units=targ_units,
+            eqv=eqv, image_data=image_data
+            )
+
+    return (values * orig_units).to_value(targ_units, equivalencies=eqv)
+
+
+def _transitive_conversion(values, orig_units, targ_units, eqv, spec_unit=None, image_data=None):  # noqa
+    # transitive units cannot be directly converted, and require
+    # additional conversions to reach the desired end unit.
+    if spec_unit and spec_unit in [orig_units, targ_units]:
+        if u.Unit(targ_units) in transitive_units():
+            temp_targ = targ_units * u.sr
+            values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
+            orig_units = u.Unit(temp_targ)
+            return values, orig_units, 'orig'
+        elif u.Unit(orig_units) in transitive_units():
+            temp_orig = orig_units * u.sr
+            values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
+            targ_units = u.Unit(temp_orig)
+            return values, targ_units, 'targ'
+
+        return values, targ_units, 'targ'
+
+    elif image_data:
+        if ((u.Unit(targ_units) in transitive_units()) or
+           (u.Unit(orig_units) in transitive_units())):
             # SB -> Flux -> Flux -> SB
             temp_orig = orig_units * u.sr
             temp_targ = targ_units * u.sr
@@ -401,11 +427,11 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
             # Convert Surface Brightness to Flux, then Flux to Flux
             values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
             values = (values * temp_orig).to_value(temp_targ, equivalencies=eqv)
-
             # Lastly a Flux to Surface Brightness translation in the return statement
             orig_units = temp_targ
+            return values, orig_units
 
-    return (values * orig_units).to_value(targ_units, equivalencies=eqv)
+        return values, orig_units
 
 
 def _convert_surface_brightness_units(data, original_units, target_units):

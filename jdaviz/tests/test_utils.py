@@ -10,7 +10,8 @@ from astropy.wcs import FITSFixedWarning
 from numpy.testing import assert_allclose
 from specutils import Spectrum1D
 
-from jdaviz.utils import alpha_index, download_uri_to_path, flux_conversion
+from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
+                          _transitive_conversion, _eqv_pixar_sr)
 
 PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
 
@@ -34,6 +35,68 @@ def test_spec_sb_flux_conversion():
     # complex translation erg / (Angstrom s cm2 sr) -> Jy / sr
     targ = [3.33564095e+13, 2.66851276e+14, 9.00623057e+14] * (u.Jy / u.sr)
     assert_allclose(flux_conversion(values, u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr), u.Jy / u.sr, spec), targ.value)  # noqa: E501
+
+    spectral_values = spec.spectral_axis
+    spec_unit = u.MJy
+    eqv = u.spectral_density(spectral_values) + _eqv_pixar_sr(spec.meta["_pixel_scale_factor"])
+
+    # test spectrum when target unit in untranslatable unit list
+    target_values = [5.03411657e-05, 2.01364663e-04, 4.53070491e-04]
+    expected_units = (u.ph / (u.Hz * u.s * u.cm**2))
+    returned_values, return_units, unit_flag = _transitive_conversion(
+                                                    values=values, orig_units=(u.MJy),
+                                                    targ_units=(u.ph / (u.s * u.cm**2 * u.Hz * u.sr)),  # noqa
+                                                    eqv=eqv, spec_unit=spec_unit, image_data=None
+                                                )
+    assert_allclose(returned_values, target_values)
+    assert (return_units == expected_units)
+    assert (unit_flag == 'orig')
+
+    # test spectrum when original unit in untranslatable unit list
+    target_values = [1., 2., 3.]
+    expected_units = (u.ph / (u.Angstrom * u.s * u.cm**2))
+    returned_values, return_units, unit_flag = _transitive_conversion(
+                                                    values=values,
+                                                    orig_units=(u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr)),  # noqa
+                                                    targ_units=(u.MJy), eqv=eqv,
+                                                    spec_unit=spec_unit, image_data=None
+                                                )
+    assert_allclose(returned_values, target_values)
+    assert (return_units == expected_units)
+    assert (unit_flag == 'targ')
+
+    # test the default case where units are translatable
+    target_values = [10, 20, 30]
+    expected_units = (u.MJy)
+    returned_values, return_units, unit_flag = _transitive_conversion(
+                                                    values=values, orig_units=(u.Jy/u.sr),
+                                                    targ_units=(u.MJy), eqv=eqv,
+                                                    spec_unit=spec_unit, image_data=None
+                                                )
+    assert_allclose(returned_values, target_values)
+    assert (return_units == expected_units)
+    assert (unit_flag == 'targ')
+
+    # test image viewer data units are untranslatable
+    target_value = 1.e-18
+    expected_units = (u.erg / (u.s * u.cm**2 * u.Hz))
+    returned_values, return_units = _transitive_conversion(
+                                        values=1, orig_units=(u.MJy/u.sr),
+                                        targ_units=(u.erg / (u.s * u.cm**2 * u.Hz * u.sr)),
+                                        eqv=eqv, spec_unit=None, image_data=True
+                                    )
+    assert_allclose(returned_values, target_value)
+    assert return_units == expected_units
+
+    # test image viewer data units are translatable
+    target_value = 10
+    expected_units = (u.MJy / u.sr)
+    returned_values, return_units = _transitive_conversion(
+                                        values=10, orig_units=(u.MJy/u.sr), targ_units=(u.Jy/u.sr),
+                                        eqv=eqv, spec_unit=None, image_data=True
+                                    )
+    assert_allclose(returned_values, target_value)
+    assert return_units == expected_units
 
     # Quantity scalar pixel scale factor
     spec.meta["_pixel_scale_factor"] = 0.1 * (u.sr / u.pix)
