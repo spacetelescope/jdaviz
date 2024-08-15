@@ -127,7 +127,7 @@ class PluginMark:
         if not self.auto_update_units:
             return
         if self.viewer.__class__.__name__ in ['SpecvizProfileView', 'CubevizProfileView']:
-            axis_map = {'spectral': 'x', 'flux': 'y'}
+            axis_map = {'spectral': 'x', 'spectral_y': 'y'}
         elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
             axis_map = {'spectral': 'x'}
         else:

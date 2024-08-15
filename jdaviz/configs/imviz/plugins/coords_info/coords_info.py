@@ -12,12 +12,13 @@ from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
 from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfileView,
                                                    MosvizProfile2DView)
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
+from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged, SnackbarMessage
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.utils import _eqv_pixar_sr, _convert_surface_brightness_units
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 __all__ = ['CoordsInfo']
 
@@ -120,9 +121,21 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
     def _on_global_display_unit_changed(self, msg):
-        # eventually should observe change in flux OR angle
-        if msg.axis == "flux":
-            self.image_unit = u.Unit(msg.unit)
+
+        # only concerned with handling unit changes for mouseover in cubeviz,
+        # until implemented in other configs
+        if self.config == 'cubeviz':
+            # even if data loaded is in 'flux' it can be represented as a
+            # per-pixel sb unit, so all cube data will be 'sb'
+            if msg.axis == "sb":
+                image_unit = u.Unit(msg.unit)
+
+                # temporarily, until non-sr units are suppported, strip 'pix' from
+                # unit if it is a per-pixel unit
+                if 'pix' in image_unit.bases:
+                    image_unit = image_unit * u.pix
+
+                self.image_unit = u.Unit(image_unit)
 
     @property
     def marks(self):
