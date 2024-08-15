@@ -150,7 +150,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.is_cube = False
 
-    def _on_display_units_changed(self, msg={}):
+    def _on_display_units_changed(self, event={}):
 
         """
         Handle change of display units from Unit Conversion plugin (for now,
@@ -160,105 +160,76 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         'calculate' is pressed again.
         """
 
-        # only concerned with unit changes in cubeviz, for now
         if self.config == 'cubeviz':
 
-            if msg.axis == 'flux':
-                # update the traitlet for the flux scaling display unit when
-                # the global flux display unit has been changed
-                # a 'flux' message will be immediatley followed by a 'sb'
-                # message upon unit change, so the rest will be handled there
+            # get previously selected display units
+            prev_display_flux_or_sb_unit = self.display_flux_or_sb_unit
+            prev_flux_scale_unit = self.flux_scaling_display_unit
 
-                self.flux_scaling_display_unit = msg.unit
+            # update display unit traitlets to new selection
+            self._set_display_unit_of_selected_dataset()
 
-                # get previously selected display unit
-                prev_flux_scale_unit = self.flux_scaling_display_unit
+            # convert the previous background and flux scaling values to new unit so
+            # re-calculating photometry with the current selections will produce
+            # the previous output with the new unit.
+            if prev_display_flux_or_sb_unit != '':
 
-                if prev_flux_scale_unit = != '':
-                    if self.flux_scaling is not None:
-                        prev_unit = u.Unit(prev_flux_scale_unit)
-                        new_unit = u.Unit(self.flux_scaling_display_unit)
-                        self._convert_flux_scaling_to_new_units(prev_unit, new_unit)
-
-            if msg.axis == 'sb':
-                # get previously selected display unit
-                prev_display_flux_or_sb_unit = self.display_flux_or_sb_unit
-                
-                # update display unit traitlet to new selection
-                disp_unit = msg.unit
-                self._set_display_flux_or_sb_unit_traitlet(msg.unit)
-                
                 # convert background to new unit
-                if prev_display_flux_or_sb_unit != '':
-                    if self.background_value is not None:
-                        prev_unit = u.Unit(prev_display_flux_or_sb_unit)
-                        new_unit = u.Unit(self.display_flux_or_sb_unit)
-                        self._convert_background_to_new_units(prev_unit, new_unit)
+                if self.background_value is not None:
 
-    def _set_display_flux_or_sb_unit_traitlet(self, disp_unit):
-        # in its own method rather than setting directly because there is some
-        # additional logic to handle pixel units, and can be called when units
-        # change or when dataset changes
+                    prev_unit = u.Unit(prev_display_flux_or_sb_unit)
+                    new_unit = u.Unit(self.display_flux_or_sb_unit)
 
-        # temporarily, until non-sr units are suppported, strip 'pix'
-        # from unit if it is a per-pixel sb unit
-        if 'pix' in disp_unit.bases:
-            disp_unit = u.Unit(image_unit) * u.pix
-            disp_unit = disp_unit.to_string()
+                    bg = self.background_value * prev_unit
+                    self.background_value = bg.to_value(
+                        new_unit, u.spectral_density(self._cube_wave))
 
-        self.display_flux_or_sb_unit = disp_unit
+                # convert flux scaling to new unit
+                if self.flux_scaling is not None:
+                    prev_unit = u.Unit(prev_flux_scale_unit)
+                    new_unit = u.Unit(self.flux_scaling_display_unit)
 
-    def _convert_background_to_new_units(self, prev_unit, new_unit):
+                    fs = self.flux_scaling * prev_unit
+                    self.flux_scaling = fs.to_value(
+                        new_unit, u.spectral_density(self._cube_wave))
 
-        bg = self.background_value * prev_unit
-        self.background_value = bg.to_value(new_unit,
-                                            u.spectral_density(self._cube_wave))
+    def _set_display_unit_of_selected_dataset(self):
 
-    def _convert_flux_scaling_to_new_units(self, prev_unit, new_unit):
-        fs = self.flux_scaling * prev_unit
+        """
+        Set the display_flux_or_sb_unit and flux_scaling_display_unit traitlets,
+        which depend on if the selected data set is flux or surface brightness,
+        and the corresponding global display unit for either flux or
+        surface brightness.
+        """
 
-        self.flux_scaling = fs.to_value( new_unit, u.spectral_density(self._cube_wave))
-
-    @observe('dataset_selected')
-    def _dataset_selected_changed(self, event={}):
-        if not hasattr(self, 'dataset'):
-            # plugin not fully initialized
-            return
-        if self.dataset.selected_dc_item is None:
-            return
-        if self.multiselect:
-            # defaults are applied within the loop if the auto-switches are enabled,
-            # but we still need to update the flux-scaling warning
-            self._multiselect_flux_scaling_warning()
+        if not self.dataset_selected or not self.aperture_selected:
+            self.display_flux_or_sb_unit = ''
+            self.flux_scaling_display_unit = ''
             return
 
-        try:
-            defaults = self._get_defaults_from_metadata()
-            self.counts_factor = 0
-            self.pixel_area = defaults.get('pixel_area', 0)
-            self.flux_scaling = defaults.get('flux_scaling', 0)
-            if 'flux_scaling' in defaults:
-                self.flux_scaling_warning = ''
+        data = self.dataset.selected_dc_item
+        comp = data.get_component(data.main_components[0])
+        if comp.units:
+            # if data is something-per-solid-angle, its a SB unit and we should
+            # use the selected global display unit for SB
+            if check_if_unit_is_per_solid_angle(comp.units):
+                flux_or_sb = 'sb'
             else:
-                self.flux_scaling_warning = ('Could not determine flux scaling for '
-                                             f'{self.dataset.selected}, defaulting to zero.')
+                flux_or_sb = 'flux'
 
-        except Exception as e:
-            self.hub.broadcast(SnackbarMessage(
-                f"Failed to extract {self.dataset_selected}: {repr(e)}",
-                color='error', sender=self))
+            disp_unit = self.app._get_display_unit(flux_or_sb)
 
-        # get correct display unit for newly selected dataset
-        if self.config == 'cubeviz':
-            # 'get_display_unit' should be used when we are not intercepting
-            # a message with the correct unit from the UC plugin
-            sb_unit = self.app._get_display_unit('sb')
-            self._set_display_flux_or_sb_unit_traitlet(sb_unit)
-            self.flux_scaling_display_unit = self.app._get_display_unit('flux')
+            self.display_flux_or_sb_unit = disp_unit
 
-        # auto-populate background, if applicable.
-        self._aperture_selected_changed()
+            # now get display unit for flux_scaling_display_unit. this unit will always
+            # be in flux, but it will not be derived from the global flux display unit
+            # note : need to generalize this for non-sr units eventually
+            fs_unit = u.Unit(disp_unit) * u.sr
+            self.flux_scaling_display_unit = fs_unit.to_string()
 
+        else:
+            self.display_flux_or_sb_unit = ''
+            self.flux_scaling_display_unit = ''
 
     def _get_defaults_from_metadata(self, dataset=None):
         defaults = {}
@@ -334,6 +305,43 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not self.multiselect:
             # disable warning once user changes value
             self.flux_scaling_warning = ''
+
+    @observe('dataset_selected')
+    def _dataset_selected_changed(self, event={}):
+        if not hasattr(self, 'dataset'):
+            # plugin not fully initialized
+            return
+        if self.dataset.selected_dc_item is None:
+            return
+        if self.multiselect:
+            # defaults are applied within the loop if the auto-switches are enabled,
+            # but we still need to update the flux-scaling warning
+            self._multiselect_flux_scaling_warning()
+            return
+
+        try:
+            defaults = self._get_defaults_from_metadata()
+            self.counts_factor = 0
+            self.pixel_area = defaults.get('pixel_area', 0)
+            self.flux_scaling = defaults.get('flux_scaling', 0)
+            if 'flux_scaling' in defaults:
+                self.flux_scaling_warning = ''
+            else:
+                self.flux_scaling_warning = ('Could not determine flux scaling for '
+                                             f'{self.dataset.selected}, defaulting to zero.')
+
+        except Exception as e:
+            self.hub.broadcast(SnackbarMessage(
+                f"Failed to extract {self.dataset_selected}: {repr(e)}",
+                color='error', sender=self))
+
+        # get correct display unit for newly selected dataset
+        if self.config == 'cubeviz':
+            # set display_flux_or_sb_unit and flux_scaling_display_unit
+            self._set_display_unit_of_selected_dataset()
+
+        # auto-populate background, if applicable.
+        self._aperture_selected_changed()
 
     def _on_subset_update(self, msg):
         if not self.dataset_selected or not self.aperture_selected:
