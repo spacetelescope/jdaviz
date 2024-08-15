@@ -3,7 +3,7 @@ import re
 from playwright.sync_api import Page, expect
 
 
-def test_voila_basics(page: Page):
+def test_solara_basics(page: Page):
     page.goto("http://localhost:8765/")
 
     # when jdaviz is loaded (button at the top left)

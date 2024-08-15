@@ -37,7 +37,7 @@ export default {
 
 <style id="jdaviz-main-styles" >
 * {
-  /* otherwise, voila will override box-sizing to unset which screws up layouts */
+  /* otherwise, solara will override box-sizing to unset which screws up layouts */
   box-sizing: border-box !important;
 }
 
