@@ -235,7 +235,7 @@ class UnitConversion(PluginTemplateMixin):
         # have a scale factor assigned in the metadata, enabling translation.
         current_y_unit = self.spectrum_viewer.state.y_display_unit
 
-        # various plugins are listening for changes in either flux or sb and 
+        # various plugins are listening for changes in either flux or sb and
         # need to be able to filter messages accordingly, so broadcast both when
         # flux unit is updated. if data was loaded in a flux unit (i.e MJy), it
         # can be reperesented as a per-pixel surface brightness unit

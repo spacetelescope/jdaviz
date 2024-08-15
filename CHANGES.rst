@@ -134,7 +134,7 @@ Cubeviz
 - No longer incorrectly swap RA and Dec axes when loading Spectrum1D objects. [#3133]
 
 - Improved messaging from unit conversion plugin to handle changes to flux, surface brightness,
-and spectral y axis independently. This fixes an issue with mouseover units in cubeviz. [#3155]
+  and spectral y axis independently. This fixes an issue with mouseover units in cubeviz. [#3155]
 
 Imviz
 ^^^^^
