@@ -98,13 +98,9 @@ def _main(config=None):
                         help='Verbosity of the application for popup snackbars.')
     parser.add_argument('--history-verbosity', choices=_verbosity_levels, default='info',
                         help='Verbosity of the logger history.')
-    if sys.version_info >= (3, 9):
-        # Also enables --no-hotreload
-        parser.add_argument('--hotreload', action=argparse.BooleanOptionalAction, default=False,
-                            help='Whether to enable hot-reloading of the UI (for development).')
-    else:
-        parser.add_argument('--hotreload', action='store_true', default=False,
-                            help='Enable hot-reloading of the UI (for development).')
+    # Also enables --no-hotreload
+    parser.add_argument('--hotreload', action=argparse.BooleanOptionalAction, default=False,
+                        help='Whether to enable hot-reloading of the UI (for development).')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 
