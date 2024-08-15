@@ -18,6 +18,8 @@ New Features
 
 - Plugins can now expose in-UI API hints. [#3137]
 
+- The standalone version of jdaviz now uses solara instead of voila, resulting in faster load times. [#2909]
+
 Cubeviz
 ^^^^^^^
 
