@@ -50,7 +50,7 @@ def Page():
 
     solara.Style(Path(__file__).parent / "solara.css")
 
-    if not len(data_list):
+    if config is None or not hasattr(jdaviz.configs, config):
         from jdaviz.core.launcher import Launcher
         launcher = Launcher(height='100vh', filepath=(data_list[0] if len(data_list) == 1 else ''))
         solara.display(launcher.main_with_launcher)
