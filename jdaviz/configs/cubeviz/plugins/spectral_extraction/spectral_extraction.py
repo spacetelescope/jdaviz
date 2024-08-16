@@ -323,10 +323,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # a 'flux' and 'sb' message should be recieved back to back from
         # the unit conversion plugin, so don't need to sync them immediatley
         # within each message recieved
-        if msg.axis == 'flux':
+        elif msg.axis == 'flux':
             self.flux_unit = str(msg.unit)
-        if msg.axis == 'sb':
+        elif msg.axis == 'sb':
             self.sb_unit = str(msg.unit)
+        else:
+            return
+
+        # and set results_units, which depends on function selected
+        self._update_units_on_function_selection()
 
     @observe('function_selected')
     def _update_units_on_function_selection(self, *args):
