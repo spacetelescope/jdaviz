@@ -528,8 +528,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._check_model_equation_invalid()
 
     def _on_global_display_unit_changed(self, msg):
-        if 'spectral' in msg.axis:
-            axis = msg.axis.replace('spectral_', '')  # get 'x' or 'y'
+        if msg.axis == 'spectral_y':
+            axis = 'y'
+        elif msg.axis == 'spectral_x':
+            axis = 'x'
         else:
             return
 
