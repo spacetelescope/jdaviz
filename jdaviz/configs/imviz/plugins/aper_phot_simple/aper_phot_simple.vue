@@ -113,6 +113,7 @@
             type="number"
             hint="Factor to convert data unit to counts, in unit of flux/counts"
             persistent-hint
+            :rules="[() => counts_factor>=0 || 'Counts conversion factor cannot be negative.']"
           >
           </v-text-field>
         </v-row>
@@ -175,7 +176,7 @@
             :results_isolated_to_plugin="true"
             @click="do_aper_phot"
             :spinner="spinner"
-            :disabled="aperture_selected === background_selected || !aperture_selected_validity.is_aperture"
+            :disabled="aperture_selected === background_selected || !aperture_selected_validity.is_aperture || counts_factor < 0"
           >
             Calculate
           </plugin-action-button>

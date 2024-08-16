@@ -111,6 +111,8 @@ Bug Fixes
   world and pixel (previously containing SkyCoord and pixel location tuples, respectively) are now
   each two separate columns for world_ra/world_dec and pixel_x/pixel_y, respectively. [#3089]
 
+- Aperture Photometry plugin no longer allows negative counts conversion factor. [#3154]
+
 Cubeviz
 ^^^^^^^
 

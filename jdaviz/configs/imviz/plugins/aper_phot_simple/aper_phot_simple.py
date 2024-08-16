@@ -637,7 +637,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     include_pixarea_fac = True
             if img_unit != u.count:
                 try:
-                    ctfac = float(counts_factor if counts_factor is not None else self.counts_factor)  # noqa
+                    ctfac = float(counts_factor if counts_factor is not None else self.counts_factor)  # noqa: E501
+                    if ctfac < 0:
+                        raise ValueError('Counts conversion factor cannot be negative.')
                 except ValueError:  # Clearer error message
                     raise ValueError('Missing or invalid counts conversion factor')
                 if not np.allclose(ctfac, 0):
