@@ -492,10 +492,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                         value = flux_conversion(value, unit, self.image_unit,
                                                 eqv=_eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR']),  # noqa: E501
                                                 slice=slice)
+                        unit = self.image_unit
 
                     elif self.image_unit.is_equivalent(unit):
                         value = (value * u.Unit(unit)).to_value(u.Unit(self.image_unit))
-                    unit = self.image_unit
+                        unit = self.image_unit
 
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]

@@ -389,8 +389,9 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
                     eqv=eqv, spec_unit=spec_unit
                 )
 
-        if len(result) == 2:
+        if result and len(result) == 2:
             values, updated_units = result
+            orig_units = updated_units
         else:
             values, updated_units, selected_unit_updated = result
             if selected_unit_updated == 'targ':
@@ -440,6 +441,7 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
             values = (values * temp_orig).to_value(temp_targ, equivalencies=eqv)
             # Lastly a Flux to Surface Brightness translation in the return statement
             orig_units = temp_targ
+
             return values, orig_units
 
         return values, orig_units
