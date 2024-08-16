@@ -227,6 +227,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fix default units in zeroth moment map. [#3116]
+
 Imviz
 ^^^^^
 

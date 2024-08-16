@@ -181,7 +181,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                      "Velocity": "km/s",
                      "Velocity^N": f"km{self.n_moment}/s{self.n_moment}"}
 
-        sb_or_flux_label = None
+        sb_or_flux_label = 'Surface Brightness'
 
         if self.dataset_selected != "":
             # Spectral axis is first in this list
@@ -203,14 +203,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         for item in self.output_unit_items:
             item["unit_str"] = unit_dict[item["label"]]
 
-            if item["label"] in ["Flux", "Surface Brightness"] and sb_or_flux_label:
+            if item["label"] in "Surface Brightness" and sb_or_flux_label:
                 # change unit label to reflect if unit is flux or SB
                 item["label"] = sb_or_flux_label
-
-        if self.dataset_selected != "":
-            # output_unit_selected might not match (potentially) changed flux/SB label
-            if self.output_unit_selected in ['Flux', 'Surface Brightness']:
-                self.output_unit_selected = sb_or_flux_label
 
         # Filter what we want based on n_moment
         if self.n_moment == 0:
@@ -349,7 +344,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         unit_conv = self.app.get_tray_item_from_name('g-unit-conversion')
         if self.spectrum_viewer.state.x_display_unit is not None:
             return (
-                u.Unit(unit_conv.sb_unit.selected) *
+                u.Unit(unit_conv.sb_unit) *
                 self.spectrum_viewer.state.x_display_unit
             )
         return ''
