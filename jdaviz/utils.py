@@ -21,6 +21,8 @@ from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
 from ipyvue import watch
 
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type',
            'download_uri_to_path', 'flux_conversion', 'spectral_axis_conversion',
@@ -290,7 +292,7 @@ def indirect_units():
     return [
         u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
         u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
-        u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr),
+        u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.sr * u.cm**2),
         u.ph / (u.s * u.cm**2 * u.Hz * u.sr)
     ]
 
@@ -382,14 +384,19 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         # indirect units cannot be directly converted, and require
         # additional conversions to reach the desired end unit.
         # if spec_unit in [original_units, target_units]:
-        values, updated_units, selected_unit_updated = _indirect_conversion(
-            values=values, orig_units=orig_units, targ_units=targ_units,
-            eqv=eqv, spec_unit=spec_unit
-            )
-        if selected_unit_updated == 'targ':
-            targ_units = updated_units
-        elif selected_unit_updated == 'orig':
-            orig_units = updated_units
+        result = _indirect_conversion(
+                    values=values, orig_units=orig_units, targ_units=targ_units,
+                    eqv=eqv, spec_unit=spec_unit
+                )
+
+        if len(result) == 2:
+            values, updated_units = result
+        else:
+            values, updated_units, selected_unit_updated = result
+            if selected_unit_updated == 'targ':
+                targ_units = updated_units
+            elif selected_unit_updated == 'orig':
+                orig_units = updated_units
 
     elif image_data:
         values, orig_units = _indirect_conversion(
@@ -400,10 +407,12 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 
 
-def _indirect_conversion(values, orig_units, targ_units, eqv, spec_unit=None, image_data=None):  # noqa
+def _indirect_conversion(values, orig_units, targ_units, eqv,
+                         spec_unit=None, image_data=None):
     # indirect units cannot be directly converted, and require
     # additional conversions to reach the desired end unit.
-    if spec_unit and spec_unit in [orig_units, targ_units]:
+    if (spec_unit and spec_unit in [orig_units, targ_units]
+            and not check_if_unit_is_per_solid_angle(spec_unit)):
         if u.Unit(targ_units) in indirect_units():
             temp_targ = targ_units * u.sr
             values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
@@ -417,7 +426,9 @@ def _indirect_conversion(values, orig_units, targ_units, eqv, spec_unit=None, im
 
         return values, targ_units, 'targ'
 
-    elif image_data:
+    elif image_data or (spec_unit and check_if_unit_is_per_solid_angle(spec_unit)):
+        if not check_if_unit_is_per_solid_angle(targ_units):
+            targ_units /= u.sr
         if ((u.Unit(targ_units) in indirect_units()) or
            (u.Unit(orig_units) in indirect_units())):
             # SB -> Flux -> Flux -> SB

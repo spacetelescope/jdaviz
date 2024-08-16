@@ -252,8 +252,6 @@ class UnitConversion(PluginTemplateMixin):
 
         spectral_y = sb_unit if self.flux_or_sb == 'Surface Brightness' else flux_unit
 
-
-
         yunit = _valid_glue_display_unit(spectral_y, self.spectrum_viewer, 'y')
 
         # update spectrum viewer with new y display unit

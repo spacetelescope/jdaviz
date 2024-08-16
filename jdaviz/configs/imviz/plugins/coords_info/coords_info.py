@@ -489,15 +489,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                         # This is needed for units that are not directly convertible/translatable.
                         slice = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
 
-                        value = flux_conversion(values=value, original_units=unit,
-                                                target_units=self.image_unit, spec=None,
-                                                eqv=_eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR']),  # noqa
+                        value = flux_conversion(value, unit, self.image_unit,
+                                                eqv=_eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR']),  # noqa: E501
                                                 slice=slice)
-                        unit = self.image_unit
 
                     elif self.image_unit.is_equivalent(unit):
                         value = (value * u.Unit(unit)).to_value(u.Unit(self.image_unit))
-                        unit = self.image_unit
+                    unit = self.image_unit
 
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]
@@ -601,7 +599,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 # temporarily here, may be removed after upstream units handling
                 # or will be generalized for any sb <-> flux
                 if '_pixel_scale_factor' in sp.meta:
-                    disp_flux = flux_conversion(sp.flux.value, sp.flux.unit, viewer.state.y_display_unit, sp)  # noqa
+                    disp_flux = flux_conversion(sp.flux.value, sp.flux.unit, viewer.state.y_display_unit, spec=sp)  # noqa: E501
                 else:
                     disp_flux = sp.flux.to_value(viewer.state.y_display_unit,
                                                  u.spectral_density(sp.spectral_axis))
