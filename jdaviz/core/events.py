@@ -408,7 +408,10 @@ class CanvasRotationChangedMessage(Message):
 
 
 class GlobalDisplayUnitChanged(Message):
-    '''Message generated when the global app-wide display unit is changed'''
+    '''Message generated when the (x or y axis) unit of the spectrum viewer is
+    changed, which is used app-wide to inform display units that depend on the
+    unit choice and flux<>sb toggle of the spectrum viewer.'''
+
     def __init__(self, axis, unit, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._axis = axis

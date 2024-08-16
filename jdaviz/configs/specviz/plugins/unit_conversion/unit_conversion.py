@@ -230,40 +230,38 @@ class UnitConversion(PluginTemplateMixin):
         if not self.flux_unit.choices and self.app.config == 'cubeviz':
             return
 
-        flux_or_sb = None
+        # various plugins are listening for changes in either flux or sb and
+        # need to be able to filter messages accordingly, so broadcast both when
+        # flux unit is updated. if data was loaded in a flux unit (i.e MJy), it
+        # can be reperesented as a per-pixel surface brightness unit
+        flux_unit = self.flux_unit.selected
+        sb_unit = self._append_angle_correctly(flux_unit, self.angle_unit.selected)
 
-        # when the configuration is Specviz, translation is not currently supported.
-        # If in Cubeviz, all spectra pass through Spectral Extraction plugin and will
-        # have a scale factor assigned in the metadata, enabling translation.
-        current_y_unit = self.spectrum_viewer.state.y_display_unit
+        self.hub.broadcast(GlobalDisplayUnitChanged("flux", flux_unit, sender=self))
+        self.hub.broadcast(GlobalDisplayUnitChanged("sb", sb_unit, sender=self))
 
-        # if the current y display unit is a surface brightness unit,
-        if self.angle_unit.selected and check_if_unit_is_per_solid_angle(current_y_unit):
-            flux_or_sb = self._append_angle_correctly(
-                         self.flux_unit.selected,
-                         self.angle_unit.selected
-            )
-        else:
-            flux_or_sb = self.flux_unit.selected
+        spectral_y = sb_unit if self.flux_or_sb == 'Surface Brightness' else flux_unit
 
         untranslatable_units = self._untranslatable_units
         # disable translator if flux unit is untranslatable,
         # still can convert flux units, this just disables flux
         # to surface brightness translation for units in list.
-        if flux_or_sb in untranslatable_units:
+        if spectral_y in untranslatable_units:
             self.can_translate = False
         else:
             self.can_translate = True
 
-        yunit = _valid_glue_display_unit(flux_or_sb, self.spectrum_viewer, 'y')
+        yunit = _valid_glue_display_unit(spectral_y, self.spectrum_viewer, 'y')
 
         # update spectrum viewer with new y display unit
         if self.spectrum_viewer.state.y_display_unit != yunit:
             self.spectrum_viewer.state.y_display_unit = yunit
             self.spectrum_viewer.reset_limits()
 
-            # and broacast that there has been a change in flux
-            self.hub.broadcast(GlobalDisplayUnitChanged("flux", flux_or_sb, sender=self))
+            # and broacast that there has been a change in the spectral axis y unit
+            # to either a flux or surface brightness unit, for plugins that specifically
+            # care about this toggle selection
+            self.hub.broadcast(GlobalDisplayUnitChanged("spectral_y", spectral_y, sender=self))
 
         if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
             self.flux_or_sb_selected = 'Flux'
@@ -298,10 +296,12 @@ class UnitConversion(PluginTemplateMixin):
             spec_units = u.Unit(self.spectrum_viewer.state.y_display_unit)
         else:
             return
+
         # on instantiation, we set determine flux choices and selection
         # after surface brightness
         if not self.flux_unit.choices:
             return
+
         # Surface Brightness -> Flux
         if check_if_unit_is_per_solid_angle(spec_units) and flux_or_sb == 'Flux':
             spec_units *= u.sr
@@ -318,7 +318,9 @@ class UnitConversion(PluginTemplateMixin):
         else:
             return
 
-        self.hub.broadcast(GlobalDisplayUnitChanged('flux',
+        # broadcast that there has been a change in the spectrum viewer y axis,
+        # if translation was completed
+        self.hub.broadcast(GlobalDisplayUnitChanged('spectral_y',
                                                     spec_units,
                                                     sender=self))
         self.spectrum_viewer.reset_limits()

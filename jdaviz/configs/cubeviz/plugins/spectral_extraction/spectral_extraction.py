@@ -109,6 +109,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     results_units = Unicode().tag(sync=True)
     spectrum_y_units = Unicode().tag(sync=True)
+    flux_unit = Unicode().tag(sync=True)
+    sb_unit = Unicode().tag(sync=True)
 
     aperture_method_items = List().tag(sync=True)
     aperture_method_selected = Unicode('Center').tag(sync=True)
@@ -178,7 +180,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
-                           handler=self._update_results_units)
+                           handler=self._on_gloabl_display_unit_changed)
 
         self._update_disabled_msg()
 
@@ -313,13 +315,31 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.background.scale_factor = self.slice_spectral_value/self.reference_spectral_value
 
-    @observe('function_selected')
-    def _update_results_units(self, msg={}):
-        self.spectrum_y_units = str(self.app._get_display_unit('spectral_y'))
-        if self.function_selected.lower() == 'sum':
-            self.results_units = str(self.app._get_display_unit('flux'))
+    def _on_gloabl_display_unit_changed(self, msg={}):
+
+        if msg.axis == 'spectral_y':
+            self.spectrum_y_units = str(msg.unit)
+
+        # a 'flux' and 'sb' message should be recieved back to back from
+        # the unit conversion plugin, so don't need to sync them immediatley
+        # within each message recieved
+        elif msg.axis == 'flux':
+            self.flux_unit = str(msg.unit)
+        elif msg.axis == 'sb':
+            self.sb_unit = str(msg.unit)
         else:
-            self.results_units = str(self.app._get_display_unit('sb'))
+            return
+
+        # and set results_units, which depends on function selected
+        self._update_units_on_function_selection()
+
+    @observe('function_selected')
+    def _update_units_on_function_selection(self, *args):
+
+        if self.function_selected.lower() == 'sum':
+            self.results_units = self.flux_unit
+        else:
+            self.results_units = self.sb_unit
 
     @observe('function_selected', 'aperture_method_selected')
     def _update_aperture_method_on_function_change(self, *args):

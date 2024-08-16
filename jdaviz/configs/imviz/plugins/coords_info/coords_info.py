@@ -120,9 +120,18 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
 
     def _on_global_display_unit_changed(self, msg):
-        # eventually should observe change in flux OR angle
-        if msg.axis == "flux":
-            self.image_unit = u.Unit(msg.unit)
+
+        # even if data loaded is in 'flux' it can be represented as a
+        # per-pixel sb unit, so all cube data will be 'sb' (cubeviz)
+        if msg.axis == "sb":
+            image_unit = u.Unit(msg.unit)
+
+            # temporarily, until non-sr units are suppported, strip 'pix' from
+            # unit if it is a per-pixel unit
+            if 'pix' in image_unit.bases:
+                image_unit = image_unit * u.pix
+
+            self.image_unit = u.Unit(image_unit)
 
     @property
     def marks(self):
