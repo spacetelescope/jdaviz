@@ -530,7 +530,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _on_global_display_unit_changed(self, msg):
         if msg.axis == 'spectral_y':
             axis = 'y'
-        elif msg.axis == 'spectral_x':
+        elif msg.axis == 'spectral':
             axis = 'x'
         else:
             return
