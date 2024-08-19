@@ -75,18 +75,16 @@ class UnitConverterWithSpectral:
                 include_prefix_units=True, equivalencies=eqv)))
                 + [
                     'Jy', 'mJy', 'uJy', 'MJy',
-                    'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
-                    'eV / (s m2 Hz)', 'eV / (Hz s m2)',
-                    'erg / (s cm2 Angstrom)', 'erg / (s cm2 Angstrom)',
-                    'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
-                    'ph / (Angstrom s cm2)',
-                    'ph / (Hz s cm2)', 'ph / (Hz s cm2)'
+                    'W / (Hz m2)', 'eV / (Hz s m2)',
+                    'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
+                    'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)'
                 ]
                 + [
                     'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
-                    'W / (Hz sr m2)',
-                    'eV / (Hz s sr m2)',
-                    'erg / (s sr cm2)',
+                    'W / (Hz sr m2)', 'eV / (Hz s sr m2)',
+                    'erg / (s sr cm2)', 'erg / (Hz s sr cm2)',
+                    'erg / (Angstrom s sr cm2)',
+                    'ph / (Angstrom s sr cm2)', 'ph / (Hz s sr cm2)'
                 ])
         else:  # spectral axis
             # prefer Hz over Bq and um over micron
@@ -108,7 +106,7 @@ class UnitConverterWithSpectral:
             except RuntimeError:
                 data = data.get_object(cls=NDDataArray)
                 spec = Spectrum1D(flux=data.data * u.Unit(original_units))
-            return flux_conversion(spec, values, original_units, target_units)
+            return flux_conversion(values, original_units, target_units, spec)
         else:  # spectral axis
             return spectral_axis_conversion(values, original_units, target_units)
 

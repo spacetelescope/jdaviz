@@ -74,9 +74,7 @@
         :class="api_hints_enabled ? 'api-hint' : null"
         hint="Select the y-axis physical type for the spectrum-viewer."
         persistent-hint
-        :disabled="!can_translate"
       ></v-select>
-      <span v-if="!can_translate">Translation is not available due to current unit selection.</span>
     </v-row>
 
     <v-alert type="warning" v-if="!pixar_sr_exists && config == 'cubeviz'">

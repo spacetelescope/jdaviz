@@ -21,6 +21,8 @@ from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
 from ipyvue import watch
 
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'standardize_metadata', 'ColorCycler', 'alpha_index', 'get_subset_type',
            'download_uri_to_path', 'flux_conversion', 'spectral_axis_conversion',
@@ -286,31 +288,48 @@ def standardize_metadata(metadata):
     return out_meta
 
 
-def flux_conversion(spec, values, original_units, target_units):
+def indirect_units():
+    return [
+        u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
+        u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
+        u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.sr * u.cm**2),
+        u.ph / (u.s * u.cm**2 * u.Hz * u.sr)
+    ]
+
+
+def flux_conversion(values, original_units, target_units, spec=None, eqv=None, slice=None):
     """
-    Given a Spectrum1D object, flux values, original flux units, and target units,
-    this method will return the flux values in the converted units. This conversion
-    takes into account the possible surface brightness to flux or vice versa change that
-    may happen between units.
+    Convert flux or surface brightness values from original units to target units.
+
+    This function handles the conversion of flux or surface brightness values between different
+    units, taking into account changes between flux and surface brightness. It supports complex
+    conversions for Spectrum1D objects or cube image data.
 
     Parameters
     ----------
-    spec : `~specutils.Spectrum1D` object
-        The Spectrum1D object that will have converted flux units.
-
     values : float array
-        Flux values in the original units.
+        Flux or surface brightness values in the original units.
 
     original_units : str
-        The flux units of the spec object.
+        The flux or surface brightness units of the spec object or cube image.
 
     target_units : str
-        The units the flux will be converted to.
+        The units the flux or surface brightness will be converted to.
+
+    spec : `~specutils.Spectrum1D`, optional
+        The Spectrum1D object that will have converted flux or surface brightness units.
+
+    eqv : list of `astropy.units.equivalencies`, optional
+        A list of Astropy equivalencies necessary for complex unit conversions/translations.
+
+    slice : `astropy.units.Quantity`, optional
+        The current slice of a data cube, with units. Necessary for complex unit
+        conversions/translations that require spectral density equivalencies.
 
     Returns
     -------
     result : float array
-        Flux values in the target units.
+        Flux or surface brightness values in the target units.
     """
     # we set surface brightness choices and selection before flux, which can
     # cause a dimensionless translation attempt at instantiation
@@ -319,13 +338,22 @@ def flux_conversion(spec, values, original_units, target_units):
     # If there are only two values, this is likely the limits being converted, so then
     # in case we need to use the spectral density equivalency, we need to provide only
     # to spectral axis values. If there is only one value
-    if not np.isscalar(values) and len(values) == 2:
-        spectral_values = spec.spectral_axis[0]
-    else:
-        spectral_values = spec.spectral_axis
+    image_data = False
+    if spec:
+        if not np.isscalar(values) and len(values) == 2:
+            spectral_values = spec.spectral_axis[0]
+        else:
+            spectral_values = spec.spectral_axis
 
-    # Need this for setting the y-limits
-    eqv = u.spectral_density(spectral_values)
+        # the unit of the data collection item object, could be flux or surface brightness
+        spec_unit = str(spec.flux.unit)
+
+        # Need this for setting the y-limits
+        eqv = u.spectral_density(spectral_values)
+    elif slice is not None and eqv:
+        image_data = True
+        # Need this to convert Flux to Flux for complex conversions/translations of cube image data
+        eqv += u.spectral_density(slice)
 
     orig_units = u.Unit(original_units)
     orig_bases = orig_units.bases
@@ -333,7 +361,7 @@ def flux_conversion(spec, values, original_units, target_units):
     targ_bases = targ_units.bases
 
     # Ensure a spectrum passed through Spectral Extraction plugin
-    if (('_pixel_scale_factor' in spec.meta) and
+    if (((spec and ('_pixel_scale_factor' in spec.meta))) and
             (((u.sr in orig_bases) and (u.sr not in targ_bases)) or
              ((u.sr not in orig_bases) and (u.sr in targ_bases)))):
         # Data item in data collection does not update from conversion/translation.
@@ -351,15 +379,72 @@ def flux_conversion(spec, values, original_units, target_units):
             eqv_in = [min(fac), max(fac)]
         else:
             eqv_in = fac
-
         eqv += _eqv_pixar_sr(np.array(eqv_in))
+
+        # indirect units cannot be directly converted, and require
+        # additional conversions to reach the desired end unit.
+        # if spec_unit in [original_units, target_units]:
+        result = _indirect_conversion(
+                    values=values, orig_units=orig_units, targ_units=targ_units,
+                    eqv=eqv, spec_unit=spec_unit
+                )
+
+        if result and len(result) == 2:
+            values, updated_units = result
+            orig_units = updated_units
+        else:
+            values, updated_units, selected_unit_updated = result
+            if selected_unit_updated == 'targ':
+                targ_units = updated_units
+            elif selected_unit_updated == 'orig':
+                orig_units = updated_units
+
+    elif image_data:
+        values, orig_units = _indirect_conversion(
+            values=values, orig_units=orig_units, targ_units=targ_units,
+            eqv=eqv, image_data=image_data
+            )
 
     return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 
 
-def _convert_surface_brightness_units(data, from_unit, to_unit):
-    quantity = data * u.Unit(from_unit)
-    return quantity.to_value(u.Unit(to_unit))
+def _indirect_conversion(values, orig_units, targ_units, eqv,
+                         spec_unit=None, image_data=None):
+    # indirect units cannot be directly converted, and require
+    # additional conversions to reach the desired end unit.
+    if (spec_unit and spec_unit in [orig_units, targ_units]
+            and not check_if_unit_is_per_solid_angle(spec_unit)):
+        if u.Unit(targ_units) in indirect_units():
+            temp_targ = targ_units * u.sr
+            values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
+            orig_units = u.Unit(temp_targ)
+            return values, orig_units, 'orig'
+        elif u.Unit(orig_units) in indirect_units():
+            temp_orig = orig_units * u.sr
+            values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
+            targ_units = u.Unit(temp_orig)
+            return values, targ_units, 'targ'
+
+        return values, targ_units, 'targ'
+
+    elif image_data or (spec_unit and check_if_unit_is_per_solid_angle(spec_unit)):
+        if not check_if_unit_is_per_solid_angle(targ_units):
+            targ_units /= u.sr
+        if ((u.Unit(targ_units) in indirect_units()) or
+           (u.Unit(orig_units) in indirect_units())):
+            # SB -> Flux -> Flux -> SB
+            temp_orig = orig_units * u.sr
+            temp_targ = targ_units * u.sr
+
+            # Convert Surface Brightness to Flux, then Flux to Flux
+            values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
+            values = (values * temp_orig).to_value(temp_targ, equivalencies=eqv)
+            # Lastly a Flux to Surface Brightness translation in the return statement
+            orig_units = temp_targ
+
+            return values, orig_units
+
+        return values, orig_units
 
 
 def _eqv_pixar_sr(pixar_sr):
@@ -369,7 +454,12 @@ def _eqv_pixar_sr(pixar_sr):
     def iconverter_flux(x):  # Flux -> Surface Brightness
         return x / pixar_sr
 
-    return [(u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux)]
+    return [
+        (u.MJy / u.sr, u.MJy, converter_flux, iconverter_flux),
+        (u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr), u.erg / (u.s * u.cm**2 * u.Angstrom), converter_flux, iconverter_flux),  # noqa
+        (u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.cm**2), converter_flux, iconverter_flux),  # noqa
+        (u.ph / (u.Hz * u.s * u.cm**2  * u.sr), u.ph / (u.Hz * u.s * u.cm**2), converter_flux, iconverter_flux)  # noqa
+    ]
 
 
 def spectral_axis_conversion(values, original_units, target_units):
