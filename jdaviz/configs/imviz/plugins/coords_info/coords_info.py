@@ -493,7 +493,9 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     image, arr, x, y, viewer
                 )
 
-                if hasattr(image, "meta") and "Plugin" in image.meta and image.meta["Plugin"] == "Moment Maps":  # noqa: E501
+                # We don't want to convert for things like moment maps
+                if str(u.Unit(unit).physical_type) not in ("spectral flux density",
+                                                           "surface brightness"):
                     skip_spectral_density_eqv = True
 
                 if self.image_unit is not None and not skip_spectral_density_eqv:
