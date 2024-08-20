@@ -486,12 +486,17 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_value = dq_data[int(round(y)), int(round(x))]
                 unit = image.get_component(attribute).units
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
+                skip_spectral_density_eqv = False
                 arr = image.get_component(attribute).data
                 unit = image.get_component(attribute).units
                 value = self._get_cube_value(
                     image, arr, x, y, viewer
                 )
-                if self.image_unit is not None:
+
+                if hasattr(image, "meta") and "Plugin" in image.meta and image.meta["Plugin"] == "Moment Maps":  # noqa: E501
+                    skip_spectral_density_eqv = True
+
+                if self.image_unit is not None and not skip_spectral_density_eqv:
                     if 'PIXAR_SR' in self.app.data_collection[0].meta:
                         # Need current slice value and associated unit to use to compute
                         # spectral density equivalencies that enable Flux to Flux conversions.
