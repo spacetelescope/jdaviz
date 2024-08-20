@@ -145,10 +145,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config != "cubeviz":
             return
         # self.dataset might not exist when app is setting itself up.
-        if hasattr(self, "dataset") and self.dataset.selected_dc_item.ndim > 2:
-            self.is_cube = True
-        else:
-            self.is_cube = False
+        if hasattr(self, "dataset"):
+            if isinstance(self.dataset.selected_dc_item, list):
+                datasets = self.dataset.selected_dc_item
+            else:
+                datasets = [self.dataset.selected_dc_item]
+            for dataset in datasets:
+                if dataset.ndim > 2:
+                    self.is_cube = True
+                    break
+                else:
+                    self.is_cube = False
 
     def _on_display_units_changed(self, event={}):
 
@@ -543,6 +550,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if self.config == 'cubeviz':
             display_unit = u.Unit(self.display_flux_or_sb_unit)
+
+        print(img_unit, display_unit)
 
         if background is not None and background not in self.background.choices:  # pragma: no cover
             raise ValueError(f"background must be one of {self.background.choices}")
@@ -1060,6 +1069,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 option.setdefault('pixel_area', defaults.get('pixel_area', 0))
             if self.flux_scaling_multi_auto:
                 option.setdefault('flux_scaling', defaults.get('flux_scaling', 0))
+
             try:
                 self.calculate_photometry(add_to_table=add_to_table,
                                           update_plots=this_update_plots,
