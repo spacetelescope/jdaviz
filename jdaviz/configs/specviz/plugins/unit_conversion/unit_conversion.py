@@ -276,7 +276,7 @@ class UnitConversion(PluginTemplateMixin):
         # Always send a surface brightness unit to contours
         if self.flux_or_sb_selected == 'Flux':
             yunit = self._append_angle_correctly(yunit, self.angle_unit.selected)
-        self._find_and_convert_contour_units(yunit)
+        self._find_and_convert_contour_units(yunit=yunit)
 
         # for displaying message that PIXAR_SR = 1 if it is not found in the FITS header
         if (
@@ -285,18 +285,23 @@ class UnitConversion(PluginTemplateMixin):
         ):
             self.pixar_sr_exists = False
 
-    def _find_and_convert_contour_units(self, yunit=None):
+    def _find_and_convert_contour_units(self, msg=None, yunit=None):
         if not yunit:
             yunit = self.sb_unit_selected
+
+        if msg is not None:
+            viewers = [self.app.get_viewer(msg.viewer_reference)]
+        else:
+            viewers = [viewer._obj for _, viewer in self._app._jdaviz_helper.viewers.items()]
 
         if self.angle_unit_selected is None or self.angle_unit_selected == '':
             # Can't do this before the plugin is initialized completely
             return
 
-        for name, viewer in self._app._jdaviz_helper.viewers.items():
-            if not isinstance(viewer._obj, BqplotImageView):
+        for viewer in viewers:
+            if not isinstance(viewer, BqplotImageView):
                 continue
-            for layer in viewer._obj.state.layers:
+            for layer in viewer.state.layers:
                 # DQ layer doesn't play nicely with this attribute
                 if "DQ" in layer.layer.label:
                     continue
