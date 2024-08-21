@@ -16,7 +16,6 @@ data_list = []
 load_data_kwargs = {}
 jdaviz_verbosity = 'error'
 jdaviz_history_verbosity = 'info'
-theme = 'light'
 
 
 @solara.lab.on_kernel_start
@@ -35,9 +34,6 @@ def on_kernel_start():
 
 @solara.component
 def Page():
-    if theme == 'dark':
-        solara.lab.theme.dark = True
-
     solara.Title("Jdaviz")
 
     if config is None:

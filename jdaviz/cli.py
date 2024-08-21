@@ -17,7 +17,7 @@ DEFAULT_HISTORY_VERBOSITY = 'info'
 
 
 def main(filepaths=None, layout='default', instrument=None, browser='default',
-         theme='light', verbosity=DEFAULT_VERBOSITY, history_verbosity=DEFAULT_HISTORY_VERBOSITY,
+         theme='auto', verbosity=DEFAULT_VERBOSITY, history_verbosity=DEFAULT_HISTORY_VERBOSITY,
          hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
@@ -32,7 +32,7 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         Specifies which instrument parser to use for Mosviz, if applicable.
     browser : str, optional
         Path to browser executable.
-    theme : {'light', 'dark'}
+    theme : {'auto', 'light', 'dark'}
         Theme to use for application.
     verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the popup messages in the application.
@@ -72,7 +72,9 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         args += ['--auto-restart']
     else:
         args += ['--production']
-    cli(['run', 'jdaviz.solara', '--theme-loader', 'plain'] + args)
+    cli(['run', 'jdaviz.solara',
+         '--theme-loader', 'plain',
+         '--theme-variant', theme] + args)
 
 
 def _main(config=None):
