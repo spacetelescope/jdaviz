@@ -24,7 +24,6 @@ from astropy.io import fits, registry as io_registry
 from astropy.nddata import NDDataArray, CCDData, StdDevUncertainty
 from regions.core.core import Region
 from specutils import Spectrum1D, SpectralRegion
-from specutils.io.registers import _astropy_has_priorities
 
 from jdaviz.app import Application
 from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
@@ -1071,9 +1070,7 @@ def jdaviz_cube_fitswriter(spectrum, file_name, **kwargs):
     hdulist.writeto(file_name, **kwargs)
 
 
-if _astropy_has_priorities():
-    kwargs = {"priority": 0}
-else:  # pragma: no cover
-    kwargs = {}
 io_registry.register_writer(
-    "jdaviz-cube", Spectrum1D, jdaviz_cube_fitswriter, force=False, **kwargs)
+    "jdaviz-cube", Spectrum1D, jdaviz_cube_fitswriter,
+    force=False, priority=0
+)

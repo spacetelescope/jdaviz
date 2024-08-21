@@ -1778,7 +1778,7 @@ class Application(VuetifyTemplate, HubListener):
         table_viewers = (MosvizTableViewer, )
         image_viewers = (ImvizImageView, CubevizImageView, RampvizImageView)
         flux_viewers = (CubevizImageView, RampvizImageView)
-        profile_viewers = (RampvizProfileView, )
+        ramp_viewers = (RampvizProfileView, )
 
         for vid in self._viewer_store:
             viewer_item = self._viewer_item_by_id(vid)
@@ -1802,7 +1802,7 @@ class Application(VuetifyTemplate, HubListener):
                 if isinstance(self._viewer_store[vid], flux_viewers) and is_returnable:
                     return viewer_item['reference']
             elif require_profile_viewer:
-                if isinstance(self._viewer_store[vid], profile_viewers) and is_returnable:
+                if isinstance(self._viewer_store[vid], ramp_viewers) and is_returnable:
                     return viewer_item['reference']
             else:
                 if is_returnable:

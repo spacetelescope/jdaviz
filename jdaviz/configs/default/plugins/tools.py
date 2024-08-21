@@ -44,4 +44,4 @@ class ProfileFromCube(SinglePixelRegion):
         super().deactivate()
 
     def on_mouse_move(self, data):
-        raise NotImplementedError("must be implemented by sublcasses")
+        raise NotImplementedError("must be implemented by subclasses")

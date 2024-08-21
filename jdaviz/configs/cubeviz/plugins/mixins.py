@@ -1,6 +1,5 @@
 import numpy as np
 import astropy.units as u
-from astropy.nddata import NDDataArray
 from functools import cached_property
 
 from jdaviz.core.marks import SliceIndicatorMarks
@@ -15,7 +14,7 @@ class WithSliceIndicator:
 
     @property
     def slice_display_unit_name(self):
-        return 'spectral' if self.default_class != NDDataArray else 'temporal'
+        return 'spectral' if self.jdaviz_app.config == 'cubeviz' else 'temporal'
 
     @cached_property
     def slice_indicator(self):
@@ -78,7 +77,7 @@ class WithSliceSelection:
 
     @property
     def slice_display_unit_name(self):
-        return 'spectral' if self.default_class != NDDataArray else 'temporal'
+        return 'spectral' if self.jdaviz_app.config == 'cubeviz' else 'temporal'
 
     @property
     def slice_values(self):
