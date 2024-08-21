@@ -302,8 +302,11 @@ class UnitConversion(PluginTemplateMixin):
             if not isinstance(viewer, BqplotImageView):
                 continue
             for layer in viewer.state.layers:
+
                 # DQ layer doesn't play nicely with this attribute
                 if "DQ" in layer.layer.label:
+                    continue
+                elif u.Unit(layer.layer.get_component("flux").units).physical_type != 'surface brightness':  # noqa
                     continue
                 if hasattr(layer, 'attribute_display_unit'):
                     layer.attribute_display_unit = yunit
