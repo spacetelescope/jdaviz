@@ -185,6 +185,7 @@
           <plugin-action-button
             :spinner="apply_RGB_presets_spinner"
             :results_isolated_to_plugin="false"
+            :class="api_hints_enabled ? 'api-hint' : null"
             @click="apply_RGB_presets"
           >
             {{ api_hints_enabled ?

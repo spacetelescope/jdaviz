@@ -3,7 +3,7 @@
     <plugin-input-header
       v-if="label && !label_inline"
       :label="label"
-      :api_hint="api_hint + value"
+      :api_hint="api_hint + '\''+value+'\''"
       :api_hints_enabled="api_hints_enabled"
     ></plugin-input-header>
     <v-menu>

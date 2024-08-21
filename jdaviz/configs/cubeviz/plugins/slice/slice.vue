@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     :config="config"
-    plugin_key="Slice"
+    :plugin_key="plugin_key || 'Slice'"
     :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Select slice of the cube to show in the image viewers.  The slice can also be changed interactively in the spectrum viewer by activating the slice tool.'"
     :irrelevant_msg="irrelevant_msg"
@@ -60,8 +60,8 @@
         v-model.number="value"
         @focus="(e) => value_editing = true"
         @blur="(e) => value_editing = false"
-        class="mt-0 pt-0"
         :label="api_hints_enabled ? 'plg.value =' : value_label"
+        :class="api_hints_enabled ? 'api-hint' : null"
         :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
         :suffix="value_unit"
       ></v-text-field>

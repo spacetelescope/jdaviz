@@ -68,7 +68,7 @@
             <v-radio
               v-for="item in align_by_items"
               :key="item.label"
-              :label="item.label == 'WCS' ? 'WCS (Sky)' : item.label"
+              :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : item.label"
               :value="item.label"
             ></v-radio>
           </v-radio-group>
