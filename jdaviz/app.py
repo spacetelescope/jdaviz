@@ -52,7 +52,6 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label, flux_conversion,
                           spectral_axis_conversion)
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
@@ -1274,37 +1273,16 @@ class Application(VuetifyTemplate, HubListener):
                 return self._get_multi_mask_subset_definition(subset_state)
 
     def _get_display_unit(self, axis):
-        if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
-            # fallback on native units (unit conversion is not enabled)
-            if axis == 'spectral':
-                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
-                return sv.data()[0].spectral_axis.unit
-            elif axis in ('flux', 'sb', 'spectral_y'):
-                sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
-                sv_y_unit = sv.data()[0].flux.unit
-                if axis == 'spectral_y':
-                    return sv_y_unit
-                elif axis == 'flux':
-                    if check_if_unit_is_per_solid_angle(sv_y_unit):
-                        # TODO: this will need updating once solid-angle unit can be non-steradian
-                        return sv_y_unit * u.sr
-                    return sv_y_unit
-                else:
-                    # surface_brightness
-                    if check_if_unit_is_per_solid_angle(sv_y_unit):
-                        return sv_y_unit
-                    return sv_y_unit / u.sr
-            elif axis == 'temporal':
-                # No unit for ramp's time (group/resultant) axis:
-                return None
-            else:
-                raise ValueError(f"could not find units for axis='{axis}'")
-        uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
+        if self._jdaviz_helper is None:
+            return ''
+        uc = self._jdaviz_helper.plugins.get('Unit Conversion', None)
+        if uc is None:
+            raise ValueError("unit conversion plugin is required to be loaded for display units")
         if axis == 'spectral_y':
             # translate options from uc.flux_or_sb to the prefix used in uc.??_unit_selected
-            axis = {'Surface Brightness': 'sb', 'Flux': 'flux'}[uc.flux_or_sb_selected]
+            axis = {'Surface Brightness': 'sb', 'Flux': 'flux'}[uc._obj.flux_or_sb_selected]
         try:
-            return getattr(uc, f'{axis}_unit_selected')
+            return getattr(uc._obj, f'{axis}_unit_selected')
         except AttributeError:
             raise ValueError(f"could not find display unit for axis='{axis}'")
 
