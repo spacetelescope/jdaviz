@@ -394,6 +394,7 @@ class PluginTemplateMixin(TemplateMixin):
     _plugin_name = None  # noqa overwritten by the registry - won't be populated by plugins instantiated directly
     disabled_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will show this message in place of plugin content
     irrelevant_msg = Unicode("").tag(sync=True)  # noqa if non-empty, will exclude from the tray, and show this message in place of any content in other instances
+    plugin_key = Unicode("").tag(sync=True) # set to non-empty to override value in vue file (when supported by vue file)
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     docs_description = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)

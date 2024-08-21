@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     :config="config"
-    plugin_key="Slice"
+    :plugin_key="plugin_key || 'Slice'"
     :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Select slice of the cube to show in the image viewers.  The slice can also be changed interactively in the spectrum viewer by activating the slice tool.'"
     :irrelevant_msg="irrelevant_msg"
