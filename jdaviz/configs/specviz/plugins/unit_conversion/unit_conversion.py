@@ -292,7 +292,7 @@ class UnitConversion(PluginTemplateMixin):
         if msg is not None:
             viewers = [self.app.get_viewer(msg.viewer_reference)]
         else:
-            viewers = [viewer._obj for _, viewer in self._app._jdaviz_helper.viewers.items()]
+            viewers = self._app._viewer_store.values()
 
         if self.angle_unit_selected is None or self.angle_unit_selected == '':
             # Can't do this before the plugin is initialized completely
