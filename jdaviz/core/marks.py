@@ -158,13 +158,11 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
                          **kwargs)
 
     def _update_reference_data(self, reference_data):
-        if reference_data is None:
+        # don't update x units before initialization or in rampviz
+        if reference_data is None or self.viewer.jdaviz_app.config == 'rampviz':
             return
-        try:
-            self._update_unit(reference_data.get_object(cls=Spectrum1D).spectral_axis.unit)
-        except (TypeError, ValueError):
-            # don't update x units for rampviz, which doesn't convert to Spectrum1D
-            pass
+
+        self._update_unit(reference_data.get_object(cls=Spectrum1D).spectral_axis.unit)
 
     def _update_unit(self, new_unit):
         # the x-units may have changed.  We want to convert the internal self.x
