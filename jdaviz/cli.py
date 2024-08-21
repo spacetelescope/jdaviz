@@ -72,7 +72,7 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         args += ['--auto-restart']
     else:
         args += ['--production']
-    cli(['run', 'jdaviz.solara'] + args)
+    cli(['run', 'jdaviz.solara', '--theme-loader', 'plain'] + args)
 
 
 def _main(config=None):

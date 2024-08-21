@@ -8,6 +8,3 @@
     height: 100vh;
     max-height: 100vh;
 }
-.v-application--wrap > div:nth-child(2) > div:nth-child(2){
-    display: none !important;
-}
