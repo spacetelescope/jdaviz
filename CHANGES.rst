@@ -113,6 +113,8 @@ Bug Fixes
 
 - Aperture Photometry plugin no longer allows negative counts conversion factor. [#3154]
 
+- Batch mode aperture photometry now works in Cubeviz. [#3163]
+
 Cubeviz
 ^^^^^^^
 

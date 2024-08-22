@@ -4,6 +4,7 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
+from glue.core.roi import CircularROI
 from numpy.testing import assert_allclose, assert_array_equal
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
@@ -489,3 +490,29 @@ def test_curve_of_growth(with_unit):
     with pytest.raises(TypeError, match='Unsupported aperture'):
         _curve_of_growth(data, cen, EllipticalAnnulus(cen, 3, 8, 5), 100,
                          pixarea_fac=pixarea_fac)
+
+
+def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube):
+    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    phot_plugin = cubeviz_helper.plugins['Aperture Photometry']._obj
+    uc_plugin = cubeviz_helper.plugins['Unit Conversion']
+
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    fv.apply_roi(CircularROI(xc=5, yc=5, radius=2))
+
+    subset_plugin.subset_selected = 'Create New'
+    fv.apply_roi(CircularROI(xc=3, yc=3, radius=2))
+
+    phot_plugin.dataset_selected = 'test[FLUX]'
+    phot_plugin.multiselect = True
+    phot_plugin.aperture.selected = ['Subset 1', 'Subset 2']
+
+    print(uc_plugin.flux_unit)
+    uc_plugin.flux_unit = 'MJy'
+    print(uc_plugin.flux_unit)
+
+    phot_plugin.calculate_batch_photometry()
+
+    print()
+    raise ValueError
