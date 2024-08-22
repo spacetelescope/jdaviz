@@ -3,11 +3,6 @@
 import inspect
 import os
 import pathlib
-import sys
-import tempfile
-
-from voila.app import Voila
-from voila.configuration import VoilaConfiguration
 
 from jdaviz import __version__
 from jdaviz.app import _verbosity_levels, ALL_JDAVIZ_CONFIGS
@@ -22,7 +17,7 @@ DEFAULT_HISTORY_VERBOSITY = 'info'
 
 
 def main(filepaths=None, layout='default', instrument=None, browser='default',
-         theme='light', verbosity=DEFAULT_VERBOSITY, history_verbosity=DEFAULT_HISTORY_VERBOSITY,
+         theme='auto', verbosity=DEFAULT_VERBOSITY, history_verbosity=DEFAULT_HISTORY_VERBOSITY,
          hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
@@ -37,8 +32,8 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         Specifies which instrument parser to use for Mosviz, if applicable.
     browser : str, optional
         Path to browser executable.
-    theme : {'light', 'dark'}
-        Theme to use for Voila app or Jupyter Lab.
+    theme : {'auto', 'light', 'dark'}
+        Theme to use for application.
     verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the popup messages in the application.
     history_verbosity : {'debug', 'info', 'warning', 'error'}
@@ -46,13 +41,6 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     hotreload : bool
         Whether to enable hot-reloading of the UI (for development)
     """
-    import logging  # Local import to avoid possibly messing with JWST pipeline logger.
-
-    # Tornado Webserver py3.8 compatibility hotfix for windows
-    if sys.platform == 'win32':
-        import asyncio
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
     if filepaths:
         # Convert paths to posix string; windows paths are not JSON compliant
         file_list = [pathlib.Path(f).absolute().as_posix() for f in filepaths]
@@ -63,74 +51,30 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     else:
         file_list = []
 
-    if layout == '':
-        if len(file_list) <= 1:
-            notebook = "jdaviz_cli_launcher.ipynb"
-        else:
-            raise ValueError("'layout' argument is required when specifying multiple files")
-    else:
-        notebook = "jdaviz_cli.ipynb"
-
-    with open(JDAVIZ_DIR / notebook) as f:
-        notebook_template = f.read()
-
-    start_dir = os.path.abspath('.')
+    if layout == '' and len(file_list) > 1:
+        raise ValueError("'layout' argument is required when specifying multiple files")
 
     # Keep track of start directory in environment variable so that it can be
     # easily accessed e.g. in the file load dialog.
-    os.environ['JDAVIZ_START_DIR'] = start_dir
+    os.environ['JDAVIZ_START_DIR'] = os.path.abspath('.')
 
-    nbdir = tempfile.mkdtemp()
-
+    from solara.__main__ import cli
+    from jdaviz import solara
+    solara.config = layout.capitalize()
+    solara.data_list = file_list
+    if layout == 'mosviz':
+        solara.load_data_kwargs = {'instrument': instrument}
+    solara.theme = theme
+    solara.jdaviz_verbosity = verbosity
+    solara.jdaviz_history_verbosity = history_verbosity
+    args = []
     if hotreload:
-        notebook_template = notebook_template.replace("# PREFIX", "from jdaviz import enable_hot_reloading; enable_hot_reloading()")  # noqa: E501
-
-    with open(os.path.join(nbdir, 'notebook.ipynb'), 'w') as nbf:
-        nbf.write(
-            notebook_template
-            .replace('CONFIG', layout.capitalize())
-            .replace('DATA_LIST', str(file_list))
-            .replace('JDAVIZ_VERBOSITY', verbosity)
-            .replace('JDAVIZ_HISTORY_VERBOSITY', history_verbosity)
-            # Mosviz specific changes
-            .replace('load_data(data', 'load_data(directory=data' if layout == 'mosviz' else 'load_data(data')  # noqa: E501
-            .replace(') #ADDITIONAL_LOAD_DATA_ARGS', f', instrument=\'{instrument}\')' if layout == 'mosviz' else ')')  # noqa: E501
-            .strip()
-        )
-
-    os.chdir(nbdir)
-
-    try:
-        logging.getLogger('tornado.access').disabled = True
-        Voila.notebook_path = 'notebook.ipynb'
-        VoilaConfiguration.template = 'jdaviz-default'
-        VoilaConfiguration.enable_nbextensions = True
-        VoilaConfiguration.file_whitelist = ['.*']
-        VoilaConfiguration.theme = theme
-        if browser != 'default':
-            Voila.browser = browser
-
-        voila = Voila.instance()
-        # monkey patch listen, so we can get a handle on the kernel_manager
-        # after it is created
-        previous_listen = voila.listen
-
-        def listen(*args, **kwargs):
-            # monkey patch remove_kernel, so we can stop the event loop
-            # when a kernel is removed (which means the browser page was closed)
-            previous_remove_kernel = voila.kernel_manager.remove_kernel
-
-            def remove_kernel(kernel_id):
-                previous_remove_kernel(kernel_id)
-                voila.ioloop.stop()
-
-            voila.kernel_manager.remove_kernel = remove_kernel
-            return previous_listen(*args, **kwargs)
-
-        voila.listen = listen
-        sys.exit(voila.launch_instance(argv=[]))
-    finally:
-        os.chdir(start_dir)
+        args += ['--auto-restart']
+    else:
+        args += ['--production']
+    cli(['run', 'jdaviz.solara',
+         '--theme-loader', 'plain',
+         '--theme-variant', theme] + args)
 
 
 def _main(config=None):
@@ -157,13 +101,9 @@ def _main(config=None):
                         help='Verbosity of the application for popup snackbars.')
     parser.add_argument('--history-verbosity', choices=_verbosity_levels, default='info',
                         help='Verbosity of the logger history.')
-    if sys.version_info >= (3, 9):
-        # Also enables --no-hotreload
-        parser.add_argument('--hotreload', action=argparse.BooleanOptionalAction, default=False,
-                            help='Whether to enable hot-reloading of the UI (for development).')
-    else:
-        parser.add_argument('--hotreload', action='store_true', default=False,
-                            help='Enable hot-reloading of the UI (for development).')
+    # Also enables --no-hotreload
+    parser.add_argument('--hotreload', action=argparse.BooleanOptionalAction, default=False,
+                        help='Whether to enable hot-reloading of the UI (for development).')
     parser.add_argument('--version', action='version', version=f'%(prog)s {__version__}')
     args = parser.parse_args()
 

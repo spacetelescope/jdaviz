@@ -11,13 +11,13 @@ under the source checkout's root directory, you will need to rebuild
 the package even in editable install mode. Otherwise, this should not
 affect your development experience.
 
-WSL2 and voila
---------------
+WSL2 and Solara
+---------------
 
-``voila`` is unable to display when WSL2 cannot start up the
+``solara`` is unable to display when WSL2 cannot start up the
 Windows-side browser executable. Unfortunately, unlike Jupyter
-notebook, ``voila`` does not have a ``--no-browser`` option
+notebook, ``solara`` does not have a ``--no-browser`` option
 with a tokenized URL you can copy-and-paste manually on the
-Windows side (see https://github.com/voila-dashboards/voila/issues/773).
+Windows side.
 Therefore, you might need to install Jdaviz natively on Windows
 to test its standalone application functionality.

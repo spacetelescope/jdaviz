@@ -71,7 +71,6 @@ instead of ``pip``:
     conda install bottleneck
     conda install -c conda-forge notebook
     conda install -c conda-forge jupyterlab
-    conda install -c conda-forge voila
 
 You might also want to enable the ``ipywidgets`` notebook extension, as follows:
 

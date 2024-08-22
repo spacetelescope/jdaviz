@@ -51,10 +51,10 @@ jobs:
     - name: Install pytest
       run: pip install pytest-playwright
 
-    - name: Wait for Voila to get online
+    - name: Wait for Solara to get online
       uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
       with:
-        resource: tcp:8866
+        resource: tcp:8765
         timeout: 60000
 
     - name: Test standalone
@@ -174,10 +174,10 @@ jobs:
     - name: Install pytest
       run: pip install pytest-playwright
 
-    - name: Wait for Voila to get online
+    - name: Wait for Solara to get online
       uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
       with:
-        resource: tcp:8866
+        resource: tcp:8765
         timeout: 60000
 
     - name: Test standalone
