@@ -215,6 +215,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
 
         data = self.dataset.selected_dc_item
+        if isinstance(data, list):
+            data = data[0]
         comp = data.get_component(data.main_components[0])
         if comp.units:
             # if data is something-per-solid-angle, its a SB unit and we should
@@ -550,8 +552,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         if self.config == 'cubeviz':
             display_unit = u.Unit(self.display_flux_or_sb_unit)
-
-        print(img_unit, display_unit)
 
         if background is not None and background not in self.background.choices:  # pragma: no cover
             raise ValueError(f"background must be one of {self.background.choices}")
