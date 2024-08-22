@@ -1,8 +1,8 @@
 settings:
-  configuration: cubeviz
+  configuration: rampviz
   data:
     auto_populate: true
-    parser: cubeviz-data-parser
+    parser: rampviz-data-parser
   visible:
     menu_bar: false
     toolbar: true
@@ -22,17 +22,9 @@ tray:
   - g-plot-options
   - g-data-quality
   - g-subset-plugin
+  - ramp-extraction
   - g-markers
   - cube-slice
-  - g-unit-conversion
-  - cubeviz-spectral-extraction
-  - g-gaussian-smooth
-  - g-collapse
-  - g-model-fitting
-  - g-line-list
-  - specviz-line-analysis
-  - cubeviz-moment-maps
-  - imviz-aper-phot-simple
   - export
   - about
 viewer_area:
@@ -41,13 +33,13 @@ viewer_area:
       - container: row
         viewers:
           - name: Flux
-            plot: cubeviz-image-viewer
-            reference: flux-viewer
-          - name: Uncertainty
-            plot: cubeviz-image-viewer
-            reference: uncert-viewer
+            plot: rampviz-image-viewer
+            reference: group-viewer
+          - name: Difference
+            plot: rampviz-image-viewer
+            reference: diff-viewer
       - container: row
         viewers:
-          - name: Spectrum
-            plot: cubeviz-profile-viewer
-            reference: spectrum-viewer
+          - name: Integration profile
+            plot: rampviz-profile-viewer
+            reference: integration-viewer

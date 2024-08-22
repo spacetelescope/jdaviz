@@ -99,10 +99,14 @@ class UnitConverterWithSpectral:
         # should return the converted values. Note that original_units
         # gives the units of the values array, which might not be the same
         # as the original native units of the component in the data.
-        if cid.label == "flux":
+
+        if cid.label == 'Pixel Axis 0 [z]' and target_units == '':
+            # handle ramps loaded into Rampviz by avoiding conversion
+            # of the groups axis:
+            return values
+        elif cid.label == "flux":
             try:
                 spec = data.get_object(cls=Spectrum1D)
-
             except RuntimeError:
                 data = data.get_object(cls=NDDataArray)
                 spec = Spectrum1D(flux=data.data * u.Unit(original_units))
@@ -1290,6 +1294,9 @@ class Application(VuetifyTemplate, HubListener):
                     if check_if_unit_is_per_solid_angle(sv_y_unit):
                         return sv_y_unit
                     return sv_y_unit / u.sr
+            elif axis == 'temporal':
+                # No unit for ramp's time (group/resultant) axis:
+                return None
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
         uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
@@ -1747,7 +1754,8 @@ class Application(VuetifyTemplate, HubListener):
             require_spectrum_2d_viewer=False,
             require_table_viewer=False,
             require_flux_viewer=False,
-            require_image_viewer=False
+            require_image_viewer=False,
+            require_profile_viewer=False,
     ):
         """
         Return the viewer reference name of the first available viewer.
@@ -1761,12 +1769,16 @@ class Application(VuetifyTemplate, HubListener):
         from jdaviz.configs.mosviz.plugins.viewers import (
             MosvizTableViewer, MosvizProfile2DView
         )
+        from jdaviz.configs.rampviz.plugins.viewers import (
+            RampvizImageView, RampvizProfileView
+        )
 
         spectral_viewers = (SpecvizProfileView, CubevizProfileView)
         spectral_2d_viewers = (MosvizProfile2DView, )
         table_viewers = (MosvizTableViewer, )
-        image_viewers = (ImvizImageView, CubevizImageView)
-        flux_viewers = (CubevizImageView, )
+        image_viewers = (ImvizImageView, CubevizImageView, RampvizImageView)
+        flux_viewers = (CubevizImageView, RampvizImageView)
+        ramp_viewers = (RampvizProfileView, )
 
         for vid in self._viewer_store:
             viewer_item = self._viewer_item_by_id(vid)
@@ -1788,6 +1800,9 @@ class Application(VuetifyTemplate, HubListener):
                     return viewer_item['reference']
             elif require_flux_viewer:
                 if isinstance(self._viewer_store[vid], flux_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_profile_viewer:
+                if isinstance(self._viewer_store[vid], ramp_viewers) and is_returnable:
                     return viewer_item['reference']
             else:
                 if is_returnable:

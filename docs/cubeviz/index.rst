@@ -11,7 +11,7 @@
     :alt: Introductory video tour of the Cubeviz configuration and its features
 
 Cubeviz is a visualization and analysis toolbox for data cubes from
-integral field units (IFUs). It is built as part of the
+integral field units (IFUs). It is built on top of the
 `glue visualization <https://glueviz.org>`_ tool. Cubeviz is designed to work
 with data cubes from the NIRSpec and MIRI instruments on JWST, and will work
 with IFU data cubes. It uses

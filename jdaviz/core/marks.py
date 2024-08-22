@@ -158,8 +158,10 @@ class BaseSpectrumVerticalLine(Lines, PluginMark, HubListener):
                          **kwargs)
 
     def _update_reference_data(self, reference_data):
-        if reference_data is None:
+        # don't update x units before initialization or in rampviz
+        if reference_data is None or self.viewer.jdaviz_app.config == 'rampviz':
             return
+
         self._update_unit(reference_data.get_object(cls=Spectrum1D).spectral_axis.unit)
 
     def _update_unit(self, new_unit):
@@ -538,6 +540,7 @@ class PluginLine(Lines, PluginMark, HubListener):
         self.viewer = viewer
         # color is same blue as import button
         kwargs.setdefault('colors', [accent_color])
+        self.label = kwargs.get('label')
         super().__init__(x=x, y=y, scales=kwargs.pop('scales', viewer.scales), **kwargs)
 
 

@@ -164,7 +164,13 @@ class HomeZoom(HomeTool, _BaseZoomHistory):
 
     def activate(self):
         self.save_prev_zoom()
-        super().activate()
+
+        # typical case:
+        if not hasattr(self.viewer, 'reset_limits'):
+            super().activate()
+        else:
+            # if the viewer has its own reset_limits method, use it:
+            self.viewer.reset_limits()
 
 
 @viewer_tool

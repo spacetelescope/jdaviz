@@ -14,7 +14,7 @@ class WithSliceIndicator:
 
     @property
     def slice_display_unit_name(self):
-        return 'spectral'
+        return 'spectral' if self.jdaviz_app.config == 'cubeviz' else 'temporal'
 
     @cached_property
     def slice_indicator(self):
@@ -77,7 +77,7 @@ class WithSliceSelection:
 
     @property
     def slice_display_unit_name(self):
-        return 'spectral'
+        return 'spectral' if self.jdaviz_app.config == 'cubeviz' else 'temporal'
 
     @property
     def slice_values(self):
@@ -91,6 +91,11 @@ class WithSliceSelection:
         converted_axis = np.array([])
         for layer in self.layers:
             world_comp_ids = layer.layer.data.world_component_ids
+
+            if not len(world_comp_ids):
+                # rampviz uses coordinate components:
+                world_comp_ids = layer.layer.data.coordinate_components
+
             if self.slice_index >= len(world_comp_ids):
                 # Case where 2D image is loaded in image viewer
                 continue

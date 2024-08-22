@@ -15,6 +15,7 @@ User Guide
   cubeviz/index
   specviz2d/index
   mosviz/index
+  rampviz/index
   plugin_api
   save_state
   display

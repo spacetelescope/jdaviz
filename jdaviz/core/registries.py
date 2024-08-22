@@ -93,7 +93,7 @@ class TrayRegistry(UniqueDictRegistry):
     """
 
     default_viewer_category = [
-        "spectrum", "table", "image", "spectrum-2d", "flux", "uncert"
+        "spectrum", "table", "image", "spectrum-2d", "flux", "uncert", "profile"
     ]
     default_viewer_reqs = {
         category: {
