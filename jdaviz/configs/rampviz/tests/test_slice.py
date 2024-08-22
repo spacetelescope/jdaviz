@@ -4,8 +4,16 @@ from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_slice(rampviz_helper, roman_level_1_ramp):
-    app = rampviz_helper.app
+def test_slice_roman(rampviz_helper, roman_level_1_ramp):
+    _slice(rampviz_helper, roman_level_1_ramp)
+
+
+def test_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
+    _slice(rampviz_helper, jwst_level_1b_ramp)
+
+
+def _slice(helper, ramp_cube):
+    app = helper.app
     sl = Slice(app=app)
 
     # No data yet
@@ -19,11 +27,11 @@ def test_slice(rampviz_helper, roman_level_1_ramp):
     sl.vue_play_start_stop()
     assert not sl.is_playing
 
-    rampviz_helper.load_data(roman_level_1_ramp, data_label='test')
+    helper.load_data(ramp_cube, data_label='test')
     app.add_data_to_viewer("group-viewer", "test[DATA]")
     app.add_data_to_viewer("diff-viewer", "test[DATA]")
     app.add_data_to_viewer("integration-viewer", "Ramp (mean)")
-    sv = rampviz_helper.viewers['integration-viewer']._obj
+    sv = helper.viewers['integration-viewer']._obj
 
     # sample ramp only has 10 groups
     assert len(sv.slice_values) == 10
@@ -32,14 +40,14 @@ def test_slice(rampviz_helper, roman_level_1_ramp):
     assert len(slice_values) == 10
 
     assert sl.value == slice_values[len(slice_values) // 2]
-    assert rampviz_helper.app.get_viewer("group-viewer").slice == len(slice_values) // 2
-    assert rampviz_helper.app.get_viewer("group-viewer").state.slices[-1] == 5
-    assert rampviz_helper.app.get_viewer("diff-viewer").state.slices[-1] == 5
-    rampviz_helper.select_group(slice_values[0])
-    assert rampviz_helper.app.get_viewer("group-viewer").slice == 0
+    assert helper.app.get_viewer("group-viewer").slice == len(slice_values) // 2
+    assert helper.app.get_viewer("group-viewer").state.slices[-1] == 5
+    assert helper.app.get_viewer("diff-viewer").state.slices[-1] == 5
+    helper.select_group(slice_values[0])
+    assert helper.app.get_viewer("group-viewer").slice == 0
     assert sl.value == slice_values[0]
 
-    rampviz_helper.select_group(slice_values[1])
+    helper.select_group(slice_values[1])
     assert sl.value == slice_values[1]
 
     # Retrieve updated slice_values
@@ -69,12 +77,20 @@ def test_slice(rampviz_helper, roman_level_1_ramp):
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_indicator_settings(rampviz_helper, roman_level_1_ramp):
-    rampviz_helper.load_data(roman_level_1_ramp, data_label='test')
-    app = rampviz_helper.app
+def test_indicator_settings_roman(rampviz_helper, roman_level_1_ramp):
+    _indicator_settings(rampviz_helper, roman_level_1_ramp)
+
+
+def test_indicator_settings_jwst(rampviz_helper, jwst_level_1b_ramp):
+    _indicator_settings(rampviz_helper, jwst_level_1b_ramp)
+
+
+def _indicator_settings(helper, ramp):
+    helper.load_data(ramp, data_label='test')
+    app = helper.app
     app.add_data_to_viewer("group-viewer", "test[DATA]")
     app.add_data_to_viewer("integration-viewer", "Ramp (mean)")
-    sl = rampviz_helper.plugins['Slice']._obj
+    sl = helper.plugins['Slice']._obj
     sv = app.get_viewer('integration-viewer')
     indicator = sv.slice_indicator
 
@@ -91,11 +107,19 @@ def test_indicator_settings(rampviz_helper, roman_level_1_ramp):
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_init_slice(rampviz_helper, roman_level_1_ramp):
-    rampviz_helper.load_data(roman_level_1_ramp, data_label='test')
+def test_init_slice_roman(rampviz_helper, roman_level_1_ramp):
+    _init_slice(rampviz_helper, roman_level_1_ramp)
 
-    fv = rampviz_helper.app.get_viewer('group-viewer')
-    sl = rampviz_helper.plugins['Slice']
+
+def test_init_slice_jwst(rampviz_helper, jwst_level_1b_ramp):
+    _init_slice(rampviz_helper, jwst_level_1b_ramp)
+
+
+def _init_slice(helper, ramp):
+    helper.load_data(ramp, data_label='test')
+
+    fv = helper.app.get_viewer('group-viewer')
+    sl = helper.plugins['Slice']
     slice_values = sl._obj.valid_selection_values_sorted
 
     assert sl.value == slice_values[len(slice_values)//2]
