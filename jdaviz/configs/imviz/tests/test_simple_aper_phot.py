@@ -512,4 +512,4 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
 
     phot_plugin.calculate_batch_photometry()
 
-    assert(len(phot_plugin.table)) == 2
+    assert len(phot_plugin.table) == 2
