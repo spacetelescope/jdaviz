@@ -492,8 +492,8 @@ def test_curve_of_growth(with_unit):
                          pixarea_fac=pixarea_fac)
 
 
-def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
+    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
     subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     phot_plugin = cubeviz_helper.plugins['Aperture Photometry']._obj
     uc_plugin = cubeviz_helper.plugins['Unit Conversion']
@@ -508,11 +508,8 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube):
     phot_plugin.multiselect = True
     phot_plugin.aperture.selected = ['Subset 1', 'Subset 2']
 
-    print(uc_plugin.flux_unit)
     uc_plugin.flux_unit = 'MJy'
-    print(uc_plugin.flux_unit)
 
     phot_plugin.calculate_batch_photometry()
 
-    print()
-    raise ValueError
+    assert(len(phot_plugin.table)) == 2
