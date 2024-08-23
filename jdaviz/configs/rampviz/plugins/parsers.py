@@ -245,7 +245,8 @@ def _parse_hdulist(
         flux_unit = u.DN
 
     # index the ramp array by the integration to load. returns all groups and pixels.
-    ramp_cube = hdu.data[integration]
+    # cast from uint16 to integers:
+    ramp_cube = hdu.data[integration].astype(int)
 
     metadata = standardize_metadata(hdu.header)
     if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
@@ -262,8 +263,6 @@ def _parse_hdulist(
 def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
                      group_viewer_reference_name, diff_viewer_reference_name,
                      meta=None):
-    ramp_cube = NDDataArray(_swap_axes(ramp_cube_data), unit=flux_unit, meta=meta)
-
     # last axis is the group axis, first two are spatial axes:
     diff_data = np.vstack([
         # begin with a group of zeros, so
@@ -272,6 +271,7 @@ def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
         np.diff(ramp_cube_data, axis=0)
     ])
 
+    ramp_cube = NDDataArray(_swap_axes(ramp_cube_data), unit=flux_unit, meta=meta)
     diff_cube = NDDataArray(_swap_axes(diff_data), unit=flux_unit, meta=meta)
 
     group_data_label = app.return_data_label(file_name, ext="DATA")
