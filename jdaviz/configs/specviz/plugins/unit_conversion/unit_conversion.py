@@ -56,16 +56,24 @@ class UnitConversion(PluginTemplateMixin):
     """
     template_file = __file__, "unit_conversion.vue"
 
+    has_spectral = Bool(False).tag(sync=True)
     spectral_unit_items = List().tag(sync=True)
     spectral_unit_selected = Unicode().tag(sync=True)
 
+    has_flux = Bool(False).tag(sync=True)
     flux_unit_items = List().tag(sync=True)
     flux_unit_selected = Unicode().tag(sync=True)
 
-    sb_unit_selected = Unicode().tag(sync=True)
-
+    has_angle = Bool(False).tag(sync=True)
     angle_unit_items = List().tag(sync=True)
     angle_unit_selected = Unicode().tag(sync=True)
+
+    has_sb = Bool(False).tag(sync=True)
+    sb_unit_selected = Unicode().tag(sync=True)
+
+    has_time = Bool(False).tag(sync=True)
+    time_unit_items = List().tag(sync=True)
+    time_unit_selected = Unicode().tag(sync=True)
 
     spectral_y_type_items = List().tag(sync=True)
     spectral_y_type_selected = Unicode().tag(sync=True)
@@ -97,30 +105,51 @@ class UnitConversion(PluginTemplateMixin):
         self.session.hub.subscribe(self, AddDataToViewerMessage,
                                    handler=self._find_and_convert_contour_units)
 
+        self.has_spectral = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
                                                        selected='spectral_unit_selected')
+
+        self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
+        self.flux_unit = UnitSelectPluginComponent(self,
+                                                   items='flux_unit_items',
+                                                   selected='flux_unit_selected')
+
+        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz')
+        self.angle_unit = UnitSelectPluginComponent(self,
+                                                    items='angle_unit_items',
+                                                    selected='angle_unit_selected')
+
+        self.has_sb = self.has_angle or self.config in ('imviz',)
+        # NOTE: always read_only, exposed through sb_unit property
+
+        self.has_time = False
+        self.time_unit = UnitSelectPluginComponent(self,
+                                                   items='time_unit_items',
+                                                   selected='time_unit_selected')
 
         self.spectral_y_type = SelectPluginComponent(self,
                                                      items='spectral_y_type_items',
                                                      selected='spectral_y_type_selected',
                                                      manual_options=['Surface Brightness', 'Flux'])
 
-        self.flux_unit = UnitSelectPluginComponent(self,
-                                                   items='flux_unit_items',
-                                                   selected='flux_unit_selected')
-
-        self.angle_unit = UnitSelectPluginComponent(self,
-                                                    items='angle_unit_items',
-                                                    selected='angle_unit_selected')
-
     @property
     def user_api(self):
-        if self.app.config == 'cubeviz':
-            expose = ('spectral_unit', 'spectral_y_type', 'flux_unit', 'angle_unit', 'sb_unit')
-        else:
-            expose = ('spectral_unit', 'flux_unit', 'angle_unit')
-        return PluginUserApi(self, expose=expose)
+        expose = []
+        readonly = []
+        if self.has_spectral:
+            expose += ['spectral_unit']
+        if self.has_flux:
+            expose += ['flux_unit']
+        if self.has_angle:
+            expose += ['angle_unit']
+        if self.has_sb:
+            readonly = ['sb_unit']
+        if self.has_time:
+            expose += ['time_unit']
+        if self.config == 'cubeviz':
+            expose += ['spectral_y_type']
+        return PluginUserApi(self, expose=expose, readonly=readonly)
 
     @property
     def sb_unit(self):
