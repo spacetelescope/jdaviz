@@ -152,6 +152,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             else:
                 datasets = [self.dataset.selected_dc_item]
             for dataset in datasets:
+                # This assumes all cubes, or no cubes. If we allow photometry on collapsed cubes
+                # or images this will need to change.
                 if dataset.ndim > 2:
                     self.is_cube = True
                     break
