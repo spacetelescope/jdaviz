@@ -1,8 +1,10 @@
-import numpy as np
 from astropy import units as u
+from glue.core.subset_group import GroupedSubset
+from glue_jupyter.bqplot.image import BqplotImageView
+import numpy as np
 from traitlets import List, Unicode, observe, Bool
 
-from jdaviz.core.events import GlobalDisplayUnitChanged
+from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataToViewerMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
@@ -91,6 +93,9 @@ class UnitConversion(PluginTemplateMixin):
 
         self.spectrum_viewer.state.add_callback('y_display_unit',
                                                 self._on_glue_y_display_unit_changed)
+
+        self.session.hub.subscribe(self, AddDataToViewerMessage,
+                                   handler=self._find_and_convert_contour_units)
 
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
@@ -269,12 +274,43 @@ class UnitConversion(PluginTemplateMixin):
         else:
             self.flux_or_sb_selected = 'Surface Brightness'
 
+        # Always send a surface brightness unit to contours
+        if self.flux_or_sb_selected == 'Flux':
+            yunit = self._append_angle_correctly(yunit, self.angle_unit.selected)
+        self._find_and_convert_contour_units(yunit=yunit)
+
         # for displaying message that PIXAR_SR = 1 if it is not found in the FITS header
         if (
             len(self.app.data_collection) > 0
             and not self.app.data_collection[0].meta.get('PIXAR_SR')
         ):
             self.pixar_sr_exists = False
+
+    def _find_and_convert_contour_units(self, msg=None, yunit=None):
+        if not yunit:
+            yunit = self.sb_unit_selected
+
+        if msg is not None:
+            viewers = [self.app.get_viewer(msg.viewer_reference)]
+        else:
+            viewers = self._app._viewer_store.values()
+
+        if self.angle_unit_selected is None or self.angle_unit_selected == '':
+            # Can't do this before the plugin is initialized completely
+            return
+
+        for viewer in viewers:
+            if not isinstance(viewer, BqplotImageView):
+                continue
+            for layer in viewer.state.layers:
+
+                # DQ layer doesn't play nicely with this attribute
+                if "DQ" in layer.layer.label or isinstance(layer.layer, GroupedSubset):
+                    continue
+                elif u.Unit(layer.layer.get_component("flux").units).physical_type != 'surface brightness':  # noqa
+                    continue
+                if hasattr(layer, 'attribute_display_unit'):
+                    layer.attribute_display_unit = yunit
 
     def _translate(self, flux_or_sb=None):
         # currently unsupported, can be supported with a scale factor
