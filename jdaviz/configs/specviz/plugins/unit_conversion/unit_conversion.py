@@ -1,4 +1,5 @@
 from astropy import units as u
+from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
 import numpy as np
 from traitlets import List, Unicode, observe, Bool
@@ -304,7 +305,7 @@ class UnitConversion(PluginTemplateMixin):
             for layer in viewer.state.layers:
 
                 # DQ layer doesn't play nicely with this attribute
-                if "DQ" in layer.layer.label:
+                if "DQ" in layer.layer.label or isinstance (layer.layer, GroupedSubset):
                     continue
                 elif u.Unit(layer.layer.get_component("flux").units).physical_type != 'surface brightness':  # noqa
                     continue
