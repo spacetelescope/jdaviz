@@ -4,10 +4,9 @@ import numpy as np
 import astropy.units as u
 from astropy.io import fits
 from astropy.nddata import NDData, NDDataArray
-from astropy.time import Time
+from stdatamodels.jwst.datamodels import Level1bModel
 
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.configs.cubeviz.plugins.parsers import _get_data_type_by_hdu
 from jdaviz.utils import (
     standardize_metadata, download_uri_to_path,
     PRIHDR_KEY, standardize_roman_metadata
@@ -25,7 +24,8 @@ __all__ = ['parse_data']
 
 @data_parser_registry("ramp-data-parser")
 def parse_data(app, file_obj, data_type=None, data_label=None,
-               parent=None, cache=None, local_path=None, timeout=None):
+               parent=None, cache=None, local_path=None, timeout=None,
+               integration=0):
     """
     Attempts to parse a data file and auto-populate available viewers in
     rampviz.
@@ -53,6 +53,10 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
+    integration : int, optional
+        JWST Level 1b products bundle multiple integrations in a time-series into the
+        same ramp file. If this keyword is specified and the observations
+        are JWST Level 1b products, this integration in the time series will be selected.
     """
 
     group_viewer_reference_name = app._jdaviz_helper._default_group_viewer_reference_name
@@ -101,6 +105,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         with fits.open(file_obj) as hdulist:
             _parse_hdulist(
                 app, hdulist, file_name=data_label or file_name,
+                integration=integration,
                 group_viewer_reference_name=group_viewer_reference_name,
                 diff_viewer_reference_name=diff_viewer_reference_name,
             )
@@ -121,6 +126,20 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
             meta=getattr(file_obj, 'meta')
         )
 
+    elif isinstance(file_obj, Level1bModel):
+        metadata = standardize_metadata({
+            key: value for key, value in file_obj.to_flat_dict().items()
+            if key.startswith('meta')
+        })
+
+        _parse_ramp_cube(
+            app, file_obj.data[integration], u.DN,
+            data_label or file_obj.__class__.__name__,
+            group_viewer_reference_name,
+            diff_viewer_reference_name,
+            meta=metadata
+        )
+
     elif HAS_ROMAN_DATAMODELS and isinstance(file_obj, rdd.DataModel):
         with rdd.open(file_obj) as pf:
             _roman_3d_to_glue_data(
@@ -133,6 +152,13 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
 
+def _swap_axes(x):
+    # swap axes per the conventions of ramp cubes
+    # (group axis comes first) and the default in
+    # rampviz (group axis expected last)
+    return np.swapaxes(x, 0, -1)
+
+
 def _roman_3d_to_glue_data(
     app, file_obj, data_label,
     group_viewer_reference_name=None,
@@ -143,12 +169,6 @@ def _roman_3d_to_glue_data(
     Parse a Roman 3D ramp cube file (Level 1),
     usually with suffix '_uncal.asdf'.
     """
-    def _swap_axes(x):
-        # swap axes per the conventions of Roman cubes
-        # (group axis comes first) and the default in
-        # Cubeviz (wavelength axis expected last)
-        return np.swapaxes(x, 0, -1)
-
     # update viewer reference names for Roman ramp cubes:
     # app._update_viewer_reference_name()
 
@@ -199,88 +219,76 @@ def _roman_3d_to_glue_data(
 
 def _parse_hdulist(
     app, hdulist, file_name=None,
-    viewer_reference_name=None
+    integration=None,
+    group_viewer_reference_name=None,
+    diff_viewer_reference_name=None,
 ):
     if file_name is None and hasattr(hdulist, 'file_name'):
         file_name = hdulist.file_name
     else:
         file_name = file_name or "Unknown HDU object"
 
-    is_loaded = []
+    hdu = hdulist[1]  # extension containing the ramp
+    if hdu.header['NAXIS'] != 4:
+        raise ValueError(f"Expected a ramp with NAXIS=4 (with axes:"
+                         f"integrations, groups, x, y), but got "
+                         f"NAXIS={hdu.header['NAXIS']}.")
 
-    # TODO: This needs refactoring to be more robust.
-    # Current logic fails if there are multiple EXTVER.
-    for hdu in hdulist:
-        if hdu.data is None or not hdu.is_image or hdu.data.ndim != 3:
-            continue
-
-        data_type = _get_data_type_by_hdu(hdu)
-        if not data_type:
-            continue
-
-        # Only load each type once.
-        if data_type in is_loaded:
-            continue
-
-        is_loaded.append(data_type)
-        data_label = app.return_data_label(file_name, hdu.name)
-
-        if 'BUNIT' in hdu.header:
-            try:
-                flux_unit = u.Unit(hdu.header['BUNIT'])
-            except Exception:
-                logging.warning("Invalid BUNIT, using DN as data unit")
-                flux_unit = u.DN
-        else:
+    if 'BUNIT' in hdu.header:
+        try:
+            flux_unit = u.Unit(hdu.header['BUNIT'])
+        except Exception:
             logging.warning("Invalid BUNIT, using DN as data unit")
             flux_unit = u.DN
+    else:
+        logging.warning("Invalid BUNIT, using DN as data unit")
+        flux_unit = u.DN
 
-        flux = hdu.data << flux_unit
-        metadata = standardize_metadata(hdu.header)
-        if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
-            metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
-
-        app.add_data(flux, data_label)
-        app.data_collection[data_label].get_component("data").units = flux_unit
-        app.add_data_to_viewer(viewer_reference_name, data_label)
-        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
-
-
-def _parse_jwst_level1(
-    app, hdulist, data_label, ext='SCI',
-    viewer_name=None,
-):
-    hdu = hdulist[ext]
-    data_type = _get_data_type_by_hdu(hdu)
-
-    # Manually inject MJD-OBS until we can support GWCS, see
-    # https://github.com/spacetelescope/jdaviz/issues/690 and
-    # https://github.com/glue-viz/glue-astronomy/issues/59
-    if ext == 'SCI' and 'MJD-OBS' not in hdu.header:
-        for key in ('MJD-BEG', 'DATE-OBS'):  # Possible alternatives
-            if key in hdu.header:
-                if key.startswith('MJD'):
-                    hdu.header['MJD-OBS'] = hdu.header[key]
-                    break
-                else:
-                    t = Time(hdu.header[key])
-                    hdu.header['MJD-OBS'] = t.mjd
-                    break
-
-    unit = u.Unit(hdu.header.get('BUNIT', 'count'))
-    flux = hdu.data << unit
+    # index the ramp array by the integration to load. returns all groups and pixels.
+    # cast from uint16 to integers:
+    ramp_cube = hdu.data[integration].astype(int)
 
     metadata = standardize_metadata(hdu.header)
-    app.data_collection[data_label] = NDData(data=flux, meta=metadata)
+    if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
+        metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-    if data_type == 'flux':
-        app.data_collection[-1].get_component("data").units = flux.unit
+    _parse_ramp_cube(
+        app, ramp_cube, flux_unit, file_name,
+        group_viewer_reference_name,
+        diff_viewer_reference_name,
+        meta=metadata
+    )
 
-    if viewer_name is not None:
-        app.add_data_to_viewer(viewer_name, data_label)
 
-    if data_type == 'flux':
-        app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
+def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
+                     group_viewer_reference_name, diff_viewer_reference_name,
+                     meta=None):
+    # last axis is the group axis, first two are spatial axes:
+    diff_data = np.vstack([
+        # begin with a group of zeros, so
+        # that `diff_data.ndim == data.ndim`
+        np.zeros((1, *ramp_cube_data[0].shape)),
+        np.diff(ramp_cube_data, axis=0)
+    ])
+
+    ramp_cube = NDDataArray(_swap_axes(ramp_cube_data), unit=flux_unit, meta=meta)
+    diff_cube = NDDataArray(_swap_axes(diff_data), unit=flux_unit, meta=meta)
+
+    group_data_label = app.return_data_label(file_name, ext="DATA")
+    diff_data_label = app.return_data_label(file_name, ext="DIFF")
+
+    for data_entry, data_label, viewer_ref in zip(
+            (ramp_cube, diff_cube),
+            (group_data_label, diff_data_label),
+            (group_viewer_reference_name, diff_viewer_reference_name)
+    ):
+        app.add_data(data_entry, data_label)
+        app.add_data_to_viewer(viewer_ref, data_label)
+
+        # load these cubes into the cache:
+        app._jdaviz_helper.cube_cache[data_label] = data_entry
+
+    app._jdaviz_helper._loaded_flux_cube = app.data_collection[group_data_label]
 
 
 def _parse_ndarray(

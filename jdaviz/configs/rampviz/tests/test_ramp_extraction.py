@@ -5,22 +5,30 @@ from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 
 
 @pytest.mark.skipif(not HAS_ROMAN_DATAMODELS, reason="roman_datamodels is not installed")
-def test_previews(rampviz_helper, roman_level_1_ramp):
-    rampviz_helper.load_data(roman_level_1_ramp)
+def test_previews_roman(rampviz_helper, roman_level_1_ramp):
+    _ramp_extraction_previews(rampviz_helper, roman_level_1_ramp)
+
+
+def test_previews_jwst(rampviz_helper, jwst_level_1b_ramp):
+    _ramp_extraction_previews(rampviz_helper, jwst_level_1b_ramp)
+
+
+def _ramp_extraction_previews(_rampviz_helper, _ramp_file):
+    _rampviz_helper.load_data(_ramp_file)
 
     # add subset:
     region = CirclePixelRegion(center=PixCoord(12.5, 15.5), radius=2)
-    rampviz_helper.load_regions(region)
-    ramp_extr = rampviz_helper.plugins['Ramp Extraction']._obj
+    _rampviz_helper.load_regions(region)
+    ramp_extr = _rampviz_helper.plugins['Ramp Extraction']._obj
 
-    subsets = rampviz_helper.app.get_subsets()
-    ramp_cube = rampviz_helper.app.data_collection[0]
+    subsets = _rampviz_helper.app.get_subsets()
+    ramp_cube = _rampviz_helper.app.data_collection[0]
     n_groups = ramp_cube.shape[-1]
 
     assert len(subsets) == 1
     assert 'Subset 1' in subsets
 
-    integration_viewer = rampviz_helper.app.get_viewer('integration-viewer')
+    integration_viewer = _rampviz_helper.app.get_viewer('integration-viewer')
 
     # contains a layer for the default ramp extraction and the subset:
     assert len(integration_viewer.layers) == 2

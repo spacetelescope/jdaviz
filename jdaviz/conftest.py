@@ -71,6 +71,22 @@ def roman_level_1_ramp():
 
 
 @pytest.fixture
+def jwst_level_1b_ramp():
+    from stdatamodels.jwst.datamodels import Level1bModel
+
+    rng = np.random.default_rng(seed=42)
+
+    # JWST Level 1b ramp files have an additional preceding dimension
+    # compared with Roman. This dimension is the integration number
+    # in a sequence (if there's more than one in the visit).
+    shape = (1, 10, 25, 25)
+    data_model = Level1bModel(shape)
+    data_model.data = 100 + 3 * np.cumsum(rng.uniform(size=shape), axis=0)
+
+    return data_model
+
+
+@pytest.fixture
 def image_2d_wcs():
     return WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
                 'CRPIX1': 1, 'CRVAL1': 337.5202808,

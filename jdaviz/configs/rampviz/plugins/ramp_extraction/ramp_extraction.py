@@ -156,7 +156,9 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
 
         # glue region has transposed coords relative to cached cube:
-        region_mask = region.to_mask().to_image(self.cube.shape[:-1]).astype(bool).T
+        region_mask = region.to_mask().to_image(
+            self.cube.shape[:-1][::-1]
+        ).astype(bool).T
         cube_subset = self.cube[region_mask]  # shape: (N pixels extracted, M groups)
 
         n_pixels_in_extraction = cube_subset.shape[0]
@@ -292,7 +294,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def cube(self):
-        return self.app._jdaviz_helper.cube_cache[self.dataset.selected]
+        return self.app._jdaviz_helper.cube_cache.get(self.dataset.selected)
 
     @property
     def slice_display_unit(self):
