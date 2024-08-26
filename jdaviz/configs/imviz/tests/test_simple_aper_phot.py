@@ -4,7 +4,6 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
-from glue.core.roi import CircularROI
 from numpy.testing import assert_allclose, assert_array_equal
 from photutils.aperture import (ApertureStats, CircularAperture, EllipticalAperture,
                                 RectangularAperture, EllipticalAnnulus)
@@ -494,7 +493,6 @@ def test_curve_of_growth(with_unit):
 
 def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     phot_plugin = cubeviz_helper.plugins['Aperture Photometry']._obj
     uc_plugin = cubeviz_helper.plugins['Unit Conversion']
 
