@@ -151,14 +151,14 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 datasets = self.dataset.selected_dc_item
             else:
                 datasets = [self.dataset.selected_dc_item]
+
+            self.is_cube = False
             for dataset in datasets:
                 # This assumes all cubes, or no cubes. If we allow photometry on collapsed cubes
                 # or images this will need to change.
                 if dataset.ndim > 2:
                     self.is_cube = True
                     break
-                else:
-                    self.is_cube = False
 
     def _on_display_units_changed(self, event={}):
 
@@ -569,7 +569,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             # cubeviz: background_value set in plugin is in display units
             # convert temporarily to image units for calculations
-            if (self.config == 'cubeviz') and (img_unit is not None):
+            if (self.config == 'cubeviz') and (img_unit is not None) and display_unit != '':
                 background_value = (background_value * display_unit).to_value(
                     img_unit, u.spectral_density(self._cube_wave))
 
@@ -580,7 +580,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             # cubeviz: background_value set in plugin is in display units
             # convert temporarily to image units for calculations
-            if (self.config == 'cubeviz') and (img_unit is not None):
+            if (self.config == 'cubeviz') and (img_unit is not None) and display_unit != '':
                 background_value = (background_value * display_unit).to_value(
                     img_unit, u.spectral_density(self._cube_wave))
         else:
@@ -590,7 +590,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             # cubeviz: computed background median will be in display units,
             # convert temporarily back to image units for calculations
-            if (self.config == 'cubeviz') and (img_unit is not None):
+            if (self.config == 'cubeviz') and (img_unit is not None) and display_unit != '':
                 background_value = (background_value * display_unit).to_value(
                     img_unit, u.spectral_density(self._cube_wave))
         try:
@@ -738,25 +738,26 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 # convert units of certain columns in aperture phot. output table
                 # to reflect display units (i.e if data units are MJy / sr, but
                 # Jy / sr is selected in Unit Conversion plugin)
-                phot_table['background'] = phot_table['background'].to(
-                    display_unit, u.spectral_density(self._cube_wave))
+                if display_unit != '':
+                    phot_table['background'] = phot_table['background'].to(
+                        display_unit, u.spectral_density(self._cube_wave))
 
-                if include_pixarea_fac:
-                    phot_table['sum'] = phot_table['sum'].to(
-                        (display_unit * pixarea_fac).unit, u.spectral_density(self._cube_wave))
-                else:
-                    phot_table['sum'] = phot_table['sum'].to(
-                        display_unit, u.spectral_density(self._cube_wave))
-                for key in ['min', 'max', 'mean', 'median', 'mode', 'std',
-                            'mad_std', 'biweight_location']:
-                    phot_table[key] = phot_table[key].to(
-                        display_unit, u.spectral_density(self._cube_wave))
-                for key in ['var', 'biweight_midvariance']:
-                    try:
-                        phot_table[key] = phot_table[key].to(display_unit**2)
-                    # FIXME: Can fail going between per-wave and per-freq
-                    except u.UnitConversionError:
-                        pass
+                    if include_pixarea_fac:
+                        phot_table['sum'] = phot_table['sum'].to(
+                            (display_unit * pixarea_fac).unit, u.spectral_density(self._cube_wave))
+                    else:
+                        phot_table['sum'] = phot_table['sum'].to(
+                            display_unit, u.spectral_density(self._cube_wave))
+                    for key in ['min', 'max', 'mean', 'median', 'mode', 'std',
+                                'mad_std', 'biweight_location']:
+                        phot_table[key] = phot_table[key].to(
+                            display_unit, u.spectral_density(self._cube_wave))
+                    for key in ['var', 'biweight_midvariance']:
+                        try:
+                            phot_table[key] = phot_table[key].to(display_unit**2)
+                        # FIXME: Can fail going between per-wave and per-freq
+                        except u.UnitConversionError:
+                            pass
 
         if add_to_table:
             try:
@@ -1078,6 +1079,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                           update_plots=this_update_plots,
                                           **option)
             except Exception as e:
+                raise
                 failed_iters.append(i)
                 if full_exceptions:
                     exceptions.append(e)
