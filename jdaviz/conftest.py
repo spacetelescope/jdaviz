@@ -70,8 +70,7 @@ def roman_level_1_ramp():
     return data_model
 
 
-@pytest.fixture
-def jwst_level_1b_ramp():
+def _make_jwst_ramp(shape=(1, 10, 25, 25)):
     from stdatamodels.jwst.datamodels import Level1bModel
 
     rng = np.random.default_rng(seed=42)
@@ -79,11 +78,20 @@ def jwst_level_1b_ramp():
     # JWST Level 1b ramp files have an additional preceding dimension
     # compared with Roman. This dimension is the integration number
     # in a sequence (if there's more than one in the visit).
-    shape = (1, 10, 25, 25)
     data_model = Level1bModel(shape)
     data_model.data = 100 + 3 * np.cumsum(rng.uniform(size=shape), axis=0)
 
     return data_model
+
+
+@pytest.fixture
+def jwst_level_1b_ramp():
+    return _make_jwst_ramp()
+
+
+@pytest.fixture
+def jwst_level_1b_rectangular_ramp():
+    return _make_jwst_ramp(shape=(1, 10, 32, 25))
 
 
 @pytest.fixture

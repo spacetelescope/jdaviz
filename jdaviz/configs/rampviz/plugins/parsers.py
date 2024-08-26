@@ -128,7 +128,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
 
     elif isinstance(file_obj, Level1bModel):
         metadata = standardize_metadata({
-            key: value for key, value in file_obj.to_flat_dict().items()
+            key: value for key, value in file_obj.to_flat_dict(
+                include_arrays=False)
+            .items()
             if key.startswith('meta')
         })
 
@@ -271,12 +273,22 @@ def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
     # Identify NIRSpec IRS2 detector mode, which needs special treatment.
     # jdox: https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph/nirspec-instrumentation/
     # nirspec-detectors/nirspec-detector-readout-modes-and-patterns/nirspec-irs2-detector-readout-mode
-    header = meta.get('_primary_header', {})
-    from_jwst_nirspec_irs2 = (
-        header.get('TELESCOP') == 'JWST' and
-        header.get('INSTRUME') == 'NIRSPEC' and
-        'IRS2' in header.get('READPATT', '')
-    )
+    if 'meta.model_type' in meta:
+        # this is a Level1bModel, which has metadata in a Node rather
+        # than a dictionary:
+        from_jwst_nirspec_irs2 = (
+            meta.get('meta._primary_header.TELESCOP') == 'JWST' and
+            meta.get('meta._primary_header.INSTRUME') == 'NIRSPEC' and
+            'IRS2' in meta.get('meta._primary_header.READPATT', '')
+        )
+    else:
+        # assume this was parsed from FITS:
+        header = meta.get('_primary_header', {})
+        from_jwst_nirspec_irs2 = (
+            header.get('TELESCOP') == 'JWST' and
+            header.get('INSTRUME') == 'NIRSPEC' and
+            'IRS2' in header.get('READPATT', '')
+        )
 
     # last axis is the group axis, first two are spatial axes:
     diff_data = np.vstack([
