@@ -830,8 +830,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if (isinstance(regions, SpectralRegion) or
                 (isinstance(regions, list) and isinstance(regions[0], SpectralRegion))):
             mode = kwargs.pop('mode', None)
-            self._import_spectral_regions(regions, mode)
-            return None
+            return self._import_spectral_regions(regions, mode, max_num_regions, return_bad_regions)
         elif not isinstance(regions, (list, tuple, Regions)):
             regions = [regions]
 
@@ -942,7 +941,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if return_bad_regions:
             return bad_regions
 
-    def _import_spectral_regions(self, spec_region, mode=None, viewer=None):
+    def _import_spectral_regions(self, spec_region, mode=None, viewer=None, max_num_regions=None,
+                                 return_bad_regions=False):
         """
         Method for importing a SpectralRegion object or list of SpectralRegion objects.
 
@@ -957,6 +957,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         """
         viewer_name = viewer or self.app._jdaviz_helper._default_spectrum_viewer_reference_name
         range_viewer = self.app.get_viewer(viewer_name)
+        n_loaded = 0
+        bad_regions = []
         for index, sub_region in enumerate(spec_region):
             if isinstance(mode, list):
                 if len(mode) != (len(spec_region) - 1):
@@ -975,6 +977,23 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
                                  att=range_viewer.state.x_att)
             range_viewer.apply_subset_state(s)
+            n_loaded += 1
+            if max_num_regions is not None and n_loaded >= max_num_regions:
+                break
+
+        n_reg_in = len(index)
+        n_reg_bad = len(bad_regions)
+        if n_loaded == 0:
+            snack_color = "error"
+        elif n_reg_bad > 0:
+            snack_color = "warning"
+        else:
+            snack_color = "success"
+        self.app.hub.broadcast(SnackbarMessage(
+            f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
+            f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
+        if return_bad_regions:
+            return bad_regions
 
     def _apply_subset_state_to_viewer(self, state, viewer):
         if self.combination_mode.selected is not None:
