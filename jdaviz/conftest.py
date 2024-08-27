@@ -264,6 +264,7 @@ def _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy, shape=(2, 2, 4), with_u
 def spectrum1d_cube():
     return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy)
 
+
 @pytest.fixture
 def spectrum1d_cube_sb_unit():
     return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy / u.sr)
