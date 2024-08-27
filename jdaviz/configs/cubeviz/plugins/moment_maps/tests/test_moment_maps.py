@@ -49,8 +49,10 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
         with pytest.raises(ValueError, match="units must be in"):
             mm.calculate_moment()
 
+
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
-def test_moment_calculation(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube_type, tmp_path):
+def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
+                            spectrum1d_cube_sb_unit, cube_type, tmp_path):
 
     if SPECUTILS_LT_1_15_1:
         moment_unit = "Jy"
