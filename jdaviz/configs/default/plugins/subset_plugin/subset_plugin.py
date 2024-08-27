@@ -954,6 +954,21 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             By default this is set to 'new' which creates a new subset per subregion.
             'or' will create a composite subset with each subregion corresponding
             to a subregion of a single subset.
+        viewer : str
+            The viewer that the spectral subset will be applied to.
+        max_num_regions : int
+            The maximum number of regions to load into jdaviz.
+        return_bad_regions : bool
+            If `True`, return the regions that failed to load (see ``bad_regions``);
+            This is useful for debugging. If `False`, do not return anything (`None`).
+
+        Returns
+        -------
+        bad_regions : list of (obj, str) or `None`
+            If requested (see ``return_bad_regions`` option), return a
+            list of ``(region, reason)`` tuples for region objects that failed to load.
+            If all the regions loaded successfully, this list will be empty.
+            If not requested, return `None`.
         """
         viewer_name = viewer or self.app._jdaviz_helper._default_spectrum_viewer_reference_name
         range_viewer = self.app.get_viewer(viewer_name)
@@ -977,9 +992,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
                                  att=range_viewer.state.x_att)
             range_viewer.apply_subset_state(s)
-            n_loaded += 1
-            if max_num_regions is not None and n_loaded >= max_num_regions:
-                break
+            # TODO: Fix max_num_regions
+            # if self.app.session.edit_subset_mode.mode == SUBSET_MODES_PRETTY['new']:
+            #     n_loaded += 1
+            #     if max_num_regions is not None and n_loaded >= max_num_regions:
+            #         break
 
         n_reg_in = index
         n_reg_bad = len(bad_regions)
