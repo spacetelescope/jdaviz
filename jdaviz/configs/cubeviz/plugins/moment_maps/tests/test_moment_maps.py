@@ -68,6 +68,8 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     elif cube_type == 'Flux':
         cube = spectrum1d_cube
 
+    cube_unit = cube.unit.to_string()
+
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
@@ -104,13 +106,13 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     assert mm._obj.results_label == 'moment 0'
     assert mm._obj.results_label_overwrite is True
 
-    # Make sure coordinate display works
+    # Make sure coordinate display works in flux viewer (loaded data, not the moment map)
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.state.slices == (0, 0, 1)
     # Slice 0 has 8 pixels, this is Slice 1
-    assert label_mouseover.as_text() == (f"Pixel x=00.0 y=00.0 Value +8.00000e+00 {moment_unit}",
+    assert label_mouseover.as_text() == (f"Pixel x=00.0 y=00.0 Value +8.00000e+00 {cube_unit}",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 
