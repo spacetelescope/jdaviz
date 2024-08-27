@@ -579,6 +579,18 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         pix_scale_factor = self.cube.meta.get('PIXAR_SR', 1.0)
         spec.meta['_pixel_scale_factor'] = pix_scale_factor
 
+        # Follows user-selected flux unit for extracted spectrum, ignoring bg_spec.
+        uc = self.app.get_tray_item_from_name("g-unit-conversion")
+        if uc.flux_unit_selected and (uc.flux_unit_selected != spec.flux.unit.to_string()):
+            # While specutils has with_flux_unit method, it does not handle uncertainty unit,
+            # so we roll our own here, copying internals from that method.
+            eqv = u.spectral_density(spec.spectral_axis)
+            new_spec_flux = spec.flux.to(uc.flux_unit_selected, equivalencies=eqv)
+            spec._data = new_spec_flux.value
+            spec._unit = new_spec_flux.unit
+            if spec.uncertainty:
+                spec.uncertainty.unit = new_spec_flux.unit
+
         # stuff for exporting to file
         self.extracted_spec = spec
         self.extraction_available = True

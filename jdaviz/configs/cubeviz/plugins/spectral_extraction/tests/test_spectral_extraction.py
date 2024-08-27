@@ -578,7 +578,7 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     assert collapsed.flux.unit == u.MJy
     assert collapsed.uncertainty.unit == u.MJy
     assert_allclose(collapsed.flux.value, extracted_spectra[0].flux.value / 1e6)
-    assert uc.flux_unit.selected == 'MJy'
+    assert uc.flux_unit.selected == "MJy"
 
 
 @pytest.mark.usefixtures('_jail')
