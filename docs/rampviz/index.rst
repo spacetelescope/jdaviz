@@ -1,12 +1,13 @@
-.. |cubeviz_logo| image:: ../logos/cube.svg
-    :height: 42px
-
 .. _rampviz:
 
-######################
-|cubeviz_logo| Rampviz
-######################
 
+#######
+Rampviz
+#######
+
+.. warning::
+
+    Heads up: Rampviz is new, and in active development.
 
 Rampviz is a visualization and analysis toolbox for ramp cubes from
 infrared detectors. It is built on top of the
@@ -18,4 +19,5 @@ with ramp files from the Roman Space Telescope and JWST.
 .. toctree::
   :maxdepth: 2
 
+  import_data
   plugins

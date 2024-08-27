@@ -287,6 +287,7 @@ intersphinx_mapping.update({  # noqa: F405
     'skimage': ('https://scikit-image.org/docs/stable/', None),
     'specreduce': ('https://specreduce.readthedocs.io/en/stable/', None),
     'specutils': ('https://specutils.readthedocs.io/en/stable/', None),
+    'stdatamodels': ('https://stdatamodels.readthedocs.io/en/latest/', None),
     'traitlets': ('https://traitlets.readthedocs.io/en/stable/', None)})
 
 # Options for linkcheck
