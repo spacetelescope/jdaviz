@@ -981,7 +981,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             if max_num_regions is not None and n_loaded >= max_num_regions:
                 break
 
-        n_reg_in = len(index)
+        n_reg_in = index
         n_reg_bad = len(bad_regions)
         if n_loaded == 0:
             snack_color = "error"
