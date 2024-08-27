@@ -1079,7 +1079,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                           update_plots=this_update_plots,
                                           **option)
             except Exception as e:
-                raise
                 failed_iters.append(i)
                 if full_exceptions:
                     exceptions.append(e)
