@@ -93,6 +93,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     # saving client-side is supported
     export_enabled = Bool(True).tag(sync=True)
 
+    # for unit conversion, only enabled now for moment 0
+    moment_0_display_unit = Unicode().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -175,6 +178,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.send_state("output_unit_selected")
 
         # either 'Flux' or 'Surface Brightness'
+        # this will eventually always be 'surface brightness'
         orig_flux_or_sb = self.output_unit_items[0]['label']
 
         unit_dict = {orig_flux_or_sb: "",
@@ -197,24 +201,21 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             self.dataset_spectral_unit = sunit
             unit_dict["Spectral Unit"] = sunit
 
-            # get flux/SB units
-            if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
-                if self.spectrum_viewer.state.y_display_unit is not None:
-                    unit_dict[orig_flux_or_sb] = self.spectrum_viewer.state.y_display_unit
-                else:
-                    # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
-                    # been done if not, get default flux units which should be the units displayed
-                    unit_dict[orig_flux_or_sb] = data.get_component('flux').units
-            else:
-                # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
-                # been done if not, get default flux units which should be the units displayed
-                unit_dict[orig_flux_or_sb] = data.get_component('flux').units
+            # since this is the method subscribed to 'global display unit changed',
+            # we could get this information from the broadcasted message and not respond
+            # to every message, but that would require some refactoring,
+            # so use get_display_unit for now.
+            comp = data.get_component(self.dataset.selected_dc_item.main_components[0])
 
-            # figure out if label should say 'Flux' or 'Surface Brightness'
-            sb_or_flux_label = "Flux"
-            is_unit_solid_angle = check_if_unit_is_per_solid_angle(unit_dict[orig_flux_or_sb])
-            if is_unit_solid_angle is True:
+            # is cube data a flux or sb? this check can go away when cubes are forced to sb
+            if check_if_unit_is_per_solid_angle(comp.units):
+                print('data unit is sb')
                 sb_or_flux_label = "Surface Brightness"
+                unit_dict[orig_flux_or_sb] = self.app._get_display_unit('sb')
+            else:
+                print('data unit is flux')
+                sb_or_flux_label = "Flux"
+                unit_dict[orig_flux_or_sb] = self.app._get_display_unit('flux')
 
         # Update units in selection item dictionary
         for item in self.output_unit_items:
@@ -343,21 +344,19 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # convert units for moment 0, which is the only currently supported
         # moment for using converted units.
         if n_moment == 0:
-            # get flux/SB units
-            if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
-                if self.spectrum_viewer.state.y_display_unit is not None:
-                    flux_sb_unit = self.spectrum_viewer.state.y_display_unit
-                else:
-                    flux_sb_unit = data.get_component('flux').units
-            else:
-                flux_sb_unit = data.get_component('flux').units
 
-            # convert unit string to u.Unit so moment map data can be converted
-            flux_or_sb_display_unit = u.Unit(flux_sb_unit)
+            # get display units
+            moment_0_display_unit = self.output_unit_items[0]['unit_str']
+
+            # convert unit string to Unit so moment map data can be converted
+            flux_or_sb_display_unit = u.Unit(moment_0_display_unit)
+
+            # account for extra wavelength factor, depending on specutils version
             if SPECUTILS_LT_1_15_1:
                 moment_new_unit = flux_or_sb_display_unit
             else:
                 moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
+
             self.moment = self.moment.to(moment_new_unit)
 
         # Reattach the WCS so we can load the result
