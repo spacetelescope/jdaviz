@@ -56,7 +56,10 @@ Jdaviz
          Jump to Mosviz
 
    .. grid-item-card::
-      :img-top: logos/cube.svg
+
+      .. note::
+
+         New and in development. Logo coming soon!
 
       .. button-ref:: rampviz/index
          :expand:
