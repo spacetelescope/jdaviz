@@ -209,11 +209,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
             # is cube data a flux or sb? this check can go away when cubes are forced to sb
             if check_if_unit_is_per_solid_angle(comp.units):
-                print('data unit is sb')
                 sb_or_flux_label = "Surface Brightness"
                 unit_dict[orig_flux_or_sb] = self.app._get_display_unit('sb')
             else:
-                print('data unit is flux')
                 sb_or_flux_label = "Flux"
                 unit_dict[orig_flux_or_sb] = self.app._get_display_unit('flux')
 

@@ -49,8 +49,9 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
         with pytest.raises(ValueError, match="units must be in"):
             mm.calculate_moment()
 
+@pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
+def test_moment_calculation(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube_type, tmp_path):
 
-def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     if SPECUTILS_LT_1_15_1:
         moment_unit = "Jy"
         moment_value_str = "+8.00000e+00"
@@ -58,10 +59,18 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
         moment_unit = "Jy m"
         moment_value_str = "+6.40166e-10"
 
+    if cube_type == 'Surface Brightness':
+        moment_unit += " / sr"
+        cube = spectrum1d_cube_sb_unit
+
+    elif cube_type == 'Flux':
+        cube = spectrum1d_cube
+
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+        cubeviz_helper.load_data(cube, data_label='test')
+
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
 
     # Since we are not really displaying, need this to trigger GUI stuff.
@@ -73,7 +82,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
 
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
     assert mm._obj.results_label == 'moment 0'
-    assert mm.output_unit == "Flux"
+    assert mm.output_unit == cube_type  # cube data in SB should produce result in SB
 
     mm._obj.add_results.viewer.selected = cubeviz_helper._default_uncert_viewer_reference_name
     mm._obj.vue_calculate_moment()
@@ -99,7 +108,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
                                                       'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.state.slices == (0, 0, 1)
     # Slice 0 has 8 pixels, this is Slice 1
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
+    assert label_mouseover.as_text() == (f"Pixel x=00.0 y=00.0 Value +8.00000e+00 {moment_unit}",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 
