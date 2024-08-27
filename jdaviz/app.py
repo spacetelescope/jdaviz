@@ -2497,10 +2497,9 @@ class Application(VuetifyTemplate, HubListener):
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
-            'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
-            'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
+            'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id,
+            # TODO: remove unused entries after old data menu deprecation period
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
-            'visible_layers': {},  # label: {color}, READ-ONLY
             'wcs_only_layers': wcs_only_layers,
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg

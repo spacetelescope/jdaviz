@@ -22,6 +22,7 @@ from astropy.nddata import (
 from specutils import Spectrum1D
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
+from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.freezable_state import FreezableProfileViewerState
@@ -61,10 +62,15 @@ class JdavizViewerMixin(WithCache):
         # Allow each viewer to cycle through colors for each new addition to the viewer:
         self.color_cycler = ColorCycler()
 
+        self._data_menu = DataMenu(viewer=self, app=self.jdaviz_app)
+
     @property
     def user_api(self):
         # default exposed user APIs.  Can override this method in any particular viewer.
         if not isinstance(self, TableViewer):
+            # TODO: eventually remove data_labels, data_labels_loaded,
+            # and data_labels_visible once deprecation period passes
+            # TODO: add data_menu once API is finalized and ready to be made public
             expose = ['data_labels', 'data_labels_loaded', 'data_labels_visible']
         else:
             expose = []
@@ -88,6 +94,11 @@ class JdavizViewerMixin(WithCache):
         return ViewerUserApi(self, expose=expose)
 
     @property
+    def data_menu(self):
+        return self._data_menu.user_api
+
+    @property
+    # TODO: deprecate in favor of viewer.data_menu.layers_loaded
     def data_labels_loaded(self):
         """
         List of data labels loaded in this viewer.
@@ -103,6 +114,7 @@ class JdavizViewerMixin(WithCache):
                 if self.jdaviz_app._get_data_item_by_id(data_id) is not None]
 
     @property
+    # TODO: deprecate in favor of viewer.data_menu.layers_visible
     def data_labels_visible(self):
         """
         List of data labels visible in this viewer.
@@ -251,8 +263,11 @@ class JdavizViewerMixin(WithCache):
                                                      'linewidth': _get_layer_linewidth(layer),
                                                      'prefix_icon': prefix_icon}
 
-        viewer_item = self.jdaviz_app._viewer_item_by_id(self.reference_id)
-        viewer_item['visible_layers'] = visible_layers
+        self._data_menu.visible_layers = visible_layers
+        # this is hacky, but don't know why the state callbacks aren't working
+        # and this does ensure they're up to date
+        self._data_menu._on_app_viewer_icons_changed(self.jdaviz_app.state.viewer_icons)
+        self._data_menu._on_app_layer_icons_changed(self.jdaviz_app.state.layer_icons)
 
     def _on_layers_update(self, layers=None):
         if self.__class__.__name__ == 'MosvizTableViewer':

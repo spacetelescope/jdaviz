@@ -583,7 +583,7 @@ class PluginTemplateMixin(TemplateMixin):
         Parameters
         ----------
         loc : str
-            The display location determines where to present the viz app.
+            The display location determines where to present the plugin UI.
             Supported locations:
 
             "inline": Display the plugin inline in a notebook.
@@ -4421,7 +4421,7 @@ class PluginSubcomponent(VuetifyTemplate):
         Parameters
         ----------
         loc : str
-            The display location determines where to present the viz app.
+            The display location determines where to present the component UI.
             Supported locations:
 
             "inline": Display the component inline in a notebook.

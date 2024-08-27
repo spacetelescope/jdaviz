@@ -61,27 +61,9 @@
         </div>
 
         <v-card tile flat style="flex: 1; margin-top: -2px; overflow: hidden;">
-          <div v-if="app_settings.viewer_labels" class='viewer-label-container'>
-            <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label invert-if-dark">
-              <j-tooltip span_style="white-space: nowrap">
-                <j-layer-viewer-icon span_style="float: right;" :icon="viewer_icons[viewer.id]" :linked_by_wcs="viewer.linked_by_wcs"></j-layer-viewer-icon>
-              </j-tooltip>
-              <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">{{viewer.reference || viewer.id}}</span>
-            </div>
-
-            <div v-for="(layer_info, layer_name) in viewer.visible_layers" class="viewer-label invert-if-dark">
-              <j-tooltip span_style="white-space: nowrap">
-                <j-layer-viewer-icon span_style="float: right;" :icon="layer_icons[layer_name]" :linewidth="layer_info.linewidth" :linestyle="'solid'" :color="layer_info.color" :linked_by_wcs="viewer.linked_by_wcs"></j-layer-viewer-icon>
-              </j-tooltip>
-              <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 24px">
-                <v-icon v-if="layer_info.prefix_icon" dense>
-                  {{layer_info.prefix_icon}}
-                </v-icon>
-                {{layer_name}}
-              </span>
-            </div>
+          <div class="viewer-label-container">
+            <jupyter-widget :widget="viewer.data_menu" v-if="app_settings.viewer_labels"></jupyter-widget>
           </div>
-
           <jupyter-widget
             :widget="viewer.widget"
             :ref="'viewer-widget-'+viewer.id"
@@ -93,34 +75,16 @@
 </template>
 
 <style>
-.viewer-label-container {
-  position: absolute;
-  right: 0;
-  z-index: 1;
-  width: 24px;
-}
-.viewer-label {
-  display: block;
-  float: right;
-  background-color: #c3c3c3c3;
-  width: 24px;
-  overflow: hidden;
-  white-space: nowrap;
-  /*cursor: pointer;*/
-}
-.viewer-label:last-child {
-  padding-bottom: 2px;
-}
-.viewer-label:hover {
-  background-color: #e5e5e5;
-  width: auto;
-  border-bottom-left-radius: 4px; 
-  border-top-left-radius: 4px;
-}
-.imviz div.v-card.v-card--flat.v-sheet.v-sheet--tile {
-  /* black background beyond edges of canvas for canvas rotation */
-  background-color: black
-}
+  .viewer-label-container {
+    position: absolute;
+    right: 0;
+    z-index: 1;
+    width: 24px;
+  }
+  .imviz div.v-card.v-card--flat.v-sheet.v-sheet--tile {
+    /* black background beyond edges of canvas for canvas rotation */
+    background-color: black
+  }
 </style>
 
 <script>
