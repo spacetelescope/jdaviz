@@ -570,13 +570,15 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     )
 
     # Also test unit conversion
-    uc = cubeviz_helper.plugins["Unit Conversion"]._obj
-    uc.flux_unit_selected = "MJy"
-    spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    assert uc.flux_unit == "Jy"
+    uc.flux_unit = "MJy"
+    spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']
     collapsed = spec_extr_plugin.extract()
     assert collapsed.flux.unit == u.MJy
     assert collapsed.uncertainty.unit == u.MJy
     assert_allclose(collapsed.flux.value, extracted_spectra[0].flux.value / 1e6)
+    assert uc.flux_unit.selected == 'MJy'
 
 
 @pytest.mark.usefixtures('_jail')
