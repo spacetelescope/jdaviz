@@ -180,7 +180,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
         self.hub.subscribe(self, GlobalDisplayUnitChanged,
-                           handler=self._on_gloabl_display_unit_changed)
+                           handler=self._on_global_display_unit_changed)
 
         self._update_disabled_msg()
 
@@ -315,7 +315,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         else:
             self.background.scale_factor = self.slice_spectral_value/self.reference_spectral_value
 
-    def _on_gloabl_display_unit_changed(self, msg={}):
+    def _on_global_display_unit_changed(self, msg={}):
 
         if msg.axis == 'spectral_y':
             self.spectrum_y_units = str(msg.unit)
