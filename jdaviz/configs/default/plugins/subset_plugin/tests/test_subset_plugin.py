@@ -18,8 +18,9 @@ def test_plugin(specviz_helper, spectrum1d):
     p = specviz_helper.plugins['Subset Tools']
 
     # regression test for https://github.com/spacetelescope/jdaviz/issues/1693
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
-    sv.apply_roi(XRangeROI(6500, 7400))
+    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
+                                                                        7400 * unit))
 
     p._obj.subset_select.selected = 'Create New'
 
@@ -98,7 +99,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
 
     # apply subset
     roi_params = {key: subset_info[key]['initial_value'] for key in subset_info}
-    imviz_helper.app.get_viewer('imviz-0').apply_roi(roi_class(**roi_params))
+    imviz_helper.plugins['Subset Tools'].import_region(roi_class(**roi_params))
 
     # get plugin and check that attribute tracking link type is set properly
     plugin = imviz_helper.plugins['Subset Tools']._obj
@@ -145,7 +146,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     img_wcs = imviz_helper.app.data_collection['Default orientation'].coords
     new_pix_region = original_sky_region.to_pixel(img_wcs)
     new_roi = regions2roi(new_pix_region)
-    imviz_helper.app.get_viewer('imviz-0').apply_roi(new_roi)
+    imviz_helper.plugins['Subset Tools'].import_region(new_roi)
 
     # get subset definitions again, which should now be in sky coordinates
     subset_defs = plugin.subset_definitions
@@ -211,7 +212,7 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
     assert len(subsets) == 1
 
     plg.combination_mode.selected = 'or'
-    plg.import_region(SpectralRegion(7*u.um, 8*u.um))
+    plg.import_region(SpectralRegion(7 * u.um, 8 * u.um))
 
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets['Subset 1']) == 2

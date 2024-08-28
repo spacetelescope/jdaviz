@@ -2,8 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.wcs import WCS
-from specutils import Spectrum1D
-from glue.core.roi import XRangeROI
+from specutils import Spectrum1D, SpectralRegion
 from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 from numpy.testing import assert_allclose, assert_array_equal
 
@@ -64,7 +63,9 @@ def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
     dc[0].meta["_orig_spec"] = spectrum1d
 
     cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'test')
-    cubeviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(6600, 7400))
+    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit)
+    cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
+                                                                        7400 * unit))
 
     subsets = cubeviz_helper.app.get_subsets()
     reg = subsets.get('Subset 1')

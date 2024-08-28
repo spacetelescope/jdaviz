@@ -6,9 +6,8 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from glue.core.roi import XRangeROI
 from regions import PixCoord, CirclePixelRegion, CircleSkyRegion, EllipsePixelRegion
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.configs.imviz.tests.test_regions import BaseRegionHandler
 
@@ -59,7 +58,9 @@ class TestLoadRegions(BaseRegionHandler):
         self.cubeviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
 
         # Manually draw wavelength range.
-        self.spectrum_viewer.apply_roi(XRangeROI(4.892, 4.896))
+        unit = u.Unit(self.cubeviz.plugins['Unit Conversion'].spectral_unit)
+        self.cubeviz.plugins['Subset Tools'].import_region(SpectralRegion(4.892 * unit,
+                                                                          4.896 * unit))
         self.cubeviz.app.session.edit_subset_mode.edit_subset = None
 
         # Get interactive spatial regions only.
