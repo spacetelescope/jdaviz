@@ -884,6 +884,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                    CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
                 state = regions2roi(region, wcs=data.coords)
                 self._apply_subset_state_to_viewer(state, viewer)
+            elif isinstance(region, (CircularROI, CircularAnnulusROI,
+                                     EllipticalROI, RectangularROI)):
+                self._apply_subset_state_to_viewer(region, viewer)
 
             # Last resort: Masked Subset that is static (if data is not a cube)
             elif data.ndim == 2:
@@ -938,6 +941,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.app.hub.broadcast(SnackbarMessage(
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
             f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
+
+        # Make sure that the plugin selects the most recently created subset
+        self.subset_selected = self.app.data_collection.subset_groups[-1].label
+
         if return_bad_regions:
             return bad_regions
 
@@ -1014,7 +1021,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     def _apply_subset_state_to_viewer(self, state, viewer):
         if self.combination_mode.selected is not None:
-            self.app.session.edit_subset_mode.mode = SUBSET_MODES[self.combination_mode.selected]
+            self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[self.combination_mode.selected]
         if isinstance(viewer, SpecvizProfileView):
             raise NotImplementedError("This method is currently only for image viewers")
         else:

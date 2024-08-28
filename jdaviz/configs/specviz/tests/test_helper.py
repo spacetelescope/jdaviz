@@ -5,9 +5,7 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.tests.helper import assert_quantity_allclose
-from glue.core.roi import XRangeROI
-from glue.core.edit_subset_mode import OrMode, AndMode, AndNotMode
-from specutils import Spectrum1D, SpectrumList, SpectrumCollection
+from specutils import Spectrum1D, SpectrumList, SpectrumCollection, SpectralRegion
 from astropy.utils.data import download_file
 
 from jdaviz.app import Application
@@ -124,29 +122,30 @@ class TestSpecvizHelper:
         assert spec_region == {}
 
     def test_get_spectral_regions_one(self):
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6500))
+        self.spec_app.plugins['Subset Tools'].import_region(
+            SpectralRegion(6000*self.spec.spectral_axis.unit, 6500*self.spec.spectral_axis.unit))
         spec_region = self.spec_app.get_spectral_regions()
         assert len(spec_region['Subset 1'].subregions) == 1
 
     def test_get_spectral_regions_two(self):
-        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
-
-        # Set the active edit_subset_mode to OrMode to be able to add multiple subregions
-        spectrum_viewer.session.edit_subset_mode._mode = OrMode
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6500))
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(7300, 7800))
+        subset = (SpectralRegion(6000*self.spec.spectral_axis.unit,
+                                 6500*self.spec.spectral_axis.unit) +
+                  SpectralRegion(7300*self.spec.spectral_axis.unit,
+                                 7800*self.spec.spectral_axis.unit))
+        self.spec_app.plugins['Subset Tools'].import_region(subset, mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
 
         assert len(spec_region['Subset 1'].subregions) == 2
 
     def test_get_spectral_regions_three(self):
-        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
-
-        spectrum_viewer.session.edit_subset_mode._mode = OrMode
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6400))
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6600, 7000))
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(7300, 7800))
+        subset = (SpectralRegion(6000*self.spec.spectral_axis.unit,
+                                 6400*self.spec.spectral_axis.unit) +
+                  SpectralRegion(6600*self.spec.spectral_axis.unit,
+                                 7000*self.spec.spectral_axis.unit) +
+                  SpectralRegion(7300*self.spec.spectral_axis.unit,
+                                 7800*self.spec.spectral_axis.unit))
+        self.spec_app.plugins['Subset Tools'].import_region(subset, mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
 
@@ -168,12 +167,11 @@ class TestSpecvizHelper:
                                  7800., atol=1e-5)
 
     def test_get_spectral_regions_does_not_raise_value_error(self):
-        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
-
-        spectrum_viewer.session.edit_subset_mode._mode = OrMode
-        # Selecting ROIs that are not part of the actual spectrum no longer raises an error
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(1, 3))
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(4, 6))
+        subset = (SpectralRegion(1*self.spec.spectral_axis.unit,
+                                 3*self.spec.spectral_axis.unit) +
+                  SpectralRegion(4*self.spec.spectral_axis.unit,
+                                 6*self.spec.spectral_axis.unit))
+        self.spec_app.plugins['Subset Tools'].import_region(subset, mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
@@ -187,17 +185,13 @@ class TestSpecvizHelper:
                                  6, atol=1e-5)
 
     def test_get_spectral_regions_composite_region(self):
-        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
-
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 7400))
-
-        spectrum_viewer.session.edit_subset_mode._mode = AndNotMode
-
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6600, 7000))
-
-        spectrum_viewer.session.edit_subset_mode._mode = AndMode
-
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(7300, 7800))
+        subset = (SpectralRegion(6000*self.spec.spectral_axis.unit,
+                                 7400*self.spec.spectral_axis.unit) +
+                  SpectralRegion(6600*self.spec.spectral_axis.unit,
+                                 7000*self.spec.spectral_axis.unit) +
+                  SpectralRegion(7300*self.spec.spectral_axis.unit,
+                                 7800*self.spec.spectral_axis.unit))
+        self.spec_app.plugins['Subset Tools'].import_region(subset, mode=['andnot', 'and'])
 
         spec_region = self.spec_app.get_spectral_regions()
 
@@ -209,17 +203,13 @@ class TestSpecvizHelper:
                                  7400., atol=1e-5)
 
     def test_get_spectral_regions_composite_region_multiple_and_nots(self):
-        spectrum_viewer = self.spec_app.app.get_viewer("spectrum-viewer")
-
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 7800))
-
-        spectrum_viewer.session.edit_subset_mode._mode = AndNotMode
-
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 6600))
-
-        spectrum_viewer.session.edit_subset_mode._mode = AndNotMode
-
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(7300, 7700))
+        subset = (SpectralRegion(6000*self.spec.spectral_axis.unit,
+                                 7800*self.spec.spectral_axis.unit) +
+                  SpectralRegion(6200*self.spec.spectral_axis.unit,
+                                 6600*self.spec.spectral_axis.unit) +
+                  SpectralRegion(7300*self.spec.spectral_axis.unit,
+                                 7700*self.spec.spectral_axis.unit))
+        self.spec_app.plugins['Subset Tools'].import_region(subset, mode=['andnot', 'andnot'])
 
         spec_region = self.spec_app.get_spectral_regions()
 
@@ -267,7 +257,10 @@ def test_get_spectra_no_spectra_label_redshift_error(specviz_helper, spectrum1d)
 
 def test_add_spectrum_after_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="test")
-    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
+    subset = SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
+                            7000 * spectrum1d.spectral_axis.unit)
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
+
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
     specviz_helper.load_data(new_spec, data_label="test2")
 
@@ -275,7 +268,9 @@ def test_add_spectrum_after_subset(specviz_helper, spectrum1d):
 def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
     # Ensure units we put in are the same as the units we get out
     specviz_helper.load_data(spectrum1d)
-    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
+    subset = SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
+                            7000 * spectrum1d.spectral_axis.unit)
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
 
     subsets = specviz_helper.get_spectral_regions()
     reg = subsets.get('Subset 1')
@@ -315,8 +310,9 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     # Convert the wavelength axis to micron
     new_spectral_axis = "um"
     specviz_helper.plugins['Unit Conversion'].spectral_unit = new_spectral_axis
-
-    spec_viewer.apply_roi(XRangeROI(0.6, 0.7))
+    spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    subset = SpectralRegion(0.6 * spectral_axis_unit, 0.7 * spectral_axis_unit)
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
 
     # Retrieve the Subset
     subsets = specviz_helper.get_spectral_regions(use_display_units=False)
@@ -347,8 +343,11 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
 
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     sv.toolbar.active_tool = sv.toolbar.tools['bqplot:xrange']
-    from glue.core.roi import XRangeROI
-    sv.apply_roi(XRangeROI(2.5, 3.5))
+
+    spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    subset = SpectralRegion(2.5 * spectral_axis_unit,
+                            3.5 * spectral_axis_unit)
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
     # _on_layers_update is not triggered within CI
     sv._on_layers_update()
     assert sv.state.layers[-1].linewidth == 3
@@ -487,7 +486,11 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
     specviz_helper.load_data(spectrum1d, 'my_spec_AA')
     specviz_helper.load_data(spectrum1d_nm, 'my_spec_nm')
 
-    specviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6200, 7000))
+    spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+
+    subset = SpectralRegion(6200 * spectral_axis_unit,
+                            7000 * spectral_axis_unit)
+    specviz_helper.plugins['Subset Tools'].import_region(subset)
 
     assert len(specviz_helper.app.data_collection.subset_groups) == 1
     subset1 = specviz_helper.app.data_collection.subset_groups[0]
