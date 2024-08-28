@@ -6,8 +6,7 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
-from glue.core.edit_subset_mode import AndMode, NewMode
-from glue.core.roi import CircularROI, XRangeROI
+from glue.core.roi import CircularROI
 from regions import Regions, CircleSkyRegion
 from specutils import Spectrum1D, SpectralRegion
 from pathlib import Path
@@ -199,7 +198,8 @@ class TestExportSubsets:
 
         # Test saving spectral subset
         subset_plugin.combination_mode.selected = 'new'
-        spectral_axis_unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+        spectral_axis_unit = u.Unit(
+            cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
         subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,
                                                    15.5 * spectral_axis_unit))
         export_plugin.subset.selected = 'Subset 2'

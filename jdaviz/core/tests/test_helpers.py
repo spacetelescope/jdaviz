@@ -35,7 +35,8 @@ class TestConfigHelper:
         self.label = "Test 1D Spectrum"
         spectral_axis_unit = u.AA
 
-        self.spec2 = spectrum1d._copy(spectral_axis=spectrum1d.spectral_axis+1000*spectral_axis_unit)
+        self.spec2 = spectrum1d._copy(
+            spectral_axis=spectrum1d.spectral_axis+1000*spectral_axis_unit)
         self.label2 = "Test 1D Spectrum 2"
         self.spec_app.load_data(spectrum1d, data_label=self.label)
         self.spec_app.load_data(self.spec2, data_label=self.label2)

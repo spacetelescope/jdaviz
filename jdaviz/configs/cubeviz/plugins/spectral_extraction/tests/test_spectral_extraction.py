@@ -440,7 +440,6 @@ def test_cube_extraction_with_nan(cubeviz_helper, image_cube_hdu_obj):
 
 def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    fv = cubeviz_helper.viewers['flux-viewer']._obj
     cubeviz_helper.plugins['Subset Tools'].import_region(CircularROI(xc=5, yc=5, radius=2))
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
@@ -467,7 +466,6 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
 
 def test_aperture_composite_detection(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
-    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
     subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
 
