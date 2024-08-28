@@ -590,6 +590,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 spec.meta['_default_color'] = default_color
             self.add_results.add_results_from_plugin(spec)
 
+            # Follows user-selected flux unit for extracted spectrum.
+            uc = self.app.get_tray_item_from_name("g-unit-conversion")
+            if uc.flux_unit_selected and (uc.flux_unit_selected != spec.flux.unit.to_string()):
+                self.spectrum_viewer.state.y_display_unit = uc.flux_unit_selected
+
             snackbar_message = SnackbarMessage(
                 f"{self.resulting_product_name.title()} extracted successfully.",
                 color="success",
