@@ -2,6 +2,7 @@ from traitlets import Dict, Unicode
 
 from jdaviz.core.template_mixin import TemplateMixin
 from jdaviz.core.user_api import UserApiWrapper
+from jdaviz.core.events import IconsUpdatedMessage
 
 __all__ = ['DataMenu']
 
@@ -23,10 +24,9 @@ class DataMenu(TemplateMixin):
         self._viewer = viewer
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
-        self.app.state.add_callback('viewer_icons', self._on_app_viewer_icons_changed)
-        self.app.state.add_callback('layer_icons', self._on_app_layer_icons_changed)
-        self._on_app_viewer_icons_changed(self.app.state.viewer_icons)
-        self._on_app_layer_icons_changed(self.app.state.layer_icons)
+        self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
+        self.viewer_icons = dict(self.app.state.viewer_icons)
+        self.layer_icons = dict(self.app.state.layer_icons)
 
     @property
     def user_api(self):
@@ -41,12 +41,10 @@ class DataMenu(TemplateMixin):
         except Exception:
             pass
 
-    def _on_app_viewer_icons_changed(self, value):
+    def _on_app_icons_updated(self, msg):
         # value is a CallbackDict, cast to dict
-        self.viewer_icons = dict(value)
-        self.set_viewer_id()
-
-    def _on_app_layer_icons_changed(self, value):
-        # value is a CallbackDict, cast to dict
-        self.layer_icons = dict(value)
+        if msg.icon_type == 'viewer':
+            self.viewer_icons = msg.icons
+        elif msg.icon_type == 'layer':
+            self.layer_icons = msg.icons
         self.set_viewer_id()

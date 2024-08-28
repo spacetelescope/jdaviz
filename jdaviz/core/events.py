@@ -11,7 +11,8 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'CanvasRotationChangedMessage',
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
            'PluginTableAddedMessage', 'PluginTableModifiedMessage',
-           'PluginPlotAddedMessage', 'PluginPlotModifiedMessage']
+           'PluginPlotAddedMessage', 'PluginPlotModifiedMessage',
+           'IconsUpdatedMessage']
 
 
 class NewViewerMessage(Message):
@@ -464,3 +465,13 @@ class PluginPlotModifiedMessage(PluginPlotAddedMessage):
     '''Message generated when the items in a plugin plot are changed'''
     def __init__(self, sender):
         super().__init__(sender)
+
+
+class IconsUpdatedMessage(Message):
+    '''Message generated when the viewer or layer icons are updated'''
+    def __init__(self, icon_type, icons, **kwargs):
+        # icon_type = 'layer' or 'viewer'
+        super().__init__(**kwargs)
+        self.icon_type = icon_type
+        # icons might be a CallbackDict, cast to ensure its a dictionary
+        self.icons = dict(icons)

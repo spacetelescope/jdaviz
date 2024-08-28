@@ -264,10 +264,6 @@ class JdavizViewerMixin(WithCache):
                                                      'prefix_icon': prefix_icon}
 
         self._data_menu.visible_layers = visible_layers
-        # this is hacky, but don't know why the state callbacks aren't working
-        # and this does ensure they're up to date
-        self._data_menu._on_app_viewer_icons_changed(self.jdaviz_app.state.viewer_icons)
-        self._data_menu._on_app_layer_icons_changed(self.jdaviz_app.state.layer_icons)
 
     def _on_layers_update(self, layers=None):
         if self.__class__.__name__ == 'MosvizTableViewer':

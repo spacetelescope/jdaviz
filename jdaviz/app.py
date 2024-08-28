@@ -45,7 +45,8 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
-                                ViewerRenamedMessage, ChangeRefDataMessage)
+                                ViewerRenamedMessage, ChangeRefDataMessage,
+                                IconsUpdatedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
@@ -390,6 +391,12 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=self._on_layers_changed)
         # SubsetDeleteMessage will also call _on_layers_changed via _on_subset_delete_message
+
+        # Emit messages when icons are updated
+        self.state.add_callback('viewer_icons',
+                                lambda value: self.hub.broadcast(IconsUpdatedMessage('viewer', value, sender=self)))  # noqa
+        self.state.add_callback('layer_icons',
+                                lambda value: self.hub.broadcast(IconsUpdatedMessage('layer', value, sender=self)))  # noqa
 
     def _on_plugin_table_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -1734,7 +1741,9 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item['id'] = new_reference
             self._viewer_store[new_reference] = self._viewer_store.pop(old_id)
             self._viewer_store[new_reference]._reference_id = new_reference
-            self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
+            viewer_icons = dict(self.state.viewer_icons)
+            viewer_icons[new_reference] = viewer_icons.pop(old_id)
+            self.state.viewer_icons = viewer_icons
 
         # update the viewer name attributes on the helper:
         old_viewer_ref_attrs = [
@@ -2484,7 +2493,14 @@ class Application(VuetifyTemplate, HubListener):
         # own attribute instead.
         viewer._reference_id = vid  # For reverse look-up
 
-        self.state.viewer_icons.setdefault(vid, len(self.state.viewer_icons)+1)
+        if vid not in self.state.viewer_icons:
+            self.state.viewer_icons = {**self.state.viewer_icons,
+                                       vid: len(self.state.viewer_icons) + 1}
+            # for some reason that state callback is not triggering this
+            self.hub.broadcast(IconsUpdatedMessage('viewer',
+                                                   self.state.viewer_icons,
+                                                   sender=self)
+                               )
 
         wcs_only_layers = getattr(viewer.state, 'wcs_only_layers', [])
 
