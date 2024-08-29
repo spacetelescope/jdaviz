@@ -252,8 +252,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
         if not hasattr(self, 'aperture'):
             return
+        orig_labels = [item['label'] for item in msg['old']]
         for item in msg['new']:
-            if item not in msg['old']:
+            if item['label'] not in orig_labels:
                 if item.get('type') != 'spatial':
                     continue
                 subset_lbl = item.get('label')
