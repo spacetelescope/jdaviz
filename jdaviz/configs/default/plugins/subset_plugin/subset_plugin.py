@@ -700,7 +700,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 break
 
     def import_region(self, region, max_num_regions=None, refdata_label=None,
-                      return_bad_regions=False, **kwargs):
+                      return_bad_regions=False, create_new_after=False, **kwargs):
         """
         Method for creating subsets from regions or region files.
 
@@ -731,6 +731,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             If `True`, return the regions that failed to load (see ``bad_regions``);
             This is useful for debugging. If `False`, do not return anything (`None`).
 
+        create_new_after : bool
+            If `True`, after subset is created, set subset to be `Create New`
+
         Returns
         -------
         bad_regions : list of (obj, str) or `None`
@@ -751,13 +754,13 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     raw_regs = SpectralRegion.read(region)
 
                 return self._load_regions(raw_regs, max_num_regions, refdata_label,
-                                          return_bad_regions, **kwargs)
+                                          return_bad_regions, create_new_after, **kwargs)
         else:
             return self._load_regions(region, max_num_regions, refdata_label,
-                                      return_bad_regions, **kwargs)
+                                      return_bad_regions, create_new_after, **kwargs)
 
     def _load_regions(self, regions, max_num_regions=None, refdata_label=None,
-                      return_bad_regions=False, **kwargs):
+                      return_bad_regions=False, create_new_after=False, **kwargs):
         """Load given region(s) into the viewer.
         WCS-to-pixel translation and mask creation, if needed, is relative
         to the image defined by ``refdata_label``. Meanwhile, the rest of
@@ -799,6 +802,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         return_bad_regions : bool
             If `True`, return the regions that failed to load (see ``bad_regions``);
             This is useful for debugging. If `False`, do not return anything (`None`).
+
+        create_new_after : bool
+            If `True`, after subset is created, set subset to be `Create New`
 
         kwargs : dict
             Extra keywords to be passed into the region's ``to_mask`` method.
@@ -883,10 +889,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                    RectanglePixelRegion, RectangleSkyRegion,
                                    CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
                 state = regions2roi(region, wcs=data.coords)
-                self._apply_subset_state_to_viewer(state, viewer)
+                self._apply_subset_state_to_viewer(state, viewer, create_new_after=create_new_after)
             elif isinstance(region, (CircularROI, CircularAnnulusROI,
                                      EllipticalROI, RectangularROI)):
-                self._apply_subset_state_to_viewer(region, viewer)
+                self._apply_subset_state_to_viewer(region, viewer, create_new_after=create_new_after)
 
             # Last resort: Masked Subset that is static (if data is not a cube)
             elif data.ndim == 2:
@@ -942,8 +948,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
             f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
 
-        # Make sure that the plugin selects the most recently created subset
-        self.subset_selected = self.app.data_collection.subset_groups[-1].label
+        # # Make sure that the plugin selects the most recently created subset
+        # self.subset_selected = self.app.data_collection.subset_groups[-1].label
 
         if return_bad_regions:
             return bad_regions
@@ -1019,7 +1025,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if return_bad_regions:
             return bad_regions
 
-    def _apply_subset_state_to_viewer(self, state, viewer):
+    def _apply_subset_state_to_viewer(self, state, viewer, create_new_after=False):
         if self.combination_mode.selected is not None:
             self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[
                 self.combination_mode.selected]
@@ -1027,7 +1033,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             raise NotImplementedError("This method is currently only for image viewers")
         else:
             viewer.apply_roi(state)
-        self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+        if create_new_after:
+            self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration # noqa
+            self.combination_mode.selected = 'new'
 
     @observe('combination_selected')
     def _combination_selected_updated(self, change):

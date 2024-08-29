@@ -63,7 +63,7 @@ def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
     dc[0].meta["_orig_spec"] = spectrum1d
 
     cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'test')
-    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit)
+    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6600 * unit,
                                                                         7400 * unit))
 

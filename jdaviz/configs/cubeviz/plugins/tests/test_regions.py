@@ -58,7 +58,7 @@ class TestLoadRegions(BaseRegionHandler):
         self.cubeviz._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
 
         # Manually draw wavelength range.
-        unit = u.Unit(self.cubeviz.plugins['Unit Conversion'].spectral_unit)
+        unit = u.Unit(self.cubeviz.plugins['Unit Conversion'].spectral_unit.selected)
         self.cubeviz.plugins['Subset Tools'].import_region(SpectralRegion(4.892 * unit,
                                                                           4.896 * unit))
         self.cubeviz.app.session.edit_subset_mode.edit_subset = None
