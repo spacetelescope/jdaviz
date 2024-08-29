@@ -732,7 +732,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             This is useful for debugging. If `False`, do not return anything (`None`).
 
         create_new_after : bool
-            If `True`, after subset is created, set subset to be `Create New`
+            If `True`, after subset is created, set combination mode to new.
 
         Returns
         -------
