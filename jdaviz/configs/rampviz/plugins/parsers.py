@@ -128,7 +128,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
 
     elif isinstance(file_obj, Level1bModel):
         metadata = standardize_metadata({
-            key: value for key, value in file_obj.to_flat_dict().items()
+            key: value for key, value in file_obj.to_flat_dict(
+                include_arrays=False)
+            .items()
             if key.startswith('meta')
         })
 
@@ -152,7 +154,7 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
         raise NotImplementedError(f'Unsupported data format: {file_obj}')
 
 
-def _swap_axes(x):
+def move_group_axis_last(x):
     # swap axes per the conventions of ramp cubes
     # (group axis comes first) and the default in
     # rampviz (group axis expected last)
@@ -189,8 +191,12 @@ def _roman_3d_to_glue_data(
     ramp_diff_data_label = f"{data_label}[DIFF]"
 
     # load these cubes into the cache:
-    app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(_swap_axes(data))
-    app._jdaviz_helper.cube_cache[ramp_diff_data_label] = NDDataArray(_swap_axes(diff_data))
+    app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(
+        move_group_axis_last(data)
+    )
+    app._jdaviz_helper.cube_cache[ramp_diff_data_label] = NDDataArray(
+        move_group_axis_last(diff_data)
+    )
 
     if meta is not None:
         meta = standardize_roman_metadata(file_obj)
@@ -198,14 +204,14 @@ def _roman_3d_to_glue_data(
     # load these cubes into the app:
     _parse_ndarray(
         app,
-        file_obj=_swap_axes(data),
+        file_obj=move_group_axis_last(data),
         data_label=ramp_cube_data_label,
         viewer_reference_name=group_viewer_reference_name,
         meta=meta
     )
     _parse_ndarray(
         app,
-        file_obj=_swap_axes(diff_data),
+        file_obj=move_group_axis_last(diff_data),
         data_label=ramp_diff_data_label,
         viewer_reference_name=diff_viewer_reference_name,
         meta=meta
@@ -263,6 +269,27 @@ def _parse_hdulist(
 def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
                      group_viewer_reference_name, diff_viewer_reference_name,
                      meta=None):
+
+    # Identify NIRSpec IRS2 detector mode, which needs special treatment.
+    # jdox: https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph/nirspec-instrumentation/
+    # nirspec-detectors/nirspec-detector-readout-modes-and-patterns/nirspec-irs2-detector-readout-mode
+    if 'meta.model_type' in meta:
+        # this is a Level1bModel, which has metadata in a Node rather
+        # than a dictionary:
+        from_jwst_nirspec_irs2 = (
+            meta.get('meta._primary_header.TELESCOP') == 'JWST' and
+            meta.get('meta._primary_header.INSTRUME') == 'NIRSPEC' and
+            'IRS2' in meta.get('meta._primary_header.READPATT', '')
+        )
+    else:
+        # assume this was parsed from FITS:
+        header = meta.get('_primary_header', {})
+        from_jwst_nirspec_irs2 = (
+            header.get('TELESCOP') == 'JWST' and
+            header.get('INSTRUME') == 'NIRSPEC' and
+            'IRS2' in header.get('READPATT', '')
+        )
+
     # last axis is the group axis, first two are spatial axes:
     diff_data = np.vstack([
         # begin with a group of zeros, so
@@ -271,8 +298,15 @@ def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
         np.diff(ramp_cube_data, axis=0)
     ])
 
-    ramp_cube = NDDataArray(_swap_axes(ramp_cube_data), unit=flux_unit, meta=meta)
-    diff_cube = NDDataArray(_swap_axes(diff_data), unit=flux_unit, meta=meta)
+    if from_jwst_nirspec_irs2:
+        # JWST/NIRSpec in IRS2 readout needs an additional axis swap for x and y:
+        def move_axes(x):
+            return np.swapaxes(move_group_axis_last(x), 0, 1)
+    else:
+        move_axes = move_group_axis_last
+
+    ramp_cube = NDDataArray(move_axes(ramp_cube_data), unit=flux_unit, meta=meta)
+    diff_cube = NDDataArray(move_axes(diff_data), unit=flux_unit, meta=meta)
 
     group_data_label = app.return_data_label(file_name, ext="DATA")
     diff_data_label = app.return_data_label(file_name, ext="DIFF")
