@@ -614,12 +614,14 @@ class Application(VuetifyTemplate, HubListener):
             if children_layers is not None:
                 parent_icon = self.state.layer_icons[layer_name]
                 for i, child_layer in enumerate(children_layers, start=1):
-                    child_layer_icons[child_layer] = f'{parent_icon}{i}'
+                    if child_layer not in self.state.layer_icons:
+                        child_layer_icons[child_layer] = f'{parent_icon}{i}'
 
-        self.state.layer_icons = {
-            **self.state.layer_icons,
-            **child_layer_icons
-        }
+        if child_layer_icons:
+            self.state.layer_icons = {
+                **self.state.layer_icons,
+                **child_layer_icons
+            }
 
     def _change_reference_data(self, new_refdata_label, viewer_id=None):
         """
