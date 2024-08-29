@@ -18,7 +18,7 @@ DEFAULT_HISTORY_VERBOSITY = 'info'
 
 def main(filepaths=None, layout='default', instrument=None, browser='default',
          theme='auto', verbosity=DEFAULT_VERBOSITY, history_verbosity=DEFAULT_HISTORY_VERBOSITY,
-         hotreload=False):
+         host='localhost', hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
 
@@ -38,6 +38,8 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         Verbosity of the popup messages in the application.
     history_verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the history logger in the application.
+    host : str, optional
+        Host to bind the server to, default is 'localhost'.
     hotreload : bool
         Whether to enable hot-reloading of the UI (for development)
     """
@@ -74,7 +76,8 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         args += ['--production']
     cli(['run', 'jdaviz.solara',
          '--theme-loader', 'plain',
-         '--theme-variant', theme] + args)
+         '--theme-variant', theme,
+         '--host', host] + args)
 
 
 def _main(config=None):
@@ -114,7 +117,7 @@ def _main(config=None):
 
     main(filepaths=args.filepaths, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
-         hotreload=args.hotreload)
+         host=args.host, hotreload=args.hotreload)
 
 
 def _specviz():
