@@ -1936,9 +1936,9 @@ class SubsetSelect(SelectPluginComponent):
              or (subset.label == self.selected))):
             # updated the currently selected subset, clear all cache
             self._clear_cache()
-            update_has_subregions = True
+            selected_has_changed = True
         else:
-            update_has_subregions = False
+            selected_has_changed = False
 
         if subset.label not in self.labels:
             # NOTE: this logic will need to be revisited if generic renaming of subsets is added
@@ -1958,11 +1958,11 @@ class SubsetSelect(SelectPluginComponent):
                               else self._subset_to_dict(subset)
                               for s in self.items]
 
-        if update_has_subregions:
+        if selected_has_changed:
             self._update_has_subregions()
 
-        if self._subset_selected_changed_callback is not None:
-            self._subset_selected_changed_callback()
+            if self._subset_selected_changed_callback is not None:
+                self._subset_selected_changed_callback()
 
     def _update_has_subregions(self):
         if "selected_has_subregions" in self._plugin_traitlets.keys():
