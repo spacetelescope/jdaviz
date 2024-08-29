@@ -743,7 +743,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             If not requested, return `None`.
 
         """
-
         if isinstance(region, str):
             if os.path.exists(region):
                 from regions import Regions
@@ -889,10 +888,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                                    RectanglePixelRegion, RectangleSkyRegion,
                                    CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
                 state = regions2roi(region, wcs=data.coords)
-                self._apply_subset_state_to_viewer(state, viewer, create_new_after=create_new_after)
+                self._apply_subset_state_to_viewer(state, viewer,
+                                                   create_new_after=create_new_after)
             elif isinstance(region, (CircularROI, CircularAnnulusROI,
                                      EllipticalROI, RectangularROI)):
-                self._apply_subset_state_to_viewer(region, viewer, create_new_after=create_new_after)
+                self._apply_subset_state_to_viewer(region, viewer,
+                                                   create_new_after=create_new_after)
 
             # Last resort: Masked Subset that is static (if data is not a cube)
             elif data.ndim == 2:
@@ -947,9 +948,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.app.hub.broadcast(SnackbarMessage(
             f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
             f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
-
-        # # Make sure that the plugin selects the most recently created subset
-        # self.subset_selected = self.app.data_collection.subset_groups[-1].label
 
         if return_bad_regions:
             return bad_regions

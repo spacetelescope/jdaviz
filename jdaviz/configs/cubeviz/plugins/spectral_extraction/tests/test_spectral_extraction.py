@@ -248,7 +248,8 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
     center = PixCoord(5, 10)
     cubeviz_helper.plugins['Subset Tools'].import_region(CirclePixelRegion(center, radius=2.5))
     cubeviz_helper.plugins['Subset Tools'].combination_mode.selected = 'new'
-    cubeviz_helper.plugins['Subset Tools'].import_region(EllipsePixelRegion(center, width=5, height=5))
+    cubeviz_helper.plugins['Subset Tools'].import_region(
+        EllipsePixelRegion(center, width=5, height=5))
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
 
