@@ -554,7 +554,8 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     # regression tests make sure that doesn't happen anymore by accounting
     # for non-science pixels in the sums:
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
-    flux_viewer = cubeviz_helper.app.get_viewer('flux-viewer')
+    flux_viewer = cubeviz_helper.app.get_viewer(
+        cubeviz_helper._default_flux_viewer_reference_name)
 
     # create a spatial subset that spans all spaxels:
     flux_viewer.apply_roi(CircularROI(1.5, 2, 5))
@@ -575,10 +576,10 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     uc.flux_unit = "MJy"
     spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']
     collapsed = spec_extr_plugin.extract()
-    assert collapsed.flux.unit == u.MJy
-    assert collapsed.uncertainty.unit == u.MJy
-    assert_allclose(collapsed.flux.value, extracted_spectra[0].flux.value / 1e6)
+    # Actual values not in display unit but should not affect display unit.
+    assert collapsed.flux.unit == u.Jy
     assert uc.flux_unit.selected == "MJy"
+    assert cubeviz_helper.app._get_display_unit('spectral_y') == "MJy"
 
 
 @pytest.mark.usefixtures('_jail')
