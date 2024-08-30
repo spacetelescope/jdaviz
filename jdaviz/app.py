@@ -2513,7 +2513,7 @@ class Application(VuetifyTemplate, HubListener):
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
-            'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id,
+            'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
             # TODO: remove unused entries after old data menu deprecation period
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
             'wcs_only_layers': wcs_only_layers,
