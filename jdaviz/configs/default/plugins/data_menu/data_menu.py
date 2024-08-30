@@ -45,7 +45,6 @@ class DataMenu(TemplateMixin):
             return
 
     def _on_app_icons_updated(self, msg):
-        # value is a CallbackDict, cast to dict
         if msg.icon_type == 'viewer':
             self.viewer_icons = msg.icons
         elif msg.icon_type == 'layer':

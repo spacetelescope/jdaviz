@@ -1741,9 +1741,7 @@ class Application(VuetifyTemplate, HubListener):
             viewer_item['id'] = new_reference
             self._viewer_store[new_reference] = self._viewer_store.pop(old_id)
             self._viewer_store[new_reference]._reference_id = new_reference
-            viewer_icons = dict(self.state.viewer_icons)
-            viewer_icons[new_reference] = viewer_icons.pop(old_id)
-            self.state.viewer_icons = viewer_icons
+            self.state.viewer_icons[new_reference] = self.state.viewer_icons.pop(old_id)
 
         # update the viewer name attributes on the helper:
         old_viewer_ref_attrs = [
