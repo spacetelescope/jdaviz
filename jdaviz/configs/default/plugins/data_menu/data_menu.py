@@ -34,12 +34,15 @@ class DataMenu(TemplateMixin):
         return UserApiWrapper(self, expose=expose)
 
     def set_viewer_id(self):
-        # TODO: refactor so this can be set once
+        # viewer_ids are not populated on the viewer at init, so we'll keep checking and set
+        # these the first time that they are available
+        if len(self.viewer_id) and len(self.viewer_reference):
+            return
         try:
             self.viewer_id = getattr(self._viewer, '_reference_id', '')
             self.viewer_reference = self._viewer.reference
-        except Exception:
-            pass
+        except AttributeError:
+            return
 
     def _on_app_icons_updated(self, msg):
         # value is a CallbackDict, cast to dict
