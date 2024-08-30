@@ -1,6 +1,7 @@
 import numpy as np
 from astropy.nddata import NDDataArray
 from glue.core import BaseData
+from glue.core.subset import Subset
 from glue_jupyter.bqplot.image import BqplotImageView
 
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin, JdavizProfileView
@@ -36,21 +37,29 @@ class RampvizProfileView(JdavizProfileView, WithSliceIndicator):
             self.reset_limits()
 
     def reset_limits(self):
-        super().reset_limits()
-
         # override to reset to the global y limits including marks:
-        global_y_min = float(self.state.y_min)
-        global_y_max = float(self.state.y_max)
+        global_y_min = np.inf
+        global_y_max = -np.inf
         for mark in self.figure.marks:
             if len(mark.y) and mark.visible:
                 global_y_min = min(global_y_min, np.nanmin(mark.y))
                 global_y_max = max(global_y_max, np.nanmax(mark.y))
 
-        if global_y_min != self.state.y_min or global_y_max != self.state.y_max:
-            self.set_limits(
-                y_min=global_y_min * 0.9,
-                y_max=global_y_max * 1.1
-            )
+        for layer in self.state.layers:
+            if not isinstance(layer.layer, Subset) and layer.visible:
+                component = layer.layer.main_components[0]
+                layer_y_min = layer.layer.get_component(component).data.min()
+                layer_y_max = layer.layer.get_component(component).data.max()
+
+                global_y_min = min(global_y_min, layer_y_min)
+                global_y_max = max(global_y_max, layer_y_max)
+
+        y_buffer = 0.1
+
+        y_min = (1 - y_buffer) * global_y_min
+        y_max = (1 + y_buffer) * global_y_max
+        if y_min != self.state.y_min or y_max != self.state.y_max:
+            self.set_limits(y_min=y_min, y_max=y_max)
 
     def set_plot_axes(self):
 

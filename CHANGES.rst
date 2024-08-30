@@ -20,7 +20,7 @@ New Features
 
 - The standalone version of jdaviz now uses solara instead of voila, resulting in faster load times. [#2909]
 
-- New configuration for ramp/Level 1 data products from Roman WFI and JWST [#3120, #3148, #3167]
+- New configuration for ramp/Level 1 data products from Roman WFI and JWST [#3120, #3148, #3167, #3171]
 
 Cubeviz
 ^^^^^^^

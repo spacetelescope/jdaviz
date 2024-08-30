@@ -186,6 +186,8 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             if getattr(mark, 'label', None) != subset_lbl
         ] + marks
 
+        self.integration_viewer.reset_limits()
+
     def _on_subset_delete(self, msg={}):
         subset_lbl = msg.subset.label
         self.integration_viewer.figure.marks = [
@@ -200,7 +202,6 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if not hasattr(self.app._jdaviz_helper, '_default_integration_viewer_reference_name'):
             return
 
-        redraw_limits = False
         for mark in self.integration_viewer.figure.marks:
             if isinstance(mark, PluginLine) and mark.label is not None:
                 new_visibility = (
@@ -209,10 +210,8 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 )
                 if mark.visible != new_visibility:
                     mark.visible = new_visibility
-                    redraw_limits = True
 
-        if redraw_limits:
-            self.integration_viewer.reset_limits()
+        self.integration_viewer.reset_limits()
 
     @property
     def _subset_preview_visible(self):
