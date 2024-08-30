@@ -23,7 +23,7 @@ class RampPerPixel(ProfileFromCube):
     def on_mouse_move(self, data):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
-            self._reset_profile_viewer_bounds()
+            self._profile_viewer.reset_limits()
             return
 
         x = int(np.round(data['domain']['x']))
@@ -41,3 +41,4 @@ class RampPerPixel(ProfileFromCube):
                 return
             self._mark.update_xy(np.arange(y_values.size), y_values)
             self._mark.visible = True
+            self._profile_viewer.reset_limits()

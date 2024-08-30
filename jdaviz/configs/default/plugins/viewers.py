@@ -198,7 +198,11 @@ class JdavizViewerMixin(WithCache):
             return
 
         # default visibility based on the visibility of the "parent" data layer
-        layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
+        if self.__class__.__name__ != 'RampvizProfileView':
+            layer_state.visible = self._get_layer(layer_state.layer.data.label).visible
+        else:
+            # Rampviz doesn't show subset profiles by default:
+            layer_state.visible = False
 
     def _update_layer_icons(self):
         # update visible_layers (TODO: move this somewhere that can update on color change, etc)
