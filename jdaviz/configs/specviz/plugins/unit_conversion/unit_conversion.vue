@@ -35,7 +35,7 @@
       ></v-select>
     </v-row>
 
-    <v-row>
+    <v-row v-if="config in ['cubeviz', 'imviz', 'mosviz']">
       <v-select
         :menu-props="{ left: true }"
         attach
