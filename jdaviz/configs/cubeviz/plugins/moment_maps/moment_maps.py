@@ -175,9 +175,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.send_state("output_unit_selected")
 
         # either 'Flux' or 'Surface Brightness'
-        orig_flux_or_sb = self.output_unit_items[0]['label']
+        orig_spectral_y_type = self.output_unit_items[0]['label']
 
-        unit_dict = {orig_flux_or_sb: "",
+        unit_dict = {orig_spectral_y_type: "",
                      "Spectral Unit": "",
                      "Velocity": "km/s",
                      "Velocity^N": f"km{self.n_moment}/s{self.n_moment}"}
@@ -200,19 +200,19 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             # get flux/SB units
             if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
                 if self.spectrum_viewer.state.y_display_unit is not None:
-                    unit_dict[orig_flux_or_sb] = self.spectrum_viewer.state.y_display_unit
+                    unit_dict[orig_spectral_y_type] = self.spectrum_viewer.state.y_display_unit
                 else:
                     # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
                     # been done if not, get default flux units which should be the units displayed
-                    unit_dict[orig_flux_or_sb] = data.get_component('flux').units
+                    unit_dict[orig_spectral_y_type] = data.get_component('flux').units
             else:
                 # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
                 # been done if not, get default flux units which should be the units displayed
-                unit_dict[orig_flux_or_sb] = data.get_component('flux').units
+                unit_dict[orig_spectral_y_type] = data.get_component('flux').units
 
             # figure out if label should say 'Flux' or 'Surface Brightness'
             sb_or_flux_label = "Flux"
-            is_unit_solid_angle = check_if_unit_is_per_solid_angle(unit_dict[orig_flux_or_sb])
+            is_unit_solid_angle = check_if_unit_is_per_solid_angle(unit_dict[orig_spectral_y_type])
             if is_unit_solid_angle is True:
                 sb_or_flux_label = "Surface Brightness"
 
@@ -353,11 +353,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 flux_sb_unit = data.get_component('flux').units
 
             # convert unit string to u.Unit so moment map data can be converted
-            flux_or_sb_display_unit = u.Unit(flux_sb_unit)
+            spectral_y_display_unit = u.Unit(flux_sb_unit)
             if SPECUTILS_LT_1_15_1:
-                moment_new_unit = flux_or_sb_display_unit
+                moment_new_unit = spectral_y_display_unit
             else:
-                moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
+                moment_new_unit = spectral_y_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
             self.moment = self.moment.to(moment_new_unit)
 
         # Reattach the WCS so we can load the result

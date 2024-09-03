@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Unit Conversion"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Convert the spectral flux density and spectral axis units.'"
+    :description="docs_description || 'Convert the units of displayed physical quantities.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
@@ -34,7 +34,7 @@
         persistent-hint
       ></v-select>
     </v-row>
-  
+
     <v-row>
       <v-select
         :menu-props="{ left: true }"
@@ -45,7 +45,7 @@
         :class="api_hints_enabled ? 'api-hint' : null"
         hint="Solid angle unit."
         persistent-hint
-        
+
       ></v-select>
     </v-row>
 
@@ -68,9 +68,9 @@
       <v-select
         :menu-props="{ left: true }"
         attach
-        :items="flux_or_sb_items.map(i => i.label)"
-        v-model="flux_or_sb_selected"
-        :label="api_hints_enabled ? 'plg.flux_or_sb =' : 'Flux or Surface Brightness'"
+        :items="spectral_y_type_items.map(i => i.label)"
+        v-model="spectral_y_type_selected"
+        :label="api_hints_enabled ? 'plg.spectral_y_type =' : 'Spectral y-axis Type'"
         :class="api_hints_enabled ? 'api-hint' : null"
         hint="Select the y-axis physical type for the spectrum-viewer."
         persistent-hint
