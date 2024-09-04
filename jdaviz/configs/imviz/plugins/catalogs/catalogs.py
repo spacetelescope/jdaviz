@@ -173,15 +173,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                       query_region_result['dec'],
                                       unit='deg')
 
-            # adding in coords + Id's into table
-            # NOTE: If performance becomes a problem, see
-            # https://docs.astropy.org/en/stable/table/index.html#performance-tips
-            for row in self.app._catalog_source_table:
-                row_info = {'Right Ascension (degrees)': row['ra'],
-                            'Declination (degrees)': row['dec'],
-                            'Object ID': row['objid'].astype(str)}
-                self.table.add_item(row_info)
-
         elif self.catalog_selected == 'Gaia':
             from astroquery.gaia import Gaia, conf
 
@@ -233,7 +224,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         self.table.item_key = 'id'
         self.table.show_rowselect = True
-        i = 0
+        i = len(skycoord_table) + 1
 
         if self.catalog_selected == "SDSS":
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
@@ -245,7 +236,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'id': i,
                             'x_coord': x_coord,
                             'y_coord': y_coord}
-
                 self.table.add_item(row_info)
                 i += 1
 
@@ -262,7 +252,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'x_coord': x_coord,
                             'y_coord': y_coord}
 
-                self.table.add_item(row_info)
                 self.table.add_item(row_info)
                 i += 1
 
@@ -303,16 +292,19 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     def plot_selected_points(self):
         selected_rows = self.table.selected_rows
+        if len(selected_rows) == 0 or 'x_coord' not in selected_rows[0]:
+            return
 
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
-
         self._get_mark(self.viewer.selected_obj).update_xy(getattr(x, 'value', x),
                                                            getattr(y, 'value', y))
 
     # this function will zoom into the image based on the selected points
-    def zoom_in(self):
+    def vue_zoom_in(self, *args, **kwargs):
         selected_rows = self.table.selected_rows
+        if len(selected_rows) == 0 or 'x_coord' not in selected_rows[0]:
+            return
 
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]

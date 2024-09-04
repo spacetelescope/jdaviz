@@ -67,6 +67,15 @@
             Search
           </plugin-action-button>
        </v-col>
+       <v-col>
+         <plugin-action-button
+            :results_isolated_to_plugin="true"
+            @click="zoom_in"
+            :spinner="spinner"
+          >
+            Zoom in
+          </plugin-action-button>
+       </v-col>
     </v-row>
 
     <v-row>
