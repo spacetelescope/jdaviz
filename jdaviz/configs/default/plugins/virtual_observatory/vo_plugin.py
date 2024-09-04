@@ -11,7 +11,12 @@ from traitlets import Bool, Unicode, Any, List, Int, observe
 from jdaviz.configs.imviz.plugins.orientation.orientation import (
     orientation_plugin_label,
 )
-from jdaviz.core.events import SnackbarMessage, AddDataMessage, RemoveDataMessage
+from jdaviz.core.events import (
+    SnackbarMessage,
+    AddDataMessage,
+    RemoveDataMessage,
+    LinkUpdatedMessage,
+)
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
     PluginTemplateMixin,
@@ -74,8 +79,9 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         self.hub.subscribe(self, AddDataMessage, handler=self._center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._center_on_data)
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._center_on_data)
 
-    @observe("viewer_selected", "change")
+    @observe("viewer_selected", type="change")
     def _center_on_data(self, _=None):
         """
         If data is present in the default viewer, center the plugin's coordinates on
@@ -343,7 +349,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                     str(entry["URL"]),  # Open URL as FITS object
                     data_label=f"{self.source}_{self.resource_selected}_{entry.get('Title', entry.get('URL', ''))}",  # noqa: E501
                     cache=False,
-                    timeout=1e6  # Set to arbitrarily large value to prevent timeouts
+                    timeout=1e6,  # Set to arbitrarily large value to prevent timeouts
                 )
             except Exception as e:
                 self.hub.broadcast(
