@@ -1,4 +1,5 @@
-from numpy.testing import assert_allclose
+from astropy.io import fits
+import numpy as np
 import pytest
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
@@ -46,10 +47,10 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         # Switch to first viewer and verify coordinates have switched
         vo_plugin.viewer_selected = "imviz-0"
         ra_str, dec_str = vo_plugin.source.split()
-        assert_allclose(
+        np.testing.assert_allclose(
             float(ra_str), self._data_center_coords["has_wcs_1[SCI,1]"]["ra"]
         )
-        assert_allclose(
+        np.testing.assert_allclose(
             float(dec_str), self._data_center_coords["has_wcs_1[SCI,1]"]["dec"]
         )
 
@@ -60,10 +61,10 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         # Now load second data into second viewer and verify coordinates
         self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_2[SCI,1]")
         ra_str, dec_str = vo_plugin.source.split()
-        assert_allclose(
+        np.testing.assert_allclose(
             float(ra_str), self._data_center_coords["has_wcs_2[SCI,1]"]["ra"]
         )
-        assert_allclose(
+        np.testing.assert_allclose(
             float(dec_str), self._data_center_coords["has_wcs_2[SCI,1]"]["dec"]
         )
 
@@ -132,6 +133,65 @@ class TestVOImvizLocal(BaseImviz_WCS_WCS):
         )
         assert vo_plugin._populate_url_only is True
         assert vo_plugin.table.headers_visible == ["URL"]
+
+
+def test_link_type_autocoord(imviz_helper):
+    """
+    Tests switching linking types forces recalculation of viewer center coordinates
+    """
+    # First data with WCS, same as the one in BaseImviz_WCS_NoWCS.
+    hdu1 = fits.ImageHDU(np.random.rand(100, 100), name="SCI")
+    hdu1.header.update(
+        {
+            "CTYPE1": "RA---TAN",
+            "CUNIT1": "deg",
+            "CDELT1": -2.777777778,
+            "CRPIX1": 1,
+            "CRVAL1": 337.5202808,
+            "NAXIS1": 10,
+            "CTYPE2": "DEC--TAN",
+            "CUNIT2": "deg",
+            "CDELT2": 2.777777778,
+            "CRPIX2": 1,
+            "CRVAL2": -20.833333059999998,
+            "NAXIS2": 10,
+        }
+    )
+    imviz_helper.load_data(hdu1, data_label="has_wcs_1")
+
+    # Second data with WCS, similar to above but dithered by 1 pixel in X.
+    hdu2 = fits.ImageHDU(np.ones((10, 10)), name="SCI")
+    hdu2.header.update(
+        {
+            "CTYPE1": "RA---TAN",
+            "CUNIT1": "deg",
+            "CDELT1": -0.0002777777778,
+            "CRPIX1": 2,
+            "CRVAL1": 137.5202808,
+            "NAXIS1": 10,
+            "CTYPE2": "DEC--TAN",
+            "CUNIT2": "deg",
+            "CDELT2": 0.0002777777778,
+            "CRPIX2": 1,
+            "CRVAL2": -20.833333059999998,
+            "NAXIS2": 10,
+        }
+    )
+    imviz_helper.load_data(hdu2, data_label="has_wcs_2")
+
+    vo_plugin = imviz_helper.plugins["Virtual Observatory"]._obj
+    vo_plugin.viewer_selected = "imviz-0"
+    vo_plugin._center_on_data()
+    ra_str, dec_str = vo_plugin.source.split()
+    np.testing.assert_allclose(float(ra_str), 284.2101962057667)
+    np.testing.assert_allclose(float(dec_str), 32.23616603681311)
+
+    imviz_helper.plugins[orientation_plugin_label].link_type = "WCS"
+
+    ra_str, dec_str = vo_plugin.source.split()
+
+    np.testing.assert_allclose(float(ra_str), 326.7884142245305)
+    np.testing.assert_allclose(float(dec_str), -9.905948925234416)
 
 
 @pytest.mark.remote_data
