@@ -138,7 +138,7 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def _on_data_added(self, msg={}):
         # only perform the default collapse after the first data load:
-        if len(self.app.data_collection) == 2:
+        if len(self.app.data_collection) == 2 and len(self.app._jdaviz_helper.cube_cache):
             self.extract(add_data=True)
             self.integration_viewer._initialize_x_axis()
 
