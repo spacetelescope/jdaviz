@@ -144,7 +144,7 @@ class UnitConversion(PluginTemplateMixin):
             self.spectral_unit.selected = x_unit_str
             if not len(self.flux_unit.choices) or not len(self.angle_unit.choices):
                 # in case flux_unit was triggered first (but could not be set because there
-                # as no spectral_unit to determine valid equivalencies)
+                # was no spectral_unit to determine valid equivalencies)
                 self._on_glue_y_display_unit_changed(self.spectrum_viewer.state.y_display_unit)
 
     def _on_glue_y_display_unit_changed(self, y_unit_str):
@@ -156,12 +156,10 @@ class UnitConversion(PluginTemplateMixin):
             # and call this manually in the case that that is triggered second.
             return
         self.spectrum_viewer.set_plot_axes()
-        print(f"y_unit_str is {y_unit_str}")
 
         x_unit = u.Unit(self.spectral_unit.selected)
         y_unit_str = _valid_glue_display_unit(y_unit_str, self.spectrum_viewer, 'y')
         y_unit = u.Unit(y_unit_str)
-        print(f"y_unit is {y_unit}")
 
         if not check_if_unit_is_per_solid_angle(y_unit_str) and y_unit_str != self.flux_unit.selected:  # noqa
             flux_choices = create_flux_equivalencies_list(y_unit, x_unit)
@@ -179,7 +177,6 @@ class UnitConversion(PluginTemplateMixin):
             self.flux_unit.choices = flux_choices
             flux_unit = str(y_unit * u.sr)
             if flux_unit in self.flux_unit.choices and flux_unit != self.flux_unit.selected:
-                print(f"Setting flux unit to {flux_unit}")
                 self.flux_unit.selected = flux_unit
 
         # sets the angle unit drop down and the surface brightness read-only text
@@ -256,6 +253,9 @@ class UnitConversion(PluginTemplateMixin):
         # flux unit is updated. if data was loaded in a flux unit (i.e MJy), it
         # can be reperesented as a per-pixel surface brightness unit
         flux_unit = self.flux_unit.selected
+        if self.angle_unit.selected is None or self.angle_unit.selected == "":
+            # Plugin isn't completely initialized, can't run the rest of this logic yet.
+            return
         sb_unit = self._append_angle_correctly(flux_unit, self.angle_unit.selected)
 
         self.hub.broadcast(GlobalDisplayUnitChanged("flux", flux_unit, sender=self))
