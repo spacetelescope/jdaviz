@@ -257,6 +257,12 @@ def spectrum1d_cube_custom_fluxunit():
 
 
 @pytest.fixture
+def spectrum1d_cube_fluxunit_jy_per_steradian():
+    return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy/u.sr, shape=(10, 4, 5),
+                                                 with_uncerts=True)
+
+
+@pytest.fixture
 def mos_spectrum1d(mos_spectrum2d):
     '''
     A specially defined Spectrum1d that matches the corresponding spectrum2d below.
