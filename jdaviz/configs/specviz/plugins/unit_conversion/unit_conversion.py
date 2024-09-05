@@ -156,10 +156,12 @@ class UnitConversion(PluginTemplateMixin):
             # and call this manually in the case that that is triggered second.
             return
         self.spectrum_viewer.set_plot_axes()
+        print(f"y_unit_str is {y_unit_str}")
 
         x_unit = u.Unit(self.spectral_unit.selected)
         y_unit_str = _valid_glue_display_unit(y_unit_str, self.spectrum_viewer, 'y')
         y_unit = u.Unit(y_unit_str)
+        print(f"y_unit is {y_unit}")
 
         if not check_if_unit_is_per_solid_angle(y_unit_str) and y_unit_str != self.flux_unit.selected:  # noqa
             flux_choices = create_flux_equivalencies_list(y_unit, x_unit)
@@ -175,6 +177,10 @@ class UnitConversion(PluginTemplateMixin):
         if check_if_unit_is_per_solid_angle(y_unit_str):
             flux_choices = create_flux_equivalencies_list(y_unit * u.sr, x_unit)
             self.flux_unit.choices = flux_choices
+            flux_unit = str(y_unit * u.sr)
+            if flux_unit in self.flux_unit.choices and flux_unit != self.flux_unit.selected:
+                print(f"Setting flux unit to {flux_unit}")
+                self.flux_unit.selected = flux_unit
 
         # sets the angle unit drop down and the surface brightness read-only text
         if self.app.data_collection[0]:
