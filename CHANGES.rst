@@ -9,6 +9,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Fixed multiple select handling for batch mode aperture photometry in Cubeviz. [#3163]
+
 Imviz
 ^^^^^
 

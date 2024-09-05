@@ -114,7 +114,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                                     'photon flux density wav',
                                     'spectral flux density',
                                     'photon flux density',
-                                    'energy flux']  # Moment map 0
+                                    'energy flux',  # Moment map 0
+                                    'surface brightness']
                 return ((data.ndim in (2, 3)) and
                         ((img_unit == (u.MJy / u.sr)) or
                          (img_unit.physical_type in acceptable_types)))
@@ -143,10 +144,19 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config != "cubeviz":
             return
         # self.dataset might not exist when app is setting itself up.
-        if hasattr(self, "dataset") and self.dataset.selected_dc_item.ndim > 2:
-            self.is_cube = True
-        else:
+        if hasattr(self, "dataset"):
+            if isinstance(self.dataset.selected_dc_item, list):
+                datasets = self.dataset.selected_dc_item
+            else:
+                datasets = [self.dataset.selected_dc_item]
+
             self.is_cube = False
+            for dataset in datasets:
+                # This assumes all cubes, or no cubes. If we allow photometry on collapsed cubes
+                # or images this will need to change.
+                if dataset.ndim > 2:
+                    self.is_cube = True
+                    break
 
     def _get_defaults_from_metadata(self, dataset=None):
         defaults = {}
@@ -842,6 +852,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 option.setdefault('pixel_area', defaults.get('pixel_area', 0))
             if self.flux_scaling_multi_auto:
                 option.setdefault('flux_scaling', defaults.get('flux_scaling', 0))
+
             try:
                 self.calculate_photometry(add_to_table=add_to_table,
                                           update_plots=this_update_plots,

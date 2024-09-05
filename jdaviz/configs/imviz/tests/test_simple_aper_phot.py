@@ -489,3 +489,33 @@ def test_curve_of_growth(with_unit):
     with pytest.raises(TypeError, match='Unsupported aperture'):
         _curve_of_growth(data, cen, EllipticalAnnulus(cen, 3, 8, 5), 100,
                          pixarea_fac=pixarea_fac)
+
+
+def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
+    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
+    phot_plugin = cubeviz_helper.plugins['Aperture Photometry']._obj
+    uc_plugin = cubeviz_helper.plugins['Unit Conversion']
+
+    cubeviz_helper.load_regions(CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2))
+    cubeviz_helper.load_regions(CirclePixelRegion(center=PixCoord(x=3, y=3), radius=2))
+
+    phot_plugin.dataset_selected = 'test[FLUX]'
+    phot_plugin.multiselect = True
+    phot_plugin.aperture.selected = ['Subset 1', 'Subset 2']
+
+    phot_plugin.calculate_batch_photometry(full_exceptions=True)
+    assert len(phot_plugin.table) == 2
+    tbl = cubeviz_helper.get_aperture_photometry_results()
+    assert_quantity_allclose(tbl['sum'], [5.980836e-12, 2.037396e-10] * u.Jy, rtol=1e-4)
+
+    # Test that it still works after unit conversion
+    uc_plugin.flux_unit = 'MJy'
+
+    phot_plugin.calculate_batch_photometry(full_exceptions=True)
+
+    assert len(phot_plugin.table) == 4
+    tbl = cubeviz_helper.get_aperture_photometry_results()
+    # get_aperture_photometry_results converts all to the same units
+    assert_quantity_allclose(tbl['sum'],
+                             [5.980836e-12, 2.037396e-10, 5.980836e-12, 2.037396e-10] * u.Jy,
+                             rtol=1e-4)
