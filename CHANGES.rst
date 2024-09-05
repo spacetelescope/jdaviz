@@ -30,7 +30,7 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Added a table with catalog search results. [#2915, #3101]
+- Added a table with catalog search results. [#2915, #3101, #3099]
 
 - "Imviz Line Profiles (XY)" plugin is renamed to "Image Profiles (XY)". [#3121]
 
