@@ -1,0 +1,88 @@
+<template>
+  <j-tooltip :tooltipcontent="tooltipContent(label, visible, colormode, colors, is_subset)">
+    <v-btn
+      :rounded="is_subset"
+      @click="(e) => $emit('click', e)"
+      :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityStyle(visible)+', '+colorStyle(colors, cmap_samples)+';'"
+      width="30px"
+      min-width="30px"
+      height="30px"
+    >
+      <span style="color: white; text-shadow: 0px 0px 3px black">
+        {{ icon }}
+      </span>
+    </v-btn>
+  </j-tooltip>
+</template>
+
+<script>
+module.exports = {
+  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'colormode', 'cmap_samples'],
+  methods: {
+    tooltipContent(label, visible, colormode, colors, is_subset) {
+      var tooltip = label
+      if (visible === 'mixed') {
+        tooltip += '<br/>Visibility: mixed'
+      } else if (!visible) {
+        tooltip += '<br/>Visibility: hidden'
+      }
+      if (colormode === 'mixed' && !is_subset) {
+        tooltip += '<br/>Color mode: mixed'
+      }
+      if (colors.length > 1) {
+        if (colormode === 'Colormaps' && !is_subset) {
+          tooltip += '<br/>Colormap: mixed'
+        } else if (colormode === 'mixed' && !is_subset) {
+          tooltip += '<br/>Color/colormap: mixed'
+        } else {
+          tooltip += '<br/>Color: mixed'
+        }
+      }
+      return tooltip
+    },
+    visibilityStyle(visible) {
+      if (visible === 'mixed'){
+        return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.3), rgba(0,0,0,0.3) 3px, transparent 3px, transparent 3px, transparent 10px)'
+      }
+      else if (visible) {
+        return 'repeating-linear-gradient(30deg, transparent, transparent 10px)'
+      } else {
+        return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.4), rgba(0,0,0,0.4) 8px, transparent 8px, transparent 8px, transparent 10px)'
+      }
+    },
+    colorStyle(colors, cmap_samples) {
+      const strip_width = 42 / colors.length
+      var cmap_strip_width = strip_width
+      var style_colors = []
+      var style = 'repeating-linear-gradient( 135deg, '
+  
+      for ([mi, color_or_cmap] of colors.entries()) {
+        if (color_or_cmap.startsWith('#')) {
+          style_colors = [color_or_cmap]
+        } else {
+          style_colors = cmap_samples[color_or_cmap]
+        }
+
+        cmap_strip_width = strip_width / style_colors.length
+        for ([ci, color] of style_colors.entries()) {
+          var start = mi*strip_width + ci*cmap_strip_width
+          var end = mi*strip_width+(ci+1)*cmap_strip_width
+          style += color + ' '+start+'px, ' + color + ' '+end+'px'
+          if (ci !== style_colors.length-1) {
+            style += ', '
+          }
+        }
+        if (mi !== colors.length-1) {
+          style += ', '
+        }
+      }
+    
+      style += ')'
+      return style
+    }
+  }
+};
+</script>
+
+<style scoped>
+</style>
