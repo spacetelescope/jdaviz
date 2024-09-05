@@ -19,6 +19,7 @@
           :visible="item.visible"
           :is_subset="item.is_subset"
           :colors="item.colors"
+          :linewidth="item.linewidth"
           :colormode="colormode"
           :cmap_samples="cmap_samples"
           @click="() => {if (!multiselect){$emit('update:selected', item.label)} else if(!selectedAsList.includes(item.label)) {$emit('update:selected', selected.concat(item.label))} else if (selected.length > 1) {$emit('update:selected', selected.filter(select => select != item.label))} }"

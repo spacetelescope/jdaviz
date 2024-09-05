@@ -1,14 +1,14 @@
 <template>
-  <j-tooltip :tooltipcontent="tooltipContent(label, visible, colormode, colors, is_subset)">
+  <j-tooltip :tooltipcontent="tooltipContent(label, visible, colormode, colors, linewidth, is_subset)">
     <v-btn
       :rounded="is_subset"
       @click="(e) => $emit('click', e)"
-      :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityStyle(visible)+', '+colorStyle(colors, cmap_samples)+';'"
+      :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityBackgroundStyle(visible)+', '+colorBackgroundStyle(colors, cmap_samples)+';'"
       width="30px"
       min-width="30px"
       height="30px"
     >
-      <span style="color: white; text-shadow: 0px 0px 3px black">
+      <span :style="'color: white; text-shadow: 0px 0px 3px black; '+borderStyle(linewidth)">
         {{ icon }}
       </span>
     </v-btn>
@@ -17,9 +17,9 @@
 
 <script>
 module.exports = {
-  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'colormode', 'cmap_samples'],
+  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples'],
   methods: {
-    tooltipContent(label, visible, colormode, colors, is_subset) {
+    tooltipContent(label, visible, colormode, colors, linewidth, is_subset) {
       var tooltip = label
       if (visible === 'mixed') {
         tooltip += '<br/>Visibility: mixed'
@@ -38,9 +38,12 @@ module.exports = {
           tooltip += '<br/>Color: mixed'
         }
       }
+      if (linewidth == 'mixed' && !is_subset) {
+        tooltip += '<br/>Linewidth: mixed'
+      }
       return tooltip
     },
-    visibilityStyle(visible) {
+    visibilityBackgroundStyle(visible) {
       if (visible === 'mixed'){
         return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.3), rgba(0,0,0,0.3) 3px, transparent 3px, transparent 3px, transparent 10px)'
       }
@@ -50,7 +53,7 @@ module.exports = {
         return 'repeating-linear-gradient(30deg, rgba(0,0,0,0.4), rgba(0,0,0,0.4) 8px, transparent 8px, transparent 8px, transparent 10px)'
       }
     },
-    colorStyle(colors, cmap_samples) {
+    colorBackgroundStyle(colors, cmap_samples) {
       const strip_width = 42 / colors.length
       var cmap_strip_width = strip_width
       var style_colors = []
@@ -79,7 +82,13 @@ module.exports = {
     
       style += ')'
       return style
-    }
+    },
+    borderStyle(linewidth) {
+      if (linewidth != 'mixed' && linewidth > 0) { 
+        return 'border-bottom: '+Math.min(linewidth, 5)+'px solid white'
+      }
+      return ''
+    },
   }
 };
 </script>

@@ -1533,6 +1533,7 @@ class LayerSelect(SelectPluginComponent):
         is_subset = None
         colors = []
         visibilities = []
+        linewidths = []
         for viewer in self.viewer_objs:
             for layer in viewer.layers:
                 if layer.layer.label == layer_label and is_not_wcs_only(layer.layer):
@@ -1548,11 +1549,13 @@ class LayerSelect(SelectPluginComponent):
 
                     visibilities.append(getattr(layer.state, 'bitmap_visible', True)
                                         and layer.visible)
+                    linewidths.append(getattr(layer.state, 'linewidth', 0))
 
         return {"label": layer_label,
                 "is_subset": is_subset,
                 "icon": self.app.state.layer_icons.get(layer_label),
                 "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
+                "linewidth": linewidths[0] if len(list(set(linewidths))) == 1 else 'mixed',
                 "colors": np.unique(colors).tolist()}
 
     def _on_viewer_selected_changed(self, msg=None):
@@ -4362,7 +4365,7 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._update_mixed_state()
 
     def _on_glue_value_changed(self, value):
-        if self._glue_name == 'color_mode':
+        if self._glue_name in ('color_mode', 'linewidth'):
             # then we need to force updates to the layer-icon colors
             # NOTE: this will only trigger when the change to color_mode was handled
             # through this plugin.  Manual changes to the glue state for viewers not
