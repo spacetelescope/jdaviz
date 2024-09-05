@@ -583,7 +583,7 @@ class PluginTemplateMixin(TemplateMixin):
         Parameters
         ----------
         loc : str
-            The display location determines where to present the viz app.
+            The display location determines where to present the plugin UI.
             Supported locations:
 
             "inline": Display the plugin inline in a notebook.
@@ -3887,14 +3887,13 @@ class AddResults(BasePluginComponent):
             for viewer_select_item in self.add_to_viewer_items[1:]:
                 # index 0 is for "None"
                 viewer_ref = viewer_select_item['reference']
-                viewer_item = self.app._viewer_item_by_reference(viewer_ref)
                 viewer = self.app.get_viewer(viewer_ref)
                 for layer in viewer.layers:
                     if layer.layer.label != label:
                         continue
                     else:
                         add_to_viewer_refs.append(viewer_ref)
-                        add_to_viewer_vis.append(label in viewer_item['visible_layers'])
+                        add_to_viewer_vis.append(label in viewer._data_menu.visible_layers)
                         preserve_these = {}
                         for att in layer.state.as_dict():
                             # Can't set cmap_att, size_att, etc
@@ -4421,7 +4420,7 @@ class PluginSubcomponent(VuetifyTemplate):
         Parameters
         ----------
         loc : str
-            The display location determines where to present the viz app.
+            The display location determines where to present the component UI.
             Supported locations:
 
             "inline": Display the component inline in a notebook.

@@ -45,7 +45,8 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
-                                ViewerRenamedMessage, ChangeRefDataMessage)
+                                ViewerRenamedMessage, ChangeRefDataMessage,
+                                IconsUpdatedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
@@ -390,6 +391,12 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=self._on_layers_changed)
         # SubsetDeleteMessage will also call _on_layers_changed via _on_subset_delete_message
+
+        # Emit messages when icons are updated
+        self.state.add_callback('viewer_icons',
+                                lambda value: self.hub.broadcast(IconsUpdatedMessage('viewer', value, sender=self)))  # noqa
+        self.state.add_callback('layer_icons',
+                                lambda value: self.hub.broadcast(IconsUpdatedMessage('layer', value, sender=self)))  # noqa
 
     def _on_plugin_table_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -2484,7 +2491,14 @@ class Application(VuetifyTemplate, HubListener):
         # own attribute instead.
         viewer._reference_id = vid  # For reverse look-up
 
-        self.state.viewer_icons.setdefault(vid, len(self.state.viewer_icons)+1)
+        if vid not in self.state.viewer_icons:
+            self.state.viewer_icons = {**self.state.viewer_icons,
+                                       vid: len(self.state.viewer_icons) + 1}
+            # for some reason that state callback is not triggering this
+            self.hub.broadcast(IconsUpdatedMessage('viewer',
+                                                   self.state.viewer_icons,
+                                                   sender=self)
+                               )
 
         wcs_only_layers = getattr(viewer.state, 'wcs_only_layers', [])
 
@@ -2497,10 +2511,9 @@ class Application(VuetifyTemplate, HubListener):
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
-            'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
-            'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
+            'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
+            # TODO: remove unused entries after old data menu deprecation period
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
-            'visible_layers': {},  # label: {color}, READ-ONLY
             'wcs_only_layers': wcs_only_layers,
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
