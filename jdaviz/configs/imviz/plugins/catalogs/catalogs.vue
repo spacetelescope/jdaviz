@@ -73,7 +73,7 @@
             @click="zoom_in"
             :spinner="spinner"
           >
-            Zoom in
+            Zoom to Selected
           </plugin-action-button>
        </v-col>
     </v-row>

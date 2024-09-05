@@ -224,7 +224,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         self.table.item_key = 'id'
         self.table.show_rowselect = True
-        i = len(skycoord_table) + 1
+        i = len(skycoord_table)
 
         if self.catalog_selected == "SDSS":
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
@@ -292,8 +292,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     def plot_selected_points(self):
         selected_rows = self.table.selected_rows
-        if len(selected_rows) == 0 or 'x_coord' not in selected_rows[0]:
-            return
 
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
@@ -303,8 +301,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     # this function will zoom into the image based on the selected points
     def vue_zoom_in(self, *args, **kwargs):
         selected_rows = self.table.selected_rows
-        if len(selected_rows) == 0 or 'x_coord' not in selected_rows[0]:
-            return
 
         x = [float(coord['x_coord']) for coord in selected_rows]
         y = [float(coord['y_coord']) for coord in selected_rows]
