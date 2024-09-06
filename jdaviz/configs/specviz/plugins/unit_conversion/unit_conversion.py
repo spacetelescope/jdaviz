@@ -343,7 +343,6 @@ class UnitConversion(PluginTemplateMixin):
 
         # Surface Brightness -> Flux
         if spec_axis_ang_unit and flux_or_sb == 'Flux':
-            print(f'translating SB to flux. spec_units = {spec_units}, angle={selected_display_solid_angle_unit}')
             spec_units *= selected_display_solid_angle_unit
             print('new spec_units = ', spec_units)
             # update display units
@@ -351,7 +350,6 @@ class UnitConversion(PluginTemplateMixin):
 
         # Flux -> Surface Brightness
         elif (not spec_axis_ang_unit and flux_or_sb == 'Surface Brightness'):
-            print(f'translating flux to sb. spec_units = {spec_units}, angle={selected_display_solid_angle_unit}')
             spec_units /= selected_display_solid_angle_unit
             print('new spec_units = ', spec_units)
             # update display units

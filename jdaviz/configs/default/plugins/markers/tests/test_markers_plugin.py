@@ -77,7 +77,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
                                         {'event': 'mousemove',
                                          'domain': {'x': 4.623e-7, 'y': 0}})
 
-    assert label_mouseover.as_text() == (f'Cursor 4.62300e-07, 0.00000e+00 Value +8.00000e+00 {sb_unit}',
+    assert label_mouseover.as_text() == (f'Cursor 4.62300e-07, 0.00000e+00 Value +8.00000e+00 {sb_unit}',  # noqa
                                          'Wave 4.62280e-07 m (0 pix)',
                                          f'Flux 2.80000e+01 {flux_unit}')
     assert label_mouseover.as_dict() == {'data_label': 'Spectrum (sum)',
@@ -103,7 +103,7 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
                                         {'event': 'mousemove',
                                          'domain': {'x': 4.623e-7, 'y': 0}})
 
-    assert label_mouseover.as_text() == (f'Cursor 4.62300e-07, 0.00000e+00 Value +8.00000e+00 {sb_unit}',
+    assert label_mouseover.as_text() == (f'Cursor 4.62300e-07, 0.00000e+00 Value +8.00000e+00 {sb_unit}',  # noqa
                                          '', '')
     assert label_mouseover.as_dict() == {'axes_x': 4.623e-07,
                                          'axes_x:unit': 'm',
