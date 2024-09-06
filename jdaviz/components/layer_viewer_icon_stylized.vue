@@ -3,7 +3,7 @@
     <v-btn
       :rounded="is_subset"
       @click="(e) => $emit('click', e)"
-      :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityBackgroundStyle(visible)+', '+colorBackgroundStyle(colors, cmap_samples)+';'"
+      :style="'padding: 0px; margin-bottom: 4px; background: '+visibilityBackgroundStyle(visible)+', '+colorBackgroundStyle(colors, cmap_samples)+'; '+btn_style"
       width="30px"
       min-width="30px"
       height="30px"
@@ -17,7 +17,7 @@
 
 <script>
 module.exports = {
-  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples'],
+  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples', 'btn_style'],
   methods: {
     tooltipContent(label, visible, colormode, colors, linewidth, is_subset) {
       var tooltip = label

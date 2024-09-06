@@ -23,8 +23,7 @@
           :colormode="colormode"
           :cmap_samples="cmap_samples"
           @click="() => {if (!multiselect){$emit('update:selected', item.label)} else if(!selectedAsList.includes(item.label)) {$emit('update:selected', selected.concat(item.label))} else if (selected.length > 1) {$emit('update:selected', selected.filter(select => select != item.label))} }"
-        ></j-layer-viewer-icon-stylized>
-      </span>
+        />
     </span>
  </div>
 </template>
