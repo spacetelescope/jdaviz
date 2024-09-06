@@ -157,6 +157,9 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Bump required specutils version to 1.16. Moment 0 calculation is now in units
+  of flux*dx (rather than flux) [#3184]
+
 3.11 (unreleased)
 =================
 
