@@ -570,7 +570,9 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     )
 
 
-def test_spectral_extraction_unit_conv_one_spec(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
+def test_spectral_extraction_unit_conv_one_spec(
+    cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
+):
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
     spectrum_viewer = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
