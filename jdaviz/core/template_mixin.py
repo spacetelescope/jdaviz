@@ -3912,8 +3912,7 @@ class AddResults(BasePluginComponent):
 
         enforce_flux_unit = None
         if label in self.app.data_collection:
-            if ((self.app.config == "cubeviz") and
-                    (self._plugin._plugin_name == "Spectral Extraction")):
+            if self.app.config == "cubeviz":
                 sv = self.app.get_viewer(
                     self.app._jdaviz_helper._default_spectrum_viewer_reference_name)
                 if len(sv.state.layers) == 1:
