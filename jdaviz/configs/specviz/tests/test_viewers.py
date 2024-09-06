@@ -26,6 +26,21 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
     assert (y_axis_label in label)
 
 
+@pytest.mark.xfail(reason="FIXME: Some callback magic needs to happen somewhere.")
+def test_spectrum_viewer_keep_unit_when_removed(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d, data_label="Test")
+    uc = specviz_helper.plugins["Unit Conversion"]
+    assert uc.flux_unit == "Jy"
+    uc.flux_unit = "MJy"
+    specviz_helper.app.remove_data_from_viewer("spectrum-viewer", "Test")
+    specviz_helper.app.add_data_to_viewer("spectrum-viewer", "Test")
+    # Actual values not in display unit but should not affect display unit.
+    spec = specviz_helper.get_spectra(data_label="Test", apply_slider_redshift=False)
+    assert spec.flux.unit == u.Jy
+    assert uc.flux_unit.selected == "MJy"
+    assert specviz_helper.app._get_display_unit('spectral_y') == "MJy"
+
+
 class TestResetLimitsTwoTests:
     """See https://github.com/spacetelescope/lcviz/pull/93"""
 
