@@ -319,7 +319,7 @@ class UnitConversion(PluginTemplateMixin):
                     layer.attribute_display_unit = yunit
 
     def _translate(self, flux_or_sb=None):
-        print('in translate')
+
         # currently unsupported, can be supported with a scale factor
         if self.app.config == 'specviz':
             return
@@ -329,8 +329,6 @@ class UnitConversion(PluginTemplateMixin):
         else:
             return
 
-        print('spec units', spec_units)
-
         # on instantiation, we set determine flux choices and selection
         # after surface brightness
         if not self.flux_unit.choices:
@@ -338,20 +336,16 @@ class UnitConversion(PluginTemplateMixin):
 
         selected_display_solid_angle_unit = u.Unit(self.angle_unit_selected)
         spec_axis_ang_unit = check_if_unit_is_per_solid_angle(spec_units)
-        print('selected_display_solid_angle_unit', selected_display_solid_angle_unit)
-        print('flux_or_sb', flux_or_sb)
 
         # Surface Brightness -> Flux
         if spec_axis_ang_unit and flux_or_sb == 'Flux':
             spec_units *= selected_display_solid_angle_unit
-            print('new spec_units = ', spec_units)
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
 
         # Flux -> Surface Brightness
         elif (not spec_axis_ang_unit and flux_or_sb == 'Surface Brightness'):
             spec_units /= selected_display_solid_angle_unit
-            print('new spec_units = ', spec_units)
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
 

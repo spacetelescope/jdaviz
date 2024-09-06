@@ -327,7 +327,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             else:
                 moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
 
-            print(self.moment.unit, moment_new_unit)
             self.moment = self.moment.to(moment_new_unit)
 
         # Reattach the WCS so we can load the result

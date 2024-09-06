@@ -507,7 +507,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # Remove per solid angle denominator to turn sb into flux
             sq_angle_unit = check_if_unit_is_per_solid_angle(collapsed_nddata.unit,
                                                              return_unit=True)
-            print('sq angle unit', sq_angle_unit)
             if sq_angle_unit is not None:
                 # convert aperture area in steradians to the selected square angle unit
                 # NOTE: just forcing these units for now!! this is in steradians and

@@ -468,8 +468,6 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
 def _indirect_conversion(values, orig_units, targ_units, eqv,
                          spec_unit=None, image_data=None):
 
-    print(f'in _indirect_conversion, orig_units={orig_units}, targ_units={targ_units}')
-
     # make these an input parameter since they're already determined
     # here for now until i make sure this function isn't called elsewhere
     solid_angle_in_orig = check_if_unit_is_per_solid_angle(orig_units, return_unit=True)
@@ -482,9 +480,6 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
             and not check_if_unit_is_per_solid_angle(spec_unit)):
         if u.Unit(targ_units) in indirect_units():
             temp_targ = targ_units * solid_angle_in_targ
-            print('temp_targ', temp_targ)
-            print('solid angle in targ', solid_angle_in_targ)
-            print('orig_units', orig_units)
             values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
             orig_units = u.Unit(temp_targ)
             return values, orig_units, 'orig'
