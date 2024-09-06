@@ -157,6 +157,8 @@ Specviz2d
 Other Changes and Additions
 ---------------------------
 
+- Bump required specutils version to 1.16. [#3184]
+
 3.11 (unreleased)
 =================
 
