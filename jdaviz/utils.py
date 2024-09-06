@@ -406,8 +406,8 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     orig_units = u.Unit(original_units)
     targ_units = u.Unit(target_units)
 
-    solid_angle_in_orig = check_if_unit_is_per_solid_angle(orig_units)
-    solid_angle_in_targ = check_if_unit_is_per_solid_angle(targ_units)
+    solid_angle_in_orig = check_if_unit_is_per_solid_angle(orig_units, return_unit=True)
+    solid_angle_in_targ = check_if_unit_is_per_solid_angle(targ_units, return_unit=True)
 
     # Ensure a spectrum passed through Spectral Extraction plugin
     if (('_pixel_scale_factor' in spec.meta) and
@@ -431,9 +431,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         eqv += _eqv_pixar_sr(np.array(eqv_in))
 
         # may need equivalencies between flux and flux per square pixel
-        # NOTE need to extend this to other flux types that aren't equiv with u.Jy,
-        # this is a placeholder
-        eqv += _eqv_flux_to_sb_pixel(u.Jy)
+        eqv += _eqv_flux_to_sb_pixel()
 
         # when angle<>pixel translations are enabled
         # eqv += _eqv_sb_per_pixel_to_per_angle(u.Jy)
@@ -461,6 +459,15 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
             values=values, orig_units=orig_units, targ_units=targ_units,
             eqv=eqv, image_data=image_data
             )
+    elif solid_angle_in_orig == solid_angle_in_targ == u.pix * u.pix:
+        # in the case where we have 2 SBs per solid pixel that need
+        # u.spectral_density equivalency, they can't be directly converted
+        # for whatever reason (i.e 'Jy / pix2' and 'erg / (Angstrom s cm2 pix2)'
+        # are not convertible). In this case, multiply out the factor of pix2 for
+        # conversion (same kind of thing _indirect_conversion is
+        # doing but we already know the exact angle units.
+        orig_units *= u.pix * u.pix
+        targ_units *= u.pix * u.pix
 
     return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 
@@ -468,7 +475,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
 def _indirect_conversion(values, orig_units, targ_units, eqv,
                          spec_unit=None, image_data=None):
 
-    # Note: is there a way we could write this to not require 'spec_unit'? It 
+    # Note: is there a way we could write this to not require 'spec_unit'? It
     # seems like it falls back on this to get a solid angle unit, but can we
     # assume pix2 now if there are none? or use the display units?
 
@@ -516,7 +523,6 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
         return values, orig_units
 
 
-
 def _eqv_pixar_sr(pixar_sr):
     """
     Return Equivalencies to convert from flux to flux per solid
@@ -537,7 +543,7 @@ def _eqv_pixar_sr(pixar_sr):
     ]
 
 
-def _eqv_flux_to_sb_pixel(flux_unit):
+def _eqv_flux_to_sb_pixel():
     """
     Returns an Equivalency between `flux_unit` and `flux_unit`/pix**2. This
     allows conversion between flux and flux-per-square-pixel surface brightness

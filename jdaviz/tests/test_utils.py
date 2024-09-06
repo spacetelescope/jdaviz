@@ -29,7 +29,7 @@ def test_spec_sb_flux_conversion():
     spec.meta["_pixel_scale_factor"] = 0.1
     assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 2, 3])
     assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), [100, 200, 300])
-    
+
     # conversions with eq pixels
     assert_allclose(flux_conversion(values, u.Jy / PIX2, u.Jy, spec), [10, 20, 30])
     assert_allclose(flux_conversion(values, u.Jy, u.Jy / PIX2, spec), [10, 20, 30])
@@ -53,14 +53,15 @@ def test_spec_sb_flux_conversion():
     # test spectrum when target unit in untranslatable unit list
     target_values = [5.03411657e-05, 2.01364663e-04, 4.53070491e-04]
     expected_units = (u.ph / (u.Hz * u.s * u.cm**2))
-    returned_values, return_units, unit_flag = _indirect_conversion(
-                                                    values=values, orig_units=(u.MJy),
-                                                    targ_units=(u.ph / (u.s * u.cm**2 * u.Hz * u.sr)),  # noqa
-                                                    eqv=eqv, spec_unit=spec_unit, image_data=None
-                                                )
-    assert_allclose(returned_values, target_values)
-    assert (return_units == expected_units)
-    assert (unit_flag == 'orig')
+    for solid_angle in [u.sr, u.pix*u.pix]:
+        returned_values, return_units, unit_flag = _indirect_conversion(
+                                                        values=values, orig_units=(u.MJy),
+                                                        targ_units=(u.ph / (u.s * u.cm**2 * u.Hz * solid_angle)),  # noqa
+                                                        eqv=eqv, spec_unit=spec_unit, image_data=None
+                                                    )
+        assert_allclose(returned_values, target_values)
+        assert (return_units == expected_units)
+        assert (unit_flag == 'orig')
 
     # test spectrum when original unit in untranslatable unit list
     target_values = [1., 2., 3.]

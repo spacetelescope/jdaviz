@@ -118,7 +118,7 @@ class PluginMark:
                     y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
 
                 # for flux <> flux/pix2
-                eqv += _eqv_flux_to_sb_pixel(u.Jy)  # extend to untranslatable, Jy is placeholder
+                eqv += _eqv_flux_to_sb_pixel()
             else:
                 y = (self.y * self.yunit).to_value(unit)
             self.yunit = unit
