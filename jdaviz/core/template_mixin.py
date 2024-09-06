@@ -774,7 +774,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def __repr__(self):
         if hasattr(self, 'multiselect'):
-            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
@@ -3307,7 +3307,7 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
     """
     viewer_items = List().tag(sync=True)
-    viewer_selected = Any().tag(sync=True)
+    viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
     viewer_multiselect = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):

@@ -20,7 +20,7 @@ from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
+from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, LayerSelect,
                                         PlotOptionsSyncState, Plot,
                                         skip_if_no_updates_since_last_active, with_spinner)
 from jdaviz.core.events import ChangeRefDataMessage
@@ -132,7 +132,7 @@ def _round_step(step):
 
 
 @tray_registry('g-plot-options', label="Plot Options")
-class PlotOptions(PluginTemplateMixin):
+class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     """
     The Plot Options Plugin gives access to per-viewer and per-layer options and enables
     setting across multiple viewers/layers simultaneously.
@@ -215,9 +215,6 @@ class PlotOptions(PluginTemplateMixin):
     # read-only display units
     display_units = Dict().tag(sync=True)
 
-    viewer_multiselect = Bool(False).tag(sync=True)
-    viewer_items = List().tag(sync=True)
-    viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
     viewer_limits = Dict().tag(sync=True)
 
     layer_multiselect = Bool(False).tag(sync=True)
@@ -406,7 +403,6 @@ class PlotOptions(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
 
