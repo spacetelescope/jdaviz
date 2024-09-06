@@ -43,6 +43,7 @@ def test_initialize_specviz_sb(specviz_helper, spectrum1d):
     assert plg._obj.spectral_y_type == "Surface Brightness"
     assert plg._obj.angle_unit == "sr"
 
+
 @pytest.mark.parametrize('uncert', (False, True))
 def test_conv_wave_only(specviz_helper, spectrum1d, uncert):
     if uncert is False:
