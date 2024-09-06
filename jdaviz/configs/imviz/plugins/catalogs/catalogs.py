@@ -181,12 +181,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                             columns=('source_id', 'ra', 'dec'))
             self.app._catalog_source_table = sources
             skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
-            # adding in coords + Id's into table
-            for row in sources:
-                row_info = {'Right Ascension (degrees)': row['ra'],
-                            'Declination (degrees)': row['dec'],
-                            'Source ID': row['SOURCE_ID']}
-                self.table.add_item(row_info)
 
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
@@ -226,13 +220,17 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.table.show_rowselect = True
         i = len(skycoord_table)
 
-        if self.catalog_selected == "SDSS":
+        if self.catalog_selected in ["SDSS", "Gaia"]:
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
                                              x_coordinates, y_coordinates):
+                if self.catalog_selected == "SDSS":
+                    row_id = row["objid"]
+                elif self.catalog_selected == "Gaia":
+                    row_id = row["SOURCE_ID"]
                 # Check if the row contains the required keys
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
-                            'Object ID': row['objid'].astype(str),
+                            'Object ID': row_id.astype(str),
                             'id': i,
                             'x_coord': x_coord,
                             'y_coord': y_coord}

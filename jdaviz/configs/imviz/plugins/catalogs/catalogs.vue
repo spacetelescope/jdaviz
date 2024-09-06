@@ -71,7 +71,6 @@
          <plugin-action-button
             :results_isolated_to_plugin="true"
             @click="zoom_in"
-            :spinner="spinner"
           >
             Zoom to Selected
           </plugin-action-button>
