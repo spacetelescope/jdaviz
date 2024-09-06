@@ -774,7 +774,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
             # create an equivalency for each flux unit for flux <> flux/pix2.
             # for similar reasons to the 'untranslatable units' issue, custom equivalencies can't be combined,
             # so a workaround is creating an equivalency for each flux that may need an additional equiv.
-            angle_to_pixel_equivs = [_eqv_sb_per_pixel_to_per_angle(unit) for unit in locally_defined_flux_units]
+            angle_to_pixel_equivs = [_eqv_sb_per_pixel_to_per_angle(un) for un in locally_defined_flux_units]
 
             if any([y_unit.is_equivalent(unit, angle_to_pixel_equivs[i]) for i, unit in enumerate(locally_defined_sb_units)]):  # noqa
                 flux_unit_type = "Surface Brightness"

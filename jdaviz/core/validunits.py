@@ -4,8 +4,10 @@ import itertools
 __all__ = ['supported_sq_angle_units', 'units_to_strings', 'create_spectral_equivalencies_list',
            'create_flux_equivalencies_list', 'check_if_unit_is_per_solid_angle']
 
+
 def supported_sq_angle_units():
     return [u.pix*u.pix, u.sr]
+
 
 def units_to_strings(unit_list):
     """Convert equivalencies into readable versions of the units.

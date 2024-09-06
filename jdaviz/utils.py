@@ -337,7 +337,8 @@ def indirect_units():
         units += [
                   u.erg / (u.s * u.cm**2 * u.Angstrom * angle_unit),
                   u.erg / (u.s * u.cm**2 * u.Hz * angle_unit),
-                  u.ph / (u.Angstrom * u.s * u.cm**2 * angle_unit), u.ph / (u.Angstrom * u.s * angle_unit * u.cm**2),   
+                  u.ph / (u.Angstrom * u.s * u.cm**2 * angle_unit),
+                  u.ph / (u.Angstrom * u.s * angle_unit * u.cm**2),
                   u.ph / (u.s * u.cm**2 * u.Hz * angle_unit)
                  ]
 
@@ -516,7 +517,8 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
         return values, orig_units
 
 # Note: should unify how these custom equivs are written, either they should take in any flux unit
-# or return multiple equivalencies for all non-equivalent flux unit types. 
+# or return multiple equivalencies for all non-equivalent flux unit types.
+
 
 def _eqv_pixar_sr(pixar_sr):
     """
@@ -536,6 +538,7 @@ def _eqv_pixar_sr(pixar_sr):
         (u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.cm**2), converter_flux, iconverter_flux),  # noqa
         (u.ph / (u.Hz * u.s * u.cm**2  * u.sr), u.ph / (u.Hz * u.s * u.cm**2), converter_flux, iconverter_flux)  # noqa
     ]
+
 
 def _eqv_flux_to_sb_pixel(flux_unit):
     """

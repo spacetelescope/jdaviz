@@ -180,7 +180,7 @@ class UnitConversion(PluginTemplateMixin):
         # sets the angle unit drop down and the surface brightness read-only text
         if self.app.data_collection[0]:
             dc_unit = self.app.data_collection[0].get_component("flux").units
-            
+
             # angle choices will be angle equivalencies to the solid-angle component of the cube
             dc_solid_angle_unit = check_if_unit_is_per_solid_angle(dc_unit, return_unit=True)
 

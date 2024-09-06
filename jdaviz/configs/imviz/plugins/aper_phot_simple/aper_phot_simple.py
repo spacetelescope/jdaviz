@@ -233,22 +233,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.flux_scaling_display_unit = ''
             return
 
-<<<<<<< HEAD
-        data = self.dataset.selected_dc_item
-        if isinstance(data, list):
-            data = data[0]
-        comp = data.get_component(data.main_components[0])
-        if comp.units:
-            # if data is something-per-solid-angle, its a SB unit and we should
-            # use the selected global display unit for SB
-            if check_if_unit_is_per_solid_angle(comp.units):
-                flux_or_sb = 'sb'
-            else:
-                flux_or_sb = 'flux'
-=======
         disp_unit = self.app._get_display_unit('sb')  # all cubes are in sb
         self.display_flux_or_sb_unit = disp_unit
->>>>>>> efb22333 (added ap phot changes, all cubeviz plugin test passing)
 
         # get angle componant of surface brightness
         # note: could add 'axis=angle' when cleaning this code up to avoid repeating this

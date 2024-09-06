@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import astropy
-import astropy.units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
