@@ -9,7 +9,13 @@ __all__ = ['DataMenu']
 
 
 class DataMenu(TemplateMixin, LayerSelectMixin):
-    """Viewer Data Menu"""
+    """Viewer Data Menu
+    
+    Only the following attributes and methods are available through the
+    :ref:`public API <plugin-apis>`:
+
+    * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
+    """
     template_file = __file__, "data_menu.vue"
 
     viewer_id = Unicode().tag(sync=True)
