@@ -248,6 +248,8 @@ class UnitConversion(PluginTemplateMixin):
         if not self.flux_unit.choices and self.app.config == 'cubeviz':
             return
 
+        print(f"flux_or_sb is {self.flux_or_sb}")
+
         # various plugins are listening for changes in either flux or sb and
         # need to be able to filter messages accordingly, so broadcast both when
         # flux unit is updated. if data was loaded in a flux unit (i.e MJy), it
