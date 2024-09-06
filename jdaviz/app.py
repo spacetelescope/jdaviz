@@ -86,7 +86,16 @@ class UnitConverterWithSpectral:
                     'erg / (s sr cm2)', 'erg / (Hz s sr cm2)',
                     'erg / (Angstrom s sr cm2)',
                     'ph / (Angstrom s sr cm2)', 'ph / (Hz s sr cm2)'
-                ])
+                ]
+                + [
+                    'Jy / pix2', 'mJy / pix2', 'uJy / pix2', 'MJy / pix2',
+                    'W / (Hz m2 pix2)', 'eV / (Hz s m2 pix2)',
+                    'erg / (s cm2 pix2)', 'erg / (Hz s cm2 pix2)',
+                    'erg / (Angstrom s cm2 pix2)',
+                    'ph / (Angstrom s cm2 pix2)', 'ph / (Hz s cm2 pix2)'
+                ]
+
+                )
         else:  # spectral axis
             # prefer Hz over Bq and um over micron
             exclude = {'Bq', 'micron'}

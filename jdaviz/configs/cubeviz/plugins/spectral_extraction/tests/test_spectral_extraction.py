@@ -35,6 +35,11 @@ def test_version_after_nddata_update(cubeviz_helper, spectrum1d_cube_with_uncert
     # Axes 0, 1 are the spatial ones.
     collapsed_cube_nddata = spectral_cube.sum(axis=(0, 1))  # return NDDataArray
 
+    # when loaded into app, cubes loaded in flux are converted to per-pixel-squared
+    # surface brightness, so multiply by pix**2 to compare to NDData, if input
+    # cube was in flux
+    collapsed_cube_nddata = collapsed_cube_nddata * (u.pix ** 2)
+
     # Collapse the spectral cube using the methods in jdaviz:
     collapsed_cube_s1d = plg.extract(add_data=False)  # returns Spectrum1D
 

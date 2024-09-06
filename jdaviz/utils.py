@@ -320,13 +320,28 @@ def standardize_roman_metadata(data_model):
         }
 
 
+# def indirect_units():
+#     return [
+#         u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
+#         u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
+#         u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.sr * u.cm**2),
+#         u.ph / (u.s * u.cm**2 * u.Hz * u.sr)
+#     ]
+
 def indirect_units():
-    return [
-        u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
-        u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
-        u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.sr * u.cm**2),
-        u.ph / (u.s * u.cm**2 * u.Hz * u.sr)
-    ]
+    from jdaviz.core.validunits import supported_sq_angle_units
+
+    units = []
+
+    for angle_unit in supported_sq_angle_units():
+        units += [
+                  u.erg / (u.s * u.cm**2 * u.Angstrom * angle_unit),
+                  u.erg / (u.s * u.cm**2 * u.Hz * angle_unit),
+                  u.ph / (u.Angstrom * u.s * u.cm**2 * angle_unit), u.ph / (u.Angstrom * u.s * angle_unit * u.cm**2),   
+                  u.ph / (u.s * u.cm**2 * u.Hz * angle_unit)
+                 ]
+
+    return units
 
 
 def flux_conversion(values, original_units, target_units, spec=None, eqv=None, slice=None):
@@ -388,14 +403,15 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         eqv += u.spectral_density(slice)
 
     orig_units = u.Unit(original_units)
-    orig_bases = orig_units.bases
     targ_units = u.Unit(target_units)
-    targ_bases = targ_units.bases
+
+    solid_angle_in_orig = check_if_unit_is_per_solid_angle(orig_units)
+    solid_angle_in_targ = check_if_unit_is_per_solid_angle(targ_units)
 
     # Ensure a spectrum passed through Spectral Extraction plugin
-    if (((spec and ('_pixel_scale_factor' in spec.meta))) and
-            (((u.sr in orig_bases) and (u.sr not in targ_bases)) or
-             ((u.sr not in orig_bases) and (u.sr in targ_bases)))):
+    if (('_pixel_scale_factor' in spec.meta) and
+            (((solid_angle_in_orig) and (not solid_angle_in_targ)) or
+             ((not solid_angle_in_orig) and (solid_angle_in_targ)))):
         # Data item in data collection does not update from conversion/translation.
         # App-wide original data units are used for conversion, original and
         # target_units dictate the conversion to take place.
@@ -412,6 +428,14 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         else:
             eqv_in = fac
         eqv += _eqv_pixar_sr(np.array(eqv_in))
+
+        # may need equivalencies between flux and flux per square pixel
+        # NOTE need to extend this to other flux types that aren't equiv with u.Jy,
+        # this is a placeholder
+        eqv += _eqv_flux_to_sb_pixel(u.Jy)
+
+        # when angle<>pixel translations are enabled
+        # eqv += _eqv_sb_per_pixel_to_per_angle(u.Jy)
 
         # indirect units cannot be directly converted, and require
         # additional conversions to reach the desired end unit.
@@ -442,35 +466,48 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
 
 def _indirect_conversion(values, orig_units, targ_units, eqv,
                          spec_unit=None, image_data=None):
+
+    print(f'in _indirect_conversion, orig_units={orig_units}, targ_units={targ_units}')
+
+    # make these an input parameter since they're already determined
+    # here for now until i make sure this function isn't called elsewhere
+    solid_angle_in_orig = check_if_unit_is_per_solid_angle(orig_units, return_unit=True)
+    solid_angle_in_targ = check_if_unit_is_per_solid_angle(targ_units, return_unit=True)
+    solid_angle_in_spec = check_if_unit_is_per_solid_angle(spec_unit, return_unit=True)
+
     # indirect units cannot be directly converted, and require
     # additional conversions to reach the desired end unit.
     if (spec_unit and spec_unit in [orig_units, targ_units]
             and not check_if_unit_is_per_solid_angle(spec_unit)):
         if u.Unit(targ_units) in indirect_units():
-            temp_targ = targ_units * u.sr
+            temp_targ = targ_units * solid_angle_in_targ
+            print('temp_targ', temp_targ)
+            print('solid angle in targ', solid_angle_in_targ)
+            print('orig_units', orig_units)
             values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
             orig_units = u.Unit(temp_targ)
             return values, orig_units, 'orig'
         elif u.Unit(orig_units) in indirect_units():
-            temp_orig = orig_units * u.sr
+            temp_orig = orig_units * solid_angle_in_orig
             values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
             targ_units = u.Unit(temp_orig)
             return values, targ_units, 'targ'
 
         return values, targ_units, 'targ'
 
-    elif image_data or (spec_unit and check_if_unit_is_per_solid_angle(spec_unit)):
-        if not check_if_unit_is_per_solid_angle(targ_units):
-            targ_units /= u.sr
+    elif image_data or (spec_unit and solid_angle_in_spec):
+        if not solid_angle_in_targ:
+            targ_units /= solid_angle_in_spec
         if ((u.Unit(targ_units) in indirect_units()) or
            (u.Unit(orig_units) in indirect_units())):
             # SB -> Flux -> Flux -> SB
-            temp_orig = orig_units * u.sr
-            temp_targ = targ_units * u.sr
+            temp_orig = orig_units * solid_angle_in_orig
+            temp_targ = targ_units * solid_angle_in_targ
 
             # Convert Surface Brightness to Flux, then Flux to Flux
             values = (values * orig_units).to_value(temp_orig, equivalencies=eqv)
             values = (values * temp_orig).to_value(temp_targ, equivalencies=eqv)
+
             # Lastly a Flux to Surface Brightness translation in the return statement
             orig_units = temp_targ
 
@@ -478,8 +515,15 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
 
         return values, orig_units
 
+# Note: should unify how these custom equivs are written, either they should take in any flux unit
+# or return multiple equivalencies for all non-equivalent flux unit types. 
 
 def _eqv_pixar_sr(pixar_sr):
+    """
+    Return Equivalencies to convert from flux to flux per solid
+    angle (aka surface brightness) using scale ratio `pixar_sr`
+    (steradians per pixel).
+    """
     def converter_flux(x):  # Surface Brightness -> Flux
         return x * pixar_sr
 
@@ -492,6 +536,45 @@ def _eqv_pixar_sr(pixar_sr):
         (u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.cm**2), converter_flux, iconverter_flux),  # noqa
         (u.ph / (u.Hz * u.s * u.cm**2  * u.sr), u.ph / (u.Hz * u.s * u.cm**2), converter_flux, iconverter_flux)  # noqa
     ]
+
+def _eqv_flux_to_sb_pixel(flux_unit):
+    """
+    Returns an Equivalency between `flux_unit` and `flux_unit`/pix**2. This
+    allows conversion between flux and flux-per-square-pixel surface brightness
+    e.g MJy <> MJy / pix2
+    """
+
+    pix2 = u.pix * u.pix
+    equiv = [(flux_unit, flux_unit / pix2, lambda x: x, lambda x: x)]
+
+    return equiv
+
+
+def _eqv_sb_per_pixel_to_per_angle(flux_unit, scale_factor=1):
+    """
+    Returns an equivalency between `flux_unit` per square pixel and
+    `flux_unit` per solid angle to be able to compare and convert between units
+    like Jy/pix**2 and Jy/sr. The scale factor is assumed to be in steradians,
+    to follow the convention of the PIXAR_SR keyword.
+    Note:
+    To allow conversions between units like 'ph / (Hz s cm2 sr)' and
+    MJy / pix2, which would require this equivalency as well as u.spectral_density,
+    these CAN'T be combined when converting like:
+    equivalencies=u.spectral_density(1 * u.m) + _eqv_sb_per_pixel_to_per_angle(u.Jy)
+    So additional logic is needed to compare units that need both equivalencies
+    (one solution being creating this equivalency for each equivalent flux-type.)
+    """
+    pix2 = u.pix * u.pix
+
+    # the two types of units we want to define a conversion between
+    flux_solid_ang = flux_unit / u.sr
+    flux_sq_pix = flux_unit / pix2
+
+    pix_to_solid_angle_equiv = u.Equivalency([(flux_solid_ang, flux_sq_pix,
+                                               lambda x: x * scale_factor,
+                                               lambda x: x / scale_factor)])
+
+    return pix_to_solid_angle_equiv
 
 
 def spectral_axis_conversion(values, original_units, target_units):

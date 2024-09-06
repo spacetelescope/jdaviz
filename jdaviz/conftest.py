@@ -305,6 +305,11 @@ def spectrum1d_cube_fluxunit_jy_per_steradian():
     return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy/u.sr, shape=(10, 4, 5),
                                                  with_uncerts=True)
 
+@pytest.fixture
+def spectrum1d_cube_sb_unit():
+    # similar fixture to spectrum1d_cube_fluxunit_jy_per_steradian, but no uncerts
+    # and different shape. can probably remove one of these eventually
+    return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy / u.sr)
 
 @pytest.fixture
 def mos_spectrum1d(mos_spectrum2d):

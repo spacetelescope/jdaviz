@@ -5,7 +5,7 @@ from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
-from jdaviz.utils import _eqv_pixar_sr
+from jdaviz.utils import _eqv_pixar_sr, _eqv_flux_to_sb_pixel
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
@@ -116,6 +116,9 @@ class PluginMark:
                 if ('_pixel_scale_factor' in spec.meta):
                     eqv += _eqv_pixar_sr(spec.meta['_pixel_scale_factor'])
                     y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
+
+                # for flux <> flux/pix2
+                eqv += _eqv_flux_to_sb_pixel(u.Jy)  # extend to untranslatable, Jy is placeholder
             else:
                 y = (self.y * self.yunit).to_value(unit)
             self.yunit = unit

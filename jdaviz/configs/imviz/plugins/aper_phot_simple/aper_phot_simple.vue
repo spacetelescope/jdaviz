@@ -95,7 +95,8 @@
             persistent-hint
           />
         </v-row>
-        <v-row v-if="!multiselect || !pixel_area_multi_auto">
+        <v-row v-if="(!multiselect || !pixel_area_multi_auto) && !disable_pixarea_input">
+
           <v-text-field
             label="Pixel area"
             v-model.number="pixel_area"
