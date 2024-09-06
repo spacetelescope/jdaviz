@@ -890,7 +890,10 @@ module.exports = {
       var cmap_strip_width = 2
       var colors = []
       var style = 'repeating-linear-gradient( 90deg, '
+      console.log(cmap_samples)
+      console.log(item.value)
       colors = cmap_samples[item.value]
+      console.log(colors)
       for ([ci, color] of colors.entries()) {
         var start = ci*cmap_strip_width
         var end = (ci+1)*cmap_strip_width
@@ -900,7 +903,6 @@ module.exports = {
         }
       }
       style += ')'
-      console.log(style)
       return style
     }
   },

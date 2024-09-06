@@ -10,7 +10,7 @@ from echo import delay_callback
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.core.subset_group import GroupedSubset
-from glue.config import colormaps, stretches
+from glue.config import stretches as glue_stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState, ImageViewerState
@@ -27,38 +27,15 @@ from jdaviz.core.events import ChangeRefDataMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
-from jdaviz.utils import is_not_wcs_only
+# by importing from utils, glue_colormaps will include the custom Random colormap
+from jdaviz.utils import is_not_wcs_only, cmap_samples, glue_colormaps
 
 
 from scipy.interpolate import PchipInterpolator
-from photutils.utils import make_random_cmap
 
 __all__ = ['PlotOptions']
 
 RANDOM_SUBSET_SIZE = 10_000
-
-
-def _register_random_cmap(
-    cmap_name,
-    bkg_color=[0, 0, 0],
-    bkg_alpha=1,
-    seed=42,
-    ncolors=10_000
-):
-    """
-    Custom random colormap, useful for rendering image
-    segmentation maps. The default background for
-    `label==0` is *transparent*. If the segmentation map
-    contains more than 10,000 labels, adjust the `ncolors`
-    kwarg to ensure uniqueness.
-    """
-    cmap = make_random_cmap(ncolors=ncolors, seed=seed)
-    cmap.colors[0] = bkg_color + [bkg_alpha]
-    cmap.name = cmap_name
-    colormaps.add(cmap_name, cmap)
-
-
-_register_random_cmap('Random', bkg_alpha=1)
 
 
 class SplineStretch:
@@ -117,8 +94,8 @@ class SplineStretch:
 
 
 # Add the spline stretch to the glue stretch registry if not registered
-if "spline" not in stretches:
-    stretches.add("spline", SplineStretch, display="Spline")
+if "spline" not in glue_stretches:
+    glue_stretches.add("spline", SplineStretch, display="Spline")
 
 
 def _round_step(step):
@@ -396,7 +373,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
     show_viewer_labels = Bool(True).tag(sync=True)
 
-    cmap_samples = Dict().tag(sync=True)
+    cmap_samples = Dict(cmap_samples).tag(sync=True)
     swatches_palette = List().tag(sync=True)
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
     stretch_hist_spinner = Bool(False).tag(sync=True)
@@ -661,13 +638,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
 
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
-
-        # give UI access to sampled version of the available colormap choices
-        def hex_for_cmap(cmap):
-            N = 50
-            cm_sampled = cmap.resampled(N)
-            return [matplotlib.colors.to_hex(cm_sampled(i)) for i in range(N)]
-        self.cmap_samples = {cmap[1].name: hex_for_cmap(cmap[1]) for cmap in colormaps.members}
 
     @property
     def user_api(self):
@@ -1081,7 +1051,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         data = stretch(data, out=data)
 
         if color_mode == 'Colormaps':
-            cmap = colormaps[self.image_colormap.text]
+            cmap = glue_colormaps[self.image_colormap.text]
             if hasattr(cmap, "get_bad"):
                 bad_color = cmap.get_bad().tolist()[:3]
                 layer_cmap = cmap.with_extremes(bad=bad_color + [self.image_opacity_value])

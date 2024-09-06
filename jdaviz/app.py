@@ -12,7 +12,6 @@ from astropy.time import Time
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-import matplotlib.cm as cm
 import numpy as np
 from glue.config import colormaps, data_translator, settings as glue_settings
 from glue.core import HubListener
@@ -297,21 +296,6 @@ class Application(VuetifyTemplate, HubListener):
         # Create a dictionary for holding non-ipywidget viewer objects so we
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
-
-        # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
-        # https://github.com/glue-viz/glue/blob/main/glue/config.py
-        new_cms = (['Rainbow', cm.rainbow],
-                   ['Seismic', cm.seismic],
-                   ['Reversed: Gray', cm.gray_r],
-                   ['Reversed: Viridis', cm.viridis_r],
-                   ['Reversed: Plasma', cm.plasma_r],
-                   ['Reversed: Inferno', cm.inferno_r],
-                   ['Reversed: Magma', cm.magma_r],
-                   ['Reversed: Hot', cm.hot_r],
-                   ['Reversed: Rainbow', cm.rainbow_r])
-        for cur_cm in new_cms:
-            if cur_cm not in colormaps.members:
-                colormaps.add(*cur_cm)
 
         from jdaviz.core.events import PluginTableAddedMessage, PluginPlotAddedMessage
         self._plugin_tables = {}

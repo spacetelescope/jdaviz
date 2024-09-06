@@ -14,8 +14,12 @@ from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.units import Quantity
 from astropy import units as u
 from astroquery.mast import Observations, conf
+from matplotlib import colors as mpl_colors
+import matplotlib.cm as cm
+from photutils.utils import make_random_cmap
 
 from glue.config import settings
+from glue.config import colormaps as glue_colormaps
 from glue.core import BaseData
 from glue.core.exceptions import IncompatibleAttribute
 from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
@@ -30,7 +34,7 @@ __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
            'download_uri_to_path', 'flux_conversion', 'spectral_axis_conversion',
            'layer_is_2d', 'layer_is_2d_or_3d', 'layer_is_image_data', 'layer_is_wcs_only',
            'get_wcs_only_layer_labels', 'get_top_layer_index', 'get_reference_image_data',
-           'standardize_roman_metadata']
+           'standardize_roman_metadata', 'cmap_samples', 'glue_colormaps']
 
 NUMPY_LT_2_0 = not minversion("numpy", "2.0.dev")
 
@@ -929,3 +933,48 @@ def get_reference_image_data(app, viewer_id=None):
         return refdata, iref
 
     return None, -1
+
+
+# Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
+# https://github.com/glue-viz/glue/blob/main/glue/config.py
+new_cms = (['Rainbow', cm.rainbow],
+            ['Seismic', cm.seismic],
+            ['Reversed: Gray', cm.gray_r],
+            ['Reversed: Viridis', cm.viridis_r],
+            ['Reversed: Plasma', cm.plasma_r],
+            ['Reversed: Inferno', cm.inferno_r],
+            ['Reversed: Magma', cm.magma_r],
+            ['Reversed: Hot', cm.hot_r],
+            ['Reversed: Rainbow', cm.rainbow_r])
+for cur_cm in new_cms:
+    if cur_cm not in glue_colormaps.members:
+        glue_colormaps.add(*cur_cm)
+
+def _register_random_cmap(
+    cmap_name,
+    bkg_color=[0, 0, 0],
+    bkg_alpha=1,
+    seed=42,
+    ncolors=10_000
+):
+    """
+    Custom random colormap, useful for rendering image
+    segmentation maps. The default background for
+    `label==0` is *transparent*. If the segmentation map
+    contains more than 10,000 labels, adjust the `ncolors`
+    kwarg to ensure uniqueness.
+    """
+    cmap = make_random_cmap(ncolors=ncolors, seed=seed)
+    cmap.colors[0] = bkg_color + [bkg_alpha]
+    cmap.name = cmap_name
+    glue_colormaps.add(cmap_name, cmap)
+
+
+_register_random_cmap('Random', bkg_alpha=1)
+
+# give UI access to sampled version of the available colormap choices
+def _hex_for_cmap(cmap):
+    N = 50
+    cm_sampled = cmap.resampled(N)
+    return [mpl_colors.to_hex(cm_sampled(i)) for i in range(N)]
+cmap_samples = {cmap[1].name: _hex_for_cmap(cmap[1]) for cmap in glue_colormaps.members}
