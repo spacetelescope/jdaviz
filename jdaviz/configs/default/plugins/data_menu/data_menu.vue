@@ -9,6 +9,7 @@
       <div v-if="item.visible">
         <span style="float: right;">
           <j-layer-viewer-icon-stylized
+            tooltip=""
             :label="item.label"
             :icon="item.icon"
             :visible="item.visible"

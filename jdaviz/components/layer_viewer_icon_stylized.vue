@@ -1,5 +1,5 @@
 <template>
-  <j-tooltip :tooltipcontent="tooltipContent(label, visible, colormode, colors, linewidth, is_subset)">
+  <j-tooltip :tooltipcontent="tooltipContent(tooltip, label, visible, colormode, colors, linewidth, is_subset)">
     <v-btn
       :rounded="is_subset"
       @click="(e) => $emit('click', e)"
@@ -17,9 +17,13 @@
 
 <script>
 module.exports = {
-  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples', 'btn_style'],
+  // tooltip: undefined will use default generated, empty will skip tooltips, any other string will be used directly
+  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples', 'btn_style', 'tooltip'],
   methods: {
-    tooltipContent(label, visible, colormode, colors, linewidth, is_subset) {
+    tooltipContent(tooltip, label, visible, colormode, colors, linewidth, is_subset) {
+      if (tooltip !== undefined) {
+        return tooltip
+      }
       var tooltip = label
       if (visible === 'mixed') {
         tooltip += '<br/>Visibility: mixed'
