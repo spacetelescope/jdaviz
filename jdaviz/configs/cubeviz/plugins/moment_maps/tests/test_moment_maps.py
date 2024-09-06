@@ -11,8 +11,6 @@ from astropy.wcs import WCS
 from glue.core.roi import XRangeROI
 from numpy.testing import assert_allclose
 
-from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import SPECUTILS_LT_1_15_1
-
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
 def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube_type):
@@ -65,12 +63,8 @@ def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube
 def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
                             spectrum1d_cube_sb_unit, cube_type, tmp_path):
 
-    if SPECUTILS_LT_1_15_1:
-        moment_unit = "Jy"
-        moment_value_str = "+8.00000e+00"
-    else:
-        moment_unit = "Jy m"
-        moment_value_str = "+6.40166e-10"
+    moment_unit = "Jy m"
+    moment_value_str = "+6.40166e-10"
 
     if cube_type == 'Surface Brightness':
         moment_unit += " / sr"
@@ -80,7 +74,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
     elif cube_type == 'Flux':
         moment_unit += " / pix2"
         cube = spectrum1d_cube
-        cube_unit = moment_unit  # cube in Jy will become cube in Jy / pix2
+        cube_unit = cube.unit.to_string() + " / pix2"  # cube in Jy will become cube in Jy / pix2
 
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
@@ -323,10 +317,8 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
 
 
 def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
-    if SPECUTILS_LT_1_15_1:
-        moment_unit = "Jy / sr"
-    else:
-        moment_unit = "Jy m / sr"
+
+    moment_unit = "Jy m / sr"
 
     # test that the output unit labels in the moment map plugin reflect any
     # changes made in the unit conversion plugin.
