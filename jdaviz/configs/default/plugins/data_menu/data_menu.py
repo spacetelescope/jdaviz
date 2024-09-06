@@ -3,7 +3,7 @@ from traitlets import Dict, Unicode
 from jdaviz.core.template_mixin import TemplateMixin, LayerSelectMixin
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import IconsUpdatedMessage
-from jdaviz.utils import cmap_samples
+from jdaviz.utils import cmap_samples, is_not_wcs_only
 
 __all__ = ['DataMenu']
 
@@ -28,6 +28,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
 
         # TODO: refactor how this is applied by default to go through filters directly
         self.layer.remove_filter('filter_is_root')
+        self.layer.add_filter(is_not_wcs_only)
 
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
