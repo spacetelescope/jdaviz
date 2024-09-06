@@ -84,7 +84,7 @@
           attach
           :items="spectral_y_type_items.map(i => i.label)"
           v-model="spectral_y_type_selected"
-          :label="api_hints_enabled ? 'plg.spectral_y_type =' : 'Flux or Surface Brightness'"
+          :label="api_hints_enabled ? 'plg.spectral_y_type =' : 'Spectral y-axis Type'"
           :class="api_hints_enabled ? 'api-hint' : null"
           hint="Select the y-axis physical type for the spectrum-viewer."
           persistent-hint
