@@ -468,16 +468,20 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
 def _indirect_conversion(values, orig_units, targ_units, eqv,
                          spec_unit=None, image_data=None):
 
-    # make these an input parameter since they're already determined
-    # here for now until i make sure this function isn't called elsewhere
+    # Note: is there a way we could write this to not require 'spec_unit'? It 
+    # seems like it falls back on this to get a solid angle unit, but can we
+    # assume pix2 now if there are none? or use the display units?
+
     solid_angle_in_orig = check_if_unit_is_per_solid_angle(orig_units, return_unit=True)
     solid_angle_in_targ = check_if_unit_is_per_solid_angle(targ_units, return_unit=True)
-    solid_angle_in_spec = check_if_unit_is_per_solid_angle(spec_unit, return_unit=True)
+    if spec_unit is not None:
+        solid_angle_in_spec = check_if_unit_is_per_solid_angle(spec_unit, return_unit=True)
+    else:
+        solid_angle_in_spec = None
 
     # indirect units cannot be directly converted, and require
     # additional conversions to reach the desired end unit.
-    if (spec_unit and spec_unit in [orig_units, targ_units]
-            and not check_if_unit_is_per_solid_angle(spec_unit)):
+    if (spec_unit and spec_unit in [orig_units, targ_units] and not solid_angle_in_spec):
         if u.Unit(targ_units) in indirect_units():
             temp_targ = targ_units * solid_angle_in_targ
             values = (values * orig_units).to_value(temp_targ, equivalencies=eqv)
@@ -511,8 +515,6 @@ def _indirect_conversion(values, orig_units, targ_units, eqv,
 
         return values, orig_units
 
-# Note: should unify how these custom equivs are written, either they should take in any flux unit
-# or return multiple equivalencies for all non-equivalent flux unit types.
 
 
 def _eqv_pixar_sr(pixar_sr):
@@ -543,7 +545,15 @@ def _eqv_flux_to_sb_pixel(flux_unit):
     """
 
     pix2 = u.pix * u.pix
-    equiv = [(flux_unit, flux_unit / pix2, lambda x: x, lambda x: x)]
+
+    # generate an equivalency for each flux type that would need
+    # another equivalency for converting to/from
+    flux_units = [u.MJy, u.erg / (u.s * u.cm**2 * u.Angstrom),
+                  u.ph / (u.Angstrom * u.s * u.cm**2),
+                  u.ph / (u.Hz * u.s * u.cm**2)]
+    equiv = []
+    for flux_unit in flux_units:
+        equiv.append((flux_unit, flux_unit / pix2, lambda x: x, lambda x: x))
 
     return equiv
 

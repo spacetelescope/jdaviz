@@ -15,6 +15,8 @@ from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
 
 PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
 
+PIX2 = u.pix * u.pix
+
 
 def test_spec_sb_flux_conversion():
     # Actual spectrum content does not matter, just the meta is used here.
@@ -27,14 +29,22 @@ def test_spec_sb_flux_conversion():
     spec.meta["_pixel_scale_factor"] = 0.1
     assert_allclose(flux_conversion(values, u.Jy / u.sr, u.Jy, spec), [1, 2, 3])
     assert_allclose(flux_conversion(values, u.Jy, u.Jy / u.sr, spec), [100, 200, 300])
+    
+    # conversions with eq pixels
+    assert_allclose(flux_conversion(values, u.Jy / PIX2, u.Jy, spec), [10, 20, 30])
+    assert_allclose(flux_conversion(values, u.Jy, u.Jy / PIX2, spec), [10, 20, 30])
 
     # complex translation Jy / sr -> erg / (Angstrom s cm2 sr)
     targ = [2.99792458e-12, 1.49896229e-12, 9.99308193e-13] * (u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr))  # noqa: E501
     assert_allclose(flux_conversion(values, u.Jy / u.sr, u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr), spec), targ.value)  # noqa: E501
+    # swap sr for pix2 and check conversion
+    assert_allclose(flux_conversion(values, u.Jy / PIX2, u.erg / (u.Angstrom * u.s * u.cm**2 * PIX2), spec), targ.value)  # noqa: E501
 
     # complex translation erg / (Angstrom s cm2 sr) -> Jy / sr
     targ = [3.33564095e+13, 2.66851276e+14, 9.00623057e+14] * (u.Jy / u.sr)
     assert_allclose(flux_conversion(values, u.erg / (u.Angstrom * u.s * u.cm**2 * u.sr), u.Jy / u.sr, spec), targ.value)  # noqa: E501
+    # swap sr for pix2 and check conversion
+    assert_allclose(flux_conversion(values, u.erg / (u.Angstrom * u.s * u.cm**2 * PIX2), u.Jy / PIX2, spec), targ.value)  # noqa: E501
 
     spectral_values = spec.spectral_axis
     spec_unit = u.MJy
