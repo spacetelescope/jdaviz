@@ -176,6 +176,9 @@ class UnitConversion(PluginTemplateMixin):
             flux_choices = create_flux_equivalencies_list(y_unit * u.sr, x_unit)
             self.flux_unit.choices = flux_choices
             flux_unit = str(y_unit * u.sr)
+            # We need to set the angle_unit before triggering _on_flux_unit_changed
+            self.angle_unit.choices = create_angle_equivalencies_list(y_unit)
+            self.angle_unit.selected = self.angle_unit.choices[0]
             if flux_unit in self.flux_unit.choices and flux_unit != self.flux_unit.selected:
                 self.flux_unit.selected = flux_unit
 
@@ -248,16 +251,11 @@ class UnitConversion(PluginTemplateMixin):
         if not self.flux_unit.choices and self.app.config == 'cubeviz':
             return
 
-        print(f"flux_or_sb is {self.flux_or_sb}")
-
         # various plugins are listening for changes in either flux or sb and
         # need to be able to filter messages accordingly, so broadcast both when
         # flux unit is updated. if data was loaded in a flux unit (i.e MJy), it
         # can be reperesented as a per-pixel surface brightness unit
         flux_unit = self.flux_unit.selected
-        if self.angle_unit.selected is None or self.angle_unit.selected == "":
-            # Plugin isn't completely initialized, can't run the rest of this logic yet.
-            return
         sb_unit = self._append_angle_correctly(flux_unit, self.angle_unit.selected)
 
         self.hub.broadcast(GlobalDisplayUnitChanged("flux", flux_unit, sender=self))

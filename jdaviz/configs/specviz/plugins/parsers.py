@@ -163,13 +163,11 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             # If this is the first loaded data, we want to set spectral y unit type to Flux or
             # Surface Brightness as appropriate
             if len(app.data_collection) == 0:
-                print("Nothing in data collection yet")
-                uc = self.app._jdaviz_helper.plugins["Unit Conversion"]
+                uc = app._jdaviz_helper.plugins["Unit Conversion"]
                 if check_if_unit_is_per_solid_angle(flux_units):
-                    print("Unit is per solid angle")
-                    uc.spectral_y_type = "Surface Brightness"
+                    uc._obj.spectral_y_type = "Surface Brightness"
                 else:
-                    uc.spectral_y_type = "Flux"
+                    uc._obj.spectral_y_type = "Flux"
 
             app.add_data(spec, data_label[i])
 
