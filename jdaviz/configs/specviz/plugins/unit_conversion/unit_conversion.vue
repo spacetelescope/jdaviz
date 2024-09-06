@@ -82,9 +82,9 @@
         <v-select
           :menu-props="{ left: true }"
           attach
-          :items="flux_or_sb_items.map(i => i.label)"
-          v-model="flux_or_sb_selected"
-          :label="api_hints_enabled ? 'plg.flux_or_sb =' : 'Flux or Surface Brightness'"
+          :items="spectral_y_type_items.map(i => i.label)"
+          v-model="spectral_y_type_selected"
+          :label="api_hints_enabled ? 'plg.spectral_y_type =' : 'Flux or Surface Brightness'"
           :class="api_hints_enabled ? 'api-hint' : null"
           hint="Select the y-axis physical type for the spectrum-viewer."
           persistent-hint
