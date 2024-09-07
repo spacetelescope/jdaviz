@@ -127,14 +127,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
         # even if data loaded is in 'flux' it can be represented as a
         # per-pixel sb unit, so all cube data will be 'sb' (cubeviz)
         if msg.axis == "sb":
-            image_unit = u.Unit(msg.unit)
-
-            # temporarily, until non-sr units are suppported, strip 'pix' from
-            # unit if it is a per-pixel unit
-            if 'pix' in image_unit.bases:
-                image_unit = image_unit * u.pix
-
-            self.image_unit = u.Unit(image_unit)
+            self.image_unit = u.Unit(msg.unit)
 
     @property
     def marks(self):

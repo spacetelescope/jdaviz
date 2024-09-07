@@ -714,9 +714,13 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
             # if angle unit is pix2, pixarea should be 1 pixel2 per pixel2
             if display_solid_angle_unit == PIX2:
+                print('here')
                 pixarea_fac = 1 * PIX2
             else:
+                print('there')
                 pixarea = pixarea * (u.arcsec * u.arcsec / PIX2)
+                print('pixarea', pixarea)
+                print('display_solid_angle_unit', display_solid_angle_unit)
                 # NOTE: Sum already has npix value encoded, so we simply apply the npix unit here.
                 pixarea_fac = PIX2 * pixarea.to(display_solid_angle_unit / PIX2)
 
