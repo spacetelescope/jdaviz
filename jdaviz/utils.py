@@ -410,7 +410,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     solid_angle_in_targ = check_if_unit_is_per_solid_angle(targ_units, return_unit=True)
 
     # Ensure a spectrum passed through Spectral Extraction plugin
-    if (('_pixel_scale_factor' in spec.meta) and
+    if (((spec and ('_pixel_scale_factor' in spec.meta))) and
             (((solid_angle_in_orig) and (not solid_angle_in_targ)) or
              ((not solid_angle_in_orig) and (solid_angle_in_targ)))):
         # Data item in data collection does not update from conversion/translation.
