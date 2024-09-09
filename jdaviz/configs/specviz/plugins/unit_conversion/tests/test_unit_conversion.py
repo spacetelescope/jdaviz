@@ -128,7 +128,8 @@ def test_non_stddev_uncertainty(specviz_helper):
     )
 
 
-def test_unit_translation(cubeviz_helper):
+@pytest.mark.parametrize("angle_unit", [u.sr, u.pix*u.pix])
+def test_unit_translation(cubeviz_helper, angle_unit):
     # custom cube so PIXAR_SR is in metadata, and Flux units, and in MJy
     wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
                 "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
@@ -137,7 +138,7 @@ def test_unit_translation(cubeviz_helper):
     w = WCS(wcs_dict)
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.MJy / u.sr, wcs=w, meta=wcs_dict)
+    cube = Spectrum1D(flux=flux * u.MJy / angle_unit, wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     center = PixCoord(5, 10)
@@ -167,14 +168,18 @@ def test_unit_translation(cubeviz_helper):
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
     # check if units translated
-    assert y_display_unit == u.MJy / u.sr
+    assert y_display_unit == u.MJy / angle_unit
 
     # get_data(use_display_units=True) should return surface brightness-like units
-    assert cubeviz_helper.app._get_display_unit('spectral_y') == u.MJy / u.sr
-    assert cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True).unit == u.MJy / u.sr
+    assert cubeviz_helper.app._get_display_unit('spectral_y') == u.MJy / angle_unit
+    assert cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True).unit == u.MJy / angle_unit  # noqa
 
 
-def test_sb_unit_conversion(cubeviz_helper):
+@pytest.mark.parametrize("angle_unit", [u.sr, u.pix*u.pix])
+def test_sb_unit_conversion(cubeviz_helper, angle_unit):
+
+    angle_str = angle_unit.to_string()
+
     # custom cube to have Surface Brightness units
     wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
                 "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
@@ -183,7 +188,7 @@ def test_sb_unit_conversion(cubeviz_helper):
     w = WCS(wcs_dict)
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
+    cube = Spectrum1D(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
@@ -203,7 +208,7 @@ def test_sb_unit_conversion(cubeviz_helper):
     # Surface Brightness conversion
     uc_plg.flux_unit = 'Jy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    assert y_display_unit == u.Jy / u.sr
+    assert y_display_unit == u.Jy / angle_unit
     label_mouseover = cubeviz_helper.app.session.application._tools["g-coords-info"]
     flux_viewer = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_flux_viewer_reference_name
@@ -212,21 +217,28 @@ def test_sb_unit_conversion(cubeviz_helper):
         flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
     )
     assert label_mouseover.as_text() == (
-            "Pixel x=00010.0 y=00008.0 Value +1.00000e+06 Jy / sr",
+            f"Pixel x=00010.0 y=00008.0 Value +1.00000e+06 Jy / {angle_str}",
             "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
             "204.9987654313 27.0008999946 (deg)")
 
     # Try a second conversion
     uc_plg.flux_unit = 'W / Hz m2'
+
+    if angle_unit == u.pix * u.pix:  # unit string order is different for pix2 vs sr
+        str_unit = 'W / (Hz m2 pix2)'
+    elif angle_unit == u.sr:
+        str_unit = 'W / (Hz sr m2)'
+
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    assert y_display_unit == u.Unit("W / (Hz sr m2)")
+    assert y_display_unit == u.Unit(str_unit)
 
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
     label_mouseover._viewer_mouse_event(
         flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
     )
+
     assert label_mouseover.as_text() == (
-            "Pixel x=00010.0 y=00008.0 Value +1.00000e-20 W / (Hz sr m2)",
+            f"Pixel x=00010.0 y=00008.0 Value +1.00000e-20 {str_unit}",
             "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
             "204.9987654313 27.0008999946 (deg)")
 
@@ -239,7 +251,7 @@ def test_sb_unit_conversion(cubeviz_helper):
         flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
     )
     assert label_mouseover.as_text() == (
-            "Pixel x=00010.0 y=00008.0 Value +1.00000e+00 MJy / sr",
+            f"Pixel x=00010.0 y=00008.0 Value +1.00000e+00 MJy / {angle_str}",
             "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
             "204.9987654313 27.0008999946 (deg)")
 

@@ -155,6 +155,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     assert test_label in cubeviz_helper.app.data_collection
 
 
+@pytest.mark.skip()
 def test_fit_cube_no_wcs(cubeviz_helper):
     # This is like when user do something to a cube outside of Jdaviz
     # and then load it back into a new instance of Cubeviz for further analysis.

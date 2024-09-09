@@ -18,6 +18,7 @@ from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.utils import flux_conversion, _eqv_pixar_sr
 
 __all__ = ['CoordsInfo']
@@ -124,8 +125,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
     def _on_global_display_unit_changed(self, msg):
 
-        # even if data loaded is in 'flux' it can be represented as a
-        # per-pixel sb unit, so all cube data will be 'sb' (cubeviz)
+        # all cubes are converted to surface brightness so we just need to
+        # listen to SB for cubeviz unit changes
         if msg.axis == "sb":
             self.image_unit = u.Unit(msg.unit)
 
@@ -486,9 +487,18 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     image, arr, x, y, viewer
                 )
 
-                # We don't want to convert for things like moment maps
-                if str(u.Unit(unit).physical_type) not in ("spectral flux density",
-                                                           "surface brightness"):
+                # We don't want to convert for things like moment maps, so check physical type
+                # If unit is flux per pix2, the type will be 'unknown' rather
+                # than surface brightness, so have to multiply the pix2 part out
+                # and check if the numerator is a spectral flux density
+                if check_if_unit_is_per_solid_angle(unit, return_unit=True) == u.pix*u.pix:
+                    un = u.Unit(unit) * u.pix*u.pix
+                    physical_type = un.physical_type
+                else:
+                    physical_type = u.Unit(unit).physical_type
+
+                if str(physical_type) not in ("spectral flux density",
+                                              "surface brightness"):
                     skip_spectral_density_eqv = True
 
                 if self.image_unit is not None and not skip_spectral_density_eqv:
@@ -504,6 +514,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                         unit = self.image_unit
 
                     elif self.image_unit.is_equivalent(unit):
+
                         value = (value * u.Unit(unit)).to_value(u.Unit(self.image_unit))
                         unit = self.image_unit
 

@@ -57,7 +57,9 @@ def test_spec_sb_flux_conversion():
         returned_values, return_units, unit_flag = _indirect_conversion(
                                                         values=values, orig_units=(u.MJy),
                                                         targ_units=(u.ph / (u.s * u.cm**2 * u.Hz * solid_angle)),  # noqa
-                                                        eqv=eqv, spec_unit=spec_unit, image_data=None
+                                                        eqv=eqv,
+                                                        spec_unit=spec_unit,
+                                                        image_data=None
                                                     )
         assert_allclose(returned_values, target_values)
         assert (return_units == expected_units)
