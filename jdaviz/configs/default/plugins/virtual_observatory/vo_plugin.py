@@ -6,7 +6,7 @@ from pyvo.utils import vocabularies
 from pyvo import registry
 from pyvo.dal.exceptions import DALFormatError
 from requests.exceptions import ConnectionError as RequestConnectionError
-from traitlets import Bool, Unicode, Any, List, Int, observe
+from traitlets import Bool, Unicode, Any, List, Float, observe
 
 from jdaviz.configs.imviz.plugins.orientation.orientation import (
     orientation_plugin_label,
@@ -48,7 +48,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     source = Unicode("").tag(sync=True)
     coordframes = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
-    radius_deg = Int(1).tag(sync=True)
+    radius_deg = Float(1).tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
     data_loading = Bool(False).tag(sync=True)
@@ -251,7 +251,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             # Once coordinate lookup is complete, search service using these coords.
             sia_results = sia_service.search(
                 coord,
-                size=((self.radius_deg * u.deg) if self.radius_deg > 0 else None),
+                size=((self.radius_deg * u.deg) if self.radius_deg > 0.0 else None),
                 format="image/fits",
             )
             if len(sia_results) == 0:
