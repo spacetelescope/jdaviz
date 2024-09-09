@@ -92,6 +92,9 @@ class LoadDataMessage(Message):
 
 
 class AddDataMessage(Message):
+    """
+    Emitted AFTER data is added to a viewer
+    """
     def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -198,6 +201,9 @@ class ConfigurationLoadedMessage(Message):
 
 
 class AddDataToViewerMessage(Message):
+    """
+    Emitted to request data is added to a viewer (BEFORE the data is actually added)
+    """
     def __init__(self, viewer_reference, data_label, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

@@ -1452,8 +1452,6 @@ class LayerSelect(SelectPluginComponent):
                            handler=self._on_data_added)
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=lambda _: self._update_layer_items())
-        self.hub.subscribe(self, AddDataToViewerMessage,
-                           handler=self._on_data_added)
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=lambda _: self._on_subset_created())
         # will need SubsetUpdateMessage for name only (style shouldn't force a full refresh)
