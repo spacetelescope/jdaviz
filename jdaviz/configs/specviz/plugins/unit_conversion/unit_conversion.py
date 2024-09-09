@@ -176,7 +176,9 @@ class UnitConversion(PluginTemplateMixin):
             flux_choices = create_flux_equivalencies_list(y_unit * u.sr, x_unit)
             self.flux_unit.choices = flux_choices
             flux_unit = str(y_unit * u.sr)
-            # We need to set the angle_unit before triggering _on_flux_unit_changed
+            # We need to set the angle_unit before triggering _on_flux_unit_changed via
+            # setting self.flux_unit.selected below, or the lack of angle unit will make it think
+            # we're in Flux units.
             self.angle_unit.choices = create_angle_equivalencies_list(y_unit)
             self.angle_unit.selected = self.angle_unit.choices[0]
             if flux_unit in self.flux_unit.choices and flux_unit != self.flux_unit.selected:
