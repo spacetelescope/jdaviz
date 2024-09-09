@@ -570,6 +570,24 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     )
 
 
+def test_spectral_extraction_unit_conv_one_spec(
+    cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
+):
+    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
+    spectrum_viewer = cubeviz_helper.app.get_viewer(
+        cubeviz_helper._default_spectrum_viewer_reference_name)
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    assert uc.flux_unit == "Jy"
+    uc.flux_unit.selected = "MJy"
+    spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']
+    # Overwrite the one and only default extraction.
+    collapsed = spec_extr_plugin.extract()
+    # Actual values not in display unit but should not affect display unit.
+    assert collapsed.flux.unit == u.Jy
+    assert uc.flux_unit.selected == "MJy"
+    assert spectrum_viewer.state.y_display_unit == "MJy"
+
+
 @pytest.mark.usefixtures('_jail')
 @pytest.mark.remote_data
 @pytest.mark.parametrize(
