@@ -206,7 +206,7 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
     # check that initial units are synced between plugins
     assert uc.flux_unit.selected == 'MJy'
     assert uc.angle_unit.selected == 'sr'
-    assert ap.display_spectral_y_unit == 'MJy / sr'
+    assert ap.display_unit == 'MJy / sr'
     assert ap.flux_scaling_display_unit == 'MJy'
 
     # and defaults for inputs are in the correct unit

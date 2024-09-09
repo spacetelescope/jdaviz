@@ -354,10 +354,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
             # convert unit string to u.Unit so moment map data can be converted
             spectral_y_display_unit = u.Unit(flux_sb_unit)
-            if SPECUTILS_LT_1_15_1:
-                moment_new_unit = spectral_y_display_unit
-            else:
-                moment_new_unit = spectral_y_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
+            moment_new_unit = spectral_y_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
             self.moment = self.moment.to(moment_new_unit)
 
         # Reattach the WCS so we can load the result
