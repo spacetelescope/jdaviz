@@ -102,9 +102,9 @@ class UnitConversion(PluginTemplateMixin):
                                                        selected='spectral_unit_selected')
 
         self.spectral_y_type = SelectPluginComponent(self,
-                                                items='spectral_y_type_items',
-                                                selected='spectral_y_type_selected',
-                                                manual_options=['Surface Brightness', 'Flux'])
+                                                     items='spectral_y_type_items',
+                                                     selected='spectral_y_type_selected',
+                                                     manual_options=['Surface Brightness', 'Flux'])
 
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
