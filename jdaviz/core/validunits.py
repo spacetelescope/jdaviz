@@ -160,7 +160,7 @@ def check_if_unit_is_per_solid_angle(unit, return_unit=False):
     >>> check_if_unit_is_per_solid_angle('erg / (s cm^2 sr)')
     True
     >>> check_if_unit_is_per_solid_angle('erg / (s cm^2 sr)', return_unit=True)
-    Unit("sr")
+    u.Unit("sr")
     >>> check_if_unit_is_per_solid_angle('erg / s cm^2')
     False
     >>> check_if_unit_is_per_solid_angle('Jy * sr^-1')
