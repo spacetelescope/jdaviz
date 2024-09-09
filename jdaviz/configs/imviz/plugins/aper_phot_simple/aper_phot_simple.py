@@ -224,16 +224,20 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         surface brightness.
         """
 
-        # the refactoring done in 3144 will have the response to
-        # GlobalDisplayUnitChanged handled correctly. for now, use
-        # _get_display_unit
+        # all cubes are in sb so we can get display unit for plugin from SB display unit
+        # this can be changed to listen specifically to changes in surface brightness
+        # from UC plugin GlobalDisplayUnitChange message, but wiill require some refactoring
+        #
+        disp_unit = self.app._get_display_unit('sb')
 
-        if not self.dataset_selected or not self.aperture_selected:
+        # this check needs to be here because 'get_display_unit' will sometimes
+        # return non surface brightness units or even None when the app is starting
+        # up. this can be removed once that is fixed (see PR #3144)
+        if disp_unit is None or not check_if_unit_is_per_solid_angle(disp_unit):
             self.display_flux_or_sb_unit = ''
             self.flux_scaling_display_unit = ''
             return
 
-        disp_unit = self.app._get_display_unit('sb')  # all cubes are in sb
         self.display_flux_or_sb_unit = disp_unit
 
         # get angle componant of surface brightness
