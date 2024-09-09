@@ -80,7 +80,7 @@
             v-model.number="background_value"
             type="number"
             hint="Background to subtract"
-            :suffix="display_flux_or_sb_unit"
+            :suffix="display_spectral_y_unit"
             :disabled="background_selected!='Manual'"
             persistent-hint
           >
@@ -192,7 +192,7 @@
     </v-row>
 
     <v-row v-if="!multiselect && plot_available">
-      <jupyter-widget :widget="plot_widget"/> 
+      <jupyter-widget :widget="plot_widget"/>
     </v-row>
 
     <div v-if="!multiselect && plot_available && fit_radial_profile && current_plot_type != 'Curve of Growth'">
@@ -232,7 +232,7 @@
 
     <div v-if="result_available">
       <j-plugin-section-header>Results History</j-plugin-section-header>
-      <jupyter-widget :widget="table_widget"></jupyter-widget> 
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
     </div>
   </j-tray-plugin>
 </template>

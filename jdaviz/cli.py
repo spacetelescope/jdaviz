@@ -18,7 +18,7 @@ DEFAULT_HISTORY_VERBOSITY = 'info'
 
 def main(filepaths=None, layout='default', instrument=None, browser='default',
          theme='auto', verbosity=DEFAULT_VERBOSITY, history_verbosity=DEFAULT_HISTORY_VERBOSITY,
-         hotreload=False):
+         host='localhost', port=0, hotreload=False):
     """
     Start a Jdaviz application instance with data loaded from FILENAME.
 
@@ -38,6 +38,10 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         Verbosity of the popup messages in the application.
     history_verbosity : {'debug', 'info', 'warning', 'error'}
         Verbosity of the history logger in the application.
+    host : str, optional
+        Host to bind the server to, default is 'localhost'.
+    port : int, optional
+        Port to bind the server to, default is 0 (finds an empty port).
     hotreload : bool
         Whether to enable hot-reloading of the UI (for development)
     """
@@ -74,7 +78,9 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
         args += ['--production']
     cli(['run', 'jdaviz.solara',
          '--theme-loader', 'plain',
-         '--theme-variant', theme] + args)
+         '--theme-variant', theme,
+         '--host', host,
+         '--port', port] + args)
 
 
 def _main(config=None):
@@ -101,6 +107,10 @@ def _main(config=None):
                         help='Verbosity of the application for popup snackbars.')
     parser.add_argument('--history-verbosity', choices=_verbosity_levels, default='info',
                         help='Verbosity of the logger history.')
+    parser.add_argument('--host', type=str, default='localhost',
+                        help='Host to bind the server to, defaults to localhost.')
+    parser.add_argument('--port', type=int, default=0,
+                        help='Port to bind the server to, defaults to 0 (finds an empty port).')
     # Also enables --no-hotreload
     parser.add_argument('--hotreload', action=argparse.BooleanOptionalAction, default=False,
                         help='Whether to enable hot-reloading of the UI (for development).')
@@ -114,7 +124,7 @@ def _main(config=None):
 
     main(filepaths=args.filepaths, layout=layout, instrument=args.instrument, browser=args.browser,
          theme=args.theme, verbosity=args.verbosity, history_verbosity=args.history_verbosity,
-         hotreload=args.hotreload)
+         host=args.host, port=args.port, hotreload=args.hotreload)
 
 
 def _specviz():

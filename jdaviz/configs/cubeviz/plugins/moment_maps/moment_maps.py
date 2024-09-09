@@ -192,7 +192,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 sunit = ""
             self.dataset_spectral_unit = sunit
             unit_dict["Spectral Unit"] = sunit
-
             unit_dict["Surface Brightness"] = self.app._get_display_unit('sb')
 
         # Update units in selection item dictionary
@@ -314,18 +313,13 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # convert units for moment 0, which is the only currently supported
         # moment for using converted units.
         if n_moment == 0:
-
             # get display units for moment 0 based on unit conversion plugin selection
             moment_0_display_unit = self.output_unit_items[0]['unit_str']
 
             # convert unit string to Unit so moment map data can be converted
             flux_or_sb_display_unit = u.Unit(moment_0_display_unit)
 
-            # account for extra wavelength factor, depending on specutils version
-            if SPECUTILS_LT_1_15_1:
-                moment_new_unit = flux_or_sb_display_unit
-            else:
-                moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
+            moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
 
             self.moment = self.moment.to(moment_new_unit)
 

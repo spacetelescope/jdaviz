@@ -89,7 +89,7 @@ def test_conv_no_data(specviz_helper, spectrum1d):
     """plugin unit selections won't have valid choices yet, preventing
     attempting to set display units."""
     # spectrum not load is in Flux units, sb_unit and flux_unit
-    # should be enabled, flux_or_sb should not be
+    # should be enabled, spectral_y_type should not be
     plg = specviz_helper.plugins["Unit Conversion"]
     with pytest.raises(ValueError, match="no valid unit choices"):
         plg.spectral_unit = "micron"
@@ -100,7 +100,7 @@ def test_conv_no_data(specviz_helper, spectrum1d):
     # make sure we don't expose translations in Specviz
     assert hasattr(plg, 'flux_unit')
     assert hasattr(plg, 'angle_unit')
-    assert not hasattr(plg, 'flux_or_sb')
+    assert not hasattr(plg, 'spectral_y_type')
 
 
 def test_non_stddev_uncertainty(specviz_helper):
@@ -151,7 +151,7 @@ def test_unit_translation(cubeviz_helper, angle_unit):
 
     # When the dropdown is displayed, this ensures the loaded
     # data collection item units will be used for translations.
-    assert uc_plg._obj.flux_or_sb_selected == 'Flux'
+    assert uc_plg._obj.spectral_y_type_selected == 'Flux'
 
     # accessing from get_data(use_display_units=True) should return flux-like units
     assert cubeviz_helper.app._get_display_unit('spectral_y') == u.MJy
@@ -162,9 +162,9 @@ def test_unit_translation(cubeviz_helper, angle_unit):
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
     # change global y-units from Flux -> Surface Brightness
-    uc_plg._obj.flux_or_sb_selected = 'Surface Brightness'
+    uc_plg._obj.spectral_y_type_selected = 'Surface Brightness'
 
-    assert uc_plg._obj.flux_or_sb_selected == 'Surface Brightness'
+    assert uc_plg._obj.spectral_y_type_selected == 'Surface Brightness'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
     # check if units translated
@@ -195,7 +195,7 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     uc_plg.open_in_tray()
 
     # ensure that per solid angle cube defaults to Flux spectrum
-    assert uc_plg.flux_or_sb == 'Flux'
+    assert uc_plg.spectral_y_type == 'Flux'
     # flux choices is populated with flux units
     assert uc_plg.flux_unit.choices
 
@@ -203,7 +203,7 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     viewer_1d = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
-    uc_plg.flux_or_sb.selected = 'Surface Brightness'
+    uc_plg.spectral_y_type.selected = 'Surface Brightness'
 
     # Surface Brightness conversion
     uc_plg.flux_unit = 'Jy'
@@ -255,7 +255,7 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
             "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
             "204.9987654313 27.0008999946 (deg)")
 
-    uc_plg._obj.flux_or_sb_selected = 'Flux'
+    uc_plg._obj.spectral_y_type_selected = 'Flux'
     uc_plg.flux_unit = 'Jy'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
 
@@ -278,7 +278,7 @@ def test_contour_unit_conversion(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per
 
     assert np.allclose(po_plg.contour_max.value, 199)
 
-    uc_plg._obj.flux_or_sb_selected = 'Surface Brightness'
+    uc_plg._obj.spectral_y_type_selected = 'Surface Brightness'
     uc_plg.flux_unit = 'MJy'
 
     assert np.allclose(po_plg.contour_max.value, 1.99e-4)

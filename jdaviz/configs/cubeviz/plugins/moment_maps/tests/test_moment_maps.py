@@ -301,7 +301,7 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
-    uc.flux_or_sb.selected = 'Surface Brightness'
+    uc.spectral_y_type.selected = 'Surface Brightness'
     mm = cubeviz_helper.plugins['Moment Maps']._obj
     mm.open_in_tray()  # plugin has to be open for unit change to take hold
     mm._set_data_units()
@@ -316,7 +316,7 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
                     (sky_cube.ra.deg, sky_cube.dec.deg))
 
 
-def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
+def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
 
     moment_unit = "Jy m / sr"
 
@@ -335,7 +335,7 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
-    uc.flux_or_sb.selected = 'Surface Brightness'
+    uc.spectral_y_type.selected = 'Surface Brightness'
     mm = cubeviz_helper.plugins['Moment Maps']._obj
     mm.open_in_tray()  # plugin has to be open for unit change to take hold
     mm._set_data_units()

@@ -47,7 +47,7 @@ class UnitConversion(PluginTemplateMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``spectral_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
       Global unit to use for all spectral axes.
-    * ``flux_or_sb`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+    * ``spectral_y_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Select the y-axis physical type for the spectrum-viewer.
     * ``flux_unit`` (:class:`~jdaviz.core.template_mixin.UnitSelectPluginComponent`):
       Global display unit for flux axis.
@@ -67,8 +67,8 @@ class UnitConversion(PluginTemplateMixin):
     angle_unit_items = List().tag(sync=True)
     angle_unit_selected = Unicode().tag(sync=True)
 
-    flux_or_sb_items = List().tag(sync=True)
-    flux_or_sb_selected = Unicode().tag(sync=True)
+    spectral_y_type_items = List().tag(sync=True)
+    spectral_y_type_selected = Unicode().tag(sync=True)
 
     # This is used a warning message if False. This can be changed from
     # bool to unicode when we eventually handle inputing this value if it
@@ -101,9 +101,9 @@ class UnitConversion(PluginTemplateMixin):
                                                        items='spectral_unit_items',
                                                        selected='spectral_unit_selected')
 
-        self.flux_or_sb = SelectPluginComponent(self,
-                                                items='flux_or_sb_items',
-                                                selected='flux_or_sb_selected',
+        self.spectral_y_type = SelectPluginComponent(self,
+                                                items='spectral_y_type_items',
+                                                selected='spectral_y_type_selected',
                                                 manual_options=['Surface Brightness', 'Flux'])
 
         self.flux_unit = UnitSelectPluginComponent(self,
@@ -117,7 +117,7 @@ class UnitConversion(PluginTemplateMixin):
     @property
     def user_api(self):
         if self.app.config == 'cubeviz':
-            expose = ('spectral_unit', 'flux_or_sb', 'flux_unit', 'angle_unit', 'sb_unit')
+            expose = ('spectral_unit', 'spectral_y_type', 'flux_unit', 'angle_unit', 'sb_unit')
         else:
             expose = ('spectral_unit', 'flux_unit', 'angle_unit')
         return PluginUserApi(self, expose=expose)
@@ -152,7 +152,7 @@ class UnitConversion(PluginTemplateMixin):
             return
         if self.spectral_unit.selected == "":
             # no spectral unit set yet, cannot determine equivalencies
-            # setting the spectral unit will check len(flux_or_sb_unit.choices)
+            # setting the spectral unit will check len(spectral_y_type_unit.choices)
             # and call this manually in the case that that is triggered second.
             return
         self.spectrum_viewer.set_plot_axes()
@@ -218,15 +218,15 @@ class UnitConversion(PluginTemplateMixin):
                                self.spectral_unit.selected,
                                sender=self))
 
-    @observe('flux_or_sb_selected')
-    def _on_flux_or_sb_selected(self, msg):
+    @observe('spectral_y_type_selected')
+    def _on_spectral_y_type_selected(self, msg):
         """
         Observes toggle between surface brightness or flux selection for
         spectrum viewer to trigger translation.
         """
 
-        if msg.get('name') == 'flux_or_sb_selected':
-            self._translate(self.flux_or_sb_selected)
+        if msg.get('name') == 'spectral_y_type_selected':
+            self._translate(self.spectral_y_type_selected)
 
     @observe('flux_unit_selected')
     def _on_flux_unit_changed(self, msg):
@@ -261,7 +261,7 @@ class UnitConversion(PluginTemplateMixin):
         self.hub.broadcast(GlobalDisplayUnitChanged("flux", flux_unit, sender=self))
         self.hub.broadcast(GlobalDisplayUnitChanged("sb", sb_unit, sender=self))
 
-        spectral_y = sb_unit if self.flux_or_sb == 'Surface Brightness' else flux_unit
+        spectral_y = sb_unit if self.spectral_y_type == 'Surface Brightness' else flux_unit
 
         yunit = _valid_glue_display_unit(spectral_y, self.spectrum_viewer, 'y')
 
@@ -276,12 +276,12 @@ class UnitConversion(PluginTemplateMixin):
             self.hub.broadcast(GlobalDisplayUnitChanged("spectral_y", spectral_y, sender=self))
 
         if not check_if_unit_is_per_solid_angle(self.spectrum_viewer.state.y_display_unit):
-            self.flux_or_sb_selected = 'Flux'
+            self.spectral_y_type_selected = 'Flux'
         else:
-            self.flux_or_sb_selected = 'Surface Brightness'
+            self.spectral_y_type_selected = 'Surface Brightness'
 
         # Always send a surface brightness unit to contours
-        if self.flux_or_sb_selected == 'Flux':
+        if self.spectral_y_type_selected == 'Flux':
             yunit = self._append_angle_correctly(yunit, self.angle_unit.selected)
         self._find_and_convert_contour_units(yunit=yunit)
 
@@ -318,7 +318,7 @@ class UnitConversion(PluginTemplateMixin):
                 if hasattr(layer, 'attribute_display_unit'):
                     layer.attribute_display_unit = yunit
 
-    def _translate(self, flux_or_sb=None):
+    def _translate(self, spectral_y_type=None):
 
         # currently unsupported, can be supported with a scale factor
         if self.app.config == 'specviz':
@@ -338,13 +338,13 @@ class UnitConversion(PluginTemplateMixin):
         spec_axis_ang_unit = check_if_unit_is_per_solid_angle(spec_units)
 
         # Surface Brightness -> Flux
-        if spec_axis_ang_unit and flux_or_sb == 'Flux':
+        if spec_axis_ang_unit and spectral_y_type == 'Flux':
             spec_units *= selected_display_solid_angle_unit
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
 
         # Flux -> Surface Brightness
-        elif (not spec_axis_ang_unit and flux_or_sb == 'Surface Brightness'):
+        elif (not spec_axis_ang_unit and spectral_y_type == 'Surface Brightness'):
             spec_units /= selected_display_solid_angle_unit
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)

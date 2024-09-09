@@ -5,7 +5,7 @@ New Features
 ------------
 
 - Added flux/surface brightness translation and surface brightness
-  unit conversion in Cubeviz and Specviz. [#2781, #2940, #3088, #3111, #3113, #3129, #3139, #3149, #3155, #3156]
+  unit conversion in Cubeviz and Specviz. [#2781, #2940, #3088, #3111, #3113, #3129, #3139, #3149, #3155, #3178, #3156]
 
 - Plugin tray is now open by default. [#2892]
 
@@ -156,6 +156,9 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+
+- Bump required specutils version to 1.16. Moment 0 calculation is now in units
+  of flux*dx (rather than flux) [#3184]
 
 3.11 (unreleased)
 =================
