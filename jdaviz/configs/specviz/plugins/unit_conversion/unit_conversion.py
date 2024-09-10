@@ -118,7 +118,6 @@ class UnitConversion(PluginTemplateMixin):
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
                                                        selected='spectral_unit_selected')
-        # TODO: can choices be defined in the object init?
         self.spectral_unit.choices = create_spectral_equivalencies_list(u.Hz)
 
 
@@ -126,7 +125,6 @@ class UnitConversion(PluginTemplateMixin):
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
-        # TODO: double check if using Hz to grab the equivalencies will cause a problem for wavelength
         # NOTE: will switch to count only if first data loaded into viewer in in counts
         self.flux_unit.choices = create_flux_equivalencies_list(u.Jy, u.Hz)
 
@@ -138,7 +136,7 @@ class UnitConversion(PluginTemplateMixin):
         self.angle_unit.choices = create_angle_equivalencies_list(u.sr)
 
         self.has_sb = self.has_angle or self.config in ('imviz',)
-        # NOTE: always read_only, exposed through sb_unit property
+        # NOTE: sb_unit is read_only, exposed through sb_unit property
 
         self.has_time = False
         self.time_unit = UnitSelectPluginComponent(self,
@@ -149,7 +147,6 @@ class UnitConversion(PluginTemplateMixin):
                                                      items='spectral_y_type_items',
                                                      selected='spectral_y_type_selected',
                                                      manual_options=['Surface Brightness', 'Flux'])
-
 
     @property
     def user_api(self):
@@ -185,8 +182,9 @@ class UnitConversion(PluginTemplateMixin):
                 self.pixar_sr_exists = False
 
         viewer = msg.viewer
- 
-        if isinstance(viewer, JdavizProfileView):  # TODO: think about rampviz
+
+        # TODO: when enabling unit-conversion in rampviz, this may need to be more specific or handle other cases for ramp profile viewers
+        if isinstance(viewer, JdavizProfileView):
             if viewer.state.x_display_unit == self.spectral_unit_selected and viewer.state.y_display_unit == self.app._get_display_unit('spectral_y'):
                 # data already existed in this viewer and display units were already set
                 return
