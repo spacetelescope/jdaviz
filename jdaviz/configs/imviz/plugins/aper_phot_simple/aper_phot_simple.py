@@ -70,9 +70,19 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     # Cubeviz only
     cube_slice = Unicode("").tag(sync=True)
     is_cube = Bool(False).tag(sync=True)
-    display_spectral_y_unit = Unicode("").tag(sync=True)
+
+    # surface brightness display unit
+    display_unit = Unicode("").tag(sync=True)
+
+    # angle component of `display_unit`, to avoid repetition of seperating
+    # it out from `display_unit`
+
     display_solid_angle_unit = Unicode("").tag(sync=True)
+
+    # flux scaling display unit will always be flux, not sb. again its own
+    # traitlet to avoid avoid repetition of seperating it out from `display_unit`
     flux_scaling_display_unit = Unicode("").tag(sync=True)
+
     disable_pixarea_input = Bool(False).tag(sync=True)  # if flux/pix2
 
     def __init__(self, *args, **kwargs):
@@ -184,7 +194,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if self.config == 'cubeviz':
 
             # get previously selected display units
-            prev_display_spectral_y_unit = self.display_spectral_y_unit
+            prev_display_unit = self.display_unit
             prev_flux_scale_unit = self.flux_scaling_display_unit
 
             # update display unit traitlets to new selection
@@ -193,16 +203,18 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             # convert the previous background and flux scaling values to new unit so
             # re-calculating photometry with the current selections will produce
             # the previous output with the new unit.
-            if prev_display_spectral_y_unit != '':
+            if prev_display_unit != '':
 
                 # convert background to new unit
                 if self.background_value is not None:
 
-                    prev_unit = u.Unit(prev_display_spectral_y_unit)
-                    new_unit = u.Unit(self.display_spectral_y_unit)
+                    prev_unit = u.Unit(prev_display_unit)
+                    new_unit = u.Unit(self.display_unit)
 
                     bg = self.background_value * prev_unit
 
+                    # will need to add additonal custom equiv here once
+                    # pix2<>angle is enabled
                     self.background_value = bg.to_value(
                         new_unit, u.spectral_density(self._cube_wave))
 
@@ -218,7 +230,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def _set_display_unit_of_selected_dataset(self):
 
         """
-        Set the display_spectral_y_unit and flux_scaling_display_unit traitlets,
+        Set the display_unit and flux_scaling_display_unit traitlets,
         which depend on if the selected data set is flux or surface brightness,
         and the corresponding global display unit for either flux or
         surface brightness.
@@ -227,18 +239,17 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # all cubes are in sb so we can get display unit for plugin from SB display unit
         # this can be changed to listen specifically to changes in surface brightness
         # from UC plugin GlobalDisplayUnitChange message, but wiill require some refactoring
-        #
         disp_unit = self.app._get_display_unit('sb')
 
         # this check needs to be here because 'get_display_unit' will sometimes
         # return non surface brightness units or even None when the app is starting
         # up. this can be removed once that is fixed (see PR #3144)
         if disp_unit is None or not check_if_unit_is_per_solid_angle(disp_unit):
-            self.display_spectral_y_unit = ''
+            self.display_unit = ''
             self.flux_scaling_display_unit = ''
             return
 
-        self.display_spectral_y_unit = disp_unit
+        self.display_unit = disp_unit
 
         # get angle componant of surface brightness
         # note: could add 'axis=angle' when cleaning this code up to avoid repeating this
@@ -282,8 +293,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             mjy2abmag = 0.003631
 
             # if display unit is different, translate
-            if (self.config == 'cubeviz') and (self.display_spectral_y_unit != ''):
-                disp_unit = u.Unit(self.display_spectral_y_unit)
+            if (self.config == 'cubeviz') and (self.display_unit != ''):
+                disp_unit = u.Unit(self.display_unit)
                 mjy2abmag = (mjy2abmag * u.Unit("MJy/sr")).to_value(disp_unit)
 
             if 'photometry' in meta and 'pixelarea_arcsecsq' in meta['photometry']:
@@ -368,7 +379,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # get correct display unit for newly selected dataset
         if self.config == 'cubeviz':
-            # sets display_spectral_y_unit and flux_scaling_display_unit traitlets
+            # sets display_unit and flux_scaling_display_unit traitlets
             self._set_display_unit_of_selected_dataset()
 
         # auto-populate background, if applicable.
@@ -468,9 +479,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # convert to display unit, if necessary (cubeviz only)
 
-        if (self.config == 'cubeviz') and (self.display_spectral_y_unit != '') and comp.units:
+        if (self.config == 'cubeviz') and (self.display_unit != '') and comp.units:
             bg_md = (bg_md * u.Unit(comp.units)).to_value(
-                u.Unit(self.display_spectral_y_unit), u.spectral_density(self._cube_wave))
+                u.Unit(self.display_unit), u.spectral_density(self._cube_wave))
 
         return bg_md
 
@@ -573,7 +584,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             img_unit = None
 
         if self.config == 'cubeviz':
-            display_unit = u.Unit(self.display_spectral_y_unit)
+            display_unit = u.Unit(self.display_unit)
 
         if background is not None and background not in self.background.choices:  # pragma: no cover
             raise ValueError(f"background must be one of {self.background.choices}")
@@ -768,7 +779,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             phot_table.add_column(slice_val, name="slice_wave", index=29)
 
             if comp.units:  # convert phot. results from image unit to display unit
-                display_unit = u.Unit(self.display_spectral_y_unit)
+                display_unit = u.Unit(self.display_unit)
                 # convert units of certain columns in aperture phot. output table
                 # to reflect display units (i.e if data units are MJy / sr, but
                 # Jy / sr is selected in Unit Conversion plugin)
@@ -809,8 +820,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         if update_plots:
 
             # for cubeviz unit conversion display units
-            if self.display_spectral_y_unit != '':
-                plot_display_unit = self.display_spectral_y_unit
+            if self.display_unit != '':
+                plot_display_unit = self.display_unit
             else:
                 plot_display_unit = None
 
