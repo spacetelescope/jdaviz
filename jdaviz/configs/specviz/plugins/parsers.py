@@ -11,7 +11,6 @@ from specutils import Spectrum1D, SpectrumList, SpectrumCollection
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.utils import standardize_metadata, download_uri_to_path
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 
 __all__ = ["specviz_spectrum1d_parser"]
@@ -159,15 +158,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
             # Make metadata layout conform with other viz.
             spec.meta = standardize_metadata(spec.meta)
-
-            # If this is the first loaded data, we want to set spectral y unit type to Flux or
-            # Surface Brightness as appropriate
-            if len(app.data_collection) == 0 and "Unit Conversion" in app._jdaviz_helper.plugins:
-                uc = app._jdaviz_helper.plugins["Unit Conversion"]
-                if check_if_unit_is_per_solid_angle(flux_units):
-                    uc._obj.spectral_y_type = "Surface Brightness"
-                else:
-                    uc._obj.spectral_y_type = "Flux"
 
             app.add_data(spec, data_label[i])
 
