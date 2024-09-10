@@ -27,7 +27,6 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
     assert (y_axis_label in label)
 
 
-@pytest.mark.xfail(reason="FIXME: Some callback magic needs to happen somewhere.")
 def test_spectrum_viewer_keep_unit_when_removed(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="Test")
     uc = specviz_helper.plugins["Unit Conversion"]

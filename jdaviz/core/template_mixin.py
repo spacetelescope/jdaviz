@@ -3908,13 +3908,7 @@ class AddResults(BasePluginComponent):
                 add_to_viewer_vis = [True]
                 preserved_attributes = [{}]
 
-        enforce_flux_unit = None
         if label in self.app.data_collection:
-            if self.app.config == "cubeviz":
-                sv = self.app.get_viewer(
-                    self.app._jdaviz_helper._default_spectrum_viewer_reference_name)
-                if len(sv.state.layers) == 1:
-                    enforce_flux_unit = self.app._get_display_unit('spectral_y')
             for viewer_ref in add_to_viewer_refs:
                 self.app.remove_data_from_viewer(viewer_ref, label)
             self.app.data_collection.remove(self.app.data_collection[label])
@@ -3946,9 +3940,6 @@ class AddResults(BasePluginComponent):
             self.app.add_data_to_viewer(viewer_ref,
                                         label,
                                         visible=visible, clear_other_data=this_replace)
-
-            if enforce_flux_unit:
-                sv.state.y_display_unit = enforce_flux_unit
 
             if preserved != {}:
                 layer_state = [layer.state for layer in this_viewer.layers if
