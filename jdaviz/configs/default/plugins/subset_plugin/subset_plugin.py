@@ -125,8 +125,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         align_by = getattr(self.app, '_align_by', None)
         self.display_sky_coordinates = (align_by == 'wcs' and not self.multiselect)
 
-        combination_options = [key for key, value in SUBSET_MODES_PRETTY.items()]
-
+        combination_options = list(SUBSET_MODES_PRETTY)
         self.combination_mode = SelectPluginComponent(self,
                                                       items='combination_items',
                                                       selected='combination_selected',
@@ -714,13 +713,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
               fully supports ``regions``)
             * specutils ``SpectralRegion`` object
 
-            A string which represents a ``regions`` or ``SpectralRegion`` file
+            A string which represents a ``regions`` or ``SpectralRegion`` file.
+            If given as a list, it can only contain spectral or non-spectral regions, not both.
 
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
-            Default is to load everything.
+            Default is to load everything.  If you are providing a large file/list
+             input for ``region``, it is recommended
 
         refdata_label : str or `None`
+            **This is only applicable to non-spectral regions.**
             Label of data to use for sky-to-pixel conversion for a region, or
             mask creation. Data must already be loaded into Jdaviz.
             If `None`, defaults to the reference data in the default viewer.
@@ -732,8 +734,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             This is useful for debugging. If `False`, do not return anything (`None`).
 
         create_as_new : bool
-            If `True`, after subset is created, set combination mode to new.
-
+            If `True`, combination mode is set to new and subset is added as
+            a new subset.
         Returns
         -------
         bad_regions : list of (obj, str) or `None`
@@ -803,7 +805,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             This is useful for debugging. If `False`, do not return anything (`None`).
 
         create_as_new : bool
-            If `True`, after subset is created, set subset to be `Create New`
+            If `True`, combination mode is set to new and subset is added as
+            a new subset.
 
         kwargs : dict
             Extra keywords to be passed into the region's ``to_mask`` method.
@@ -975,11 +978,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
         Returns
         -------
-        bad_regions : list of (obj, str) or `None`
-            If requested (see ``return_bad_regions`` option), return a
-            list of ``(region, reason)`` tuples for region objects that failed to load.
-            If all the regions loaded successfully, this list will be empty.
-            If not requested, return `None`.
+        bad_regions : `None`
+            Not yet implemented for spectral subsets.
         """
         viewer_name = viewer or self.app._jdaviz_helper._default_spectrum_viewer_reference_name
         range_viewer = self.app.get_viewer(viewer_name)
