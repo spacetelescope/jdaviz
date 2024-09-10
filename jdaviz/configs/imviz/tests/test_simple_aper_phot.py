@@ -499,9 +499,12 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
     phot_plugin = cubeviz_helper.plugins['Aperture Photometry']._obj
     uc_plugin = cubeviz_helper.plugins['Unit Conversion']
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
 
-    cubeviz_helper.load_regions(CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2))
-    cubeviz_helper.load_regions(CirclePixelRegion(center=PixCoord(x=3, y=3), radius=2))
+    subset_plugin.import_region(CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2),
+                                create_as_new=True)
+    subset_plugin.import_region(CirclePixelRegion(center=PixCoord(x=3, y=3), radius=2),
+                                create_as_new=True)
 
     phot_plugin.dataset_selected = 'test[FLUX]'
     phot_plugin.multiselect = True
