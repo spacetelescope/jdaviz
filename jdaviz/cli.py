@@ -70,20 +70,16 @@ def main(filepaths=None, layout='default', instrument=None, browser='default',
     solara.theme = theme
     solara.jdaviz_verbosity = verbosity
     solara.jdaviz_history_verbosity = history_verbosity
-    args = []
-    if hotreload:
-        args += ['--auto-restart']
-    else:
-        args += ['--production']
-    run_solara(host=host, port=port, theme=theme, browser=browser)
+    run_solara(host=host, port=port, theme=theme, browser=browser, production=not hotreload)
 
 
-def run_solara(host, port, theme, browser):
+def run_solara(host, port, theme, browser, production: bool = True):
     os.environ["SOLARA_APP"] = "jdaviz.solara"
     import solara.server.starlette
     import solara.server.settings
     solara.server.settings.theme.variant = theme
     solara.server.settings.theme.loader = "plain"
+    solara.server.settings.main.mode = "production" if production else "development"
 
     server = solara.server.starlette.ServerStarlette(host="localhost", port=port)
     print(f"Starting server on {server.base_url}")
@@ -125,7 +121,7 @@ def _main(config=None):
     parser.add_argument('--instrument', type=str, default='nirspec',
                         help='Manually specifies which instrument parser to use, for Mosviz')
     parser.add_argument('--browser', type=str, default='default',
-                        help='Browser to use for application (use qt for embedded qt browser).')
+                        help='Browser to use for application (use qt for embedded Qt browser).')
     parser.add_argument('--theme', choices=['light', 'dark'], default='light',
                         help='Theme to use for application.')
     parser.add_argument('--verbosity', choices=_verbosity_levels, default='info',
