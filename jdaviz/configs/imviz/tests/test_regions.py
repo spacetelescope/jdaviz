@@ -111,7 +111,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # A little out-of-bounds should still overlay the overlapped part.
         my_reg = CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5)
         bad_regions = self.subset_plugin.import_region([my_reg], return_bad_regions=True,
-                                                       create_new_after=True)
+                                                       create_as_new=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1')
         assert len(self.imviz.get_interactive_regions()) == 1
@@ -130,7 +130,7 @@ class TestLoadRegions(BaseImviz_WCS_NoWCS, BaseRegionHandler):
         # Add them all.
         bad_regions = self.subset_plugin.import_region([my_reg_sky_1, my_reg_sky_2, my_reg_sky_3],
                                                        return_bad_regions=True,
-                                                       create_new_after=True)
+                                                       create_as_new=True)
         assert len(bad_regions) == 0
 
         # Mimic interactive regions (after)
@@ -199,7 +199,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
-            self.region_file, return_bad_regions=True, create_new_after=True)
+            self.region_file, return_bad_regions=True, create_as_new=True)
         assert len(bad_regions) == 1
 
         # Will load 8/9 and 7 of that become ROIs.
@@ -214,7 +214,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
         self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
         bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
-            self.region_file, max_num_regions=2, return_bad_regions=True, create_new_after=True)
+            self.region_file, max_num_regions=2, return_bad_regions=True, create_as_new=True)
         assert len(bad_regions) == 0
         subsets = imviz_helper.get_interactive_regions()
         assert list(subsets.keys()) == ['Subset 1', 'Subset 2'], subsets
