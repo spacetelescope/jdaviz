@@ -295,16 +295,20 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 else:
                     add_flux = False
 
-                solid_angle_in_flux_unit = check_if_unit_is_per_solid_angle(flux_unit, return_unit=True)
+                solid_angle_in_flux_unit = check_if_unit_is_per_solid_angle(flux_unit,
+                                                                            return_unit=True)
                 if solid_angle_in_flux_unit is None:
-                    solid_angle_in_flux_unit = u.sr  # use as a placeholder
-                                                     # is_equivalent checks won't pass anyway if theres no
-                                                     # solid angle so this won't matter.
+                    # use sr as a placeholder unit. is_equivalent() checks won't
+                    # pass anyway if theres no solid angle in the unit, so it
+                    # won't matter what this is
+                    solid_angle_in_flux_unit = u.sr
+
                 solid_angle_string = solid_angle_in_flux_unit.to_string()
 
                 # If the flux unit is equivalent to Jy, or Jy per spaxel for Cubeviz,
                 # enforce integration in frequency space
-                if (flux_unit.is_equivalent(u.Jy) or flux_unit.is_equivalent(u.Jy/solid_angle_in_flux_unit)):
+                if (flux_unit.is_equivalent(u.Jy) or
+                   flux_unit.is_equivalent(u.Jy / solid_angle_in_flux_unit)):
                     # Perform integration in frequency space
                     freq_spec = Spectrum1D(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
