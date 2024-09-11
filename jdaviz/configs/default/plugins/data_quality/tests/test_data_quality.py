@@ -241,7 +241,7 @@ def test_cubeviz_layer_visibility_bug(cubeviz_helper, tmp_path):
 
     # create a spatial subset in the flux-viewer
     roi = RectangularROI(22, 27, 22, 30)
-    cubeviz_helper.plugins['Subset Tools'].import_region(roi)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(roi)
 
     # toggle layer visibility, this used to trigger an AttributeError:
     cubeviz_helper.app.set_data_visibility('flux-viewer', dc[-1].label)
