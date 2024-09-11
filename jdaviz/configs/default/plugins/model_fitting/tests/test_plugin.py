@@ -329,7 +329,7 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
 
     # Now create the new spectral subset:
     cubeviz_helper.plugins['Subset Tools']._obj.import_region(
-        SpectralRegion(min_wavelength.to(u.m),max_wavelength.to(u.m)))
+        SpectralRegion(min_wavelength.to(u.m), max_wavelength.to(u.m)))
     assert "Subset 2" in p.spectral_subset.choices
 
     # Select the spectral subset

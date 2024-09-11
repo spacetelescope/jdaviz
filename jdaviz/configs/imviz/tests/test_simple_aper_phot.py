@@ -359,7 +359,8 @@ def test_annulus_background(imviz_helper):
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(
         PixCoord(x=150, y=25), inner_radius=7, outer_radius=17)
-    imviz_helper.plugins['Subset Tools']._obj.import_region([circle_1, annulus_1], create_as_new=True)
+    imviz_helper.plugins['Subset Tools']._obj.import_region([circle_1, annulus_1],
+                                                            create_as_new=True)
 
     phot_plugin.aperture_selected = 'Subset 1'
     phot_plugin.background_selected = 'Subset 2'
@@ -377,7 +378,7 @@ def test_annulus_background(imviz_helper):
     annulus_2 = CircleAnnulusPixelRegion(
         PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
     imviz_helper.plugins['Subset Tools']._obj.import_region([ellipse_1, annulus_2],
-                                                       create_as_new=True)
+                                                            create_as_new=True)
 
     # Subset 4 (annulus) should be available in both sets of choices, but invalid for selection as
     # aperture
