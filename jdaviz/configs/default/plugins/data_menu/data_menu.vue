@@ -21,8 +21,8 @@
           />
         </span>
         <span class="invert-if-dark" style="margin-left: 24px; margin-right: 32px; line-height: 28px">
-          <v-icon v-if="item.icon" dense>
-            {{item.icon}}
+          <v-icon v-if="item.prefix_icon" dense>
+            {{item.prefix_icon}}
           </v-icon>
           {{item.label}}
         </span>
