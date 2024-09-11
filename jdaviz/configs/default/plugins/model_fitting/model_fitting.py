@@ -209,7 +209,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         elif param == "scale" and model_type == "BlackBody":
             return str("")
 
-        #print(f"returning y units from _param_units: {self._units['y']}")
         return self._units["y"] if param in y_params else self._units["x"]
 
     def _update_parameters_from_fit(self):
@@ -465,24 +464,20 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                                          "bounds": {"scale": (0.0, None)}}
 
         initial_values = {}
-        #print("Initializing values")
         for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
             # access the default value from the model class itself
             default_param = getattr(model_cls, param_name, _EmptyParam(0))
             default_units = self._param_units(param_name,
                                               model_type=new_model["model_type"])
-            #print(f"default units: {default_units}")
 
             if default_param.unit is None:
                 # then the model parameter accepts unitless, but we want
                 # to pass with appropriate default units
-                #print("default_param.unit is None")
                 initial_val = u.Quantity(default_param.value, default_units)
             else:
                 # then the model parameter has default units.  We want to pass
                 # with jdaviz default units (based on x/y units) but need to
                 # convert the default parameter unit to these units
-                #print(f"Got to this else, converting {default_param.quantity} to {default_units}")
                 initial_val = default_param.quantity.to(default_units)
 
             initial_values[param_name] = initial_val
@@ -498,7 +493,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
                                                        self.spectral_subset)
         mask = masked_spectrum.mask
-        #print(f"Initial values: {initial_values}")
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
                                **initial_values,
@@ -506,13 +500,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum.spectral_axis[~mask] if mask is not None else masked_spectrum.spectral_axis,  # noqa
             masked_spectrum.flux[~mask] if mask is not None else masked_spectrum.flux)
 
-        #print(initialized_model)
-
         # need to loop over parameters again as the initializer may have overridden
         # the original default value. However, if we toggled cube_fit, we may need to override
         for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
             param_quant = getattr(initialized_model, param_name)
-            #print(f"Setting param_quant {param_name} {param_quant.value} {param_quant.unit}")
             new_model["parameters"].append({"name": param_name,
                                             "value": param_quant.value,
                                             "unit": str(param_quant.unit),
@@ -521,8 +512,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         new_model["Initialized"] = True
         new_model["initialized_display_units"] = self._units.copy()
-
-        #print(f"initialized_display_units: {new_model['initialized_display_units']}")
 
         new_model["compat_display_units"] = True  # always compatible at time of creation
         return new_model
@@ -559,13 +548,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             uc = self.app._jdaviz_helper.plugins['Unit Conversion']
 
             if msg.unit != uc._obj.sb_unit_selected:
-                print(f"Uh oh, flux units: {msg.unit}, forcing to {uc._obj.sb_unit_selected}")
                 self._units[axis] = uc._obj.sb_unit_selected
                 self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
                 return
 
         # update internal tracking of current units
-        print(f"Updating {axis} units to {msg.unit}")
         self._units[axis] = str(msg.unit)
 
         self._check_model_component_compat([axis], [msg.unit])
@@ -796,14 +783,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._update_viewer_filters(event=event)
         uc = self.app._jdaviz_helper.plugins['Unit Conversion']
 
-        print("Toggled cube fit")
-        print(self._units['y'])
-        print(uc._obj.sb_unit_selected, uc.flux_unit.selected)
         if event.get('new'):
-            print(f"Uh oh, flux units: {self._units['y']}, forcing to {uc._obj.sb_unit_selected}")
             self._units['y'] = uc._obj.sb_unit_selected
         else:
-            print("Changing y units back to flux")
             self._units['y'] = uc.flux_unit.selected
 
 
@@ -954,9 +936,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         uc = self.app._jdaviz_helper.plugins['Unit Conversion']
         if spec.flux.unit != uc._obj.sb_unit_selected:
-            print(f"Converting cube units from {spec.flux.unit} to {uc._obj.sb_unit_selected}")
             spec = spec.with_flux_unit(uc._obj.sb_unit_selected)
-        print(f"Fitting to {spec}")
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
