@@ -150,7 +150,8 @@ def test_unit_translation(cubeviz_helper):
     cubeviz_helper.load_data(cube, data_label="test")
 
     center = PixCoord(5, 10)
-    cubeviz_helper.plugins['Subset Tools'].import_region(CirclePixelRegion(center, radius=2.5))
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+        CirclePixelRegion(center, radius=2.5))
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
 

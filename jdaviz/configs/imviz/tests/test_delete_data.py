@@ -29,11 +29,11 @@ class TestDeleteData(BaseImviz_WCS_WCS):
 
         # Add a subset
         reg = CirclePixelRegion(PixCoord(2, 2), 3).to_sky(self.wcs_1)
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.imviz.plugins['Subset Tools']._obj.import_region(reg)
 
-        self.imviz.plugins['Subset Tools'].combination_mode.selected = 'new'
+        self.imviz.plugins['Subset Tools']._obj.combination_mode.selected = 'new'
         reg = RectanglePixelRegion(PixCoord(1, 1), 2, 2).to_sky(self.wcs_1)
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.imviz.plugins['Subset Tools']._obj.import_region(reg)
 
         assert len(self.imviz.app.data_collection.subset_groups) == 2
 
@@ -91,7 +91,7 @@ class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
         # Create a rotated ellipse.
         reg = EllipsePixelRegion(
             PixCoord(3.5, 4.5), width=2, height=5, angle=Angle(30, 'deg')).to_sky(self.wcs_1)
-        self.imviz.plugins['Subset Tools'].import_region(reg)
+        self.imviz.plugins['Subset Tools']._obj.import_region(reg)
 
         # Switch back to Default Orientation.
         self.imviz.app._change_reference_data("Default orientation")

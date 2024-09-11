@@ -133,7 +133,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     @property
     def user_api(self):
-        expose = ['import_region', 'combination_mode']
+        expose = []
         return PluginUserApi(self, expose)
 
     def _on_link_update(self, *args):

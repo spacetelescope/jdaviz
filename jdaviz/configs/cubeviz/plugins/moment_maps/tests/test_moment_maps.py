@@ -209,8 +209,8 @@ def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger
     mm = cubeviz_helper.plugins['Moment Maps']
 
     unit = u.Unit(uc.spectral_unit.selected)
-    cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(4.624e-07 * unit,
-                                                                        4.627e-07 * unit))
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(SpectralRegion(4.624e-07 * unit,
+                                                                             4.627e-07 * unit))
 
     uc.spectral_unit = 'Hz'
     mm.spectral_subset = 'Subset 1'

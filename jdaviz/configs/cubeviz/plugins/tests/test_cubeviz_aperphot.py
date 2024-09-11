@@ -13,7 +13,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
     flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
-    cubeviz_helper.plugins['Subset Tools'].import_region(aper)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(aper)
 
     # Make sure MASK is not an option even when shown in viewer.
     cubeviz_helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
@@ -99,7 +99,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
     cubeviz_helper.app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
-    cubeviz_helper.plugins['Subset Tools'].import_region(aper)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(aper)
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     plg.dataset_selected = "test[FLUX] spatial-smooth stddev-1.0"
@@ -125,7 +125,7 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
-    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg], create_as_new=True)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region([aper, bg], create_as_new=True)
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     plg.dataset_selected = "test[FLUX]"
@@ -192,7 +192,7 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
     bg = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=1, height=1)
 
     cubeviz_helper.load_data(mjy_sr_cube, data_label="test")
-    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg], create_as_new=True)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region([aper, bg], create_as_new=True)
 
     ap = cubeviz_helper.plugins['Aperture Photometry']._obj
 

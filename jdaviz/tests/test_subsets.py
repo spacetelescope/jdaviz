@@ -415,7 +415,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # This rectangle is over a real object in reference image but
     # only the last row in the second image if linked by pixel.
-    imviz_helper.plugins['Subset Tools'].import_region(
+    imviz_helper.plugins['Subset Tools']._obj.import_region(
         RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w))
 
     subset_plugin = imviz_helper.plugins["Subset Tools"]._obj
@@ -894,7 +894,7 @@ class TestRegionsFromSubsets:
         data = NDData(np.ones((40, 40)) * u.nJy)
         imviz_helper.load_data(data)
 
-        subset_plugin = imviz_helper.plugins['Subset Tools']
+        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
         subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         assert subsets['Subset 1'][0]['sky_region'] is None
@@ -902,7 +902,7 @@ class TestRegionsFromSubsets:
     def test_subset_renaming(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d, 'myfile')
 
-        subset_plugin = specviz_helper.plugins['Subset Tools']
+        subset_plugin = specviz_helper.plugins['Subset Tools']._obj
         subset_plugin.import_region(SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
                                                    7200 * spectrum1d.spectral_axis.unit))
         get_data_no_sub = specviz_helper.get_data('myfile')

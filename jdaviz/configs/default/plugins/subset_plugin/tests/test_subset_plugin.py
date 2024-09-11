@@ -15,14 +15,13 @@ from jdaviz.core.region_translators import regions2roi
 @pytest.mark.filterwarnings('ignore')
 def test_plugin(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    p = specviz_helper.plugins['Subset Tools']
+    p = specviz_helper.plugins['Subset Tools']._obj
 
     # regression test for https://github.com/spacetelescope/jdaviz/issues/1693
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
-                                                                        7400 * unit))
+    p.import_region(SpectralRegion(6500 * unit, 7400 * unit))
 
-    p._obj.subset_select.selected = 'Create New'
+    p.subset_select.selected = 'Create New'
 
     po = specviz_helper.plugins['Plot Options']
     po.layer = 'Subset 1'
@@ -99,7 +98,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
 
     # apply subset
     roi_params = {key: subset_info[key]['initial_value'] for key in subset_info}
-    imviz_helper.plugins['Subset Tools'].import_region(roi_class(**roi_params))
+    imviz_helper.plugins['Subset Tools']._obj.import_region(roi_class(**roi_params))
 
     # get plugin and check that attribute tracking link type is set properly
     plugin = imviz_helper.plugins['Subset Tools']._obj
@@ -146,7 +145,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     img_wcs = imviz_helper.app.data_collection['Default orientation'].coords
     new_pix_region = original_sky_region.to_pixel(img_wcs)
     new_roi = regions2roi(new_pix_region)
-    imviz_helper.plugins['Subset Tools'].import_region(new_roi)
+    imviz_helper.plugins['Subset Tools']._obj.import_region(new_roi)
 
     # get subset definitions again, which should now be in sky coordinates
     subset_defs = plugin.subset_definitions
@@ -194,7 +193,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
 def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, mode, len_subsets,
                                 len_subregions):
     cubeviz_helper.load_data(spectrum1d_cube)
-    plg = cubeviz_helper.plugins['Subset Tools']
+    plg = cubeviz_helper.plugins['Subset Tools']._obj
     plg.import_region(spec_regions, mode=mode)
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == len_subsets
