@@ -788,7 +788,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             self._units['y'] = uc.flux_unit.selected
 
-
     @with_spinner()
     def calculate_fit(self, add_data=True):
         """
@@ -962,7 +961,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 self.model_equation,
                 run_fitter=True,
                 window=None,
-                n_cpu=1
+                n_cpu=1  # Remove this after debugging!
             )
         except ValueError:
             snackbar_message = SnackbarMessage(
