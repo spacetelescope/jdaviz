@@ -142,6 +142,7 @@ Cubeviz
 
 - No longer incorrectly swap RA and Dec axes when loading Spectrum1D objects. [#3133]
 
+- Fixed fitting a model to the entire cube when NaNs are present. [#3190]
 
 Imviz
 ^^^^^
