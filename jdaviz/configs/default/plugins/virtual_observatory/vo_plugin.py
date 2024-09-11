@@ -48,7 +48,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     source = Unicode("").tag(sync=True)
     coordframes = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
-    radius_deg = Float(1).tag(sync=True)
+    radius_val = Float(1).tag(sync=True)
+    radius_unit = Unicode("deg").tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
     data_loading = Bool(False).tag(sync=True)
@@ -185,7 +186,10 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                             f"Unable to resolve source coordinates: {self.source}"
                         )
                 registry_args.append(
-                    registry.Spatial(coord, self.radius_deg, intersect="overlaps")
+                    registry.Spatial(
+                        (coord, (self.radius_val * u.Unit(self.radius_unit))),
+                        intersect="overlaps",
+                    )
                 )
             self._full_registry_results = registry.search(*registry_args)
             self.resources = list(self._full_registry_results.getcolumn("short_name"))
@@ -251,7 +255,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             # Once coordinate lookup is complete, search service using these coords.
             sia_results = sia_service.search(
                 coord,
-                size=((self.radius_deg * u.deg) if self.radius_deg > 0.0 else None),
+                size=(
+                    (self.radius_val * u.Unit(self.radius_unit))
+                    if self.radius_val > 0.0
+                    else None
+                ),
                 format="image/fits",
             )
             if len(sia_results) == 0:

@@ -41,14 +41,24 @@
 
     <j-plugin-section-header>Common Options</j-plugin-section-header>
 
-      <v-row>
-        <v-text-field
-        v-model.number="radius_deg"
-        type="number"
-        label="Radius"
-        hint="Angular radius, in degrees, around source coordinates, within which to query for data (Default 1 degree)"
-        persistent-hint>
-        </v-text-field>
+      <v-row justify="space-between">
+        <div :style="{ width: '55%' }">
+          <v-text-field
+            v-model.number="radius_val"
+            type="number"
+            label="Radius"
+            hint="Angular radius around source coordinates, within which to query for data (Default 1 degree)"
+            persistent-hint>
+          </v-text-field>
+        </div>
+        <div :style="{ width: '40%' }">
+          <v-select
+          v-model="radius_unit"
+          attach
+          :items="['deg', 'rad', 'arcmin', 'arcsec']"
+          label="Unit">
+          </v-select>
+        </div>
       </v-row>
 
 

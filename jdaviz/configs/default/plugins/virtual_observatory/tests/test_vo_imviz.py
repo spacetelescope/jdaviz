@@ -216,7 +216,8 @@ class TestVOImvizRemote:
         # Sets common args for Remote Testing
         vo_plugin.viewer_selected = "Manual"
         vo_plugin.source = "M51"
-        vo_plugin.radius = 1
+        vo_plugin.radius_val = 1
+        vo_plugin.radius_unit = "deg"
         vo_plugin.waveband_selected = "optical"
 
         return vo_plugin
@@ -287,7 +288,8 @@ class TestVOImvizRemote:
         # Manually set the source to a fake target
         vo_plugin.viewer_selected = "Manual"
         vo_plugin.source = "ThisIsAFakeTargetThatWontResolveToAnything"
-        vo_plugin.radius = 1
+        vo_plugin.radius_val = 1
+        vo_plugin.radius_unit = "deg"
 
         # If we have coverage filtering on, we should get an error
         vo_plugin.resource_filter_coverage = True
