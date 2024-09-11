@@ -719,7 +719,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         max_num_regions : int or `None`
             Maximum number of regions to load, starting from top of the list.
             Default is to load everything.  If you are providing a large file/list
-             input for ``region``, it is recommended
+            input for ``region``, it is recommended
 
         refdata_label : str or `None`
             **This is only applicable to non-spectral regions.**
