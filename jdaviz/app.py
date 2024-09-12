@@ -1334,6 +1334,9 @@ class Application(VuetifyTemplate, HubListener):
                     if sv_y_angle_unit:
                         return sv_y_unit
                     return sv_y_unit / solid_angle_unit
+            elif axis == 'temporal':
+                # No unit for ramp's time (group/resultant) axis:
+                return None
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
         uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
