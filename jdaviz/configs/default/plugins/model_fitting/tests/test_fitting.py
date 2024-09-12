@@ -392,3 +392,21 @@ def test_cube_fit_with_nans(cubeviz_helper):
     mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
+
+def test_cube_fit_with_mask_and_nans(cubeviz_helper):
+    # Also test with existing mask
+    flux = np.ones((7, 8, 9)) * u.nJy
+    flux[:, :, 0] = np.nan
+    spec = Spectrum1D(flux=flux)
+    spec.mask = np.zeros((7, 8, 9)).astype(bool)
+    spec.mask[5,5,5] = True
+    spec.flux[5,5,5] = 10*u.nJy
+    cubeviz_helper.load_data(spec, data_label="test")
+
+    mf = cubeviz_helper.plugins["Model Fitting"]
+    mf.cube_fit = True
+    mf.create_model_component("Const1D")
+    mf.calculate_fit()
+    result = cubeviz_helper.app.data_collection['model']
+    print(cubeviz_helper.app.data_collection['model'].get_object(statistic=None).flux.max())
+    assert np.all(result.get_component("flux").data == 1)
