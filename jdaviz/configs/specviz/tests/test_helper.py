@@ -132,7 +132,7 @@ class TestSpecvizHelper:
                                  6500*self.spec.spectral_axis.unit) +
                   SpectralRegion(7300*self.spec.spectral_axis.unit,
                                  7800*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subset Tools']._obj.import_region(subset, mode='or')
+        self.spec_app.plugins['Subset Tools']._obj.import_region(subset, combination_mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
 
@@ -145,7 +145,7 @@ class TestSpecvizHelper:
                                  7000*self.spec.spectral_axis.unit) +
                   SpectralRegion(7300*self.spec.spectral_axis.unit,
                                  7800*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subset Tools']._obj.import_region(subset, mode='or')
+        self.spec_app.plugins['Subset Tools']._obj.import_region(subset, combination_mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
 
@@ -171,7 +171,7 @@ class TestSpecvizHelper:
                                  3*self.spec.spectral_axis.unit) +
                   SpectralRegion(4*self.spec.spectral_axis.unit,
                                  6*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subset Tools']._obj.import_region(subset, mode='or')
+        self.spec_app.plugins['Subset Tools']._obj.import_region(subset, combination_mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
@@ -191,7 +191,8 @@ class TestSpecvizHelper:
                                  7000*self.spec.spectral_axis.unit) +
                   SpectralRegion(7300*self.spec.spectral_axis.unit,
                                  7800*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subset Tools']._obj.import_region(subset, mode=['andnot', 'and'])
+        self.spec_app.plugins['Subset Tools']._obj.import_region(
+            subset, combination_mode=['new', 'andnot', 'and'])
 
         spec_region = self.spec_app.get_spectral_regions()
 
@@ -209,7 +210,8 @@ class TestSpecvizHelper:
                                  6600*self.spec.spectral_axis.unit) +
                   SpectralRegion(7300*self.spec.spectral_axis.unit,
                                  7700*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subset Tools']._obj.import_region(subset, mode=['andnot', 'andnot'])
+        self.spec_app.plugins['Subset Tools']._obj.import_region(
+            subset, combination_mode=['new', 'andnot', 'andnot'])
 
         spec_region = self.spec_app.get_spectral_regions()
 

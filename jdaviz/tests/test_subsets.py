@@ -522,8 +522,8 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
     subset = [SpectralRegion(6200 * unit, 6800 * unit),
               SpectralRegion(7200 * unit, 7600 * unit),
               SpectralRegion(6200 * unit, 7600 * unit)]
-    mode = ['or', 'xor']
-    subset_plugin.import_region(region=subset, mode=mode)
+    mode = ['new', 'or', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     reg = specviz_helper.app.get_subsets("Subset 1")
     assert reg.lower.value == 6800 and reg.upper.value == 7200
@@ -571,8 +571,8 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     subset = [SpectralRegion(6200 * unit, 6800 * unit),
               SpectralRegion(7200 * unit, 7600 * unit),
               SpectralRegion(6100 * unit, 7600 * unit)]
-    mode = ['or', 'xor']
-    subset_plugin.import_region(region=subset, mode=mode)
+    mode = ['new', 'or', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     reg = specviz_helper.app.get_subsets("Subset 1")
 
@@ -583,8 +583,8 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     subset = [SpectralRegion(7000 * unit, 7200 * unit),
               SpectralRegion(7100 * unit, 7300 * unit),
               SpectralRegion(6900 * unit, 7105 * unit)]
-    mode = ['xor', 'or']
-    subset_plugin.import_region(region=subset, mode=mode)
+    mode = ['new', 'xor', 'or']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     reg = specviz_helper.app.get_subsets("Subset 2")
     assert reg[0].lower.value == 6900 and reg[0].upper.value == 7105
@@ -593,8 +593,8 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     subset_plugin.combination_mode.selected = 'new'
     subset = [SpectralRegion(6000 * unit, 6500 * unit),
               SpectralRegion(6100 * unit, 6200 * unit)]
-    mode = ['xor']
-    subset_plugin.import_region(region=subset, mode=mode)
+    mode = ['new', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     reg = specviz_helper.app.get_subsets("Subset 3")
     assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
@@ -603,8 +603,8 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     subset_plugin.combination_mode.selected = 'new'
     subset = [SpectralRegion(6100 * unit, 6200 * unit),
               SpectralRegion(6000 * unit, 6500 * unit)]
-    mode = ['xor']
-    subset_plugin.import_region(region=subset, mode=mode)
+    mode = ['new', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     reg = specviz_helper.app.get_subsets("Subset 4")
     assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
@@ -613,8 +613,8 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     subset_plugin.combination_mode.selected = 'new'
     subset = [SpectralRegion(7500 * unit, 7600 * unit),
               SpectralRegion(6000 * unit, 6010 * unit)]
-    mode = ['xor']
-    subset_plugin.import_region(region=subset, mode=mode)
+    mode = ['new', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     reg = specviz_helper.app.get_subsets("Subset 5")
     assert reg[0].lower.value == 6000 and reg[0].upper.value == 6010
@@ -634,8 +634,8 @@ def test_composite_spectral_with_xor_complicated(specviz_helper, spectrum1d):
               SpectralRegion(6010 * unit, 6020 * unit),
               SpectralRegion(6090 * unit, 6850 * unit)
               ]
-    mode = ['andnot', 'xor', 'or', 'or', 'xor']
-    subset_plugin.import_region(region=subset, mode=mode)
+    mode = ['new', 'andnot', 'xor', 'or', 'or', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     # (6100, 6200), (6300, 6700)
     # (6050, 6100), (6200, 6300), (6700, 6800)
@@ -659,8 +659,8 @@ def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
     subset = [SpectralRegion(6400 * unit, 7400 * unit),
               SpectralRegion(6600 * unit, 7200 * unit),
               SpectralRegion(6600 * unit, 7300 * unit)]
-    mode = ['andnot', 'or']
-    subset_plugin.import_region(region=subset, mode=mode)
+    mode = ['new', 'andnot', 'or']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     assert subset_plugin.can_simplify
     subset_plugin.vue_simplify_subset()
