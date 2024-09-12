@@ -1,7 +1,6 @@
 from astropy import units as u
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
-import numpy as np
 from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
 
@@ -121,7 +120,6 @@ class UnitConversion(PluginTemplateMixin):
                                                        selected='spectral_unit_selected')
         self.spectral_unit.choices = create_spectral_equivalencies_list(u.Hz)
 
-
         self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
         self.flux_unit = UnitSelectPluginComponent(self,
                                                    items='flux_unit_items',
@@ -168,7 +166,8 @@ class UnitConversion(PluginTemplateMixin):
 
     @property
     def sb_unit(self):
-        # expose selected surface-brightness unit as read-only (rather than exposing a select object)
+        # expose selected surface-brightness unit as read-only
+        # (rather than exposing a select object)
         return self.sb_unit_selected
 
     def _on_add_data_to_viewer(self, msg):
@@ -191,7 +190,7 @@ class UnitConversion(PluginTemplateMixin):
             data_obj = msg.data.get_object()
             if isinstance(data_obj, Spectrum1D):
 
-                self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)
+                self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)  # noqa
                 if not len(self.spectral_unit_selected):
                     try:
                         self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
@@ -199,7 +198,7 @@ class UnitConversion(PluginTemplateMixin):
                         self.spectral_unit.selected = ''
 
                 angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit, return_unit=True)
-                flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit
+                flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
 
                 if not self.flux_unit_selected:
                     if flux_unit in (u.count, u.DN):
@@ -223,26 +222,31 @@ class UnitConversion(PluginTemplateMixin):
                     except ValueError:
                         self.angle_unit.selected = ''
 
-                if not len(self.spectral_y_type_selected) and isinstance(viewer, JdavizProfileView):
-                    # set spectral_y_type_selected to 'Flux' if the y-axis unit is not per solid angle
+                if (not len(self.spectral_y_type_selected)
+                        and isinstance(viewer, JdavizProfileView)):
+                    # set spectral_y_type_selected to 'Flux'
+                    # if the y-axis unit is not per solid angle
                     self.spectral_y_type.choices = ['Surface Brightness', 'Flux']
                     if angle_unit is None:
                         self.spectral_y_type_selected = 'Flux'
                     else:
                         self.spectral_y_type_selected = 'Surface Brightness'
 
-                # setting default values will trigger the observes to set the units in _on_unit_selected,
-                # so return here to avoid setting twice
+                # setting default values will trigger the observes to set the units
+                # in _on_unit_selected, so return here to avoid setting twice
                 return
 
-        # TODO: when enabling unit-conversion in rampviz, this may need to be more specific or handle other cases for ramp profile viewers
+        # TODO: when enabling unit-conversion in rampviz, this may need to be more specific
+        # or handle other cases for ramp profile viewers
         if isinstance(viewer, JdavizProfileView):
-            if viewer.state.x_display_unit == self.spectral_unit_selected and viewer.state.y_display_unit == self.app._get_display_unit('spectral_y'):
+            if (viewer.state.x_display_unit == self.spectral_unit_selected
+                    and viewer.state.y_display_unit == self.app._get_display_unit('spectral_y')):
                 # data already existed in this viewer and display units were already set
                 return
 
-            # this spectral viewer was empty (did not have display units set yet), but global selections
-            # are available in the plugin, so we'll set them to the viewer here
+            # this spectral viewer was empty (did not have display units set yet),
+            # but global selections are available in the plugin,
+            # so we'll set them to the viewer here
             viewer.state.x_display_unit = self.spectral_unit_selected
             # _handle_spectral_y_unit will call viewer.set_plot_axes()
             self._handle_spectral_y_unit()
@@ -252,7 +256,6 @@ class UnitConversion(PluginTemplateMixin):
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
             self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
-
 
     @observe('spectral_unit_selected', 'flux_unit_selected',
              'angle_unit_selected', 'sb_unit_selected',
@@ -276,16 +279,20 @@ class UnitConversion(PluginTemplateMixin):
         elif axis == 'flux':
             if len(self.angle_unit_selected):
                 # NOTE: setting sb_unit_selected will call this method again with axis=='sb',
-                # which in turn will call _handle_spectral_y_unit and send a second GlobalDisplayUnitChanged message for sb
-                self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected, self.angle_unit.selected)
+                # which in turn will call _handle_spectral_y_unit and
+                # send a second GlobalDisplayUnitChanged message for sb
+                self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected,
+                                                         self.angle_unit.selected)
 
             if self.spectral_y_type_selected == 'Flux':
                 self._handle_spectral_y_unit()
 
         elif axis == 'angle':
             if len(self.flux_unit_selected):
-                # NOTE: setting sb_unit_selected will call this method again and send a second GlobalDisplayUnitChanged message for sb
-                self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected, self.angle_unit.selected)
+                # NOTE: setting sb_unit_selected will call this method again and
+                # send a second GlobalDisplayUnitChanged message for sb
+                self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected,
+                                                         self.angle_unit.selected)
 
         elif axis == 'sb':
             self._handle_attribute_display_unit(self.sb_unit_selected)
@@ -300,14 +307,15 @@ class UnitConversion(PluginTemplateMixin):
         self.hub.broadcast(GlobalDisplayUnitChanged(msg.name.split('_')[0],
                            msg.new, sender=self))
 
-
     @observe('spectral_y_type_selected')
     def _handle_spectral_y_unit(self, *args):
         """
-        When the spectral_y_type is changed, or the unit corresponding to the currently selected spectral_y_type is changed,
-        update the y-axis of the spectrum viewer with the new unit, and then emit a GlobalDisplayUnitChanged message to notify
+        When the spectral_y_type is changed, or the unit corresponding to the
+        currently selected spectral_y_type is changed, update the y-axis of
+        the spectrum viewer with the new unit, and then emit a
+        GlobalDisplayUnitChanged message to notify
         """
-        yunit_selected = self.sb_unit_selected if self.spectral_y_type_selected == 'Surface Brightness' else self.flux_unit_selected
+        yunit_selected = self.sb_unit_selected if self.spectral_y_type_selected == 'Surface Brightness' else self.flux_unit_selected  # noqa
         yunit = _valid_glue_display_unit(yunit_selected, self.spectrum_viewer, 'y')
         if self.spectrum_viewer.state.y_display_unit == yunit:
             return
@@ -324,16 +332,16 @@ class UnitConversion(PluginTemplateMixin):
                                                         yunit,
                                                         sender=self))
 
- 
     def _handle_attribute_display_unit(self, attr_unit, layers=None):
         """
-        Update the per-layer attribute display unit in glue for image viewers (updating stretch and contour units).
+        Update the per-layer attribute display unit in glue for image viewers
+        (updating stretch and contour units).
         """
         if layers is None:
             layers = [layer
-                      for viewer in self._app._viewer_store.values() if isinstance(viewer, BqplotImageView)
+                      for viewer in self._app._viewer_store.values() if isinstance(viewer, BqplotImageView)  # noqa
                       for layer in viewer.layers]
- 
+
         for layer in layers:
             # DQ layer doesn't play nicely with this attribute
             if "DQ" in layer.layer.label or isinstance(layer.layer, GroupedSubset):

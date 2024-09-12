@@ -250,7 +250,8 @@ class Slice(PluginTemplateMixin):
         if not len(attrs):
             attrs = self._cached_properties
         if len(attrs):
-            # most internally cached properties rely on viewer slice_values, so let's also clear those caches
+            # most internally cached properties rely on
+            # viewer slice_values, so let's also clear those caches
             for viewer in self.slice_selection_viewers:
                 viewer._clear_cache('slice_values')
         for attr in attrs:
