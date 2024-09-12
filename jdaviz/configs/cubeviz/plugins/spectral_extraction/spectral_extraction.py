@@ -471,6 +471,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             wcs = cube.meta['_orig_spec'].wcs.spectral
         elif hasattr(cube.coords, 'spectral'):
             wcs = cube.coords.spectral
+        elif hasattr(cube.coords, 'spectral_wcs'):
+            # This is the attribute for a PaddedSpectrumWCS in the 3D case
+            wcs = cube.coords.spectral_wcs
         else:
             wcs = None
 
