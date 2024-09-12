@@ -1,0 +1,1 @@
+Max pinned matplotlib to <3.9 due to standalone build problems.
