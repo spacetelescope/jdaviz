@@ -394,12 +394,13 @@ def test_cube_fit_with_nans(cubeviz_helper):
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
+
 def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     # Also test with existing mask
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
     spec = Spectrum1D(flux=flux)
-    spec.flux[5,5,7] = 10*u.nJy
+    spec.flux[5, 5, 7] = 10 * u.nJy
     cubeviz_helper.load_data(spec, data_label="test")
 
     sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
