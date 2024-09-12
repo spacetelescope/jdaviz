@@ -136,6 +136,15 @@ Development Guide
 
    index_ref_api
 
+*****************
+Development Guide
+*****************
+
+.. toctree::
+   :maxdepth: 2
+
+   changes
+
 *********************
 License & Attribution
 *********************
