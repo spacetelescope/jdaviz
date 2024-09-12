@@ -415,5 +415,4 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
         mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
-    print(cubeviz_helper.app.data_collection['model'].get_object(statistic=None).flux.max())
     assert np.all(result.get_component("flux").data == 1)
