@@ -79,6 +79,48 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
         assert u.Unit(result['unit']) != u.dimensionless_unscaled
 
 
+@pytest.mark.parametrize('sq_angle_unit', [u.sr, u.pix*u.pix])
+def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
+                       sq_angle_unit):
+    """
+    Tests that the plugin produces the correct result when loaded cube
+    is in flux/pix2 and flux/sr, and that the results remain consistant
+    between translations of the spectral y axis flux<>surface brightness.
+    """
+    cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.Jy / sq_angle_unit,
+                                           shape=(25, 25, 4), with_uncerts=True)
+    cubeviz_helper.load_data(cube, data_label="Test Cube")
+
+    uc = cubeviz_helper.plugins['Unit Conversion']
+    assert uc.spectral_y_type == 'Flux'  # initial selection should be Flux
+
+    plugin = cubeviz_helper.app.get_tray_item_from_name('specviz-line-analysis')
+    plugin.keep_active = True
+
+    plugin.dataset_selected = 'Spectrum (sum)'
+    plugin.continuum_subset_selected = 'Surrounding'
+
+    results = plugin.results
+    assert results[0]['unit'] == 'W / m2'
+
+    # now change to surface brightness
+    uc.spectral_y_type = 'Surface Brightness'
+
+    results = plugin.results
+    line_flux_before_unit_conversion = results[0]
+    # convert back and forth between unit<>str for string format consistency
+    unit_str = u.Unit(f'W / {sq_angle_unit.to_string()} m2').to_string()
+    assert line_flux_before_unit_conversion['unit'] == unit_str
+
+    # change flux unit and make sure result stays the same after conversion
+    uc.flux_unit.selected = 'MJy'
+    results = plugin.results
+    np.testing.assert_allclose(float(results[0]['result']),
+                               float(line_flux_before_unit_conversion['result']))
+    np.testing.assert_allclose(float(results[0]['uncertainty']),
+                               float(line_flux_before_unit_conversion['uncertainty']))
+
+
 def test_user_api(specviz_helper, spectrum1d):
     label = "Test 1D Spectrum"
     specviz_helper.load_data(spectrum1d, data_label=label)
