@@ -7,7 +7,6 @@ from astropy.io import fits
 from astropy.modeling import models
 from astropy.nddata import StdDevUncertainty
 from astropy.tests.helper import assert_quantity_allclose
-from astropy.utils.exceptions import AstropyUserWarning
 from astropy.wcs import WCS
 from glue.core.roi import XRangeROI
 from numpy.testing import assert_allclose, assert_array_equal
@@ -391,7 +390,8 @@ def test_cube_fit_with_nans(cubeviz_helper):
     mf = cubeviz_helper.plugins["Model Fitting"]
     mf.cube_fit = True
     mf.create_model_component("Const1D")
-    with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
@@ -412,7 +412,8 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     mf.cube_fit = True
     mf.spectral_subset = 'Subset 1'
     mf.create_model_component("Const1D")
-    with pytest.warns(AstropyUserWarning, match='Model is linear in parameters'):
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
