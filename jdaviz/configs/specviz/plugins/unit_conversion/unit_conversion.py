@@ -2,6 +2,7 @@ from astropy import units as u
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
 import numpy as np
+from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
@@ -145,8 +146,7 @@ class UnitConversion(PluginTemplateMixin):
 
         self.spectral_y_type = SelectPluginComponent(self,
                                                      items='spectral_y_type_items',
-                                                     selected='spectral_y_type_selected',
-                                                     manual_options=['Surface Brightness', 'Flux'])
+                                                     selected='spectral_y_type_selected')
 
     @property
     def user_api(self):
@@ -183,43 +183,49 @@ class UnitConversion(PluginTemplateMixin):
 
         viewer = msg.viewer
 
-        # TODO: when enabling unit-conversion in rampviz, this may need to be more specific or handle other cases for ramp profile viewers
-        if isinstance(viewer, JdavizProfileView):
-            if viewer.state.x_display_unit == self.spectral_unit_selected and viewer.state.y_display_unit == self.app._get_display_unit('spectral_y'):
-                # data already existed in this viewer and display units were already set
-                return
-            if not (len(self.spectral_unit_selected)
-                    and len(self.flux_unit_selected)
-                    and len(self.angle_unit_selected)
-                    and (self.config != 'cubeviz' or len(self.spectral_y_type_selected))):
+        if not (len(self.spectral_unit_selected)
+                and len(self.flux_unit_selected)
+                and len(self.angle_unit_selected)
+                and (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
 
-                spec = msg.data.get_object()
+            data_obj = msg.data.get_object()
+            if isinstance(data_obj, Spectrum1D):
 
                 self.spectral_unit._addl_unit_strings = self.spectrum_viewer.state.__class__.x_display_unit.get_choices(self.spectrum_viewer.state)
                 if not len(self.spectral_unit_selected):
-                    self.spectral_unit.selected = str(spec.spectral_axis.unit)
+                    try:
+                        self.spectral_unit.selected = str(data_obj.spectral_axis.unit)
+                    except ValueError:
+                        self.spectral_unit.selected = ''
 
-                angle_unit = check_if_unit_is_per_solid_angle(spec.flux.unit, return_unit=True)
-                flux_unit = spec.flux.unit if angle_unit is None else spec.flux.unit * angle_unit
+                angle_unit = check_if_unit_is_per_solid_angle(data_obj.flux.unit, return_unit=True)
+                flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit
 
                 if not self.flux_unit_selected:
                     if flux_unit in (u.count, u.DN):
                         self.flux_unit.choices = [flux_unit]
-                    self.flux_unit.selected = str(flux_unit)
+                    try:
+                        self.flux_unit.selected = str(flux_unit)
+                    except ValueError:
+                        self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
                     if angle_unit == u.pix**2:
                         self.angle_unit.choices = ['pix2']
 
-                    if angle_unit is None:
-                        # default to sr if input spectrum is not in surface brightness units
-                        # TODO: for cubeviz, should we check the cube itself?
-                        self.angle_unit.selected = 'sr'
-                    else:
-                        self.angle_unit.selected = str(angle_unit)
+                    try:
+                        if angle_unit is None:
+                            # default to sr if input spectrum is not in surface brightness units
+                            # TODO: for cubeviz, should we check the cube itself?
+                            self.angle_unit.selected = 'sr'
+                        else:
+                            self.angle_unit.selected = str(angle_unit)
+                    except ValueError:
+                        self.angle_unit.selected = ''
 
-                if not len(self.spectral_y_type_selected):
+                if not len(self.spectral_y_type_selected) and isinstance(viewer, JdavizProfileView):
                     # set spectral_y_type_selected to 'Flux' if the y-axis unit is not per solid angle
+                    self.spectral_y_type.choices = ['Surface Brightness', 'Flux']
                     if angle_unit is None:
                         self.spectral_y_type_selected = 'Flux'
                     else:
@@ -227,6 +233,12 @@ class UnitConversion(PluginTemplateMixin):
 
                 # setting default values will trigger the observes to set the units in _on_unit_selected,
                 # so return here to avoid setting twice
+                return
+
+        # TODO: when enabling unit-conversion in rampviz, this may need to be more specific or handle other cases for ramp profile viewers
+        if isinstance(viewer, JdavizProfileView):
+            if viewer.state.x_display_unit == self.spectral_unit_selected and viewer.state.y_display_unit == self.app._get_display_unit('spectral_y'):
+                # data already existed in this viewer and display units were already set
                 return
 
             # this spectral viewer was empty (did not have display units set yet), but global selections
