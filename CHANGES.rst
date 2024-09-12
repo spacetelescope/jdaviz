@@ -1641,7 +1641,7 @@ Bug Fixes
 
 - Fixed blank tabbed viewers. [#1718]
 
-- Prevent `app.add_data_to_viewer` from loading data from disk [#1725]
+- Prevent ``app.add_data_to_viewer`` from loading data from disk [#1725]
 
 - Fix bug in creating and removing new image viewers from Imviz [#1741]
 
@@ -1693,7 +1693,7 @@ New Features
 - Cycle through colors applied to data when multiple datasets are loaded to
   the same viewer [#1674]
 
-- Added ability to set height of application widget using `show` method. [#1646]
+- Added ability to set height of application widget using ``show`` method. [#1646]
 
 - Add Common Galactic line lists, split Atomic/Ionic list with verified medium info [#1656]
 
