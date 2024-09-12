@@ -12,7 +12,6 @@ from contextlib import contextmanager
 from inspect import isclass
 
 import numpy as np
-from astropy.utils import deprecated
 from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage

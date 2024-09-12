@@ -24,7 +24,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.helpers import _next_subset_num
-from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.utils import MultiMaskSubsetState, data_has_valid_wcs
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
