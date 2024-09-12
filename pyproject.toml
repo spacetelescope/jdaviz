@@ -178,7 +178,14 @@ filename = "CHANGES.rst"
 directory = "changes"
 package = "jdaviz"
 title_format = "{version} ({project_date})"
-ignore = [".gitkeep"]
+ignore = [
+    ".gitkeep",
+    "cubeviz",
+    "imviz",
+    "mosviz",
+    "specviz",
+    "specviz2d",
+]
 wrap = true
 issue_format = "`#{issue} <https://github.com/spacetelescope/jdaviz/issues/{issue}>`_"
 
