@@ -23,18 +23,8 @@ Fixes #<Issue Number>
 ### Change log entry
 
 - [ ] Is a change log entry needed? If yes, write a fragment in `changes/`: `echo "changed something" > changes/<module>/<pr#>.<changetype>.rst` 
-  or `echo "changed something" > changes/<pr#>.<changetype>.rst` (see below for possible module sections and change types). 
+  or `echo "changed something" > changes/<pr#>.<changetype>.rst` (see below for change types). 
   If no, maintainer should add a `no-changelog-entry-needed` label.
-
-  <details><summary>change log module sections...</summary>
-
-  - `changes/<pr#>.<changetype>.rst` (no module section)
-  - `changes/cubeviz/<pr#>.<changetype>.rst`
-  - `changes/imviz/<pr#>.<changetype>.rst`
-  - `changes/mosviz/<pr#>.<changetype>.rst`
-  - `changes/specviz/<pr#>.<changetype>.rst`
-  - `changes/specviz2d/<pr#>.<changetype>.rst`
-  </details>
 
   <details><summary>change log entry types...</summary>
 
