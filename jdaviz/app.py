@@ -735,8 +735,9 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         elif self.config == 'cubeviz' and linked_data.ndim == 1:
-            ref_wavelength_component = dc[0].components[-2]
-            ref_flux_component = dc[0].components[-1]
+            # Don't want to use negative indices in case there are extra components like a mask
+            ref_wavelength_component = dc[0].components[5]
+            ref_flux_component = dc[0].components[6]
             linked_wavelength_component = dc[-1].components[1]
             linked_flux_component = dc[-1].components[-1]
 
