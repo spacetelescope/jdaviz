@@ -378,3 +378,18 @@ def test_incompatible_units(specviz_helper, spectrum1d):
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
         mf.calculate_fit(add_data=True)
+
+
+def test_cube_fit_with_nans(cubeviz_helper):
+    flux = np.ones((7, 8, 9)) * u.nJy
+    flux[:, :, 0] = np.nan
+    spec = Spectrum1D(flux=flux)
+    cubeviz_helper.load_data(spec, data_label="test")
+
+    mf = cubeviz_helper.plugins["Model Fitting"]
+    mf.cube_fit = True
+    #mf.dataset = "test[FLUX]"
+    mf.create_model_component("Const1D")
+    mf.calculate_fit()
+    result = cubeviz_helper.app.data_collection['model']
+    assert np.all(result.get_component("flux").data == 1)
