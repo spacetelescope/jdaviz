@@ -22,9 +22,27 @@ Fixes #<Issue Number>
 
 ### Change log entry
 
-- [ ] Is a change log needed? If yes, is it added to `CHANGES.rst`? If you want to avoid merge conflicts,
-  list the proposed change log here for review and add to `CHANGES.rst` before merge. If no, maintainer
-  should add a `no-changelog-entry-needed` label.
+- [ ] Is a change log entry needed? If yes, write a fragment in `changes/`: `echo "changed something" > changes/<module>/<pr#>.<changetype>.rst` 
+  or `echo "changed something" > changes/<pr#>.<changetype>.rst` (see below for possible module sections and change types). 
+  If no, maintainer should add a `no-changelog-entry-needed` label.
+
+  <details><summary>change log module sections...</summary>
+
+  - `changes/<pr#>.<changetype>.rst` (no module section)
+  - `changes/cubeviz/<pr#>.<changetype>.rst`
+  - `changes/imviz/<pr#>.<changetype>.rst`
+  - `changes/mosviz/<pr#>.<changetype>.rst`
+  - `changes/specviz/<pr#>.<changetype>.rst`
+  - `changes/specviz2d/<pr#>.<changetype>.rst`
+  </details>
+
+  <details><summary>change log entry types...</summary>
+
+  - `changes/<module>/<pr#>.feature.rst`: adds new feature
+  - `changes/<module>/<pr#>.apichange.rst`: changes API
+  - `changes/<module>/<pr#>.bugfix.rst`: resolves an issue
+  - `changes/<module>/<pr#>.other.rst`: other changes and additions
+  </details>
 
 ### Checklist for package maintainer(s)
 <!-- This section is to be filled by package maintainer(s) who will
