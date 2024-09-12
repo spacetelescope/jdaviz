@@ -75,6 +75,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.table.headers_visible = headers
         self.table._default_values_by_colname = self._default_table_values
         self.table._selected_rows_changed_callback = lambda msg: self.plot_selected_points()
+        self.table.item_key = 'id'
+        self.table.show_rowselect = True
 
     @staticmethod
     def _file_parser(path):
@@ -215,9 +217,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         filtered_pair_pixel_table = np.array(np.hsplit(filtered_table, 2))
         x_coordinates = np.squeeze(filtered_pair_pixel_table[0])
         y_coordinates = np.squeeze(filtered_pair_pixel_table[1])
-
-        self.table.item_key = 'id'
-        self.table.show_rowselect = True
 
         if self.catalog_selected in ["SDSS", "Gaia"]:
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
