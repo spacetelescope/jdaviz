@@ -1,0 +1,1 @@
+Stretch histogram in zoom limits no longer attempts unnecessary updates when zoom limits are changed.
