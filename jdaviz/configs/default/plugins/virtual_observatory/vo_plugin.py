@@ -23,6 +23,7 @@ from jdaviz.core.template_mixin import (
     AddResultsMixin,
     TableMixin,
     ViewerSelect,
+    UnitSelectPluginComponent,
 )
 
 __all__ = ["VoPlugin"]
@@ -49,7 +50,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     coordframes = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
     radius_val = Float(1).tag(sync=True)
-    radius_unit = Unicode("deg").tag(sync=True)
+    radius_unit_items = List().tag(sync=True)
+    radius_unit_selected = Unicode("deg").tag(sync=True)
 
     results_loading = Bool(False).tag(sync=True)
     data_loading = Bool(False).tag(sync=True)
@@ -59,6 +61,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.viewer = ViewerSelect(
             self, "viewer_items", "viewer_selected", manual_options=["Manual"]
         )
+
+        self.radius_unit = UnitSelectPluginComponent(
+            self, items="radius_unit_items", selected="radius_unit_selected"
+        )
+        self.radius_unit.choices = ["deg", "rad", "arcmin", "arcsec"]
 
         # Waveband properties to filter available registry resources
         self.wavebands = [
@@ -187,7 +194,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         )
                 registry_args.append(
                     registry.Spatial(
-                        (coord, (self.radius_val * u.Unit(self.radius_unit))),
+                        (coord, (self.radius_val * u.Unit(self.radius_unit.selected))),
                         intersect="overlaps",
                     )
                 )
@@ -256,7 +263,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             sia_results = sia_service.search(
                 coord,
                 size=(
-                    (self.radius_val * u.Unit(self.radius_unit))
+                    (self.radius_val * u.Unit(self.radius_unit.selected))
                     if self.radius_val > 0.0
                     else None
                 ),
