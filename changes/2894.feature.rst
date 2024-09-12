@@ -1,0 +1,1 @@
+Descriptions are shown in the color mode dropdown for image layers to help describe the use-cases for ``Colormap`` vs ``Color``.

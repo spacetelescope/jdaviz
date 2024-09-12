@@ -1,0 +1,1 @@
+New configuration for ramp/Level 1 data products from Roman WFI and JWST

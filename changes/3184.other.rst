@@ -1,0 +1,1 @@
+Bump required specutils version to 1.16. Moment 0 calculation is now in units of flux*dx (rather than flux)

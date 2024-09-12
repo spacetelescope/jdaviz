@@ -1,0 +1,1 @@
+Plugin tray is now open by default.

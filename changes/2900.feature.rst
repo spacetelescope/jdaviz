@@ -1,0 +1,1 @@
+The colormap menu for image layers now shows in-line previews of the colormaps.

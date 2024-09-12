@@ -1,0 +1,1 @@
+Mouse over coordinates now responds to the selected surface brightness unit.

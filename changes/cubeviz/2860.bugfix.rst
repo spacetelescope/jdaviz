@@ -1,0 +1,1 @@
+Update the scale factor used to convert a spectrum between surface brightness and flux to use wavelength-dependent aperture area instead of the cone slice scale factor.

@@ -1,0 +1,1 @@
+Moment map plugin now reflects selected flux / surface brightness unit for moment zero.

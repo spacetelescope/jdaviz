@@ -1,0 +1,1 @@
+Aperture Photometry plugin no longer allows negative counts conversion factor.

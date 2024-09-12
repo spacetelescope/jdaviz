@@ -1,0 +1,1 @@
+Aperture photometry plugin now listens to changes in display unit.

@@ -1,0 +1,1 @@
+Fixed ``viz.app.get_subsets()`` for XOR mode.

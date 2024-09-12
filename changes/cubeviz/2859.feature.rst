@@ -1,0 +1,1 @@
+Background subtraction support within Spectral Extraction.

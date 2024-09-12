@@ -1,0 +1,1 @@
+In the Line Analysis plugin, deprecated ``width`` was removed (use ``continuum_width``).

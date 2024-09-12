@@ -1,0 +1,1 @@
+"Imviz Line Profiles (XY)" plugin is renamed to "Image Profiles (XY)".

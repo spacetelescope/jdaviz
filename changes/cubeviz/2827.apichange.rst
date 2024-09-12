@@ -1,0 +1,3 @@
+``get_data`` no longer supports ``function`` or ``spatial_subset`` as arguments.  To access an extracted 1D spectrum, use the Spectral Extraction plugin or the automatic extraction of spatial subsets, and refer to the data-label assigned to the resulting 1D spectrum.
+
+Several plugins that take 1D spectra replace ``spatial_subset`` with referring to the 1D spectrum in ``dataset``.  This affects: model fitting, gaussian smooth, line analysis, and moment maps.

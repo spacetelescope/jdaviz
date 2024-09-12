@@ -1,0 +1,1 @@
+Generic FITS parsing now goes through ``specutils`` loaders first, if possible. If a ``specutils`` loader is used, uncertainty is converted to standard deviation type.

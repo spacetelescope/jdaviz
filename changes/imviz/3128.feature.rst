@@ -1,0 +1,1 @@
+Updated ``link_type`` to ``align_by`` and ``wcs_use_affine`` to ``wcs_fast_approximation`` in Orientation plugin API to better match UI text.

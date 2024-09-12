@@ -1,0 +1,3 @@
+Removed deprecated ``cubeviz.select_slice()`` method. Use ``cubeviz.select_wavelength()`` instead.
+
+In the Slice plugin, the following deprecated properties were removed: ``wavelength`` (use ``value``), ``wavelength_unit`` (use ``value_unit``), ``show_wavelength`` (use ``show_value``), ``slice`` (use ``value``).

@@ -1,0 +1,1 @@
+The standalone version of jdaviz now uses solara instead of voila, resulting in faster load times.

@@ -1,0 +1,1 @@
+Fixed multiple select handling for batch mode aperture photometry in Cubeviz.

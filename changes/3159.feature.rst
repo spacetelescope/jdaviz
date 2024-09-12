@@ -1,0 +1,1 @@
+Plugins can now expose in-UI API hints.

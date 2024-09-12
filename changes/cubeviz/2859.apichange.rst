@@ -1,0 +1,1 @@
+Spectral Extraction: renamed ``collapse_to_spectrum(...)`` to ``extract(...)``.
