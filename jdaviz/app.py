@@ -1300,18 +1300,20 @@ class Application(VuetifyTemplate, HubListener):
             elif axis in ('flux', 'sb', 'spectral_y'):
                 sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
                 sv_y_unit = sv.data()[0].flux.unit
+                sv_y_solid_angle_unit = check_if_unit_is_per_solid_angle(sv_y_unit, return_unit=True)
+
                 if axis == 'spectral_y':
                     return sv_y_unit
                 elif axis == 'flux':
-                    if check_if_unit_is_per_solid_angle(sv_y_unit):
+                    if sv_y_solid_angle_unit:
                         # TODO: this will need updating once solid-angle unit can be non-steradian
-                        return sv_y_unit * u.sr
+                        return sv_y_unit * sv_y_solid_angle_unit
                     return sv_y_unit
                 else:
                     # surface_brightness
-                    if check_if_unit_is_per_solid_angle(sv_y_unit):
+                    if sv_y_solid_angle_unit:
                         return sv_y_unit
-                    return sv_y_unit / u.sr
+                    return sv_y_unit / sv_y_solid_angle_unit
             elif axis == 'temporal':
                 # No unit for ramp's time (group/resultant) axis:
                 return None
