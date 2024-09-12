@@ -89,6 +89,12 @@ class WithSliceSelection:
         take_inds = [2, 1, 0]
         take_inds.remove(self.slice_index)
         converted_axis = np.array([])
+
+        # Retrieve display units
+        slice_display_units = self.jdaviz_app._get_display_unit(
+            self.slice_display_unit_name
+        )
+
         for layer in self.layers:
             world_comp_ids = layer.layer.data.world_component_ids
 
@@ -99,11 +105,6 @@ class WithSliceSelection:
             if self.slice_index >= len(world_comp_ids):
                 # Case where 2D image is loaded in image viewer
                 continue
-
-            # Retrieve display units
-            slice_display_units = self.jdaviz_app._get_display_unit(
-                self.slice_display_unit_name
-            )
 
             try:
                 # Retrieve layer data and units using the slice index of the world components ids

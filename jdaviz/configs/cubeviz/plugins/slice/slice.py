@@ -139,12 +139,13 @@ class Slice(PluginTemplateMixin):
             if str(viewer.state.x_att) not in self.valid_slice_att_names:
                 # avoid setting value to degs, before x_att is changed to wavelength, for example
                 continue
-            # ensure the cache is reset (if previous attempts to initialize failed resulting in an
-            # empty list as the cache)
-            viewer._clear_cache('slice_values')
+            if self.app._get_display_unit(viewer.slice_display_unit_name) == '':
+                # viewer is not ready to retrieve slice_values in display units
+                continue
             slice_values = viewer.slice_values
             if len(slice_values):
-                self.value = slice_values[int(len(slice_values)/2)]
+                new_value = slice_values[int(len(slice_values)/2)]
+                self.value = new_value
                 self._indicator_initialized = True
                 return
 
@@ -229,22 +230,29 @@ class Slice(PluginTemplateMixin):
             self.value = msg.value
 
     def _on_global_display_unit_changed(self, msg):
-        if not self.app.config == 'cubeviz':
-            return
-
         if msg.axis != self.slice_display_unit_name:
             return
+        self._clear_cache()
         if not self.value_unit:
             self.value_unit = str(msg.unit)
             return
+        if not self._indicator_initialized:
+            self._initialize_location()
+            return
         prev_unit = u.Unit(self.value_unit)
         self.value_unit = str(msg.unit)
-        self._clear_cache()
-        self.value = (self.value * prev_unit).to_value(msg.unit, equivalencies=u.spectral())
+        self.value = self._convert_value_to_unit(self.value, prev_unit, msg.unit)
+
+    def _convert_value_to_unit(self, value, prev_unit, new_unit):
+        return (value * prev_unit).to_value(new_unit, equivalencies=u.spectral())
 
     def _clear_cache(self, *attrs):
         if not len(attrs):
             attrs = self._cached_properties
+        if len(attrs):
+            # most internally cached properties rely on viewer slice_values, so let's also clear those caches
+            for viewer in self.slice_selection_viewers:
+                viewer._clear_cache('slice_values')
         for attr in attrs:
             if attr in self.__dict__:
                 del self.__dict__[attr]
