@@ -106,8 +106,9 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         def is_image_viewer(viewer):
             from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
             from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+            from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
 
-            return isinstance(viewer, (ImvizImageView, CubevizImageView))
+            return isinstance(viewer, (ImvizImageView, CubevizImageView, RampvizImageView))
 
         viewer_filter_names = [filt.__name__ for filt in self.viewer.filters]
         if 'is_image_viewer' not in viewer_filter_names:
@@ -151,6 +152,9 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def dq_layer_selected_flattened(self):
+        if not hasattr(self, 'dq_layer'):
+            return []
+
         selected_dq = self.dq_layer.selected_obj
         if not len(selected_dq):
             return []
@@ -170,6 +174,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             return []
 
         dq = selected_dq[0].get_image_data()
+
         return np.unique(dq[~np.isnan(dq)])
 
     @property
@@ -210,11 +215,15 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
             # for cubeviz, also change uncert-viewer defaults to
             # map the out-of-bounds regions to the cmap's `bad` color:
-            if self.app.config == 'cubeviz':
-                uncert_viewer = self.app.get_viewer(
-                    self.app._jdaviz_helper._default_uncert_viewer_reference_name
+            if self.app.config in ('cubeviz', 'rampviz'):
+                viewer = self.app.get_viewer(
+                    getattr(
+                        self.app._jdaviz_helper,
+                        '_default_uncert_viewer_reference_name', 'level-2'
+                    )
                 )
-                for layer in uncert_viewer.layers:
+
+                for layer in viewer.layers:
                     # allow bad alpha for image layers, not subsets:
                     if not hasattr(layer, 'subset_array'):
                         layer.composite._allow_bad_alpha = True

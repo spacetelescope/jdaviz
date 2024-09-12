@@ -1,4 +1,4 @@
-from jdaviz.core.events import SliceSelectSliceMessage
+from jdaviz.core.events import SliceSelectSliceMessage, NewViewerMessage
 from jdaviz.core.helpers import CubeConfigHelper
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
 
@@ -98,3 +98,27 @@ class Rampviz(CubeConfigHelper):
         return self._get_data(data_label=data_label, spatial_subset=spatial_subset,
                               temporal_subset=temporal_subset,
                               cls=cls, use_display_units=use_display_units)
+
+    def create_image_viewer(self, viewer_name=None, data=None):
+        """
+        Create a new image viewer.
+
+        Parameters
+        ----------
+        viewer_name : str or `None`
+            Viewer name/ID to use. If `None`, it is auto-generated.
+
+        Returns
+        -------
+        viewer : `~jdaviz.configs.imviz.plugins.viewers.ImvizImageView`
+            Image viewer instance.
+
+        """
+        from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
+
+        # Cannot assign data to real Data because it loads but it will
+        # not update checkbox in Data menu.
+
+        return self.app._on_new_viewer(
+            NewViewerMessage(ImvizImageView, data=None, sender=self.app),
+            vid=viewer_name, name=viewer_name)

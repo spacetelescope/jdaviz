@@ -105,7 +105,7 @@ class _MatchedZoomMixin:
             to_lims = self._map_limits(self.viewer, viewer, from_lims)
             matched_refdata = viewer.state.reference_data
 
-            if hasattr(viewer, '_get_fov'):
+            if hasattr(viewer, '_get_fov') and matched_refdata is not None:
                 to_fov_sky = viewer._get_fov(wcs=matched_refdata.coords)
             else:
                 to_fov_sky = None

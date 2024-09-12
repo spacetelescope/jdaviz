@@ -195,7 +195,6 @@ def _roman_3d_to_glue_data(
 
     data_reshaped = move_group_axis_last(data)
     diff_data_reshaped = move_group_axis_last(diff_data)
-    data_reshaped = data_reshaped - data_reshaped[..., 0]
 
     # load these cubes into the cache:
     app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(
@@ -246,7 +245,18 @@ def _parse_hdulist(
     hdu = hdulist[1]  # extension containing the ramp
 
     if hdu.header['NAXIS'] == 2:
+        # this may be a calibrated Level 2 image:
         _parse_image_imviz(app, hdulist, data_label=file_name, ext=ext, parent=parent)
+        new_viewer_name = 'level-2'
+
+        # create a level-2 viewer if none exists:
+        if new_viewer_name not in app.get_viewer_reference_names():
+            app._jdaviz_helper.create_image_viewer(viewer_name=new_viewer_name)
+
+        # add the SCI extension to the level-2 viewer:
+        if 'SCI' in ext:
+            idx = len(ext) - ext.index('SCI')
+            app.add_data_to_viewer(new_viewer_name, app.data_collection[-idx].label)
         return
 
     elif hdu.header['NAXIS'] != 4:
@@ -283,27 +293,6 @@ def _parse_hdulist(
 def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
                      group_viewer_reference_name, diff_viewer_reference_name,
                      meta=None):
-
-    # Identify NIRSpec IRS2 detector mode, which needs special treatment.
-    # jdox: https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph/nirspec-instrumentation/
-    # nirspec-detectors/nirspec-detector-readout-modes-and-patterns/nirspec-irs2-detector-readout-mode
-    if 'meta.model_type' in meta:
-        # this is a Level1bModel, which has metadata in a Node rather
-        # than a dictionary:
-        from_jwst_nirspec_irs2 = (
-            meta.get('meta._primary_header.TELESCOP') == 'JWST' and
-            meta.get('meta._primary_header.INSTRUME') == 'NIRSPEC' and
-            'IRS2' in meta.get('meta._primary_header.READPATT', '')
-        )
-    else:
-        # assume this was parsed from FITS:
-        header = meta.get('_primary_header', {})
-        from_jwst_nirspec_irs2 = (
-            header.get('TELESCOP') == 'JWST' and
-            header.get('INSTRUME') == 'NIRSPEC' and
-            'IRS2' in header.get('READPATT', '')
-        )
-
     # last axis is the group axis, first two are spatial axes:
     diff_data = np.vstack([
         # begin with a group of zeros, so
@@ -312,12 +301,9 @@ def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
         np.diff(ramp_cube_data, axis=0)
     ])
 
-    def move_axes(x):
-        return np.swapaxes(move_group_axis_last(x), 0, 1)
-
-    ramp_cube = NDDataArray(move_axes(ramp_cube_data), unit=flux_unit, meta=meta)
-    ramp_cube = ramp_cube.subtract(ramp_cube[..., :1])
-    diff_cube = NDDataArray(move_axes(diff_data), unit=flux_unit, meta=meta)
+    ramp_data = move_group_axis_last(ramp_cube_data)
+    ramp_cube = NDDataArray(ramp_data, unit=flux_unit, meta=meta)
+    diff_cube = NDDataArray(move_group_axis_last(diff_data), unit=flux_unit, meta=meta)
 
     group_data_label = app.return_data_label(file_name, ext="DATA")
     diff_data_label = app.return_data_label(file_name, ext="DIFF")

@@ -129,7 +129,8 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     def _initial_x_axis(self, *args):
         # Make sure that the x_att is correct on data load
         ref_data = self.state.reference_data
-        if ref_data and ref_data.ndim == 3:
+
+        if ref_data:
             self.state.x_att = ref_data.id["Pixel Axis 0 [z]"]
 
     def set_plot_axes(self):

@@ -41,5 +41,5 @@ def test_load_nirspec_irs2(rampviz_helper, jwst_level_1b_rectangular_ramp):
 
     parsed_cube_shape = rampviz_helper.app.data_collection[0].shape
     assert parsed_cube_shape == (
-        original_cube_shape[1], original_cube_shape[2], original_cube_shape[0]
+        original_cube_shape[2], original_cube_shape[1], original_cube_shape[0]
     )
