@@ -16,14 +16,24 @@
       />
 
       <v-row>
-        <v-text-field
-          v-model="source"
-          label="Source or Coordinates"
-          hint="Enter a source name or coordinates in degrees to center your query on"
-          :disabled="viewer_selected !== 'Manual'"
-          :rules="[() => !!source || 'This field is required']"
-          persistent-hint>
-        </v-text-field>
+        <div :style="viewer_selected === 'Manual' ? 'width: 100%' : 'width: calc(100% - 32px)'">
+          <v-text-field
+            v-model="source"
+            label="Source/Coordinates"
+            hint="Enter a source name or coordinates in degrees to center your query on"
+            :disabled="viewer_selected !== 'Manual'"
+            :rules="[() => !!source || 'This field is required']"
+            persistent-hint>
+          </v-text-field>
+        </div>
+        <div v-if="viewer_selected !== 'Manual'" style="line-height:64px; width:32px">
+          <v-btn
+            id="autocenterbtn"
+            @click="center_on_data"
+            icon>
+            <v-icon>mdi-crosshairs-gps</v-icon>
+          </v-btn>
+        </div>
       </v-row>
 
       <v-row>
@@ -87,7 +97,7 @@
       </v-row>
 
       <v-row>
-        <div class="row-select">
+        <div :style="'width: calc(100% - 32px)'">
           <v-select
             v-model="resource_selected"
             :menu-props="{ left: true }"

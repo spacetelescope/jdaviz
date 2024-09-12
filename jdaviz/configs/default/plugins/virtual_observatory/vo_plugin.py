@@ -85,12 +85,12 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.table.show_rowselect = True
         self.table.item_key = "URL"
 
-        self.hub.subscribe(self, AddDataMessage, handler=self._center_on_data)
-        self.hub.subscribe(self, RemoveDataMessage, handler=self._center_on_data)
-        self.hub.subscribe(self, LinkUpdatedMessage, handler=self._center_on_data)
+        self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
+        self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
+        self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
 
     @observe("viewer_selected", type="change")
-    def _center_on_data(self, _=None):
+    def vue_center_on_data(self, _=None):
         """
         If data is present in the default viewer, center the plugin's coordinates on
         the viewer's center WCS coordinates.
