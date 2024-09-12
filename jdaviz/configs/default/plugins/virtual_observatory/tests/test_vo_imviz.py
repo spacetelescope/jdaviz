@@ -217,7 +217,7 @@ class TestVOImvizRemote:
         vo_plugin.viewer_selected = "Manual"
         vo_plugin.source = "M51"
         vo_plugin.radius_val = 1
-        vo_plugin.radius_unit = "deg"
+        vo_plugin.radius_unit.selected = "deg"
         vo_plugin.waveband_selected = "optical"
 
         return vo_plugin
@@ -289,7 +289,7 @@ class TestVOImvizRemote:
         vo_plugin.viewer_selected = "Manual"
         vo_plugin.source = "ThisIsAFakeTargetThatWontResolveToAnything"
         vo_plugin.radius_val = 1
-        vo_plugin.radius_unit = "deg"
+        vo_plugin.radius_unit.selected = "deg"
 
         # If we have coverage filtering on, we should get an error
         vo_plugin.resource_filter_coverage = True

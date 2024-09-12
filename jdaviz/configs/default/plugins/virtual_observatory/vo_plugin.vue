@@ -53,9 +53,9 @@
         </div>
         <div :style="{ width: '40%' }">
           <v-select
-          v-model="radius_unit"
+          v-model="radius_unit_selected"
           attach
-          :items="['deg', 'rad', 'arcmin', 'arcsec']"
+          :items="radius_unit_items.map(i => i.label)"
           label="Unit">
           </v-select>
         </div>
