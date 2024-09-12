@@ -388,7 +388,6 @@ def test_cube_fit_with_nans(cubeviz_helper):
 
     mf = cubeviz_helper.plugins["Model Fitting"]
     mf.cube_fit = True
-    #mf.dataset = "test[FLUX]"
     mf.create_model_component("Const1D")
     mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
