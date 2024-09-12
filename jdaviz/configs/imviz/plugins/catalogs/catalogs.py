@@ -218,7 +218,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         self.table.item_key = 'id'
         self.table.show_rowselect = True
-        i = len(skycoord_table)
 
         if self.catalog_selected in ["SDSS", "Gaia"]:
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
@@ -231,11 +230,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 row_info = {'Right Ascension (degrees)': row['ra'],
                             'Declination (degrees)': row['dec'],
                             'Object ID': row_id.astype(str),
-                            'id': i,
+                            'id': len(self.table),
                             'x_coord': x_coord,
                             'y_coord': y_coord}
                 self.table.add_item(row_info)
-                i += 1
 
         # NOTE: If performance becomes a problem, see
         # https://docs.astropy.org/en/stable/table/index.html#performance-tips
@@ -246,12 +244,11 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                 row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
                             'Declination (degrees)': row['sky_centroid'].dec.deg,
                             'Object ID': str(row.get('label', 'N/A')),
-                            'id': i,
+                            'id': len(self.table),
                             'x_coord': x_coord,
                             'y_coord': y_coord}
 
                 self.table.add_item(row_info)
-                i += 1
 
         filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
                                                                                     y_coordinates)
@@ -265,7 +262,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
         return skycoord_table
 
-    # unsure of whether or not I need to adjust this even more
     def _get_mark(self, viewer):
         matches = [mark for mark in viewer.figure.marks if isinstance(mark, CatalogMark)]
         if len(matches):
@@ -296,8 +292,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self._get_mark(self.viewer.selected_obj).update_xy(getattr(x, 'value', x),
                                                            getattr(y, 'value', y))
 
-    # this function will zoom into the image based on the selected points
     def vue_zoom_in(self, *args, **kwargs):
+        """This function will zoom into the image based on the selected points"""
         selected_rows = self.table.selected_rows
 
         x = [float(coord['x_coord']) for coord in selected_rows]
@@ -309,17 +305,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         x_max = max(x) + 50
         y_min = min(y) - 50
         y_max = max(y) + 50
-
-        # extract max and min x and y coords; then add a bit of space around those as well
-        # zoom region will be rectangular
-        # Adding some padding around the zoom area
-        # padding_factor = 0.1  # 10% padding
-        # x_range = x_max - x_min + 100
-        # y_range = y_max - y_min + 100
-        # x_min -= x_range * padding_factor
-        # x_max += x_range * padding_factor
-        # y_min -= y_range * padding_factor
-        # y_max += y_range * padding_factor
 
         imview = self.app._jdaviz_helper._default_viewer
 

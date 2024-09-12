@@ -4,7 +4,7 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#catalog-search'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
-    :keept_active_sync="keep_active"
+    :keep_active_sync="keep_active"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
