@@ -142,9 +142,9 @@ def create_angle_equivalencies_list(solid_angle_unit):
 
 def check_if_unit_is_per_solid_angle(unit, return_unit=False):
     """
-    Check if a given `u.Unit` or unit string (that can be converted to
-    a `u.Unit`) represents some unit per solid angle. If 'return_unit'
-    is True, then a `u.Unit` of the solid angle will be returned (or
+    Check if a given Unit or unit string (that can be converted to
+    a Unit) represents some unit per solid angle. If 'return_unit'
+    is True, then a Unit of the solid angle will be returned (or
     None if no solid angle is present in the denominator).
 
     Parameters
