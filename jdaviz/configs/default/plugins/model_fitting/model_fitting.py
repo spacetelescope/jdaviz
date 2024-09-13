@@ -493,7 +493,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum.flux[~mask] if mask is not None else masked_spectrum.flux)
 
         # need to loop over parameters again as the initializer may have overridden
-        # the original default value
+        # the original default value.
         for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
             param_quant = getattr(initialized_model, param_name)
             new_model["parameters"].append({"name": param_name,
@@ -917,6 +917,12 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Apply masks from selected spectral subset
         spec = self._apply_subset_masks(spec, self.spectral_subset)
+        # Also mask out NaNs for fitting. Simply adding filter_non_finite to the cube fit
+        # didn't work out of the box, so doing this for now.
+        if spec.mask is None:
+            spec.mask = np.isnan(spec.flux)
+        else:
+            spec.mask = spec.mask | np.isnan(spec.flux)
 
         try:
             fitted_model, fitted_spectrum = fit_model_to_spectrum(
