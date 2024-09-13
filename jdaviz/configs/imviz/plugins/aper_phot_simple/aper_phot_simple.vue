@@ -80,7 +80,7 @@
             v-model.number="background_value"
             type="number"
             hint="Background to subtract"
-            :suffix="display_spectral_y_unit"
+            :suffix="display_unit"
             :disabled="background_selected!='Manual'"
             persistent-hint
           >
