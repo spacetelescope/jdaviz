@@ -170,16 +170,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
         )
 
-    @observe('cube_fit')
-    def _cube_fit_changed(self, msg={}):
-        if self.cube_fit:
-            self.dataset.add_filter('is_flux_cube')
-            self.dataset.remove_filter('layer_in_spectrum_viewer')
-        else:
-            self.dataset.add_filter('layer_in_spectrum_viewer')
-            self.dataset.remove_filter('is_flux_cube')
-        self.dataset._clear_cache()
-
     @property
     def user_api(self):
         expose = ['dataset']
@@ -308,6 +298,32 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             return True
         else:
             return False
+
+    def _update_viewer_filters(self, event={}):
+        if event.get('new', self.cube_fit):
+            # only want image viewers in the options
+            self.add_results.viewer.filters = ['is_image_viewer']
+        else:
+            # only want spectral viewers in the options
+            self.add_results.viewer.filters = ['is_spectrum_viewer']
+
+
+    @observe('cube_fit')
+    def _cube_fit_changed(self, event={}):
+        self._update_viewer_filters(event=event)
+        uc = self.app._jdaviz_helper.plugins['Unit Conversion']
+
+        if event.get('new'):
+            self._units['y'] = uc._obj.sb_unit_selected
+            self.dataset.add_filter('is_flux_cube')
+            self.dataset.remove_filter('layer_in_spectrum_viewer')
+        else:
+            self._units['y'] = uc.flux_unit.selected
+            self.dataset.add_filter('layer_in_spectrum_viewer')
+            self.dataset.remove_filter('is_flux_cube')
+
+        self.dataset._clear_cache()
+        self.reestimate_model_parameters()
 
     @observe("dataset_selected")
     def _dataset_selected_changed(self, event=None):
@@ -769,24 +785,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @observe("results_label")
     def _set_residuals_label_default(self, event={}):
         self.residuals_label_default = self.results_label+" residuals"
-
-    def _update_viewer_filters(self, event={}):
-        if event.get('new', self.cube_fit):
-            # only want image viewers in the options
-            self.add_results.viewer.filters = ['is_image_viewer']
-        else:
-            # only want spectral viewers in the options
-            self.add_results.viewer.filters = ['is_spectrum_viewer']
-
-    @observe("cube_fit")
-    def _handle_toggle_cube_fit(self, event={}):
-        self._update_viewer_filters(event=event)
-        uc = self.app._jdaviz_helper.plugins['Unit Conversion']
-
-        if event.get('new'):
-            self._units['y'] = uc._obj.sb_unit_selected
-        else:
-            self._units['y'] = uc.flux_unit.selected
 
     @with_spinner()
     def calculate_fit(self, add_data=True):
