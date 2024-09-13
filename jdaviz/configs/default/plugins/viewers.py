@@ -765,7 +765,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
 
         # if solid angle is present in denominator, check physical type of numerator
         # if numerator is a flux type the display unit is a 'surface brightness', otherwise
-        # defaulty to the catchall 'flux density' label
+        # default to the catchall 'flux density' label
         flux_unit_type = None
 
         if solid_angle_unit is not None:
