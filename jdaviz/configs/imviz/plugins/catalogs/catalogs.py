@@ -3,7 +3,7 @@ import numpy.ma as ma
 from astropy import units as u
 from astropy.table import QTable
 from astropy.coordinates import SkyCoord
-from traitlets import List, Unicode, Bool, Int
+from traitlets import List, Unicode, Bool, Int, observe
 
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.registries import tray_registry
@@ -12,8 +12,12 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 
+from jdaviz.core.marks import CatalogMark
+
 from jdaviz.core.template_mixin import TableMixin
 from jdaviz.core.user_api import PluginUserApi
+from echo import delay_callback
+
 
 __all__ = ['Catalogs']
 
@@ -31,6 +35,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     """
     template_file = __file__, "catalogs.vue"
+    uses_active_status = Bool(True).tag(sync=True)
     catalog_items = List([]).tag(sync=True)
     catalog_selected = Unicode("").tag(sync=True)
     results_available = Bool(False).tag(sync=True)
@@ -41,7 +46,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     _default_table_values = {
             'Right Ascension (degrees)': np.nan,
             'Declination (degrees)': np.nan,
-            'Object ID': np.nan}
+            'Object ID': np.nan,
+            'id': np.nan,
+            'x_coord': np.nan,
+            'y_coord': np.nan}
 
     @property
     def user_api(self):
@@ -60,11 +68,15 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self._marker_name = 'catalog_results'
 
         # initializing the headers in the table that is displayed in the UI
-        headers = ['Right Ascension (degrees)', 'Declination (degrees)', 'Object ID']
+        headers = ['Right Ascension (degrees)', 'Declination (degrees)',
+                   'Object ID', 'x_coord', 'y_coord']
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
         self.table._default_values_by_colname = self._default_table_values
+        self.table._selected_rows_changed_callback = lambda msg: self.plot_selected_points()
+        self.table.item_key = 'id'
+        self.table.show_rowselect = True
 
     @staticmethod
     def _file_parser(path):
@@ -163,15 +175,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                       query_region_result['dec'],
                                       unit='deg')
 
-            # adding in coords + Id's into table
-            # NOTE: If performance becomes a problem, see
-            # https://docs.astropy.org/en/stable/table/index.html#performance-tips
-            for row in self.app._catalog_source_table:
-                row_info = {'Right Ascension (degrees)': row['ra'],
-                            'Declination (degrees)': row['dec'],
-                            'Object ID': row['objid'].astype(str)}
-                self.table.add_item(row_info)
-
         elif self.catalog_selected == 'Gaia':
             from astroquery.gaia import Gaia, conf
 
@@ -180,12 +183,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                             columns=('source_id', 'ra', 'dec'))
             self.app._catalog_source_table = sources
             skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
-            # adding in coords + Id's into table
-            for row in sources:
-                row_info = {'Right Ascension (degrees)': row['ra'],
-                            'Declination (degrees)': row['dec'],
-                            'Source ID': row['SOURCE_ID']}
-                self.table.add_item(row_info)
 
         elif self.catalog_selected == 'From File...':
             # all exceptions when going through the UI should have prevented setting this path
@@ -193,14 +190,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             table = self.catalog.selected_obj
             self.app._catalog_source_table = table
             skycoord_table = table['sky_centroid']
-
-            # NOTE: If performance becomes a problem, see
-            # https://docs.astropy.org/en/stable/table/index.html#performance-tips
-            for row in self.app._catalog_source_table:
-                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
-                            'Declination (degrees)': row['sky_centroid'].dec.deg,
-                            'Object ID': str(row.get('label', 'N/A'))}
-                self.table.add_item(row_info)
 
         else:
             self.results_available = False
@@ -228,6 +217,38 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         filtered_pair_pixel_table = np.array(np.hsplit(filtered_table, 2))
         x_coordinates = np.squeeze(filtered_pair_pixel_table[0])
         y_coordinates = np.squeeze(filtered_pair_pixel_table[1])
+
+        if self.catalog_selected in ["SDSS", "Gaia"]:
+            for row, x_coord, y_coord in zip(self.app._catalog_source_table,
+                                             x_coordinates, y_coordinates):
+                if self.catalog_selected == "SDSS":
+                    row_id = row["objid"]
+                elif self.catalog_selected == "Gaia":
+                    row_id = row["SOURCE_ID"]
+                # Check if the row contains the required keys
+                row_info = {'Right Ascension (degrees)': row['ra'],
+                            'Declination (degrees)': row['dec'],
+                            'Object ID': row_id.astype(str),
+                            'id': len(self.table),
+                            'x_coord': x_coord,
+                            'y_coord': y_coord}
+                self.table.add_item(row_info)
+
+        # NOTE: If performance becomes a problem, see
+        # https://docs.astropy.org/en/stable/table/index.html#performance-tips
+        if self.catalog_selected == 'From File...':
+            for row, x_coord, y_coord in zip(self.app._catalog_source_table,
+                                             x_coordinates, y_coordinates):
+                # Check if the row contains the required keys
+                row_info = {'Right Ascension (degrees)': row['sky_centroid'].ra.deg,
+                            'Declination (degrees)': row['sky_centroid'].dec.deg,
+                            'Object ID': str(row.get('label', 'N/A')),
+                            'id': len(self.table),
+                            'x_coord': x_coord,
+                            'y_coord': y_coord}
+
+                self.table.add_item(row_info)
+
         filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
                                                                                     y_coordinates)
 
@@ -236,10 +257,63 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
         self.number_of_results = len(catalog_results)
         # markers are added to the viewer based on the table
-        viewer.marker = {'color': 'red', 'alpha': 0.8, 'markersize': 5, 'fill': False}
+        viewer.marker = {'color': 'blue', 'alpha': 0.8, 'markersize': 30, 'fill': False}
         viewer.add_markers(table=catalog_results, use_skycoord=True, marker_name=self._marker_name)
-
         return skycoord_table
+
+    def _get_mark(self, viewer):
+        matches = [mark for mark in viewer.figure.marks if isinstance(mark, CatalogMark)]
+        if len(matches):
+            return matches[0]
+        mark = CatalogMark(viewer)
+        viewer.figure.marks = viewer.figure.marks + [mark]
+        return mark
+
+    @property
+    def marks(self):
+        return {viewer_id: self._get_mark(viewer)
+                for viewer_id, viewer in self.app._viewer_store.items()
+                if hasattr(viewer, 'figure')}
+
+    @observe('is_active')
+    def _on_is_active_changed(self, *args):
+        if self.disabled_msg:
+            return
+
+        for mark in self.marks.values():
+            mark.visible = self.is_active
+
+    def plot_selected_points(self):
+        selected_rows = self.table.selected_rows
+
+        x = [float(coord['x_coord']) for coord in selected_rows]
+        y = [float(coord['y_coord']) for coord in selected_rows]
+        self._get_mark(self.viewer.selected_obj).update_xy(getattr(x, 'value', x),
+                                                           getattr(y, 'value', y))
+
+    def vue_zoom_in(self, *args, **kwargs):
+        """This function will zoom into the image based on the selected points"""
+        selected_rows = self.table.selected_rows
+
+        x = [float(coord['x_coord']) for coord in selected_rows]
+        y = [float(coord['y_coord']) for coord in selected_rows]
+
+        # this works with single selected points
+        # zooming when the range is too large is not performing correctly
+        x_min = min(x) - 50
+        x_max = max(x) + 50
+        y_min = min(y) - 50
+        y_max = max(y) + 50
+
+        imview = self.app._jdaviz_helper._default_viewer
+
+        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
+            imview.state.x_min = x_min
+            imview.state.x_max = x_max
+            imview.state.y_min = y_min
+            imview.state.y_max = y_max
+
+        return (x_min, x_max), (y_min, y_max)
 
     def import_catalog(self, catalog):
         """

@@ -39,7 +39,7 @@ Cubeviz
 Imviz
 ^^^^^
 
-- Added a table with catalog search results. [#2915, #3101]
+- Added a table with catalog search results. [#2915, #3101, #3099]
 
 - "Imviz Line Profiles (XY)" plugin is renamed to "Image Profiles (XY)". [#3121]
 
@@ -142,7 +142,6 @@ Cubeviz
 
 - No longer incorrectly swap RA and Dec axes when loading Spectrum1D objects. [#3133]
 
-
 Imviz
 ^^^^^
 
@@ -238,6 +237,8 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+
+- Fixed fitting a model to the entire cube when NaNs are present. [#3191]
 
 Imviz
 ^^^^^

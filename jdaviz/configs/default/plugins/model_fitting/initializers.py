@@ -119,7 +119,7 @@ class _WideBand1DInitializer(object):
         instance: `~astropy.modeling.Model`
             The initialized model.
         """
-        y_mean = np.mean(y)
+        y_mean = np.nanmean(y)
         x_range = x[-1] - x[0]
         position = x_range / 2.0 + x[0]
 
@@ -190,7 +190,7 @@ class _LineProfile1DInitializer(object):
 
         # width can be estimated by the weighted
         # 2nd moment of the X coordinate.
-        dx = x - np.mean(x)
+        dx = x - np.nanmean(x)
         fwhm = 2 * np.sqrt(np.sum((dx * dx) * y) / np.sum(y))
 
         # amplitude is derived from area.
