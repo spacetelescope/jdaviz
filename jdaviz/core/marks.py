@@ -17,8 +17,8 @@ __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'PluginMark', 'LinesAutoUnit', 'PluginLine', 'PluginScatter',
            'LineAnalysisContinuum', 'LineAnalysisContinuumCenter',
            'LineAnalysisContinuumLeft', 'LineAnalysisContinuumRight',
-           'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark', 'FootprintOverlay',
-           'ApertureMark']
+           'LineUncertainties', 'ScatterMask', 'SelectedSpaxel', 'MarkersMark',
+           'CatalogMark', 'FootprintOverlay', 'ApertureMark']
 
 accent_color = "#c75d2c"
 
@@ -592,6 +592,12 @@ class SelectedSpaxel(Lines):
 
 
 class MarkersMark(PluginScatter):
+    def __init__(self, viewer, **kwargs):
+        kwargs.setdefault('marker', 'circle')
+        super().__init__(viewer, **kwargs)
+
+
+class CatalogMark(PluginScatter):
     def __init__(self, viewer, **kwargs):
         kwargs.setdefault('marker', 'circle')
         super().__init__(viewer, **kwargs)
