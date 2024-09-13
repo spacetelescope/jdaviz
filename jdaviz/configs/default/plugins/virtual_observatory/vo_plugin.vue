@@ -12,11 +12,20 @@
         :selected.sync="viewer_selected"
         label="Viewer"
         :show_if_single_entry="true"
-        hint="Select a viewer to autofill center coordinates, or Manual for manual coordinate entry."
+        hint="Select a viewer to retrieve center coordinates, or Manual for manual coordinate entry."
       />
 
+      <v-row v-if="viewer_selected !== 'Manual'">
+        <v-switch
+          v-model="coord_follow_viewer_pan"
+          label="Follow Viewer Center"
+          hint="Automatically adjust coordinates as viewer pans and zooms"
+          persistent-hint
+        ></v-switch>
+      </v-row>
+
       <v-row>
-        <div :style="viewer_selected === 'Manual' ? 'width: 100%' : 'width: calc(100% - 32px)'">
+        <div :style="!(viewer_selected !== 'Manual' && !coord_follow_viewer_pan) ? 'width: 100%' : 'width: calc(100% - 32px)'">
           <v-text-field
             v-model="source"
             label="Source/Coordinates"
@@ -26,7 +35,7 @@
             persistent-hint>
           </v-text-field>
         </div>
-        <div v-if="viewer_selected !== 'Manual'" style="line-height:64px; width:32px">
+        <div v-if="viewer_selected !== 'Manual' && !coord_follow_viewer_pan" style="line-height:64px; width:32px">
           <v-btn
             id="autocenterbtn"
             @click="center_on_data"

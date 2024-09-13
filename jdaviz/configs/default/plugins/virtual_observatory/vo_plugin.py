@@ -47,6 +47,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     resources_loading = Bool(False).tag(sync=True)
 
     source = Unicode("").tag(sync=True)
+    coord_follow_viewer_pan = Bool(False).tag(sync=True)
     coordframes = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
     radius_val = Float(1).tag(sync=True)
@@ -89,7 +90,24 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
 
-    @observe("viewer_selected", type="change")
+    @observe("viewer_selected", "coord_follow_viewer_pan", type="change")
+    def vue_viewer_changed(self, _=None):
+        if not hasattr(self, "viewer"):
+            # mixin object not yet initialized
+            return
+
+        # Clear all existing subscriptions
+        for viewer in self.viewer.viewers:
+            viewer.state.remove_callback('zoom_center_x', self.vue_center_on_data)
+            viewer.state.remove_callback('zoom_center_y', self.vue_center_on_data)
+
+        # Subscribe to selected viewer
+        if self.coord_follow_viewer_pan:
+            self.viewer.selected_obj.state.add_callback('zoom_center_x', self.vue_center_on_data)
+            self.viewer.selected_obj.state.add_callback('zoom_center_y', self.vue_center_on_data)
+
+        self.vue_center_on_data()
+
     def vue_center_on_data(self, _=None):
         """
         If data is present in the default viewer, center the plugin's coordinates on
