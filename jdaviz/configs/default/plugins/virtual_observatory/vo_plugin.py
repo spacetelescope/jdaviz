@@ -102,7 +102,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             viewer.state.remove_callback('zoom_center_y', self.vue_center_on_data)
 
         # Subscribe to selected viewer
-        if self.coord_follow_viewer_pan:
+        if self.viewer_selected != "Manual" and self.coord_follow_viewer_pan:
             self.viewer.selected_obj.state.add_callback('zoom_center_x', self.vue_center_on_data)
             self.viewer.selected_obj.state.add_callback('zoom_center_y', self.vue_center_on_data)
 
