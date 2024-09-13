@@ -181,7 +181,7 @@ def test_link_type_autocoord(imviz_helper):
 
     vo_plugin = imviz_helper.plugins["Virtual Observatory"]._obj
     vo_plugin.viewer_selected = "imviz-0"
-    vo_plugin._center_on_data()
+    vo_plugin.vue_center_on_data()
     ra_str, dec_str = vo_plugin.source.split()
     np.testing.assert_allclose(float(ra_str), 284.2101962057667)
     np.testing.assert_allclose(float(dec_str), 32.23616603681311)
