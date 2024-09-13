@@ -307,7 +307,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             # only want spectral viewers in the options
             self.add_results.viewer.filters = ['is_spectrum_viewer']
 
-
     @observe('cube_fit')
     def _cube_fit_changed(self, event={}):
         self._update_viewer_filters(event=event)
