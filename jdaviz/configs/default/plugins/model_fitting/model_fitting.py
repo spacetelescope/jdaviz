@@ -323,7 +323,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.dataset.remove_filter('is_flux_cube')
 
         self.dataset._clear_cache()
-        self.reestimate_model_parameters()
+        if uc.spectral_y_type != "Surface Brightness":
+            self.reestimate_model_parameters()
 
     @observe("dataset_selected")
     def _dataset_selected_changed(self, event=None):
