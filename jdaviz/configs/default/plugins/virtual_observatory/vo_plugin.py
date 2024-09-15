@@ -48,6 +48,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
     source = Unicode("").tag(sync=True)
     coord_follow_viewer_pan = Bool(False).tag(sync=True)
+    viewer_centered = Bool(False).tag(sync=True)
     coordframes = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
     radius_val = Float(1).tag(sync=True)
@@ -90,25 +91,33 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
 
-    @observe("viewer_selected", "coord_follow_viewer_pan", type="change")
+    @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
-        if not hasattr(self, "viewer"):
-            # mixin object not yet initialized
-            return
+        # Check mixin object initialized
+        if hasattr(self, "viewer"):
+            # Clear all existing subscriptions and resubscribe to selected viewer
+            for viewer in self.viewer.viewers:
+                if viewer == self.viewer.selected_obj:
+                    viewer.state.add_callback("zoom_center_x", self.vue_center_on_data)
+                    viewer.state.add_callback("zoom_center_y", self.vue_center_on_data)
+                else:
+                    # If not subscribed anyways, remove_callback should produce a no-op
+                    viewer.state.remove_callback(
+                        "zoom_center_x", self.vue_center_on_data
+                    )
+                    viewer.state.remove_callback(
+                        "zoom_center_y", self.vue_center_on_data
+                    )
+            self.vue_center_on_data()
 
-        # Clear all existing subscriptions
-        for viewer in self.viewer.viewers:
-            viewer.state.remove_callback('zoom_center_x', self.vue_center_on_data)
-            viewer.state.remove_callback('zoom_center_y', self.vue_center_on_data)
+    @observe("coord_follow_viewer_pan", type="change")
+    def _toggle_viewer_pan_tracking(self, _=None):
+        """Detects when live viewer tracking toggle is clicked and centers on data if necessary"""
+        # Center on data if we're enabling the toggle
+        if self.coord_follow_viewer_pan:
+            self.vue_center_on_data()
 
-        # Subscribe to selected viewer
-        if self.viewer_selected != "Manual" and self.coord_follow_viewer_pan:
-            self.viewer.selected_obj.state.add_callback('zoom_center_x', self.vue_center_on_data)
-            self.viewer.selected_obj.state.add_callback('zoom_center_y', self.vue_center_on_data)
-
-        self.vue_center_on_data()
-
-    def vue_center_on_data(self, _=None):
+    def vue_center_on_data(self, event=None):
         """
         If data is present in the default viewer, center the plugin's coordinates on
         the viewer's center WCS coordinates.
@@ -116,7 +125,18 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         if not hasattr(self, "viewer"):
             # mixin object not yet initialized
             return
+        # If plugin is in "Manual" mode, we should never
+        # autocenter and potentially wipe the user's data
         if self.viewer_selected == "Manual":
+            return
+
+        # If the user panned but tracking not enabled, don't recenter
+        # NOTE: float event typecheck assumes the only "float" type event triggering this method
+        #   is "zoom_center_x" and "zoom_center_y"
+        #   Otherwise, need some other way to determine the event = user panning
+        if isinstance(event, float) and not self.coord_follow_viewer_pan:
+            # Thus, we're no longer centered
+            self.viewer_centered = False
             return
 
         # gets the current viewer
@@ -147,6 +167,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         # Show center value in plugin
         self.source = f"{ra_deg} {dec_deg}"
         self.coordframe_selected = frame
+
+        self.viewer_centered = True
 
     @observe("waveband_selected", "change")
     def vue_query_registry_resources(self, _=None):
