@@ -39,8 +39,11 @@
           <v-btn
             id="autocenterbtn"
             @click="center_on_data"
+            :disabled="viewer_centered"
             icon>
-            <v-icon>mdi-crosshairs-gps</v-icon>
+            <v-icon>
+              {{ viewer_centered ? 'mdi-crosshairs-gps' : 'mdi-crosshairs' }}
+            </v-icon>
           </v-btn>
         </div>
       </v-row>
