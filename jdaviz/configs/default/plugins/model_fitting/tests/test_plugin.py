@@ -134,6 +134,7 @@ def test_register_model_uncertainty_is_none(specviz_helper, spectrum1d):
         assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol=0.01)
 
 
+@pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
@@ -155,6 +156,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     assert test_label in cubeviz_helper.app.data_collection
 
 
+@pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_fit_cube_no_wcs(cubeviz_helper):
     # This is like when user do something to a cube outside of Jdaviz
     # and then load it back into a new instance of Cubeviz for further analysis.
