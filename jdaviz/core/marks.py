@@ -116,7 +116,7 @@ class PluginMark:
 
                 if ('_pixel_scale_factor' in spec.meta):
                     eqv += _eqv_pixar_sr(spec.meta['_pixel_scale_factor'])
-                    
+
                 # add equiv for flux <> flux/pix2
                 eqv += _eqv_flux_to_sb_pixel()
 
