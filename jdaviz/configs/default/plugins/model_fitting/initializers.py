@@ -77,6 +77,9 @@ class _Linear1DInitializer(object):
         instance : `~astropy.modeling.Model`
             The initialized model.
         """
+        if y.ndim == 3:
+            # For cube fitting, need to collapse before this calculation
+            y = np.nanmean(y, axis=(0,1))
         slope, intercept = np.polynomial.Polynomial.fit(x.value.flatten(), y.value.flatten(), 1)
 
         instance.slope.value = slope
