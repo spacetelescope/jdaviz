@@ -351,11 +351,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Replace NaNs from collapsed Spectrum1D in Cubeviz
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
-        # TODO: can we simplify this logic?
-        self._units["x"] = str(
-            selected_spec.spectral_axis.unit)
-        self._units["y"] = str(
-            selected_spec.flux.unit)
 
     def _default_comp_label(self, model, poly_order=None):
         abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz1D': 'Lo'}
@@ -470,6 +465,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                      "parameters": [], "model_kwargs": {}}
         model_cls = MODELS[model_comp]
 
+        # Need to set the units the first time we initialize a model component, after this
+        # we listen for display unit changes
+        if (self._units is None or self._units == {} or 'x' not in self._units or
+                'y' not in self._units):
+            uc = self.app._jdaviz_helper.plugins['Unit Conversion']
+            self._units['x'] = uc.spectral_unit.selected
+            if self.cube_fit:
+                self._units['y'] = uc._obj.sb_unit_selected
+            else:
+                self._units['y'] = uc.flux_unit.selected
+
         if model_comp == "Polynomial1D":
             # self.poly_order is the value in the widget for creating
             # the new model component.  We need to store that with the
@@ -524,6 +530,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             init_x = masked_spectrum.spectral_axis
             init_y = masked_spectrum.flux
+
+        init_y = init_y.to(self._units['y'])
 
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
