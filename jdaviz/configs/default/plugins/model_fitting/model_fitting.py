@@ -311,17 +311,20 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _cube_fit_changed(self, event={}):
         self._update_viewer_filters(event=event)
 
+        sb_unit = self.app._get_display_unit('sb')
+        spectral_y_unit = self.app._get_display_unit('spectral_y')
         if event.get('new'):
-            self._units['y'] = self.app._get_display_unit('sb')
+            self._units['y'] = sb_unit
             self.dataset.add_filter('is_flux_cube')
             self.dataset.remove_filter('layer_in_spectrum_viewer')
         else:
-            self._units['y'] = self.app._get_display_unit('spectral_y')
+            self._units['y'] = spectral_y_unit
             self.dataset.add_filter('layer_in_spectrum_viewer')
             self.dataset.remove_filter('is_flux_cube')
 
         self.dataset._clear_cache()
-        self.reestimate_model_parameters()
+        if sb_unit != spectral_y_unit:
+            self.reestimate_model_parameters()
 
     @observe("dataset_selected")
     def _dataset_selected_changed(self, event=None):
