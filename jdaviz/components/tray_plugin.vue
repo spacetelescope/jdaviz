@@ -1,6 +1,6 @@
 <template>
   <v-container 
-    class="tray_plugin"
+    class="tray-plugin"
     style="padding-left: 24px; padding-right: 24px; padding-top: 12px" >
     <v-row>
       <div style="width: calc(100% - 64px)">
