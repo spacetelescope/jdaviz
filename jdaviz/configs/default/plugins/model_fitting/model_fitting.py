@@ -148,7 +148,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.table.headers_avail = headers
         self.table.headers_visible = headers
-        # when model parameters are added as columns, only show the value columns by default
+        # when model parameters are added as columns, only show the value/unit columns by default
         # (other columns can be show in the dropdown by the user)
         self.table._new_col_visible = lambda colname: colname.split(':')[-1] not in ('fixed', 'uncert', 'std')  # noqa
 
