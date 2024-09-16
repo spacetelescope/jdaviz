@@ -528,7 +528,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             init_x = masked_spectrum.spectral_axis
             init_y = masked_spectrum.flux
 
-        init_y = init_y.to(self._units['y'])
+        init_y = init_y.to(self._units['y'], u.spectral_density(init_x))
 
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
