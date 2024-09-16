@@ -516,9 +516,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 spectral_mask = mask
             init_x = masked_spectrum.spectral_axis[~spectral_mask]
             orig_flux_shape = masked_spectrum.flux.shape
-            init_y = masked_spectrum.flux[~mask].reshape(orig_flux_shape[0],
-                                                         orig_flux_shape[1],
-                                                         len(init_x))
+            init_y = masked_spectrum.flux[~mask]
+            if mask.ndim == 3:
+                init_y = init_y.reshape(orig_flux_shape[0],
+                                        orig_flux_shape[1],
+                                        len(init_x))
         else:
             init_x = masked_spectrum.spectral_axis
             init_y = masked_spectrum.flux
