@@ -310,20 +310,18 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     @observe('cube_fit')
     def _cube_fit_changed(self, event={}):
         self._update_viewer_filters(event=event)
-        uc = self.app._jdaviz_helper.plugins['Unit Conversion']
 
         if event.get('new'):
-            self._units['y'] = uc._obj.sb_unit_selected
+            self._units['y'] = self.app._get_display_unit('sb')
             self.dataset.add_filter('is_flux_cube')
             self.dataset.remove_filter('layer_in_spectrum_viewer')
         else:
-            self._units['y'] = uc.flux_unit.selected
+            self._units['y'] = self.app._get_display_unit('spectral_y')
             self.dataset.add_filter('layer_in_spectrum_viewer')
             self.dataset.remove_filter('is_flux_cube')
 
         self.dataset._clear_cache()
-        if uc.spectral_y_type != "Surface Brightness":
-            self.reestimate_model_parameters()
+        self.reestimate_model_parameters()
 
     @observe("dataset_selected")
     def _dataset_selected_changed(self, event=None):
@@ -469,12 +467,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # we listen for display unit changes
         if (self._units is None or self._units == {} or 'x' not in self._units or
                 'y' not in self._units):
-            uc = self.app._jdaviz_helper.plugins['Unit Conversion']
-            self._units['x'] = uc.spectral_unit.selected
+            self._units['x'] = self.app._get_display_unit('spectral')
             if self.cube_fit:
-                self._units['y'] = uc._obj.sb_unit_selected
+                self._units['y'] = self.app._get_display_unit('sb')
             else:
-                self._units['y'] = uc.flux_unit.selected
+                self._units['y'] = self.app._get_display_unit('spectral_y')
 
         if model_comp == "Polynomial1D":
             # self.poly_order is the value in the widget for creating
@@ -954,9 +951,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             spec = data.get_object(cls=Spectrum1D, statistic=None)
 
-        uc = self.app._jdaviz_helper.plugins['Unit Conversion']
-        if spec.flux.unit != uc._obj.sb_unit_selected:
-            spec = spec.with_flux_unit(uc._obj.sb_unit_selected)
+        sb_unit = self.app._get_display_unit('sb')
+        if spec.flux.unit != sb_unit:
+            spec = spec.with_flux_unit(sb_unit)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
