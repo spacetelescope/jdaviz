@@ -509,12 +509,25 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
                                                        self.spectral_subset)
         mask = masked_spectrum.mask
+        if mask is not None:
+            if mask.ndim == 3:
+                spectral_mask = mask.all(axis=(0, 1))
+            else:
+                spectral_mask = mask
+            init_x = masked_spectrum.spectral_axis[~spectral_mask]
+            orig_flux_shape = masked_spectrum.flux.shape
+            init_y = masked_spectrum.flux[~mask].reshape(orig_flux_shape[0],
+                                                         orig_flux_shape[1],
+                                                         len(init_x))
+        else:
+            init_x = masked_spectrum.spectral_axis
+            init_y = masked_spectrum.flux
+
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
                                **initial_values,
                                **new_model.get("model_kwargs", {})),
-            masked_spectrum.spectral_axis[~mask] if mask is not None else masked_spectrum.spectral_axis,  # noqa
-            masked_spectrum.flux[~mask] if mask is not None else masked_spectrum.flux)
+            init_x, init_y)
 
         # need to loop over parameters again as the initializer may have overridden
         # the original default value. However, if we toggled cube_fit, we may need to override
