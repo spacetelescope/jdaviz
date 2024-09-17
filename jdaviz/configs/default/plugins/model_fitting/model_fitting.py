@@ -326,7 +326,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         if sb_unit != spectral_y_unit:
             # We make the user hit the reestimate button themselves
             for model_index, comp_model in enumerate(self.component_models):
-                print(f"Setting compat_display_units to False for {comp_model}")
                 self.component_models[model_index]["compat_display_units"] = False
             self.send_state('component_models')
 
