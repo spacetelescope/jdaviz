@@ -399,6 +399,9 @@ class UnitConversion(PluginTemplateMixin):
             sb_unit_selected = flux_unit + ' / ' + angle_unit
 
         if sb_unit_selected:
-            self.sb_unit_selected = sb_unit_selected
+            # convert string to and from u.Unit to get rid of any
+            # formatting inconstancies, order of units in string
+            # for a composite unit matters
+            sb_unit_selected = u.Unit(sb_unit_selected).to_string()
 
         return sb_unit_selected
