@@ -324,7 +324,11 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         self.dataset._clear_cache()
         if sb_unit != spectral_y_unit:
-            self.reestimate_model_parameters()
+            # We make the user hit the reestimate button themselves
+            for model_index, comp_model in enumerate(self.component_models):
+                print(f"Setting compat_display_units to False for {comp_model}")
+                self.component_models[model_index]["compat_display_units"] = False
+            self.send_state('component_models')
 
     @observe("dataset_selected")
     def _dataset_selected_changed(self, event=None):
