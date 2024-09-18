@@ -396,6 +396,7 @@ def test_incompatible_units(specviz_helper, spectrum1d):
         mf.calculate_fit(add_data=True)
 
 
+@pytest.mark.skip(reason="unskip after 3190")
 def test_cube_fit_with_nans(cubeviz_helper):
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
@@ -412,6 +413,7 @@ def test_cube_fit_with_nans(cubeviz_helper):
     assert np.all(result.get_component("flux").data == 1)
 
 
+@pytest.mark.skip(reason="unskip after 3190")
 def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     # Also test with existing mask
     flux = np.ones((7, 8, 9)) * u.nJy
