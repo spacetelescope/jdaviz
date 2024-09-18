@@ -94,7 +94,8 @@ class UnitConverterWithSpectral:
                     'W / (Hz m2 pix2)', 'eV / (Hz s m2 pix2)',
                     'erg / (s cm2 pix2)', 'erg / (Hz s cm2 pix2)',
                     'erg / (Angstrom s cm2 pix2)',
-                    'ph / (Angstrom s cm2 pix2)', 'ph / (Hz s cm2 pix2)'
+                    'ph / (Angstrom s cm2 pix2)', 'ph / (Hz s cm2 pix2)',
+                    'ct / pix2'
                 ]
 
                 )
