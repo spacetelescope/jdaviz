@@ -398,6 +398,10 @@ def test_cube_fit_with_nans(cubeviz_helper):
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
+    # Switch back to non-cube fit, check that units are marked incompatible
+    mf.cube_fit = False
+    assert mf._obj.component_models[0]['compat_display_units'] is False
+
 
 @pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_cube_fit_with_subset_and_nans(cubeviz_helper):
