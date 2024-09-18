@@ -289,7 +289,7 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     assert_allclose(flux_sci.data, fitted_spectrum.flux.value)
     # now that the flux cube was loaded into cubeviz, there will be a factor
     # of pix2 applied to the flux unit
-    assert flux_sci.units == flux_unit_str + ' / pix2'
+    assert flux_sci.units == f'{flux_unit_str} / pix2'
     coo = data_sci.coords.pixel_to_world(1, 0, 2)
     assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
     assert_allclose([coo[1].ra.deg, coo[1].dec.deg],

@@ -320,14 +320,6 @@ def standardize_roman_metadata(data_model):
         }
 
 
-# def indirect_units():
-#     return [
-#         u.erg / (u.s * u.cm**2 * u.Angstrom * u.sr),
-#         u.erg / (u.s * u.cm**2 * u.Hz * u.sr),
-#         u.ph / (u.Angstrom * u.s * u.cm**2 * u.sr), u.ph / (u.Angstrom * u.s * u.sr * u.cm**2),
-#         u.ph / (u.s * u.cm**2 * u.Hz * u.sr)
-#     ]
-
 def indirect_units():
     from jdaviz.core.validunits import supported_sq_angle_units
 
@@ -578,6 +570,7 @@ def _eqv_sb_per_pixel_to_per_angle(flux_unit, scale_factor=1):
     equivalencies=u.spectral_density(1 * u.m) + _eqv_sb_per_pixel_to_per_angle(u.Jy)
     So additional logic is needed to compare units that need both equivalencies
     (one solution being creating this equivalency for each equivalent flux-type.)
+
     """
     pix2 = u.pix * u.pix
 
@@ -585,9 +578,9 @@ def _eqv_sb_per_pixel_to_per_angle(flux_unit, scale_factor=1):
     flux_solid_ang = flux_unit / u.sr
     flux_sq_pix = flux_unit / pix2
 
-    pix_to_solid_angle_equiv = u.Equivalency([(flux_solid_ang, flux_sq_pix,
-                                               lambda x: x * scale_factor,
-                                               lambda x: x / scale_factor)])
+    pix_to_solid_angle_equiv = [(flux_solid_ang, flux_sq_pix,
+                                lambda x: x * scale_factor,
+                                lambda x: x / scale_factor)]
 
     return pix_to_solid_angle_equiv
 

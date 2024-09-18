@@ -463,9 +463,8 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
 
             # convert data loaded in flux units to a per-square-pixel surface
             # brightness unit (e.g Jy to Jy/pix**2)
-            if attr != "mask":
-                if not check_if_unit_is_per_solid_angle(flux.unit):
-                    s1d = convert_spectrum1d_from_flux_to_flux_per_pixel(s1d)
+            if (attr != "mask") and (not check_if_unit_is_per_solid_angle(flux.unit)):
+                s1d = convert_spectrum1d_from_flux_to_flux_per_pixel(s1d)
 
         cur_data_label = app.return_data_label(data_label, attr.upper())
         app.add_data(s1d, cur_data_label)
