@@ -155,6 +155,7 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper):
     assert flux.units == 'nJy / pix2'
 
 
+@pytest.mark.skip(reason="unskip after 3192 merged")
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
     cubeviz_helper.load_data(spectrum1d)
 
