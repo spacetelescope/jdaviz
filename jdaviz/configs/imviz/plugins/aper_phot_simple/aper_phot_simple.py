@@ -614,9 +614,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 background_value = (background_value * display_unit).to_value(
                     img_unit, u.spectral_density(self._cube_wave))
         else:
-            sub = background if background is not None else self.background.selected
-            dat = dataset if dataset is not None else self.dataset.selected
-            bg_reg = self.aperture._get_spatial_region(subset=sub, dataset=dat)
+            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  #noqa
+                                                       dataset=dataset if dataset is not None else self.dataset.selected)  #noqa
             background_value = self._calc_background_median(bg_reg, data=data)
 
             # cubeviz: computed background median will be in display units,
