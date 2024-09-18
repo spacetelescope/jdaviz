@@ -16,7 +16,16 @@ from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Any, List, Unicode, Bool, observe
 
 from specutils import SpectralRegion
+from photutils.aperture import (CircularAperture, SkyCircularAperture,
+                                EllipticalAperture, SkyEllipticalAperture,
+                                RectangularAperture, SkyRectangularAperture,
+                                CircularAnnulus, SkyCircularAnnulus)
+from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
+                     EllipsePixelRegion, EllipseSkyRegion,
+                     RectanglePixelRegion, RectangleSkyRegion,
+                     CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
 
+from jdaviz.core.region_translators import regions2roi, aperture2regions
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
@@ -49,6 +58,8 @@ SUBSET_MODES_PRETTY = {
     'xor': XorMode,
     'andnot': AndNotMode,
 }
+SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
+COMBO_OPTIONS = ['new', 'replace', 'or', 'and', 'xor', 'andnot']
 
 
 @tray_registry('g-subset-plugin', label="Subset Tools")
@@ -62,9 +73,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
-    * ``combination_mode`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      The method used for adding or combining subsets.
-    * :meth:`import_region`
     """
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
@@ -828,16 +836,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         if len(self.app.data_collection) == 0:
             raise ValueError('Cannot load regions without data.')
 
-        from photutils.aperture import (CircularAperture, SkyCircularAperture,
-                                        EllipticalAperture, SkyEllipticalAperture,
-                                        RectangularAperture, SkyRectangularAperture,
-                                        CircularAnnulus, SkyCircularAnnulus)
-        from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
-                             EllipsePixelRegion, EllipseSkyRegion,
-                             RectanglePixelRegion, RectangleSkyRegion,
-                             CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
-        from jdaviz.core.region_translators import regions2roi, aperture2regions
-
         if not isinstance(regions, (list, tuple, Regions, SpectralRegion)):
             regions = [regions]
 
@@ -857,13 +855,15 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         else:
             data = self.app.data_collection[refdata_label]
 
-        # TODO: Make this work for data cube.
-        # https://github.com/glue-viz/glue-astronomy/issues/75
         has_wcs = data_has_valid_wcs(data, ndim=2)
 
         combo_mode_is_list = isinstance(combination_mode, list)
         if combo_mode_is_list and len(combination_mode) != (len(regions)):
             raise ValueError("list of mode must be size of regions")
+        elif combo_mode_is_list:
+            for mode in combination_mode:
+                if mode not in COMBO_OPTIONS:
+                    raise ValueError(f"{mode} not one of {COMBO_OPTIONS}")
 
         for index, region in enumerate(regions):
             # Set combination mode for how region will be applied to current subset
@@ -989,7 +989,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
 
     def _update_combination_mode(self):
-        for key, value in SUBSET_MODES_PRETTY.items():
-            if self.app.session.edit_subset_mode.mode == value:
-                self.combination_mode.selected = key
-                return
+        if self.app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
+            self.combination_mode.selected = SUBSET_TO_PRETTY[
+                self.app.session.edit_subset_mode.mode]
