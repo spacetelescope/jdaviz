@@ -83,7 +83,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     # traitlet to avoid avoid repetition of seperating it out from `display_unit`
     flux_scaling_display_unit = Unicode("").tag(sync=True)
 
-    disable_pixarea_input = Bool(False).tag(sync=True)  # if flux/pix2
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -270,7 +269,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # if cube loaded is per-pixel-squared sb (i.e flux cube loaded)
         # pixel_area should be fixed to 1
         if self.display_solid_angle_unit == 'pix2':
-            self.disable_pixarea_input = True
             self.pixel_area = 1.0
 
     def _get_defaults_from_metadata(self, dataset=None):
