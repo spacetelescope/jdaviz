@@ -83,7 +83,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     # traitlet to avoid avoid repetition of seperating it out from `display_unit`
     flux_scaling_display_unit = Unicode("").tag(sync=True)
 
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -612,8 +611,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 background_value = (background_value * display_unit).to_value(
                     img_unit, u.spectral_density(self._cube_wave))
         else:
-            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  #noqa
-                                                       dataset=dataset if dataset is not None else self.dataset.selected)  #noqa
+            bg_reg = self.aperture._get_spatial_region(subset=background if background is not None else self.background.selected,  # noqa
+                                                       dataset=dataset if dataset is not None else self.dataset.selected)  # noqa
             background_value = self._calc_background_median(bg_reg, data=data)
 
             # cubeviz: computed background median will be in display units,
