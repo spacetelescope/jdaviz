@@ -137,6 +137,11 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
 def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            cube_unit):
+    # tests aperture photometry outputs between different inputs of flux (which
+    # should be converted to a surface brighntess after loading), flux per sr
+    # and flux per square pixel. the pixel area for per steraidan cubes is
+    # set so the output values between units will be the same
+
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit)
     cubeviz_helper.load_data(cube, data_label="test")
 
@@ -162,7 +167,6 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
         assert_allclose(plg.pixel_area, 0.01)  # check default
         plg.pixel_area = 1 * (u.sr).to(u.arcsec*u.arcsec)
         solid_angle_unit = u.sr
-        assert not plg.disable_pixarea_input  # for /sr cubes, this should be editable
 
     else:
         # for per pixel cubes, set flux scaling to default for MJy / sr cubes
@@ -171,7 +175,6 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
         plg.flux_scaling = 0.003631
         solid_angle_unit = u.pix * u.pix
         cube_unit = u.MJy / solid_angle_unit  # cube unit in app is now per pix2
-        assert plg.disable_pixarea_input
 
     plg.vue_do_aper_phot()
     row = cubeviz_helper.get_aperture_photometry_results()[0]
@@ -192,6 +195,41 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
     assert_allclose(row["aperture_sum_mag"], -7.847359 * u.mag)
 
     assert_allclose(row["mean"], 5 * (cube_unit))
+    # TODO: check if slice plugin has value_unit set correctly
+    assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)
+
+
+def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
+    # this test is essentially the same as test_cubeviz_aperphot_cube_sr_and_pix2 but for a single
+    # surface brightness unit and without changing the pixel area to make outputs the same. it
+    # was requested in review to keep both tests
+    cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr)
+    cubeviz_helper.load_data(cube, data_label="test")
+
+    aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
+    bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
+    cubeviz_helper.load_regions([aper, bg])
+
+    plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
+    plg.dataset_selected = "test[FLUX]"
+    plg.aperture_selected = "Subset 1"
+    plg.background_selected = "Subset 2"
+
+    # Make sure per steradian is handled properly.
+    assert_allclose(plg.pixel_area, 0.01)
+    assert_allclose(plg.flux_scaling, 0.003631)
+
+    plg.vue_do_aper_phot()
+    row = cubeviz_helper.get_aperture_photometry_results()[0]
+
+    # Basically, we should recover the input rectangle here, minus background.
+    assert_allclose(row["xcenter"], 3 * u.pix)
+    assert_allclose(row["ycenter"], 1 * u.pix)
+    assert_allclose(row["sum"], 1.1752215e-12 * u.MJy)  # (15 - 10) MJy/sr x 2.3504431e-13 sr
+    assert_allclose(row["sum_aper_area"], 1 * (u.pix * u.pix))
+    assert_allclose(row["pixarea_tot"], 2.350443053909789e-13 * u.sr)
+    assert_allclose(row["aperture_sum_mag"], 23.72476627732448 * u.mag)
+    assert_allclose(row["mean"], 5 * (u.MJy / u.sr))
     # TODO: check if slice plugin has value_unit set correctly
     assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)
 
