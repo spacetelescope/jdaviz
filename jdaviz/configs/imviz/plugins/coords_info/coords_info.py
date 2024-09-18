@@ -514,7 +514,6 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                         unit = self.image_unit
 
                     elif self.image_unit.is_equivalent(unit):
-
                         value = (value * u.Unit(unit)).to_value(u.Unit(self.image_unit))
                         unit = self.image_unit
 

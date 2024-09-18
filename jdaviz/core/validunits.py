@@ -170,9 +170,8 @@ def check_if_unit_is_per_solid_angle(unit, return_unit=False):
     # this will take care of some formatting consistency like
     # turning something like Jy / (degree*degree) to Jy / deg**2
     # and erg sr^1 to erg / sr
-    if isinstance(unit, u.core.Unit) or isinstance(unit, u.core.CompositeUnit):
-        unit_str = unit.to_string()
-    elif isinstance(unit, u.core.IrreducibleUnit):  # u.count
+    if isinstance(unit, (u.core.Unit, u.core.CompositeUnit,
+                  u.core.IrreducibleUnit)):
         unit_str = unit.to_string()
     elif isinstance(unit, str):
         unit = u.Unit(unit)

@@ -298,9 +298,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 solid_angle_in_flux_unit = check_if_unit_is_per_solid_angle(flux_unit,
                                                                             return_unit=True)
                 if solid_angle_in_flux_unit is None:
-                    # use sr as a placeholder unit. is_equivalent() checks won't
-                    # pass anyway if theres no solid angle in the unit, so it
-                    # won't matter what this is
+                    # use dimensionless_unscaled as a placeholder unit.
+                    # is_equivalent() checks won't pass anyway if theres no
+                    # solid angle in the unit, so it won't matter what this is
                     solid_angle_in_flux_unit = u.dimensionless_unscaled
 
                 solid_angle_string = solid_angle_in_flux_unit.to_string()

@@ -582,7 +582,7 @@ def convert_spectrum1d_from_flux_to_flux_per_pixel(spectrum):
 
     This function takes a `Spectrum1D` object with flux units and converts the
     flux (and optionally, uncertainty) to a surface brightness per square pixel
-    (e.g., from Jy to Jy/pix**2). This is done adjusting the units of spectrum.flux
+    (e.g., from Jy to Jy/pix**2). This is done by updating the units of spectrum.flux
     and (if present) spectrum.uncertainty, and creating a new `Spectrum1D`
     object with the modified flux and uncertainty.
 
@@ -601,18 +601,13 @@ def convert_spectrum1d_from_flux_to_flux_per_pixel(spectrum):
 
     # convert flux, which is always populated
     flux = getattr(spectrum, 'flux')
-    old_flux_unit = flux.unit
-    unitless_flux = flux.value
-    flux = unitless_flux * old_flux_unit / (u.pix * u.pix)
+    flux = flux / (u.pix * u.pix)
 
     # and uncerts, if present
     uncerts = getattr(spectrum, 'uncertainty')
     if uncerts is not None:
         old_uncerts = uncerts.represent_as(StdDevUncertainty)  # enforce common uncert type.
-        old_uncerts_unit = old_uncerts.unit
-        unitless_uncerts = uncerts.array
-        uncerts = unitless_uncerts * old_uncerts_unit / (u.pix * u.pix)
-        uncerts = StdDevUncertainty(uncerts)
+        uncerts = old_uncerts.quantity / (u.pix * u.pix)
 
     # create a new spectrum 1d with all the info from the input spectrum 1d,
     # and the flux / uncerts converted from flux to SB per square pixel
