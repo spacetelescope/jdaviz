@@ -190,6 +190,7 @@ class UnitConversion(PluginTemplateMixin):
         y_unit_str = _valid_glue_display_unit(y_unit_str, self.spectrum_viewer, 'y')
         y_unit = u.Unit(y_unit_str)
         y_unit_solid_angle = check_if_unit_is_per_solid_angle(y_unit_str, return_unit=True)
+        print('y_unit', y_unit)
 
         if not check_if_unit_is_per_solid_angle(y_unit_str) and y_unit_str != self.flux_unit.selected:  # noqa
             flux_choices = create_flux_equivalencies_list(y_unit, x_unit)
@@ -203,9 +204,10 @@ class UnitConversion(PluginTemplateMixin):
         # if the y-axis is set to surface brightness,
         # untranslatable units need to be removed from the flux choices
         if y_unit_solid_angle:
-            flux_choices = create_flux_equivalencies_list(y_unit * y_unit_solid_angle, x_unit)
+            flux_choices = [(y_unit * y_unit_solid_angle).to_string()]
+            flux_choices += create_flux_equivalencies_list(y_unit * y_unit_solid_angle, x_unit)
             self.flux_unit.choices = flux_choices
-            flux_unit = str(y_unit * u.sr)
+            flux_unit = str(y_unit * y_unit_solid_angle)
             # We need to set the angle_unit before triggering _on_flux_unit_changed via
             # setting self.flux_unit.selected below, or the lack of angle unit will make it think
             # we're in Flux units.
@@ -370,6 +372,8 @@ class UnitConversion(PluginTemplateMixin):
         # after surface brightness
         if not self.flux_unit.choices:
             return
+
+        print('in translate')
 
         selected_display_solid_angle_unit = u.Unit(self.angle_unit_selected)
         spec_axis_ang_unit = check_if_unit_is_per_solid_angle(spec_units)
