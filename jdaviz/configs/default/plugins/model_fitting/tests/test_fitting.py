@@ -76,6 +76,7 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
         plugin.vue_add_model({})
 
 
+@pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
 
     flux_unit = u.nJy
@@ -396,7 +397,6 @@ def test_incompatible_units(specviz_helper, spectrum1d):
         mf.calculate_fit(add_data=True)
 
 
-@pytest.mark.skip(reason="unskip after 3190")
 def test_cube_fit_with_nans(cubeviz_helper):
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
@@ -412,8 +412,11 @@ def test_cube_fit_with_nans(cubeviz_helper):
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
 
+    # Switch back to non-cube fit, check that units are marked incompatible
+    mf.cube_fit = False
+    assert mf._obj.component_models[0]['compat_display_units'] is False
 
-@pytest.mark.skip(reason="unskip after 3190")
+
 def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     # Also test with existing mask
     flux = np.ones((7, 8, 9)) * u.nJy
@@ -434,3 +437,43 @@ def test_cube_fit_with_subset_and_nans(cubeviz_helper):
         mf.calculate_fit()
     result = cubeviz_helper.app.data_collection['model']
     assert np.all(result.get_component("flux").data == 1)
+
+
+def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian):
+    cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label="test")
+
+    uc = cubeviz_helper.plugins['Unit Conversion']
+    mf = cubeviz_helper.plugins['Model Fitting']
+    uc.flux_unit = "MJy"
+    mf.cube_fit = True
+
+    mf.create_model_component("Const1D")
+    # Check that the parameter is using the current units when initialized
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'MJy / sr'
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit()
+
+    expected_result_slice = np.array([[9.00e-05, 9.50e-05, 1.00e-04, 1.05e-04],
+                                      [9.10e-05, 9.60e-05, 1.01e-04, 1.06e-04],
+                                      [9.20e-05, 9.70e-05, 1.02e-04, 1.07e-04],
+                                      [9.30e-05, 9.80e-05, 1.03e-04, 1.08e-04],
+                                      [9.40e-05, 9.90e-05, 1.04e-04, 1.09e-04]])
+
+    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    assert model_flux.units == 'MJy / sr'
+    assert np.allclose(model_flux.data[:, :, 1], expected_result_slice)
+
+    # Switch back to Jy, see that the component didn't change but the output does
+    uc.flux_unit = 'Jy'
+    assert mf._obj.component_models[0]['parameters'][0]['unit'] == 'MJy / sr'
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
+        mf.calculate_fit()
+
+    model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
+    assert model_flux.units == 'Jy / sr'
+    assert np.allclose(model_flux.data[:, :, 1], expected_result_slice * 1e6)
+
+    # ToDo: Add a test for a unit change that needs an equivalency
