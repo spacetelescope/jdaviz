@@ -314,6 +314,8 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # moment for using converted units.
         if n_moment == 0:
             # get display units for moment 0 based on unit conversion plugin selection
+            # the 0th item of this dictionary is the surface brightness unit, kept
+            # up to date with choices from the UC plugin
             moment_0_display_unit = self.output_unit_items[0]['unit_str']
 
             # convert unit string to Unit so moment map data can be converted
@@ -321,7 +323,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             # to the choice of selected flux and angle unit from the UC plugin.
             display_unit = u.Unit(moment_0_display_unit)
 
-            moment_new_unit = display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
+            moment_new_unit = display_unit * self.app._get_display_unit('spectral')  # noqa: E501
 
             self.moment = self.moment.to(moment_new_unit)
 
