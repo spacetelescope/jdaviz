@@ -165,6 +165,8 @@ def test_fit_cube_no_wcs(cubeviz_helper):
     mf = cubeviz_helper.plugins['Model Fitting']
     mf.create_model_component('Linear1D')
     mf.cube_fit = True
+    # Need to manually reestimate the parameters to update the units
+    mf.reestimate_model_parameters()
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Model is linear in parameters.*")
         fitted_model, output_cube = mf.calculate_fit(add_data=True)
