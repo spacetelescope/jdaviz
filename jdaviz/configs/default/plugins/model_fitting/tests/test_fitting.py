@@ -462,3 +462,5 @@ def test_cube_fit_after_unit_change(cubeviz_helper, spectrum1d_cube_fluxunit_jy_
     model_flux = cubeviz_helper.app.data_collection[-1].get_component('flux')
     assert model_flux.units == 'Jy / sr'
     assert np.allclose(model_flux.data[:, :, 1], expected_result_slice * 1e6)
+
+    # ToDo: Add a test for a unit change that needs an equivalency
