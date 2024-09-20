@@ -984,8 +984,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 models_to_fit,
                 self.model_equation,
                 run_fitter=True,
-                window=None,
-                n_cpu=1  # Remove this after debugging!
+                window=None
             )
         except ValueError:
             snackbar_message = SnackbarMessage(
