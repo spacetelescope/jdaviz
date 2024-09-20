@@ -139,7 +139,7 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
                                            cube_unit):
     # tests aperture photometry outputs between different inputs of flux (which
     # should be converted to a surface brighntess after loading), flux per sr
-    # and flux per square pixel. the pixel area for per steraidan cubes is
+    # and flux per square pixel. the pixel area for per steradian cubes is
     # set so the output values between units will be the same
 
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit)

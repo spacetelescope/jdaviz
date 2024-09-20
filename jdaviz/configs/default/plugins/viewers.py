@@ -783,7 +783,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                     flux_unit_type = "Surface Brightness"
                 elif y_unit.is_equivalent(un):
                     flux_unit_type = 'Flux'
-                elif y_unit.is_equivalent(u.electron / u.s) or y_unit.physical_type == 'dimensionless':
+                elif y_unit.is_equivalent(u.electron / u.s) or y_unit.physical_type == 'dimensionless':  # noqa
                     # electron / s or 'dimensionless_unscaled' should be labeled counts
                     flux_unit_type = "Counts"
                 elif y_unit.is_equivalent(u.W):
