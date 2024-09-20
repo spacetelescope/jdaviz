@@ -1345,8 +1345,7 @@ class Application(VuetifyTemplate, HubListener):
                 raise ValueError(f"could not find units for axis='{axis}'")
         uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
         if axis == 'spectral_y':
-            # translate options from uc.spectral_y_type to the prefix used in uc.??_unit_selected
-            axis = {'Surface Brightness': 'sb', 'Flux': 'flux'}[uc.spectral_y_type_selected]
+            return uc.spectral_y_unit
         try:
             return getattr(uc, f'{axis}_unit_selected')
         except AttributeError:

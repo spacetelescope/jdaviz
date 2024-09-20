@@ -69,6 +69,9 @@ class UnitConversion(PluginTemplateMixin):
       derived from the set values of ``flux_unit`` and ``angle_unit``.
     * ``spectral_y_type`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Select the y-axis physical type for the spectrum-viewer (applicable only to Cubeviz).
+    * ``spectral_y_unit``: Read-only property for the current y-axis unit in the spectrum-viewer,
+      either ``flux_unit`` or ``sb_unit`` depending on the selected ``spectral_y_type``
+      (applicable only to Cubeviz).
     """
     template_file = __file__, "unit_conversion.vue"
 
@@ -161,7 +164,7 @@ class UnitConversion(PluginTemplateMixin):
         if self.has_time:
             expose += ['time_unit']
         if self.config == 'cubeviz':
-            expose += ['spectral_y_type']
+            expose += ['spectral_y_type', 'spectral_y_unit']
         return PluginUserApi(self, expose=expose, readonly=readonly)
 
     @property
@@ -169,6 +172,10 @@ class UnitConversion(PluginTemplateMixin):
         # expose selected surface-brightness unit as read-only
         # (rather than exposing a select object)
         return self.sb_unit_selected
+
+    @property
+    def spectral_y_unit(self):
+        return self.sb_unit_selected if self.spectral_y_type_selected == 'Surface Brightness' else self.flux_unit_selected  # noqa
 
     def _on_add_data_to_viewer(self, msg):
         # toggle warning message for cubes without PIXAR_SR defined
@@ -182,10 +189,10 @@ class UnitConversion(PluginTemplateMixin):
 
         viewer = msg.viewer
 
-        if not (len(self.spectral_unit_selected)
-                and len(self.flux_unit_selected)
-                and len(self.angle_unit_selected)
-                and (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
+        if (not len(self.spectral_unit_selected)
+                or not len(self.flux_unit_selected)
+                or not len(self.angle_unit_selected)
+                or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
 
             data_obj = msg.data.get_object()
             if isinstance(data_obj, Spectrum1D):
@@ -240,11 +247,11 @@ class UnitConversion(PluginTemplateMixin):
         # or handle other cases for ramp profile viewers
         if isinstance(viewer, JdavizProfileView):
             if (viewer.state.x_display_unit == self.spectral_unit_selected
-                    and viewer.state.y_display_unit == self.app._get_display_unit('spectral_y')):
+                    and viewer.state.y_display_unit == self.spectral_y_unit):
                 # data already existed in this viewer and display units were already set
                 return
 
-            # this spectral viewer was empty (did not have display units set yet),
+            # this spectral viewer was empty (did not have display units set yet),˜
             # but global selections are available in the plugin,
             # so we'll set them to the viewer here
             viewer.state.x_display_unit = self.spectral_unit_selected
@@ -279,8 +286,9 @@ class UnitConversion(PluginTemplateMixin):
         elif axis == 'flux':
             if len(self.angle_unit_selected):
                 # NOTE: setting sb_unit_selected will call this method again with axis=='sb',
-                # which in turn will call _handle_spectral_y_unit and
-                # send a second GlobalDisplayUnitChanged message for sb
+                # which in turn will call _handle_attribute_display_unit,
+                # _handle_spectral_y_unit (if spectral_y_type_selected == 'Surface Brightness'),
+                #  and send a second GlobalDisplayUnitChanged message for sb
                 self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected,
                                                          self.angle_unit.selected)
 
@@ -289,8 +297,10 @@ class UnitConversion(PluginTemplateMixin):
 
         elif axis == 'angle':
             if len(self.flux_unit_selected):
-                # NOTE: setting sb_unit_selected will call this method again and
-                # send a second GlobalDisplayUnitChanged message for sb
+                # NOTE: setting sb_unit_selected will call this method again with axis=='sb',
+                # which in turn will call _handle_attribute_display_unit,
+                # _handle_spectral_y_unit (if spectral_y_type_selected == 'Surface Brightness'),
+                #  and send a second GlobalDisplayUnitChanged message for sb
                 self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected,
                                                          self.angle_unit.selected)
 
@@ -315,9 +325,9 @@ class UnitConversion(PluginTemplateMixin):
         the spectrum viewer with the new unit, and then emit a
         GlobalDisplayUnitChanged message to notify
         """
-        yunit_selected = self.sb_unit_selected if self.spectral_y_type_selected == 'Surface Brightness' else self.flux_unit_selected  # noqa
-        yunit = _valid_glue_display_unit(yunit_selected, self.spectrum_viewer, 'y')
+        yunit = _valid_glue_display_unit(self.spectral_y_unit, self.spectrum_viewer, 'y')
         if self.spectrum_viewer.state.y_display_unit == yunit:
+            self.spectrum_viewer.set_plot_axes()
             return
         try:
             self.spectrum_viewer.state.y_display_unit = yunit
@@ -346,7 +356,10 @@ class UnitConversion(PluginTemplateMixin):
             # DQ layer doesn't play nicely with this attribute
             if "DQ" in layer.layer.label or isinstance(layer.layer, GroupedSubset):
                 continue
-            elif u.Unit(layer.layer.get_component("flux").units).physical_type != 'surface brightness':  # noqa
+            elif ("flux" not in [str(c) for c in layer.layer.components]
+                    or u.Unit(layer.layer.get_component("flux").units).physical_type != 'surface brightness'):  # noqa
                 continue
-            if hasattr(layer, 'attribute_display_unit'):
-                layer.attribute_display_unit = attr_unit
+            if hasattr(layer.state, 'attribute_display_unit'):
+                layer.state.attribute_display_unit = _valid_glue_display_unit(attr_unit,
+                                                                              layer,
+                                                                              'attribute')

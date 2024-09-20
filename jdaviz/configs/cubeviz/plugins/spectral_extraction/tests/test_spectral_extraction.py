@@ -584,6 +584,7 @@ def test_spectral_extraction_unit_conv_one_spec(
     uc = cubeviz_helper.plugins["Unit Conversion"]
     assert uc.flux_unit == "Jy"
     uc.flux_unit.selected = "MJy"
+    assert spectrum_viewer.state.y_display_unit == "MJy"
     spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']
     # Overwrite the one and only default extraction.
     collapsed = spec_extr_plugin.extract()
