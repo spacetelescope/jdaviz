@@ -594,7 +594,7 @@ def convert_spectrum1d_from_flux_to_flux_per_pixel(spectrum):
     Returns
     -------
     Spectrum1D
-        A new `Spectrum1D` object with flux and uncertainty (if present)
+        A new `specutils.Spectrum1D` object with flux and uncertainty (if present)
         converted to units of flux per square pixel.
     """
 
@@ -624,7 +624,7 @@ def convert_spectrum1d_from_flux_to_flux_per_pixel(spectrum):
 
     # initialize new spectrum1d with new flux, uncerts, and all other init parameters
     # from old input spectrum as well as any 'meta'. any more missing information
-    # not in init signiture that might be present in `spectrum`?
+    # not in init signature that might be present in `spectrum`?
     new_spec1d = Spectrum1D(flux=flux, uncertainty=uncerts,
                             spectral_axis=spectrum.spectral_axis,
                             mask=spectrum.mask,
