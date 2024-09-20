@@ -579,16 +579,16 @@ def convert_spectrum1d_from_flux_to_flux_per_pixel(spectrum):
     """
     Converts a Spectrum1D object's flux units to flux per square pixel.
 
-    This function takes a `Spectrum1D` object with flux units and converts the
+    This function takes a `specutils.Spectrum1D` object with flux units and converts the
     flux (and optionally, uncertainty) to a surface brightness per square pixel
     (e.g., from Jy to Jy/pix**2). This is done by updating the units of spectrum.flux
-    and (if present) spectrum.uncertainty, and creating a new `Spectrum1D`
+    and (if present) spectrum.uncertainty, and creating a new `specutils.Spectrum1D`
     object with the modified flux and uncertainty.
 
     Parameters
     ----------
     spectrum : Spectrum1D
-        A `Spectrum1D` object containing flux data, which is assumed to be in
+        A `specutils.Spectrum1D` object containing flux data, which is assumed to be in
         flux units without any angular component in the denominator.
 
     Returns
