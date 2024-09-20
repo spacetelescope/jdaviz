@@ -76,14 +76,23 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
         plugin.vue_add_model({})
 
 
-@pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
+
+    flux_unit = u.nJy
+    sb_unit = flux_unit / (u.pix * u.pix)
+    wav_unit = u.Hz
+
     flux = np.ones((3, 4, 5))
     flux[2, 2, :] = [1, 2, 3, 4, 5]
-    cubeviz_helper.load_data(Spectrum1D(flux=flux * u.nJy, wcs=spectral_cube_wcs),
+    cubeviz_helper.load_data(Spectrum1D(flux=flux * flux_unit, wcs=spectral_cube_wcs),
                              data_label='test')
+
     plugin = cubeviz_helper.plugins["Model Fitting"]
+
+    # since cube_fit is true, output fit should be in SB units
+    # even though the spectral y axis is in 'flux' by default
     plugin.cube_fit = True
+
     plugin.create_model_component("Linear1D", "L")
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')
@@ -92,14 +101,15 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     params = cubeviz_helper.get_model_parameters()
     slope_res = np.zeros((3, 4))
     slope_res[2, 2] = 1.0
-    slope_res = slope_res * u.nJy / u.Hz
+
+    slope_res = slope_res * sb_unit / wav_unit
     intercept_res = np.ones((3, 4))
     intercept_res[2, 2] = 0
-    intercept_res = intercept_res * u.nJy
+    intercept_res = intercept_res * sb_unit
     assert_quantity_allclose(params['model']['slope'], slope_res,
-                             atol=1e-10 * u.nJy / u.Hz)
+                             atol=1e-10 * sb_unit / wav_unit)
     assert_quantity_allclose(params['model']['intercept'], intercept_res,
-                             atol=1e-10 * u.nJy)
+                             atol=1e-10 * sb_unit)
 
 
 @pytest.mark.parametrize('unc', ('zeros', None))
@@ -225,6 +235,8 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     assert isinstance(fitted_spectrum, Spectrum1D)
     assert len(fitted_spectrum.shape) == 3
     assert fitted_spectrum.shape == (IMAGE_SIZE_X, IMAGE_SIZE_Y, SPECTRUM_SIZE)
+
+    # since were not loading data into app, results are just u.Jy not u.Jy / pix2
     assert fitted_spectrum.flux.unit == u.Jy
     assert not np.all(fitted_spectrum.flux.value == 0)
 
@@ -275,7 +287,9 @@ def test_cube_fitting_backend(cubeviz_helper, unc, tmp_path):
     data_sci = cubeviz_helper.app.data_collection["fitted_cube.fits[SCI]"]
     flux_sci = data_sci.get_component("flux")
     assert_allclose(flux_sci.data, fitted_spectrum.flux.value)
-    assert flux_sci.units == flux_unit_str
+    # now that the flux cube was loaded into cubeviz, there will be a factor
+    # of pix2 applied to the flux unit
+    assert flux_sci.units == f'{flux_unit_str} / pix2'
     coo = data_sci.coords.pixel_to_world(1, 0, 2)
     assert_allclose(coo[0].value, coo_expected[0].value)  # SpectralCoord
     assert_allclose([coo[1].ra.deg, coo[1].dec.deg],
@@ -382,7 +396,6 @@ def test_incompatible_units(specviz_helper, spectrum1d):
         mf.calculate_fit(add_data=True)
 
 
-@pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_cube_fit_with_nans(cubeviz_helper):
     flux = np.ones((7, 8, 9)) * u.nJy
     flux[:, :, 0] = np.nan
@@ -403,7 +416,6 @@ def test_cube_fit_with_nans(cubeviz_helper):
     assert mf._obj.component_models[0]['compat_display_units'] is False
 
 
-@pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_cube_fit_with_subset_and_nans(cubeviz_helper):
     # Also test with existing mask
     flux = np.ones((7, 8, 9)) * u.nJy

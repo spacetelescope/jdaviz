@@ -25,6 +25,7 @@ from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_mod
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
                                                                        initialize,
                                                                        get_model_parameters)
+from jdaviz.utils import _eqv_flux_to_sb_pixel
 
 __all__ = ['ModelFitting']
 
@@ -534,7 +535,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             init_x = masked_spectrum.spectral_axis
             init_y = masked_spectrum.flux
 
-        init_y = init_y.to(self._units['y'], u.spectral_density(init_x))
+        # equivs for spectral density and flux<>flux/pix2. revisit
+        # when generalizing plugin UC equivs.
+        equivs = _eqv_flux_to_sb_pixel() + [u.spectral_density(init_x)]
+        init_y = init_y.to(self._units['y'], equivs)
 
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,

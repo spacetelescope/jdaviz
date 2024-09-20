@@ -3,7 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import astropy
-import astropy.units as u
 from astropy.nddata import (
     NDDataArray, StdDevUncertainty
 )
@@ -24,6 +23,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
 
@@ -506,9 +506,16 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             collapsed_nddata = getattr(nddata_reshaped, selected_func)(
                 axis=self.spatial_axes, **kwargs
             )  # returns an NDDataArray
-            # Remove per steradian denominator
-            if astropy.units.sr in collapsed_nddata.unit.bases:
-                aperture_area = self.cube.meta.get('PIXAR_SR', 1.0) * u.sr
+
+            # Remove per solid angle denominator to turn sb into flux
+            sq_angle_unit = check_if_unit_is_per_solid_angle(collapsed_nddata.unit,
+                                                             return_unit=True)
+            if sq_angle_unit is not None:
+                # convert aperture area in steradians to the selected square angle unit
+                # NOTE: just forcing these units for now!! this is in steradians and
+                # needs to be converted to the selected square angle unit but for now just
+                # force to correct units
+                aperture_area = self.cube.meta.get('PIXAR_SR', 1.0) * sq_angle_unit
                 collapsed_nddata = collapsed_nddata.multiply(aperture_area,
                                                              propagate_uncertainties=True)
         else:

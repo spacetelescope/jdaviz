@@ -95,7 +95,8 @@
             persistent-hint
           />
         </v-row>
-        <v-row v-if="!multiselect || !pixel_area_multi_auto">
+        <v-row v-if="(!multiselect || !pixel_area_multi_auto) && display_solid_angle_unit!='pix2'">
+
           <v-text-field
             label="Pixel area"
             v-model.number="pixel_area"

@@ -12,10 +12,21 @@ from glue.core.roi import XRangeROI
 from numpy.testing import assert_allclose
 
 
-def test_user_api(cubeviz_helper, spectrum1d_cube):
+@pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
+def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube_type):
+
+    # test is parameterize to test a cube that is in Jy / sr (Surface Brightness)
+    # as well as Jy (Flux), to test that flux cubes, which are converted in the
+    # parser to flux / pix^2 surface brightness cubes, both work correctly.
+
+    if cube_type == 'Surface Brightness':
+        cube = spectrum1d_cube_sb_unit
+    elif cube_type == 'Flux':
+        cube = spectrum1d_cube
+
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+        cubeviz_helper.load_data(cube, data_label='test')
 
     mm = cubeviz_helper.plugins['Moment Maps']
     assert not mm._obj.continuum_marks['center'].visible
@@ -43,20 +54,33 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
         mm.n_moment = 1
         with pytest.raises(ValueError, match="not one of"):
             mm._obj.output_unit_selected = "Bad Unit"
-        mm._obj.output_unit_selected = "Flux"
+        mm._obj.output_unit_selected = "Surface Brightness"
         with pytest.raises(ValueError, match="units must be in"):
             mm.calculate_moment()
 
 
-def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
+@pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
+def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
+                            spectrum1d_cube_sb_unit, cube_type, tmp_path):
 
     moment_unit = "Jy m"
     moment_value_str = "+6.40166e-10"
 
+    if cube_type == 'Surface Brightness':
+        moment_unit += " / sr"
+        cube = spectrum1d_cube_sb_unit
+        cube_unit = cube.unit.to_string()
+
+    elif cube_type == 'Flux':
+        moment_unit += " / pix2"
+        cube = spectrum1d_cube
+        cube_unit = cube.unit.to_string() + " / pix2"  # cube in Jy will become cube in Jy / pix2
+
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+        cubeviz_helper.load_data(cube, data_label='test')
+
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
 
     # Since we are not really displaying, need this to trigger GUI stuff.
@@ -68,7 +92,9 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
 
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
     assert mm._obj.results_label == 'moment 0'
-    assert mm.output_unit == "Flux"
+
+    # result is always a SB unit - if flux cube loaded, per pix2
+    assert mm.output_unit == 'Surface Brightness'
 
     mm._obj.add_results.viewer.selected = cubeviz_helper._default_uncert_viewer_reference_name
     mm._obj.vue_calculate_moment()
@@ -88,13 +114,13 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     assert mm._obj.results_label == 'moment 0'
     assert mm._obj.results_label_overwrite is True
 
-    # Make sure coordinate display works
+    # Make sure coordinate display works in flux viewer (loaded data, not the moment map)
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.state.slices == (0, 0, 1)
     # Slice 0 has 8 pixels, this is Slice 1
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
+    assert label_mouseover.as_text() == (f"Pixel x=00.0 y=00.0 Value +8.00000e+00 {cube_unit}",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 
@@ -290,7 +316,7 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
                     (sky_cube.ra.deg, sky_cube.dec.deg))
 
 
-def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
+def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
 
     moment_unit = "Jy m / sr"
 

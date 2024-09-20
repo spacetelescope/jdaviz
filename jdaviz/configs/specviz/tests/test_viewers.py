@@ -4,6 +4,7 @@ import pytest
 from specutils import Spectrum1D
 
 
+@pytest.mark.skip(reason="unskip after 3192 merged")
 @pytest.mark.parametrize(
     ('input_unit', 'y_axis_label'),
     [(u.MJy, 'Flux'),

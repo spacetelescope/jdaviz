@@ -189,6 +189,7 @@ class UnitConversion(PluginTemplateMixin):
         x_unit = u.Unit(self.spectral_unit.selected)
         y_unit_str = _valid_glue_display_unit(y_unit_str, self.spectrum_viewer, 'y')
         y_unit = u.Unit(y_unit_str)
+        y_unit_solid_angle = check_if_unit_is_per_solid_angle(y_unit_str, return_unit=True)
 
         if not check_if_unit_is_per_solid_angle(y_unit_str) and y_unit_str != self.flux_unit.selected:  # noqa
             flux_choices = create_flux_equivalencies_list(y_unit, x_unit)
@@ -201,10 +202,11 @@ class UnitConversion(PluginTemplateMixin):
 
         # if the y-axis is set to surface brightness,
         # untranslatable units need to be removed from the flux choices
-        if check_if_unit_is_per_solid_angle(y_unit_str):
-            flux_choices = create_flux_equivalencies_list(y_unit * u.sr, x_unit)
+        if y_unit_solid_angle:
+            flux_choices = [(y_unit * y_unit_solid_angle).to_string()]
+            flux_choices += create_flux_equivalencies_list(y_unit * y_unit_solid_angle, x_unit)
             self.flux_unit.choices = flux_choices
-            flux_unit = str(y_unit * u.sr)
+            flux_unit = str(y_unit * y_unit_solid_angle)
             # We need to set the angle_unit before triggering _on_flux_unit_changed via
             # setting self.flux_unit.selected below, or the lack of angle unit will make it think
             # we're in Flux units.
@@ -216,7 +218,11 @@ class UnitConversion(PluginTemplateMixin):
         # sets the angle unit drop down and the surface brightness read-only text
         if self.app.data_collection[0]:
             dc_unit = self.app.data_collection[0].get_component("flux").units
-            self.angle_unit.choices = create_angle_equivalencies_list(dc_unit)
+
+            # angle choices will be angle equivalencies to the solid-angle component of the cube
+            dc_solid_angle_unit = check_if_unit_is_per_solid_angle(dc_unit, return_unit=True)
+
+            self.angle_unit.choices = create_angle_equivalencies_list(dc_solid_angle_unit)
             self.angle_unit.selected = self.angle_unit.choices[0]
             self.sb_unit_selected = self._append_angle_correctly(
                 self.flux_unit.selected,
@@ -238,7 +244,8 @@ class UnitConversion(PluginTemplateMixin):
 
             if not self.flux_unit.selected:
                 y_display_unit = self.spectrum_viewer.state.y_display_unit
-                self.flux_unit.selected = (str(u.Unit(y_display_unit * u.sr)))
+                flux_unit_str = str(u.Unit(y_display_unit * y_unit_solid_angle))
+                self.flux_unit.selected = flux_unit_str
 
     @observe('spectral_unit_selected')
     def _on_spectral_unit_changed(self, *args):
@@ -350,6 +357,7 @@ class UnitConversion(PluginTemplateMixin):
                     layer.attribute_display_unit = yunit
 
     def _translate(self, spectral_y_type=None):
+
         # currently unsupported, can be supported with a scale factor
         if self.app.config == 'specviz':
             return
@@ -364,18 +372,21 @@ class UnitConversion(PluginTemplateMixin):
         if not self.flux_unit.choices:
             return
 
+        selected_display_solid_angle_unit = u.Unit(self.angle_unit_selected)
+        spec_axis_ang_unit = check_if_unit_is_per_solid_angle(spec_units)
+
         # Surface Brightness -> Flux
-        if check_if_unit_is_per_solid_angle(spec_units) and spectral_y_type == 'Flux':
-            spec_units *= u.sr
+        if spec_axis_ang_unit and spectral_y_type == 'Flux':
+            spec_units *= selected_display_solid_angle_unit
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
 
         # Flux -> Surface Brightness
-        elif (not check_if_unit_is_per_solid_angle(spec_units)
-              and spectral_y_type == 'Surface Brightness'):
-            spec_units /= u.sr
+        elif (not spec_axis_ang_unit and spectral_y_type == 'Surface Brightness'):
+            spec_units /= selected_display_solid_angle_unit
             # update display units
             self.spectrum_viewer.state.y_display_unit = str(spec_units)
+
         # entered the translator when we shouldn't translate
         else:
             return
@@ -388,7 +399,7 @@ class UnitConversion(PluginTemplateMixin):
         self.spectrum_viewer.reset_limits()
 
     def _append_angle_correctly(self, flux_unit, angle_unit):
-        if angle_unit not in ['pix', 'sr']:
+        if angle_unit not in ['pix2', 'sr']:
             self.sb_unit_selected = flux_unit
             return flux_unit
         if '(' in flux_unit:
@@ -399,6 +410,9 @@ class UnitConversion(PluginTemplateMixin):
             sb_unit_selected = flux_unit + ' / ' + angle_unit
 
         if sb_unit_selected:
-            self.sb_unit_selected = sb_unit_selected
+            # convert string to and from u.Unit to get rid of any
+            # formatting inconstancies, order of units in string
+            # for a composite unit matters
+            sb_unit_selected = u.Unit(sb_unit_selected).to_string()
 
         return sb_unit_selected

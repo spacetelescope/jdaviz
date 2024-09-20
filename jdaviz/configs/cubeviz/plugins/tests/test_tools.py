@@ -68,8 +68,22 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert uncert_viewer.toolbar.active_tool._mark.visible is True
 
 
-def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+@pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
+def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
+                                        spectrum1d_cube_sb_unit, cube_type):
+
+    # test is parameterize to test a cube that is in Jy / sr (Surface Brightness)
+    # as well as Jy (Flux), to test that flux cubes, which are converted in the
+    # parser to flux / pix^2 surface brightness cubes, both work correctly.
+
+    if cube_type == 'Surface Brightness':
+        cube = spectrum1d_cube_sb_unit
+        cube_unit = 'Jy / sr'
+    elif cube_type == 'Flux':
+        cube = spectrum1d_cube
+        cube_unit = 'Jy / pix2'
+
+    cubeviz_helper.load_data(cube, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
@@ -88,7 +102,7 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 2, 'y': 1}})
-    assert label_mouseover.as_text() == ('Pixel x=02.0 y=01.0 Value +1.40000e+01 Jy',
+    assert label_mouseover.as_text() == (f'Pixel x=02.0 y=01.0 Value +1.40000e+01 {cube_unit}',
                                          'World 13h39m59.9192s +27d00m00.7200s (ICRS)',
                                          '204.9996633015 27.0001999996 (deg)')
 
@@ -122,7 +136,7 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     # Make sure coordinate info panel did not change
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
-    assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.30000e+01 Jy',
+    assert label_mouseover.as_text() == (f'Pixel x=01.0 y=01.0 Value +1.30000e+01 {cube_unit}',
                                          'World 13h39m59.9461s +27d00m00.7200s (ICRS)',
                                          '204.9997755344 27.0001999998 (deg)')
 

@@ -78,15 +78,27 @@ class UnitConverterWithSpectral:
                     'Jy', 'mJy', 'uJy', 'MJy',
                     'W / (Hz m2)', 'eV / (Hz s m2)',
                     'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
-                    'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)'
+                    'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)',
+                    'ct'
                 ]
                 + [
                     'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
                     'W / (Hz sr m2)', 'eV / (Hz s sr m2)',
                     'erg / (s sr cm2)', 'erg / (Hz s sr cm2)',
                     'erg / (Angstrom s sr cm2)',
-                    'ph / (Angstrom s sr cm2)', 'ph / (Hz s sr cm2)'
-                ])
+                    'ph / (Angstrom s sr cm2)', 'ph / (Hz s sr cm2)',
+                    'ct / sr'
+                ]
+                + [
+                    'Jy / pix2', 'mJy / pix2', 'uJy / pix2', 'MJy / pix2',
+                    'W / (Hz m2 pix2)', 'eV / (Hz s m2 pix2)',
+                    'erg / (s cm2 pix2)', 'erg / (Hz s cm2 pix2)',
+                    'erg / (Angstrom s cm2 pix2)',
+                    'ph / (Angstrom s cm2 pix2)', 'ph / (Hz s cm2 pix2)',
+                    'ct / pix2'
+                ]
+
+                )
         else:  # spectral axis
             # prefer Hz over Bq and um over micron
             exclude = {'Bq', 'micron'}
@@ -1294,16 +1306,38 @@ class Application(VuetifyTemplate, HubListener):
                 sv_y_unit = sv.data()[0].flux.unit
                 if axis == 'spectral_y':
                     return sv_y_unit
-                elif axis == 'flux':
-                    if check_if_unit_is_per_solid_angle(sv_y_unit):
-                        # TODO: this will need updating once solid-angle unit can be non-steradian
-                        return sv_y_unit * u.sr
+                # since this is where we're falling back on native units (UC plugin might not exist)
+                # first check the spectrum viewer y axis for any solid angle unit (i think that it
+                # will ALWAYS be in flux, but just to be sure). If no solid angle unit is found,
+                # check the flux viewer for surface brightness units
+                sv_y_angle_unit = check_if_unit_is_per_solid_angle(sv_y_unit, return_unit=True)
+
+                # check flux viewer if none in spectral viewer
+                fv_angle_unit = None
+                if not sv_y_angle_unit:
+                    if hasattr(self._jdaviz_helper, '_default_flux_viewer_reference_name'):
+                        vname = self._jdaviz_helper._default_flux_viewer_reference_name
+                        fv = self.get_viewer(vname)
+                        fv_unit = fv.data()[0].get_object().flux.unit
+                        fv_angle_unit = check_if_unit_is_per_solid_angle(fv_unit,
+                                                                         return_unit=True)
+                    else:
+                        # mosviz, not sure what to do here but can't access flux
+                        # viewer the same way. once we force the UC plugin to
+                        # exist this won't matter anyway because units can be
+                        # acessed from the plugin directly. assume u.sr for now
+                        fv_angle_unit = u.sr
+
+                solid_angle_unit = sv_y_angle_unit or fv_angle_unit
+
+                if axis == 'flux':
+                    if sv_y_angle_unit:
+                        return sv_y_unit * solid_angle_unit
                     return sv_y_unit
-                else:
-                    # surface_brightness
-                    if check_if_unit_is_per_solid_angle(sv_y_unit):
+                elif axis == 'sb':
+                    if sv_y_angle_unit:
                         return sv_y_unit
-                    return sv_y_unit / u.sr
+                    return sv_y_unit / solid_angle_unit
             elif axis == 'temporal':
                 # No unit for ramp's time (group/resultant) axis:
                 return None

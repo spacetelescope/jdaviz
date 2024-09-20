@@ -31,7 +31,9 @@ from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache
 from jdaviz.core.user_api import ViewerUserApi
 from jdaviz.utils import (ColorCycler, get_subset_type, _wcs_only_label,
-                          layer_is_image_data, layer_is_not_dq)
+                          layer_is_image_data, layer_is_not_dq,
+                          _eqv_sb_per_pixel_to_per_angle)
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 uc = UnitConverter()
 
@@ -754,24 +756,43 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
             u.bol, u.AB, u.ST
         ]
 
-        locally_defined_sb_units = [
-            unit / u.sr for unit in locally_defined_flux_units
-            ]
-
-        if any(y_unit.is_equivalent(unit) for unit in locally_defined_sb_units):
-            flux_unit_type = "Surface Brightness"
-        elif any(y_unit.is_equivalent(unit) for unit in locally_defined_flux_units):
-            flux_unit_type = 'Flux'
-        elif (
-                y_unit.is_equivalent(u.DN) or
-                y_unit.is_equivalent(u.electron / u.s) or
-                y_unit.physical_type == 'dimensionless'
-        ):
-            # electron / s or 'dimensionless_unscaled' should be labeled counts
-            flux_unit_type = "Counts"
-        elif y_unit.is_equivalent(u.W):
-            flux_unit_type = "Luminosity"
+        # get square angle from 'sb' display unit
+        sb_unit = self.jdaviz_app._get_display_unit(axis='sb')
+        if sb_unit is not None:
+            solid_angle_unit = check_if_unit_is_per_solid_angle(sb_unit, return_unit=True)
         else:
+            solid_angle_unit = None
+
+        # if solid angle is present in denominator, check physical type of numerator
+        # if numerator is a flux type the display unit is a 'surface brightness', otherwise
+        # default to the catchall 'flux density' label
+        flux_unit_type = None
+
+        if solid_angle_unit is not None:
+
+            for un in locally_defined_flux_units:
+                locally_defined_sb_unit = un / solid_angle_unit
+
+                # create an equivalency for each flux unit for flux <> flux/pix2.
+                # for similar reasons to the 'untranslatable units' issue, custom
+                # equivs. can't be combined, so a workaround is creating an eqiv
+                # for each flux that may need an additional equiv.
+                angle_to_pixel_equiv = _eqv_sb_per_pixel_to_per_angle(un)
+
+                if y_unit.is_equivalent(locally_defined_sb_unit, angle_to_pixel_equiv):
+                    flux_unit_type = "Surface Brightness"
+                elif y_unit.is_equivalent(un):
+                    flux_unit_type = 'Flux'
+                elif y_unit.is_equivalent(u.electron / u.s) or y_unit.physical_type == 'dimensionless':  # noqa
+                    # electron / s or 'dimensionless_unscaled' should be labeled counts
+                    flux_unit_type = "Counts"
+                elif y_unit.is_equivalent(u.W):
+                    flux_unit_type = "Luminosity"
+                if flux_unit_type is not None:
+                    # if we determined a label, stop checking
+                    break
+
+        if flux_unit_type is None:
             # default to Flux Density for flux density or uncaught types
             flux_unit_type = "Flux density"
 

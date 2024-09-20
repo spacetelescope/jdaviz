@@ -8,9 +8,10 @@ from astropy.io import fits
 from astropy.nddata import StdDevUncertainty
 from astropy.time import Time
 from astropy.wcs import WCS
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectralAxis
 
 from jdaviz.core.registries import data_parser_registry
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
 
@@ -177,15 +178,27 @@ def _get_celestial_wcs(wcs):
     return wcs.celestial if hasattr(wcs, 'celestial') else None
 
 
-def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=None,
-                                        hdulist=None, uncertainty=None, mask=None):
+def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type,
+                                        target_wave_unit=None, hdulist=None,
+                                        uncertainty=None, mask=None, apply_pix2=False):
     """Upstream issue of WCS not using the correct units for data must be fixed here.
-    Issue: https://github.com/astropy/astropy/issues/3658
+    Issue: https://github.com/astropy/astropy/issues/3658.
+
+    Also converts flux units to flux/pix2 solid angle units, if `flux` is not a surface
+    brightness and `apply_pix2` is True.
     """
     with warnings.catch_warnings():
         warnings.filterwarnings(
             'ignore', message='Input WCS indicates that the spectral axis is not last',
             category=UserWarning)
+
+        # convert flux and uncertainty to per-pix2 if input is not a surface brightness
+        if apply_pix2:
+            if not check_if_unit_is_per_solid_angle(flux.unit):
+                flux = flux / (u.pix * u.pix)
+                if uncertainty is not None:
+                    uncertainty = uncertainty / (u.pix * u.pix)
+
         sc = Spectrum1D(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask)
 
     if target_wave_unit is None and hdulist is not None:
@@ -281,7 +294,9 @@ def _parse_hdulist(app, hdulist, file_name=None,
         # to sky regions, where the parent data of the subset might have dropped spatial WCS info
         metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
 
-        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+        apply_pix2 = data_type in ['flux', 'uncert']
+        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type,
+                                                 hdulist=hdulist, apply_pix2=apply_pix2)
 
         app.add_data(sc, data_label)
 
@@ -295,7 +310,8 @@ def _parse_hdulist(app, hdulist, file_name=None,
 
         else:  # flux
             # Forced wave unit conversion made it lose stuff, so re-add
-            app.data_collection[data_label].get_component("flux").units = flux_unit
+            # also re-get unit from sc in case a factor of pix2 was applied
+            app.data_collection[data_label].get_component("flux").units = sc.unit
             # Add flux to top left image viewer
             app.add_data_to_viewer(flux_viewer_reference_name, data_label)
             app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
@@ -341,7 +357,6 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     app.add_data(data, data_label, parent=parent)
 
     # get glue data and update if DQ:
-
     if ext == 'DQ':
         # prevent circular import:
         from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
@@ -448,6 +463,11 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
 
             s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=meta)
 
+            # convert data loaded in flux units to a per-square-pixel surface
+            # brightness unit (e.g Jy to Jy/pix**2)
+            if (attr != "mask") and (not check_if_unit_is_per_solid_angle(flux.unit)):
+                s1d = convert_spectrum1d_from_flux_to_flux_per_pixel(s1d)
+
         cur_data_label = app.return_data_label(data_label, attr.upper())
         app.add_data(s1d, cur_data_label)
 
@@ -474,6 +494,11 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
 
+    # convert data loaded in flux units to a per-square-pixel surface
+    # brightness unit (e.g Jy to Jy/pix**2)
+    if not check_if_unit_is_per_solid_angle(file_obj.flux.unit):
+        file_obj = convert_spectrum1d_from_flux_to_flux_per_pixel(file_obj)
+
     app.add_data(file_obj, data_label)
     app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
@@ -496,6 +521,12 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
 
     meta = standardize_metadata({'_orig_spatial_wcs': None})
     s3d = Spectrum1D(flux=flux, meta=meta)
+
+    # convert data loaded in flux units to a per-square-pixel surface
+    # brightness unit (e.g Jy to Jy/pix**2)
+    if not check_if_unit_is_per_solid_angle(s3d.unit):
+        file_obj = convert_spectrum1d_from_flux_to_flux_per_pixel(s3d)
+
     app.add_data(s3d, data_label)
 
     if data_type == 'flux':
@@ -522,6 +553,11 @@ def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None):
     meta = {'filename': file_name, '_orig_spatial_wcs': None}
     s3d = Spectrum1D(flux=flux * u.count, meta=standardize_metadata(meta))
 
+    # convert data loaded in flux units to a per-square-pixel surface
+    # brightness unit (e.g Jy to Jy/pix**2)
+    if not check_if_unit_is_per_solid_angle(s3d):
+        file_obj = convert_spectrum1d_from_flux_to_flux_per_pixel(s3d)
+
     app.add_data(s3d, data_label)
     app.add_data_to_viewer(flux_viewer_reference_name, data_label)
 
@@ -539,3 +575,66 @@ def _get_data_type_by_hdu(hdu):
     else:
         data_type = ''
     return data_type
+
+
+def convert_spectrum1d_from_flux_to_flux_per_pixel(spectrum):
+    """
+    Converts a Spectrum1D object's flux units to flux per square pixel.
+
+    This function takes a `specutils.Spectrum1D` object with flux units and converts the
+    flux (and optionally, uncertainty) to a surface brightness per square pixel
+    (e.g., from Jy to Jy/pix**2). This is done by updating the units of spectrum.flux
+    and (if present) spectrum.uncertainty, and creating a new `specutils.Spectrum1D`
+    object with the modified flux and uncertainty.
+
+    Parameters
+    ----------
+    spectrum : Spectrum1D
+        A `specutils.Spectrum1D` object containing flux data, which is assumed to be in
+        flux units without any angular component in the denominator.
+
+    Returns
+    -------
+    Spectrum1D
+        A new `specutils.Spectrum1D` object with flux and uncertainty (if present)
+        converted to units of flux per square pixel.
+    """
+
+    # convert flux, which is always populated
+    flux = getattr(spectrum, 'flux')
+    flux = flux / (u.pix * u.pix)
+
+    # and uncerts, if present
+    uncerts = getattr(spectrum, 'uncertainty')
+    if uncerts is not None:
+        old_uncerts = uncerts.represent_as(StdDevUncertainty)  # enforce common uncert type.
+        uncerts = old_uncerts.quantity / (u.pix * u.pix)
+
+    # create a new spectrum 1d with all the info from the input spectrum 1d,
+    # and the flux / uncerts converted from flux to SB per square pixel
+
+    # if there is a spectral axis that is a SpectralAxis, you cant also set
+    # redshift or radial_velocity
+    spectral_axis = getattr(spectrum, 'spectral_axis', None)
+    if spectral_axis is not None:
+        if isinstance(spectral_axis, SpectralAxis):
+            redshift = None
+            radial_velocity = None
+        else:
+            redshift = spectrum.redshift
+            radial_velocity = spectrum.radial_velocity
+
+    # initialize new spectrum1d with new flux, uncerts, and all other init parameters
+    # from old input spectrum as well as any 'meta'. any more missing information
+    # not in init signature that might be present in `spectrum`?
+    new_spec1d = Spectrum1D(flux=flux, uncertainty=uncerts,
+                            spectral_axis=spectrum.spectral_axis,
+                            mask=spectrum.mask,
+                            wcs=spectrum.wcs,
+                            velocity_convention=spectrum.velocity_convention,
+                            rest_value=spectrum.rest_value, redshift=redshift,
+                            radial_velocity=radial_velocity,
+                            bin_specification=getattr(spectrum, 'bin_specification', None),
+                            meta=spectrum.meta)
+
+    return new_spec1d
