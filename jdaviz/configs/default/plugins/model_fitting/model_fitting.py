@@ -170,16 +170,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             self.app._jdaviz_helper, '_default_flux_viewer_reference_name', 'flux-viewer'
         )
 
-    @observe('cube_fit')
-    def _cube_fit_changed(self, msg={}):
-        if self.cube_fit:
-            self.dataset.add_filter('is_flux_cube')
-            self.dataset.remove_filter('layer_in_spectrum_viewer')
-        else:
-            self.dataset.add_filter('layer_in_spectrum_viewer')
-            self.dataset.remove_filter('is_flux_cube')
-        self.dataset._clear_cache()
-
     @property
     def user_api(self):
         expose = ['dataset']
@@ -309,6 +299,36 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         else:
             return False
 
+    def _update_viewer_filters(self, event={}):
+        if event.get('new', self.cube_fit):
+            # only want image viewers in the options
+            self.add_results.viewer.filters = ['is_image_viewer']
+        else:
+            # only want spectral viewers in the options
+            self.add_results.viewer.filters = ['is_spectrum_viewer']
+
+    @observe('cube_fit')
+    def _cube_fit_changed(self, event={}):
+        self._update_viewer_filters(event=event)
+
+        sb_unit = self.app._get_display_unit('sb')
+        spectral_y_unit = self.app._get_display_unit('spectral_y')
+        if event.get('new'):
+            self._units['y'] = sb_unit
+            self.dataset.add_filter('is_flux_cube')
+            self.dataset.remove_filter('layer_in_spectrum_viewer')
+        else:
+            self._units['y'] = spectral_y_unit
+            self.dataset.add_filter('layer_in_spectrum_viewer')
+            self.dataset.remove_filter('is_flux_cube')
+
+        self.dataset._clear_cache()
+        if sb_unit != spectral_y_unit:
+            # We make the user hit the reestimate button themselves
+            for model_index, comp_model in enumerate(self.component_models):
+                self.component_models[model_index]["compat_display_units"] = False
+            self.send_state('component_models')
+
     @observe("dataset_selected")
     def _dataset_selected_changed(self, event=None):
         """
@@ -335,11 +355,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # Replace NaNs from collapsed Spectrum1D in Cubeviz
         # (won't affect calculations because these locations are masked)
         selected_spec.flux[np.isnan(selected_spec.flux)] = 0.0
-        # TODO: can we simplify this logic?
-        self._units["x"] = str(
-            selected_spec.spectral_axis.unit)
-        self._units["y"] = str(
-            selected_spec.flux.unit)
 
     def _default_comp_label(self, model, poly_order=None):
         abbrevs = {'BlackBody': 'BB', 'PowerLaw': 'PL', 'Lorentz1D': 'Lo'}
@@ -454,6 +469,16 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                      "parameters": [], "model_kwargs": {}}
         model_cls = MODELS[model_comp]
 
+        # Need to set the units the first time we initialize a model component, after this
+        # we listen for display unit changes
+        if (self._units is None or self._units == {} or 'x' not in self._units or
+                'y' not in self._units):
+            self._units['x'] = self.app._get_display_unit('spectral')
+            if self.cube_fit:
+                self._units['y'] = self.app._get_display_unit('sb')
+            else:
+                self._units['y'] = self.app._get_display_unit('spectral_y')
+
         if model_comp == "Polynomial1D":
             # self.poly_order is the value in the widget for creating
             # the new model component.  We need to store that with the
@@ -482,18 +507,43 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
             initial_values[param_name] = initial_val
 
-        masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
-                                                   self.spectral_subset)
+        if self.cube_fit:
+            # We need to input the whole cube when initializing the model so the units are correct.
+            if self.dataset_selected in self.app.data_collection.labels:
+                data = self.app.data_collection[self.dataset_selected].get_object(statistic=None)
+            else:  # User selected some subset from spectrum viewer, just use original cube
+                data = self.app.data_collection[0].get_object(statistic=None)
+            masked_spectrum = self._apply_subset_masks(data, self.spectral_subset)
+        else:
+            masked_spectrum = self._apply_subset_masks(self.dataset.selected_spectrum,
+                                                       self.spectral_subset)
         mask = masked_spectrum.mask
+        if mask is not None:
+            if mask.ndim == 3:
+                spectral_mask = mask.all(axis=(0, 1))
+            else:
+                spectral_mask = mask
+            init_x = masked_spectrum.spectral_axis[~spectral_mask]
+            orig_flux_shape = masked_spectrum.flux.shape
+            init_y = masked_spectrum.flux[~mask]
+            if mask.ndim == 3:
+                init_y = init_y.reshape(orig_flux_shape[0],
+                                        orig_flux_shape[1],
+                                        len(init_x))
+        else:
+            init_x = masked_spectrum.spectral_axis
+            init_y = masked_spectrum.flux
+
+        init_y = init_y.to(self._units['y'], u.spectral_density(init_x))
+
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
                                **initial_values,
                                **new_model.get("model_kwargs", {})),
-            masked_spectrum.spectral_axis[~mask] if mask is not None else masked_spectrum.spectral_axis,  # noqa
-            masked_spectrum.flux[~mask] if mask is not None else masked_spectrum.flux)
+            init_x, init_y)
 
         # need to loop over parameters again as the initializer may have overridden
-        # the original default value.
+        # the original default value. However, if we toggled cube_fit, we may need to override
         for param_name in get_model_parameters(model_cls, new_model["model_kwargs"]):
             param_quant = getattr(initialized_model, param_name)
             new_model["parameters"].append({"name": param_name,
@@ -534,6 +584,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             axis = 'x'
         else:
             return
+
+        if axis == 'y' and self.cube_fit:
+            # The units have to be in surface brightness for a cube fit.
+            uc = self.app._jdaviz_helper.plugins['Unit Conversion']
+
+            if msg.unit != uc._obj.sb_unit_selected:
+                self._units[axis] = uc._obj.sb_unit_selected
+                self._check_model_component_compat([axis], [u.Unit(uc._obj.sb_unit_selected)])
+                return
 
         # update internal tracking of current units
         self._units[axis] = str(msg.unit)
@@ -753,15 +812,6 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
     def _set_residuals_label_default(self, event={}):
         self.residuals_label_default = self.results_label+" residuals"
 
-    @observe("cube_fit")
-    def _update_viewer_filters(self, event={}):
-        if event.get('new', self.cube_fit):
-            # only want image viewers in the options
-            self.add_results.viewer.filters = ['is_image_viewer']
-        else:
-            # only want spectral viewers in the options
-            self.add_results.viewer.filters = ['is_spectrum_viewer']
-
     @with_spinner()
     def calculate_fit(self, add_data=True):
         """
@@ -906,6 +956,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             spec = data.meta["_orig_spec"]
         else:
             spec = data.get_object(cls=Spectrum1D, statistic=None)
+
+        sb_unit = self.app._get_display_unit('sb')
+        if spec.flux.unit != sb_unit:
+            spec = spec.with_flux_unit(sb_unit)
 
         snackbar_message = SnackbarMessage(
             "Fitting model to cube...",
