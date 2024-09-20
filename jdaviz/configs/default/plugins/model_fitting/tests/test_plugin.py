@@ -134,7 +134,6 @@ def test_register_model_uncertainty_is_none(specviz_helper, spectrum1d):
         assert np.allclose(param["std"], expected_uncertainties[param["name"]], rtol=0.01)
 
 
-@pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
@@ -148,6 +147,7 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
     # changing the lable should set auto to False, but the event may not have triggered yet
     modelfit_plugin._obj.results_label_auto = False
     modelfit_plugin.cube_fit = True
+    modelfit_plugin.reestimate_model_parameters()
     assert modelfit_plugin._obj.results_label_default == 'model'
     assert modelfit_plugin._obj.results_label == test_label
     with warnings.catch_warnings():

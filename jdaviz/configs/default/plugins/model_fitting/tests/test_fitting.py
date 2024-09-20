@@ -76,7 +76,6 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
         plugin.vue_add_model({})
 
 
-@pytest.mark.skip(reason="Needs #3156 after merging #3190")
 def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
 
     flux_unit = u.nJy
