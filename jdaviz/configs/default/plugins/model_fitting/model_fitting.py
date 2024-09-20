@@ -535,6 +535,8 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             init_x = masked_spectrum.spectral_axis
             init_y = masked_spectrum.flux
 
+        # equivs for spectral density and flux<>flux/pix2. revisit
+        # when generalizing plugin UC equivs.
         equivs = _eqv_flux_to_sb_pixel() + [u.spectral_density(init_x)]
         init_y = init_y.to(self._units['y'], equivs)
 
