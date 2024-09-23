@@ -310,11 +310,11 @@ class UnitConversion(PluginTemplateMixin):
             if self.spectral_y_type_selected == 'Surface Brightness':
                 self._handle_spectral_y_unit()
 
-        elif axis == 'time':
-            pass
+        # custom axes downstream can override _on_unit_selected if anything needs to be
+        # processed before the GlobalDisplayUnitChanged message is broadcast
 
         # axis (first) argument will be one of: spectral, flux, angle, sb, time
-        self.hub.broadcast(GlobalDisplayUnitChanged(msg.name.split('_')[0],
+        self.hub.broadcast(GlobalDisplayUnitChanged(axis,
                            msg.new, sender=self))
 
     @observe('spectral_y_type_selected')
