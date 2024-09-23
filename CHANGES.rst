@@ -23,6 +23,8 @@ New Features
 
 - New configuration for ramp/Level 1 data products from Roman WFI and JWST [#3120, #3148, #3167, #3171]
 
+- Unit columns are now visible by default in the results table in model fitting. [#3196]
+
 Cubeviz
 ^^^^^^^
 
