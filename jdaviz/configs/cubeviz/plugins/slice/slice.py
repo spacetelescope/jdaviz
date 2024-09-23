@@ -144,8 +144,7 @@ class Slice(PluginTemplateMixin):
                 continue
             slice_values = viewer.slice_values
             if len(slice_values):
-                new_value = slice_values[int(len(slice_values)/2)]
-                self.value = new_value
+                self.value = slice_values[int(len(slice_values)/2)]
                 self._indicator_initialized = True
                 return
 
