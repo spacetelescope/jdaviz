@@ -178,7 +178,7 @@ def _get_celestial_wcs(wcs):
     return wcs.celestial if hasattr(wcs, 'celestial') else None
 
 
-def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type,
+def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
                                         target_wave_unit=None, hdulist=None,
                                         uncertainty=None, mask=None, apply_pix2=False):
     """Upstream issue of WCS not using the correct units for data must be fixed here.
@@ -198,6 +198,10 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type,
                 flux = flux / (u.pix * u.pix)
                 if uncertainty is not None:
                     uncertainty = uncertainty / (u.pix * u.pix)
+
+        # handle scale factors when they are included in the unit
+        if not np.isclose(flux.unit.scale, 1.0, rtol=1e-5):
+            flux = flux.to(flux.unit / flux.unit.scale)
 
         sc = Spectrum1D(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask)
 
@@ -461,7 +465,7 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             if hasattr(file_obj, 'wcs'):
                 meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs)
 
-            s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=meta)
+            s1d = _return_spectrum_with_correct_units(flux, wcs=file_obj.wcs, metadata=meta)
 
             # convert data loaded in flux units to a per-square-pixel surface
             # brightness unit (e.g Jy to Jy/pix**2)
