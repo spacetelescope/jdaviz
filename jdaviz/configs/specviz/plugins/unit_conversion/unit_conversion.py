@@ -208,7 +208,7 @@ class UnitConversion(PluginTemplateMixin):
                 flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
 
                 if not self.flux_unit_selected:
-                    if flux_unit in (u.count, u.DN):
+                    if flux_unit in (u.count, u.DN, u.electron / u.s):
                         self.flux_unit.choices = [flux_unit]
                     try:
                         self.flux_unit.selected = str(flux_unit)
