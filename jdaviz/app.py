@@ -14,7 +14,7 @@ from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 import matplotlib.cm as cm
 import numpy as np
-from glue.config import colormaps, settings as glue_settings
+from glue.config import colormaps, data_translator, settings as glue_settings
 from glue.core import HubListener
 from glue.core.link_helpers import LinkSame, LinkSameWithUnits
 from glue.core.message import (DataCollectionAddMessage,
@@ -1067,13 +1067,15 @@ class Application(VuetifyTemplate, HubListener):
                                  simplify_spectral=True, use_display_units=False):
         # TODO: Use global display units
         # units = dc[0].data.coords.spectral_axis.unit
-        viewer = self.get_viewer(self._jdaviz_helper. _default_spectrum_viewer_reference_name)
-        data = viewer.data()
-        if data and len(data) > 0 and isinstance(data[0], Spectrum1D):
-            units = data[0].spectral_axis.unit
+        data = subset_state.att.parent
+        ndim = data.get_component("flux").ndim
+        if ndim == 2:
+            units = u.pix
         else:
-            raise ValueError("Unable to find spectral axis units")
-        if use_display_units:
+            handler, _ = data_translator.get_handler_for(Spectrum1D)
+            spec = handler.to_object(data)
+            units = spec.spectral_axis.unit
+        if use_display_units and units != u.pix:
             # converting may result in flipping order (wavelength <-> frequency)
             ret_units = self._get_display_unit('spectral')
             subset_bounds = [(subset_state.lo * units).to(ret_units, u.spectral()),
