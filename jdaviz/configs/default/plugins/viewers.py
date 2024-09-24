@@ -768,31 +768,29 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
         # default to the catchall 'flux density' label
         flux_unit_type = None
 
-        if solid_angle_unit is not None:
+        for un in locally_defined_flux_units:
+            locally_defined_sb_unit = un / solid_angle_unit if solid_angle_unit is not None else None  # noqa
 
-            for un in locally_defined_flux_units:
-                locally_defined_sb_unit = un / solid_angle_unit
+            # create an equivalency for each flux unit for flux <> flux/pix2.
+            # for similar reasons to the 'untranslatable units' issue, custom
+            # equivs. can't be combined, so a workaround is creating an eqiv
+            # for each flux that may need an additional equiv.
+            angle_to_pixel_equiv = _eqv_sb_per_pixel_to_per_angle(un)
 
-                # create an equivalency for each flux unit for flux <> flux/pix2.
-                # for similar reasons to the 'untranslatable units' issue, custom
-                # equivs. can't be combined, so a workaround is creating an eqiv
-                # for each flux that may need an additional equiv.
-                angle_to_pixel_equiv = _eqv_sb_per_pixel_to_per_angle(un)
-
-                if y_unit.is_equivalent(locally_defined_sb_unit, angle_to_pixel_equiv):
-                    flux_unit_type = "Surface Brightness"
-                elif y_unit.is_equivalent(un):
-                    flux_unit_type = 'Flux'
-                elif y_unit.is_equivalent(u.electron / u.s) or y_unit.physical_type == 'dimensionless':  # noqa
-                    # electron / s or 'dimensionless_unscaled' should be labeled counts
-                    flux_unit_type = "Counts"
-                elif y_unit.is_equivalent(u.W):
-                    flux_unit_type = "Luminosity"
-                if flux_unit_type is not None:
-                    # if we determined a label, stop checking
-                    break
-
-        if flux_unit_type is None:
+            if (locally_defined_sb_unit is not None
+                    and y_unit.is_equivalent(locally_defined_sb_unit, angle_to_pixel_equiv)):
+                flux_unit_type = "Surface Brightness"
+            elif y_unit.is_equivalent(un):
+                flux_unit_type = 'Flux'
+            elif y_unit.is_equivalent(u.electron / u.s) or y_unit.physical_type == 'dimensionless':  # noqa
+                # electron / s or 'dimensionless_unscaled' should be labeled counts
+                flux_unit_type = "Counts"
+            elif y_unit.is_equivalent(u.W):
+                flux_unit_type = "Luminosity"
+            if flux_unit_type is not None:
+                # if we determined a label, stop checking
+                break
+        else:
             # default to Flux Density for flux density or uncaught types
             flux_unit_type = "Flux density"
 
