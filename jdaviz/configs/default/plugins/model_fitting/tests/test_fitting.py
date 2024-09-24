@@ -93,6 +93,10 @@ def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
     # even though the spectral y axis is in 'flux' by default
     plugin.cube_fit = True
 
+    assert cubeviz_helper.app._get_display_unit('spectral') == wav_unit
+    assert cubeviz_helper.app._get_display_unit('spectral_y') == flux_unit
+    assert cubeviz_helper.app._get_display_unit('sb') == sb_unit
+
     plugin.create_model_component("Linear1D", "L")
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='Model is linear in parameters.*')

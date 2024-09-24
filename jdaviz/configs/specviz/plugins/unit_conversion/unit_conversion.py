@@ -210,6 +210,9 @@ class UnitConversion(PluginTemplateMixin):
                 if not self.flux_unit_selected:
                     if flux_unit in (u.count, u.DN, u.electron / u.s):
                         self.flux_unit.choices = [flux_unit]
+                    elif flux_unit not in self.flux_unit.choices:
+                        # ensure that the native units are in the list of choices
+                        self.flux_unit.choices += [flux_unit]
                     try:
                         self.flux_unit.selected = str(flux_unit)
                     except ValueError:

@@ -472,9 +472,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # Need to set the units the first time we initialize a model component, after this
         # we listen for display unit changes
-        if (self._units is None or self._units == {} or 'x' not in self._units or
-                'y' not in self._units):
+        if self._units.get('x', '') == '':
             self._units['x'] = self.app._get_display_unit('spectral')
+        if self._units.get('y', '') == '':
             if self.cube_fit:
                 self._units['y'] = self.app._get_display_unit('sb')
             else:
@@ -537,7 +537,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
 
         # equivs for spectral density and flux<>flux/pix2. revisit
         # when generalizing plugin UC equivs.
-        equivs = _eqv_flux_to_sb_pixel() + [u.spectral_density(init_x)]
+        equivs = _eqv_flux_to_sb_pixel() + u.spectral_density(init_x)
         init_y = init_y.to(self._units['y'], equivs)
 
         initialized_model = initialize(
