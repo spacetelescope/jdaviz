@@ -690,7 +690,7 @@ def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
 def test_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
     viewer = specviz2d_helper.app.get_viewer(
-        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
+        specviz2d_helper._default_spectrum_viewer_reference_name)
 
     viewer.apply_roi(XRangeROI(6400, 7400))
     specviz2d_helper.app.session.edit_subset_mode.mode = AndNotMode
