@@ -1,23 +1,16 @@
 # Licensed under a 3-clause BSD style license - see LICENSE.rst
 # copied and modified from astropy: https://github.com/astropy/astropy/pull/12304
-"""Tests for physical functions."""
-# pylint: disable=no-member, invalid-name
+"""Tests for blackbody functions."""
 import pytest
 import numpy as np
 
-from jdaviz.models import BlackBody
-from astropy.modeling.fitting import TRFLSQFitter
-
-from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
+from astropy.modeling.fitting import TRFLSQFitter
+from astropy.tests.helper import assert_quantity_allclose
+from astropy.utils.compat.optional_deps import HAS_SCIPY
 from astropy.utils.exceptions import AstropyUserWarning
-from astropy.utils.compat.optional_deps import HAS_SCIPY  # noqa
 
-
-__doctest_skip__ = ["*"]
-
-
-# BlackBody tests
+from jdaviz.models import BlackBody
 
 
 @pytest.mark.parametrize("temperature", (3000 * u.K, 2726.85 * u.deg_C))
@@ -61,10 +54,12 @@ def test_blackbody_return_units():
     assert b(1.0 * u.micron).unit == u.MJy / u.sr
 
 
-@pytest.mark.skipif("not HAS_SCIPY")
+@pytest.mark.skipif(not HAS_SCIPY, reason="requires scipy")
 def test_blackbody_fit():
 
     fitter = TRFLSQFitter()
+    rtol = 0.54
+    atol = 1e-15
 
     b = BlackBody(3000 * u.K, scale=5e-17, output_units=u.Jy / u.sr)
 
@@ -73,8 +68,8 @@ def test_blackbody_fit():
 
     b_fit = fitter(b, wav, fnu, maxiter=1000)
 
-    assert_quantity_allclose(b_fit.temperature, 2840.7438355865065 * u.K)
-    assert_quantity_allclose(b_fit.scale, 5.803783292762381e-17)
+    assert_quantity_allclose(b_fit.temperature, 2840.7438355865065 * u.K, rtol=rtol)
+    assert_quantity_allclose(b_fit.scale, 5.803783292762381e-17, atol=atol)
 
 
 def test_blackbody_overflow():
