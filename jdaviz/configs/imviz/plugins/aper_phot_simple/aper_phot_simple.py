@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import numpy as np
 from astropy import units as u
-from astropy.modeling.fitting import LevMarLSQFitter
+from astropy.modeling.fitting import TRFLSQFitter
 from astropy.modeling import Parameter
 from astropy.modeling.models import Gaussian1D
 from astropy.time import Time
@@ -876,7 +876,7 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
                 # Fit Gaussian1D to radial profile data.
                 if self.fit_radial_profile:
-                    fitter = LevMarLSQFitter()
+                    fitter = TRFLSQFitter()
                     y_max = y_data.max()
                     x_mean = x_data[np.where(y_data == y_max)].mean()
                     std = 0.5 * (phot_table['semimajor_sigma'][0] +

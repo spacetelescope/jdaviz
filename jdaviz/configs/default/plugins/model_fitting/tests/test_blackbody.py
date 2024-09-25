@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 
 from jdaviz.models import BlackBody
-from astropy.modeling.fitting import LevMarLSQFitter
+from astropy.modeling.fitting import TRFLSQFitter
 
 from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
@@ -64,7 +64,7 @@ def test_blackbody_return_units():
 @pytest.mark.skipif("not HAS_SCIPY")
 def test_blackbody_fit():
 
-    fitter = LevMarLSQFitter()
+    fitter = TRFLSQFitter()
 
     b = BlackBody(3000 * u.K, scale=5e-17, output_units=u.Jy / u.sr)
 
