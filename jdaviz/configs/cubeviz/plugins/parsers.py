@@ -611,8 +611,9 @@ def convert_spectrum1d_from_flux_to_flux_per_pixel(spectrum):
     # and uncerts, if present
     uncerts = getattr(spectrum, 'uncertainty')
     if uncerts is not None:
-        old_uncerts = uncerts.represent_as(StdDevUncertainty)  # enforce common uncert type.
-        uncerts = old_uncerts.quantity / (u.pix * u.pix)
+        # enforce common uncert type.
+        uncerts = uncerts.represent_as(StdDevUncertainty)
+        uncerts = StdDevUncertainty(uncerts.quantity / (u.pix * u.pix))
 
     # create a new spectrum 1d with all the info from the input spectrum 1d,
     # and the flux / uncerts converted from flux to SB per square pixel
