@@ -95,10 +95,16 @@ Cubeviz
 - Custom Spectrum1D writer format ``jdaviz-cube`` is removed. Use ``wcs1d-fits`` from
   ``specutils`` instead. [#2094]
 
+- Aperture Photometry plugin now uses TRFLSQFitter to fit radial profile because LevMarLSQFitter
+  is no longer recommended by Astropy. [#3202]
+
 Imviz
 ^^^^^
 
 - Deprecated Rotate Canvas plugin was removed; use Orientation plugin instead. [#2878]
+
+- Aperture Photometry plugin now uses TRFLSQFitter to fit radial profile because LevMarLSQFitter
+  is no longer recommended by Astropy. [#3202]
 
 Mosviz
 ^^^^^^
