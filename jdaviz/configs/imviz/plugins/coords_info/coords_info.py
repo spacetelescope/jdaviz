@@ -13,7 +13,7 @@ from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfil
                                                    MosvizProfile2DView)
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine

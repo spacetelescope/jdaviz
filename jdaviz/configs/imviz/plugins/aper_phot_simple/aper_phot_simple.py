@@ -15,7 +15,7 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.events import (GlobalDisplayUnitChanged, SnackbarMessage,
                                 LinkUpdatedMessage, SliceValueUpdatedMessage)
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset

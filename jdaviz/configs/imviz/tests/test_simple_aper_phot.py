@@ -13,7 +13,7 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 from jdaviz.tests.test_utils import PHOTUTILS_LT_1_12_1
 
 

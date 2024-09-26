@@ -6,7 +6,7 @@ from astropy.wcs import WCS
 from regions import PixCoord, CirclePixelRegion
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 
 
 # On failure, should not crash; essentially a no-op.

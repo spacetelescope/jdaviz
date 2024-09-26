@@ -22,7 +22,7 @@ from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from ipyvue import watch
 
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',

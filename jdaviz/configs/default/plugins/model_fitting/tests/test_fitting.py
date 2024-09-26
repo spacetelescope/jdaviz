@@ -14,7 +14,7 @@ from specutils.spectra import Spectrum1D
 
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 
 SPECTRUM_SIZE = 200  # length of spectrum
 

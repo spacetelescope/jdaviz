@@ -10,7 +10,7 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectralAxis
 
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path

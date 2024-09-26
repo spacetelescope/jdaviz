@@ -10,7 +10,7 @@ from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.events import LineIdentifyMessage
 from jdaviz.core.marks import LineAnalysisContinuum
 

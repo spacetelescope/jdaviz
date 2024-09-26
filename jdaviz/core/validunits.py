@@ -1,7 +1,7 @@
 from astropy import units as u
 import itertools
 
-from jdaviz.core.custom_units import *
+from jdaviz.core.custom_units import PIX2
 
 __all__ = ['supported_sq_angle_units', 'locally_defined_flux_units',
            'combine_flux_and_angle_units', 'units_to_strings',
@@ -15,6 +15,7 @@ def supported_sq_angle_units(as_strings=False):
         units = units_to_strings(units)
     return units
 
+
 def locally_defined_flux_units():
     """
     This function returns a list of string representations of flux units that,
@@ -23,12 +24,13 @@ def locally_defined_flux_units():
     can be combined with units in 'supported_sq_angle_units' to form supported
     surface brightness units. If data is loaded with a flux unit (or equivalent
     flux unit e.g nJy) in this list, conversions between all other units in the
-    list should be supported. Units like 'counts' and 'e / s' would not 
+    list should be supported.
     """
     flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'W / (Hz m2)', 'eV / (Hz s m2)',
                   'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
                   'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)']
     return flux_units
+
 
 def combine_flux_and_angle_units(flux_units, angle_units):
     """
