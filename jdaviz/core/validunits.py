@@ -31,7 +31,7 @@ def create_spectral_equivalencies_list(spectral_axis_unit,
                                                 u.lyr, u.AU, u.pc, u.Bq, u.micron, u.lsec]):
     """Get all possible conversions from current spectral_axis_unit."""
     if spectral_axis_unit in (u.pix, u.dimensionless_unscaled):
-        return []
+        return [spectral_axis_unit]
 
     # Get unit equivalencies.
     try:

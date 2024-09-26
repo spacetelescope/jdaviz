@@ -100,7 +100,7 @@ def test_conv_no_data(specviz_helper, spectrum1d):
     # spectrum not load is in Flux units, sb_unit and flux_unit
     # should be enabled, spectral_y_type should not be
     plg = specviz_helper.plugins["Unit Conversion"]
-    with pytest.raises(ValueError, match="no valid unit choices"):
+    with pytest.raises(ValueError, match="could not find match in valid x display units"):
         plg.spectral_unit = "micron"
     assert len(specviz_helper.app.data_collection) == 0
 
@@ -290,11 +290,17 @@ def test_contour_unit_conversion(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per
     # Make sure that the contour values get updated
     po_plg.contour_visible = True
 
+    assert uc_plg.spectral_y_type == 'Flux'
+    assert uc_plg.flux_unit == 'Jy'
+    assert uc_plg.sb_unit == "Jy / sr"
+    assert cubeviz_helper.viewers['flux-viewer']._obj.layers[0].state.attribute_display_unit == "Jy / sr"  # noqa
     assert np.allclose(po_plg.contour_max.value, 199)
 
-    uc_plg._obj.spectral_y_type_selected = 'Surface Brightness'
+    uc_plg.spectral_y_type = 'Surface Brightness'
     uc_plg.flux_unit = 'MJy'
 
+    assert uc_plg.sb_unit == "MJy / sr"
+    assert cubeviz_helper.viewers['flux-viewer']._obj.layers[0].state.attribute_display_unit == "MJy / sr"  # noqa
     assert np.allclose(po_plg.contour_max.value, 1.99e-4)
 
 
