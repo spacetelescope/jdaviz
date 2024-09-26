@@ -6,6 +6,8 @@ from astropy.wcs import WCS
 from regions import PixCoord, CirclePixelRegion
 from specutils import Spectrum1D
 
+from jdaviz.core.custom_units import *
+
 
 # On failure, should not crash; essentially a no-op.
 @pytest.mark.parametrize(
@@ -147,7 +149,7 @@ def cubeviz_wcs_dict():
     return w, wcs_dict
 
 
-@pytest.mark.parametrize("angle_unit", [u.sr, u.pix*u.pix])
+@pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
 def test_unit_translation(cubeviz_helper, angle_unit):
     # custom cube so PIXAR_SR is in metadata, and Flux units, and in MJy
     w, wcs_dict = cubeviz_wcs_dict()
@@ -190,7 +192,7 @@ def test_unit_translation(cubeviz_helper, angle_unit):
     assert cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True).unit == u.MJy / angle_unit  # noqa
 
 
-@pytest.mark.parametrize("angle_unit", [u.sr, u.pix*u.pix])
+@pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
 def test_sb_unit_conversion(cubeviz_helper, angle_unit):
 
     angle_str = angle_unit.to_string()
@@ -238,7 +240,7 @@ def test_sb_unit_conversion(cubeviz_helper, angle_unit):
     # Try a second conversion
     uc_plg.flux_unit = 'W / Hz m2'
 
-    if angle_unit == u.pix * u.pix:  # unit string order is different for pix2 vs sr
+    if angle_unit == PIX2:  # unit string order is different for pix2 vs sr
         str_unit = 'W / (Hz m2 pix2)'
     elif angle_unit == u.sr:
         str_unit = 'W / (Hz sr m2)'
@@ -304,7 +306,7 @@ def test_contour_unit_conversion(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per
     assert np.allclose(po_plg.contour_max.value, 1.99e-4)
 
 
-@pytest.mark.parametrize("angle_unit", [u.sr, u.pix*u.pix])
+@pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
 def test_cubeviz_flux_sb_translation_counts(cubeviz_helper, angle_unit):
 
     """

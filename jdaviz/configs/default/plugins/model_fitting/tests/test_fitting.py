@@ -14,6 +14,7 @@ from specutils.spectra import Spectrum1D
 
 from jdaviz.configs.default.plugins.model_fitting import fitting_backend as fb
 from jdaviz.configs.default.plugins.model_fitting import initializers
+from jdaviz.core.custom_units import *
 
 SPECTRUM_SIZE = 200  # length of spectrum
 
@@ -79,7 +80,7 @@ def test_model_ids(cubeviz_helper, spectral_cube_wcs):
 def test_parameter_retrieval(cubeviz_helper, spectral_cube_wcs):
 
     flux_unit = u.nJy
-    sb_unit = flux_unit / (u.pix * u.pix)
+    sb_unit = flux_unit / PIX2
     wav_unit = u.Hz
 
     flux = np.ones((3, 4, 5))

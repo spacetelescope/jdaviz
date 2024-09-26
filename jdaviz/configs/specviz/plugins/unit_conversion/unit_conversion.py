@@ -6,6 +6,7 @@ from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
+from jdaviz.core.custom_units import *
 from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
@@ -228,9 +229,8 @@ class UnitConversion(PluginTemplateMixin):
                         self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
-                    if angle_unit == u.pix**2:
+                    if angle_unit == PIX2:
                         self.angle_unit.choices = ['pix2']
-
                     try:
                         if angle_unit is None:
                             # default to sr if input spectrum is not in surface brightness units
