@@ -53,7 +53,10 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label, flux_conversion,
                           spectral_axis_conversion)
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+from jdaviz.core.validunits import (check_if_unit_is_per_solid_angle,
+                                    combine_flux_and_angle_units,
+                                    locally_defined_flux_units,
+                                    supported_sq_angle_units)
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
@@ -72,32 +75,14 @@ class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
         if cid.label == "flux":
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
-            list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
-                include_prefix_units=True, equivalencies=eqv)))
-                + [
-                    'Jy', 'mJy', 'uJy', 'MJy',
-                    'W / (Hz m2)', 'eV / (Hz s m2)',
-                    'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
-                    'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)',
-                    'ct'
-                ]
-                + [
-                    'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
-                    'W / (Hz sr m2)', 'eV / (Hz s sr m2)',
-                    'erg / (s sr cm2)', 'erg / (Hz s sr cm2)',
-                    'erg / (Angstrom s sr cm2)',
-                    'ph / (Angstrom s sr cm2)', 'ph / (Hz s sr cm2)',
-                    'ct / sr'
-                ]
-                + [
-                    'Jy / pix2', 'mJy / pix2', 'uJy / pix2', 'MJy / pix2',
-                    'W / (Hz m2 pix2)', 'eV / (Hz s m2 pix2)',
-                    'erg / (s cm2 pix2)', 'erg / (Hz s cm2 pix2)',
-                    'erg / (Angstrom s cm2 pix2)',
-                    'ph / (Angstrom s cm2 pix2)', 'ph / (Hz s cm2 pix2)',
-                    'ct / pix2'
-                ]
+            all_flux_units = locally_defined_flux_units() + ['ct']
+            angle_units = supported_sq_angle_units()
+            all_sb_units = combine_flux_and_angle_units(all_flux_units, angle_units)
 
+            # list of all possible units for spectral y axis, independent of data loaded
+            #
+            list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
+                include_prefix_units=True, equivalencies=eqv))) + all_flux_units + all_sb_units
                 )
         else:  # spectral axis
             # prefer Hz over Bq and um over micron

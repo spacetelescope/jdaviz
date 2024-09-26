@@ -3,12 +3,45 @@ import itertools
 
 from jdaviz.core.custom_units import *
 
-__all__ = ['supported_sq_angle_units', 'units_to_strings', 'create_spectral_equivalencies_list',
+__all__ = ['supported_sq_angle_units', 'locally_defined_flux_units',
+           'combine_flux_and_angle_units', 'units_to_strings',
+           'create_spectral_equivalencies_list',
            'create_flux_equivalencies_list', 'check_if_unit_is_per_solid_angle']
 
 
-def supported_sq_angle_units():
-    return [PIX2, u.sr]
+def supported_sq_angle_units(as_strings=False):
+    units = [PIX2, u.sr]
+    if as_strings:
+        units = units_to_strings(units)
+    return units
+
+def locally_defined_flux_units():
+    """
+    This function returns a list of string representations of flux units that,
+    combined with the u.spectral_density equivalency for some conversions,
+    are translatable between one another. These units
+    can be combined with units in 'supported_sq_angle_units' to form supported
+    surface brightness units. If data is loaded with a flux unit (or equivalent
+    flux unit e.g nJy) in this list, conversions between all other units in the
+    list should be supported. Units like 'counts' and 'e / s' would not 
+    """
+    flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'W / (Hz m2)', 'eV / (Hz s m2)',
+                  'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
+                  'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)']
+    return flux_units
+
+def combine_flux_and_angle_units(flux_units, angle_units):
+    """
+    Combine (list of) flux_units and angle_units to create a list of string
+    representations of surface brightness units. The returned strings will be in
+    the same format as the astropy unit to_string() of the unit, for consistency.
+    """
+    if not isinstance(flux_units, list):
+        flux_units = [flux_units]
+    if not isinstance(angle_units, list):
+        angle_units = [angle_units]
+
+    return [(u.Unit(flux) / u.Unit(angle)).to_string() for flux in flux_units for angle in angle_units]  # noqa
 
 
 def units_to_strings(unit_list):
@@ -78,15 +111,7 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     curr_flux_unit_equivalencies = [unit for unit in curr_flux_unit_equivalencies if not any(mag in unit.name for mag in mag_units)]  # noqa
 
     # Get local flux units.
-    locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy',
-                                  'W / (Hz m2)',
-                                  'eV / (s m2 Hz)',
-                                  'erg / (s cm2 Hz)',
-                                  'erg / (s cm2 Angstrom)',
-                                  'ph / (Angstrom s cm2)',
-                                  'ph / (Hz s cm2)',
-                                  ]
-    local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
+    local_units = [u.Unit(unit) for unit in locally_defined_flux_units()]
 
     # Remove overlap units.
     curr_flux_unit_equivalencies = list(set(curr_flux_unit_equivalencies)
