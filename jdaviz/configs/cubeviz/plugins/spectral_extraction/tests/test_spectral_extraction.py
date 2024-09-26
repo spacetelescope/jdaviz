@@ -432,12 +432,12 @@ def test_cube_extraction_with_nan(cubeviz_helper, image_cube_hdu_obj):
     cubeviz_helper.load_data(image_cube_hdu_obj, data_label="with_nan")
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
     sp = extract_plg.extract()  # Default settings (sum)
-    assert_allclose(sp.flux.value, 96)  # (10 x 10) - 4
+    assert_allclose(sp.flux.value, 9.6E-16)  # (10 x 10) - 4
 
     cubeviz_helper.load_regions(RectanglePixelRegion(PixCoord(1.5, 1.5), width=4, height=4))
     extract_plg.aperture = 'Subset 1'
     sp_subset = extract_plg.extract()  # Default settings but on Subset
-    assert_allclose(sp_subset.flux.value, 12)  # (4 x 4) - 4
+    assert_allclose(sp_subset.flux.value, 1.2E-16)  # (4 x 4) - 4
 
 
 def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):

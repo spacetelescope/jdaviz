@@ -45,10 +45,17 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
+
+    # This secondarily tests a scale factor embedded in a unit at parse-time to make sure it
+    # is applied to the values, then it is removed from the actual display unit
     flux_unit_str = "erg / (Angstrom s cm2 pix2)"
-    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +5.00000e+00 1e-17 {flux_unit_str}',  # noqa
+    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +5.00000e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
                                          '205.4398995981 27.0034178810 (deg)')  # noqa
+
+    # verify that scale factor embedded in unit is removed
+    assert np.allclose(flux_cube.unit.scale, 1.0)
+
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
@@ -87,7 +94,6 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     assert cubeviz_helper.app.data_collection[0].label == "test_fits_image.fits[FLUX]"
 
     # This tests the same data as test_fits_image_hdu_parse above.
-
     cubeviz_helper.app.data_collection[0].meta['EXTNAME'] == 'FLUX'
     cubeviz_helper.app.data_collection[1].meta['EXTNAME'] == 'MASK'
     cubeviz_helper.app.data_collection[2].meta['EXTNAME'] == 'ERR'
@@ -99,7 +105,7 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     flux_unit_str = "erg / (Angstrom s cm2 pix2)"
-    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 {flux_unit_str}',  # noqa
+    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')
 
@@ -129,12 +135,11 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
     flux_unit_str = "erg / (Angstrom s cm2 pix2)"
-    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 {flux_unit_str}',  # noqa
+    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')
 
     # These viewers have no data.
-
     unc_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_uncert_viewer_reference_name)
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
