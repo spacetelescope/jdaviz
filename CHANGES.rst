@@ -260,6 +260,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fix matched mouseover marker for 1d spectrum viewer when mouse is over 2d spectrum viewer. [#3203]
+
 3.10.3 (2024-07-22)
 ===================
 
