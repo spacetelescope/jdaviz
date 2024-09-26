@@ -1,4 +1,5 @@
 from astropy import units as u
+from functools import cached_property
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
 from specutils import Spectrum1D
@@ -105,6 +106,8 @@ class UnitConversion(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._cached_properties = ['image_layers']
+
         if self.config not in ['specviz', 'cubeviz']:
             # TODO [specviz2d, mosviz] x_display_unit is not implemented in glue for image viewer
             # used by spectrum-2d-viewer
@@ -176,6 +179,12 @@ class UnitConversion(PluginTemplateMixin):
     @property
     def spectral_y_unit(self):
         return self.sb_unit_selected if self.spectral_y_type_selected == 'Surface Brightness' else self.flux_unit_selected  # noqa
+
+    @cached_property
+    def image_layers(self):
+        return [layer
+                for viewer in self._app._viewer_store.values() if isinstance(viewer, BqplotImageView)  # noqa
+                for layer in viewer.layers]
 
     def _on_add_data_to_viewer(self, msg):
         # toggle warning message for cubes without PIXAR_SR defined
@@ -266,6 +275,7 @@ class UnitConversion(PluginTemplateMixin):
             # NOTE: this assumes that all image data is coerced to surface brightness units
             layers = [lyr for lyr in msg.viewer.layers if lyr.layer.data.label == msg.data.label]
             self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
+            self._clear_cache('image_layers')
 
     @observe('spectral_unit_selected', 'flux_unit_selected',
              'angle_unit_selected', 'sb_unit_selected',
@@ -287,6 +297,11 @@ class UnitConversion(PluginTemplateMixin):
             self.spectrum_viewer.set_plot_axes()
 
         elif axis == 'flux':
+            # handle spectral y-unit first since that is a more apparent change to the user
+            # and feels laggy if it is done later
+            if self.spectral_y_type_selected == 'Flux':
+                self._handle_spectral_y_unit()
+
             if len(self.angle_unit_selected):
                 # NOTE: setting sb_unit_selected will call this method again with axis=='sb',
                 # which in turn will call _handle_attribute_display_unit,
@@ -294,9 +309,6 @@ class UnitConversion(PluginTemplateMixin):
                 #  and send a second GlobalDisplayUnitChanged message for sb
                 self.sb_unit_selected = _flux_to_sb_unit(self.flux_unit.selected,
                                                          self.angle_unit.selected)
-
-            if self.spectral_y_type_selected == 'Flux':
-                self._handle_spectral_y_unit()
 
         elif axis == 'angle':
             if len(self.flux_unit_selected):
@@ -308,10 +320,12 @@ class UnitConversion(PluginTemplateMixin):
                                                          self.angle_unit.selected)
 
         elif axis == 'sb':
-            self._handle_attribute_display_unit(self.sb_unit_selected)
-
+            # handle spectral y-unit first since that is a more apparent change to the user
+            # and feels laggy if it is done later
             if self.spectral_y_type_selected == 'Surface Brightness':
                 self._handle_spectral_y_unit()
+
+            self._handle_attribute_display_unit(self.sb_unit_selected)
 
         # custom axes downstream can override _on_unit_selected if anything needs to be
         # processed before the GlobalDisplayUnitChanged message is broadcast
@@ -354,9 +368,7 @@ class UnitConversion(PluginTemplateMixin):
         (updating stretch and contour units).
         """
         if layers is None:
-            layers = [layer
-                      for viewer in self._app._viewer_store.values() if isinstance(viewer, BqplotImageView)  # noqa
-                      for layer in viewer.layers]
+            layers = self.image_layers
 
         for layer in layers:
             # DQ layer doesn't play nicely with this attribute
