@@ -6,16 +6,49 @@ from regions import PixCoord, CirclePixelRegion
 from specutils import Spectrum1D
 
 from jdaviz.core.custom_units import PIX2
+from jdaviz.core.validunits import locally_defined_flux_units
 
 
 def cubeviz_wcs_dict():
-    # returns a WCS obj and dictionary used for cubeviz tests here
+    # returns a WCS obj and dictionary used for cubeviz tests
     wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
                 "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
                 "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
                 "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 8e-11}
     w = WCS(wcs_dict)
     return w, wcs_dict
+
+
+@pytest.mark.skip(reason="Unskip after JDAT 4785 resolved.")
+@pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
+def test_basic_unit_conversions(cubeviz_helper, angle_unit):
+    """
+    Basic test for changing flux units for a cube loaded in Jy to
+    all available flux units. Checks that the the conversion does
+    not produce any tracebacks. Tests conversions between all units
+    in :
+    ['Jy', 'mJy', 'uJy', 'MJy', 'W / (Hz m2)', 'eV / (Hz s m2)',
+     'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
+     'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)']
+
+    Parametrized over both available solid angle units (pix2 and sr).
+    """
+
+    # load cube with flux units of MJy
+    w, wcs_dict = cubeviz_wcs_dict()
+    flux = np.zeros((30, 20, 3001), dtype=np.float32)
+    cube = Spectrum1D(flux=flux * u.MJy / angle_unit, wcs=w, meta=wcs_dict)
+    cubeviz_helper.load_data(cube, data_label="test")
+
+    # get all available flux units for translation. Since cube is loaded
+    # in Jy, this will be all items in 'locally_defined_flux_units'
+
+    all_flux_units = locally_defined_flux_units()
+
+    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+
+    for flux_unit in all_flux_units:
+        uc_plg.flux_unit = flux_unit
 
 
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
