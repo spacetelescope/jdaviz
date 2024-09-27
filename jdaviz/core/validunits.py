@@ -18,13 +18,11 @@ def supported_sq_angle_units(as_strings=False):
 
 def locally_defined_flux_units():
     """
-    This function returns a list of string representations of flux units that,
-    combined with the u.spectral_density equivalency for some conversions,
-    are translatable between one another. These units
-    can be combined with units in 'supported_sq_angle_units' to form supported
-    surface brightness units. If data is loaded with a flux unit (or equivalent
-    flux unit e.g nJy) in this list, conversions between all other units in the
-    list should be supported.
+    This function returns a list of string representations of flux units. This
+    list represents flux units that the unit conversion plugin supports
+    conversion to and from if the input data unit is compatible with items in the
+    list (i.e is equivalent directly or with u.spectral_density(cube_wave)).
+
     """
     flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'W / (Hz m2)', 'eV / (Hz s m2)',
                   'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
