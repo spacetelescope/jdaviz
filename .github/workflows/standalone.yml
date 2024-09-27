@@ -23,11 +23,11 @@ jobs:
       matrix:
         os: [ubuntu, windows]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938  # v4.2.0
       with:
         fetch-depth: 0
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3  # v5.2.0
       with:
         python-version: "3.11"
 
@@ -62,14 +62,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874  # v4.4.0
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (non-OSX)
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874  # v4.4.0
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: |
@@ -85,17 +85,17 @@ jobs:
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
-      uses: apple-actions/import-codesign-certs@v3
+      uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d  # v3
       if: ${{ matrix.os == 'macos' }}
       with:
         p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
         p12-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938  # v4.2.0
       with:
         fetch-depth: 0
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3  # v5.2.0
       with:
         python-version: "3.11"
 
@@ -185,14 +185,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874  # v4.4.0
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos') }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874  # v4.4.0
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: standalone/dist/jdaviz.dmg

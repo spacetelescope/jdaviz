@@ -14,12 +14,12 @@ jobs:
     steps:
     # NOTE: sync-labels due to https://github.com/actions/labeler/issues/112
     - name: Label PR
-      uses: actions/labeler@v5
+      uses: actions/labeler@8558fd74291d67161a8a78ce36a881fa63b766a9  # v5.0.0
       if: github.event_name == 'pull_request_target' && github.event.pull_request.user.login != 'meeseeksmachine'
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
     # Special action for a special day. Until next year!
     #- name: Special comment
-    #  uses: pllim/action-special_pr_comment@main
+    #  uses: pllim/action-special_pr_comment@5126c189c02418a55448480b28efd1a00af48d7b  # 0.2
     #  with:
     #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
