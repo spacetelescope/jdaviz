@@ -21,7 +21,8 @@ New Features
 
 - The standalone version of jdaviz now uses solara instead of voila, resulting in faster load times. [#2909]
 
-- New configuration for ramp/Level 1 data products from Roman WFI and JWST [#3120, #3148, #3167, #3171, #3194]
+- New configuration for ramp/Level 1 and rate image/Level 2 data products from Roman WFI and
+  JWST [#3120, #3148, #3167, #3171, #3194]
 
 - Unit columns are now visible by default in the results table in model fitting. [#3196]
 

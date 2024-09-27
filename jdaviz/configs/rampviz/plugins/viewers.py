@@ -131,7 +131,10 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         ref_data = self.state.reference_data
 
         if ref_data:
-            self.state.x_att = ref_data.id["Pixel Axis 0 [z]"]
+            if "Pixel Axis 0 [z]" in [comp.label for comp in ref_data.components]:
+                self.state.x_att = ref_data.id["Pixel Axis 0 [z]"]
+            else:
+                self.state.x_att = ref_data.id["Pixel Axis 0 [y]"]
 
     def set_plot_axes(self):
         self.figure.axes[1].tick_format = None
