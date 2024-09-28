@@ -133,7 +133,7 @@ class UnitConversion(PluginTemplateMixin):
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
         # NOTE: will switch to count only if first data loaded into viewer in in counts
-        self.flux_unit.choices = create_flux_equivalencies_list(u.Jy, u.Hz)
+        self.flux_unit.choices = create_flux_equivalencies_list(u.Jy)
 
         self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz')
         self.angle_unit = UnitSelectPluginComponent(self,
@@ -219,11 +219,8 @@ class UnitConversion(PluginTemplateMixin):
                 flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
 
                 if not self.flux_unit_selected:
-                    if flux_unit in (u.count, u.DN, u.electron / u.s):
-                        self.flux_unit.choices = [flux_unit]
-                    elif flux_unit not in self.flux_unit.choices:
-                        # ensure that the native units are in the list of choices
-                        self.flux_unit.choices += [flux_unit]
+                    self.flux_unit.choices = create_flux_equivalencies_list(flux_unit)
+
                     try:
                         self.flux_unit.selected = str(flux_unit)
                     except ValueError:
