@@ -126,7 +126,8 @@ def parse_data(app, file_obj, ext=None, data_label=None,
 
         elif file_obj_lower.endswith('.reg'):
             # This will load DS9 regions as Subset but only if there is already data.
-            app._jdaviz_helper.load_regions_from_file(file_obj)
+            app.get_tray_item_from_name('g-subset-plugin').import_region(file_obj,
+                                                                         combination_mode='new')
 
         else:  # Assume FITS
             with fits.open(file_obj) as pf:
