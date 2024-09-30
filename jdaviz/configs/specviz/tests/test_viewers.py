@@ -1,10 +1,10 @@
 import astropy.units as u
 import numpy as np
 import pytest
+import warnings
 from specutils import Spectrum1D
 
 
-@pytest.mark.skip(reason="unskip after 3192 merged")
 @pytest.mark.parametrize(
     ('input_unit', 'y_axis_label'),
     [(u.MJy, 'Flux'),
@@ -20,14 +20,15 @@ def test_spectrum_viewer_axis_labels(specviz_helper, input_unit, y_axis_label):
 
     spec = Spectrum1D(flux, spectral_axis)
 
-    specviz_helper.load_data(spec)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=".*contains multiple slashes, which is discouraged by the FITS standard.*")  # noqa
+        specviz_helper.load_data(spec)
 
     label = specviz_helper.app.get_viewer_by_id('specviz-0').figure.axes[1].label
 
     assert (y_axis_label in label)
 
 
-@pytest.mark.xfail(reason="FIXME: Some callback magic needs to happen somewhere.")
 def test_spectrum_viewer_keep_unit_when_removed(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="Test")
     uc = specviz_helper.plugins["Unit Conversion"]

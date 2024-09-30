@@ -18,7 +18,7 @@ def _ramp_extraction_previews(_rampviz_helper, _ramp_file):
 
     # add subset:
     region = CirclePixelRegion(center=PixCoord(12.5, 15.5), radius=2)
-    _rampviz_helper.load_regions(region)
+    _rampviz_helper.plugins['Subset Tools']._obj.import_region(region)
     ramp_extr = _rampviz_helper.plugins['Ramp Extraction']._obj
 
     subsets = _rampviz_helper.app.get_subsets()

@@ -13,6 +13,7 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
+from jdaviz.core.custom_units import PIX2
 from jdaviz.tests.test_utils import PHOTUTILS_LT_1_12_1
 
 
@@ -21,7 +22,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         self.imviz.link_data(align_by='wcs')  # They are dithered by 1 pixel on X
 
         reg = CirclePixelRegion(center=PixCoord(x=4.5, y=4.5), radius=4.5).to_sky(self.wcs_1)
-        self.imviz.load_regions(reg)
+        self.imviz.plugins['Subset Tools']._obj.import_region(reg)
 
         phot_plugin = self.imviz.app.get_tray_item_from_name('imviz-aper-phot-simple')
 
@@ -79,7 +80,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
-        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * (u.pix * u.pix), rtol=1e-4)  # noqa
+        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * PIX2, rtol=1e-4)  # noqa
         assert_array_equal(tbl['pixarea_tot'], None)
         assert_array_equal(tbl['aperture_sum_counts'], None)
         assert_array_equal(tbl['aperture_sum_counts_err'], None)
@@ -116,7 +117,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on an ellipse subset.
         reg = EllipsePixelRegion(center=PixCoord(x=4.5, y=2.0), width=9.0, height=4.0).to_sky(self.wcs_1)  # noqa: E501
-        self.imviz.load_regions(reg)
+        self.imviz.plugins['Subset Tools']._obj.combination_mode.selected = 'new'
+        self.imviz.plugins['Subset Tools']._obj.import_region(reg)
 
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 2'
@@ -130,7 +132,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
         assert_allclose(sky.dec.deg, -20.832777499255897, rtol=1e-4)
-        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * (u.pix * u.pix), rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * PIX2, rtol=1e-4)
         assert_allclose(tbl[-1]['sum'], 28.274334, rtol=1e-4)
         assert_allclose(tbl[-1]['mean'], 1, rtol=1e-4)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
@@ -139,7 +141,8 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
         reg = RectanglePixelRegion(center=PixCoord(x=4.5, y=4.5), width=9, height=9).to_sky(self.wcs_1)  # noqa: E501
-        self.imviz.load_regions(reg)
+        self.imviz.plugins['Subset Tools']._obj.combination_mode.selected = 'new'
+        self.imviz.plugins['Subset Tools']._obj.import_region(reg)
 
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
         phot_plugin.aperture_selected = 'Subset 3'
@@ -154,7 +157,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
         assert_allclose(sky.dec.deg, -20.832083, rtol=1e-4)
-        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * (u.pix * u.pix))
+        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * PIX2)
         assert_allclose(tbl[-1]['sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
@@ -276,11 +279,12 @@ class TestAdvancedAperPhot:
         w = imviz_helper.app.data_collection[0].coords
 
         # Regions to be used for aperture photometry
-        imviz_helper.load_regions([
+        imviz_helper.plugins['Subset Tools']._obj.import_region([
             CirclePixelRegion(center=PixCoord(x=145.1, y=168.3), radius=5).to_sky(w),
             CirclePixelRegion(center=PixCoord(x=48.3, y=200.3), radius=5).to_sky(w),
             EllipsePixelRegion(center=PixCoord(x=84.7, y=224.1), width=23, height=9, angle=2.356 * u.rad).to_sky(w),  # noqa: E501
-            RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w)])
+            RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w)],
+            combination_mode='new')
 
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj
@@ -356,7 +360,8 @@ def test_annulus_background(imviz_helper):
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_1 = CircleAnnulusPixelRegion(
         PixCoord(x=150, y=25), inner_radius=7, outer_radius=17)
-    imviz_helper.load_regions([circle_1, annulus_1])
+    imviz_helper.plugins['Subset Tools']._obj.import_region([circle_1, annulus_1],
+                                                            combination_mode='new')
 
     phot_plugin.aperture_selected = 'Subset 1'
     phot_plugin.background_selected = 'Subset 2'
@@ -373,7 +378,8 @@ def test_annulus_background(imviz_helper):
     # Load annulus (this used to be part of the plugin but no longer)
     annulus_2 = CircleAnnulusPixelRegion(
         PixCoord(x=20.5, y=37.5), inner_radius=20.5, outer_radius=30.5)
-    imviz_helper.load_regions([ellipse_1, annulus_2])
+    imviz_helper.plugins['Subset Tools']._obj.import_region([ellipse_1, annulus_2],
+                                                            combination_mode='new')
 
     # Subset 4 (annulus) should be available in both sets of choices, but invalid for selection as
     # aperture
@@ -495,9 +501,12 @@ def test_cubeviz_batch(cubeviz_helper, spectrum1d_cube_fluxunit_jy_per_steradian
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian, data_label='test')
     phot_plugin = cubeviz_helper.plugins['Aperture Photometry']._obj
     uc_plugin = cubeviz_helper.plugins['Unit Conversion']
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
 
-    cubeviz_helper.load_regions(CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2))
-    cubeviz_helper.load_regions(CirclePixelRegion(center=PixCoord(x=3, y=3), radius=2))
+    subset_plugin.import_region(CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2),
+                                combination_mode='new')
+    subset_plugin.import_region(CirclePixelRegion(center=PixCoord(x=3, y=3), radius=2),
+                                combination_mode='new')
 
     phot_plugin.dataset_selected = 'test[FLUX]'
     phot_plugin.multiselect = True

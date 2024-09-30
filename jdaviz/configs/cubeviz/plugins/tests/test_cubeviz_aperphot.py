@@ -7,14 +7,16 @@ from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 
+from jdaviz.core.custom_units import PIX2
+
 
 def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
     flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
-    solid_angle_unit = u.pix * u.pix
+    solid_angle_unit = PIX2
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
-    cubeviz_helper.load_regions(aper)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(aper)
 
     # Make sure MASK is not an option even when shown in viewer.
     cubeviz_helper.app.add_data_to_viewer("flux-viewer", "test[MASK]", visible=True)
@@ -99,7 +101,7 @@ def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_micr
 def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
     flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
-    solid_angle_unit = u.pix * u.pix
+    solid_angle_unit = PIX2
 
     gauss_plg = cubeviz_helper.plugins["Gaussian Smooth"]._obj
     gauss_plg.mode_selected = "Spatial"
@@ -110,7 +112,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
     cubeviz_helper.app.add_data_to_viewer("uncert-viewer", "test[FLUX] spatial-smooth stddev-1.0")
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
-    cubeviz_helper.load_regions(aper)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(aper)
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     plg.dataset_selected = "test[FLUX] spatial-smooth stddev-1.0"
@@ -133,7 +135,7 @@ def test_cubeviz_aperphot_generated_3d_gaussian_smooth(cubeviz_helper, image_cub
     assert_quantity_allclose(row["slice_wave"], 4.894499866699333 * u.um)
 
 
-@pytest.mark.parametrize("cube_unit", [u.MJy / u.sr, u.MJy, u.MJy / (u.pix*u.pix)])
+@pytest.mark.parametrize("cube_unit", [u.MJy / u.sr, u.MJy, u.MJy / PIX2])
 def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
                                            spectrum1d_cube_custom_fluxunit,
                                            cube_unit):
@@ -173,7 +175,7 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
         # so we can directly compare. this shouldn't be populated automatically,
         # which is checked above
         plg.flux_scaling = 0.003631
-        solid_angle_unit = u.pix * u.pix
+        solid_angle_unit = PIX2
         cube_unit = u.MJy / solid_angle_unit  # cube unit in app is now per pix2
 
     plg.vue_do_aper_phot()
@@ -185,7 +187,7 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
     # (15 - 10) MJy/sr x 1 sr, will always be MJy since solid angle is multiplied out
     assert_allclose(row["sum"], 5.0 * u.MJy)
 
-    assert_allclose(row["sum_aper_area"], 1 * (u.pix * u.pix))
+    assert_allclose(row["sum_aper_area"], 1 * PIX2)
 
     #  we forced area to be one sr so MJy / sr and MJy / pix2 gave the same result
     assert_allclose(row["pixarea_tot"], 1.0 * solid_angle_unit)
@@ -208,7 +210,7 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
-    cubeviz_helper.load_regions([aper, bg])
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region([aper, bg], combination_mode='new')
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     plg.dataset_selected = "test[FLUX]"
@@ -226,7 +228,7 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
     assert_allclose(row["xcenter"], 3 * u.pix)
     assert_allclose(row["ycenter"], 1 * u.pix)
     assert_allclose(row["sum"], 1.1752215e-12 * u.MJy)  # (15 - 10) MJy/sr x 2.3504431e-13 sr
-    assert_allclose(row["sum_aper_area"], 1 * (u.pix * u.pix))
+    assert_allclose(row["sum_aper_area"], 1 * PIX2)
     assert_allclose(row["pixarea_tot"], 2.350443053909789e-13 * u.sr)
     assert_allclose(row["aperture_sum_mag"], 23.72476627732448 * u.mag)
     assert_allclose(row["mean"], 5 * (u.MJy / u.sr))
@@ -275,7 +277,7 @@ def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom
     bg = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=1, height=1)
 
     cubeviz_helper.load_data(mjy_sr_cube, data_label="test")
-    cubeviz_helper.load_regions([aper, bg])
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region([aper, bg], combination_mode='new')
 
     ap = cubeviz_helper.plugins['Aperture Photometry']._obj
 

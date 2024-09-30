@@ -1,12 +1,47 @@
 from astropy import units as u
 import itertools
 
-__all__ = ['supported_sq_angle_units', 'units_to_strings', 'create_spectral_equivalencies_list',
+from jdaviz.core.custom_units import PIX2
+
+__all__ = ['supported_sq_angle_units', 'locally_defined_flux_units',
+           'combine_flux_and_angle_units', 'units_to_strings',
+           'create_spectral_equivalencies_list',
            'create_flux_equivalencies_list', 'check_if_unit_is_per_solid_angle']
 
 
-def supported_sq_angle_units():
-    return [u.pix*u.pix, u.sr]
+def supported_sq_angle_units(as_strings=False):
+    units = [PIX2, u.sr]
+    if as_strings:
+        units = units_to_strings(units)
+    return units
+
+
+def locally_defined_flux_units():
+    """
+    This function returns a list of string representations of flux units. This
+    list represents flux units that the unit conversion plugin supports
+    conversion to and from if the input data unit is compatible with items in the
+    list (i.e is equivalent directly or with u.spectral_density(cube_wave)).
+
+    """
+    flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'W / (Hz m2)', 'eV / (Hz s m2)',
+                  'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
+                  'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)']
+    return flux_units
+
+
+def combine_flux_and_angle_units(flux_units, angle_units):
+    """
+    Combine (list of) flux_units and angle_units to create a list of string
+    representations of surface brightness units. The returned strings will be in
+    the same format as the astropy unit to_string() of the unit, for consistency.
+    """
+    if not isinstance(flux_units, list):
+        flux_units = [flux_units]
+    if not isinstance(angle_units, list):
+        angle_units = [angle_units]
+
+    return [(u.Unit(flux) / u.Unit(angle)).to_string() for flux in flux_units for angle in angle_units]  # noqa
 
 
 def units_to_strings(unit_list):
@@ -31,7 +66,7 @@ def create_spectral_equivalencies_list(spectral_axis_unit,
                                                 u.lyr, u.AU, u.pc, u.Bq, u.micron, u.lsec]):
     """Get all possible conversions from current spectral_axis_unit."""
     if spectral_axis_unit in (u.pix, u.dimensionless_unscaled):
-        return []
+        return [spectral_axis_unit]
 
     # Get unit equivalencies.
     try:
@@ -76,15 +111,7 @@ def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
     curr_flux_unit_equivalencies = [unit for unit in curr_flux_unit_equivalencies if not any(mag in unit.name for mag in mag_units)]  # noqa
 
     # Get local flux units.
-    locally_defined_flux_units = ['Jy', 'mJy', 'uJy', 'MJy',
-                                  'W / (Hz m2)',
-                                  'eV / (s m2 Hz)',
-                                  'erg / (s cm2 Hz)',
-                                  'erg / (s cm2 Angstrom)',
-                                  'ph / (Angstrom s cm2)',
-                                  'ph / (Hz s cm2)',
-                                  ]
-    local_units = [u.Unit(unit) for unit in locally_defined_flux_units]
+    local_units = [u.Unit(unit) for unit in locally_defined_flux_units()]
 
     # Remove overlap units.
     curr_flux_unit_equivalencies = list(set(curr_flux_unit_equivalencies)
@@ -196,7 +223,7 @@ def check_if_unit_is_per_solid_angle(unit, return_unit=False):
                     return new_unit
                 return True  # area units present but not requested to be returned
             # square pixel should be considered a square angle unit
-            if new_unit == u.pix * u.pix:
+            if new_unit == PIX2:
                 if return_unit:
                     return new_unit
                 return True

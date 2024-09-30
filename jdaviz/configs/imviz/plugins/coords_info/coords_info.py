@@ -13,6 +13,7 @@ from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfil
                                                    MosvizProfile2DView)
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
@@ -491,8 +492,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 # If unit is flux per pix2, the type will be 'unknown' rather
                 # than surface brightness, so have to multiply the pix2 part out
                 # and check if the numerator is a spectral flux density
-                if check_if_unit_is_per_solid_angle(unit, return_unit=True) == u.pix*u.pix:
-                    un = u.Unit(unit) * u.pix*u.pix
+                if check_if_unit_is_per_solid_angle(unit, return_unit=True) == PIX2:
+                    un = u.Unit(unit) * PIX2
                     physical_type = un.physical_type
                 else:
                     physical_type = u.Unit(unit).physical_type

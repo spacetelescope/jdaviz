@@ -16,6 +16,7 @@ from stdatamodels import asdf_in_fits
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image, HAS_ROMAN_DATAMODELS)
+from jdaviz.core.custom_units import PIX2
 
 
 @pytest.mark.parametrize(
@@ -287,7 +288,7 @@ class TestParseImage:
         data_unit = u.MJy / u.sr
         assert_quantity_allclose(tbl[0]['background'], 0.1741226315498352 * data_unit)
         assert_quantity_allclose(tbl[0]['sum'], 4.486487e-11 * u.MJy, rtol=1e-6)
-        assert_quantity_allclose(tbl[0]['sum_aper_area'], 111.220234 * (u.pix * u.pix))
+        assert_quantity_allclose(tbl[0]['sum_aper_area'], 111.220234 * PIX2)
         assert_quantity_allclose(tbl[0]['pixarea_tot'], 9.33677e-14 * u.sr, rtol=1e-6)
         assert_quantity_allclose(tbl[0]['aperture_sum_counts'], 132061.576643 * u.count, rtol=1e-6)
         assert_quantity_allclose(tbl[0]['aperture_sum_counts_err'], 363.402775 * u.count)
@@ -413,7 +414,7 @@ class TestParseImage:
         data_unit = u.electron / u.s
         assert_quantity_allclose(tbl[0]['background'], 0.0014 * data_unit)
         assert_quantity_allclose(tbl[0]['sum'], 115.944737 * data_unit, rtol=1e-3)
-        assert_quantity_allclose(tbl[0]['sum_aper_area'], 2583.959958 * (u.pix * u.pix), rtol=1e-3)
+        assert_quantity_allclose(tbl[0]['sum_aper_area'], 2583.959958 * PIX2, rtol=1e-3)
         assert_array_equal(tbl[0]['pixarea_tot'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts'], None)
         assert_array_equal(tbl[0]['aperture_sum_counts_err'], None)
