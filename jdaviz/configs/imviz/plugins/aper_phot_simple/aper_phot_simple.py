@@ -15,6 +15,7 @@ from photutils.aperture import (ApertureStats, CircularAperture, EllipticalApert
 from traitlets import Any, Bool, Integer, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.events import (GlobalDisplayUnitChanged, SnackbarMessage,
                                 LinkUpdatedMessage, SliceValueUpdatedMessage)
 from jdaviz.core.region_translators import regions2aperture, _get_region_from_spatial_subset
@@ -26,8 +27,6 @@ from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.utils import PRIHDR_KEY
 
 __all__ = ['SimpleAperturePhotometry']
-
-PIX2 = u.pix * u.pix  # define square pixel unit which is used around the plugin
 
 
 @tray_registry('imviz-aper-phot-simple', label="Aperture Photometry")

@@ -13,6 +13,7 @@ from regions import (CircleAnnulusPixelRegion, CirclePixelRegion, EllipsePixelRe
 from jdaviz.configs.imviz.plugins.aper_phot_simple.aper_phot_simple import (
     _curve_of_growth, _radial_profile)
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS, BaseImviz_WCS_NoWCS
+from jdaviz.core.custom_units import PIX2
 from jdaviz.tests.test_utils import PHOTUTILS_LT_1_12_1
 
 
@@ -79,7 +80,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
             'data_label', 'subset_label', 'timestamp']
         assert_array_equal(tbl['id'], [1, 2])
         assert_allclose(tbl['background'], 0)
-        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * (u.pix * u.pix), rtol=1e-4)  # noqa
+        assert_quantity_allclose(tbl['sum_aper_area'], [63.617251, 62.22684693104279] * PIX2, rtol=1e-4)  # noqa
         assert_array_equal(tbl['pixarea_tot'], None)
         assert_array_equal(tbl['aperture_sum_counts'], None)
         assert_array_equal(tbl['aperture_sum_counts_err'], None)
@@ -131,7 +132,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
         assert_allclose(sky.dec.deg, -20.832777499255897, rtol=1e-4)
-        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * (u.pix * u.pix), rtol=1e-4)
+        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 28.274334 * PIX2, rtol=1e-4)
         assert_allclose(tbl[-1]['sum'], 28.274334, rtol=1e-4)
         assert_allclose(tbl[-1]['mean'], 1, rtol=1e-4)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'
@@ -156,7 +157,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         sky = tbl[-1]['sky_center']
         assert_allclose(sky.ra.deg, 337.51894336144454, rtol=1e-4)
         assert_allclose(sky.dec.deg, -20.832083, rtol=1e-4)
-        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * (u.pix * u.pix))
+        assert_quantity_allclose(tbl[-1]['sum_aper_area'], 81 * PIX2)
         assert_allclose(tbl[-1]['sum'], 0)
         assert_allclose(tbl[-1]['mean'], 0)
         assert tbl[-1]['data_label'] == 'has_wcs_1[SCI,1]'

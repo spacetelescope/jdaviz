@@ -10,6 +10,7 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectralAxis
 
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.registries import data_parser_registry
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
@@ -195,9 +196,9 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
         # convert flux and uncertainty to per-pix2 if input is not a surface brightness
         if apply_pix2:
             if not check_if_unit_is_per_solid_angle(flux.unit):
-                flux = flux / (u.pix * u.pix)
+                flux = flux / PIX2
                 if uncertainty is not None:
-                    uncertainty = uncertainty / (u.pix * u.pix)
+                    uncertainty = uncertainty / PIX2
 
         # handle scale factors when they are included in the unit
         if not np.isclose(flux.unit.scale, 1.0, rtol=1e-5):
@@ -606,14 +607,14 @@ def convert_spectrum1d_from_flux_to_flux_per_pixel(spectrum):
 
     # convert flux, which is always populated
     flux = getattr(spectrum, 'flux')
-    flux = flux / (u.pix * u.pix)
+    flux = flux / PIX2
 
     # and uncerts, if present
     uncerts = getattr(spectrum, 'uncertainty')
     if uncerts is not None:
         # enforce common uncert type.
         uncerts = uncerts.represent_as(StdDevUncertainty)
-        uncerts = StdDevUncertainty(uncerts.quantity / (u.pix * u.pix))
+        uncerts = StdDevUncertainty(uncerts.quantity / PIX2)
 
     # create a new spectrum 1d with all the info from the input spectrum 1d,
     # and the flux / uncerts converted from flux to SB per square pixel

@@ -10,12 +10,11 @@ from astropy.wcs import FITSFixedWarning
 from numpy.testing import assert_allclose
 from specutils import Spectrum1D
 
+from jdaviz.core.custom_units import PIX2
 from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
                           _indirect_conversion, _eqv_pixar_sr)
 
 PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
-
-PIX2 = u.pix * u.pix
 
 
 def test_spec_sb_flux_conversion():
@@ -53,7 +52,7 @@ def test_spec_sb_flux_conversion():
     # test spectrum when target unit in untranslatable unit list
     target_values = [5.03411657e-05, 2.01364663e-04, 4.53070491e-04]
     expected_units = (u.ph / (u.Hz * u.s * u.cm**2))
-    for solid_angle in [u.sr, u.pix*u.pix]:
+    for solid_angle in [u.sr, PIX2]:
         returned_values, return_units, unit_flag = _indirect_conversion(
                                                         values=values, orig_units=(u.MJy),
                                                         targ_units=(u.ph / (u.s * u.cm**2 * u.Hz * solid_angle)),  # noqa

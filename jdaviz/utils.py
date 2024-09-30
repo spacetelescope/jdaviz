@@ -22,6 +22,7 @@ from glue.core.subset import SubsetState, RangeSubsetState, RoiSubsetState
 from glue_astronomy.spectral_coordinates import SpectralCoordinates
 from ipyvue import watch
 
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 __all__ = ['SnackbarQueue', 'enable_hot_reloading', 'bqplot_clear_figure',
@@ -451,15 +452,15 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
             values=values, orig_units=orig_units, targ_units=targ_units,
             eqv=eqv, image_data=image_data
             )
-    elif solid_angle_in_orig == solid_angle_in_targ == u.pix * u.pix:
+    elif solid_angle_in_orig == solid_angle_in_targ == PIX2:
         # in the case where we have 2 SBs per solid pixel that need
         # u.spectral_density equivalency, they can't be directly converted
         # for whatever reason (i.e 'Jy / pix2' and 'erg / (Angstrom s cm2 pix2)'
         # are not convertible). In this case, multiply out the factor of pix2 for
         # conversion (same kind of thing _indirect_conversion is
         # doing but we already know the exact angle units.
-        orig_units *= u.pix * u.pix
-        targ_units *= u.pix * u.pix
+        orig_units *= PIX2
+        targ_units *= PIX2
 
     return (values * orig_units).to_value(targ_units, equivalencies=eqv)
 
@@ -543,14 +544,12 @@ def _eqv_flux_to_sb_pixel():
     e.g MJy <> MJy / pix2
     """
 
-    pix2 = u.pix * u.pix
-
     # generate an equivalency for each flux type that would need
     # another equivalency for converting to/from
     flux_units = [u.MJy, u.erg / (u.s * u.cm**2 * u.Angstrom),
                   u.ph / (u.Angstrom * u.s * u.cm**2),
                   u.ph / (u.Hz * u.s * u.cm**2)]
-    return [(flux_unit, flux_unit / pix2, lambda x: x, lambda x: x)
+    return [(flux_unit, flux_unit / PIX2, lambda x: x, lambda x: x)
             for flux_unit in flux_units]
 
 
@@ -569,11 +568,10 @@ def _eqv_sb_per_pixel_to_per_angle(flux_unit, scale_factor=1):
     (one solution being creating this equivalency for each equivalent flux-type.)
 
     """
-    pix2 = u.pix * u.pix
 
     # the two types of units we want to define a conversion between
     flux_solid_ang = flux_unit / u.sr
-    flux_sq_pix = flux_unit / pix2
+    flux_sq_pix = flux_unit / PIX2
 
     pix_to_solid_angle_equiv = [(flux_solid_ang, flux_sq_pix,
                                 lambda x: x * scale_factor,

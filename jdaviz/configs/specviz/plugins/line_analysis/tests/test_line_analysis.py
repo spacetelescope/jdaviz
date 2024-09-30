@@ -8,6 +8,7 @@ from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.events import LineIdentifyMessage
 from jdaviz.core.marks import LineAnalysisContinuum
 
@@ -82,7 +83,7 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
         assert u.Unit(result['unit']) != u.dimensionless_unscaled
 
 
-@pytest.mark.parametrize('sq_angle_unit', [u.sr, u.pix*u.pix])
+@pytest.mark.parametrize('sq_angle_unit', [u.sr, PIX2])
 def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
                        sq_angle_unit):
     """

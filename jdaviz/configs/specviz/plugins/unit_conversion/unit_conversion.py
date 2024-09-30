@@ -6,6 +6,7 @@ from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
@@ -13,7 +14,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginCom
 from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     create_flux_equivalencies_list,
                                     check_if_unit_is_per_solid_angle,
-                                    create_angle_equivalencies_list)
+                                    create_angle_equivalencies_list,
+                                    supported_sq_angle_units)
 
 __all__ = ['UnitConversion']
 
@@ -35,7 +37,7 @@ def _valid_glue_display_unit(unit_str, sv, axis='x'):
 
 
 def _flux_to_sb_unit(flux_unit, angle_unit):
-    if angle_unit not in ['pix2', 'sr']:
+    if angle_unit not in supported_sq_angle_units(as_strings=True):
         sb_unit = flux_unit
     elif '(' in flux_unit:
         pos = flux_unit.rfind(')')
@@ -228,9 +230,8 @@ class UnitConversion(PluginTemplateMixin):
                         self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
-                    if angle_unit == u.pix**2:
+                    if angle_unit == PIX2:
                         self.angle_unit.choices = ['pix2']
-
                     try:
                         if angle_unit is None:
                             # default to sr if input spectrum is not in surface brightness units
