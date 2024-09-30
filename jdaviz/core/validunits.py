@@ -36,7 +36,6 @@ def locally_defined_flux_units():
     return spectral_and_photon_flux_density_units()
 
 
-
 def combine_flux_and_angle_units(flux_units, angle_units):
     """
     Combine (list of) flux_units and angle_units to create a list of string
@@ -156,7 +155,7 @@ def create_angle_equivalencies_list(solid_angle_unit):
 
     """
 
-    if solid_angle_unit is None:
+    if solid_angle_unit is None or solid_angle_unit is PIX2:
         # if there was no solid angle in the unit when calling this function
         # can only represent that unit as per square pixel
         return ['pix^2']

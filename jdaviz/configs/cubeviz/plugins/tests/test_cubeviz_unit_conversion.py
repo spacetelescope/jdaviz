@@ -6,7 +6,9 @@ from regions import PixCoord, CirclePixelRegion
 from specutils import Spectrum1D
 
 from jdaviz.core.custom_units import PIX2
-from jdaviz.core.validunits import locally_defined_flux_units
+from jdaviz.core.validunits import spectral_and_photon_flux_density_units
+
+ALL_FLUX_UNITS = spectral_and_photon_flux_density_units()
 
 
 def cubeviz_wcs_dict():
@@ -41,14 +43,35 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     cubeviz_helper.load_data(cube, data_label="test")
 
     # get all available flux units for translation. Since cube is loaded
-    # in Jy, this will be all items in 'locally_defined_flux_units'
-
-    all_flux_units = locally_defined_flux_units()
+    # in Jy, this will be all items in 'spectral_and_photon_flux_density_units'
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
 
-    for flux_unit in all_flux_units:
+    for flux_unit in ALL_FLUX_UNITS:
         uc_plg.flux_unit = flux_unit
+
+@pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
+                                                         (u.Jy, ALL_FLUX_UNITS),
+                                                         (u.nJy, ALL_FLUX_UNITS + ['nJy'])])
+def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
+    """ 
+    Test that cubes loaded with various flux units have the expected default
+    flux unit selection in the unit conversion plugin, and that the list of
+    convertable flux units in the dropdown is correct.
+    """
+
+    w, wcs_dict = cubeviz_wcs_dict()
+    flux = np.zeros((30, 20, 3001), dtype=np.float32)
+    # load cube in flux_unit, will become cube in flux_unit / pix2
+    cube = Spectrum1D(flux=flux * flux_unit, wcs=w, meta=wcs_dict)
+    cubeviz_helper.load_data(cube)
+
+    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+
+    assert uc_plg.angle_unit.selected == 'pix2'  # will always be pix2  
+
+    assert uc_plg.flux_unit.selected == flux_unit.to_string()
+    assert uc_plg.flux_unit.choices == expected_choices
 
 
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])

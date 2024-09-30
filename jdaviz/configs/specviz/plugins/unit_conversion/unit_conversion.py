@@ -220,15 +220,13 @@ class UnitConversion(PluginTemplateMixin):
 
                 if not self.flux_unit_selected:
                     self.flux_unit.choices = create_flux_equivalencies_list(flux_unit)
-
                     try:
                         self.flux_unit.selected = str(flux_unit)
                     except ValueError:
                         self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
-                    if angle_unit == PIX2:
-                        self.angle_unit.choices = ['pix2']
+                    self.angle_unit.choices = create_angle_equivalencies_list(angle_unit)
                     try:
                         if angle_unit is None:
                             # default to sr if input spectrum is not in surface brightness units
