@@ -50,11 +50,12 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     for flux_unit in ALL_FLUX_UNITS:
         uc_plg.flux_unit = flux_unit
 
+
 @pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
                                                          (u.Jy, ALL_FLUX_UNITS),
                                                          (u.nJy, ALL_FLUX_UNITS + ['nJy'])])
 def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
-    """ 
+    """
     Test that cubes loaded with various flux units have the expected default
     flux unit selection in the unit conversion plugin, and that the list of
     convertable flux units in the dropdown is correct.
@@ -68,7 +69,7 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
 
-    assert uc_plg.angle_unit.selected == 'pix2'  # will always be pix2  
+    assert uc_plg.angle_unit.selected == 'pix2'  # will always be pix2
 
     assert uc_plg.flux_unit.selected == flux_unit.to_string()
     assert uc_plg.flux_unit.choices == expected_choices

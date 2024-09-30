@@ -31,6 +31,7 @@ def spectral_and_photon_flux_density_units():
 
     return sorted(flux_units)
 
+
 def locally_defined_flux_units():
     return spectral_and_photon_flux_density_units()
 
