@@ -1067,7 +1067,7 @@ class Application(VuetifyTemplate, HubListener):
                                  simplify_spectral=True, use_display_units=False):
         # TODO: Use global display units
         # units = dc[0].data.coords.spectral_axis.unit
-        if self.config == "cubeviz":
+        if not hasattr(subset_state.att, "parent"):  # e.g., Cubeviz
             viewer = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
             data = viewer.data()
             if data and len(data) > 0 and isinstance(data[0], Spectrum1D):
