@@ -14,8 +14,8 @@ from astropy.utils.exceptions import AstropyUserWarning
 from astropy.utils.introspection import minversion
 import astropy.units as u
 
-from glue.core.roi import CircularROI, XRangeROI
-from specutils import Spectrum1D
+from glue.core.roi import CircularROI
+from specutils import Spectrum1D, SpectralRegion
 
 from jdaviz.configs.default.plugins.model_fitting.initializers import MODELS
 
@@ -182,8 +182,9 @@ def test_toggle_cube_fit_subset(cubeviz_helper):
     cubeviz_helper.load_data(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
 
-    sv = cubeviz_helper.app.get_viewer('spectrum-viewer')
-    sv.apply_roi(XRangeROI(7.5, 8))
+    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(SpectralRegion(7.5 * unit,
+                                                                             8 * unit))
 
     mf.spectral_subset = 'Subset 1'
     mf.cube_fit = True
@@ -295,8 +296,9 @@ def test_reestimate_parameters(specviz_helper, spectrum1d):
     assert mc['parameters']['stddev']['value'] == 1
     assert mc['parameters']['stddev']['fixed'] is True
 
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
-    sv.apply_roi(XRangeROI(7500, 8000))
+    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    specviz_helper.plugins['Subset Tools']._obj.import_region(SpectralRegion(7500 * unit,
+                                                                             8000 * unit))
 
     mf.spectral_subset = 'Subset 1'
 
@@ -313,9 +315,8 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper.load_data(spectrum1d_cube_larger)
     assert spectrum1d_cube_larger.mask is None
 
-    fv = cubeviz_helper.app.get_viewer('flux-viewer')
     # create a "Subset 1" entry in spatial dimension, selected "interactively"
-    fv.apply_roi(CircularROI(0.5, 0.5, 1))
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(CircularROI(0.5, 0.5, 1))
 
     # check that when no subset is selected, the spectral cube has no mask:
     p = cubeviz_helper.app.get_tray_item_from_name('g-model-fitting')
@@ -330,7 +331,8 @@ def test_subset_masks(cubeviz_helper, spectrum1d_cube_larger):
     sv.toolbar_active_subset.selected = []
 
     # Now create the new spectral subset:
-    sv.apply_roi(XRangeROI(min=min_wavelength.to_value(u.m), max=max_wavelength.to_value(u.m)))
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+        SpectralRegion(min_wavelength.to(u.m), max_wavelength.to(u.m)))
     assert "Subset 2" in p.spectral_subset.choices
 
     # Select the spectral subset
@@ -362,7 +364,9 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     # apply subset that overlaps on left_spectrum, but not right_spectrum
     # NOTE: using a subset that overlaps the right_spectrum (reference) results in errors when
     # retrieving the subset (https://github.com/spacetelescope/jdaviz/issues/1868)
-    specviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(5000, 6000))
+    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    specviz_helper.plugins['Subset Tools']._obj.import_region(SpectralRegion(5000 * unit,
+                                                                             6000 * unit))
 
     plugin = specviz_helper.plugins['Model Fitting']
     plugin.create_model_component('Linear1D')

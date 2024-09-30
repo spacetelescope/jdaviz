@@ -5,8 +5,7 @@ import numpy as np
 from astropy.nddata import NDData
 import astropy.units as u
 from specutils import SpectralRegion
-from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI, XRangeROI
-from glue.core.edit_subset_mode import OrMode, NewMode, AndNotMode
+from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
@@ -16,13 +15,13 @@ from jdaviz.core.region_translators import regions2roi
 @pytest.mark.filterwarnings('ignore')
 def test_plugin(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    p = specviz_helper.plugins['Subset Tools']
+    p = specviz_helper.plugins['Subset Tools']._obj
 
     # regression test for https://github.com/spacetelescope/jdaviz/issues/1693
-    sv = specviz_helper.app.get_viewer('spectrum-viewer')
-    sv.apply_roi(XRangeROI(6500, 7400))
+    unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    p.import_region(SpectralRegion(6500 * unit, 7400 * unit))
 
-    p._obj.subset_select.selected = 'Create New'
+    p.subset_select.selected = 'Create New'
 
     po = specviz_helper.plugins['Plot Options']
     po.layer = 'Subset 1'
@@ -99,7 +98,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
 
     # apply subset
     roi_params = {key: subset_info[key]['initial_value'] for key in subset_info}
-    imviz_helper.app.get_viewer('imviz-0').apply_roi(roi_class(**roi_params))
+    imviz_helper.plugins['Subset Tools']._obj.import_region(roi_class(**roi_params))
 
     # get plugin and check that attribute tracking link type is set properly
     plugin = imviz_helper.plugins['Subset Tools']._obj
@@ -146,7 +145,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     img_wcs = imviz_helper.app.data_collection['Default orientation'].coords
     new_pix_region = original_sky_region.to_pixel(img_wcs)
     new_roi = regions2roi(new_pix_region)
-    imviz_helper.app.get_viewer('imviz-0').apply_roi(new_roi)
+    imviz_helper.plugins['Subset Tools']._obj.import_region(new_roi)
 
     # get subset definitions again, which should now be in sky coordinates
     subset_defs = plugin.subset_definitions
@@ -177,23 +176,45 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     ('spec_regions', 'mode', 'len_subsets', 'len_subregions'),
     [([SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
-       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], NewMode, 3, 1),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], 'new', 3, 1),
+     ([SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um),
+       SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)], 'replace', 1, 1),
      ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
-       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), OrMode, 1, 3),
+       SpectralRegion(7.004748267441649 * u.um, 7.3404016303483965 * u.um)), 'or', 1, 3),
      ((SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
        SpectralRegion(5.8 * u.um, 5.9 * u.um) +
        SpectralRegion(6.494371022809778 * u.um, 6.724270682553864 * u.um) +
-       SpectralRegion(7 * u.um, 7.2 * u.um)), [AndNotMode, OrMode, OrMode], 1, 4),
+       SpectralRegion(7 * u.um, 7.2 * u.um)), ['new', 'andnot', 'or', 'or'], 1, 4),
      (SpectralRegion(5.8 * u.um, 5.9 * u.um), None, 1, 1)
      ]
 )
 def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, mode, len_subsets,
                                 len_subregions):
     cubeviz_helper.load_data(spectrum1d_cube)
-    cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     plg = cubeviz_helper.plugins['Subset Tools']._obj
-    plg._import_spectral_regions(spec_region=spec_regions, mode=mode)
+    plg.import_region(spec_regions, combination_mode=mode)
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == len_subsets
     assert len(subsets['Subset 1']) == len_subregions
+
+
+def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path):
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']._obj
+    s = SpectralRegion(5*u.um, 6*u.um)
+    local_path = str(tmp_path / 'spectral_region.ecsv')
+    s.write(local_path)
+    plg.import_region(local_path)
+    subsets = cubeviz_helper.app.get_subsets()
+    assert len(subsets) == 1
+
+    plg.combination_mode.selected = 'or'
+    plg.import_region(SpectralRegion(7 * u.um, 8 * u.um))
+
+    subsets = cubeviz_helper.app.get_subsets()
+    assert len(subsets['Subset 1']) == 2
+
+    with pytest.raises(ValueError, match='test not one of'):
+        plg.combination_mode.selected = 'test'

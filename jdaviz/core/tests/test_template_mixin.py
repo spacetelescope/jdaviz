@@ -1,8 +1,7 @@
 import pytest
 import numpy as np
 import astropy.units as u
-
-from glue.core.roi import XRangeROI
+from specutils import SpectralRegion
 
 
 def test_spectralsubsetselect(specviz_helper, spectrum1d):
@@ -13,7 +12,9 @@ def test_spectralsubsetselect(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     sv = specviz_helper.app.get_viewer('spectrum-viewer')
     # create a "Subset 1" entry
-    sv.apply_roi(XRangeROI(6500, 7400))
+    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+    subset_plugin.import_region(SpectralRegion(6500 * spectrum1d.spectral_axis.unit,
+                                               7400 * spectrum1d.spectral_axis.unit))
 
     # model fitting uses the mixin
     p = specviz_helper.app.get_tray_item_from_name('g-model-fitting')
