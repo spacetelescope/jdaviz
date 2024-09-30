@@ -59,7 +59,7 @@ SUBSET_MODES_PRETTY = {
     'andnot': AndNotMode,
 }
 SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
-COMBO_OPTIONS = ['new', 'replace', 'or', 'and', 'xor', 'andnot']
+COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
 @tray_registry('g-subset-plugin', label="Subset Tools")
@@ -132,11 +132,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         align_by = getattr(self.app, '_align_by', None)
         self.display_sky_coordinates = (align_by == 'wcs' and not self.multiselect)
 
-        combination_options = list(SUBSET_MODES_PRETTY)
         self.combination_mode = SelectPluginComponent(self,
                                                       items='combination_items',
                                                       selected='combination_selected',
-                                                      manual_options=combination_options)
+                                                      manual_options=COMBO_OPTIONS)
 
     @property
     def user_api(self):
