@@ -18,7 +18,6 @@ def cubeviz_wcs_dict():
     return w, wcs_dict
 
 
-@pytest.mark.skip(reason="Unskip after JDAT 4785 resolved.")
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
 def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     """
