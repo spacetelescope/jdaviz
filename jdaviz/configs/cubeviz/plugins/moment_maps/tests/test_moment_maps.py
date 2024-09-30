@@ -8,8 +8,8 @@ from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData
 from astropy.wcs import WCS
-from glue.core.roi import XRangeROI
 from numpy.testing import assert_allclose
+from specutils import SpectralRegion
 
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
@@ -233,8 +233,10 @@ def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     mm = cubeviz_helper.plugins['Moment Maps']
-    viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
-    viewer.apply_roi(XRangeROI(4.624e-07, 4.627e-07))
+
+    unit = u.Unit(uc.spectral_unit.selected)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(SpectralRegion(4.624e-07 * unit,
+                                                                             4.627e-07 * unit))
 
     uc.spectral_unit = 'Hz'
     mm.spectral_subset = 'Subset 1'

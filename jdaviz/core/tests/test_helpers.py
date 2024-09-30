@@ -2,8 +2,7 @@ import pytest
 
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
-from glue.core.edit_subset_mode import NewMode
-from glue.core.roi import XRangeROI
+from specutils import SpectralRegion
 
 from jdaviz.core.helpers import _next_subset_num
 
@@ -34,18 +33,23 @@ class TestConfigHelper:
         self.spec_app = specviz_helper
         self.spec = spectrum1d
         self.label = "Test 1D Spectrum"
+        spectral_axis_unit = u.AA
 
-        self.spec2 = spectrum1d._copy(spectral_axis=spectrum1d.spectral_axis+1000*u.AA)
+        self.spec2 = spectrum1d._copy(
+            spectral_axis=spectrum1d.spectral_axis+1000*spectral_axis_unit)
         self.label2 = "Test 1D Spectrum 2"
         self.spec_app.load_data(spectrum1d, data_label=self.label)
         self.spec_app.load_data(self.spec2, data_label=self.label2)
 
         # Add 3 subsets to cover different parts of spec and spec2
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6500))
-        self.spec_app.app.session.edit_subset_mode.mode = NewMode
-
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6700, 7200))
-        self.spec_app.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(8200, 8800))
+        self.spec_app.plugins['Subset Tools']._obj.import_region(
+            SpectralRegion(6000*spectral_axis_unit, 6500*spectral_axis_unit))
+        self.spec_app.plugins['Subset Tools']._obj.import_region(
+            SpectralRegion(6700*spectral_axis_unit, 7200*spectral_axis_unit),
+            combination_mode='new')
+        self.spec_app.plugins['Subset Tools']._obj.import_region(
+            SpectralRegion(8200*spectral_axis_unit, 8800*spectral_axis_unit),
+            combination_mode='new')
 
     @pytest.mark.parametrize(
         ('label', 'subset_name', 'answer'),

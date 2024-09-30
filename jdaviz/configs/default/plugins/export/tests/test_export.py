@@ -6,10 +6,9 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import NDData
-from glue.core.edit_subset_mode import AndMode, NewMode
-from glue.core.roi import CircularROI, XRangeROI
+from glue.core.roi import CircularROI
 from regions import Regions, CircleSkyRegion
-from specutils import Spectrum1D
+from specutils import Spectrum1D, SpectralRegion
 from pathlib import Path
 
 
@@ -25,10 +24,9 @@ class TestExportSubsets:
         data = NDData(np.ones((500, 500)) * u.nJy)
 
         imviz_helper.load_data(data)
+        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
-        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(xc=250,
-                                                                     yc=250,
-                                                                     radius=100))
         export_plugin = imviz_helper.plugins['Export']._obj
         export_plugin.subset.selected = 'Subset 1'
 
@@ -80,14 +78,10 @@ class TestExportSubsets:
         data = Spectrum1D(flux=np.ones((500, 500, 2)) * u.nJy,
                           wcs=spectral_cube_wcs)
         cubeviz_helper.load_data(data)
-
-        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=255,
-                                                                           yc=255,
-                                                                           radius=50))
-        cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
-        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=200,
-                                                                           yc=250,
-                                                                           radius=50))
+        subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(CircularROI(xc=255, yc=255, radius=50))
+        subset_plugin.combination_mode.selected = 'and'
+        subset_plugin.import_region(CircularROI(xc=200, yc=250, radius=50))
 
         export_plugin = cubeviz_helper.plugins['Export']._obj
         export_plugin.subset.selected = 'Subset 1'
@@ -106,10 +100,8 @@ class TestExportSubsets:
         imviz_helper.load_data(data)
 
         imviz_helper.link_data(align_by='wcs')
-
-        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(xc=8,
-                                                                     yc=6,
-                                                                     radius=.2))
+        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(CircularROI(xc=8, yc=6, radius=.2))
 
         export_plugin = imviz_helper.plugins['Export']._obj
         export_plugin.subset.selected = 'Subset 1'
@@ -130,10 +122,8 @@ class TestExportSubsets:
         data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
 
         cubeviz_helper.load_data(data)
-
-        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=50,
-                                                                           yc=50,
-                                                                           radius=10))
+        subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(CircularROI(xc=50, yc=50, radius=10))
 
         export_plugin = cubeviz_helper.plugins['Export']._obj
         export_plugin.subset.selected = 'Subset 1'
@@ -198,17 +188,20 @@ class TestExportSubsets:
             export_plugin.subset_format.selected = 'ecsv'
 
         # test that attempting to save a composite subset raises an error
-        cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
-        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=25, yc=25, radius=5))
-        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=20, yc=25, radius=5))
+        subset_plugin.combination_mode.selected = 'and'
+        subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
+        subset_plugin.import_region(CircularROI(xc=20, yc=25, radius=5))
 
         with pytest.raises(NotImplementedError,
                            match='Subset can not be exported - Export for composite subsets not yet supported.'):  # noqa
             export_plugin.export()
 
         # Test saving spectral subset
-        cubeviz_helper.app.session.edit_subset_mode.mode = NewMode
-        cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
+        subset_plugin.combination_mode.selected = 'new'
+        spectral_axis_unit = u.Unit(
+            cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+        subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,
+                                                   15.5 * spectral_axis_unit))
         export_plugin.subset.selected = 'Subset 2'
 
         # Format should auto-update to first non-disabled entry
@@ -326,10 +319,8 @@ class TestExportPluginPlots:
         imviz_helper.load_data(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
-
-        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(xc=250,
-                                                                     yc=250,
-                                                                     radius=100))
+        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
         phot_plugin.aperture_selected = 'Subset 1'

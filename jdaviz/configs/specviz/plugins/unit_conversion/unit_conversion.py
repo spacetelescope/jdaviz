@@ -227,6 +227,7 @@ class UnitConversion(PluginTemplateMixin):
 
                 if not self.angle_unit_selected:
                     self.angle_unit.choices = create_angle_equivalencies_list(angle_unit)
+
                     try:
                         if angle_unit is None:
                             # default to sr if input spectrum is not in surface brightness units

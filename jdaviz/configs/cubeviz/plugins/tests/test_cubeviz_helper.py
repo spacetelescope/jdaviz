@@ -1,4 +1,4 @@
-from glue.core.roi import XRangeROI
+from specutils import SpectralRegion
 
 from jdaviz import Cubeviz
 from jdaviz.app import Application
@@ -43,8 +43,9 @@ def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
 
     # Subset 2 (spectral)
-    spec_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_spectrum_viewer_reference_name) # noqa
-    spec_viewer.apply_roi(XRangeROI(4.62440061e-07, 4.62520112e-07))
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    unit = spectrum1d_cube_larger.spectral_axis.unit
+    subset_plugin.import_region(SpectralRegion(4.62440061e-07 * unit, 4.62520112e-07 * unit))
 
     spatial_with_spec = cubeviz_helper.get_data(data_label="Spectrum (Subset 1, sum)",
                                                 spectral_subset="Subset 2")

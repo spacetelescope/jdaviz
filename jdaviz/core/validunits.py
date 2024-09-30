@@ -24,7 +24,6 @@ def spectral_and_photon_flux_density_units():
     that the unit conversion plugin supports conversion to and from if the input
     data unit is compatible with items in the list (i.e is equivalent directly
     or with u.spectral_density(cube_wave)).
-
     """
     flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'W / (Hz m2)', 'eV / (Hz s m2)',
                   'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
@@ -109,8 +108,7 @@ def create_flux_equivalencies_list(flux_unit):
 
     If the loaded flux unit is count, dimensionless_unscaled, DN, e/s, then
     there will be no additional items available for unit conversion and the
-    only item in the dropdown will be the native unit
-
+    only item in the dropdown will be the native unit.
     """
 
     flux_unit_str = flux_unit.to_string()
