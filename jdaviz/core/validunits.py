@@ -4,7 +4,7 @@ import numpy as np
 
 from jdaviz.core.custom_units import PIX2
 
-__all__ = ['supported_sq_angle_units', 'locally_defined_flux_units',
+__all__ = ['supported_sq_angle_units', 'spectral_and_photon_flux_density_units',
            'combine_flux_and_angle_units', 'units_to_strings',
            'create_spectral_equivalencies_list',
            'create_flux_equivalencies_list', 'check_if_unit_is_per_solid_angle']
@@ -30,10 +30,6 @@ def spectral_and_photon_flux_density_units():
                   'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)']
 
     return sorted(flux_units)
-
-
-def locally_defined_flux_units():
-    return spectral_and_photon_flux_density_units()
 
 
 def combine_flux_and_angle_units(flux_units, angle_units):
