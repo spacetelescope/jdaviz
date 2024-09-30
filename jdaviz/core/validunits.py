@@ -100,7 +100,7 @@ def create_spectral_equivalencies_list(spectral_axis_unit,
 
 def create_flux_equivalencies_list(flux_unit):
     """
-    Get all possible conversions for flux from flux_unit, to populate 'flux' 
+    Get all possible conversions for flux from flux_unit, to populate 'flux'
     dropdown menu in the unit conversion plugin.
 
     If flux_unit is a spectral or photon density (i.e convertable to units in
