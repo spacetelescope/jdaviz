@@ -428,6 +428,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             except Exception:  # WCS might not be valid  # pragma: no cover
                 coords_status = False
             else:
+                coords_status = True
                 self.row2_title = 'Wave'
                 self.row2_text = f'{wave.value:10.5e} {wave.unit.to_string()}'
                 self.row2_unreliable = False
