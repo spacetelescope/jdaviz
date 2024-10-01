@@ -106,6 +106,7 @@ class PluginMark:
         self.y = np.append(self.y, y)
 
     def set_x_unit(self, unit=None):
+        print('ya')
         if unit is None:
             if not hasattr(self.viewer.state, 'x_display_unit'):
                 return
@@ -119,6 +120,9 @@ class PluginMark:
         self.xunit = unit
 
     def set_y_unit(self, unit=None):
+        with open('ex.txt', 'a') as file:
+            file.write(f'yo\n')
+        print('yo')
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
                 return
@@ -139,7 +143,13 @@ class PluginMark:
                 eqv += _eqv_flux_to_sb_pixel()
 
                 y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
+                with open('ex.txt', 'a') as file:
+                    file.write(f'here\n')
+                print('here')
             else:
+                print('there')
+                with open('ex.txt', 'a') as file:
+                    file.write(f'there\n')
                 y = (self.y * self.yunit).to_value(unit)
             self.yunit = unit
             self.y = y

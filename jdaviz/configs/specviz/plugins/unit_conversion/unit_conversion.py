@@ -112,7 +112,7 @@ class UnitConversion(PluginTemplateMixin):
 
         self._cached_properties = ['image_layers']
 
-        if self.config not in ['specviz', 'cubeviz']:
+        if self.config not in ['specviz', 'specviz2d', 'cubeviz', 'mosviz']:
             # TODO [specviz2d, mosviz] x_display_unit is not implemented in glue for image viewer
             # used by spectrum-2d-viewer
             # TODO [mosviz]: add to yaml file
@@ -225,7 +225,15 @@ class UnitConversion(PluginTemplateMixin):
                 flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
 
                 if not self.flux_unit_selected:
+<<<<<<< HEAD
                     self.flux_unit.choices = create_flux_equivalencies_list(flux_unit)
+=======
+                    if flux_unit in (u.count, u.DN, u.electron / u.s, u.DN / u.s):
+                        self.flux_unit.choices = [flux_unit]
+                    elif flux_unit not in self.flux_unit.choices:
+                        # ensure that the native units are in the list of choices
+                        self.flux_unit.choices += [flux_unit]
+>>>>>>> f752fde55 (first pass specviz2d implementation)
                     try:
                         self.flux_unit.selected = str(flux_unit)
                     except ValueError:
