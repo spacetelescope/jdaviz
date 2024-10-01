@@ -135,6 +135,7 @@ filterwarnings = [
     "ignore:The unit 'Angstrom' has been deprecated in the VOUnit standard\\. Suggested.* 0\\.1nm\\.",
     "ignore:((.|\n)*)Sentinel is not a public part of the traitlets API((.|\n)*)",
     "ignore:datetime\\.datetime\\.utcfromtimestamp:DeprecationWarning",  # asdf + dateutil<=2.8.2 + Python 3.12
+    "ignore:Parsing dates involving a day of month without a year:DeprecationWarning",  # ipykernel<7
     "ignore::DeprecationWarning:glue",
     "ignore::DeprecationWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
