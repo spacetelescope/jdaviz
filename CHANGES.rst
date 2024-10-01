@@ -162,6 +162,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Fixed Subset unit when it is created in 2D spectrum viewer. [#3201]
+
 Other Changes and Additions
 ---------------------------
 

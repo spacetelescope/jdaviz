@@ -1,7 +1,10 @@
 import pytest
 import stdatamodels
+from astropy import units as u
 from astropy.io import fits
 from astropy.utils.data import download_file
+from glue.core.edit_subset_mode import NewMode
+from glue.core.roi import XRangeROI
 
 from jdaviz.utils import PRIHDR_KEY
 from jdaviz.configs.imviz.tests.utils import create_example_gwcs
@@ -133,6 +136,25 @@ def test_1d_parser(specviz2d_helper, spectrum1d):
 def test_2d_1d_parser(specviz2d_helper, mos_spectrum2d, spectrum1d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d, spectrum_1d=spectrum1d)
     assert specviz2d_helper.app.data_collection.labels == ['Spectrum 2D', 'Spectrum 1D']
+
+    spec2d_viewer = specviz2d_helper.app.get_viewer("spectrum-2d-viewer")
+    assert spec2d_viewer.figure.axes[0].label == "x: pixels"  # -0.5, 14.5
+    spec2d_viewer.apply_roi(XRangeROI(10, 12))
+
+    spec2d_viewer.session.edit_subset_mode._mode = NewMode
+
+    spec1d_viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
+    assert spec1d_viewer.figure.axes[0].label == "Wavelength [Angstrom]"  # 6000, 8000
+    spec1d_viewer.apply_roi(XRangeROI(7000, 7100))
+
+    # Subset 1 should follow Spectrum 2D viewer unit.
+    # Subset 2 should follow Spectrum 1D viewer unit.
+    subsets = specviz2d_helper.app.get_subsets()
+    assert len(subsets) == 2
+    s1 = subsets["Subset 1"]
+    s2 = subsets["Subset 2"]
+    assert s1.lower.unit == s1.upper.unit == u.pix
+    assert s2.lower.unit == s2.upper.unit == u.AA
 
 
 def test_parser_no_data(specviz2d_helper):
