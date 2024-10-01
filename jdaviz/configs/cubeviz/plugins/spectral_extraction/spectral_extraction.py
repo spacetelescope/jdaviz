@@ -263,6 +263,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                     self._extract_in_new_instance(subset_lbl=subset_lbl,
                                                   auto_update=True, add_data=True)
                 except Exception:
+                    raise
                     msg = SnackbarMessage(
                         f"Automatic {self.resulting_product_name} extraction for {subset_lbl} failed",  # noqa
                         color='error', sender=self, timeout=10000)
@@ -458,9 +459,14 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 subset_id=aperture.selected, cls=NDDataArray
             )
             if uncert_cube:
-                uncertainties = uncert_cube.get_subset_object(
-                    subset_id=aperture.selected, cls=StdDevUncertainty
-                )
+                try:
+                    # Subset may not be linked to the uncertainty cube at this point??
+                    uncertainties = uncert_cube.get_subset_object(
+                        subset_id=aperture.selected, cls=StdDevUncertainty
+                    )
+                except ValueError:
+                    raise
+                    uncertainties = None
             else:
                 uncertainties = None
 
