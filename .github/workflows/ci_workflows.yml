@@ -63,6 +63,13 @@ jobs:
             toxenv: py310-test
             allow_failure: false
 
+          - name: Linux - Python 3.13
+            os: ubuntu-latest
+            python: '3.13'
+            toxenv: py313-test
+            allow_failure: false
+
+          # FIXME: Upgrade to Python 3.13 after glue-viz/bqplot-image-gl#111 is resolved.
           # This also runs on cron but we want to make sure new changes
           # won't break this job at the PR stage.
           - name: Python 3.12 with latest dev versions of key dependencies, and remote data
