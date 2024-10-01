@@ -24,7 +24,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectM
                                         SubsetSelect, ApertureSubsetSelectMixin,
                                         TableMixin, PlotMixin, MultiselectMixin, with_spinner)
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
-from jdaviz.utils import PRIHDR_KEY
+from jdaviz.utils import PRIHDR_KEY, _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -205,15 +205,32 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 # convert background to new unit
                 if self.background_value is not None:
 
-                    prev_unit = u.Unit(prev_display_unit)
-                    new_unit = u.Unit(self.display_unit)
+                    # FIXME: Kinda hacky, better solution welcomed.
+                    # Basically we want to forget about PIX2 and do normal conversion.
+                    # Since traitlet does not keep unit, we do not need to reapply PIX2.
+                    if "pix2" in prev_display_unit and "pix2" in self.display_unit:
+                        prev_unit = u.Unit(prev_display_unit) * PIX2
+                        new_unit = u.Unit(self.display_unit) * PIX2
+                    else:
+                        prev_unit = u.Unit(prev_display_unit)
+                        new_unit = u.Unit(self.display_unit)
 
                     bg = self.background_value * prev_unit
 
-                    # will need to add additonal custom equiv here once
-                    # pix2<>angle is enabled
-                    self.background_value = bg.to_value(
-                        new_unit, u.spectral_density(self._cube_wave))
+                    if self.multiselect:
+                        if len(self.dataset.selected) == 1:
+                            data = self.dataset.selected_dc_item[0]
+                        else:
+                            raise ValueError("cannot calculate background median in multiselect")
+                    else:
+                        data = self.dataset.selected_dc_item
+
+                    with u.set_enabled_equivalencies(
+                            u.spectral() + u.spectral_density(self._cube_wave) +
+                            _eqv_flux_to_sb_pixel() +
+                            _eqv_pixar_sr(data.meta.get('_pixel_scale_factor', 1)
+                                          if data else 1)):
+                        self.background_value = bg.to_value(new_unit)
 
                 # convert flux scaling to new unit
                 if self.flux_scaling is not None:
