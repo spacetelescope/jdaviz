@@ -82,8 +82,24 @@ class PluginMark:
         return self.viewer.hub
 
     def update_xy(self, x, y):
+        # If x and y are not in the previous units, they should be provided as quantities
+        if hasattr(x, 'value'):
+            xunit = x.unit
+            x = x.value
+        else:
+            xunit = None
         self.x = np.asarray(x)
+        if xunit is not None:
+            self.xunit = u.Unit(xunit)
+
+        if hasattr(y, 'value'):
+            yunit = y.unit
+            y = y.value
+        else:
+            yunit = None
         self.y = np.asarray(y)
+        if yunit is not None:
+            self.yunit = u.Unit(yunit)
 
     def append_xy(self, x, y):
         self.x = np.append(self.x, x)
