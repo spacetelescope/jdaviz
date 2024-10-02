@@ -29,7 +29,7 @@ SPECUTILS_LT_1_15_1 = not minversion(specutils, "1.15.1.dev")
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
-moment_unit_options = {0: ["Surface Brightness", "Flux"],
+moment_unit_options = {0: ["Surface Brightness"],
                        1: ["Velocity", "Spectral Unit"],
                        2: ["Velocity", "Velocity^N"]}
 
@@ -170,7 +170,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         if isinstance(self.n_moment, str) or self.n_moment < 0:
             return
-        unit_options_index = 2 if self.n_moment > 2 else self.n_moment
+        unit_options_index = min(self.n_moment, 2)
         if self.output_unit_selected not in moment_unit_options[unit_options_index]:
             self.output_unit_selected = moment_unit_options[unit_options_index][0]
         self.send_state("output_unit_selected")
@@ -192,7 +192,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 sunit = ""
             self.dataset_spectral_unit = sunit
             unit_dict["Spectral Unit"] = sunit
-            unit_dict["Surface Brightness"] = self.app._get_display_unit('sb')
+            unit_dict["Surface Brightness"] = str(self.moment_zero_unit)
 
         # Update units in selection item dictionary
         for item in self.output_unit_items:
@@ -268,14 +268,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # slice out desired region
         # TODO: should we add a warning for a composite spectral subset?
-        spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
-        display_spectral_axis_unit = self.app._get_display_unit(self.slice_display_unit_name)
+        spec_reg = self.spectral_subset.selected_obj
 
-        # Convert units of min and max if necessary
-        if display_spectral_axis_unit and display_spectral_axis_unit != str(spec_min.unit):
-            spec_min = spec_min.to(display_spectral_axis_unit, equivalencies=u.spectral())
-            spec_max = spec_max.to(display_spectral_axis_unit, equivalencies=u.spectral())
-        slab = manipulation.spectral_slab(cube, spec_min, spec_max)
+        if spec_reg is None:
+            slab = cube
+        else:
+            slab = manipulation.extract_region(cube, spec_reg)
 
         # Calculate the moment and convert to CCDData to add to the viewers
         # Need transpose to align JWST mirror shape: This is because specutils
@@ -313,19 +311,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # convert units for moment 0, which is the only currently supported
         # moment for using converted units.
         if n_moment == 0:
-            # get display units for moment 0 based on unit conversion plugin selection
-            # the 0th item of this dictionary is the surface brightness unit, kept
-            # up to date with choices from the UC plugin
-            moment_0_display_unit = self.output_unit_items[0]['unit_str']
-
-            # convert unit string to Unit so moment map data can be converted
-            # `display_unit` is the data unit (surface brighntess) translated
-            # to the choice of selected flux and angle unit from the UC plugin.
-            display_unit = u.Unit(moment_0_display_unit)
-
-            moment_new_unit = display_unit * self.app._get_display_unit('spectral')  # noqa: E501
-
-            self.moment = self.moment.to(moment_new_unit)
+            self.moment = self.moment.to(self.moment_zero_unit)
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)
@@ -343,6 +329,19 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.moment_available = True
 
         return self.moment
+
+    @property
+    def moment_zero_unit(self):
+        if self.spectrum_viewer.state.x_display_unit is not None:
+            return (
+                u.Unit(self.app._get_display_unit('sb')) *
+                self.spectrum_viewer.state.x_display_unit
+            )
+        return ''
+
+    @property
+    def spectral_unit_selected(self):
+        return self.app._get_display_unit('spectral')
 
     def vue_calculate_moment(self, *args):
         self.calculate_moment(add_data=True)
