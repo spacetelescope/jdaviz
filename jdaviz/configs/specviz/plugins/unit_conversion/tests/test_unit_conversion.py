@@ -4,9 +4,7 @@ from astropy import units as u
 from astropy.nddata import InverseVariance
 from specutils import Spectrum1D
 
-from jdaviz.core.validunits import spectral_and_photon_flux_density_units
-
-ALL_FLUX_UNITS = spectral_and_photon_flux_density_units()
+from jdaviz.core.custom_units import SPEC_PHOTON_FLUX_DENSITY_UNITS
 
 
 # On failure, should not crash; essentially a no-op.
@@ -140,8 +138,8 @@ def test_non_stddev_uncertainty(specviz_helper):
 
 
 @pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
-                                                         (u.Jy, ALL_FLUX_UNITS),
-                                                         (u.nJy, ALL_FLUX_UNITS + ['nJy'])])
+                                                         (u.Jy, SPEC_PHOTON_FLUX_DENSITY_UNITS),
+                                                         (u.nJy, SPEC_PHOTON_FLUX_DENSITY_UNITS + ['nJy'])])  # noqa
 def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
     """
     Test that cubes loaded with various flux units have the expected default

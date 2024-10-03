@@ -5,10 +5,7 @@ from astropy.wcs import WCS
 from regions import PixCoord, CirclePixelRegion
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import PIX2
-from jdaviz.core.validunits import spectral_and_photon_flux_density_units
-
-ALL_FLUX_UNITS = spectral_and_photon_flux_density_units()
+from jdaviz.core.custom_units import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 
 
 def cubeviz_wcs_dict():
@@ -47,13 +44,14 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
 
-    for flux_unit in ALL_FLUX_UNITS:
+    for flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
         uc_plg.flux_unit = flux_unit
+        assert cubeviz_helper.app._get_display_unit('spectral_y') == flux_unit
 
 
 @pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
-                                                         (u.Jy, ALL_FLUX_UNITS),
-                                                         (u.nJy, ALL_FLUX_UNITS + ['nJy'])])
+                                                         (u.Jy, SPEC_PHOTON_FLUX_DENSITY_UNITS),
+                                                         (u.nJy, SPEC_PHOTON_FLUX_DENSITY_UNITS + ['nJy'])])  # noqa
 def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
     """
     Test that cubes loaded with various flux units have the expected default
