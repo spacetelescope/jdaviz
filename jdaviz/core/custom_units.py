@@ -1,5 +1,7 @@
 import astropy.units as u
 
+___all__ = ["PIX2", "SPEC_PHOTON_FLUX_DENSITY_UNITS"]
+
 # define custom composite units here
 PIX2 = u.pix * u.pix
 
