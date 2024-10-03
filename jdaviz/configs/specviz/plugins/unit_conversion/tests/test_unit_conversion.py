@@ -142,14 +142,14 @@ def test_non_stddev_uncertainty(specviz_helper):
 @pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
                                                          (u.Jy, ALL_FLUX_UNITS),
                                                          (u.nJy, ALL_FLUX_UNITS + ['nJy'])])
-def test_flux_unit_choices(specviz_helper, spectrum1d, flux_unit, expected_choices):
+def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
     """
     Test that cubes loaded with various flux units have the expected default
     flux unit selection in the unit conversion plugin, and that the list of
     convertable flux units in the dropdown is correct.
     """
 
-    spec = Spectrum1D(spectrum1d.flux.value * flux_unit, spectrum1d.spectral_axis)
+    spec = Spectrum1D([1, 2, 3] * flux_unit, [4, 5, 6] * u.um)
     specviz_helper.load_data(spec)
 
     uc_plg = specviz_helper.plugins['Unit Conversion']
