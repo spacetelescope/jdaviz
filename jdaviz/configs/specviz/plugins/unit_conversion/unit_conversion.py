@@ -132,14 +132,16 @@ class UnitConversion(PluginTemplateMixin):
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
         # NOTE: will switch to count only if first data loaded into viewer in in counts
-        self.flux_unit.choices = create_flux_equivalencies_list(u.Jy)
+        # initialize flux choices to empty list, will be populated when data is loaded
+        self.flux_unit.choices = []
 
         self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz')
         self.angle_unit = UnitSelectPluginComponent(self,
                                                     items='angle_unit_items',
                                                     selected='angle_unit_selected')
         # NOTE: will switch to pix2 only if first data loaded into viewer is in pix2 units
-        self.angle_unit.choices = create_angle_equivalencies_list(u.sr)
+        # initialize flux choices to empty list, will be populated when data is loaded
+        self.angle_unit.choices = []
 
         self.has_sb = self.has_angle or self.config in ('imviz',)
         # NOTE: sb_unit is read_only, exposed through sb_unit property
