@@ -1,6 +1,5 @@
 from astropy import units as u
 import itertools
-import numpy as np
 
 from jdaviz.core.custom_units import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 
@@ -99,10 +98,12 @@ def create_flux_equivalencies_list(flux_unit):
     # dropdown options should be the loaded unit (which may have a different
     # prefix e.g nJy) in addition to items in SPEC_PHOTON_FLUX_DENSITY_UNITS
     equiv = u.spectral_density(1 * u.m)  # spec. unit doesn't matter here, we're not evaluating
-    if np.any([flux_unit.is_equivalent(un, equiv) for un in SPEC_PHOTON_FLUX_DENSITY_UNITS]):
-        if flux_unit_str not in SPEC_PHOTON_FLUX_DENSITY_UNITS:
-            return SPEC_PHOTON_FLUX_DENSITY_UNITS + [flux_unit_str]
-        return SPEC_PHOTON_FLUX_DENSITY_UNITS
+    for un in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        if flux_unit.is_equivalent(un, equiv):
+            if flux_unit_str not in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+                return SPEC_PHOTON_FLUX_DENSITY_UNITS + [flux_unit_str]
+            else:
+                return SPEC_PHOTON_FLUX_DENSITY_UNITS
 
     else:
         # for any other units, including counts, DN, e/s, DN /s, etc,
