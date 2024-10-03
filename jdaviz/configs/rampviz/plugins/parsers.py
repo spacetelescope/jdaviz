@@ -161,7 +161,7 @@ def move_group_axis_last(x):
     # swap axes per the conventions of ramp cubes
     # (group axis comes first) and the default in
     # rampviz (group axis expected last)
-    return np.swapaxes(x, 0, -1)
+    return np.transpose(x, (1, 2, 0))
 
 
 def _roman_3d_to_glue_data(
@@ -201,7 +201,7 @@ def _roman_3d_to_glue_data(
         data_reshaped
     )
     app._jdaviz_helper.cube_cache[ramp_diff_data_label] = NDDataArray(
-        move_group_axis_last(diff_data)
+        diff_data_reshaped
     )
 
     if meta is not None:
@@ -254,9 +254,12 @@ def _parse_hdulist(
             app._jdaviz_helper.create_image_viewer(viewer_name=new_viewer_name)
 
         # add the SCI extension to the level-2 viewer:
-        if 'SCI' in ext:
+        if not ext:
+            idx = 1
+        elif ext and ('SCI' in ext or ext == '*'):
             idx = len(ext) - ext.index('SCI')
-            app.add_data_to_viewer(new_viewer_name, app.data_collection[-idx].label)
+
+        app.add_data_to_viewer(new_viewer_name, app.data_collection[-idx].label)
         return
 
     elif hdu.header['NAXIS'] != 4:
@@ -301,8 +304,7 @@ def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
         np.diff(ramp_cube_data, axis=0)
     ])
 
-    ramp_data = move_group_axis_last(ramp_cube_data)
-    ramp_cube = NDDataArray(ramp_data, unit=flux_unit, meta=meta)
+    ramp_cube = NDDataArray(move_group_axis_last(ramp_cube_data), unit=flux_unit, meta=meta)
     diff_cube = NDDataArray(move_group_axis_last(diff_data), unit=flux_unit, meta=meta)
 
     group_data_label = app.return_data_label(file_name, ext="DATA")

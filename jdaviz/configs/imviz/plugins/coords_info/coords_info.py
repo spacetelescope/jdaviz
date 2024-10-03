@@ -262,6 +262,8 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
             # cubeviz case:
             return arr[int(round(x)), int(round(y)), viewer.state.slices[-1]]
         elif image.ndim == 2:
+            if isinstance(viewer, RampvizImageView):
+                x, y = y, x
             return arr[int(round(y)), int(round(x))]
         else:  # pragma: no cover
             raise ValueError(f'does not support ndim={image.ndim}')
@@ -379,6 +381,11 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
         elif isinstance(viewer, RampvizImageView):
             coords_status = False
+
+            slice_plugin = self.app._jdaviz_helper.plugins.get('Slice', None)
+            if slice_plugin is not None and len(image.shape) == 3:
+                # float to be compatible with default value of nan
+                self._dict['slice'] = float(viewer.slice)
 
         elif isinstance(viewer, MosvizImageView):
 
