@@ -1,12 +1,11 @@
 import os
+from functools import cached_property
 from pathlib import Path
 
 import numpy as np
 import astropy
-from astropy.nddata import (
-    NDDataArray, StdDevUncertainty
-)
-from functools import cached_property
+from astropy import units as u
+from astropy.nddata import NDDataArray, StdDevUncertainty
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
@@ -515,7 +514,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 # NOTE: just forcing these units for now!! this is in steradians and
                 # needs to be converted to the selected square angle unit but for now just
                 # force to correct units
-                aperture_area = self.cube.meta.get('PIXAR_SR', 1.0) * sq_angle_unit
+                if sq_angle_unit == u.sr:
+                    aperture_area = self.cube.meta.get('PIXAR_SR', 1.0) * sq_angle_unit
+                else:
+                    aperture_area = 1 * sq_angle_unit
                 collapsed_nddata = collapsed_nddata.multiply(aperture_area,
                                                              propagate_uncertainties=True)
         else:
