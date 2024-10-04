@@ -11,6 +11,7 @@ from jdaviz.utils import (
     standardize_metadata, download_uri_to_path,
     PRIHDR_KEY, standardize_roman_metadata
 )
+from jdaviz.configs.imviz.plugins.parsers import _parse_image as _parse_image_imviz
 
 try:
     from roman_datamodels import datamodels as rdd
@@ -24,7 +25,7 @@ __all__ = ['parse_data']
 
 @data_parser_registry("ramp-data-parser")
 def parse_data(app, file_obj, data_type=None, data_label=None,
-               parent=None, cache=None, local_path=None, timeout=None,
+               ext=None, parent=None, cache=None, local_path=None, timeout=None,
                integration=0):
     """
     Attempts to parse a data file and auto-populate available viewers in
@@ -104,7 +105,9 @@ def parse_data(app, file_obj, data_type=None, data_label=None,
 
         with fits.open(file_obj) as hdulist:
             _parse_hdulist(
-                app, hdulist, file_name=data_label or file_name,
+                app, hdulist,
+                ext=ext, parent=parent,
+                file_name=data_label or file_name,
                 integration=integration,
                 group_viewer_reference_name=group_viewer_reference_name,
                 diff_viewer_reference_name=diff_viewer_reference_name,
@@ -158,7 +161,7 @@ def move_group_axis_last(x):
     # swap axes per the conventions of ramp cubes
     # (group axis comes first) and the default in
     # rampviz (group axis expected last)
-    return np.swapaxes(x, 0, -1)
+    return np.transpose(x, (1, 2, 0))
 
 
 def _roman_3d_to_glue_data(
@@ -190,12 +193,15 @@ def _roman_3d_to_glue_data(
     ramp_cube_data_label = f"{data_label}[DATA]"
     ramp_diff_data_label = f"{data_label}[DIFF]"
 
+    data_reshaped = move_group_axis_last(data)
+    diff_data_reshaped = move_group_axis_last(diff_data)
+
     # load these cubes into the cache:
     app._jdaviz_helper.cube_cache[ramp_cube_data_label] = NDDataArray(
-        move_group_axis_last(data)
+        data_reshaped
     )
     app._jdaviz_helper.cube_cache[ramp_diff_data_label] = NDDataArray(
-        move_group_axis_last(diff_data)
+        diff_data_reshaped
     )
 
     if meta is not None:
@@ -204,14 +210,14 @@ def _roman_3d_to_glue_data(
     # load these cubes into the app:
     _parse_ndarray(
         app,
-        file_obj=move_group_axis_last(data),
+        file_obj=data_reshaped,
         data_label=ramp_cube_data_label,
         viewer_reference_name=group_viewer_reference_name,
         meta=meta
     )
     _parse_ndarray(
         app,
-        file_obj=move_group_axis_last(diff_data),
+        file_obj=diff_data_reshaped,
         data_label=ramp_diff_data_label,
         viewer_reference_name=diff_viewer_reference_name,
         meta=meta
@@ -224,7 +230,9 @@ def _roman_3d_to_glue_data(
 
 
 def _parse_hdulist(
-    app, hdulist, file_name=None,
+    app, hdulist,
+    ext=None, parent=None,
+    file_name=None,
     integration=None,
     group_viewer_reference_name=None,
     diff_viewer_reference_name=None,
@@ -235,8 +243,27 @@ def _parse_hdulist(
         file_name = file_name or "Unknown HDU object"
 
     hdu = hdulist[1]  # extension containing the ramp
-    if hdu.header['NAXIS'] != 4:
-        raise ValueError(f"Expected a ramp with NAXIS=4 (with axes:"
+
+    if hdu.header['NAXIS'] == 2:
+        # this may be a calibrated Level 2 image:
+        _parse_image_imviz(app, hdulist, data_label=file_name, ext=ext, parent=parent)
+        new_viewer_name = 'level-2'
+
+        # create a level-2 viewer if none exists:
+        if new_viewer_name not in app.get_viewer_reference_names():
+            app._jdaviz_helper.create_image_viewer(viewer_name=new_viewer_name)
+
+        # add the SCI extension to the level-2 viewer:
+        if not ext:
+            idx = 1
+        elif ext and ('SCI' in ext or ext == '*'):
+            idx = len(ext) - ext.index('SCI')
+
+        app.add_data_to_viewer(new_viewer_name, app.data_collection[-idx].label)
+        return
+
+    elif hdu.header['NAXIS'] != 4:
+        raise ValueError(f"Expected a ramp with NAXIS=4 (with dimensions: "
                          f"integrations, groups, x, y), but got "
                          f"NAXIS={hdu.header['NAXIS']}.")
 
@@ -269,27 +296,6 @@ def _parse_hdulist(
 def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
                      group_viewer_reference_name, diff_viewer_reference_name,
                      meta=None):
-
-    # Identify NIRSpec IRS2 detector mode, which needs special treatment.
-    # jdox: https://jwst-docs.stsci.edu/jwst-near-infrared-spectrograph/nirspec-instrumentation/
-    # nirspec-detectors/nirspec-detector-readout-modes-and-patterns/nirspec-irs2-detector-readout-mode
-    if 'meta.model_type' in meta:
-        # this is a Level1bModel, which has metadata in a Node rather
-        # than a dictionary:
-        from_jwst_nirspec_irs2 = (
-            meta.get('meta._primary_header.TELESCOP') == 'JWST' and
-            meta.get('meta._primary_header.INSTRUME') == 'NIRSPEC' and
-            'IRS2' in meta.get('meta._primary_header.READPATT', '')
-        )
-    else:
-        # assume this was parsed from FITS:
-        header = meta.get('_primary_header', {})
-        from_jwst_nirspec_irs2 = (
-            header.get('TELESCOP') == 'JWST' and
-            header.get('INSTRUME') == 'NIRSPEC' and
-            'IRS2' in header.get('READPATT', '')
-        )
-
     # last axis is the group axis, first two are spatial axes:
     diff_data = np.vstack([
         # begin with a group of zeros, so
@@ -298,15 +304,8 @@ def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
         np.diff(ramp_cube_data, axis=0)
     ])
 
-    if from_jwst_nirspec_irs2:
-        # JWST/NIRSpec in IRS2 readout needs an additional axis swap for x and y:
-        def move_axes(x):
-            return np.swapaxes(move_group_axis_last(x), 0, 1)
-    else:
-        move_axes = move_group_axis_last
-
-    ramp_cube = NDDataArray(move_axes(ramp_cube_data), unit=flux_unit, meta=meta)
-    diff_cube = NDDataArray(move_axes(diff_data), unit=flux_unit, meta=meta)
+    ramp_cube = NDDataArray(move_group_axis_last(ramp_cube_data), unit=flux_unit, meta=meta)
+    diff_cube = NDDataArray(move_group_axis_last(diff_data), unit=flux_unit, meta=meta)
 
     group_data_label = app.return_data_label(file_name, ext="DATA")
     diff_data_label = app.return_data_label(file_name, ext="DIFF")
@@ -321,6 +320,10 @@ def _parse_ramp_cube(app, ramp_cube_data, flux_unit, file_name,
 
         # load these cubes into the cache:
         app._jdaviz_helper.cube_cache[data_label] = data_entry
+
+        # set as reference data in this viewer
+        viewer = app.get_viewer(viewer_ref)
+        viewer.state.reference_data = app.data_collection[data_label]
 
     app._jdaviz_helper._loaded_flux_cube = app.data_collection[group_data_label]
 

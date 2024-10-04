@@ -95,6 +95,13 @@ def jwst_level_1b_rectangular_ramp():
 
 
 @pytest.fixture
+def jwst_level_2c_rate_image():
+    flux_hdu = fits.ImageHDU(np.ones((32, 25)))
+    flux_hdu.name = 'FLUX'
+    return fits.HDUList([fits.PrimaryHDU(), flux_hdu])
+
+
+@pytest.fixture
 def image_2d_wcs():
     return WCS({'CTYPE1': 'RA---TAN', 'CUNIT1': 'deg', 'CDELT1': -0.0002777777778,
                 'CRPIX1': 1, 'CRVAL1': 337.5202808,

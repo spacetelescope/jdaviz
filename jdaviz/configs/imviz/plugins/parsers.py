@@ -232,7 +232,7 @@ def _parse_image(app, file_obj, data_label, ext=None, parent=None):
     for data, data_label in data_iter:
 
         # if the science extension hasn't been identified yet, do so here:
-        if sci_ext is None and ('[DATA' in data_label or '[SCI' in data_label):
+        if sci_ext is None and data.ndim == 2 and ('[DATA' in data_label or '[SCI' in data_label):
             sci_ext = data_label
 
         if isinstance(data.coords, GWCS) and (data.coords.bounding_box is not None):

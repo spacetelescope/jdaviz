@@ -1164,10 +1164,12 @@ class PlotOptions(PluginTemplateMixin):
         from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
         from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile2DView
+        from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
 
         def _is_image_viewer(viewer):
             return isinstance(viewer, (ImvizImageView, CubevizImageView,
-                                       MosvizImageView, MosvizProfile2DView))
+                                       MosvizImageView, MosvizProfile2DView,
+                                       RampvizImageView))
 
         viewers = self.viewer.selected_obj
         if not isinstance(viewers, list):
