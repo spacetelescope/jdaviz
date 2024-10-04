@@ -1,9 +1,9 @@
 from astropy import units as u
 import itertools
 
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 
-__all__ = ['supported_sq_angle_units', 'locally_defined_flux_units',
+__all__ = ['supported_sq_angle_units',
            'combine_flux_and_angle_units', 'units_to_strings',
            'create_spectral_equivalencies_list',
            'create_flux_equivalencies_list', 'check_if_unit_is_per_solid_angle']
@@ -14,20 +14,6 @@ def supported_sq_angle_units(as_strings=False):
     if as_strings:
         units = units_to_strings(units)
     return units
-
-
-def locally_defined_flux_units():
-    """
-    This function returns a list of string representations of flux units. This
-    list represents flux units that the unit conversion plugin supports
-    conversion to and from if the input data unit is compatible with items in the
-    list (i.e is equivalent directly or with u.spectral_density(cube_wave)).
-
-    """
-    flux_units = ['Jy', 'mJy', 'uJy', 'MJy', 'W / (Hz m2)', 'eV / (Hz s m2)',
-                  'erg / (Hz s cm2)', 'erg / (Angstrom s cm2)',
-                  'ph / (Angstrom s cm2)', 'ph / (Hz s cm2)']
-    return flux_units
 
 
 def combine_flux_and_angle_units(flux_units, angle_units):
@@ -92,36 +78,39 @@ def create_spectral_equivalencies_list(spectral_axis_unit,
     return sorted(units_to_strings(local_units)) + spectral_axis_unit_equivalencies_titles
 
 
-def create_flux_equivalencies_list(flux_unit, spectral_axis_unit):
-    """Get all possible conversions for flux from current flux units."""
-    if ((flux_unit in (u.count, u.dimensionless_unscaled))
-            or (spectral_axis_unit in (u.pix, u.dimensionless_unscaled))):
-        return []
+def create_flux_equivalencies_list(flux_unit):
+    """
+    Get all possible conversions for flux from flux_unit, to populate 'flux'
+    dropdown menu in the unit conversion plugin.
 
-    # Get unit equivalencies. Value passed into u.spectral_density() is irrelevant.
-    try:
-        curr_flux_unit_equivalencies = flux_unit.find_equivalent_units(
-            equivalencies=u.spectral_density(1 * spectral_axis_unit),
-            include_prefix_units=False)
-    except u.core.UnitConversionError:
-        return []
+    If flux_unit is a spectral or photon density (i.e convertable to units in
+    SPEC_PHOTON_FLUX_DENSITY_UNITS), then the loaded unit and all of the
+    units in SPEC_PHOTON_FLUX_DENSITY_UNITS.
 
-    mag_units = ['bol', 'AB', 'ST']
-    # remove magnitude units from list
-    curr_flux_unit_equivalencies = [unit for unit in curr_flux_unit_equivalencies if not any(mag in unit.name for mag in mag_units)]  # noqa
+    If the loaded flux unit is count, dimensionless_unscaled, DN, e/s, then
+    there will be no additional items available for unit conversion and the
+    only item in the dropdown will be the native unit.
+    """
 
-    # Get local flux units.
-    local_units = [u.Unit(unit) for unit in locally_defined_flux_units()]
+    flux_unit_str = flux_unit.to_string()
 
-    # Remove overlap units.
-    curr_flux_unit_equivalencies = list(set(curr_flux_unit_equivalencies)
-                                        - set(local_units))
+    # if flux_unit is a spectral or photon flux density unit, then the flux unit
+    # dropdown options should be the loaded unit (which may have a different
+    # prefix e.g nJy) in addition to items in SPEC_PHOTON_FLUX_DENSITY_UNITS
+    equiv = u.spectral_density(1 * u.m)  # spec. unit doesn't matter here, we're not evaluating
+    for un in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        if flux_unit.is_equivalent(un, equiv):
+            if flux_unit_str not in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+                return SPEC_PHOTON_FLUX_DENSITY_UNITS + [flux_unit_str]
+            else:
+                return SPEC_PHOTON_FLUX_DENSITY_UNITS
 
-    # Convert equivalencies into readable versions of the units and sort them alphabetically.
-    flux_unit_equivalencies_titles = sorted(units_to_strings(curr_flux_unit_equivalencies))
-
-    # Concatenate both lists with the local units coming first.
-    return sorted(units_to_strings(local_units)) + flux_unit_equivalencies_titles
+    else:
+        # for any other units, including counts, DN, e/s, DN /s, etc,
+        # no other conversions between flux units available as we only support
+        # conversions to and from spectral and photon flux density flux unit.
+        # dropdown will only contain one item (the input unit)
+        return [flux_unit_str]
 
 
 def create_angle_equivalencies_list(solid_angle_unit):
@@ -146,7 +135,7 @@ def create_angle_equivalencies_list(solid_angle_unit):
 
     """
 
-    if solid_angle_unit is None:
+    if solid_angle_unit is None or solid_angle_unit is PIX2:
         # if there was no solid angle in the unit when calling this function
         # can only represent that unit as per square pixel
         return ['pix^2']

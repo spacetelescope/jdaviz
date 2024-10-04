@@ -736,7 +736,7 @@ class JdavizProfileView(JdavizViewerMixin, BqplotProfileView):
                 self.figure.marks = list(self.figure.marks) + [error_line_mark]
 
     def set_plot_axes(self):
-        # Set y axes labels for the spectrum viewer
+        # Set x and y axes labels for the spectrum viewer
         y_display_unit = self.state.y_display_unit
         y_unit = (
             u.Unit(y_display_unit) if y_display_unit and y_display_unit != 'None'

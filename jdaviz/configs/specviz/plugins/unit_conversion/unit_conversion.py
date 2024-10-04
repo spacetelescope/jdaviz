@@ -6,7 +6,6 @@ from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
-from jdaviz.core.custom_units import PIX2
 from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
@@ -133,14 +132,16 @@ class UnitConversion(PluginTemplateMixin):
                                                    items='flux_unit_items',
                                                    selected='flux_unit_selected')
         # NOTE: will switch to count only if first data loaded into viewer in in counts
-        self.flux_unit.choices = create_flux_equivalencies_list(u.Jy, u.Hz)
+        # initialize flux choices to empty list, will be populated when data is loaded
+        self.flux_unit.choices = []
 
         self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz')
         self.angle_unit = UnitSelectPluginComponent(self,
                                                     items='angle_unit_items',
                                                     selected='angle_unit_selected')
         # NOTE: will switch to pix2 only if first data loaded into viewer is in pix2 units
-        self.angle_unit.choices = create_angle_equivalencies_list(u.sr)
+        # initialize flux choices to empty list, will be populated when data is loaded
+        self.angle_unit.choices = []
 
         self.has_sb = self.has_angle or self.config in ('imviz',)
         # NOTE: sb_unit is read_only, exposed through sb_unit property
@@ -219,19 +220,15 @@ class UnitConversion(PluginTemplateMixin):
                 flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
 
                 if not self.flux_unit_selected:
-                    if flux_unit in (u.count, u.DN, u.electron / u.s):
-                        self.flux_unit.choices = [flux_unit]
-                    elif flux_unit not in self.flux_unit.choices:
-                        # ensure that the native units are in the list of choices
-                        self.flux_unit.choices += [flux_unit]
+                    self.flux_unit.choices = create_flux_equivalencies_list(flux_unit)
                     try:
                         self.flux_unit.selected = str(flux_unit)
                     except ValueError:
                         self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
-                    if angle_unit == PIX2:
-                        self.angle_unit.choices = ['pix2']
+                    self.angle_unit.choices = create_angle_equivalencies_list(angle_unit)
+
                     try:
                         if angle_unit is None:
                             # default to sr if input spectrum is not in surface brightness units

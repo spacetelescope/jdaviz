@@ -53,9 +53,9 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label, flux_conversion,
                           spectral_axis_conversion)
+from jdaviz.core.custom_units import SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.core.validunits import (check_if_unit_is_per_solid_angle,
                                     combine_flux_and_angle_units,
-                                    locally_defined_flux_units,
                                     supported_sq_angle_units)
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
@@ -75,7 +75,7 @@ class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
         if cid.label == "flux":
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
-            all_flux_units = locally_defined_flux_units() + ['ct']
+            all_flux_units = SPEC_PHOTON_FLUX_DENSITY_UNITS + ['ct']
             angle_units = supported_sq_angle_units()
             all_sb_units = combine_flux_and_angle_units(all_flux_units, angle_units)
 
