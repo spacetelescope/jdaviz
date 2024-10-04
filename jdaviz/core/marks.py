@@ -559,10 +559,10 @@ class PluginScatter(Scatter, PluginMark, HubListener):
 
 class LineAnalysisContinuum(PluginLine):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         # units do not need to be updated because the plugin itself reruns
         # the computation and automatically changes the arrays themselves
-        self.auto_update_units = False
+        self.auto_update_units = kwargs.pop('auto_update_units', False)
+        super().__init__(*args, **kwargs)
 
 
 class LineAnalysisContinuumCenter(LineAnalysisContinuum):
