@@ -127,7 +127,7 @@
           ></v-radio>
         </v-radio-group>
       </v-row>
-      <v-row v-if="output_unit_selected !== 'Spectral Unit' && output_unit_selected !== 'Flux'">
+      <v-row v-if="output_unit_selected !== 'Spectral Unit' && output_unit_selected !== 'Surface Brightness'">
         <v-text-field
         ref="reference_wavelength"
         type="number"

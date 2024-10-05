@@ -347,9 +347,9 @@ def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_
     # in this list. also check that the initial unit is correct.
     output_unit_moment_0 = mm.output_unit_items[0]
     assert output_unit_moment_0['label'] == 'Surface Brightness'
-    assert output_unit_moment_0['unit_str'] == 'MJy / sr'
+    assert output_unit_moment_0['unit_str'] == 'MJy m / sr'
 
-    # check that calculated moment has the correct units
+    # check that calculated moment has the correct units of MJy m / sr
     mm.calculate_moment()
     assert mm.moment.unit == f'M{moment_unit}'
 
@@ -360,8 +360,16 @@ def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_
     # and make sure this change is propogated
     output_unit_moment_0 = mm.output_unit_items[0]
     assert output_unit_moment_0['label'] == 'Surface Brightness'
-    assert output_unit_moment_0['unit_str'] == 'Jy / sr'
+    assert output_unit_moment_0['unit_str'] == 'Jy m / sr'
 
     # and that calculated moment has the correct units
     mm.calculate_moment()
     assert mm.moment.unit == moment_unit
+
+    # now change the spectral unit and make sure that change is
+    # reflected in MM plugin
+    uc.spectral_unit = 'um'
+    assert output_unit_moment_0['unit_str'] == 'Jy um / sr'
+
+    mm.calculate_moment()
+    assert mm.moment.unit == moment_unit.replace('m', 'um')
