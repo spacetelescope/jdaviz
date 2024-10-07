@@ -2895,6 +2895,9 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
     continuum_subset_selected = Unicode().tag(sync=True)
 
     continuum_width = FloatHandleEmpty(3).tag(sync=True)
+    # whether continuum marks should update on unit change or
+    # if the plugin will handle that logic
+    continuum_auto_update_units = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2932,14 +2935,28 @@ class SpectralContinuumMixin(VuetifyTemplate, HubListener):
                 return {}
             # then haven't been initialized yet, so initialize with empty
             # marks that will be populated once the first analysis is done.
-            marks = {'left': LineAnalysisContinuumLeft(viewer, visible=self.is_active),
-                     'center': LineAnalysisContinuumCenter(viewer, visible=self.is_active),
-                     'right': LineAnalysisContinuumRight(viewer, visible=self.is_active)}
+            marks = {'left': LineAnalysisContinuumLeft(viewer,
+                                                       auto_update_units=self.continuum_auto_update_units,  # noqa
+                                                       visible=self.is_active),
+                     'center': LineAnalysisContinuumCenter(viewer,
+                                                           auto_update_units=self.continuum_auto_update_units,  # noqa
+                                                           visible=self.is_active),
+                     'right': LineAnalysisContinuumRight(viewer,
+                                                         auto_update_units=self.continuum_auto_update_units,  # noqa
+                                                         visible=self.is_active)}
             shadows = [ShadowLine(mark, shadow_width=2) for mark in marks.values()]
             # NOTE: += won't trigger the figure to notice new marks
             viewer.figure.marks = viewer.figure.marks + shadows + list(marks.values())
 
         return marks
+
+    @observe('continuum_auto_update_units')
+    def _set_auto_update_units(self, event=None):
+        for mark in self.continuum_marks.values():
+            # LineAnalysis recomputes the continuum on a change to units,
+            # but here since the continuum is just visual and an approximation,
+            # let's just convert units on the mark itself
+            mark.auto_update_units = self.continuum_auto_update_units
 
     def _update_continuum_marks(self, mark_x={}, mark_y={}):
         for pos, mark in self.continuum_marks.items():

@@ -102,6 +102,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                                'continuum_dataset_selected',
                                                filters=['not_child_layer',
                                                         'layer_in_spectrum_viewer'])
+        # since the continuum is just an approximation preview,
+        # automatically convert the units instead of recomputing
+        self.continuum_auto_update_units = True
 
         # when plugin is initialized, there won't be a dataset selected, so
         # call the output unit 'Flux' for now (rather than surface brightness).
