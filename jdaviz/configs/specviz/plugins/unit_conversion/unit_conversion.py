@@ -1,12 +1,14 @@
-from astropy import units as u
+from contextlib import nullcontext
 from functools import cached_property
+
+from astropy import units as u
 from glue.core.subset_group import GroupedSubset
 from glue_jupyter.bqplot.image import BqplotImageView
 from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
-from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage
+from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage, SliceValueUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
@@ -15,6 +17,7 @@ from jdaviz.core.validunits import (create_spectral_equivalencies_list,
                                     check_if_unit_is_per_solid_angle,
                                     create_angle_equivalencies_list,
                                     supported_sq_angle_units)
+from jdaviz.utils import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 
 __all__ = ['UnitConversion']
 
@@ -120,6 +123,8 @@ class UnitConversion(PluginTemplateMixin):
 
         self.session.hub.subscribe(self, AddDataMessage,
                                    handler=self._on_add_data_to_viewer)
+        self.session.hub.subscribe(self, SliceValueUpdatedMessage,
+                                   handler=self._on_slice_changed)
 
         self.has_spectral = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
         self.spectral_unit = UnitSelectPluginComponent(self,
@@ -275,6 +280,11 @@ class UnitConversion(PluginTemplateMixin):
             self._handle_attribute_display_unit(self.sb_unit_selected, layers=layers)
             self._clear_cache('image_layers')
 
+    def _on_slice_changed(self, msg):
+        if self.config != "cubeviz":
+            return
+        self._cube_wave = u.Quantity(msg.value, msg.value_unit)
+
     @observe('spectral_unit_selected', 'flux_unit_selected',
              'angle_unit_selected', 'sb_unit_selected',
              'time_unit_selected')
@@ -376,6 +386,13 @@ class UnitConversion(PluginTemplateMixin):
                     or u.Unit(layer.layer.get_component("flux").units).physical_type != 'surface brightness'):  # noqa
                 continue
             if hasattr(layer.state, 'attribute_display_unit'):
-                layer.state.attribute_display_unit = _valid_glue_display_unit(attr_unit,
-                                                                              layer,
-                                                                              'attribute')
+                if self.config == "cubeviz":
+                    ctx = u.set_enabled_equivalencies(
+                        u.spectral() + u.spectral_density(self._cube_wave) +
+                        _eqv_flux_to_sb_pixel() +
+                        _eqv_pixar_sr(layer.layer.meta.get('_pixel_scale_factor', 1)))
+                else:
+                    ctx = nullcontext()
+                with ctx:
+                    layer.state.attribute_display_unit = _valid_glue_display_unit(
+                        attr_unit, layer, 'attribute')

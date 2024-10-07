@@ -389,8 +389,11 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         # the unit of the data collection item object, could be flux or surface brightness
         spec_unit = str(spec.flux.unit)
 
-        # Need this for setting the y-limits
-        eqv = u.spectral_density(spectral_values)
+        # Need this for setting the y-limits but values from viewer might be downscaled
+        if len(values) == spectral_values.size:
+            eqv = u.spectral_density(spectral_values)
+        else:
+            eqv = u.spectral_density(spec.spectral_axis[0])
     elif slice is not None and eqv:
         image_data = True
         # Need this to convert Flux to Flux for complex conversions/translations of cube image data

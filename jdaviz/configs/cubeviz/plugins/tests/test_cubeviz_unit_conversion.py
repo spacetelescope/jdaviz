@@ -2,7 +2,8 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.wcs import WCS
-from regions import PixCoord, CirclePixelRegion
+from numpy.testing import assert_allclose
+from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion
 from specutils import Spectrum1D
 
 from jdaviz.core.custom_units import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
@@ -18,7 +19,6 @@ def cubeviz_wcs_dict():
     return w, wcs_dict
 
 
-@pytest.mark.skip(reason="Unskip after JDAT 4785 resolved.")
 @pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
 def test_basic_unit_conversions(cubeviz_helper, angle_unit):
     """
@@ -35,18 +35,91 @@ def test_basic_unit_conversions(cubeviz_helper, angle_unit):
 
     # load cube with flux units of MJy
     w, wcs_dict = cubeviz_wcs_dict()
-    flux = np.zeros((3, 4, 5), dtype=np.float32)
-    cube = Spectrum1D(flux=flux * u.MJy / angle_unit, wcs=w, meta=wcs_dict)
+    flux = np.ones((3, 4, 5), dtype=np.float32)
+    cube = Spectrum1D(flux=flux * (u.MJy / angle_unit), wcs=w, meta=wcs_dict)
     cubeviz_helper.load_data(cube, data_label="test")
+    viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
 
     # get all available flux units for translation. Since cube is loaded
     # in Jy, this will be all items in 'spectral_and_photon_flux_density_units'
 
     uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    ap_plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+
+    cubeviz_helper.load_regions(RectanglePixelRegion(PixCoord(1, 1), 1, 1))
+    ap_plg.background_selected = "Subset 1"
 
     for flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        if flux_unit == 'MJy':
+            if angle_unit == u.sr:
+                ans = 9.6e-10  # 12 * 8e-11
+            else:
+                ans = 12  # 12 * 1
+            bg_ans = 1  # MJy / angle_unit
+        elif flux_unit == 'Jy':
+            if angle_unit == u.sr:
+                ans = 9.6e-04
+            else:
+                ans = 1.2e+07
+            bg_ans = 1e6
+        elif flux_unit == 'mJy':
+            if angle_unit == u.sr:
+                ans = 0.96
+            else:
+                ans = 1.2e+10
+            bg_ans = 1e9
+        elif flux_unit == 'uJy':
+            if angle_unit == u.sr:
+                ans = 960
+            else:
+                ans = 1.2e+13
+            bg_ans = 1e12
+        elif flux_unit == 'W / (Hz m2)':
+            if angle_unit == u.sr:
+                ans = 9.6e-30
+            else:
+                ans = 1.2e-19
+            bg_ans = 1e-20
+        elif flux_unit == 'eV / (Hz s m2)':
+            if angle_unit == u.sr:
+                ans = 5.99185e-11
+            else:
+                ans = 7.48981e-01
+            bg_ans = 0.06241509074460764
+        elif flux_unit == 'erg / (Angstrom s cm2)':
+            if angle_unit == u.sr:
+                ans = 1.34580e-15
+            else:
+                ans = 1.68225e-05
+            bg_ans = 1.4018163962192981e-06
+        elif flux_unit == 'erg / (Hz s cm2)':
+            if angle_unit == u.sr:
+                ans = 9.6e-27
+            else:
+                ans = 1.2e-16
+            bg_ans = 1e-17
+        elif flux_unit == 'ph / (Angstrom s cm2)':
+            if angle_unit == u.sr:
+                ans = 3.133e-04
+            else:
+                ans = 3.91624e+06
+            bg_ans = 326346.6709140777
+        elif flux_unit == 'ph / (Hz s cm2)':
+            if angle_unit == u.sr:
+                ans = 2.23486e-15
+            else:
+                ans = 2.79357e-05
+            bg_ans = 2.328027206660126e-06
+
         uc_plg.flux_unit = flux_unit
         assert cubeviz_helper.app._get_display_unit('spectral_y') == flux_unit
+
+        label_mouseover._viewer_mouse_event(viewer, {
+            'event': 'mousemove', 'domain': {'x': 4.6245e-7, 'y': ans}})
+        assert_allclose(label_mouseover._dict['value'], ans, rtol=1e-4)
+
+        assert_allclose(ap_plg.background_value, bg_ans, rtol=1e-4)
 
 
 @pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
