@@ -1292,7 +1292,12 @@ class Application(VuetifyTemplate, HubListener):
                 return self._get_multi_mask_subset_definition(subset_state)
 
     def _get_display_unit(self, axis):
-        if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
+        if self._jdaviz_helper is None:
+            # cannot access either the plugin or the spectrum viewer.
+            # Plugins that access the unit at this point will need to
+            # detect that they are set to unitless and attempt again later.
+            return ''
+        elif self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
             # fallback on native units (unit conversion is not enabled)
             if axis == 'spectral':
                 sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
