@@ -7,6 +7,7 @@ import pytest
 from astropy import units as u
 from astropy.io import fits
 from astropy.nddata import CCDData
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs import WCS
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion
@@ -244,9 +245,12 @@ def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger
     mm.n_moment = 1
     mm.output_unit = 'Spectral Unit'
     moment_1_data = mm.calculate_moment()
+    mm.n_moment = 0
+    moment_0_data = mm.calculate_moment()
 
     # Check to make sure there are no nans
     assert len(np.where(moment_1_data.data > 0)[0]) == 8
+    assert_quantity_allclose(moment_0_data, -2.9607526e+09*u.Unit("Hz Jy / pix2"))
 
 
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
