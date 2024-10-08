@@ -51,6 +51,8 @@ Imviz
 - Updated ``link_type`` to ``align_by`` and ``wcs_use_affine`` to ``wcs_fast_approximation`` in
   Orientation plugin API to better match UI text. [#3128]
 
+- Improved performance and removed jittering for the matched box zoom tool. [#3215]
+
 Mosviz
 ^^^^^^
 
