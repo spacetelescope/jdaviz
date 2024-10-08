@@ -115,7 +115,7 @@ class _MatchedZoomMixin:
                 viewer.zoom_level = old_level * float(to_fov_sky / orig_fov_sky)
                 viewer.center_on(sky_cen)
 
-            else:
+            elif len(self.match_axes):
                 with delay_callback(viewer.state, *self.match_keys):
                     for ax in self.match_axes:
                         if None in orig_lims.values():
@@ -134,6 +134,13 @@ class _MatchedZoomMixin:
                             if not np.isnan(value) and (orig_value is None or
                                                         abs(value-orig_lims.get(k, np.inf)) > tol):
                                 setattr(viewer.state, k, value)
+            else:
+                # match keys, but not match axes (e.g., zoom_center and zoom_radius)
+                with delay_callback(viewer.state, *self.match_keys):
+                    for k in self.match_keys:
+                        value = to_lims.get(k)
+                        if not np.isnan(value):
+                            setattr(viewer.state, k, value)
 
     def is_visible(self):
         return len(self.viewer.jdaviz_app._viewer_store) > 1
