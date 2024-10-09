@@ -1,7 +1,9 @@
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin
-from traitlets import Bool
+from traitlets import Bool, List, Unicode, observe
+import sounddevice as sd
+
 
 __all__ = ['SonifyData']
 
@@ -21,12 +23,19 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
     audfrqmin = FloatHandleEmpty(50).tag(sync=True)
     audfrqmax = FloatHandleEmpty(1500).tag(sync=True)
     pccut = IntHandleEmpty(20).tag(sync=True)
+
+    sound_devices_items = List().tag(sync=True)
+    sound_devices_selected = Unicode('').tag(sync=True)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.sound_devices_items = [device['name'] for device in sd.query_devices()]
+        self.sound_devices_selected = self.sound_devices_items[sd.default.device[1]]
 
     def vue_sonify_cube(self, *args):
         viewer = self.app.get_viewer('flux-viewer')
-        viewer.get_sonified_cube(self.sample_rate, self.buffer_size, self.assidx,
-                                 self.ssvidx, self.pccut, self.audfrqmin,
+        # Get index of selected device since name may not be unique
+        selected_device_index = self.sound_devices_items.index(self.sound_devices_selected)
+        viewer.get_sonified_cube(self.sample_rate, self.buffer_size, selected_device_index,
+                                 self.assidx, self.ssvidx, self.pccut, self.audfrqmin,
                                  self.audfrqmax, self.eln)

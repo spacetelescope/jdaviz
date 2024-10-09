@@ -108,11 +108,12 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             return
         self.audified_cube.set_wl_bounds(w1, w2)
         
-    def get_sonified_cube(self, sample_rate, buffer_size, assidx, ssvidx, pccut, audfrqmin, audfrqmax, eln):
+    def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
+                          pccut, audfrqmin, audfrqmax, eln):
         spectrum = self.active_image_layer.layer.get_object(statistic=None)
 
         wlens = spectrum.wavelength.to('m').value
-        flux  = spectrum.flux.value
+        flux = spectrum.flux.value
         
         if self.audification_wl_bounds:
             wl_unit = getattr(u, self.audification_wl_unit)
@@ -120,9 +121,9 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             wdx = np.logical_and(wlens >= si_wl_bounds[0].value,
                                  wlens <= si_wl_bounds[1].value)
             wlens = wlens[wdx]
-            flux = flux[:,:,wdx]
+            flux = flux[:, :, wdx]
             
-        pc_cube = np.percentile(np.nan_to_num(flux), np.clip(pccut,0,99), axis=-1)
+        pc_cube = np.percentile(np.nan_to_num(flux), np.clip(pccut, 0, 99), axis=-1)
 
         # clip zeros and remove NaNs
         clipped_arr = np.nan_to_num(np.clip(flux, 0, np.inf), copy=False)
@@ -136,14 +137,18 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # and re-clip
         clipped_arr = np.clip(clipped_arr, 0, np.inf)
 
-        # print(self.state.x_min, self.state.x_max, self._spectrum_viewer.state.x_min,  self._spectrum_viewer.state.x_maX)
         print(f"making cube with {self.audification_wl_bounds}")
         self.audified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
-                                              samplerate=sample_rate, buffsize=buffer_size, wl_bounds=self.audification_wl_bounds,
-                                              wl_unit=self.audification_wl_unit, audfrqmin=audfrqmin, audfrqmax=audfrqmax)
+                                              samplerate=sample_rate, buffsize=buffer_size,
+                                              wl_bounds=self.audification_wl_bounds,
+                                              wl_unit=self.audification_wl_unit,
+                                              audfrqmin=audfrqmin, audfrqmax=audfrqmax)
         self.audified_cube.audify_cube()
-        self.audified_cube.sigcube = (self.audified_cube.sigcube * pow(whitelight / whitelight.max(), ssvidx)).astype('int16')
-        self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, channels=1, dtype='int16', latency='low',
+        self.audified_cube.sigcube = (
+                self.audified_cube.sigcube * pow(whitelight / whitelight.max(),
+                                                 ssvidx)).astype('int16')
+        self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, device=device,
+                                      channels=1, dtype='int16', latency='low',
                                       callback=self.audified_cube.player_callback)
         self.audified_cube.cbuff = True
 

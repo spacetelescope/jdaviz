@@ -20,6 +20,17 @@
       label="Data"
       hint="Select the data set."
     />
+    <v-row>
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="sound_devices_items"
+        v-model="sound_devices_selected"
+        label="Sound device"
+        hint="Device which sound will be output from. Must be selected BEFORE cube is sonified."
+        persistent-hint
+        ></v-select>
+    </v-row>
 
     <v-row>
       <v-text-field
