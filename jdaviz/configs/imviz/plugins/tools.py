@@ -21,7 +21,7 @@ class _ImvizMatchedZoomMixin(_MatchedZoomMixin):
 
     @property
     def match_keys(self):
-        return ('zoom_center_x', 'zoom_center_y', 'zoom_radius')
+        return ['zoom_center_x', 'zoom_center_y', 'zoom_radius']
 
     def _is_matched_viewer(self, viewer):
         return isinstance(viewer, BqplotImageView)
