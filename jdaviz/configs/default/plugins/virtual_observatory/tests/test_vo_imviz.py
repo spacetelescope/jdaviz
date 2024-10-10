@@ -352,8 +352,11 @@ class TestVOImvizRemote:
         vo_plugin._populate_table([fake_result])
 
         # Put the fake result first to make sure we hit the fake result before the real one
-        vo_plugin.table.selected_rows = [vo_plugin.table.items[-1], vo_plugin.table.items[0]]
-        assert vo_plugin.table.selected_rows[0]['URL'] == fake_result.getdataurl()
+        vo_plugin.table.selected_rows = [
+            vo_plugin.table.items[-1],
+            vo_plugin.table.items[0],
+        ]
+        assert vo_plugin.table.selected_rows[0]["URL"] == fake_result.getdataurl()
 
         # Load first data product and fake result
         vo_plugin.vue_load_selected_data()
@@ -389,6 +392,7 @@ class TestVOImvizRemote:
         vo_plugin.vue_load_selected_data()
         assert vo_plugin.data_loading is False
         assert all(
-            "WCS linking is not enabled; data layers may not be aligned" not in d["text"]
+            "WCS linking is not enabled; data layers may not be aligned"
+            not in d["text"]
             for d in imviz_helper.app.state.snackbar_history
         )
