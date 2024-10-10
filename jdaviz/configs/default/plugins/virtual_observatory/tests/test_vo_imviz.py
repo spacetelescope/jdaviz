@@ -4,9 +4,6 @@ import pytest
 
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_WCS
 from jdaviz.configs.default.plugins.virtual_observatory.vo_plugin import vo_plugin_label
-from jdaviz.configs.imviz.plugins.orientation.orientation import (
-    orientation_plugin_label,
-)
 
 
 class fake_siaresult:
@@ -186,7 +183,7 @@ def test_link_type_autocoord(imviz_helper):
     np.testing.assert_allclose(float(ra_str), 284.2101962057667)
     np.testing.assert_allclose(float(dec_str), 32.23616603681311)
 
-    imviz_helper.plugins[orientation_plugin_label].link_type = "WCS"
+    imviz_helper.plugins["Orientation"].align_by = "WCS"
 
     ra_str, dec_str = vo_plugin.source.split()
 
@@ -374,10 +371,7 @@ class TestVOImvizRemote:
         imviz_helper.app.state.snackbar_history = []  # Clear snackbar warnings
         # User should be warned about misaligned data if WCS linking isn't set
         # and there's already data in the data collection
-        assert (
-            imviz_helper.plugins[orientation_plugin_label].link_type.selected_item["label"]
-            == "Pixels"
-        )
+        assert imviz_helper.plugins["Orientation"].link_type == "Pixels"
         vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
         vo_plugin.vue_load_selected_data()
         assert vo_plugin.data_loading is False
@@ -390,7 +384,7 @@ class TestVOImvizRemote:
         imviz_helper.app.state.snackbar_history = []  # Clear snackbar warnings
         # If we switch to WCS linking, we shouldn't get a warning anymore
         # since the data will be aligned
-        imviz_helper.plugins[orientation_plugin_label].link_type = "WCS"
+        imviz_helper.plugins["Orientation"].link_type = "WCS"
         vo_plugin.table.selected_rows = [vo_plugin.table.items[0]]  # Select first entry
         vo_plugin.vue_load_selected_data()
         assert vo_plugin.data_loading is False

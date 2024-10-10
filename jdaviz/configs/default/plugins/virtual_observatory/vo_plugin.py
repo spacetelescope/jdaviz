@@ -8,9 +8,6 @@ from pyvo.dal.exceptions import DALFormatError
 from requests.exceptions import ConnectionError as RequestConnectionError
 from traitlets import Bool, Unicode, Any, List, Float, observe
 
-from jdaviz.configs.imviz.plugins.orientation.orientation import (
-    orientation_plugin_label,
-)
 from jdaviz.core.events import (
     SnackbarMessage,
     AddDataMessage,
@@ -388,12 +385,12 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     def vue_load_selected_data(self, _=None):
         """Load the files selected by the user in the table"""
         if (
-            self.app._jdaviz_helper.plugins[orientation_plugin_label].link_type != "WCS"
+            self.app._jdaviz_helper.plugins["Orientation"].align_by != "WCS"
             and len(self.app.data_collection) > 0
         ):
             error_msg = (
                 "WCS linking is not enabled; data layers may not be aligned. To align, "
-                f"switch link type to WCS in the {orientation_plugin_label} plugin"
+                "switch link type to WCS in the Orientation plugin"
             )
             self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="warning"))
 
