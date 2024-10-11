@@ -20,6 +20,7 @@ from jdaviz.core.template_mixin import (
     AddResultsMixin,
     TableMixin,
     ViewerSelect,
+    SelectPluginComponent,
     UnitSelectPluginComponent,
 )
 
@@ -36,7 +37,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
-    wavebands = List().tag(sync=True)
+    wavebands_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resource_filter_coverage = Bool(False).tag(sync=True)
     resources = List([]).tag(sync=True)
@@ -67,9 +68,12 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.radius_unit.choices = ["deg", "rad", "arcmin", "arcsec"]
 
         # Waveband properties to filter available registry resources
-        self.wavebands = [
+        self.wavebands = SelectPluginComponent(
+            self, items="wavebands_items", selected="waveband_selected"
+        )
+        self.wavebands.choices = (
             w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
-        ]
+        )
         self.waveband_selected = None
 
         self._full_registry_results = None
