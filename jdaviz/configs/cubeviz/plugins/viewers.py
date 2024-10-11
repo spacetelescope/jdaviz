@@ -90,7 +90,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 isinstance(layer_state.layer, BaseData)]
 
     def start_stream(self):
-        if self.stream:
+        if self.stream and not self.stream.closed:
             self.stream.start()
 
     def stop_stream(self):

@@ -123,6 +123,10 @@
       ></v-text-field>
     </v-row>
     <v-row>
+        Volume
+        <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
+    </v-row>
+    <v-row>
        <v-switch
          v-model="eln"
          label="Equal Loudness Equalisation"
@@ -131,7 +135,8 @@
         ></v-switch>
     </v-row>
     <v-row>
-        <plugin-action-button
+      <plugin-action-button
+        :spinner="spinner"
         @click="sonify_cube"
       >
         Sonify data
