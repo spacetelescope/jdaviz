@@ -91,21 +91,23 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
         # Check mixin object initialized
-        if hasattr(self, "viewer"):
-            # Clear all existing subscriptions and resubscribe to selected viewer
-            for viewer in self.viewer.viewers:
-                if viewer == self.viewer.selected_obj:
-                    viewer.state.add_callback("zoom_center_x", self.vue_center_on_data)
-                    viewer.state.add_callback("zoom_center_y", self.vue_center_on_data)
-                else:
-                    # If not subscribed anyways, remove_callback should produce a no-op
-                    viewer.state.remove_callback(
-                        "zoom_center_x", self.vue_center_on_data
-                    )
-                    viewer.state.remove_callback(
-                        "zoom_center_y", self.vue_center_on_data
-                    )
-            self.vue_center_on_data()
+        if not hasattr(self, "viewer"):
+            return
+
+        # Clear all existing subscriptions and resubscribe to selected viewer
+        for viewer in self.viewer.viewers:
+            if viewer == self.viewer.selected_obj:
+                viewer.state.add_callback("zoom_center_x", self.vue_center_on_data)
+                viewer.state.add_callback("zoom_center_y", self.vue_center_on_data)
+            else:
+                # If not subscribed anyways, remove_callback should produce a no-op
+                viewer.state.remove_callback(
+                    "zoom_center_x", self.vue_center_on_data
+                )
+                viewer.state.remove_callback(
+                    "zoom_center_y", self.vue_center_on_data
+                )
+        self.vue_center_on_data()
 
     @observe("coord_follow_viewer_pan", type="change")
     def _toggle_viewer_pan_tracking(self, _=None):
