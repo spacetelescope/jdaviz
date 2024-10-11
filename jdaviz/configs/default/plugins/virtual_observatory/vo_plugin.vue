@@ -101,7 +101,7 @@
           v-model="waveband_selected"
           :menu-props="{ left: true }"
           attach
-          :items="wavebands"
+          :items="wavebands_items.map(i => i.label)"
           label="Resource Waveband"
           hint="Select a spectral waveband to filter your surveys"
           persistent-hint
