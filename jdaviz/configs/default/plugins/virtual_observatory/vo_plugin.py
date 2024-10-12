@@ -130,7 +130,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             return
         # If plugin is in "Manual" mode, we should never
         # autocenter and potentially wipe the user's data
-        if self.viewer_selected == "Manual":
+        if not self.viewer_selected or self.viewer_selected == "Manual":
             return
 
         # If the user panned but tracking not enabled, don't recenter
@@ -143,8 +143,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             return
 
         # gets the current viewer
-        if self.viewer_selected:
-            viewer = self.viewer.selected_obj
+        viewer = self.viewer.selected_obj
 
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
