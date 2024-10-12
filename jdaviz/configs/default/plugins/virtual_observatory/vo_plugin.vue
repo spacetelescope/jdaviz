@@ -75,10 +75,10 @@
         </div>
         <div :style="{ width: '40%' }">
           <v-select
-          v-model="radius_unit_selected"
-          attach
-          :items="radius_unit_items.map(i => i.label)"
-          label="Unit">
+            v-model="radius_unit_selected"
+            attach
+            :items="radius_unit_items.map(i => i.label)"
+            label="Unit">
           </v-select>
         </div>
       </v-row>
