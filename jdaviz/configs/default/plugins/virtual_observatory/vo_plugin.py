@@ -155,10 +155,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        x_center = (viewer.state.x_min + viewer.state.x_max) * 0.5
-        y_center = (viewer.state.y_min + viewer.state.y_max) * 0.5
         skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
-            x_center, y_center
+            viewer.state.zoom_center_x, viewer.state.zoom_center_y
         )
 
         # Extract SkyCoord values as strings for plugin display
