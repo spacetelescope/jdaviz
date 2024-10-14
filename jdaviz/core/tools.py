@@ -70,7 +70,8 @@ class _MatchedZoomMixin:
 
     @cached_property
     def delay_callback_keys(self):
-        all_keys = ['x_min', 'x_max', 'y_min', 'y_max', 'zoom_center_x', 'zoom_center_y', 'zoom_radius']
+        all_keys = ['x_min', 'x_max', 'y_min', 'y_max',
+                    'zoom_center_x', 'zoom_center_y', 'zoom_radius']
         return [k for k in all_keys if hasattr(self.viewer.state, k)]
 
     def activate(self):
