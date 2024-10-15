@@ -938,17 +938,18 @@ def get_reference_image_data(app, viewer_id=None):
 # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
 # https://github.com/glue-viz/glue/blob/main/glue/config.py
 new_cms = (['Rainbow', cm.rainbow],
-            ['Seismic', cm.seismic],
-            ['Reversed: Gray', cm.gray_r],
-            ['Reversed: Viridis', cm.viridis_r],
-            ['Reversed: Plasma', cm.plasma_r],
-            ['Reversed: Inferno', cm.inferno_r],
-            ['Reversed: Magma', cm.magma_r],
-            ['Reversed: Hot', cm.hot_r],
-            ['Reversed: Rainbow', cm.rainbow_r])
+           ['Seismic', cm.seismic],
+           ['Reversed: Gray', cm.gray_r],
+           ['Reversed: Viridis', cm.viridis_r],
+           ['Reversed: Plasma', cm.plasma_r],
+           ['Reversed: Inferno', cm.inferno_r],
+           ['Reversed: Magma', cm.magma_r],
+           ['Reversed: Hot', cm.hot_r],
+           ['Reversed: Rainbow', cm.rainbow_r])
 for cur_cm in new_cms:
     if cur_cm not in glue_colormaps.members:
         glue_colormaps.add(*cur_cm)
+
 
 def _register_random_cmap(
     cmap_name,
@@ -972,9 +973,12 @@ def _register_random_cmap(
 
 _register_random_cmap('Random', bkg_alpha=1)
 
+
 # give UI access to sampled version of the available colormap choices
 def _hex_for_cmap(cmap):
     N = 50
     cm_sampled = cmap.resampled(N)
     return [mpl_colors.to_hex(cm_sampled(i)) for i in range(N)]
+
+
 cmap_samples = {cmap[1].name: _hex_for_cmap(cmap[1]) for cmap in glue_colormaps.members}

@@ -10,7 +10,7 @@ __all__ = ['DataMenu']
 
 class DataMenu(TemplateMixin, LayerSelectMixin):
     """Viewer Data Menu
-    
+
     Only the following attributes and methods are available through the
     :ref:`public API <plugin-apis>`:
 

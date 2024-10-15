@@ -13,7 +13,7 @@ from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
 import numpy as np
-from glue.config import colormaps, data_translator, settings as glue_settings
+from glue.config import data_translator, settings as glue_settings
 from glue.core import HubListener
 from glue.core.link_helpers import LinkSame, LinkSameWithUnits
 from glue.core.message import (DataCollectionAddMessage,
