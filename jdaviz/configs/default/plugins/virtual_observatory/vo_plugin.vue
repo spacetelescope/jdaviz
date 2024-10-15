@@ -123,13 +123,14 @@
           ></v-select>
         </div>
         <div style="line-height: 64px; width:32px">
-          <v-btn
-            id="querybtn"
-            @click="query_registry_resources"
-            icon
-            :loading="resources_loading">
-            <v-icon>mdi-refresh</v-icon>
-          </v-btn>
+          <j-tooltip tipid='plugin-vo-refresh-resources'>
+            <v-btn
+              @click="query_registry_resources"
+              icon
+              :loading="resources_loading">
+              <v-icon>mdi-refresh</v-icon>
+            </v-btn>
+          </j-tooltip>
         </div>
       </v-row>
     </v-form>

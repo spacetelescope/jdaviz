@@ -99,6 +99,7 @@ const tooltips = {
   'plugin-dq-show-all': 'Show all quality flags',
   'plugin-dq-hide-all': 'Hide all quality flags',
   'plugin-dq-color-picker': 'Change the color of this DQ flag',
+  'plugin-vo-refresh-resources': 'Search for available resources based on above constraints',
   'plugin-vo-filter-coverage': `Only show surveys that report coverage within specified radius of provided coordinates. Queries may take longer to process<br /><br />
     <div style="border: 1px solid gray;" class="pa-2">
       <strong>Note:</strong>
