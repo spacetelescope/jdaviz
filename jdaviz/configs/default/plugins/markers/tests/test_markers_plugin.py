@@ -117,6 +117,30 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
 
     mp._obj._on_viewer_key_event(sv, {'event': 'keydown',
                                       'key': 'm'})
+
+    # test that markers update on unit conversion
+    uc = cubeviz_helper.plugins['Unit Conversion']
+    uc.flux_unit.selected = 'MJy'
+
+    # set the current slice to match the markers spectral axis value
+    slice_plg = (cubeviz_helper.plugins['Slice'])
+    slice_plg.value = 4.623e-7
+
+    # get the spectrum's flux value at the current slice
+    flux_value = cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True)[
+                 np.where(sv.slice_values == slice_plg.value)[0][0]
+                 ].data[0]
+    # using first mark in spectrum viewer as all markers have position y=0,
+    # check if scientific notation unit conversion occurred to marker
+    assert_allclose(mp._obj.marks['cubeviz-2'].y[0], flux_value)
+
+    # check if marks update with unit that requires spectral density equivalency
+    uc.flux_unit.selected = 'erg / (Angstrom s cm2)'
+    flux_value = cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True)[
+                 np.where(sv.slice_values == slice_plg.value)[0][0]
+                 ].data[0]
+    assert_allclose(mp._obj.marks['cubeviz-2'].y[0], flux_value)
+
     assert len(mp.export_table()) == 3
     assert len(_get_markers_from_viewer(fv).x) == 1
     assert len(_get_markers_from_viewer(sv).x) == 2
