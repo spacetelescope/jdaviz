@@ -22,6 +22,7 @@ from jdaviz.core.template_mixin import (
     ViewerSelect,
     SelectPluginComponent,
     UnitSelectPluginComponent,
+    with_spinner,
 )
 
 __all__ = ["VoPlugin"]
@@ -171,6 +172,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.viewer_centered = True
 
     @observe("waveband_selected", "change")
+    @with_spinner(spinner_traitlet='resources_loading')
     def vue_query_registry_resources(self, _=None):
         """
         Query Virtual Observatory registry for all SIA services
@@ -199,7 +201,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         # Clear existing resources list
         self.resources = []
         self.resource_selected = None
-        self.resources_loading = True  # Start loading bar
 
         try:
             registry_args = [
@@ -221,7 +222,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                             self.source, frame=self.coordframe_selected
                         )
                     except Exception:
-                        self.resources_loading = False  # Stop loading bar
                         self.hub.broadcast(
                             SnackbarMessage(
                                 f"Unable to resolve source coordinates: {self.source}",
@@ -260,9 +260,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 )
             )
             raise
-        finally:
-            self.resources_loading = False  # Stop loading bar
 
+    @with_spinner(spinner_traitlet='results_loading')
     def vue_query_resource(self, _=None):
         """
         Once a specific VO resource is selected, query it with the user-specified source target.
@@ -274,7 +273,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self._populate_url_only = False
         self.table.headers_visible = ["Title", "Instrument", "DateObs"]
 
-        self.results_loading = True  # Start loading spinner
         try:
             # Query SIA service
             # Service is indexed via short name (resource_selected), which is the suggested way
@@ -334,8 +332,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 )
             )
             raise
-        finally:
-            self.results_loading = False  # Stop loading spinner
 
         try:
             self._populate_table(sia_results)
@@ -385,6 +381,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             )
         )
 
+    @with_spinner(spinner_traitlet='data_loading')
     def vue_load_selected_data(self, _=None):
         """Load the files selected by the user in the table"""
         if (
@@ -397,7 +394,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             )
             self.hub.broadcast(SnackbarMessage(error_msg, sender=self, color="warning"))
 
-        self.data_loading = True  # Start loading spinner
         for entry in self.table.selected_rows:
             try:
                 self.app._jdaviz_helper.load_data(
@@ -416,4 +412,3 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 )
         # Clear selected entries' checkboxes on table
         self.table.selected_rows = []
-        self.data_loading = False  # Stop loading spinner
