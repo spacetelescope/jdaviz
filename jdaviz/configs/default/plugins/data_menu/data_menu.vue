@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label invert-if-dark">
+    <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label">
       <span style="float: right;">
         <j-layer-viewer-icon-stylized
           tooltip=""
@@ -17,7 +17,7 @@
       <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
     </div>
 
-    <div v-for="item in layer_items" class="viewer-label invert-if-dark">
+    <div v-for="item in layer_items" class="viewer-label">
       <div v-if="item.visible">
         <span style="float: right;">
           <j-layer-viewer-icon-stylized
