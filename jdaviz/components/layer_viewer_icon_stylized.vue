@@ -64,6 +64,11 @@ module.exports = {
       var style = 'repeating-linear-gradient( 135deg, '
   
       for ([mi, color_or_cmap] of colors.entries()) {
+        if (color_or_cmap == 'from_list') {
+          /* follow-up: use actual colors from the DQ plugins */
+          color_or_cmap = 'rainbow'
+        }
+  
         if (color_or_cmap.startsWith('#')) {
           style_colors = [color_or_cmap]
         } else {

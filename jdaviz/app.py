@@ -588,7 +588,16 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.layer_icons = {**self.state.layer_icons,
                                           layer_name: orientation_icons.get(layer_name,
                                                                             wcs_only_refdata_icon)}
-            elif is_not_child:
+            elif not is_not_child:
+                parent_icon = self.state.layer_icons.get(self._get_assoc_data_parent(layer_name))
+                index = len([ln for ln, ic in self.state.layer_icons.items()
+                             if not ic[:4] == 'mdi-' and
+                             self._get_assoc_data_parent(ln) == parent_icon]) + 1
+                self.state.layer_icons = {
+                    **self.state.layer_icons,
+                    layer_name: f"{parent_icon}{index}"
+                }
+            else:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
                     layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items()
