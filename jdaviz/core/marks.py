@@ -128,8 +128,7 @@ class PluginMark:
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
             if self.viewer.default_class is Spectrum1D:
                 # used to obtain spectral density equivalencies with previous data and units
-                original_spec = Spectrum1D(flux=self.y*self.yunit, spectral_axis=self.x*self.xunit)
-                eqv = u.spectral_density(original_spec.spectral_axis)
+                eqv = u.spectral_density(self.x*self.xunit)
 
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
 
