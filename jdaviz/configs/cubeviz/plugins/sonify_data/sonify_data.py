@@ -38,20 +38,22 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
 
         # TODO: Remove hardcoded range viewer
         self.spec_viewer = self.app.get_viewer('spectrum-viewer')
+        self.flux_viewer = self.app.get_viewer('flux-viewer')
         self.spec_viewer.state.add_callback("x_min", self._update_x_values)
         self.spec_viewer.state.add_callback("x_max", self._update_x_values)
 
     @with_spinner()
     def vue_sonify_cube(self, *args):
-        viewer = self.app.get_viewer('flux-viewer')
         # Get index of selected device since name may not be unique
         selected_device_index = self.sound_devices_items.index(self.sound_devices_selected)
-        viewer.get_sonified_cube(self.sample_rate, self.buffer_size, selected_device_index,
-                                 self.assidx, self.ssvidx, self.pccut, self.audfrqmin,
-                                 self.audfrqmax, self.eln)
+        self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
+                                           selected_device_index, self.assidx, self.ssvidx,
+                                           self.pccut, self.audfrqmin,
+                                           self.audfrqmax, self.eln)
 
         # Automatically select spectrum-at-spaxel tool
-        viewer.toolbar.active_tool = viewer.toolbar.tools['jdaviz:spectrumperspaxel']
+        spec_at_spaxel_tool = self.flux_viewer.toolbar.tools['jdaviz:spectrumperspaxel']
+        self.flux_viewer.toolbar.active_tool = spec_at_spaxel_tool
 
     def _update_x_values(self, event):
         with delay_callback(self.spec_viewer.state, 'x_min', 'x_max'):
@@ -61,3 +63,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
     def update_viewer_range(self, event):
         with delay_callback(self.spec_viewer.state, 'x_min', 'x_max'):
             self.spec_viewer.state.x_min, self.spec_viewer.state.x_max = self.wavemin, self.wavemax
+
+    @observe('volume')
+    def update_volume_level(self, event):
+        self.flux_viewer.update_volume_level = event['new']

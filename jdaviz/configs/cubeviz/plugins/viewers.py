@@ -47,6 +47,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.stream = None
         self.audification_wl_bounds = None
         self.audification_wl_unit = None
+        self.volume_level = None
         
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -107,6 +108,10 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         if not self.audified_cube:
             return
         self.audified_cube.set_wl_bounds(w1, w2)
+
+    def update_volume_level(self, level):
+        # TODO: Use volume attribute for sonified cube
+        self.volume_level = level
         
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln):
