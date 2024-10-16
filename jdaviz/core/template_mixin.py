@@ -1622,8 +1622,10 @@ class LayerSelect(SelectPluginComponent):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
             return
         new_data_label = msg.data.label
-        viewer = self.viewer if isinstance(self.viewer, list) else [self.viewer]
-        for current_viewer in viewer:
+        viewers = self.viewer if isinstance(self.viewer, list) else [self.viewer]
+        for current_viewer in viewers:
+            if not len(current_viewer):
+                continue
             for layer in self._get_viewer(current_viewer).state.layers:
                 if layer.layer.label == new_data_label and not hasattr(layer.layer, 'subset_state'):
                     if is_wcs_only(layer.layer):

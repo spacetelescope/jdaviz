@@ -2,7 +2,7 @@ from traitlets import Dict, Unicode
 
 from jdaviz.core.template_mixin import TemplateMixin, LayerSelectMixin
 from jdaviz.core.user_api import UserApiWrapper
-from jdaviz.core.events import IconsUpdatedMessage
+from jdaviz.core.events import IconsUpdatedMessage, AddDataMessage
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
 __all__ = ['DataMenu']
@@ -39,6 +39,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
+        self.hub.subscribe(self, AddDataMessage, handler=lambda _: self.set_viewer_id())
         self.viewer_icons = dict(self.app.state.viewer_icons)
         self.layer_icons = dict(self.app.state.layer_icons)
 
