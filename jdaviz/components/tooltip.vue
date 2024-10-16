@@ -100,6 +100,8 @@ const tooltips = {
   'plugin-dq-hide-all': 'Hide all quality flags',
   'plugin-dq-color-picker': 'Change the color of this DQ flag',
   'plugin-vo-refresh-resources': 'Search for available resources based on above constraints',
+  'plugin-vo-autocenter-centered': 'Viewer is currently centered on these coordinates',
+  'plugin-vo-autocenter-not-centered': 'Click to update coordinates to viewer\'s center',
   'plugin-vo-filter-coverage': `Only show surveys that report coverage within specified radius of provided coordinates. Queries may take longer to process<br /><br />
     <div style="border: 1px solid gray;" class="pa-2">
       <strong>Note:</strong>
