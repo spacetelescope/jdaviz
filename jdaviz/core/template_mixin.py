@@ -1531,6 +1531,7 @@ class LayerSelect(SelectPluginComponent):
 
     def _layer_to_dict(self, layer_label):
         is_subset = None
+        subset_type = None
         colors = []
         visibilities = []
         linewidths = []
@@ -1540,6 +1541,8 @@ class LayerSelect(SelectPluginComponent):
                     if is_subset is None:
                         is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or  # noqa
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
+                        if is_subset:
+                            subset_type = get_subset_type(layer.layer)
 
                     if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
                             and hasattr(layer.state, 'cmap')):
@@ -1553,6 +1556,7 @@ class LayerSelect(SelectPluginComponent):
 
         return {"label": layer_label,
                 "is_subset": is_subset,
+                "subset_type": subset_type,
                 "icon": self.app.state.layer_icons.get(layer_label),
                 "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
                 "linewidth": linewidths[0] if len(list(set(linewidths))) == 1 else 'mixed',

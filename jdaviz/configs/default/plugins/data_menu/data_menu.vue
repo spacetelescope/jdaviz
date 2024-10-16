@@ -33,8 +33,14 @@
           />
         </span>
         <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
-          <v-icon v-if="item.prefix_icon" dense>
-            {{item.prefix_icon}}
+          <v-icon v-if="item.subset_type == 'spatial'" dense>
+            mdi-chart-scatter-plot
+          </v-icon>
+          <v-icon v-else-if="item.subset_type == 'spectral'" dense>
+            mdi-chart-bell-curve
+          </v-icon>
+          <v-icon v-else-if="item.subset_type == 'temporal'" dense>
+            mdi-chart-line
           </v-icon>
           {{item.label}}
         </span>
