@@ -106,7 +106,7 @@ class RampvizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # provide reference from state back to viewer to use for zoom syncing
-        self.state._viewer = self
+        self.state._set_viewer(self)
 
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)

@@ -71,6 +71,10 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
             self.add_callback(attr, self._set_axes_lim)
         super().__init__(*args, **kwargs)
 
+    def _set_viewer(self, viewer):
+        self._viewer = viewer
+        self._set_axes_lim()
+
     @contextmanager
     def during_zoom_sync(self):
         self._during_zoom_sync = True
@@ -82,7 +86,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         self._during_zoom_sync = False
 
     def _set_zoom_radius_center(self, *args):
-        if self._during_zoom_sync or not hasattr(self, '_viewer') or self._viewer.shape is None:
+        if self._during_zoom_sync or not hasattr(self, '_viewer'):
             return
 
         # When WCS-linked (displayed on the sky): zoom_center_x/y and zoom_radius are in sky units,
@@ -117,7 +121,7 @@ class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
         self._set_axes_lim()
 
     def _set_axes_lim(self, *args):
-        if self._during_zoom_sync or not hasattr(self, '_viewer') or self._viewer.shape is None:
+        if self._during_zoom_sync or not hasattr(self, '_viewer'):
             return
         if None in (self.x_min, self.x_max, self.y_min, self.y_max):
             return
