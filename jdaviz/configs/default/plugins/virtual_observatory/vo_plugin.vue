@@ -36,15 +36,17 @@
           </v-text-field>
         </div>
         <div v-if="viewer_selected !== 'Manual' && !coord_follow_viewer_pan" style="line-height:64px; width:32px">
-          <v-btn
-            id="autocenterbtn"
-            @click="center_on_data"
-            :disabled="viewer_centered"
-            icon>
-            <v-icon>
-              {{ viewer_centered ? 'mdi-crosshairs-gps' : 'mdi-crosshairs' }}
-            </v-icon>
-          </v-btn>
+          <j-tooltip :tipid="viewer_centered ? 'plugin-vo-autocenter-centered' : 'plugin-vo-autocenter-not-centered'">
+            <v-btn
+              id="autocenterbtn"
+              @click="center_on_data"
+              :disabled="viewer_centered"
+              icon>
+              <v-icon>
+                {{ viewer_centered ? 'mdi-crosshairs-gps' : 'mdi-crosshairs' }}
+              </v-icon>
+            </v-btn>
+          </j-tooltip>
         </div>
       </v-row>
 
