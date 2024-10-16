@@ -66,4 +66,4 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
 
     @observe('volume')
     def update_volume_level(self, event):
-        self.flux_viewer.update_volume_level = event['new']
+        self.flux_viewer.update_volume_level(event['new'])

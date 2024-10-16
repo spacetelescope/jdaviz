@@ -111,7 +111,10 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     def update_volume_level(self, level):
         # TODO: Use volume attribute for sonified cube
+        if not self.audified_cube:
+            return
         self.volume_level = level
+        self.audified_cube.atten_level = int(np.clip((100/level)**2, 0, 2**15-1))
         
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln):
@@ -147,7 +150,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                               samplerate=sample_rate, buffsize=buffer_size,
                                               wl_bounds=self.audification_wl_bounds,
                                               wl_unit=self.audification_wl_unit,
-                                              audfrqmin=audfrqmin, audfrqmax=audfrqmax)
+                                              audfrqmin=audfrqmin, audfrqmax=audfrqmax, vol=self.volume_level)
         self.audified_cube.audify_cube()
         self.audified_cube.sigcube = (
                 self.audified_cube.sigcube * pow(whitelight / whitelight.max(),
@@ -155,6 +158,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, device=device,
                                       channels=1, dtype='int16', latency='low',
                                       callback=self.audified_cube.player_callback)
+        print(sd.query_devices(), device)
         self.audified_cube.cbuff = True
 
 
