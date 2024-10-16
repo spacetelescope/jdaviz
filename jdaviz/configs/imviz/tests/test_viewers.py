@@ -97,6 +97,15 @@ def test_mastviz_config():
     assert im.app.data_collection[0].shape == (2, 2)
 
 
+def test_zoom_center_radius_init(imviz_helper):
+    """Regression test for https://github.com/spacetelescope/jdaviz/issues/3217"""
+    arr = np.ones((10, 10))
+    imviz_helper.load_data(arr, data_label='my_array')
+    assert imviz_helper.default_viewer._obj.state.zoom_center_x > 0
+    assert imviz_helper.default_viewer._obj.state.zoom_center_y > 0
+    assert imviz_helper.default_viewer._obj.state.zoom_radius > 0
+
+
 class TestDeleteData(BaseImviz_WCS_NoWCS):
 
     def test_plot_options_after_destroy(self):
