@@ -139,13 +139,10 @@
 
     <v-row class="row-no-outside-padding">
       <v-col>
-        <v-btn
-          block
-          color="primary"
+        <plugin-action-button
           :loading="results_loading"
           :disabled="!all_fields_filled"
-          text
-          @click="query_resource">Query Archive</v-btn>
+          @click="query_resource">Query Archive</plugin-action-button>
       </v-col>
     </v-row>
 
@@ -153,7 +150,9 @@
 
     <v-row class="row-no-outside-padding">
         <v-col>
-            <v-btn color="primary" :loading="data_loading" text @click="load_selected_data">Load Data</v-btn>
+          <plugin-action-button
+            :loading="data_loading" @click="load_selected_data">Load Data
+          </plugin-action-button>
         </v-col>
     </v-row>
 
