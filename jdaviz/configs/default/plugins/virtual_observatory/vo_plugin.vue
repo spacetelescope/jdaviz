@@ -63,8 +63,6 @@
         ></v-select>
       </v-row>
 
-    <j-plugin-section-header>Common Options</j-plugin-section-header>
-
       <v-row justify="space-between">
         <div :style="{ width: '55%' }">
           <v-text-field
