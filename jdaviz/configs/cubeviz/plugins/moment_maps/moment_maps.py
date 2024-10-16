@@ -271,7 +271,13 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # slice out desired region
         # TODO: should we add a warning for a composite spectral subset?
-        spec_reg = self.spectral_subset.selected_obj
+        if self.spectral_subset.selected == "Entire Spectrum":
+            spec_reg = None
+        else:
+            spec_reg = self.app.get_subsets(self.spectral_subset.selected,
+                                            simplify_spectral=True,
+                                            use_display_units=True)
+        # We need to convert the spectral region to the display units
 
         if spec_reg is None:
             slab = cube
@@ -303,7 +309,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             ref_wavelength = self.reference_wavelength * u.Unit(self.dataset_spectral_unit)
             slab_sa = slab.spectral_axis.to("km/s", doppler_convention="relativistic",
                                             doppler_rest=ref_wavelength)
-            slab = Spectrum1D(slab.flux, slab_sa)
+            slab = Spectrum1D(slab.flux, slab_sa, uncertainty=slab.uncertainty)
+        # Otherwise convert spectral axis to display units, have to do frequency <-> wavelength
+        # before calculating
+        else:
+            slab_sa = slab.spectral_axis.to(self.app._get_display_unit('spectral'))
+            slab = Spectrum1D(slab.flux, slab_sa, uncertainty=slab.uncertainty)
 
         # Finally actually calculate the moment
         self.moment = analysis.moment(slab, order=n_moment).T
