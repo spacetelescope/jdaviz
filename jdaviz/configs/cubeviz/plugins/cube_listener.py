@@ -65,7 +65,7 @@ class CubeListenerData:
         self.fadedx = 0
 
         if vol:
-            self.atten_level = int(np.clip(100/vol, 2**15-1))
+            self.atten_level = int(np.clip(100/vol,0, 2**15-1))
         else:
             self.atten_level=1
         print(vol,self.atten_level)
