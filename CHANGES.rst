@@ -64,6 +64,8 @@ Other Changes and Additions
 Bug Fixes
 ---------
 
+- Improved performance and removed jittering for the matched box zoom tool. [#3215]
+
 Cubeviz
 ^^^^^^^
 

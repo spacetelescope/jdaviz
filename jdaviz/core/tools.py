@@ -3,6 +3,7 @@ import time
 
 import numpy as np
 from echo import delay_callback
+from functools import cached_property
 from glue.config import viewer_tool
 from glue.core import HubListener
 from glue.viewers.common.tool import Tool
@@ -67,6 +68,14 @@ class _MatchedZoomMixin:
             keys += [f'{ax}_min', f'{ax}_max']
         return keys
 
+    @cached_property
+    def delay_callback_keys(self):
+        all_keys = ['x_min', 'x_max', 'y_min', 'y_max',
+                    'zoom_center_x', 'zoom_center_y', 'zoom_radius']
+        return [k for k in all_keys
+                if np.all([hasattr(v.state, k)
+                           for v in self._iter_matched_viewers(include_self=True)])]
+
     def activate(self):
         if self.disable_matched_zoom_in_other_viewer:
             # mapping limits are not guaranteed to roundtrip, so we need to disable
@@ -115,8 +124,8 @@ class _MatchedZoomMixin:
                 viewer.zoom_level = old_level * float(to_fov_sky / orig_fov_sky)
                 viewer.center_on(sky_cen)
 
-            else:
-                with delay_callback(viewer.state, *self.match_keys):
+            elif len(self.match_axes):
+                with delay_callback(viewer.state, *self.delay_callback_keys):
                     for ax in self.match_axes:
                         if None in orig_lims.values():
                             orig_range = np.inf
@@ -134,6 +143,13 @@ class _MatchedZoomMixin:
                             if not np.isnan(value) and (orig_value is None or
                                                         abs(value-orig_lims.get(k, np.inf)) > tol):
                                 setattr(viewer.state, k, value)
+            else:
+                # match keys, but not match axes (e.g., zoom_center and zoom_radius)
+                with delay_callback(viewer.state, *self.delay_callback_keys):
+                    for k in self.match_keys:
+                        value = to_lims.get(k)
+                        if not np.isnan(value):
+                            setattr(viewer.state, k, value)
 
     def is_visible(self):
         return len(self.viewer.jdaviz_app._viewer_store) > 1
