@@ -4,6 +4,8 @@ A.B.1 (unreleased)
 Bug Fixes
 ---------
 
+- Improved performance and removed jittering for the matched box zoom tool. [#3215]
+
 Cubeviz
 ^^^^^^^
 
