@@ -212,8 +212,7 @@
         >
           <j-docs-link>
             See the <j-external-link link='https://photutils.readthedocs.io/en/stable/aperture.html#aperture-and-pixel-overlap'
-            linktext='photutils docs'></j-external-link>
-            for more details on aperture masking methods.
+            linktext='photutils docs'></j-external-link> for more details on aperture masking methods.
           </j-docs-link>
         </plugin-select>
       </div>
