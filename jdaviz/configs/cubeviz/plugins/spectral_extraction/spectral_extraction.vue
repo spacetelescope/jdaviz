@@ -219,6 +219,7 @@
       </div>
 
       <plugin-select
+        v-if="function_items.length > 1"
         :items="function_items.map(i => i.label)"
         :selected.sync="function_selected"
         label="Function"
