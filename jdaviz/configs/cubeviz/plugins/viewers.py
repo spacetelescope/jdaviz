@@ -163,7 +163,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                               wl_bounds=self.audification_wl_bounds,
                                               wl_unit=self.audification_wl_unit,
                                               audfrqmin=audfrqmin, audfrqmax=audfrqmax,
-                                              vol=self.volume_level,)
+                                              vol=self.volume_level,eln=eln)
         self.audified_cube.audify_cube()
         self.audified_cube.sigcube = (
                 self.audified_cube.sigcube * pow(whitelight / whitelight.max(),
