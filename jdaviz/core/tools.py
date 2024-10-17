@@ -72,7 +72,9 @@ class _MatchedZoomMixin:
     def delay_callback_keys(self):
         all_keys = ['x_min', 'x_max', 'y_min', 'y_max',
                     'zoom_center_x', 'zoom_center_y', 'zoom_radius']
-        return [k for k in all_keys if hasattr(self.viewer.state, k)]
+        return [k for k in all_keys
+                if np.all([hasattr(v.state, k)
+                           for v in self._iter_matched_viewers(include_self=True)])]
 
     def activate(self):
         if self.disable_matched_zoom_in_other_viewer:
