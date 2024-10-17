@@ -15,19 +15,25 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
 
         t = v.toolbar.tools['jdaviz:boxzoommatch']
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5
+        # original limits (zoom_center_x, zoom_center_y, zoom_radius): 4.5 4.5 5.0
         original_limits = (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max)
         assert_allclose(original_limits, (-0.5, 9.5, -0.5, 9.5))
+        original_center_rad = (v.state.zoom_center_x, v.state.zoom_center_y, v.state.zoom_radius)
+        assert_allclose(original_center_rad, (4.5, 4.5, 5.0))
         assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), original_limits)  # noqa
+        assert_allclose((v2.state.zoom_center_x, v2.state.zoom_center_y, v2.state.zoom_radius), original_center_rad)  # noqa
         t.activate()
         t.save_prev_zoom()
         v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max = (1, 8, 1, 8)
-        # second viewer should match these changes
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
+        # second viewer should match these changes, wrt zoom center and radius
+        assert v2.state.zoom_center_x == v.state.zoom_center_x
+        assert v2.state.zoom_center_y == v.state.zoom_center_y
+        assert v2.state.zoom_radius == v.state.zoom_radius
 
         v.toolbar.tools['jdaviz:prevzoom'].activate()
-        # both should revert since they're still linked
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), original_limits)  # noqa
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), original_limits)  # noqa
+        # both should revert since they're still linked (boxzoommatch will re-activate)
+        assert_allclose((v.state.zoom_center_x, v.state.zoom_center_y, v.state.zoom_radius), original_center_rad)  # noqa
+        assert_allclose((v2.state.zoom_center_x, v2.state.zoom_center_y, v2.state.zoom_radius), original_center_rad)  # noqa
 
         v.toolbar.tools['jdaviz:prevzoom'].activate()
         # both should revert since they're still linked

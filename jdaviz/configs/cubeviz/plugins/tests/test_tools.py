@@ -150,7 +150,9 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
         flux_viewer.state.x_max = 40
         flux_viewer.state.y_max = 35
     v = uncert_viewer
-    assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (20, 40, 15, 35)
+    assert v.state.zoom_center_x == flux_viewer.state.zoom_center_x
+    assert v.state.zoom_center_y == flux_viewer.state.zoom_center_y
+    assert v.state.zoom_radius == flux_viewer.state.zoom_radius
     t_linkedpan.deactivate()
 
 
