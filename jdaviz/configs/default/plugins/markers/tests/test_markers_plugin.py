@@ -117,6 +117,28 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
 
     mp._obj._on_viewer_key_event(sv, {'event': 'keydown',
                                       'key': 'm'})
+
+    # test that markers update on unit conversion
+    uc = cubeviz_helper.plugins['Unit Conversion']
+    uc.flux_unit.selected = 'MJy'
+
+    # find the index of the marker's x-coordinate in the spectral axis of the original input data
+    spec = cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True)
+    marker_index = np.where(spec.spectral_axis.value == mp._obj.marks['cubeviz-2'].x)
+    # use the index to find the associated flux value of the original input
+    flux_value = spec.flux[marker_index].value
+
+    # compare the marker's (y) flux value with the flux value of the original input data
+    assert_allclose(mp._obj.marks['cubeviz-2'].y[0], flux_value)
+
+    # now check if marks update with a unit that requires spectral density equivalency
+    uc.flux_unit.selected = 'erg / (Angstrom s cm2)'
+
+    spec = cubeviz_helper.get_data('Spectrum (sum)', use_display_units=True)
+    flux_value = spec.flux[marker_index].value
+
+    assert_allclose(mp._obj.marks['cubeviz-2'].y[0], flux_value)
+
     assert len(mp.export_table()) == 3
     assert len(_get_markers_from_viewer(fv).x) == 1
     assert len(_get_markers_from_viewer(sv).x) == 2

@@ -127,8 +127,10 @@ class PluginMark:
 
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
             if self.viewer.default_class is Spectrum1D:
+                # used to obtain spectral density equivalencies with previous data and units
+                eqv = u.spectral_density(self.x*self.xunit)
+
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
-                eqv = u.spectral_density(spec.spectral_axis)
 
                 if ('_pixel_scale_factor' in spec.meta):
                     eqv += _eqv_pixar_sr(spec.meta['_pixel_scale_factor'])
