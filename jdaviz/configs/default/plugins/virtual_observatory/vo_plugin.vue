@@ -87,12 +87,10 @@
     <j-plugin-section-header>Survey Collections</j-plugin-section-header>
       <v-row>
         <j-tooltip tipid='plugin-vo-filter-coverage'>
-        <span>
-          <v-btn icon @click.stop="resource_filter_coverage = !resource_filter_coverage">
-            <v-icon>mdi-filter{{ resource_filter_coverage ? '' : '-remove' }}</v-icon>
-          </v-btn>
-          Filter by Coverage
-        </span>
+          <plugin-switch
+            :value.sync="resource_filter_coverage"
+            label="Filter by Coverage">
+          </plugin-switch>
         </j-tooltip>
       </v-row>
       
