@@ -258,7 +258,7 @@
         @click:action="spectral_extraction"
       >
         <v-alert
-          v-if="results_units !== spectrum_y_units"
+          v-if="spectrum_y_units && results_units !== spectrum_y_units"
           type='warning'
           style="margin-left: -12px; margin-right: -12px"
         >
