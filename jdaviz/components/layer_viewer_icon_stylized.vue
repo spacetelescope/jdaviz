@@ -7,6 +7,7 @@
       width="30px"
       min-width="30px"
       height="30px"
+      :disabled="disabled"
     >
       <span :style="'color: white; text-shadow: 0px 0px 3px black; '+borderStyle(linewidth)">
         {{ icon }}
@@ -18,7 +19,7 @@
 <script>
 module.exports = {
   // tooltip: undefined will use default generated, empty will skip tooltips, any other string will be used directly
-  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples', 'btn_style', 'tooltip'],
+  props: ['label', 'icon', 'visible', 'is_subset', 'colors', 'linewidth', 'colormode', 'cmap_samples', 'btn_style', 'tooltip', 'disabled'],
   methods: {
     tooltipContent(tooltip, label, visible, colormode, colors, linewidth, is_subset) {
       if (tooltip !== undefined) {

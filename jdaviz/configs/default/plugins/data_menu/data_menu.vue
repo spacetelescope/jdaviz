@@ -12,6 +12,7 @@
           :linewidth="0"
           :cmap_samples="cmap_samples"
           btn_style="margin-bottom: 0px"
+          disabled="true"
         />
       </span>
       <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
@@ -30,6 +31,7 @@
             :linewidth="item.linewidth"
             :cmap_samples="cmap_samples"
             btn_style="margin-bottom: 0px"
+            disabled="true"
           />
         </span>
         <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
@@ -58,7 +60,6 @@
     width: 30px;
     overflow: hidden;
     white-space: nowrap;
-    /*cursor: pointer;*/
   }
   .viewer-label:last-child {
     padding-bottom: 0px;
