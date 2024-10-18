@@ -110,7 +110,6 @@ class PluginMark:
         self.y = np.append(self.y, y)
 
     def set_x_unit(self, unit=None):
-        print('ya')
         if unit is None:
             if not hasattr(self.viewer.state, 'x_display_unit'):
                 return
@@ -124,9 +123,6 @@ class PluginMark:
         self.xunit = unit
 
     def set_y_unit(self, unit=None):
-        with open('ex.txt', 'a') as file:
-            file.write(f'yo\n')
-        print('yo')
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
                 return
@@ -134,6 +130,7 @@ class PluginMark:
         unit = u.Unit(unit)
 
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
+
             if self.viewer.default_class is Spectrum1D:
 
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
@@ -141,7 +138,6 @@ class PluginMark:
                 pixar_sr = spec.meta.get('PIXAR_SR', 1)
                 cube_wave = self.x * self.xunit
                 equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
-
                 y = flux_conversion_general(self.y, self.yunit, unit, equivs,
                                             with_unit=False)
 
@@ -149,13 +145,14 @@ class PluginMark:
 
         self.yunit = unit
 
+
     def _on_global_display_unit_changed(self, msg):
         if not self.auto_update_units:
             return
-        if self.viewer.__class__.__name__ in ['SpecvizProfileView', 'CubevizProfileView']:
+        if self.viewer.__class__.__name__ in ['SpecvizProfileView',
+                                              'CubevizProfileView',
+                                              'MosvizProfile2DView']:
             axis_map = {'spectral': 'x', 'spectral_y': 'y'}
-        elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
-            axis_map = {'spectral': 'x'}
         else:
             return
         axis = axis_map.get(msg.axis, None)

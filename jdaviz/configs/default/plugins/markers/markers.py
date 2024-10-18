@@ -4,7 +4,7 @@ from traitlets import Bool, observe
 
 from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
                                 AddDataMessage, RemoveDataMessage,
-                                MarkersPluginUpdate)
+                                MarkersPluginUpdate, GlobalDisplayUnitChanged)
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -60,10 +60,11 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                        'world_ra', 'world_dec', 'world:unreliable',
                        'value', 'value:unit', 'value:unreliable',
                        'viewer']
-
+            
         elif self.config == 'specviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'index', 'value', 'value:unit']
+
         elif self.config == 'specviz2d':
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
             headers = ['spectral_axis', 'spectral_axis:unit',
@@ -114,8 +115,19 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
+    
+    def _on_global_display_unit_changed(self, msg, viewer=None):
+        print(msg.axis)
+        #print(msg)
+
+        # all cubes are converted to surface brightness so we just need to
+        # listen to SB for cubeviz unit changes
+        if msg.axis == "flux":
+            self.image_unit = u.Unit(msg.unit)
+
 
     def _recompute_mark_positions(self, viewer):
+        print('do we go in here?')
         if self.table is None or self.table._qtable is None:
             return
         if 'world_ra' not in self.table.headers_avail:
