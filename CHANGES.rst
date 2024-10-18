@@ -66,6 +66,8 @@ Bug Fixes
 
 - Improved performance and removed jittering for the matched box zoom tool. [#3215]
 
+- Fix Slice plugin for indexing through temporal slices. [#3235]
+
 Cubeviz
 ^^^^^^^
 
