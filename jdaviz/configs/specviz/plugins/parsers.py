@@ -18,7 +18,8 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
 def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None):
+                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None,
+                              load_as_list=False):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -46,6 +47,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
+    load_as_list : bool, optional
+        Force the parser to load the input file with the `~specutils.SpectrumList` read function
+        instead of `~specutils.Spectrum1D`.
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -81,7 +85,12 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
         path = pathlib.Path(data)
 
-        if path.is_file():
+        if path.is_dir() or load_as_list:
+            data = SpectrumList.read(str(path), format=format)
+            if data == []:
+                raise ValueError(f"`specutils.SpectrumList.read('{str(path)}')` "
+                                 "returned an empty list")
+        elif path.is_file():
             try:
                 data = Spectrum1D.read(str(path), format=format)
                 if data.flux.ndim == 2:
@@ -93,11 +102,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             except IORegistryError:
                 # Multi-extension files may throw a registry error
                 data = SpectrumList.read(str(path), format=format)
-        elif path.is_dir():
-            data = SpectrumList.read(str(path), format=format)
-            if data == []:
-                raise ValueError(f"`specutils.SpectrumList.read('{str(path)}')` "
-                                 "returned an empty list")
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
