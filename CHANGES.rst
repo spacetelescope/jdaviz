@@ -68,6 +68,8 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+- Fixed mouseover for flux cubes when the native unit physical type
+  is power or photon flux density. [#3234]
 
 Imviz
 ^^^^^
