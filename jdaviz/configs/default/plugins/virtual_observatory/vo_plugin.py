@@ -106,12 +106,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 viewer.state.add_callback("zoom_center_y", self.vue_center_on_data)
             else:
                 # If not subscribed anyways, remove_callback should produce a no-op
-                viewer.state.remove_callback(
-                    "zoom_center_x", self.vue_center_on_data
-                )
-                viewer.state.remove_callback(
-                    "zoom_center_y", self.vue_center_on_data
-                )
+                viewer.state.remove_callback("zoom_center_x", self.vue_center_on_data)
+                viewer.state.remove_callback("zoom_center_y", self.vue_center_on_data)
         self.vue_center_on_data()
 
     @observe("coord_follow_viewer_pan", type="change")
@@ -157,7 +153,9 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         # Obtain center point of the current image and convert into sky coordinates
         if self.app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
-            skycoord_center = SkyCoord(viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg")
+            skycoord_center = SkyCoord(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg"
+            )
         else:
             skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
                 viewer.state.zoom_center_x, viewer.state.zoom_center_y
@@ -175,7 +173,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.viewer_centered = True
 
     @observe("waveband_selected", "change")
-    @with_spinner(spinner_traitlet='resources_loading')
+    @with_spinner(spinner_traitlet="resources_loading")
     def vue_query_registry_resources(self, _=None):
         """
         Query Virtual Observatory registry for all SIA services
@@ -264,7 +262,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             )
             raise
 
-    @with_spinner(spinner_traitlet='results_loading')
+    @with_spinner(spinner_traitlet="results_loading")
     def vue_query_resource(self, _=None):
         """
         Once a specific VO resource is selected, query it with the user-specified source target.
@@ -384,7 +382,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             )
         )
 
-    @with_spinner(spinner_traitlet='data_loading')
+    @with_spinner(spinner_traitlet="data_loading")
     def vue_load_selected_data(self, _=None):
         """Load the files selected by the user in the table"""
         if (
