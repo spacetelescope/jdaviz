@@ -18,7 +18,8 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
 def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None):
+                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None,
+                              load_as_list=False):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -46,6 +47,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
+    load_as_list : bool, optional
+        Force the parser to load the input file with the `~specutils.SpectrumList` read function
+        instead of `~specutils.Spectrum1D`.
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
@@ -56,8 +60,12 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         raise TypeError("SpectrumCollection detected."
                         " Please provide a Spectrum1D or SpectrumList")
     elif isinstance(data, Spectrum1D):
-        data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
-        data = [data]
+        # Handle the possibility of 2D spectra by splitting into separate spectra
+        if data.flux.ndim == 1:
+            data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
+            data = [data]
+        elif data.flux.ndim == 2:
+            data, data_label = split_spectrum_with_2D_flux_array(data, data_label, app)
     # No special processing is needed in this case, but we include it for completeness
     elif isinstance(data, SpectrumList):
         pass
@@ -77,19 +85,23 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
         path = pathlib.Path(data)
 
-        if path.is_file():
-            try:
-                data = [Spectrum1D.read(str(path), format=format)]
-                data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
-
-            except IORegistryError:
-                # Multi-extension files may throw a registry error
-                data = SpectrumList.read(str(path), format=format)
-        elif path.is_dir():
+        if path.is_dir() or load_as_list:
             data = SpectrumList.read(str(path), format=format)
             if data == []:
                 raise ValueError(f"`specutils.SpectrumList.read('{str(path)}')` "
                                  "returned an empty list")
+        elif path.is_file():
+            try:
+                data = Spectrum1D.read(str(path), format=format)
+                if data.flux.ndim == 2:
+                    data, data_label = split_spectrum_with_2D_flux_array(data, data_label, app)
+                else:
+                    data = [data]
+                    data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
+
+            except IORegistryError:
+                # Multi-extension files may throw a registry error
+                data = SpectrumList.read(str(path), format=format)
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
@@ -246,3 +258,20 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
                       uncertainty=unc)
     return spec
+
+
+def split_spectrum_with_2D_flux_array(data, data_label, app):
+    temp_data = []
+    temp_data_label = []
+    for i in range(data.flux.shape[0]):
+        unc = None
+        mask = None
+        if data.uncertainty is not None:
+            unc = data.uncertainty[i, :]
+        if mask is not None:
+            mask = data.mask[i, :]
+        temp_data.append(Spectrum1D(flux=data.flux[i, :], spectral_axis=data.spectral_axis,
+                                    uncertainty=unc))
+        temp_data_label.append(f'{app.return_data_label(data_label, alt_name="specviz_data")}[{i}]')  # noqa
+
+    return temp_data, temp_data_label
