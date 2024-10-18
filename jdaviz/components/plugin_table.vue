@@ -39,7 +39,7 @@
         </template>
         </v-select>
       </div>
-      <div style="line-height: 64px; width=32px" class="only-show-in-tray">
+      <div style="line-height: 64px; width: 32px" class="only-show-in-tray">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </div>
     </v-row>
