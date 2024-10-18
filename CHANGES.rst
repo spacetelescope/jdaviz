@@ -9,6 +9,8 @@ Bug Fixes
 Cubeviz
 ^^^^^^^
 
+- Add missing styling to API hints entry for aperture_method in the spectral extraction plugin. [#3231]
+
 Imviz
 ^^^^^
 
