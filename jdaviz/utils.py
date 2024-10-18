@@ -549,9 +549,11 @@ def _eqv_flux_to_sb_pixel():
 
     # generate an equivalency for each flux type that would need
     # another equivalency for converting to/from
-    flux_units = [u.MJy, u.erg / (u.s * u.cm**2 * u.Angstrom),
+    flux_units = [u.MJy,
+                  u.erg / (u.s * u.cm**2 * u.Angstrom),
                   u.ph / (u.Angstrom * u.s * u.cm**2),
-                  u.ph / (u.Hz * u.s * u.cm**2)]
+                  u.ph / (u.Hz * u.s * u.cm**2),
+                  u.ct]
     return [(flux_unit, flux_unit / PIX2, lambda x: x, lambda x: x)
             for flux_unit in flux_units]
 

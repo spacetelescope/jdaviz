@@ -551,7 +551,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         uncertainty = collapsed_nddata.uncertainty
 
         collapsed_spec = _return_spectrum_with_correct_units(
-            flux, wcs, collapsed_nddata.meta, 'flux',
+            flux, wcs, collapsed_nddata.meta, data_type='flux',
             target_wave_unit=target_wave_unit,
             uncertainty=uncertainty,
             mask=mask

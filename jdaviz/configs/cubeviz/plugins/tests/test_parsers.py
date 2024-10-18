@@ -194,7 +194,7 @@ def test_numpy_cube(cubeviz_helper):
     assert data.label == 'Array'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
-    assert flux.units == 'ct'
+    assert flux.units == 'ct / pix2'
 
     # Check context of second cube.
     data = cubeviz_helper.app.data_collection[1]
@@ -202,7 +202,7 @@ def test_numpy_cube(cubeviz_helper):
     assert data.label == 'uncert_array'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
-    assert flux.units == 'ct'
+    assert flux.units == 'ct / pix2'
 
 
 def test_invalid_data_types(cubeviz_helper):
