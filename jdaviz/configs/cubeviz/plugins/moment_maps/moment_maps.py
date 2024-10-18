@@ -21,6 +21,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.utils import flux_conversion_general
 
 __all__ = ['MomentMap']
 
@@ -325,6 +326,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # convert units for moment 0, which is the only currently supported
         # moment for using converted units.
         if n_moment == 0:
+            # how do i figure out what spectral_density equivalency to use here?
+            # eqv = u.spectral_density(u.m)
+            self.moment = flux_conversion_general(self.moment.value, self.moment.unit)
             self.moment = self.moment.to(self.moment_zero_unit)
 
         # Reattach the WCS so we can load the result
