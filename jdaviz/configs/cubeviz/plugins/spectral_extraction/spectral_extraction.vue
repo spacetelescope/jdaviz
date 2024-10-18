@@ -204,11 +204,11 @@
                  && (bg_selected === 'None' || bg_selected_validity.is_aperture)">
         <v-row>
           <v-select
-            :menu-props="{ left: true }"
             attach
             :items="aperture_method_items.map(i => i.label)"
             v-model="aperture_method_selected"
             :label="api_hints_enabled ? 'plg.aperture_method =' : 'Aperture masking method'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             :hint="'Extract '+resulting_product_name+' using an aperture masking method in place of the subset mask.'"
             persistent-hint
             ></v-select>
