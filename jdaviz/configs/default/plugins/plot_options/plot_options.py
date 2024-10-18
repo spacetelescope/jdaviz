@@ -1096,6 +1096,10 @@ class PlotOptions(PluginTemplateMixin):
             plane = layer_cmap(data)
 
         else:  # Color (Monochromatic)
+            if self.image_color_value is None:
+                # do not crash if image_color_value is not yet assigned,
+                # _update_stretch_curve observes image_color_value so will get called again
+                return False
             # Get color
             color = COLOR_CONVERTER.to_rgba_array(self.image_color_value)[0]
             plane = data[:, np.newaxis] * color
