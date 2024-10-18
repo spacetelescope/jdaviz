@@ -6,15 +6,82 @@ import pytest
 from asdf.exceptions import AsdfWarning
 from astropy import units as u
 from astropy.utils import minversion
+from astropy.units import UnitConversionError
 from astropy.wcs import FITSFixedWarning
+from itertools import combinations
 from numpy.testing import assert_allclose
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import PIX2
-from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
-                          _indirect_conversion, _eqv_pixar_sr)
+from jdaviz.core.custom_units import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.validunits import combine_flux_and_angle_units
+from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion_general,
+                          flux_conversion, _indirect_conversion,
+                          _eqv_flux_to_sb_pixel, _eqv_pixar_sr)
 
 PHOTUTILS_LT_1_12_1 = not minversion(photutils, "1.12.1.dev")
+
+
+def test_general_flux_conversion():
+    """
+    This test function tests that the `flux_conversion_general` function is able
+    to convert between all available flux units in the unit conversion plugin
+    for data in spectral/photon flux density (e.g Jy, erg/s/cm2/A) or surface
+    brightness. `flux_conversion_general` handles special cases where flux and
+    surface brightness can't be converted directly.
+    """
+
+    
+    # first test all conversions between flux units and surface brightness units
+    # (per steradian)
+    equivalencies = u.spectral_density(1*u.m) +  _eqv_pixar_sr(1)
+    sr_sbs = combine_flux_and_angle_units(SPEC_PHOTON_FLUX_DENSITY_UNITS, u.sr)
+    all_convertable_units_sr = SPEC_PHOTON_FLUX_DENSITY_UNITS + sr_sbs
+    for combo in combinations(all_convertable_units_sr, 2):
+        original_unit, target_unit = (u.Unit(x) for x in combo)
+        converted = flux_conversion_general([1, 2, 3], original_unit,
+                                            target_unit, equivalencies)
+        assert len(converted) == 3
+    
+    # next test all conversions between flux and surface brightness units (per
+    # pixel), omitting the flux<>flux conversions already covered above
+    equivalencies = u.spectral_density(1*u.m) +  _eqv_flux_to_sb_pixel()
+    pix_sbs = combine_flux_and_angle_units(SPEC_PHOTON_FLUX_DENSITY_UNITS, PIX2)
+    all_convertable_units_pix = SPEC_PHOTON_FLUX_DENSITY_UNITS + pix_sbs
+    all_convertable_units_pix = set(all_convertable_units_pix) - \
+                                set(all_convertable_units_sr)
+    for combo in combinations(all_convertable_units_pix, 2):
+        original_unit, target_unit = (u.Unit(x) for x in combo)
+        converted = flux_conversion_general([1, 2, 3], original_unit,
+                                            target_unit, equivalencies)
+        assert len(converted) == 3
+
+    # test that a unit combination passed in without the correct equivalency
+    # raises the correct error
+    msg = 'Could not convert Jy / pix2 to Jy / sr with provided equivalencies.'
+    with pytest.raises(UnitConversionError, match=msg):
+        converted = flux_conversion_general([1, 2, 3], u.Jy / PIX2, u.Jy / u.sr)
+
+    # and finally, numerically verify a subset of possible unit conversion combos
+    # a case of each 'type' of conversion is covered here
+    units_and_expected = [(u.Jy / u.sr, u.MJy, 4.0e-6),
+                          (u.Jy, u.MJy, 1.0e-6),
+                          (u.Jy, u.MJy / u.sr, 2.5e-7),
+                          (u.Jy, u.MJy / PIX2, 1.0e-6),
+                          (u.Jy / PIX2, u.MJy / PIX2, 1.0e-6),
+                          (u.MJy, u.erg / (u.s * u.cm**2 * u.AA), 0.29979246),
+                          (u.MJy / PIX2, u.erg / (u.s * u.cm**2 * u.AA), 0.29979246),
+                          (u.MJy , u.erg / (u.s * u.cm**2 * u.AA * PIX2), 0.29979246),
+                          (u.MJy / PIX2 , u.erg / (u.s * u.cm**2 * u.AA * PIX2), 0.29979246),
+                          (u.MJy / u.sr , u.erg / (u.s * u.cm**2 * u.AA * u.sr), 0.29979246),
+                          (u.MJy / u.sr , u.erg / (u.s * u.cm**2 * u.AA), 1.1991698),
+                          (u.MJy / u.sr , u.erg / (u.s * u.cm**2 * u.AA), 1.1991698),
+                          (u.MJy, u.erg / (u.s * u.cm**2 * u.AA * u.sr), 0.07494811)
+                          ]
+
+    equiv = _eqv_pixar_sr(4) + _eqv_flux_to_sb_pixel() + u.spectral_density(1*u.nm)
+    for orig, targ, truth in units_and_expected:
+        converted_value = flux_conversion_general([1], orig, targ, equiv, with_unit=False)
+        assert_allclose(converted_value[0], truth)
 
 
 def test_spec_sb_flux_conversion():

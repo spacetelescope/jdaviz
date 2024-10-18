@@ -13,6 +13,7 @@ from astropy.utils.data import download_file
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from astropy.units import Quantity
 from astropy import units as u
+from astropy.units import UnitConversionError
 from astroquery.mast import Observations, conf
 
 from glue.config import settings
@@ -336,6 +337,54 @@ def indirect_units():
                  ]
 
     return units
+
+def flux_conversion_general(values, original_unit, target_unit, equivalencies=None, with_unit=True):
+    """
+    This function converts `values` from `original_unit` to `target_unit` using the
+    provided `equivalencies` and accounting for special cases where unit converison is
+    not directly possible (e.g when u.spectral_density is needed and units are in surface
+    brightness per square pixel). Unit conversions in plugins should be passed through
+    this function rather than using astropy's unit.to() because this function handles
+    the special cases that might be encountered.
+
+    Note: This is essentially a simplified version of the function utils.flux_conversion.
+    The difference is that all required equivalencies must be passed in (rather than being
+    generated from an input spectrum or slice value, and combined with input equivalences).
+    I didn't want to replace calls to that function entirely because there is some extra
+    logic there that i'm unsure of, but in theory we could/should.
+
+    """
+    if original_unit == target_unit:
+        return values * original_unit
+
+    solid_angle_in_orig = check_if_unit_is_per_solid_angle(original_unit, return_unit=True)
+    solid_angle_in_targ = check_if_unit_is_per_solid_angle(target_unit, return_unit=True)
+    
+    with u.set_enabled_equivalencies(equivalencies):
+
+        # first possible case we want to catch before trying to translate: both
+        # the original and target unit are per-pixel-squared SB units
+        # and also require an additional equivalency, so we need to multiply out
+        # the pix2 before conversion and re-apply. if this doesn't work, something else
+        # is going on (missing equiv, etc)
+        if solid_angle_in_orig == solid_angle_in_targ == PIX2:
+            converted_values = (values * original_unit * PIX2).to(target_unit * PIX2)
+            converted_values = converted_values * PIX2  # re-apply pix2 unit
+        else:
+            try:  # if units can be converted straight away with provided equivalencies, return converted values
+                converted_values = (values * original_unit).to(target_unit)
+            except:
+                # the only other case where units with the correct equivs wouldn't convert directly
+                # is if one unit is a flux and one is a sb and also require an additional equivalency
+                if not bool(solid_angle_in_targ) == bool(solid_angle_in_orig):
+                    converted_values = (values * original_unit * (solid_angle_in_orig or 1)).to(target_unit * (solid_angle_in_targ or 1))
+                    converted_values = (converted_values / (solid_angle_in_orig or 1)).to(target_unit)
+                else:
+                    raise UnitConversionError(f'Could not convert {original_unit} to {target_unit} with provided equivalencies.')
+
+        if not with_unit:
+            return converted_values.value
+        return converted_values
 
 
 def flux_conversion(values, original_units, target_units, spec=None, eqv=None, slice=None):

@@ -25,7 +25,7 @@ from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_mod
 from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
                                                                        initialize,
                                                                        get_model_parameters)
-from jdaviz.utils import _eqv_flux_to_sb_pixel
+from jdaviz.utils import _eqv_flux_to_sb_pixel, flux_conversion_general
 
 __all__ = ['ModelFitting']
 
@@ -504,7 +504,10 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 # then the model parameter has default units.  We want to pass
                 # with jdaviz default units (based on x/y units) but need to
                 # convert the default parameter unit to these units
-                initial_val = default_param.quantity.to(default_units)
+                initial_val = flux_conversion_general([default_param.value],
+                                                       default_param.unit,
+                                                       default_units,
+                                                       equivs)
 
             initial_values[param_name] = initial_val
 
@@ -538,7 +541,7 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         # equivs for spectral density and flux<>flux/pix2. revisit
         # when generalizing plugin UC equivs.
         equivs = _eqv_flux_to_sb_pixel() + u.spectral_density(init_x)
-        init_y = init_y.to(self._units['y'], equivs)
+        init_y = flux_conversion_general([init_y.value], init_y.unit, self._units['y'], equivs)
 
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,
