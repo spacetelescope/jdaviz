@@ -82,6 +82,9 @@ docs = [
 roman = [
     "roman_datamodels>=0.17.1",
 ]
+strauss = [
+    "strauss"
+]
 
 [build-system]
 requires = [

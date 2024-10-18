@@ -48,6 +48,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.audification_wl_bounds = None
         self.audification_wl_unit = None
         self.volume_level = None
+        self.stream_active = True
         
     @property
     def _default_spectrum_viewer_reference_name(self):
@@ -91,11 +92,11 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                 isinstance(layer_state.layer, BaseData)]
 
     def start_stream(self):
-        if self.stream and not self.stream.closed:
+        if self.stream and not self.stream.closed and self.stream_active:
             self.stream.start()
 
     def stop_stream(self):
-        if self.stream:
+        if self.stream and not self.stream.closed and self.stream_active:
             self.stream.stop()
 
     def update_cube(self, x, y):
@@ -126,7 +127,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.volume_level = level
         self.audified_cube.atten_level = int(np.clip((100/level)**2, 0, 2**15-1))
 
-        
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln):
         spectrum = self.active_image_layer.layer.get_object(statistic=None)       
@@ -163,7 +163,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                               wl_bounds=self.audification_wl_bounds,
                                               wl_unit=self.audification_wl_unit,
                                               audfrqmin=audfrqmin, audfrqmax=audfrqmax,
-                                              vol=self.volume_level,eln=eln)
+                                              eln=eln, vol=self.volume_level)
         self.audified_cube.audify_cube()
         self.audified_cube.sigcube = (
                 self.audified_cube.sigcube * pow(whitelight / whitelight.max(),
