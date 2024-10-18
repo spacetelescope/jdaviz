@@ -774,7 +774,7 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
 
     def __repr__(self):
         if hasattr(self, 'multiselect'):
-            return f"<selected={self.selected} multiselect={self.multiselect} choices={self.choices}>"  # noqa
+            return f"<selected='{self.selected}' multiselect={self.multiselect} choices={self.choices}>"  # noqa
         return f"<selected='{self.selected}' choices={self.choices}>"
 
     def __eq__(self, other):
@@ -1531,14 +1531,18 @@ class LayerSelect(SelectPluginComponent):
 
     def _layer_to_dict(self, layer_label):
         is_subset = None
+        subset_type = None
         colors = []
         visibilities = []
+        linewidths = []
         for viewer in self.viewer_objs:
             for layer in viewer.layers:
                 if layer.layer.label == layer_label and is_not_wcs_only(layer.layer):
                     if is_subset is None:
                         is_subset = ((hasattr(layer, 'state') and hasattr(layer.state, 'subset_state')) or  # noqa
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
+                        if is_subset:
+                            subset_type = get_subset_type(layer.layer)
 
                     if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
                             and hasattr(layer.state, 'cmap')):
@@ -1548,11 +1552,14 @@ class LayerSelect(SelectPluginComponent):
 
                     visibilities.append(getattr(layer.state, 'bitmap_visible', True)
                                         and layer.visible)
+                    linewidths.append(getattr(layer.state, 'linewidth', 0))
 
         return {"label": layer_label,
                 "is_subset": is_subset,
+                "subset_type": subset_type,
                 "icon": self.app.state.layer_icons.get(layer_label),
                 "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
+                "linewidth": linewidths[0] if len(list(set(linewidths))) == 1 else 'mixed',
                 "colors": np.unique(colors).tolist()}
 
     def _on_viewer_selected_changed(self, msg=None):
@@ -1619,8 +1626,10 @@ class LayerSelect(SelectPluginComponent):
         if msg is None or not hasattr(msg, 'data') or msg.data is None:
             return
         new_data_label = msg.data.label
-        viewer = self.viewer if isinstance(self.viewer, list) else [self.viewer]
-        for current_viewer in viewer:
+        viewers = self.viewer if isinstance(self.viewer, list) else [self.viewer]
+        for current_viewer in viewers:
+            if not len(current_viewer):
+                continue
             for layer in self._get_viewer(current_viewer).state.layers:
                 if layer.layer.label == new_data_label and not hasattr(layer.layer, 'subset_state'):
                     if is_wcs_only(layer.layer):
@@ -3304,7 +3313,7 @@ class ViewerSelectMixin(VuetifyTemplate, HubListener):
 
     """
     viewer_items = List().tag(sync=True)
-    viewer_selected = Any().tag(sync=True)
+    viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
     viewer_multiselect = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
@@ -4362,7 +4371,7 @@ class PlotOptionsSyncState(BasePluginComponent):
         self._update_mixed_state()
 
     def _on_glue_value_changed(self, value):
-        if self._glue_name == 'color_mode':
+        if self._glue_name in ('color_mode', 'linewidth'):
             # then we need to force updates to the layer-icon colors
             # NOTE: this will only trigger when the change to color_mode was handled
             # through this plugin.  Manual changes to the glue state for viewers not

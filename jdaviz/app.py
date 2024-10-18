@@ -12,9 +12,8 @@ from astropy.time import Time
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-import matplotlib.cm as cm
 import numpy as np
-from glue.config import colormaps, data_translator, settings as glue_settings
+from glue.config import data_translator, settings as glue_settings
 from glue.core import HubListener
 from glue.core.link_helpers import LinkSame, LinkSameWithUnits
 from glue.core.message import (DataCollectionAddMessage,
@@ -126,6 +125,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-viewer-data-select': 'components/viewer_data_select.vue',
                      'j-viewer-data-select-item': 'components/viewer_data_select_item.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
+                     'j-layer-viewer-icon-stylized': 'components/layer_viewer_icon_stylized.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
                      'j-play-pause-widget': 'components/play_pause_widget.vue',
                      'j-plugin-section-header': 'components/plugin_section_header.vue',
@@ -296,21 +296,6 @@ class Application(VuetifyTemplate, HubListener):
         # Create a dictionary for holding non-ipywidget viewer objects so we
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
-
-        # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
-        # https://github.com/glue-viz/glue/blob/main/glue/config.py
-        new_cms = (['Rainbow', cm.rainbow],
-                   ['Seismic', cm.seismic],
-                   ['Reversed: Gray', cm.gray_r],
-                   ['Reversed: Viridis', cm.viridis_r],
-                   ['Reversed: Plasma', cm.plasma_r],
-                   ['Reversed: Inferno', cm.inferno_r],
-                   ['Reversed: Magma', cm.magma_r],
-                   ['Reversed: Hot', cm.hot_r],
-                   ['Reversed: Rainbow', cm.rainbow_r])
-        for cur_cm in new_cms:
-            if cur_cm not in colormaps.members:
-                colormaps.add(*cur_cm)
 
         from jdaviz.core.events import PluginTableAddedMessage, PluginPlotAddedMessage
         self._plugin_tables = {}
@@ -603,7 +588,16 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.layer_icons = {**self.state.layer_icons,
                                           layer_name: orientation_icons.get(layer_name,
                                                                             wcs_only_refdata_icon)}
-            elif is_not_child:
+            elif not is_not_child:
+                parent_icon = self.state.layer_icons.get(self._get_assoc_data_parent(layer_name))
+                index = len([ln for ln, ic in self.state.layer_icons.items()
+                             if not ic[:4] == 'mdi-' and
+                             self._get_assoc_data_parent(ln) == parent_icon]) + 1
+                self.state.layer_icons = {
+                    **self.state.layer_icons,
+                    layer_name: f"{parent_icon}{index}"
+                }
+            else:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
                     layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items()
