@@ -61,7 +61,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
             data = [data]
         elif data.flux.ndim == 2:
-            data, data_label = _split_spectrum_with_2D_flux_array(data)
+            data, data_label = split_spectrum_with_2D_flux_array(data)
     # No special processing is needed in this case, but we include it for completeness
     elif isinstance(data, SpectrumList):
         pass
