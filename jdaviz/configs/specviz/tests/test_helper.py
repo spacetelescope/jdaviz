@@ -406,8 +406,8 @@ def test_load_spectrum_list_directory_concat(tmpdir, specviz_helper):
 
 
 def test_load_spectrum1d_2d_flux(specviz_helper):
-    spec = Spectrum1D(spectral_axis=np.linspace(4000,6000,100)*u.Angstrom,
-                        flux=np.ones((4,100))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
+    spec = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 100)*u.Angstrom,
+                      flux=np.ones((4, 100))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
     specviz_helper.load_data(spec, data_label="test")
 
     assert len(specviz_helper.app.data_collection) == 4
