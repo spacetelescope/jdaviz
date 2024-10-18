@@ -171,7 +171,8 @@ class Specviz2d(ConfigHelper, LineListMixin):
                 self._default_spectrum_2d_viewer_reference_name, data_label
             )
 
-    def get_data(self, data_label=None, spectral_subset=None, cls=None):
+    def get_data(self, data_label=None, spectral_subset=None,
+                 cls=None, use_display_units=False):
         """
         Returns data with name equal to data_label of type cls with subsets applied from
         spectral_subset.
@@ -184,6 +185,9 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Spectral subset applied to data.
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
+        use_display_units : bool, optional
+            Specify whether the returned data is in native units or the current 
+            display units.
 
         Returns
         -------
@@ -191,4 +195,5 @@ class Specviz2d(ConfigHelper, LineListMixin):
             Data is returned as type cls with subsets applied.
 
         """
-        return self._get_data(data_label=data_label, spectral_subset=spectral_subset, cls=cls)
+        return self._get_data(data_label=data_label, spectral_subset=spectral_subset,
+                              cls=cls, use_display_units=use_display_units)
