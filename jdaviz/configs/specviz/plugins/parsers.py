@@ -56,8 +56,24 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         raise TypeError("SpectrumCollection detected."
                         " Please provide a Spectrum1D or SpectrumList")
     elif isinstance(data, Spectrum1D):
-        data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
-        data = [data]
+        # Handle the possibility of 2D spectra by splitting into separate spectra
+        if data.flux.ndim == 1:
+            data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
+            data = [data]
+        elif data.flux.ndim == 2:
+            temp_data = []
+            data_label = []
+            for i in range(data.flux.shape[0]):
+                unc = None
+                mask = None
+                if data.uncertainty is not None:
+                    unc = data.uncertainty[i, :]
+                if mask is not None:
+                    mask = data.mask[i, :]
+                temp_data.append(Spectrum1D(flux=data.flux[i, :], spectral_axis=data.spectral_axis,
+                                            uncertainty=unc))
+                data_label.append(f'{app.return_data_label(data_label, alt_name="specviz_data")}[{i}]')  # noqa
+            data = temp_data
     # No special processing is needed in this case, but we include it for completeness
     elif isinstance(data, SpectrumList):
         pass
