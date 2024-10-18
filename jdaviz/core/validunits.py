@@ -138,7 +138,7 @@ def create_angle_equivalencies_list(solid_angle_unit):
     if solid_angle_unit is None or solid_angle_unit is PIX2:
         # if there was no solid angle in the unit when calling this function
         # can only represent that unit as per square pixel
-        return ['pix^2']
+        return ['pix2']
 
     # cast to unit then back to string to account for formatting inconsistencies
     # in strings that represent units
@@ -148,7 +148,7 @@ def create_angle_equivalencies_list(solid_angle_unit):
 
     # uncomment and expand this list once translating between solid
     # angles and between solid angle and solid pixel is enabled
-    # equivalent_angle_units = ['sr', 'pix^2']
+    # equivalent_angle_units = ['sr', 'pix2']
     equivalent_angle_units = []
     if unit_str not in equivalent_angle_units:
         equivalent_angle_units += [unit_str]

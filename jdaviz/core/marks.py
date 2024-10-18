@@ -5,7 +5,11 @@ from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
-from jdaviz.utils import _eqv_pixar_sr, _eqv_flux_to_sb_pixel
+from jdaviz.utils import _eqv_pixar_sr, _eqv_flux_to_sb_pixel, flux_conversion
+<<<<<<< Updated upstream
+from jdaviz.utils import _eqv_pixar_sr, _eqv_flux_to_sb_pixel, flux_conversion
+=======
+>>>>>>> Stashed changes
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
@@ -106,7 +110,6 @@ class PluginMark:
         self.y = np.append(self.y, y)
 
     def set_x_unit(self, unit=None):
-        print('ya')
         if unit is None:
             if not hasattr(self.viewer.state, 'x_display_unit'):
                 return
@@ -120,21 +123,56 @@ class PluginMark:
         self.xunit = unit
 
     def set_y_unit(self, unit=None):
-        with open('ex.txt', 'a') as file:
-            file.write(f'yo\n')
-        print('yo')
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
                 return
             unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
+        
+        #print(f'self.yunit : {self.yunit}')
+        #print(f'passed new unit : {unit}')
+        #print(not np.all([s == 0 for s in self.y.shape]))
+        print(f'self.y before = {self.y}')
+        print('yname',self.name)
+        print('yunit',self.yunit)
+        print(unit)
+        print(self.marker)
+        #print(dir(self))
+<<<<<<< Updated upstream
+        
+        #print(f'self.yunit : {self.yunit}')
+        #print(f'passed new unit : {unit}')
+        #print(not np.all([s == 0 for s in self.y.shape]))
+        print(f'self.y before = {self.y}')
+        print('yname',self.name)
+        print('yunit',self.yunit)
+        print(unit)
+        print(self.marker)
+        #print(dir(self))
 
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
+            print('passed outer if')
+            print('passed outer if')
             if self.viewer.default_class is Spectrum1D:
                 # used to obtain spectral density equivalencies with previous data and units
                 eqv = u.spectral_density(self.x*self.xunit)
 
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
+=======
+
+        if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
+            print('passed outer if')
+            if self.viewer.default_class is Spectrum1D:
+                print('passed inner if')
+                spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
+                #if self.y.shape != spec.shape:
+                #    print('returning')
+                #    return
+                
+                #print(spec)
+                
+                eqv = u.spectral_density(spec.spectral_axis)
+>>>>>>> Stashed changes
 
                 if ('_pixel_scale_factor' in spec.meta):
                     eqv += _eqv_pixar_sr(spec.meta['_pixel_scale_factor'])
@@ -142,31 +180,65 @@ class PluginMark:
                 # add equiv for flux <> flux/pix2
                 eqv += _eqv_flux_to_sb_pixel()
 
+                #y = flux_conversion(values=self.y, original_units=self.yunit, target_units=unit, eqv=eqv)
+<<<<<<< Updated upstream
+                #y = flux_conversion(values=self.y, original_units=self.yunit, target_units=unit, eqv=eqv)
                 y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
-                with open('ex.txt', 'a') as file:
-                    file.write(f'here\n')
-                print('here')
+                print('end inner if')
+                print('end inner if')
             else:
-                print('there')
-                with open('ex.txt', 'a') as file:
-                    file.write(f'there\n')
+                print('the last else')
+                print('the last else')
+=======
+                y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
+                print('end inner if')
+            else:
+                print('the last else')
+>>>>>>> Stashed changes
                 y = (self.y * self.yunit).to_value(unit)
             self.yunit = unit
             self.y = y
+            print(f'self.y after = {self.y}')
+        #elif self.yunit is not None:
+
+<<<<<<< Updated upstream
+            print(f'self.y after = {self.y}')
+        #elif self.yunit is not None:
+
+=======
+>>>>>>> Stashed changes
 
         self.yunit = unit
 
+
+<<<<<<< Updated upstream
+
+=======
+>>>>>>> Stashed changes
     def _on_global_display_unit_changed(self, msg):
         if not self.auto_update_units:
             return
-        if self.viewer.__class__.__name__ in ['SpecvizProfileView', 'CubevizProfileView']:
+        if self.viewer.__class__.__name__ in ['SpecvizProfileView',
+                                              'CubevizProfileView',
+                                              'MosvizProfile2DView']:
+<<<<<<< Updated upstream
+        if self.viewer.__class__.__name__ in ['SpecvizProfileView',
+                                              'CubevizProfileView',
+                                              'MosvizProfile2DView']:
+=======
+>>>>>>> Stashed changes
             axis_map = {'spectral': 'x', 'spectral_y': 'y'}
-        elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
-            axis_map = {'spectral': 'x'}
         else:
             return
         axis = axis_map.get(msg.axis, None)
         if axis is not None:
+            print('here')
+            print(msg.unit)
+<<<<<<< Updated upstream
+            print('here')
+            print(msg.unit)
+=======
+>>>>>>> Stashed changes
             getattr(self, f'set_{axis}_unit')(msg.unit)
 
     def clear(self):
