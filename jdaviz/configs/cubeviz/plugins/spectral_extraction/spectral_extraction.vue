@@ -212,15 +212,16 @@
             :hint="'Extract '+resulting_product_name+' using an aperture masking method in place of the subset mask.'"
             persistent-hint
             ></v-select>
+        </v-row>
+        <v-row>
           <j-docs-link>
             See the <j-external-link link='https://photutils.readthedocs.io/en/stable/aperture.html#aperture-and-pixel-overlap'
-            linktext='photutils docs'></j-external-link>
-            for more details on aperture masking methods.
+            linktext='photutils docs'></j-external-link> for more details on aperture masking methods.
           </j-docs-link>
         </v-row>
       </div>
 
-      <v-row>
+      <v-row v-if="function_items.length > 1">
         <v-select
           attach
           :items="function_items.map(i => i.label)"
@@ -263,7 +264,7 @@
         @click:action="spectral_extraction"
       >
         <v-alert
-          v-if="results_units !== spectrum_y_units"
+          v-if="spectrum_y_units && results_units !== spectrum_y_units"
           type='warning'
           style="margin-left: -12px; margin-right: -12px"
         >
