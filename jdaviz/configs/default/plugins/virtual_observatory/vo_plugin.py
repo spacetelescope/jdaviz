@@ -156,9 +156,12 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             return
 
         # Obtain center point of the current image and convert into sky coordinates
-        skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
-            viewer.state.zoom_center_x, viewer.state.zoom_center_y
-        )
+        if self.app._jdaviz_helper.plugins["Orientation"].align_by == "WCS":
+            skycoord_center = SkyCoord(viewer.state.zoom_center_x, viewer.state.zoom_center_y, unit="deg")
+        else:
+            skycoord_center = viewer.state.reference_data.coords.pixel_to_world(
+                viewer.state.zoom_center_x, viewer.state.zoom_center_y
+            )
 
         # Extract SkyCoord values as strings for plugin display
         ra_deg = skycoord_center.ra.deg
