@@ -20,7 +20,7 @@ from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
-from jdaviz.utils import flux_conversion, _eqv_pixar_sr
+from jdaviz.utils import flux_conversion, _eqv_pixar_sr, _eqv_flux_to_sb_pixel
 
 __all__ = ['CoordsInfo']
 
@@ -507,7 +507,10 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     physical_type = u.Unit(unit).physical_type
 
                 if str(physical_type) not in ("spectral flux density",
-                                              "surface brightness"):
+                                              "surface brightness",
+                                              "power density/spectral flux density wav",
+                                              "photon flux density wav",
+                                              "photon flux density"):
                     skip_spectral_density_eqv = True
 
                 if self.image_unit is not None and not skip_spectral_density_eqv:
@@ -517,9 +520,13 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                         # This is needed for units that are not directly convertible/translatable.
                         slice = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
 
-                        value = flux_conversion(value, unit, self.image_unit,
-                                                eqv=_eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR']),  # noqa: E501
-                                                slice=slice)
+                        # pass required equivalencies depending on the angle unit
+                        if check_if_unit_is_per_solid_angle(unit, return_unit=True) == PIX2:
+                            eqv = _eqv_flux_to_sb_pixel()
+                        else:
+                            eqv = _eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR'])
+
+                        value = flux_conversion(value, unit, self.image_unit, eqv=eqv, slice=slice)
                         unit = self.image_unit
 
                     elif self.image_unit.is_equivalent(unit):
