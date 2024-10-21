@@ -493,7 +493,7 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                 # than native display unit
                 if unit != self.app._get_display_unit('spectral_y'):
                     wav = image.get_data(viewer.layers[0].layer.coordinate_components[3])[int(round(y)), int(round(x))] * u.Unit(self.app._get_display_unit('spectral'))  # noqa
-                    value = flux_conversion(value, unit, self.app._get_display_unit('spectral_y'), eqv=u.spectral_density(wav))
+                    value = flux_conversion(value, unit, self.app._get_display_unit('spectral_y'), eqv=u.spectral_density(wav))  # noqa
                     unit = self.app._get_display_unit('spectral_y')
 
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):

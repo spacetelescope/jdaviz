@@ -5,7 +5,7 @@ from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
-from jdaviz.utils import _eqv_pixar_sr, _eqv_flux_to_sb_pixel, flux_conversion
+from jdaviz.utils import _eqv_pixar_sr, _eqv_flux_to_sb_pixel
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
@@ -124,20 +124,8 @@ class PluginMark:
                 return
             unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
-        
-        #print(f'self.yunit : {self.yunit}')
-        #print(f'passed new unit : {unit}')
-        #print(not np.all([s == 0 for s in self.y.shape]))
-        print(f'self.y before = {self.y}')
-        print('yname',self.name)
-        print('yunit',self.yunit)
-        print(unit)
-        print(self.marker)
-        #print(dir(self))
 
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
-            print('passed outer if')
-            print('passed outer if')
             if self.viewer.default_class is Spectrum1D:
                 # used to obtain spectral density equivalencies with previous data and units
                 eqv = u.spectral_density(self.x*self.xunit)
@@ -150,17 +138,11 @@ class PluginMark:
                 # add equiv for flux <> flux/pix2
                 eqv += _eqv_flux_to_sb_pixel()
 
-                #y = flux_conversion(values=self.y, original_units=self.yunit, target_units=unit, eqv=eqv)
                 y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
-                print('end inner if')
             else:
-                print('the last else')
-                print('the last else')
                 y = (self.y * self.yunit).to_value(unit)
             self.yunit = unit
             self.y = y
-            print(f'self.y after = {self.y}')
-        #elif self.yunit is not None:
 
         self.yunit = unit
 
@@ -169,14 +151,13 @@ class PluginMark:
             return
         if self.viewer.__class__.__name__ in ['SpecvizProfileView',
                                               'CubevizProfileView',
+                                              'MosvizProfileView',
                                               'MosvizProfile2DView']:
             axis_map = {'spectral': 'x', 'spectral_y': 'y'}
         else:
             return
         axis = axis_map.get(msg.axis, None)
         if axis is not None:
-            print('here')
-            print(msg.unit)
             getattr(self, f'set_{axis}_unit')(msg.unit)
 
     def clear(self):
