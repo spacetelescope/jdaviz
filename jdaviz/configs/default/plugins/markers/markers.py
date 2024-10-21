@@ -60,7 +60,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                        'world_ra', 'world_dec', 'world:unreliable',
                        'value', 'value:unit', 'value:unreliable',
                        'viewer']
-            
+
         elif self.config == 'specviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'index', 'value', 'value:unit']
@@ -115,19 +115,14 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
-    
-    def _on_global_display_unit_changed(self, msg, viewer=None):
-        print(msg.axis)
-        #print(msg)
 
+    def _on_global_display_unit_changed(self, msg, viewer=None):
         # all cubes are converted to surface brightness so we just need to
         # listen to SB for cubeviz unit changes
         if msg.axis == "flux":
             self.image_unit = u.Unit(msg.unit)
 
-
     def _recompute_mark_positions(self, viewer):
-        print('do we go in here?')
         if self.table is None or self.table._qtable is None:
             return
         if 'world_ra' not in self.table.headers_avail:
