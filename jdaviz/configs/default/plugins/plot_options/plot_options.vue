@@ -900,7 +900,6 @@ module.exports = {
         }
       }
       style += ')'
-      console.log(style)
       return style
     }
   },

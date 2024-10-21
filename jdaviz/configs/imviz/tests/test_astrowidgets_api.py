@@ -182,9 +182,10 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
             'Gray', 'Viridis', 'Plasma', 'Inferno', 'Magma', 'Purple-Blue',
             'Yellow-Green-Blue', 'Yellow-Orange-Red', 'Red-Purple', 'Blue-Green',
             'Hot', 'Red-Blue', 'Red-Yellow-Blue', 'Purple-Orange', 'Purple-Green',
-            'Random', 'Rainbow', 'Seismic',
+            'Rainbow', 'Seismic',
             'Reversed: Gray', 'Reversed: Viridis', 'Reversed: Plasma', 'Reversed: Inferno',
-            'Reversed: Magma', 'Reversed: Hot', 'Reversed: Rainbow']
+            'Reversed: Magma', 'Reversed: Hot', 'Reversed: Rainbow',
+            'Random']
 
     def test_invalid_colormap(self):
         with pytest.raises(ValueError, match='Invalid colormap'):
