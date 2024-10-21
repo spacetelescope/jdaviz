@@ -12,7 +12,7 @@
           :linewidth="0"
           :cmap_samples="cmap_samples"
           btn_style="margin-bottom: 0px"
-          disabled="true"
+          @click="() => {data_menu_open = !data_menu_open}"
         />
       </span>
       <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
@@ -31,7 +31,7 @@
             :linewidth="item.linewidth"
             :cmap_samples="cmap_samples"
             btn_style="margin-bottom: 0px"
-            disabled="true"
+            @click="() => {data_menu_open = !data_menu_open}"
           />
         </span>
         <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
@@ -49,8 +49,41 @@
       </div>
     </div>
 
+    <div 
+      v-if="data_menu_open" 
+      style="position: absolute; float: right; right: 32px; top: 2px; background-color: white; border: 2px solid black; width: 250px; height: 350px"
+    >
+      <span>
+        <b> {{ viewer_id }}</b>
+      </span>
+      <br/>
+      <span v-for="layer in layer_items">
+        {{ layer.label }}<br/>
+      </span>
+    </div>
+
   </div>
 </template>
+
+<script>
+  module.exports = {
+    data: function () {
+      return {
+        data_menu_open: false,
+      }
+    },
+    methods: {
+      onScroll(e) {
+        const dataMenuHeight = document.getElementById(`menu-button-${this.viewer_id}`).parentElement.getBoundingClientRect().height
+        const top = document.getElementById(`target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
+        if (this.data_menu_open && document.getElementById(`target-${this.viewer_id}`)) {
+          const menuContent = document.getElementById(`menu-content-${this.viewer_id}`);
+          menuContent.parentElement.style.top = top + "px";
+        }
+      }
+    },
+  }
+</script>
 
 <style scoped>
   .viewer-label {
