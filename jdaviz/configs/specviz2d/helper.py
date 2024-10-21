@@ -186,8 +186,7 @@ class Specviz2d(ConfigHelper, LineListMixin):
         cls : `~specutils.Spectrum1D`, `~astropy.nddata.CCDData`, optional
             The type that data will be returned as.
         use_display_units : bool, optional
-            Specify whether the returned data is in native units or the current 
-            display units.
+            Specify whether the returned data is in native units or the current display units.
 
         Returns
         -------

@@ -20,7 +20,6 @@ tray:
   - g-plot-options
   - g-subset-tools
   - g-markers
-  - g-unit-conversion
   - g-gaussian-smooth
   - g-slit-overlay
   - g-model-fitting

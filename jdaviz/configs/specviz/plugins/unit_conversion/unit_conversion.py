@@ -39,10 +39,7 @@ def _valid_glue_display_unit(unit_str, sv, axis='x'):
 
 
 def _flux_to_sb_unit(flux_unit, angle_unit):
-    print('flux_unit = ', flux_unit)
-    print(angle_unit)
     if angle_unit not in supported_sq_angle_units(as_strings=True):
-        print('first if')
         sb_unit = flux_unit
     else:
         # str > unit > str to remove formatting inconsistencies with
@@ -144,7 +141,7 @@ class UnitConversion(PluginTemplateMixin):
         # initialize flux choices to empty list, will be populated when data is loaded
         self.flux_unit.choices = []
 
-        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz','specviz2d')
+        self.has_angle = self.config in ('cubeviz', 'specviz', 'mosviz', 'specviz2d')
         self.angle_unit = UnitSelectPluginComponent(self,
                                                     items='angle_unit_items',
                                                     selected='angle_unit_selected')
@@ -214,7 +211,6 @@ class UnitConversion(PluginTemplateMixin):
                 or not len(self.flux_unit_selected)
                 or not len(self.angle_unit_selected)
                 or (self.config == 'cubeviz' and not len(self.spectral_y_type_selected))):
-            print('heresssss')
             data_obj = msg.data.get_object()
             if isinstance(data_obj, Spectrum1D):
 
@@ -244,7 +240,7 @@ class UnitConversion(PluginTemplateMixin):
                                 self.has_angle = False
                                 self.has_sb = False
                             else:
-                                # default to pix2 if input spectrum is not in surface brightness units
+                                # default to pix2 if input data is not in surface brightness units
                                 # TODO: for cubeviz, should we check the cube itself?
                                 self.angle_unit.selected = 'pix2'
                         else:
@@ -306,7 +302,6 @@ class UnitConversion(PluginTemplateMixin):
             return
 
         axis = msg.get('name').split('_')[0]
-        print('axis', axis)
 
         if axis == 'spectral':
             xunit = _valid_glue_display_unit(self.spectral_unit.selected, self.spectrum_viewer, 'x')
