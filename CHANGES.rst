@@ -76,6 +76,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Remove "From File.." option when running on an external server. [#3239]
+
 Mosviz
 ^^^^^^
 
@@ -250,6 +252,17 @@ Other Changes and Additions
 
 - Bump required specutils version to 1.16. Moment 0 calculation is now in units
   of flux*dx (rather than flux) [#3184]
+
+3.10.4 (unreleased)
+===================
+
+Bug Fixes
+---------
+
+Imviz
+^^^^^
+
+- Remove "From File.." option when running on an external server. [#3239]
 
 3.10.3 (2024-07-22)
 ===================
