@@ -7,8 +7,59 @@ from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+from jdaviz.utils import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 
+def test_cubeviz_aperphot_unit_conversions(cubeviz_helper, spectrum1d_cube_custom_fluxunit, cube_unit=u.MJy / u.sr):
+    """
+    Test cubeviz aperture photometry with all possible unit conversions for a 
+    cube with units of Jy and a cube with units of Jy / sr. The aperture photometry
+    plugin should respect the choice of flux and angle unit selected in the Unit
+    Conversion plugin. Cubeviz aperture photometry will always be on data in
+    surface brightness units, so flux<>sb conversions do not need to be tested.
+    """
+
+    # create cube with specified unit
+    mjy_sr_cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit,
+                                                  shape=(5, 5, 4))
+    cubeviz_helper.load_data(mjy_sr_cube, data_label="test")
+
+    # create apertures for photometry and background
+    aper = RectanglePixelRegion(center=PixCoord(x=2, y=3), width=1, height=1)
+    bg = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=1, height=1)
+
+    
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region([aper, bg],
+                                                               combination_mode='new')
+
+    ap = cubeviz_helper.plugins['Aperture Photometry']._obj
+    uc = cubeviz_helper.plugins['Unit Conversion']._obj
+
+    ap.dataset_selected = "test[FLUX]"
+    ap.aperture_selected = "Subset 1"
+    ap.background_selected = "Subset 2"
+
+    # only required equiv is spectral density since no flux <> sb conversions
+    # will occur in ap. phot plugin
+    equivalencies = u.spectral_density(1*u.m)
+
+    # check that initial units are synced between plugins and have the correct values
+    ang_unit = check_if_unit_is_per_solid_angle(cube_unit, return_unit=True)
+    assert uc.flux_unit.selected == 'MJy'
+    assert uc.angle_unit.selected == ang_unit.to_string()
+    assert ap.display_unit == f'MJy / {ang_unit.to_string()}'
+    assert ap.flux_scaling_display_unit == 'MJy'
+    assert_allclose(ap.flux_scaling, 0.003631)
+    assert_allclose(ap.background_value, 49)
+
+    # generate list of all possible unit conversions based on cube_units
+    for unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        uc.flux_unit.selected = unit
+
+        assert uc.angle_unit.selected == ang_unit.to_string()
+        assert u.Unit(ap.display_unit).to_string() == f'{(unit / ang_unit).to_string()}'
+        assert ap.flux_scaling_display_unit == unit
 
 def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")

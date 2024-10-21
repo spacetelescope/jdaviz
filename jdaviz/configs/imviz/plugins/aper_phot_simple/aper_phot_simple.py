@@ -24,7 +24,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetMultiSelectM
                                         SubsetSelect, ApertureSubsetSelectMixin,
                                         TableMixin, PlotMixin, MultiselectMixin, with_spinner)
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
-from jdaviz.utils import PRIHDR_KEY, _eqv_flux_to_sb_pixel, _eqv_pixar_sr
+from jdaviz.utils import flux_conversion_general, PRIHDR_KEY, _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 
 __all__ = ['SimpleAperturePhotometry']
 
@@ -794,15 +794,29 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
             phot_table.add_column(slice_val, name="slice_wave", index=29)
 
             if comp.units:  # convert phot. results from image unit to display unit
+
+                # possiblee required equivalencies for UC. spectral_density is required for
+                # conversions between units like Jy and erg/s/cm2/A. flux to SB equivalencies
+                # required in the case that the sum has the solid angle multiplied out.
+                equiv = u.spectral_density(self._cube_wave)
+
                 display_unit = u.Unit(self.display_unit)
                 # convert units of certain columns in aperture phot. output table
                 # to reflect display units (i.e if data units are MJy / sr, but
                 # Jy / sr is selected in Unit Conversion plugin)
                 if display_unit != '':
-                    phot_table['background'] = phot_table['background'].to(
-                        display_unit, u.spectral_density(self._cube_wave))
+                    # note to self: there are some cases where background is in SB but sum is in flux?
+                    # is this ok because background is subtracted before?
+                    phot_table['background'] = flux_conversion_general(phot_table['background'].value,
+                                                                       phot_table['background'].unit,
+                                                                       display_unit, equiv)
 
                     if include_pixarea_fac:
+                        print('sum', phot_table['sum'].value, phot_table['sum'].unit, display_unit)
+                        # new_sum = flux_conversion_general(phot_table['sum'].value,
+                        #                                   phot_table['sum'].unit,
+                        #                                   display_unit, equiv)
+                        # print('new sum', new_sum)
                         phot_table['sum'] = phot_table['sum'].to(
                             (display_unit * pixarea_fac).unit, u.spectral_density(self._cube_wave))
                     else:

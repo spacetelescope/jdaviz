@@ -11,6 +11,7 @@ from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 SpectralMarksChangedMessage,
                                 RedshiftMessage)
+from jdaviz.utils import _eqv_flux_to_sb_pixel, flux_conversion_general
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'SliceIndicatorMarks', 'ShadowMixin', 'ShadowLine', 'ShadowLabelFixedY',
@@ -138,9 +139,9 @@ class PluginMark:
                 # add equiv for flux <> flux/pix2
                 eqv += _eqv_flux_to_sb_pixel()
 
-                y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
+                y = flux_conversion_general(self.y, self.yunit, unit, eqv)
             else:
-                y = (self.y * self.yunit).to_value(unit)
+                y = flux_conversion_general(self.y, self.yunit, unit)
             self.yunit = unit
             self.y = y
 

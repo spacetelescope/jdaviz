@@ -25,7 +25,7 @@ from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
-from jdaviz.utils import _eqv_pixar_sr
+from jdaviz.utils import flux_conversion_general, _eqv_pixar_sr, eqv_flux_to_sb_pixel
 
 
 __all__ = ['SpectralExtraction']
@@ -562,9 +562,21 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return extracted.spectral_axis
 
     def _preview_y_from_extracted(self, extracted):
+
         # TODO: use extracted.meta.get('PIXAR_SR') once populated
-        return extracted.flux.to(self.spectrum_y_units,
-                                 equivalencies=_eqv_pixar_sr(self.dataset.selected_obj.meta.get('PIXAR_SR', 1.0)))  # noqa:
+        # may need flux<>sb equivalencies, as well as spectral_density
+        eqv =_eqv_pixar_sr(self.dataset.selected_obj.meta.get('PIXAR_SR', 1.0)) # for conversions between flux <> sb per sr
+        eqv += _eqv_flux_to_sb_pixel()  # for conversions between flux <> sb per pix2
+
+        # need this equivalency as well, need to make sure it updates on slice change
+        # eqv += u.spectral_density(1*u.m)
+
+        # call this rather than unit.to because this function handles special cases where
+        # the solid angle needs to be multiplied out before conversion
+        return flux_conversion_general(extracted.flux.value, extracted.flux.unit,
+                                       self.spectrum_y_units,
+                                       eqv)
+
 
     @with_spinner()
     def extract(self, return_bg=False, add_data=True, **kwargs):
