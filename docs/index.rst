@@ -3,10 +3,13 @@ Jdaviz
 ######
 
 .. grid:: 3
-   :gutter: 1
+   :gutter: 3
 
    .. grid-item-card::
-      :img-top: logos/imviz\ icon.svg
+
+      .. image:: logos/imviz\ icon.svg
+         :width: 70%
+         :align: center
 
       .. button-ref:: imviz/index
          :expand:
@@ -16,7 +19,10 @@ Jdaviz
          Jump to Imviz
 
    .. grid-item-card::
-      :img-top: logos/specicon.svg
+
+      .. image:: logos/specicon.svg
+         :width: 70%
+         :align: center
 
       .. button-ref:: specviz/index
          :expand:
@@ -26,7 +32,10 @@ Jdaviz
          Jump to Specviz
 
    .. grid-item-card::
-      :img-top: logos/cube.svg
+
+      .. image:: logos/cube.svg
+         :width: 70%
+         :align: center
 
       .. button-ref:: cubeviz/index
          :expand:
@@ -36,7 +45,10 @@ Jdaviz
          Jump to Cubeviz
 
    .. grid-item-card::
-      :img-top: logos/specviz2d\ icon.svg
+
+      .. image:: logos/specviz2d\ icon.svg
+         :width: 70%
+         :align: center
 
       .. button-ref:: specviz2d/index
          :expand:
@@ -46,8 +58,11 @@ Jdaviz
          Jump to Specviz2D
 
    .. grid-item-card::
-      :img-top: logos/mos.svg
 
+      .. image:: logos/mos.svg
+         :width: 70%
+         :align: center
+         
       .. button-ref:: mosviz/index
          :expand:
          :color: primary
