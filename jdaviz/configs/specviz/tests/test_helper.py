@@ -414,13 +414,14 @@ def test_load_2d_flux(specviz_helper):
     assert specviz_helper.app.data_collection[0].label == "test [0]"
 
     spec2 = Spectrum1D(spectral_axis=np.linspace(4000, 6000, 10)*u.Angstrom,
-                      flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
+                       flux=np.ones((2, 10))*u.Unit("1e-17 erg / (Angstrom cm2 s)"))
 
     spec_list = SpectrumList([spec, spec2])
     specviz_helper.load_data(spec_list, data_label="second test")
 
     assert len(specviz_helper.app.data_collection) == 10
     assert specviz_helper.app.data_collection[-1].label == "second test [5]"
+
 
 def test_plot_uncertainties(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
