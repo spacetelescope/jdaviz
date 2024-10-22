@@ -81,6 +81,10 @@ docs = [
 roman = [
     "roman_datamodels>=0.17.1",
 ]
+qt = [
+    "qtpy",
+    "PySide6"
+]
 
 [build-system]
 requires = [

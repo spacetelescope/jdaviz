@@ -31,11 +31,28 @@ jobs:
       with:
         python-version: "3.11"
 
+    - uses: ConorMacBride/install-package@v1
+      with:
+          # mirrored from glue-qt
+          #  https://github.com/glue-viz/glue-qt/blob/main/.github/workflows/ci_workflows.yml
+          #  using
+          #   https://github.com/OpenAstronomy/github-actions-workflows/blob/5edb24fa432c75c0ca723ddea8ea14b72582919d/.github/workflows/tox.yml#L175C15-L175C49
+          # Linux PyQt 5.15 and 6.x installations require apt-getting xcb and EGL deps
+          # and headless X11 display;
+          apt: '^libxcb.*-dev libxkbcommon-x11-dev libegl1-mesa libopenblas-dev libhdf5-dev'
+
+    - name: Setup headless display
+      uses: pyvista/setup-headless-display-action@v2
+
     - name: Install jdaviz
-      run: pip install .[test]
+      run: pip install .[test,qt]
 
     - name: Install pyinstaller
-      run: pip install "pyinstaller<6"
+      # see https://github.com/erocarrera/pefile/issues/420 for performance issues on
+      # windows for pefile == 2024.8.26
+      # also see https://github.com/widgetti/solara/pull/724
+      # or https://solara.dev/documentation/advanced/howto/standalone (currently unpublished)
+      run: pip install "pyinstaller" "pefile<2024.8.26"
 
     - name: Create standalone binary
       env:
@@ -43,7 +60,7 @@ jobs:
       run: (cd standalone; pyinstaller ./jdaviz.spec)
 
     - name: Run jdaviz cmd in background
-      run: ./standalone/dist/jdaviz/jdaviz-cli imviz&
+      run: ./standalone/dist/jdaviz/jdaviz-cli imviz --port 8765 &
 
     - name: Install playwright
       run: (pip install playwright; playwright install chromium)
