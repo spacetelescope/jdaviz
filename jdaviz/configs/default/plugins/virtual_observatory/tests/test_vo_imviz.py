@@ -224,7 +224,7 @@ class TestVOImvizRemote:
         # If waveband isn't selected, plugin should ignore our registry query attempts
         vo_plugin = imviz_helper.plugins[vo_plugin_label]
         vo_plugin.waveband = ""
-        vo_plugin._obj.vue_query_registry_resources()
+        vo_plugin.query_registry_resources()
         assert len(vo_plugin.resource.choices) == 0
 
         # If waveband selected and coverage filtering, can't query registry if don't have a source
@@ -244,7 +244,7 @@ class TestVOImvizRemote:
 
         # If waveband selected, but NOT filtering by coverage, then allow registry query
         vo_plugin.resource_filter_coverage = False
-        vo_plugin._obj.vue_query_registry_resources()
+        vo_plugin.query_registry_resources()
         assert len(vo_plugin.resource.choices) > 0
 
     def test_coverage_toggle(self, imviz_helper):
@@ -260,14 +260,14 @@ class TestVOImvizRemote:
 
         # Retrieve registry options with filtering on
         vo_plugin.resource_filter_coverage = True
-        vo_plugin._obj.vue_query_registry_resources()
+        vo_plugin.query_registry_resources()
         assert vo_plugin._obj.resources_loading is False
         filtered_resources = vo_plugin.resource.choices
         assert len(filtered_resources) > 0
 
         # Retrieve registry options with filtering off
         vo_plugin.resource_filter_coverage = False
-        vo_plugin._obj.vue_query_registry_resources()
+        vo_plugin.query_registry_resources()
         assert vo_plugin._obj.resources_loading is False
         nonfiltered_resources = vo_plugin.resource.choices
 
@@ -292,7 +292,7 @@ class TestVOImvizRemote:
         vo_plugin.resource_filter_coverage = True
         with pytest.raises(LookupError, match=expected_error_msg):
             vo_plugin.waveband = "optical"
-            vo_plugin._obj.vue_query_registry_resources()
+            vo_plugin.query_registry_resources()
             assert any(
                 expected_error_msg in d["text"]
                 for d in imviz_helper.app.state.snackbar_history
@@ -302,7 +302,7 @@ class TestVOImvizRemote:
         # By clearing coverage filtering, we should now be able to query the registry
         # and return the full list of available resources:
         vo_plugin.resource_filter_coverage = False
-        vo_plugin._obj.vue_query_registry_resources()
+        vo_plugin.query_registry_resources()
         assert len(vo_plugin.resource.choices) > 0
 
         # However, if we try to query a resource, we should be prevented
@@ -333,7 +333,7 @@ class TestVOImvizRemote:
         # Select HST.M51 survey
         # Coverage not implemented for HST.M51
         vo_plugin.resource_filter_coverage = False
-        vo_plugin._obj.vue_query_registry_resources()
+        vo_plugin.query_registry_resources()
         assert "HST.M51" in vo_plugin.resource.choices
         vo_plugin.resource = "HST.M51"
 
