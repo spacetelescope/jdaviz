@@ -245,6 +245,8 @@ class SpectralLine(BaseSpectrumVerticalLine):
         self._rest_value = (self._rest_value * prev_unit).to_value(unit, u.spectral())
 
     def set_y_unit(self, unit=None):
+        # prevent spectral lines from entering unit conversion machinery so they maintain
+        # their position in the viewer at the rest + redshifted spectral value
         return
 
     @property
