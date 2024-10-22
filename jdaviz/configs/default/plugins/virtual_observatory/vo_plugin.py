@@ -103,8 +103,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
     @property
     def user_api(self):
-        # NOTE: leaving save_as_fits out for now - we may want a more general API to do that
-        # accross all plugins at some point
         return PluginUserApi(
             self,
             expose=(
@@ -119,6 +117,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                 "resource",
                 # Methods
                 "center_on_data",
+                "query_registry_resources",
                 "load_selected_data",
             ),
         )
@@ -208,9 +207,13 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
         self.viewer_centered = True
 
-    @observe("waveband_selected", "change")
-    @with_spinner(spinner_traitlet="resources_loading")
+    @observe("waveband_selected", type="change")
     def vue_query_registry_resources(self, _=None):
+        """UI entrypoint for resource selection and manual resource refresh btn"""
+        self.query_registry_resources()
+
+    @with_spinner(spinner_traitlet="resources_loading")
+    def query_registry_resources(self, _=None):
         """
         Query Virtual Observatory registry for all SIA services
         that serve data in that waveband around the source.
