@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 import numpy as np
 from astropy import units as u
@@ -419,6 +421,34 @@ def test_annulus_background(imviz_helper):
     subset_plugin._set_value_in_subset_definition(0, "Outer Radius (pixels)", "value", 45)
     subset_plugin.vue_update_subset()
     assert_allclose(phot_plugin.background_value, bg_4gauss_4)
+
+
+def test_fit_radial_profile_with_nan(imviz_helper):
+    from photutils.datasets import make_4gaussians_image
+
+    gauss4 = make_4gaussians_image()  # The background has a mean of 5 with noise
+    # Insert NaN
+    gauss4[25, 150] = np.nan
+
+    imviz_helper.load_data(gauss4, data_label='four_gaussians')
+
+    # Mark an object of interest
+    circle_1 = CirclePixelRegion(center=PixCoord(x=150, y=25), radius=7)
+    imviz_helper.plugins['Subset Tools']._obj.import_region(
+        [circle_1], combination_mode='new')
+
+    phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
+    phot_plugin.dataset_selected = 'four_gaussians'
+    phot_plugin.aperture_selected = 'Subset 1'
+    phot_plugin.current_plot_type = 'Radial Profile'
+    phot_plugin.fit_radial_profile = True
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # Fitter warnings do not matter, only want error.
+        phot_plugin.vue_do_aper_phot()
+    tbl = imviz_helper.get_aperture_photometry_results()
+
+    assert phot_plugin.result_failed_msg == ''
+    assert_allclose(tbl['sum'][0], 8590.419296)
 
 
 # NOTE: Extracting the cutout for radial profile is aperture
