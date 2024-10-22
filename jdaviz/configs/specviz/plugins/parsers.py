@@ -56,8 +56,10 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     # If no data label is assigned, give it a unique name
     if not data_label:
         data_label = app.return_data_label(data, alt_name="specviz_data")
+    # Still need to standardize the label
+    elif isinstance(data_label, (list, tuple)):
+        data_label = [app.return_data_label(label, alt_name="specviz_data") for label in data_label]  # noqa
     else:
-        # Still need to standardize the label
         data_label = app.return_data_label(data_label, alt_name="specviz_data")
 
     if isinstance(data, SpectrumCollection):
