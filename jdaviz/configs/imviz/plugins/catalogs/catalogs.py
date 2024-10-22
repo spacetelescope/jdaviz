@@ -34,11 +34,13 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        cat_options = ['SDSS']
+        if not self.app.state.settings.get('server_is_remote', False):
+            cat_options.append('From File...')
         self.catalog = FileImportSelectPluginComponent(self,
                                                        items='catalog_items',
                                                        selected='catalog_selected',
-                                                       manual_options=['SDSS', 'From File...'])
+                                                       manual_options=cat_options)
 
         # set the custom file parser for importing catalogs
         self.catalog._file_parser = self._file_parser

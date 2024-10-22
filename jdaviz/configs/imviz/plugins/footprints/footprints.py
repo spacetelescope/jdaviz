@@ -118,7 +118,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             preset_options = list(preset_regions._instruments.keys())
         else:
             preset_options = ['None']
-        preset_options.append('From File...')
+        if not self.app.state.settings.get('server_is_remote', False):
+            preset_options.append('From File...')
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
                                                       selected='preset_selected',
