@@ -893,8 +893,8 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                 # Fit Gaussian1D to radial profile data.
                 if self.fit_radial_profile:
                     fitter = TRFLSQFitter()
-                    y_max = y_data.max()
-                    x_mean = x_data[np.where(y_data == y_max)].mean()
+                    y_max = np.nanmax(y_data)
+                    x_mean = np.nanmean(x_data[np.where(y_data == y_max)])
                     std = 0.5 * (phot_table['semimajor_sigma'][0] +
                                  phot_table['semiminor_sigma'][0])
                     if isinstance(std, u.Quantity):
