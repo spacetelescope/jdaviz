@@ -70,6 +70,8 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+- Fixed mouseover for flux cubes when the native unit physical type
+  is power or photon flux density. [#3234]
 
 - Add missing styling to API hints entry for aperture_method in the spectral extraction plugin. [#3231]
 
