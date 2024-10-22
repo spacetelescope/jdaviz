@@ -39,16 +39,16 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
-        self.hub.subscribe(self, AddDataMessage, handler=lambda _: self.set_viewer_id())
+        self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
         self.viewer_icons = dict(self.app.state.viewer_icons)
         self.layer_icons = dict(self.app.state.layer_icons)
 
     @property
     def user_api(self):
-        expose = ['layer']
+        expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility']
         return UserApiWrapper(self, expose=expose)
 
-    def set_viewer_id(self):
+    def _set_viewer_id(self):
         # viewer_ids are not populated on the viewer at init, so we'll keep checking and set
         # these the first time that they are available
         if len(self.viewer_id) and len(self.viewer_reference):
@@ -65,4 +65,45 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
             self.viewer_icons = msg.icons
         elif msg.icon_type == 'layer':
             self.layer_icons = msg.icons
-        self.set_viewer_id()
+        self._set_viewer_id()
+
+    def set_layer_visibility(self, layer_label, visible=True):
+        """
+        Set the visibility of a layer in the viewer.
+
+        Parameters
+        ----------
+        layer_label : str
+            The label of the layer to set the visibility of.
+        visible : bool
+            Whether the layer should be visible or not.
+
+        Returns
+        -------
+        dict
+            A dictionary of the current visible layers.
+        """
+        # TODO: may need to be generalized to also support subset layers
+        self.app.set_data_visibility(self.viewer_id, layer_label, visible=visible)
+        return self.visible_layers
+
+    def toggle_layer_visibility(self, layer_label):
+        """
+        Toggle the visibility of a layer in the viewer.
+
+        Parameters
+        ----------
+        layer_label : str
+            The label of the layer to toggle the visibility of.
+
+        Returns
+        -------
+        bool
+            The new visibility state of the layer.
+        """
+        visible = not layer_label in self.visible_layers
+        self.set_layer_visibility(layer_label, visible=visible)
+        return visible
+
+    def vue_set_layer_visibility(self, info, *args):
+        return self.set_layer_visibility(info.get('layer'), info.get('value'))
