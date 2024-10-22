@@ -79,9 +79,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
             data = SpectrumList.read(data, format=format)
     else:
         # try parsing file_obj as a URI/URL:
-        data = download_uri_to_path(
-            data, cache=cache, local_path=local_path, timeout=timeout
-        )
+        data = download_uri_to_path(data, cache=cache, local_path=local_path, timeout=timeout)
 
         path = pathlib.Path(data)
 
@@ -105,11 +103,21 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
+    # step through SpectrumList and convert any 2D spectra to 1D spectra
     if isinstance(data, SpectrumList):
+        new_data = SpectrumList()
+        for spec in data:
+            if spec.flux.ndim == 2:
+                temp_data, _ = split_spectrum_with_2D_flux_array(spec)
+                new_data.extend(temp_data)
+            else:
+                new_data.append(spec)
+        data = new_data
+
         if not isinstance(data_label, (list, tuple)):
             temp_labels = []
             for i in range(len(data)):
-                temp_labels.append(f"{data_label} {i}")
+                temp_labels.append(f"{data_label} [{i}]")
             data_label = temp_labels
         elif len(data_label) != len(data):
             raise ValueError(f"Length of data labels list ({len(data_label)}) is different"
@@ -261,17 +269,28 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 
 
 def split_spectrum_with_2D_flux_array(data, data_label, app):
-    temp_data = []
-    temp_data_label = []
+    """
+    Helper function to split Spectrum1D of 2D flux to a SpectrumList of nD objects.
+    Parameters
+    ----------
+    data : `~specutils.Spectrum1D`
+        Spectrum with 2D flux array
+    Returns
+    -------
+    new_data : `~specutils.SpectrumList`
+        list of unpacked spectra
+    """
+    new_data = []
+    new_data_label = []
     for i in range(data.flux.shape[0]):
         unc = None
         mask = None
         if data.uncertainty is not None:
             unc = data.uncertainty[i, :]
-        if mask is not None:
+        if data.mask is not None:
             mask = data.mask[i, :]
-        temp_data.append(Spectrum1D(flux=data.flux[i, :], spectral_axis=data.spectral_axis,
-                                    uncertainty=unc))
-        temp_data_label.append(f'{app.return_data_label(data_label, alt_name="specviz_data")}[{i}]')  # noqa
+        new_data.append(Spectrum1D(flux=data.flux[i, :], spectral_axis=data.spectral_axis,
+                                   uncertainty=unc, mask=mask))
+        new_data_label.append(f'{app.return_data_label(data_label, alt_name="specviz_data")}[{i}]')  # noqa
 
-    return temp_data, temp_data_label
+    return new_data, new_data_label
