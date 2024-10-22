@@ -68,7 +68,7 @@ Bug Fixes
 
 - Improved performance and removed jittering for the matched box zoom tool. [#3215]
 
-- Prevent line list marks from converting y-range so they maintain their position 
+- Prevent PluginMarks from converting y-range so they maintain their position 
   in the spectrum-viewer when spectral y units are converted. [#3242]
 
 Cubeviz
