@@ -1,5 +1,5 @@
 <template>
-  <j-tooltip :tooltipcontent="tooltipContent(tooltip, label, visible, colormode, colors, linewidth, is_subset)">
+  <j-tooltip :tooltipcontent="tooltipContent(tooltip, label, visible, colormode, colors, linewidth, is_subset)" :disabled="disabled">
     <v-btn
       :rounded="is_subset"
       @click="(e) => $emit('click', e)"

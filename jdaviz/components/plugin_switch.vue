@@ -1,6 +1,6 @@
 <template>
   <span v-if="use_eye_icon">
-    <v-btn icon @click.stop="$emit('update:value', !value)">
+    <v-btn icon @click.stop="$emit('update:value', !value); $emit('click', !value)">
       <v-icon>mdi-eye{{ value ? '' : '-off' }}</v-icon>
     </v-btn>
     <span v-if="api_hints_enabled && api_hint" class="api-hint">
@@ -16,7 +16,7 @@
     :class="api_hints_enabled && api_hint ? 'api-hint' : null"
     :hint="hint"
     v-model="value"
-    @change="$emit('update:value', $event)"
+    @change="$emit('update:value', $event); $emit('click', $event)"
     persistent-hint>
   </v-switch>
 </template>

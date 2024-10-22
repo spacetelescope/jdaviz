@@ -3,7 +3,7 @@
     <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label">
       <span style="float: right;">
         <j-layer-viewer-icon-stylized
-          tooltip=""
+          tooltip="View data layers and subsets"
           :label="viewer_id"
           :icon="viewer_icons[viewer_id]"
           :visible="true"
@@ -22,7 +22,7 @@
       <div v-if="item.visible">
         <span style="float: right;">
           <j-layer-viewer-icon-stylized
-            tooltip=""
+            tooltip="View data layers and subsets"
             :label="item.label"
             :icon="item.icon"
             :visible="item.visible"
@@ -51,14 +51,37 @@
 
     <div 
       v-if="data_menu_open" 
-      style="position: absolute; float: right; right: 32px; top: 2px; background-color: white; border: 2px solid black; width: 250px; height: 350px"
+      style="position: absolute; float: right; right: 32px; top: 2px; background-color: white; border: 2px solid black; width: 300px; height: 350px"
     >
       <span>
         <b> {{ viewer_id }}</b>
       </span>
       <br/>
-      <span v-for="layer in layer_items">
-        {{ layer.label }}<br/>
+      <span v-for="item in layer_items.slice().reverse()">
+        <span style="width: 42px; margin: 4px">
+          <j-layer-viewer-icon-stylized
+              :label="item.label"
+              :icon="item.icon"
+              :visible="item.visible"
+              :is_subset="item.is_subset"
+              :colors="item.colors"
+              :linewidth="item.linewidth"
+              :cmap_samples="cmap_samples"
+              btn_style="margin-bottom: 0px"
+              disabled="true"
+            />
+        </span>
+        {{ item.label }}
+        <j-tooltip span_style="float: right" tooltipcontent="Toggle visibility">
+          <plugin-switch
+            :value="item.visible"
+            @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+            :api_hint='"dm.set_layer_visibility("+viewer_id+", "'
+            :api_hints_enabled="false"
+            :use_eye_icon="true"
+          />
+        </j-tooltip>
+        <br/>
       </span>
     </div>
 
