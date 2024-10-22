@@ -157,6 +157,12 @@ class PluginMark:
             return
         axis = axis_map.get(msg.axis, None)
         if axis is not None:
+            scale = self.scales.get(axis, None)
+            # if PluginMark mark is LinearScale(0, 1), prevent it from entering unit conversion
+            # machinery so it maintains it's position in viewer.
+            if isinstance(scale, LinearScale) and (scale.min, scale.max) == (0, 1):
+                return
+
             getattr(self, f'set_{axis}_unit')(msg.unit)
 
     def clear(self):
@@ -243,11 +249,6 @@ class SpectralLine(BaseSpectrumVerticalLine):
         prev_unit = self.xunit
         super().set_x_unit(unit=unit)
         self._rest_value = (self._rest_value * prev_unit).to_value(unit, u.spectral())
-
-    def set_y_unit(self, unit=None):
-        # prevent spectral lines from entering unit conversion machinery so they maintain
-        # their position in the viewer at the rest + redshifted spectral value
-        return
 
     @property
     def redshift(self):
@@ -338,12 +339,6 @@ class SliceIndicatorMarks(BaseSpectrumVerticalLine, HubListener):
     @property
     def marks(self):
         return [self, self.label]
-
-    def _on_global_display_unit_changed(self, msg):
-        # Updating the value is handled by the plugin itself, need to update unit string.
-        if msg.axis in ["spectral", "x"]:
-            self.xunit = msg.unit
-        self._update_label()
 
     def _value_handle_oob(self, x=None, update_label=False):
         if x is None:
