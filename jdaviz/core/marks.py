@@ -119,6 +119,8 @@ class PluginMark:
         self.xunit = unit
 
     def set_y_unit(self, unit=None):
+        if self.__class__.__name__ == 'SpectralLine':
+            return
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
                 return
