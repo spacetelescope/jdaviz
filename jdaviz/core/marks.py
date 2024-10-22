@@ -119,8 +119,6 @@ class PluginMark:
         self.xunit = unit
 
     def set_y_unit(self, unit=None):
-        if self.__class__.__name__ == 'SpectralLine':
-            return
         if unit is None:
             if not hasattr(self.viewer.state, 'y_display_unit'):
                 return
@@ -245,6 +243,9 @@ class SpectralLine(BaseSpectrumVerticalLine):
         prev_unit = self.xunit
         super().set_x_unit(unit=unit)
         self._rest_value = (self._rest_value * prev_unit).to_value(unit, u.spectral())
+
+    def set_y_unit(self, unit=None):
+        return
 
     @property
     def redshift(self):
