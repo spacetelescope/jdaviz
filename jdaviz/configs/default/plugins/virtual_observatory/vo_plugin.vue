@@ -55,7 +55,7 @@
           v-model="coordframe_selected"
           :menu-props="{ left: true }"
           attach
-          :items="coordframes"
+          :items="coordframe_choices.map(i => i.label)"
           label="Coordinate Frame"
           hint="Astronomical Coordinate Frame of the provided Coordinates"
           :disabled="viewer_selected !== 'Manual'"
@@ -66,7 +66,7 @@
       <v-row justify="space-between">
         <div :style="{ width: '55%' }">
           <v-text-field
-            v-model.number="radius_val"
+            v-model.number="radius"
             type="number"
             label="Radius"
             hint="Angular radius around source coordinates, within which to query for data (Default 1 degree)"
@@ -99,7 +99,7 @@
           v-model="waveband_selected"
           :menu-props="{ left: true }"
           attach
-          :items="wavebands_items.map(i => i.label)"
+          :items="waveband_items.map(i => i.label)"
           label="Resource Waveband"
           hint="Select a spectral waveband to filter your surveys"
           persistent-hint
@@ -112,7 +112,7 @@
             v-model="resource_selected"
             :menu-props="{ left: true }"
             attach
-            :items="resources"
+            :items="resource_choices.map(i => i.label)"
             :loading="resources_loading"
             :rules="[() => !!resource_selected || 'This field is required']"
             label="Available Resources"
