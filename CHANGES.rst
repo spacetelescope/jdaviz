@@ -12,6 +12,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+- Remove "From File.." option when running on an external server. [#3239]
+
 Mosviz
 ^^^^^^
 
