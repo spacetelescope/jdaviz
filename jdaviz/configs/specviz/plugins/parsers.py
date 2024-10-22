@@ -56,6 +56,9 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
     # If no data label is assigned, give it a unique name
     if not data_label:
         data_label = app.return_data_label(data, alt_name="specviz_data")
+    else:
+        # Still need to standardize the label
+        data_label = app.return_data_label(data_label, alt_name="specviz_data")
 
     if isinstance(data, SpectrumCollection):
         raise TypeError("SpectrumCollection detected."
