@@ -24,6 +24,7 @@ from jdaviz.core.template_mixin import (
     UnitSelectPluginComponent,
     with_spinner,
 )
+from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ["VoPlugin"]
 vo_plugin_label = "Virtual Observatory"
@@ -38,19 +39,19 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
     viewer_items = List([]).tag(sync=True)
     viewer_selected = Unicode().tag(sync=True)
 
-    wavebands_items = List().tag(sync=True)
+    waveband_items = List().tag(sync=True)
     waveband_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resource_filter_coverage = Bool(False).tag(sync=True)
-    resources = List([]).tag(sync=True)
+    resource_choices = List([]).tag(sync=True)
     resource_selected = Any().tag(sync=True)  # Any to accept Nonetype
     resources_loading = Bool(False).tag(sync=True)
 
     source = Unicode("").tag(sync=True)
     coord_follow_viewer_pan = Bool(False).tag(sync=True)
     viewer_centered = Bool(False).tag(sync=True)
-    coordframes = List([]).tag(sync=True)
+    coordframe_choices = List([]).tag(sync=True)
     coordframe_selected = Unicode("icrs").tag(sync=True)
-    radius_val = Float(1).tag(sync=True)
+    radius = Float(1).tag(sync=True)
     radius_unit_items = List().tag(sync=True)
     radius_unit_selected = Unicode("deg").tag(sync=True)
 
@@ -63,24 +64,31 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             self, "viewer_items", "viewer_selected", manual_options=["Manual"]
         )
 
+        self.coordframe = SelectPluginComponent(
+            self, items="coordframe_choices", selected="coordframe_selected"
+        )
+        self.coordframe.choices = [frame.lower() for frame in all_astropy_frames]
+
         self.radius_unit = UnitSelectPluginComponent(
             self, items="radius_unit_items", selected="radius_unit_selected"
         )
         self.radius_unit.choices = ["deg", "rad", "arcmin", "arcsec"]
 
         # Waveband properties to filter available registry resources
-        self.wavebands = SelectPluginComponent(
-            self, items="wavebands_items", selected="waveband_selected"
+        self.waveband = SelectPluginComponent(
+            self, items="waveband_items", selected="waveband_selected"
         )
-        self.wavebands.choices = (
+        self.waveband.choices = (
             w.lower() for w in vocabularies.get_vocabulary("messenger")["terms"]
         )
         self.waveband_selected = None
 
         self._full_registry_results = None
         self.resource_selected = None
-
-        self.coordframes = [frame.lower() for frame in all_astropy_frames]
+        self.resource = SelectPluginComponent(
+            self, items="resource_choices", selected="resource_selected"
+        )
+        self.resource.choices = []
 
         self.table.headers_avail = ["Title", "Instrument", "DateObs", "URL"]
         self.table.headers_visible = ["Title", "Instrument", "DateObs"]
@@ -92,6 +100,28 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         self.hub.subscribe(self, AddDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, RemoveDataMessage, handler=self.vue_center_on_data)
         self.hub.subscribe(self, LinkUpdatedMessage, handler=self.vue_center_on_data)
+
+    @property
+    def user_api(self):
+        # NOTE: leaving save_as_fits out for now - we may want a more general API to do that
+        # accross all plugins at some point
+        return PluginUserApi(
+            self,
+            expose=(
+                # Traitlets
+                "source",
+                "viewer",
+                "radius",
+                "radius_unit",
+                "waveband",
+                "coordframe",
+                "resource_filter_coverage",
+                "resource",
+                # Methods
+                "center_on_data",
+                "load_selected_data",
+            ),
+        )
 
     @observe("viewer_selected", type="change")
     def vue_viewer_changed(self, _=None):
@@ -118,16 +148,21 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             self.vue_center_on_data()
 
     def vue_center_on_data(self, event=None):
+        """UI entrypoint for the manual viewer center button"""
+        # If plugin is in "Manual" mode, we should never
+        # autocenter and potentially wipe the user's data
+        if not self.viewer_selected or self.viewer_selected == "Manual":
+            return
+
+        self.center_on_data(event)
+
+    def center_on_data(self, event=None):
         """
         If data is present in the default viewer, center the plugin's coordinates on
         the viewer's center WCS coordinates.
         """
         if not hasattr(self, "viewer"):
             # mixin object not yet initialized
-            return
-        # If plugin is in "Manual" mode, we should never
-        # autocenter and potentially wipe the user's data
-        if not self.viewer_selected or self.viewer_selected == "Manual":
             return
 
         # If the user panned but tracking not enabled, don't recenter
@@ -145,7 +180,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         # nothing happens in the case there is no image in the viewer
         # additionally if the data does not have WCS
         if (
-            viewer.state.reference_data is None
+            len(self.app._jdaviz_helper.data_labels) < 1
+            or viewer.state.reference_data is None
             or viewer.state.reference_data.coords is None
         ):
             self.source = ""
@@ -200,7 +236,7 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             raise ValueError(error_msg)
 
         # Clear existing resources list
-        self.resources = []
+        self.resource.choices = []
         self.resource_selected = None
 
         try:
@@ -235,12 +271,14 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         )
                 registry_args.append(
                     registry.Spatial(
-                        (coord, (self.radius_val * u.Unit(self.radius_unit.selected))),
+                        (coord, (self.radius * u.Unit(self.radius_unit.selected))),
                         intersect="overlaps",
                     )
                 )
             self._full_registry_results = registry.search(*registry_args)
-            self.resources = list(self._full_registry_results.getcolumn("short_name"))
+            self.resource.choices = list(
+                self._full_registry_results.getcolumn("short_name")
+            )
         except DALFormatError as e:
             if type(e.cause) is RequestConnectionError:
                 self.hub.broadcast(
@@ -302,8 +340,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             sia_results = sia_service.search(
                 coord,
                 size=(
-                    (self.radius_val * u.Unit(self.radius_unit.selected))
-                    if self.radius_val > 0.0
+                    (self.radius * u.Unit(self.radius_unit.selected))
+                    if self.radius > 0.0
                     else None
                 ),
                 format="image/fits",
@@ -382,8 +420,12 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             )
         )
 
+    def vue_load_selected_data(self, event=None):
+        """UI entrypoint for load data btn"""
+        self.load_selected_data()
+
     @with_spinner(spinner_traitlet="data_loading")
-    def vue_load_selected_data(self, _=None):
+    def load_selected_data(self, _=None):
         """Load the files selected by the user in the table"""
         if (
             self.app._jdaviz_helper.plugins["Orientation"].align_by != "WCS"
