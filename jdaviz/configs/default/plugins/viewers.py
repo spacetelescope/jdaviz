@@ -166,6 +166,17 @@ class JdavizViewerMixin(WithCache):
             if y_max is not None:
                 self.state.y_max = y_max
 
+    def get_limits(self):
+        """Return current viewer axes limits.
+
+        Returns
+        -------
+        x_min, x_max, y_min, y_max : float
+            Lower/upper X/Y limits, respectively.
+
+        """
+        return self.state.x_min, self.state.x_max, self.state.y_min, self.state.y_max
+
     @property
     def native_marks(self):
         """

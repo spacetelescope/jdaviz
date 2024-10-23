@@ -134,11 +134,11 @@ class SpectrumPerSpaxel(ProfileFromCube):
             self._reset_profile_viewer_bounds()
             self._mark.visible = False
         else:
-            y_values = spectrum.flux[x, y, :]
+            y_values = spectrum.flux[x, y, :].value
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
                 return
             self._mark.update_xy(spectrum.spectral_axis.value, y_values)
             self._mark.visible = True
-            self._profile_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
-            self._profile_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
+            self._profile_viewer.set_limits(
+                y_min=np.nanmin(y_values) * 0.8, y_max=np.nanmax(y_values) * 1.2)

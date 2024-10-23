@@ -73,6 +73,8 @@ Cubeviz
 
 - Add missing styling to API hints entry for aperture_method in the spectral extraction plugin. [#3231]
 
+- Fixed "spectrum at spaxel" tool so it no longer resets spectral axis zoom. [#3249] 
+
 Imviz
 ^^^^^
 
