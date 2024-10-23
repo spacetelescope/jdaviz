@@ -162,9 +162,9 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             self.viewer_centered = False
             return
 
-        self.center_on_data(event)
+        self.center_on_data()
 
-    def center_on_data(self, _=None):
+    def center_on_data(self):
         """
         If data is present in the default viewer, center the plugin's coordinates on
         the viewer's center WCS coordinates.
