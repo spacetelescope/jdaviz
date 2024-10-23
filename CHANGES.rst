@@ -11,6 +11,11 @@ Cubeviz
 
 Imviz
 ^^^^^
+- In the Orientation plugin, the following deprecated properties were removed: ``link_type`` (use ``align_by``),
+  ``wcs_use_affine`` (use ``wcs_fast_approximation``). [#3247]
+
+- Removed deprecated ``imviz.get_link_type()`` method. Use ``imviz.get_alignment_method()``
+  instead. [#3247]
 
 Mosviz
 ^^^^^^
