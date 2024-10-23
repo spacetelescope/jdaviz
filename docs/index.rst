@@ -56,10 +56,9 @@ Jdaviz
          Jump to Mosviz
 
    .. grid-item-card::
+      :text-align: center
 
-      .. note::
-
-         New and in development. Logo coming soon!
+      New and in development. Logo coming soon!
 
       .. button-ref:: rampviz/index
          :expand:
