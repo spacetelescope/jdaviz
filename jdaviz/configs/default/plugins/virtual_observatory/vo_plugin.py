@@ -153,17 +153,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         if not self.viewer_selected or self.viewer_selected == "Manual":
             return
 
-        self.center_on_data(event)
-
-    def center_on_data(self, event=None):
-        """
-        If data is present in the default viewer, center the plugin's coordinates on
-        the viewer's center WCS coordinates.
-        """
-        if not hasattr(self, "viewer"):
-            # mixin object not yet initialized
-            return
-
         # If the user panned but tracking not enabled, don't recenter
         # NOTE: float event typecheck assumes the only "float" type event triggering this method
         #   is "zoom_center_x" and "zoom_center_y"
@@ -172,6 +161,18 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             # Thus, we're no longer centered
             self.viewer_centered = False
             return
+
+        self.center_on_data(event)
+
+    def center_on_data(self, _=None):
+        """
+        If data is present in the default viewer, center the plugin's coordinates on
+        the viewer's center WCS coordinates.
+        """
+        if not hasattr(self, "viewer"):
+            # mixin object not yet initialized
+            return
+
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
