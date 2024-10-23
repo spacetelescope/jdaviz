@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 
 def test_plugin_user_apis(imviz_helper):
