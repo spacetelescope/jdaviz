@@ -157,6 +157,12 @@ class PluginMark:
             return
         axis = axis_map.get(msg.axis, None)
         if axis is not None:
+            scale = self.scales.get(axis, None)
+            # if PluginMark mark is LinearScale(0, 1), prevent it from entering unit conversion
+            # machinery so it maintains it's position in viewer.
+            if isinstance(scale, LinearScale) and (scale.min, scale.max) == (0, 1):
+                return
+
             getattr(self, f'set_{axis}_unit')(msg.unit)
 
     def clear(self):
