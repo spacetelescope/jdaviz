@@ -1,5 +1,4 @@
 from astropy import units as u
-from astropy.utils import deprecated
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from glue.core.link_helpers import LinkSame
 from glue.core.message import (
@@ -142,31 +141,11 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         return PluginUserApi(
             self,
             expose=(
-                'align_by', 'link_type', 'wcs_fast_approximation', 'wcs_use_affine',
+                'align_by', 'wcs_fast_approximation',
                 'delete_subsets', 'viewer', 'orientation',
                 'rotation_angle', 'east_left', 'add_orientation'
             )
         )
-
-    @property
-    @deprecated(since="4.0", alternative="align_by")
-    def link_type(self):
-        return self.align_by
-
-    @link_type.setter
-    @deprecated(since="4.0", alternative="align_by")
-    def link_type(self, link_type):
-        self.align_by = link_type
-
-    @property
-    @deprecated(since="4.0", alternative="wcs_fast_approximation")
-    def wcs_use_affine(self):
-        return self.wcs_fast_approximation
-
-    @wcs_use_affine.setter
-    @deprecated(since="4.0", alternative="wcs_fast_approximation")
-    def wcs_use_affine(self, wcs_use_affine):
-        self.wcs_fast_approximation = wcs_use_affine
 
     def _link_image_data(self):
         self.linking_in_progress = True

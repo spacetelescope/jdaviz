@@ -3,7 +3,6 @@ import re
 import warnings
 from copy import deepcopy
 
-from astropy.utils import deprecated
 import numpy as np
 from glue.core.link_helpers import LinkSame
 
@@ -251,10 +250,6 @@ class Imviz(ImageConfigHelper):
         plg._obj.wcs_use_fallback = wcs_fallback_scheme == 'pixels'
         plg.wcs_fast_approximation = wcs_fast_approximation
         plg.align_by = align_by_msg_to_trait[align_by]
-
-    @deprecated(since="4.0", alternative="get_alignment_method")
-    def get_link_type(self, data_label_1, data_label_2):
-        return self.get_alignment_method(data_label_1, data_label_2)
 
     def get_alignment_method(self, data_label_1, data_label_2):
         """Find the type of ``glue`` linking between the given
