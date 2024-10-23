@@ -173,6 +173,7 @@ extlinks = {
 # variables set in the global configuration. The variables set in the
 # global configuration are listed below, commented out.
 
+html_static_path = ["_static"]
 html_css_files = ["jdaviz.css"]
 html_copy_source = False
 
