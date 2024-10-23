@@ -10,6 +10,13 @@ from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, 
 
 __all__ = ['SonifyData']
 
+try:
+    import strauss
+except ImportError:
+    _has_strauss = False
+else:
+    _has_strauss = True
+
 
 @tray_registry('cubeviz-sonify-data', label="Sonify Data",
                viewer_requirements=['spectrum', 'image'])
@@ -28,6 +35,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
     pccut = IntHandleEmpty(20).tag(sync=True)
     volume = IntHandleEmpty(100).tag(sync=True)
     stream_active = Bool(True).tag(sync=True)
+    has_strauss = Bool(_has_strauss).tag(sync=True)
 
     # TODO: can we referesh the list, so sounddevices are up-to-date when dropdown clicked?
     sound_devices_items = List().tag(sync=True)

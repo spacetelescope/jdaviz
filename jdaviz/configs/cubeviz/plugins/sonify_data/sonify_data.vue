@@ -8,7 +8,10 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-    <j-plugin-section-header>Cube</j-plugin-section-header>
+    <j-plugin-section-header>Sonify Cube</j-plugin-section-header>
+    <v-alert v-if="!has_strauss" type="warning" style="margin-left: -12px; margin-right: -12px">
+      To use Sonify Data, install strauss and restart jdaviz.
+    </v-alert>
     <v-row>
       <j-docs-link>Choose the input cube and spectral subset.</j-docs-link>
     </v-row>
