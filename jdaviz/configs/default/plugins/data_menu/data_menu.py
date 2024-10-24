@@ -104,7 +104,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         bool
             The new visibility state of the layer.
         """
-        visible = not layer_label in self.visible_layers
+        visible = layer_label not in self.visible_layers
         self.set_layer_visibility(layer_label, visible=visible)
         return visible
 
