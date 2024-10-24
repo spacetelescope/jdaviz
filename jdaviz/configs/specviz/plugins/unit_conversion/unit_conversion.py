@@ -113,7 +113,7 @@ class UnitConversion(PluginTemplateMixin):
 
         self._cached_properties = ['image_layers']
 
-        if self.config not in ['specviz', 'specviz2d', 'cubeviz', 'mosviz']:
+        if self.config not in ['specviz', 'specviz2d', 'cubeviz']:
             # TODO [specviz2d, mosviz] x_display_unit is not implemented in glue for image viewer
             # used by spectrum-2d-viewer
             # TODO [mosviz]: add to yaml file
