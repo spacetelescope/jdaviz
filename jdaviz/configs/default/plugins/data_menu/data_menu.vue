@@ -56,7 +56,12 @@
         </div>
       </template>
       <v-list :id="'dm-content-' + viewer_id" style="max-height: 500px; width: 465px" class="overflow-y-auto">
-        <v-list-item-group multiple dense>
+        <v-list-item-group
+          active-class="active-list-item"
+          multiple
+          dense
+        >
+          <div>
           <v-list-item v-for="item in layer_items.slice().reverse()">
             <v-list-item-icon>
               <j-layer-viewer-icon-stylized
@@ -86,6 +91,7 @@
               </j-tooltip>
             </v-list-item-action>
           </v-list-item>
+          </div>
         </v-list-item-group>
       </v-list>
     </v-menu>
@@ -156,5 +162,22 @@
 
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
+  }
+  .v-list-item__icon, .v-list-item__content, .v-list-item__action {
+    /* even denser than dense */
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+  }
+  .v-list-item__icon {
+    margin-top: 6px !important;
+  }
+  .v-list-item:nth-child(even) {
+    /* alternating row colors */
+    background-color: #f1f2f8;
+  }
+  .active-list-item {
+    background-color: #d1f4ff;
   }
 </style>
