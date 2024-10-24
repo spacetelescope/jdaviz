@@ -118,7 +118,6 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 new_data.extend(split_spectrum_with_2D_flux_array(spec))
             else:
                 new_data.append(spec)
-        data = SpectrumList(new_data)
 
         if not isinstance(data_label, (list, tuple)):
             data_label = [f"{data_label} [{i}]" for i in range(len(data))]
@@ -274,6 +273,7 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
 def split_spectrum_with_2D_flux_array(data):
     """
     Helper function to split Spectrum1D of 2D flux to a SpectrumList of nD objects.
+
     Parameters
     ----------
     data : `~specutils.Spectrum1D`
@@ -282,7 +282,7 @@ def split_spectrum_with_2D_flux_array(data):
     Returns
     -------
     new_data : `~specutils.SpectrumList`
-        list of unpacked spectra
+        List of unpacked spectra.
     """
     new_data = []
     for i in range(data.flux.shape[0]):
