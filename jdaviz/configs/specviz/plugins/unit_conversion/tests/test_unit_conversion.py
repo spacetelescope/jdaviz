@@ -154,3 +154,33 @@ def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
 
     assert uc_plg.flux_unit.selected == flux_unit.to_string()
     assert uc_plg.flux_unit.choices == expected_choices
+
+
+def test_mosviz_profile_view_mouseover(specviz2d_helper, spectrum2d):
+    data = np.zeros((5, 10))
+    data[3] = np.arange(10)
+    spectrum2d = Spectrum1D(flux=data*u.MJy, spectral_axis=data[3]*u.um)
+
+    specviz2d_helper.load_data(spectrum2d)
+    viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
+    plg = specviz2d_helper.plugins["Unit Conversion"]
+
+    label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 5, 'y': 3}})
+
+    assert label_mouseover.as_text() == ('Cursor 5.00000e+00, 3.00000e+00',
+                                         'Wave 5.00000e+00 um (5 pix)',
+                                         'Flux 5.00000e+00 MJy')
+
+    plg._obj.flux_unit_selected = 'Jy'
+    assert label_mouseover.as_text() == ('Cursor 5.00000e+00, 3.00000e+00',
+                                         'Wave 5.00000e+00 um (5 pix)',
+                                         'Flux 5.00000e+06 Jy')
+
+    # test mouseover when spectral density equivalencies are required for conversion
+    plg._obj.flux_unit_selected = 'erg / (Angstrom s cm2)'
+    assert label_mouseover.as_text() == ('Cursor 5.00000e+00, 3.00000e+00',
+                                         'Wave 5.00000e+00 um (5 pix)',
+                                         'Flux 5.99585e-08 erg / (Angstrom s cm2)')
