@@ -83,8 +83,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         dict
             A dictionary of the current visible layers.
         """
-        # TODO: may need to be generalized to also support subset layers
-        self.app.set_data_visibility(self.viewer_id, layer_label, visible=visible)
+        for layer in self._viewer.layers:
+            if layer.layer.label == layer_label:
+                layer.visible = visible
         return self.visible_layers
 
     def toggle_layer_visibility(self, layer_label):
