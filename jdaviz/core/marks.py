@@ -129,6 +129,12 @@ class PluginMark:
             unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
 
+        # spectrum y-values in viewer have already been converted, don't convert again
+        # if a spectral_y_type is changed, just update the unit
+        if self.yunit is not None and check_if_unit_is_per_solid_angle(self.yunit) != check_if_unit_is_per_solid_angle(unit):  # noqa
+            self.yunit = unit
+            return
+
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
 
             if self.viewer.default_class is Spectrum1D:

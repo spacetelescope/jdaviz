@@ -5,6 +5,7 @@ from astropy.wcs import WCS
 from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion
 from specutils import Spectrum1D
+from glue.core.roi import XRangeROI
 
 from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 
@@ -150,6 +151,7 @@ def test_flux_unit_choices(cubeviz_helper, flux_unit, expected_choices):
 def test_unit_translation(cubeviz_helper, angle_unit):
     # custom cube so PIXAR_SR is in metadata, and Flux units, and in MJy
     w, wcs_dict = cubeviz_wcs_dict()
+    wcs_dict['PIXAR_SR'] = 10
     flux = np.zeros((30, 20, 3001), dtype=np.float32)
     flux[5:15, 1:11, :] = 1
     cube = Spectrum1D(flux=flux * u.MJy / angle_unit, wcs=w, meta=wcs_dict)
@@ -175,8 +177,28 @@ def test_unit_translation(cubeviz_helper, angle_unit):
     viewer_1d = cubeviz_helper.app.get_viewer(
         cubeviz_helper._default_spectrum_viewer_reference_name)
 
+    la = cubeviz_helper.plugins['Line Analysis']
+    la.keep_active = True
+    viewer_1d.apply_roi(XRangeROI(6e-7, 6.2e-7))
+    la.spectral_subset.selected = 'Subset 2'
+
+    marks_before = [la._obj.continuum_marks['left'].y,
+                    la._obj.continuum_marks['right'].y]
+
     # change global y-units from Flux -> Surface Brightness
     uc_plg._obj.spectral_y_type_selected = 'Surface Brightness'
+
+    if angle_unit == PIX2:
+        # translation does not alter spectral_y values in viewer
+        pixar_sr = 1
+    else:
+        pixar_sr = wcs_dict['PIXAR_SR']
+
+    marks_after = [la._obj.continuum_marks['left'].y * pixar_sr,
+                   la._obj.continuum_marks['right'].y * pixar_sr]
+
+    # ensure continuum marks update when spectral_y_type is changed
+    assert_allclose(marks_before, marks_after, rtol=1e-5)
 
     assert uc_plg._obj.spectral_y_type_selected == 'Surface Brightness'
     y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
