@@ -41,7 +41,8 @@ class Specviz(ConfigHelper, LineListMixin):
                                handler=self._redshift_listener)
 
     def load_data(self, data, data_label=None, format=None, show_in_viewer=True,
-                  concat_by_file=False, cache=None, local_path=None, timeout=None):
+                  concat_by_file=False, cache=None, local_path=None, timeout=None,
+                  load_as_list=False):
         """
         Load data into Specviz.
 
@@ -80,7 +81,8 @@ class Specviz(ConfigHelper, LineListMixin):
                           concat_by_file=concat_by_file,
                           cache=cache,
                           local_path=local_path,
-                          timeout=timeout)
+                          timeout=timeout,
+                          load_as_list=load_as_list)
 
     def get_spectra(self, data_label=None, spectral_subset=None, apply_slider_redshift="Warn"):
         """Returns the current data loaded into the main viewer
