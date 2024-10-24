@@ -4,7 +4,7 @@ from traitlets import Bool, observe
 
 from jdaviz.core.events import (ViewerAddedMessage, ChangeRefDataMessage,
                                 AddDataMessage, RemoveDataMessage,
-                                MarkersPluginUpdate, GlobalDisplayUnitChanged)
+                                MarkersPluginUpdate)
 from jdaviz.core.marks import MarkersMark
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin, ViewerSelectMixin, TableMixin
@@ -115,12 +115,6 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
 
     def _on_viewer_added(self, msg):
         self._create_viewer_callbacks(self.app.get_viewer_by_id(msg.viewer_id))
-
-    def _on_global_display_unit_changed(self, msg, viewer=None):
-        # all cubes are converted to surface brightness so we just need to
-        # listen to SB for cubeviz unit changes
-        if msg.axis == "flux":
-            self.image_unit = u.Unit(msg.unit)
 
     def _recompute_mark_positions(self, viewer):
         if self.table is None or self.table._qtable is None:
