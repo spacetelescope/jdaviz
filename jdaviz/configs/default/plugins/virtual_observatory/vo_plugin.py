@@ -147,7 +147,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             self.vue_center_on_data()
 
     def vue_center_on_data(self, event=None):
-        """UI entrypoint for the manual viewer center button"""
+        """
+        This vue method serves two purposes:
+        * UI entrypoint for the manual viewer center button
+        * Callback method for user panning (sub'ed to zoom_center_x/zoom_center_y)
+        """
         # If plugin is in "Manual" mode, we should never
         # autocenter and potentially wipe the user's data
         if not self.viewer_selected or self.viewer_selected == "Manual":
@@ -172,7 +176,6 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
         if not hasattr(self, "viewer"):
             # mixin object not yet initialized
             return
-
 
         # gets the current viewer
         viewer = self.viewer.selected_obj
@@ -210,7 +213,11 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
 
     @observe("waveband_selected", type="change")
     def vue_query_registry_resources(self, _=None):
-        """UI entrypoint for resource selection and manual resource refresh btn"""
+        """
+        This vue method serves as UI entrypoint for two actions:
+        * Automatically fires when a waveband is selected
+        * The manual resource refresh btn
+        """
         self.query_registry_resources()
 
     @with_spinner(spinner_traitlet="resources_loading")
