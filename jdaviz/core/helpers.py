@@ -375,10 +375,6 @@ class ConfigHelper(HubListener):
 
                 else:
                     new_uncert = None
-                if ('_pixel_scale_factor' in data.meta):
-                    new_y = flux_conversion(data.flux.value, data.flux.unit,
-                                            y_unit, spec=data) * u.Unit(y_unit)
-                else:
                     new_y = flux_conversion(data.flux.value, data.flux.unit,
                                             y_unit, spec=data) * u.Unit(y_unit)
                 new_spec = (spectral_axis_conversion(data.spectral_axis.value,
