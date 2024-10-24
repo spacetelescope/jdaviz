@@ -129,6 +129,8 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
             return
 
         # Clear all existing subscriptions and resubscribe to selected viewer
+        # NOTE: Viewer subscription needed regardless of coord_follow_viewer_pan in order
+        #   to detect when coords are centered on viewer, regardless of viewer tracking
         for viewer in self.viewer.viewers:
             if viewer == self.viewer.selected_obj:
                 viewer.state.add_callback("zoom_center_x", self.vue_center_on_data)
