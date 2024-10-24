@@ -15,7 +15,8 @@
                 :linewidth="0"
                 :cmap_samples="cmap_samples"
                 btn_style="margin-bottom: 0px"
-                @click="() => {data_menu_open = !data_menu_open}"
+                @click="() => {if (dev_data_menu) {data_menu_open = !data_menu_open}}"
+                :disabled="!dev_data_menu"
               />
             </span>
             <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
@@ -34,7 +35,8 @@
                   :linewidth="item.linewidth"
                   :cmap_samples="cmap_samples"
                   btn_style="margin-bottom: 0px"
-                  @click="() => {data_menu_open = !data_menu_open}"
+                  @click="() => {if (dev_data_menu) {data_menu_open = !data_menu_open}}"
+                  :disabled="!dev_data_menu"
                 />
               </span>
               <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">

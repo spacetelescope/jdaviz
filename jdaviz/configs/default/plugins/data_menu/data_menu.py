@@ -1,4 +1,4 @@
-from traitlets import Dict, Unicode
+from traitlets import Bool, Dict, Unicode
 
 from jdaviz.core.template_mixin import TemplateMixin, LayerSelectMixin
 from jdaviz.core.user_api import UserApiWrapper
@@ -27,6 +27,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
     visible_layers = Dict().tag(sync=True)  # read-only, set by viewer
 
     cmap_samples = Dict(cmap_samples).tag(sync=True)
+
+    dev_data_menu = Bool(False).tag(sync=True)
 
     def __init__(self, viewer, *args, **kwargs):
         super().__init__(*args, **kwargs)
