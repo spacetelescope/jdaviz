@@ -56,6 +56,37 @@
         </div>
       </template>
       <v-list :id="'dm-content-' + viewer_id" style="max-height: 500px; width: 465px" class="overflow-y-auto">
+        <v-list-item class="dm-header">
+          <v-list-item-icon>
+            <j-tooltip
+              tooltipcontent="Reorder layers (COMING SOON)"
+            >
+              <v-btn
+                icon
+                disabled
+              >
+                <v-icon>mdi-format-vertical-align-center</v-icon>
+              </v-btn>
+            </j-tooltip>
+          </v-list-item-icon>
+          <v-list-item-content>
+            <j-tooltip
+              tooltipcontent="Change orientation (COMING SOON)"
+            >
+              orientation
+            </j-tooltip>
+          </v-list-item-content>
+          <v-list-item-action>
+            <j-tooltip tooltipcontent="Add data or subset (COMING SOON)">
+              <v-btn
+                icon
+                disabled
+              >
+                <v-icon>mdi-plus</v-icon>
+              </v-btn>
+            </j-tooltip>
+          </v-list-item-action>
+        </v-list-item>
         <v-list-item-group
           v-model="dm_layer_selected"
           active-class="active-list-item"
@@ -94,6 +125,44 @@
           </v-list-item>
           </div>
         </v-list-item-group>
+        <v-list-item class="dm-footer">
+          <v-list-item-content style="display: inline-block">
+            <j-tooltip
+              span_style="display: inline-block; float: right"
+              tooltipcontent="Remove data/subset (COMING SOON)"
+            >
+              <v-btn
+                icon
+                disabled
+              >
+                <v-icon>mdi-delete</v-icon>
+              </v-btn>
+            </j-tooltip>
+            <j-tooltip
+              v-if="dm_layer_selected.length == 1 && layer_items[layer_items.length - 1 - dm_layer_selected[0]].icon.length == 1 && !layer_items[layer_items.length - 1 - dm_layer_selected[0]].is_subset && !layer_items[layer_items.length - 1 - dm_layer_selected[0]].from_plugin"
+              span_style="display: inline-block; float: right"
+              tooltipcontent="View Metadata"
+            >
+              <v-btn
+                icon
+                disabled
+                >
+                <v-icon>mdi-label</v-icon>
+              </v-btn>
+            </j-tooltip>
+            <j-tooltip
+              span_style="display: inline-block; float: right"
+              tooltipcontent="Edit Selected Subset (COMING SOON)"
+            >
+              <v-btn
+                text
+                disabled
+              >
+                Edit Subset
+              </v-btn>
+            </j-tooltip>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-menu>
     <div :id="'dm-target-' + viewer_id"></div>
@@ -164,6 +233,10 @@
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
   }
+  .v-list {
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+  }
   .v-list-item__icon, .v-list-item__content, .v-list-item__action {
     /* even denser than dense */
     padding-top: 4px !important;
@@ -180,5 +253,16 @@
   }
   .active-list-item {
     background-color: #d1f4ff !important;
+  }
+  .dm-header, .dm-footer {
+    background-color: #003B4D;
+    color: white !important;
+    font-weight: bold;
+  }
+  i.dm-header, i.dm-footer {
+    color: white !important;
+  }
+  .dm-header.v-btn--disabled  .v-icon {
+    color: green !important;
   }
 </style>
