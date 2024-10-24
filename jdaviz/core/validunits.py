@@ -149,7 +149,7 @@ def create_angle_equivalencies_list(solid_angle_unit):
     # uncomment and expand this list once translating between solid
     # angles and between solid angle and solid pixel is enabled
     # equivalent_angle_units = ['sr', 'pix2']
-    equivalent_angle_units = []
+    equivalent_angle_units = [unit_str]
     if unit_str not in equivalent_angle_units:
         equivalent_angle_units += [unit_str]
 
