@@ -1,6 +1,11 @@
 <template>
   <div>
-    <v-menu offset-x left :close-on-content-click="false" v-model="data_menu_open">
+    <v-menu
+      offset-x
+      left
+      transition="slide-x-reverse-transition"
+      :close-on-content-click="false"
+      v-model="data_menu_open">
       <template v-slot:activator="{ on, attrs }">
         <div>
           <div v-if="Object.keys(viewer_icons).length > 1" :id="'layer-legend-'+ viewer_id" class="viewer-label">
