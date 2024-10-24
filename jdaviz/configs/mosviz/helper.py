@@ -8,7 +8,6 @@ import numpy as np
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.table import QTable
-from echo import delay_callback
 from glue.core.data import Data
 from glue.core.exceptions import IncompatibleAttribute
 
@@ -183,11 +182,9 @@ class Mosviz(ConfigHelper, LineListMixin):
             cur_xcen = (imview.state.x_min + imview.state.x_max) * 0.5
             cur_ycen = (imview.state.y_min + imview.state.y_max) * 0.5
 
-            with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-                imview.state.x_min = cur_xcen - x_height
-                imview.state.y_min = cur_ycen - height
-                imview.state.x_max = cur_xcen + x_height
-                imview.state.y_max = cur_ycen + height
+            imview.set_limits(
+                x_min=cur_xcen - x_height, x_max=cur_xcen + x_height,
+                y_min=cur_ycen - height, y_max=cur_ycen + height)
 
         if center is not None:
             imview.center_on(center)

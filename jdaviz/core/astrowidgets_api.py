@@ -103,12 +103,12 @@ class AstrowidgetsImageViewerMixin:
 
         width = self.state.x_max - self.state.x_min
         height = self.state.y_max - self.state.y_min
+        new_xmin = pix[0] - (width * 0.5)
+        new_ymin = pix[1] - (height * 0.5)
 
-        with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            self.state.x_min = pix[0] - (width * 0.5)
-            self.state.y_min = pix[1] - (height * 0.5)
-            self.state.x_max = self.state.x_min + width
-            self.state.y_max = self.state.y_min + height
+        self.set_limits(
+            x_min=new_xmin, x_max=new_xmin + width,
+            y_min=new_ymin, y_max=new_ymin + height)
 
     def offset_by(self, dx, dy):
         """Move the center to a point that is given offset
