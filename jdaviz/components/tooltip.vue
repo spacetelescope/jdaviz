@@ -130,7 +130,7 @@ module.exports = {
       return tooltips[this.$props.tipid];
     },
     getSpanStyle() {
-      return this.$props.span_style || "height: inherit; display: inherit";
+      return this.$props.span_style || "height: inherit; display: inherit; cursor: default";
     },
     getOpenDelay() {
       return this.$props.delay || "0";

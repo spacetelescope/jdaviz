@@ -10,27 +10,6 @@
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-    <v-row>
-      <v-expansion-panels popout>
-        <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
-            <span style="padding: 6px">Settings</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row>
-              <plugin-switch
-                :value.sync="show_viewer_labels"
-                label="Show labels in viewers"
-                api_hint = 'plg.show_viewer_labels = '
-                :api_hints_enabled="api_hints_enabled"
-                hint="Whether to show viewer/layer labels on each viewer"
-              />
-            </v-row>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
-    </v-row>
-
     <!-- VIEWER OPTIONS -->
     <plugin-viewer-select
       :items="viewer_items"

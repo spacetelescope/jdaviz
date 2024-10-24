@@ -371,8 +371,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    show_viewer_labels = Bool(True).tag(sync=True)
-
     cmap_samples = Dict(cmap_samples).tag(sync=True)
     swatches_palette = List().tag(sync=True)
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
@@ -625,10 +623,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
                                                  'axes_visible_value', 'axes_visible_sync',
                                                  state_filter=not_profile)
-
-        self.show_viewer_labels = self.app.state.settings['viewer_labels']
-        self.app.state.add_callback('settings', self._on_app_settings_changed)
-
         sv = self.spectrum_viewer
         if sv is not None:
             sv.state.add_callback('x_display_unit',
@@ -662,13 +656,6 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
                        'stretch_curve_visible', 'apply_RGB_presets']
 
         return PluginUserApi(self, expose)
-
-    @observe('show_viewer_labels')
-    def _on_show_viewer_labels_changed(self, event):
-        self.app.state.settings['viewer_labels'] = event['new']
-
-    def _on_app_settings_changed(self, value):
-        self.show_viewer_labels = value['viewer_labels']
 
     @property
     def multiselect(self):

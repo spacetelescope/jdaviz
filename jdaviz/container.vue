@@ -62,7 +62,7 @@
 
         <v-card tile flat style="flex: 1; margin-top: -2px; overflow: hidden;">
           <div class="viewer-label-container">
-            <jupyter-widget :widget="viewer.data_menu" v-if="app_settings.viewer_labels"></jupyter-widget>
+            <jupyter-widget :widget="viewer.data_menu"></jupyter-widget>
           </div>
           <jupyter-widget
             :widget="viewer.widget"
