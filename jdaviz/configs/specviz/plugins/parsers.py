@@ -112,12 +112,13 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
 
     # step through SpectrumList and convert any 2D spectra to 1D spectra
     if isinstance(data, SpectrumList):
-        new_data = SpectrumList()
+        new_data = []
         for spec in data:
             if spec.flux.ndim == 2:
                 new_data.extend(split_spectrum_with_2D_flux_array(spec))
             else:
                 new_data.append(spec)
+        data = SpectrumList(new_data)
 
         if not isinstance(data_label, (list, tuple)):
             data_label = [f"{data_label} [{i}]" for i in range(len(data))]
@@ -293,6 +294,6 @@ def split_spectrum_with_2D_flux_array(data):
         if data.mask is not None:
             mask = data.mask[i, :]
         new_data.append(Spectrum1D(flux=data.flux[i, :], spectral_axis=data.spectral_axis,
-                                   uncertainty=unc, mask=mask))
+                                   uncertainty=unc, mask=mask, meta=data.meta))
 
     return new_data
