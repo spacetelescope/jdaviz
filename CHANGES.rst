@@ -29,6 +29,8 @@ Specviz
 Specviz2d
 ^^^^^^^^^
 
+- Implement the Unit Conversion plugin the Specviz2D. [#3253]
+
 API Changes
 -----------
 - Removed API access to plugins that have passed the deprecation period: Links Control, Canvas Rotation, Export Plot. [#3270]
@@ -136,8 +138,6 @@ Specviz
 
 Specviz2d
 ^^^^^^^^^
-
-- Implement the Unit Conversion plugin the Specviz2D. [#3253]
 
 4.0 (2024-10-17)
 ================
