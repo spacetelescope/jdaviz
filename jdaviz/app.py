@@ -206,7 +206,6 @@ class ApplicationState(State):
             'tray': True,
             'tab_headers': True,
         },
-        'viewer_labels': True,
         'dense_toolbar': True,
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
         'context': {
