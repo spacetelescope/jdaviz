@@ -57,6 +57,7 @@
       </template>
       <v-list :id="'dm-content-' + viewer_id" style="max-height: 500px; width: 465px" class="overflow-y-auto">
         <v-list-item-group
+          v-model="dm_layer_selected"
           active-class="active-list-item"
           multiple
           dense
@@ -178,6 +179,6 @@
     background-color: #f1f2f8;
   }
   .active-list-item {
-    background-color: #d1f4ff;
+    background-color: #d1f4ff !important;
   }
 </style>
