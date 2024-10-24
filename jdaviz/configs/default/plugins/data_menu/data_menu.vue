@@ -1,90 +1,93 @@
 <template>
   <div>
-    <div v-if="Object.keys(viewer_icons).length > 1" class="viewer-label">
-      <span style="float: right;">
-        <j-layer-viewer-icon-stylized
-          tooltip="View data layers and subsets"
-          :label="viewer_id"
-          :icon="viewer_icons[viewer_id]"
-          :visible="true"
-          :is_subset="false"
-          :colors="['#939393']"
-          :linewidth="0"
-          :cmap_samples="cmap_samples"
-          btn_style="margin-bottom: 0px"
-          @click="() => {data_menu_open = !data_menu_open}"
-        />
-      </span>
-      <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
-    </div>
+    <v-menu offset-x left :close-on-content-click="false" v-model="data_menu_open">
+      <template v-slot:activator="{ on, attrs }">
+        <div>
+          <div v-if="Object.keys(viewer_icons).length > 1" :id="'layer-legend-'+ viewer_id" class="viewer-label">
+            <span style="float: right;">
+              <j-layer-viewer-icon-stylized
+                tooltip="View data layers and subsets"
+                :label="viewer_id"
+                :icon="viewer_icons[viewer_id]"
+                :visible="true"
+                :is_subset="false"
+                :colors="['#939393']"
+                :linewidth="0"
+                :cmap_samples="cmap_samples"
+                btn_style="margin-bottom: 0px"
+                @click="() => {data_menu_open = !data_menu_open}"
+              />
+            </span>
+            <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">{{viewer_reference || viewer_id}}</span>
+          </div>
 
-    <div v-for="item in layer_items.slice().reverse()" class="viewer-label">
-      <div v-if="item.visible">
-        <span style="float: right;">
-          <j-layer-viewer-icon-stylized
-            tooltip="View data layers and subsets"
-            :label="item.label"
-            :icon="item.icon"
-            :visible="item.visible"
-            :is_subset="item.is_subset"
-            :colors="item.colors"
-            :linewidth="item.linewidth"
-            :cmap_samples="cmap_samples"
-            btn_style="margin-bottom: 0px"
-            @click="() => {data_menu_open = !data_menu_open}"
-          />
-        </span>
-        <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
-          <v-icon v-if="item.subset_type == 'spatial'" dense>
-            mdi-chart-scatter-plot
-          </v-icon>
-          <v-icon v-else-if="item.subset_type == 'spectral'" dense>
-            mdi-chart-bell-curve
-          </v-icon>
-          <v-icon v-else-if="item.subset_type == 'temporal'" dense>
-            mdi-chart-line
-          </v-icon>
-          {{item.label}}
-        </span>
-      </div>
-    </div>
-
-    <div 
-      v-if="data_menu_open" 
-      style="position: absolute; float: right; right: 32px; top: 2px; background-color: white; border: 2px solid black; width: 300px; height: 350px"
-    >
-      <span>
-        <b> {{ viewer_id }}</b>
-      </span>
-      <br/>
-      <span v-for="item in layer_items.slice().reverse()">
-        <span style="width: 42px; margin: 4px">
-          <j-layer-viewer-icon-stylized
-              :label="item.label"
-              :icon="item.icon"
-              :visible="item.visible"
-              :is_subset="item.is_subset"
-              :colors="item.colors"
-              :linewidth="item.linewidth"
-              :cmap_samples="cmap_samples"
-              btn_style="margin-bottom: 0px"
-              disabled="true"
-            />
-        </span>
-        {{ item.label }}
-        <j-tooltip span_style="float: right" tooltipcontent="Toggle visibility">
-          <plugin-switch
-            :value="item.visible"
-            @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-            :api_hint='"dm.set_layer_visibility("+viewer_id+", "'
-            :api_hints_enabled="false"
-            :use_eye_icon="true"
-          />
-        </j-tooltip>
-        <br/>
-      </span>
-    </div>
-
+          <div v-for="item in layer_items.slice().reverse()" class="viewer-label">
+            <div v-if="item.visible">
+              <span style="float: right;">
+                <j-layer-viewer-icon-stylized
+                  tooltip="View data layers and subsets"
+                  :label="item.label"
+                  :icon="item.icon"
+                  :visible="item.visible"
+                  :is_subset="item.is_subset"
+                  :colors="item.colors"
+                  :linewidth="item.linewidth"
+                  :cmap_samples="cmap_samples"
+                  btn_style="margin-bottom: 0px"
+                  @click="() => {data_menu_open = !data_menu_open}"
+                />
+              </span>
+              <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
+                <v-icon v-if="item.subset_type == 'spatial'" dense>
+                  mdi-chart-scatter-plot
+                </v-icon>
+                <v-icon v-else-if="item.subset_type == 'spectral'" dense>
+                  mdi-chart-bell-curve
+                </v-icon>
+                <v-icon v-else-if="item.subset_type == 'temporal'" dense>
+                  mdi-chart-line
+                </v-icon>
+                {{item.label}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </template>
+      <v-list :id="'dm-content-' + viewer_id" style="max-height: 500px; width: 465px" class="overflow-y-auto">
+        <v-list-item-group multiple dense>
+          <v-list-item v-for="item in layer_items.slice().reverse()">
+            <v-list-item-icon>
+              <j-layer-viewer-icon-stylized
+                  :label="item.label"
+                  :icon="item.icon"
+                  :visible="item.visible"
+                  :is_subset="item.is_subset"
+                  :colors="item.colors"
+                  :linewidth="item.linewidth"
+                  :cmap_samples="cmap_samples"
+                  btn_style="margin-bottom: 0px"
+                  disabled="true"
+                />
+            </v-list-item-icon>
+            <v-list-item-content>
+              {{  item.label }}
+            </v-list-item-content>
+            <v-list-item-action>
+              <j-tooltip tooltipcontent="Toggle visibility">
+                <plugin-switch
+                  :value="item.visible"
+                  @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
+                  :api_hint='"dm.set_layer_visibility("+viewer_id+", "'
+                  :api_hints_enabled="false"
+                  :use_eye_icon="true"
+                />
+              </j-tooltip>
+            </v-list-item-action>
+          </v-list-item>
+        </v-list-item-group>
+      </v-list>
+    </v-menu>
+    <div :id="'dm-target-' + viewer_id"></div>
   </div>
 </template>
 
@@ -95,12 +98,36 @@
         data_menu_open: false,
       }
     },
+    mounted() {
+      let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
+      if (element === null) {
+        return
+      }
+      while (element["tagName"] !== "BODY") {
+        if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
+          element.addEventListener("scroll", this.onScroll);
+        }
+        element = element.parentElement;
+      }
+    },
+    beforeDestroy() {
+      let element = document.getElementById(`dm-target-${this.viewer_id}`).parentElement
+      if (element === null) {
+        return
+      }
+      while (element["tagName"] !== "BODY") {
+        if (["auto", "scroll"].includes(window.getComputedStyle(element).overflowY)) {
+          element.removeEventListener("scroll", this.onScroll);
+        }
+        element = element.parentElement;
+      }
+    },
     methods: {
       onScroll(e) {
-        const dataMenuHeight = document.getElementById(`menu-button-${this.viewer_id}`).parentElement.getBoundingClientRect().height
-        const top = document.getElementById(`target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
-        if (this.data_menu_open && document.getElementById(`target-${this.viewer_id}`)) {
-          const menuContent = document.getElementById(`menu-content-${this.viewer_id}`);
+        const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
+        const top = document.getElementById(`dm-target-${this.viewer_id}`).getBoundingClientRect().y + document.body.parentElement.scrollTop + dataMenuHeight;
+        if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
+          const menuContent = document.getElementById(`dm-content-${this.viewer_id}`);
           menuContent.parentElement.style.top = top + "px";
         }
       }
