@@ -165,6 +165,13 @@ def test_mosviz_profile_view_mouseover(specviz2d_helper, spectrum2d):
     viewer = specviz2d_helper.app.get_viewer("spectrum-viewer")
     plg = specviz2d_helper.plugins["Unit Conversion"]
 
+    # make sure we don't expose angle, sb, nor spectral-y units when native
+    # units are in flux
+    assert hasattr(plg, 'flux_unit')
+    assert not hasattr(plg, 'angle_unit')
+    assert not hasattr(plg, 'sb_unit')
+    assert not hasattr(plg, 'spectral_y_type')
+
     label_mouseover = specviz2d_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove',
