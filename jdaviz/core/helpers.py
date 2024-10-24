@@ -371,7 +371,7 @@ class ConfigHelper(HubListener):
                                                                new_uncert.unit, y_unit, spec=data)
                         new_uncert = StdDevUncertainty(new_uncert_converted, unit=y_unit)
                     else:
-                        new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
+                        new_uncert = StdDevUncertainty(new_uncert, unit=y_unit)
 
                 else:
                     new_uncert = None
