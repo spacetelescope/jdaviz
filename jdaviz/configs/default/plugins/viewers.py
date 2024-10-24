@@ -153,8 +153,9 @@ class JdavizViewerMixin(WithCache):
             upper-limit of y-axis (in current axes units)
         """
         for val in (x_min, x_max, y_min, y_max):
-            if val is not None and not isinstance(val, (float, int)):
-                raise TypeError('all arguments must be None, int, or float')
+            if val is not None and not isinstance(val, (float, int, np.float32)):
+                raise TypeError('All arguments must be None, int, or float, '
+                                f'but got: {type(val)}')
 
         with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
             if x_min is not None:

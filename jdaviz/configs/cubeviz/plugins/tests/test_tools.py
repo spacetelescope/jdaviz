@@ -34,7 +34,8 @@ def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts)
 
     assert_allclose(spectrum_viewer.get_limits(),
                     (4.6228e-07, 4.6236e-07, 4, 15.6))  # Zoomed to spaxel
-    spectrum_viewer.set_limits(x_min=4.623e-07, x_max=4.6232e-07)  # Zoom in X
+    spectrum_viewer.set_limits(
+        x_min=4.623e-07, x_max=4.6232e-07, y_min=42, y_max=88)  # Zoom in X and Y
 
     # Check that a new subset was created
     subsets = cubeviz_helper.app.get_subsets()
@@ -52,8 +53,8 @@ def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts)
         {'event': 'mouseleave', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert flux_viewer.toolbar.active_tool._mark.visible is False
 
-    # Check that X is still zoomed but Y is reset.
-    assert_allclose(spectrum_viewer.get_limits(), (4.623e-07, 4.6232e-07, 28, 92))
+    # Check that zoom in both X and Y is kept.
+    assert_allclose(spectrum_viewer.get_limits(), (4.623e-07, 4.6232e-07, 42, 88))
 
     # Deselect tool
     flux_viewer.toolbar.active_tool = None
