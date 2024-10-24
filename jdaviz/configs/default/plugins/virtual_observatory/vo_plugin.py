@@ -343,6 +343,13 @@ class VoPlugin(PluginTemplateMixin, AddResultsMixin, TableMixin):
                         self.source, frame=self.coordframe_selected
                     )
                 except Exception:
+                    self.hub.broadcast(
+                        SnackbarMessage(
+                            f"Unable to resolve source coordinates: {self.source}",
+                            sender=self,
+                            color="error",
+                        )
+                    )
                     raise LookupError(
                         f"Unable to resolve source coordinates: {self.source}"
                     )
