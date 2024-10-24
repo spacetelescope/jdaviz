@@ -6,6 +6,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D, SpectralRegion
+from glue.core.roi import XRangeROI
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
 from jdaviz.core.custom_units_and_equivs import PIX2
@@ -123,6 +124,26 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
                                float(line_flux_before_unit_conversion['result']))
     np.testing.assert_allclose(float(results[0]['uncertainty']),
                                float(line_flux_before_unit_conversion['uncertainty']))
+
+    viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    viewer.apply_roi(XRangeROI(4.63e-7, 4.64e-7))
+
+    la = cubeviz_helper.plugins['Line Analysis']
+    la.keep_active = True
+    la.spectral_subset.selected = 'Subset 1'
+
+    marks_before = [la._obj.continuum_marks['left'].y,
+                    la._obj.continuum_marks['right'].y]
+
+    uc.flux_unit.selected = 'Jy'
+
+    # multiply converted continuum marks by expected scale factor (MJy -> Jy)
+    scaling_factor = 1e-6
+    marks_after = [la._obj.continuum_marks['left'].y * scaling_factor,
+                   la._obj.continuum_marks['right'].y * scaling_factor]
+
+    # ensure continuum marks update to when flux unit is converted
+    np.testing.assert_allclose(marks_before, marks_after, rtol=1e-5)
 
 
 def test_user_api(specviz_helper, spectrum1d):
