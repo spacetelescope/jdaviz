@@ -375,8 +375,8 @@ class ConfigHelper(HubListener):
 
                 else:
                     new_uncert = None
-                    new_y = flux_conversion(data.flux.value, data.flux.unit,
-                                            y_unit, spec=data) * u.Unit(y_unit)
+                new_y = flux_conversion(data.flux.value, data.flux.unit,
+                                        y_unit, spec=data) * u.Unit(y_unit)
                 new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                      data.spectral_axis.unit,
                                                      spectral_unit)
