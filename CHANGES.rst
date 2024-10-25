@@ -6,6 +6,9 @@ Bug Fixes
 
 - Improved performance and removed jittering for the matched box zoom tool. [#3215]
 
+- Fixed Aperture Photometry radial profile fit crashing when NaN is present in
+  aperture data for Cubeviz and Imviz. [#3246]
+
 Cubeviz
 ^^^^^^^
 
