@@ -110,10 +110,10 @@ class SpectrumPerSpaxel(ProfileFromCube):
             self._previous_bounds = self._profile_viewer.get_limits()
 
     def on_mouse_move(self, data):
-        self._is_moving = False
         if data['event'] == 'mouseleave':
             self._mark.visible = False
             self._reset_profile_viewer_bounds()
+            self._is_moving = False
             return
 
         self._is_moving = True
