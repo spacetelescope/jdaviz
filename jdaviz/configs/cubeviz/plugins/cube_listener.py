@@ -1,14 +1,19 @@
-from strauss.sonification import Sonification
-from strauss.sources import Events, Objects
-from strauss import channels
-from strauss.score import Score
-from strauss.generator import Spectralizer
 import numpy as np
-from tqdm import tqdm
 from contextlib import contextmanager
-import sys, os
+import sys
+import os
 import time
 from astropy import units as u
+
+try:
+    from strauss.sonification import Sonification
+    from strauss.sources import Events, Objects
+    from strauss import channels
+    from strauss.score import Score
+    from strauss.generator import Spectralizer
+    from tqdm import tqdm
+except ImportError:
+    pass
 
 # some beginner utility functions for STRAUSS + CubeViz
 

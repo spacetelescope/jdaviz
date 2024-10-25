@@ -1,5 +1,3 @@
-import sounddevice as sd
-
 from echo import delay_callback
 from traitlets import Bool, List, Unicode, observe
 
@@ -12,6 +10,7 @@ __all__ = ['SonifyData']
 
 try:
     import strauss
+    import sounddevice as sd
 except ImportError:
     _has_strauss = False
 else:
@@ -44,8 +43,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.sound_devices_items = [device['name'] for device in sd.query_devices()]
-        self.sound_devices_selected = sd.query_devices()[sd.default.device[1]]['name']
+        if self.has_strauss:
+            self.sound_devices_items = [device['name'] for device in sd.query_devices()]
+            self.sound_devices_selected = sd.query_devices()[sd.default.device[1]]['name']
         # devices, indexes = self.build_device_lists()
         # self.sound_device_indexes = dict(zip(devices, indexes))
         # self.sound_devices_items = devices

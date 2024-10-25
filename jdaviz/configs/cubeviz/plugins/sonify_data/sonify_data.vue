@@ -139,6 +139,7 @@
     </v-row>
     <v-row>
       <plugin-action-button
+        :disabled="!has_strauss"
         :spinner="spinner"
         @click="sonify_cube"
       >

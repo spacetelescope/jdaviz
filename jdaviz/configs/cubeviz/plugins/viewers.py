@@ -8,8 +8,12 @@ from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
 from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData
 import numpy as np
-import sounddevice as sd
 from astropy import units as u
+
+try:
+    import sounddevice as sd
+except ImportError:
+    pass
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
 
@@ -111,7 +115,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.audified_cube.set_wl_bounds(w1, w2)
 
     def update_sound_device(self, device_index):
-        # TODO: Use volume attribute for sonified cube
         if not self.audified_cube:
             return
 
@@ -121,7 +124,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                       latency='low', callback=self.audified_cube.player_callback)
 
     def update_volume_level(self, level):
-        # TODO: Use volume attribute for sonified cube
         if not self.audified_cube:
             return
         self.volume_level = level
