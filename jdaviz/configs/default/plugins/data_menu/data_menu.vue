@@ -45,15 +45,7 @@
                 />
               </span>
               <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
-                <v-icon v-if="item.subset_type == 'spatial'" dense>
-                  mdi-chart-scatter-plot
-                </v-icon>
-                <v-icon v-else-if="item.subset_type == 'spectral'" dense>
-                  mdi-chart-bell-curve
-                </v-icon>
-                <v-icon v-else-if="item.subset_type == 'temporal'" dense>
-                  mdi-chart-line
-                </v-icon>
+                <j-subset-icon :subset_type="item.subset_type" />
                 {{item.label}}
               </span>
             </div>
@@ -114,7 +106,10 @@
                 />
             </v-list-item-icon>
             <v-list-item-content>
-              {{  item.label }}
+              <span style="display: inline-block">
+                <j-subset-icon :subset_type="item.subset_type" />
+                {{  item.label }}
+              </span>
             </v-list-item-content>
             <v-list-item-action>
               <j-tooltip tooltipcontent="Toggle visibility">
