@@ -73,6 +73,9 @@ Cubeviz
 
 - Add missing styling to API hints entry for aperture_method in the spectral extraction plugin. [#3231]
 
+- Remove the ``save as fits`` option from the Collapse and Moment Maps plugin; use the Export plugin instead. [#3256]
+
+
 Imviz
 ^^^^^
 
