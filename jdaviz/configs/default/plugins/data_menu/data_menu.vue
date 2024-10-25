@@ -249,10 +249,10 @@
   }
   .v-list-item:nth-child(even) {
     /* alternating row colors */
-    background-color: #f1f2f8;
+    background-color: #f1f2f85a;
   }
   .active-list-item {
-    background-color: #d1f4ff !important;
+    background-color: #d1f4ff75 !important;
   }
   .dm-header, .dm-footer {
     background-color: #003B4D;
