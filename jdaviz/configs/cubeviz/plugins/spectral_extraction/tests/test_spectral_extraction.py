@@ -596,7 +596,7 @@ def test_spectral_extraction_unit_conv_one_spec(
 @pytest.mark.parametrize(
     "start_slice, aperture, expected_rtol, uri, calspec_url",
     (
-        (4.85, (20.5, 17, 12), 1e-5,
+        (5.2, (20.5, 17, 10.9), 0.01,
          "mast:jwst/product/jw01524-o003_t002_miri_ch1-shortmediumlong_s3d.fits",
          calspec_url + "delumi_mod_005.fits"),  # delta UMi
 
@@ -648,7 +648,7 @@ def test_spectral_extraction_scientific_validation(
 
     # set the slice to the blue end of MIRI CH1
     slice_plugin = cubeviz_helper.plugins['Slice']
-    slice_plugin.value = 4.85
+    slice_plugin.value = start_slice
 
     # run a conical spectral extraction
     spectral_extraction = cubeviz_helper.plugins['Spectral Extraction']
@@ -667,10 +667,10 @@ def test_spectral_extraction_scientific_validation(
     cubeviz_helper.specviz.load_data(resampled_spectrum, data_label='calspec model')
 
     # compute the relative residual, take the median absolute deviation:
-    median_abs_relative_dev = np.median(
+    median_abs_relative_dev = abs(np.median(
         abs(
             extracted_spectrum.flux /
             resampled_spectrum.flux.to(u.MJy, u.spectral_density(resampled_spectrum.wavelength))
         ).to_value(u.dimensionless_unscaled) - 1
-    )
+    ))
     assert median_abs_relative_dev < expected_rtol
