@@ -108,7 +108,14 @@
             </v-list-item-icon>
             <v-list-item-content>
               <span style="display: inline-block">
-                <j-subset-icon :subset_type="item.subset_type" />
+                <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                <j-tooltip
+                  v-if="item.icon.length == 2"
+                  :tooltipcontent="'sublayer of '+item.icon[0].toUpperCase()"
+                  span_style="display: inline-block" 
+                >
+                  <v-icon dense>mdi-layers-outline</v-icon>
+                </j-tooltip>
                 {{  item.label }}
               </span>
             </v-list-item-content>
