@@ -6,6 +6,7 @@ from astropy.tests.helper import assert_quantity_allclose
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 from specutils import Spectrum1D, SpectralRegion
+from glue.core.roi import XRangeROI
 
 from jdaviz.configs.specviz.plugins.line_analysis.line_analysis import _coerce_unit
 from jdaviz.core.custom_units import PIX2
@@ -91,7 +92,7 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     is in flux/pix2 and flux/sr, and that the results remain consistant
     between translations of the spectral y axis flux<>surface brightness.
     """
-    cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.Jy / sq_angle_unit,
+    cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / sq_angle_unit,
                                            shape=(25, 25, 4), with_uncerts=True)
     cubeviz_helper.load_data(cube, data_label="Test Cube")
 
@@ -107,8 +108,45 @@ def test_cubeviz_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit,
     results = plugin.results
     assert results[0]['unit'] == 'W / m2'
 
+    viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
+    viewer.apply_roi(XRangeROI(4.63e-7, 4.64e-7))
+
+    la = cubeviz_helper.plugins['Line Analysis']
+    la.keep_active = True
+    la.spectral_subset.selected = 'Subset 1'
+
+    marks_before = [la._obj.continuum_marks['left'].y,
+                    la._obj.continuum_marks['right'].y]
+
+    # change flux unit and make sure result stays the same after conversion
+    uc.flux_unit.selected = 'Jy'
+
+    marks_after = [la._obj.continuum_marks['left'].y,
+                   la._obj.continuum_marks['right'].y]
+
+    # ensure continuum marks update when spectral_y is changed by
+    # multiply converted continuum marks by expected scale factor (MJy -> Jy)
+    scaling_factor = 1e6
+    assert_allclose([mark * scaling_factor for mark in marks_before], marks_after, rtol=1e-5)
+
+    # reset to test again after spectral_y_type is changed
+    marks_before = marks_after
+
     # now change to surface brightness
     uc.spectral_y_type = 'Surface Brightness'
+
+    if sq_angle_unit == PIX2:
+        # translation does not alter spectral_y values in viewer
+        scaling_factor = 1
+    else:
+        scaling_factor = cube.meta.get('PIXAR_SR')
+
+    marks_after = [la._obj.continuum_marks['left'].y,
+                   la._obj.continuum_marks['right'].y]
+
+    # ensure continuum marks update when spectral_y_type is changed
+    # multiply converted continuum marks by expected pixel scale factor
+    assert_allclose([mark / scaling_factor for mark in marks_before], marks_after, rtol=1e-5)
 
     results = plugin.results
     line_flux_before_unit_conversion = results[0]

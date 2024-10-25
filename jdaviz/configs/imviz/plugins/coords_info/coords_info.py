@@ -488,6 +488,14 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_data = associated_dq_layer.layer.get_data(dq_attribute)
                     dq_value = dq_data[int(round(y)), int(round(x))]
                 unit = image.get_component(attribute).units
+
+                # update mouseover value and unit if spectral_y unit is different
+                # than native display unit
+                if self.config not in ['imviz', 'mosviz'] and unit != self.app._get_display_unit('spectral_y'):  # noqa
+                    wav = image.get_data(viewer.layers[0].layer.coordinate_components[3])[int(round(y)), int(round(x))] * u.Unit(self.app._get_display_unit('spectral'))  # noqa
+                    value = flux_conversion(value, unit, self.app._get_display_unit('spectral_y'), eqv=u.spectral_density(wav))  # noqa
+                    unit = self.app._get_display_unit('spectral_y')
+
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
                 skip_spectral_density_eqv = False
                 arr = image.get_component(attribute).data
