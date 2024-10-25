@@ -45,6 +45,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         self.layer.remove_filter('filter_is_root')
         self.layer.add_filter(is_not_wcs_only)
         self.layer.multiselect = True
+        self.layer._default_mode = 'empty'
 
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
@@ -88,18 +89,26 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         self._during_select_sync = False
 
     @observe('dm_layer_selected')
-    def _dm_layer_selected_changed(self, *args):
+    def _dm_layer_selected_changed(self, event={}):
         if not hasattr(self, 'layer') or not self.layer.multiselect:
             return
         if self._during_select_sync:
             return
+        if len(event.get('new')) == len(event.get('old')):
+            # not possible from UI interaction, but instead caused by a selected
+            # layer being removed (deleting a selected subset, etc).  We want
+            # to update dm_layer_selected in order to preserve layer.selected
+            self._update_dm_layer_selected(event)
+            return
         with self.during_select_sync():
             # map index in dm_layer_selected (inverse order of layer_items)
             # to set self.layer.selected
-            self.layer.selected = [self.layer_items[-i]['label'] for i in self.dm_layer_selected]
+            length = len(self.layer_items)
+            self.layer.selected = [self.layer_items[length-1-i]['label']
+                                   for i in self.dm_layer_selected]
 
     @observe('layer_selected', 'layer_items')
-    def _update_dm_layer_selected(self, *args):
+    def _update_dm_layer_selected(self, event={}):
         if not hasattr(self, 'layer') or not self.layer.multiselect:
             return
         if self._during_select_sync:
@@ -107,7 +116,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         with self.during_select_sync():
             # map list of strings in self.layer.selected to indices in dm_layer_selected
             layer_labels = [layer['label'] for layer in self.layer_items][::-1]
-            self.dm_layer_selected = [layer_labels.index(label) for label in self.layer.selected]
+            self.dm_layer_selected = [layer_labels.index(label) for label in self.layer.selected
+                                      if label in layer_labels]
 
     def set_layer_visibility(self, layer_label, visible=True):
         """
