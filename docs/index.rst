@@ -56,9 +56,7 @@ Jdaviz
          Jump to Mosviz
 
    .. grid-item-card::
-      :text-align: center
-
-      New and in development. Logo coming soon!
+      :img-top: logos/rampviz.svg
 
       .. button-ref:: rampviz/index
          :expand:
@@ -85,6 +83,7 @@ cube.
 spectra, typically the output of a multi-object spectrograph (e.g.,
 JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
 contextual information like on-sky views of the spectrograph slit.
+:ref:`rampviz` is a visualization tool for Level 1 "ramp" data products.
 
 .. warning::
 
