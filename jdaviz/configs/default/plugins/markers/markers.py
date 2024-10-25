@@ -69,6 +69,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             # TODO: add "index" if/when specviz2d supports plotting spectral_axis
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'pixel_x', 'pixel_y', 'value', 'value:unit', 'viewer']
+
         elif self.config == 'mosviz':
             headers = ['spectral_axis', 'spectral_axis:unit',
                        'pixel_x', 'pixel_y', 'world_ra', 'world_dec', 'index',
