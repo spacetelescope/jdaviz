@@ -1,9 +1,12 @@
+.. |rampviz_logo| image:: ../logos/rampviz.svg
+    :height: 42px
+
 .. _rampviz:
 
 
-#######
-Rampviz
-#######
+######################
+|rampviz_logo| Rampviz
+######################
 
 .. warning::
 
