@@ -6,6 +6,7 @@ from astropy.nddata import NDData
 import astropy.units as u
 from specutils import SpectralRegion
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
+from glue.core.edit_subset_mode import ReplaceMode, OrMode
 from numpy.testing import assert_allclose
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
@@ -198,6 +199,7 @@ def test_import_spectral_region(cubeviz_helper, spectrum1d_cube, spec_regions, m
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == len_subsets
     assert len(subsets['Subset 1']) == len_subregions
+    assert cubeviz_helper.app.session.edit_subset_mode.mode == ReplaceMode
 
 
 def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path):
@@ -215,6 +217,12 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
 
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets['Subset 1']) == 2
+
+    subset2 = (SpectralRegion(5.772486091213352 * u.um, 6.052963676101135 * u.um) +
+               SpectralRegion(5.8 * u.um, 5.9 * u.um))
+    plg.import_region(subset2, combination_mode=['new', 'andnot'])
+
+    assert cubeviz_helper.app.session.edit_subset_mode.mode == OrMode
 
     with pytest.raises(ValueError, match='test not one of'):
         plg.combination_mode.selected = 'test'
