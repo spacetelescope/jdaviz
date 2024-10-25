@@ -52,7 +52,7 @@
           </div>
         </div>
       </template>
-      <v-list :id="'dm-content-' + viewer_id" style="max-height: 500px; width: 465px" class="overflow-y-auto">
+      <v-list :id="'dm-content-' + viewer_id" style="width: 400px" class="overflow-y-auto">
         <v-list-item class="dm-header">
           <v-list-item-icon>
             <j-tooltip
@@ -87,6 +87,7 @@
         <v-list-item-group
           v-model="dm_layer_selected"
           active-class="active-list-item"
+          style="max-height: 265px; overflow-y: auto;"
           multiple
           dense
         >
