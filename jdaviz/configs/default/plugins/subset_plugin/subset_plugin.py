@@ -878,7 +878,6 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 # Remove selection of subset so that new one will be created
                 self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration
                 self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['new']
-
             elif combo_mode:
                 self.combination_mode.selected = combo_mode
 
@@ -970,6 +969,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             n_loaded += 1
             if max_num_regions is not None and n_loaded >= max_num_regions:
                 break
+
         # Revert edit mode to before the import_region call
         self.app.session.edit_subset_mode.mode = previous_mode
 
