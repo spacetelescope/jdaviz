@@ -117,6 +117,7 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         # Store these so we can revert to previous user-set zoom after preview view
         sv_state = self._spectrum_viewer.state
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
+        print(self._previous_bounds)
         # update listener bounds
         self.viewer.audification_wl_bounds = (sv_state.x_min, sv_state.x_max)
         self.viewer.audification_wl_unit = sv_state.x_display_unit

@@ -114,6 +114,12 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             return
         self.audified_cube.set_wl_bounds(w1, w2)
 
+    def update_listener_wls(self, w1,w2, wunit):
+        if not self.audified_cube:
+            return
+        self.audification_wl_bounds = (w1, w2)
+        self.audification_wl_unit = wunit
+
     def update_sound_device(self, device_index):
         if not self.audified_cube:
             return
