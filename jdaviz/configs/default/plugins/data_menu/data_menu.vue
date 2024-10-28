@@ -237,7 +237,6 @@
   .viewer-label:hover {
     background-color: #e5e5e5;
     width: auto;
-
     border-top-left-radius: 4px;
     border-bottom-left-radius: 4px;
   }
@@ -264,11 +263,11 @@
   }
   .dm-header, .dm-footer {
     background-color: #003B4D;
-    color: white !important;
     font-weight: bold;
   }
-  i.dm-header, i.dm-footer {
-    color: white !important;
+  .dm-header > .v-list-item__icon, .dm-header > .v-list-item__content, .dm-header > .v-list-item__action,
+  .dm-footer > .v-list-item__icon, .dm-footer > .v-list-item__content, .dm-footer > .v-list-item__action {
+    filter: invert(1);
   }
   .dm-header.v-btn--disabled  .v-icon {
     color: green !important;
