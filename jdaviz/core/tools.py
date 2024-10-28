@@ -40,8 +40,7 @@ class _BaseZoomHistory:
     # Mixin for custom zoom tools to be able to save their previous zoom state
     # which is then used by the PrevZoom tool
     def save_prev_zoom(self):
-        self.viewer._prev_limits = (self.viewer.state.x_min, self.viewer.state.x_max,
-                                    self.viewer.state.y_min, self.viewer.state.y_max)
+        self.viewer._prev_limits = self.viewer.get_limits()
 
 
 class _MatchedZoomMixin:

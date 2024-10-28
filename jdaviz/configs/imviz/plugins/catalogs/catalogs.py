@@ -16,8 +16,6 @@ from jdaviz.core.marks import CatalogMark
 
 from jdaviz.core.template_mixin import TableMixin
 from jdaviz.core.user_api import PluginUserApi
-from echo import delay_callback
-
 
 __all__ = ['Catalogs']
 
@@ -307,13 +305,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         y_min = min(y) - 50
         y_max = max(y) + 50
 
-        imview = self.app._jdaviz_helper._default_viewer
-
-        with delay_callback(imview.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-            imview.state.x_min = x_min
-            imview.state.x_max = x_max
-            imview.state.y_min = y_min
-            imview.state.y_max = y_max
+        self.app._jdaviz_helper._default_viewer.set_limits(
+            x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
 
         return (x_min, x_max), (y_min, y_max)
 
