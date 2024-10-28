@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from astropy.nddata import CCDData
 from astropy import units as u
 from specutils import Spectrum1D
 

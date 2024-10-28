@@ -1,6 +1,4 @@
-import os
 from functools import cached_property
-from pathlib import Path
 
 import numpy as np
 import astropy
@@ -105,7 +103,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
     extraction_available = Bool(False).tag(sync=True)
-    overwrite_warn = Bool(False).tag(sync=True)
 
     results_units = Unicode().tag(sync=True)
     spectrum_y_units = Unicode().tag(sync=True)

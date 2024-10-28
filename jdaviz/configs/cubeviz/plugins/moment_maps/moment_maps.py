@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 import numpy as np
 import specutils
 from astropy import units as u
@@ -80,7 +77,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     n_moment = IntHandleEmpty(0).tag(sync=True)
     filename = Unicode().tag(sync=True)
     moment_available = Bool(False).tag(sync=True)
-    overwrite_warn = Bool(False).tag(sync=True)
     output_unit_items = List().tag(sync=True)
     output_radio_items = List().tag(sync=True)
     output_unit_selected = Unicode().tag(sync=True)
@@ -359,3 +355,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     def vue_calculate_moment(self, *args):
         self.calculate_moment(add_data=True)
+
+    def vue_overwrite_fits(self, *args):
+        """Attempt to force writing the moment map if the user confirms the desire to overwrite."""
+        self.overwrite_warn = False

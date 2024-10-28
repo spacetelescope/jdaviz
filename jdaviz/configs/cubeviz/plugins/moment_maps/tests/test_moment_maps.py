@@ -1,11 +1,9 @@
-import os
 import warnings
 from pathlib import Path
 
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.io import fits
 from astropy.nddata import CCDData
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs import WCS
@@ -144,11 +142,6 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
         "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
         "204.9998877673 27.0001000000 (deg)")
 
-    assert mm._obj.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
-    mm._obj.filename = str(tmp_path / mm._obj.filename)  # But we want it in tmp_path for testing.
-    mm._obj.vue_save_as_fits()
-    assert os.path.isfile(mm._obj.filename)
-
     mm._obj.n_moment = 1
     mm._obj.output_unit_selected = "Spectral Unit"
     assert mm._obj.results_label == 'moment 1'
@@ -258,7 +251,6 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
 
     # Simulate an existing file on disk to check for overwrite warning
     test_file = tmp_path / "test_file.fits"
-    test_file_str = str(test_file)
     existing_sentinel_text = "This is a simulated, existing file on disk"
     test_file.write_text(existing_sentinel_text)
 
@@ -266,34 +258,15 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
         cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     plugin = cubeviz_helper.plugins['Moment Maps']
-    moment = plugin.calculate_moment()
+    plugin.calculate_moment()
 
-    # By default, we shouldn't be warning the user of anything
-    assert plugin._obj.overwrite_warn is False
-
-    # Attempt to write the moment map to the same file we created earlier.
-    plugin._obj.filename = test_file_str
-    plugin._obj.vue_save_as_fits()
-
-    # We should get an overwrite warning
-    assert plugin._obj.overwrite_warn is True
     # and shouldn't have written anything (the file should be intact)
     assert test_file.read_text() == existing_sentinel_text
 
-    # Force overwrite the existing file
-    plugin._obj.vue_overwrite_fits()
+    label = plugin._obj.add_results.label
+    export_plugin = cubeviz_helper.plugins['Export']._obj
 
-    # Read back in the file and check that it is equal to the one we calculated
-    with fits.open(test_file_str) as pf:
-        assert_allclose(pf[0].data, moment.data)
-        w = WCS(pf[0].header)
-        sky = w.pixel_to_world(0, 0)
-        assert_allclose(sky.ra.deg, 204.9998877673)
-        assert_allclose(sky.dec.deg, 27.0001)
-
-    plugin._obj.filename = "fake_path/test_file.fits"
-    with pytest.raises(ValueError, match="Invalid path"):
-        plugin._obj.vue_save_as_fits()
+    assert label in export_plugin.data_collection.labels
 
 
 @pytest.mark.remote_data

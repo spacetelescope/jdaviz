@@ -1,5 +1,3 @@
-import os
-from pathlib import Path
 import warnings
 
 from astropy.nddata import CCDData
@@ -43,7 +41,6 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
     collapsed_spec_available = Bool(False).tag(sync=True)
-    overwrite_warn = Bool(False).tag(sync=True)
     # export_enabled controls whether saving to a file is enabled via the UI.  This
     # is a temporary measure to allow server-installations to disable saving server-side until
     # saving client-side is supported
