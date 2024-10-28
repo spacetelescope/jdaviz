@@ -7,8 +7,8 @@
       :close-on-content-click="false"
       v-model="data_menu_open">
       <template v-slot:activator="{ on, attrs }">
-        <div>
-          <div v-if="Object.keys(viewer_icons).length > 1" :id="'layer-legend-'+ viewer_id" class="viewer-label">
+        <div :id="'layer-legend-'+ viewer_id">
+          <div v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0" class="viewer-label">
             <span style="float: right;">
               <j-layer-viewer-icon-stylized
                 tooltip="View data layers and subsets"
