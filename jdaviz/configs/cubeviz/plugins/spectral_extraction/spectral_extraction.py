@@ -1,6 +1,4 @@
-import os
 from functools import cached_property
-from pathlib import Path
 
 import numpy as np
 import astropy
@@ -105,7 +103,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
     extraction_available = Bool(False).tag(sync=True)
-    overwrite_warn = Bool(False).tag(sync=True)
 
     results_units = Unicode().tag(sync=True)
     spectrum_y_units = Unicode().tag(sync=True)
@@ -671,50 +668,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def vue_create_bg_spec(self, *args, **kwargs):
         self.extract_bg_spectrum(add_data=True)
-
-    def vue_save_as_fits(self, *args):
-        self._save_extracted_spec_to_fits()
-
-    def vue_overwrite_fits(self, *args):
-        """Attempt to force writing the spectral extraction if the user
-        confirms the desire to overwrite."""
-        self.overwrite_warn = False
-        self._save_extracted_spec_to_fits(overwrite=True)
-
-    def _save_extracted_spec_to_fits(self, overwrite=False, *args):
-
-        if not self.export_enabled:
-            # this should never be triggered since this is intended for UI-disabling and the
-            # UI section is hidden, but would prevent any JS-hacking
-            raise ValueError(f"Writing out extracted {self.resulting_product_name} to file is currently disabled")  # noqa
-
-        # Make sure file does not end up in weird places in standalone mode.
-        path = os.path.dirname(self.filename)
-        if path and not os.path.exists(path):
-            raise ValueError(f"Invalid path={path}")
-        elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
-            filename = Path(os.environ["JDAVIZ_START_DIR"]) / self.filename
-        else:
-            filename = Path(self.filename).resolve()
-
-        if filename.exists():
-            if overwrite:
-                # Try to delete the file
-                filename.unlink()
-                if filename.exists():
-                    # Warn the user if the file still exists
-                    raise FileExistsError(f"Unable to delete {filename}. Check user permissions.")
-            else:
-                self.overwrite_warn = True
-                return
-
-        filename = str(filename)
-        self.extracted_spec.write(filename)
-
-        # Let the user know where we saved the file.
-        self.hub.broadcast(SnackbarMessage(
-            f"Extracted {self.resulting_product_name} saved to {os.path.abspath(filename)}",
-            sender=self, color="success"))
 
     @observe('aperture_selected', 'function_selected')
     def _set_default_results_label(self, event={}):

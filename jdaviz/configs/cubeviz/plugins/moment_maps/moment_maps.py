@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 import numpy as np
 import specutils
 from astropy import units as u
@@ -80,7 +77,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     n_moment = IntHandleEmpty(0).tag(sync=True)
     filename = Unicode().tag(sync=True)
     moment_available = Bool(False).tag(sync=True)
-    overwrite_warn = Bool(False).tag(sync=True)
     output_unit_items = List().tag(sync=True)
     output_radio_items = List().tag(sync=True)
     output_unit_selected = Unicode().tag(sync=True)
@@ -360,45 +356,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     def vue_calculate_moment(self, *args):
         self.calculate_moment(add_data=True)
 
-    def vue_save_as_fits(self, *args):
-        self._write_moment_to_fits()
-
     def vue_overwrite_fits(self, *args):
         """Attempt to force writing the moment map if the user confirms the desire to overwrite."""
         self.overwrite_warn = False
-        self._write_moment_to_fits(overwrite=True)
-
-    def _write_moment_to_fits(self, overwrite=False, *args):
-        if self.moment is None or not self.filename:  # pragma: no cover
-            return
-        if not self.export_enabled:
-            # this should never be triggered since this is intended for UI-disabling and the
-            # UI section is hidden, but would prevent any JS-hacking
-            raise ValueError("Writing out moment map to file is currently disabled")
-
-        # Make sure file does not end up in weird places in standalone mode.
-        path = os.path.dirname(self.filename)
-        if path and not os.path.exists(path):
-            raise ValueError(f"Invalid path={path}")
-        elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
-            filename = Path(os.environ["JDAVIZ_START_DIR"]) / self.filename
-        else:
-            filename = Path(self.filename).resolve()
-
-        if filename.exists():
-            if overwrite:
-                # Try to delete the file
-                filename.unlink()
-                if filename.exists():
-                    # Warn the user if the file still exists
-                    raise FileExistsError(f"Unable to delete {filename}. Check user permissions.")
-            else:
-                self.overwrite_warn = True
-                return
-
-        filename = str(filename)
-        self.moment.write(filename)
-
-        # Let the user know where we saved the file.
-        self.hub.broadcast(SnackbarMessage(
-            f"Moment map saved to {os.path.abspath(filename)}", sender=self, color="success"))

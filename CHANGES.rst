@@ -44,6 +44,7 @@ Bug Fixes
 
 Cubeviz
 ^^^^^^^
+- Removed the deprecated ``save as fits`` option from the Collapse, Moment Maps, and Spectral Extraction plugins; use the Export plugin instead. [#3256]
 
 Imviz
 ^^^^^

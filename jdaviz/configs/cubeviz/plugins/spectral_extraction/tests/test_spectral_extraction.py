@@ -144,7 +144,7 @@ def test_subset(
     assert_array_equal(collapsed_spec_2.uncertainty.array, expected_uncert)
 
 
-def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tmp_path):
+def test_extracted_file_in_export_plugin(cubeviz_helper, spectrum1d_cube_with_uncerts, tmp_path):
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
 
@@ -165,34 +165,10 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectrum1d_cube_with_uncerts, tm
     assert extract_plugin._obj.filename == fname
     extract_plugin._obj.filename = str(fname_path)
 
-    # save output file with default name, make sure it exists
-    extract_plugin._obj.vue_save_as_fits()
-    assert fname_path.is_file()
+    label = extract_plugin._obj.add_results.label
+    export_plugin = cubeviz_helper.plugins['Export']._obj
 
-    # read file back in, make sure it matches
-    dat = Spectrum1D.read(fname_path)
-    assert_array_equal(dat.data, extract_plugin._obj.extracted_spec.data)
-    assert dat.unit == extract_plugin._obj.extracted_spec.unit
-
-    # make sure correct error message is raised when export_enabled is False
-    # this won't appear in UI, but just to be safe.
-    extract_plugin._obj.export_enabled = False
-    with pytest.raises(
-            ValueError, match="Writing out extracted spectrum to file is currently disabled"):
-        extract_plugin._obj.vue_save_as_fits()
-    extract_plugin._obj.export_enabled = True  # set back to True
-
-    # check that trying to overwrite without overwrite=True sets overwrite_warn to True, to
-    # display popup in UI
-    assert extract_plugin._obj.overwrite_warn is False
-    extract_plugin._obj.vue_save_as_fits()
-    assert extract_plugin._obj.overwrite_warn
-
-    # check that writing out to a non existent directory fails as expected
-    extract_plugin._obj.filename = '/this/path/doesnt/exist.fits'
-    with pytest.raises(ValueError, match="Invalid path=/this/path/doesnt"):
-        extract_plugin._obj.vue_save_as_fits()
-    extract_plugin._obj.filename == fname  # set back to original filename
+    assert label in export_plugin.data_collection.labels
 
 
 def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
