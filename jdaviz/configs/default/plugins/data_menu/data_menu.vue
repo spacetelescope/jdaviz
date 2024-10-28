@@ -75,14 +75,11 @@
             </j-tooltip>
           </v-list-item-content>
           <v-list-item-action>
-            <j-tooltip tooltipcontent="Add data or subset (COMING SOON)">
-              <v-btn
-                icon
-                disabled
-              >
-                <v-icon>mdi-plus</v-icon>
-              </v-btn>
-            </j-tooltip>
+            <data-menu-add-data
+              :dataset_items="dataset_items"
+              @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
+            >
+            </data-menu-add-data>
           </v-list-item-action>
         </v-list-item>
         <v-list-item-group

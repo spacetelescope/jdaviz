@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from traitlets import Bool, Dict, Unicode, List, observe
 
-from jdaviz.core.template_mixin import TemplateMixin, LayerSelectMixin
+from jdaviz.core.template_mixin import (TemplateMixin, LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import IconsUpdatedMessage, AddDataMessage
 from jdaviz.utils import cmap_samples, is_not_wcs_only
@@ -9,7 +9,7 @@ from jdaviz.utils import cmap_samples, is_not_wcs_only
 __all__ = ['DataMenu']
 
 
-class DataMenu(TemplateMixin, LayerSelectMixin):
+class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     """Viewer Data Menu
 
     Only the following attributes and methods are available through the
@@ -29,7 +29,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
     viewer_icons = Dict().tag(sync=True)  # read-only, see app.state.viewer_icons
 
     visible_layers = Dict().tag(sync=True)  # read-only, set by viewer
-
+ 
     cmap_samples = Dict(cmap_samples).tag(sync=True)
 
     dm_layer_selected = List().tag(sync=True)
@@ -47,6 +47,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         self.layer.multiselect = True
         self.layer._default_mode = 'empty'
 
+        # we'll use a modified version of the dataset mixin to have a filtered
+        # list of data entries in the app that are not in the current viewer.
+        # changing the selection has no consequence.
+        def data_not_in_viewer(data):
+            return data.label not in self.layer.choices
+        self.dataset.filters = ['is_not_wcs_only', 'not_child_layer', data_not_in_viewer]
+
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
@@ -58,6 +65,12 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
     def user_api(self):
         expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility']
         return UserApiWrapper(self, expose=expose)
+
+    @observe('layer_items')
+    def _update_data_not_in_viewer(self, msg):
+        # changing the layers in the viewer needs to trigger an update to dataset_items
+        # through the set filters
+        self.dataset._on_data_changed()
 
     def _set_viewer_id(self):
         # viewer_ids are not populated on the viewer at init, so we'll keep checking and set
@@ -162,3 +175,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
 
     def vue_set_layer_visibility(self, info, *args):
         return self.set_layer_visibility(info.get('layer'), info.get('value'))  # pragma: no cover
+
+    def vue_add_data_to_viewer(self, info, *args):
+        data_label = info.get('data_label')
+        return self.app.add_data_to_viewer(self.viewer_reference, data_label)  # pragma: no cover
