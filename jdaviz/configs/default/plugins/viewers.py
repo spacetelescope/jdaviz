@@ -153,8 +153,9 @@ class JdavizViewerMixin(WithCache):
             upper-limit of y-axis (in current axes units)
         """
         for val in (x_min, x_max, y_min, y_max):
-            if val is not None and not isinstance(val, (float, int)):
-                raise TypeError('all arguments must be None, int, or float')
+            if val is not None and not isinstance(val, (float, int, np.float32)):
+                raise TypeError('All arguments must be None, int, or float, '
+                                f'but got: {type(val)}')
 
         with delay_callback(self.state, 'x_min', 'x_max', 'y_min', 'y_max'):
             if x_min is not None:
@@ -165,6 +166,17 @@ class JdavizViewerMixin(WithCache):
                 self.state.y_min = y_min
             if y_max is not None:
                 self.state.y_max = y_max
+
+    def get_limits(self):
+        """Return current viewer axes limits.
+
+        Returns
+        -------
+        x_min, x_max, y_min, y_max : float
+            Lower/upper X/Y limits, respectively.
+
+        """
+        return self.state.x_min, self.state.x_max, self.state.y_min, self.state.y_max
 
     @property
     def native_marks(self):

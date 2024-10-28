@@ -91,15 +91,40 @@ class SpectrumPerSpaxel(ProfileFromCube):
     action_text = 'See spectrum at a single spaxel'
     tool_tip = 'Click on the viewer and see the spectrum at that spaxel in the spectrum viewer'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._is_moving = False
+
+    def activate(self):
+        super().activate()
+        for k in ("y_min", "y_max"):
+            self._profile_viewer.state.add_callback(k, self.on_limits_change)
+
+    def deactivate(self):
+        for k in ("y_min", "y_max"):
+            self._profile_viewer.state.remove_callback(k, self.on_limits_change)
+        super().deactivate()
+
+    def on_limits_change(self, *args):
+        if not self._is_moving:
+            self._previous_bounds = self._profile_viewer.get_limits()
+
     def on_mouse_move(self, data):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
             self._reset_profile_viewer_bounds()
+            self._is_moving = False
             return
 
-        x = int(np.round(data['domain']['x']))
-        y = int(np.round(data['domain']['y']))
+        self._is_moving = True
+        try:
+            x = int(np.round(data['domain']['x']))
+            y = int(np.round(data['domain']['y']))
+            self._mouse_move_worker(x, y)
+        finally:
+            self._is_moving = False
 
+    def _mouse_move_worker(self, x, y):
         # Use the selected layer from coords_info as long as it's 3D
         coords_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
         if coords_dataset == 'auto':
@@ -134,11 +159,11 @@ class SpectrumPerSpaxel(ProfileFromCube):
             self._reset_profile_viewer_bounds()
             self._mark.visible = False
         else:
-            y_values = spectrum.flux[x, y, :]
+            y_values = spectrum.flux[x, y, :].value
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
                 return
             self._mark.update_xy(spectrum.spectral_axis.value, y_values)
             self._mark.visible = True
-            self._profile_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
-            self._profile_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
+            self._profile_viewer.set_limits(
+                y_min=np.nanmin(y_values) * 0.8, y_max=np.nanmax(y_values) * 1.2)
