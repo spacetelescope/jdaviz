@@ -83,14 +83,14 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         self._during_select_sync = True
         try:
             yield
-        except Exception:
+        except Exception:  # pragma: no cover
             self._during_select_sync = False
             raise
         self._during_select_sync = False
 
     @observe('dm_layer_selected')
     def _dm_layer_selected_changed(self, event={}):
-        if not hasattr(self, 'layer') or not self.layer.multiselect:
+        if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
             return
         if self._during_select_sync:
             return
@@ -109,7 +109,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
 
     @observe('layer_selected', 'layer_items')
     def _update_dm_layer_selected(self, event={}):
-        if not hasattr(self, 'layer') or not self.layer.multiselect:
+        if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
             return
         if self._during_select_sync:
             return
@@ -138,6 +138,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         for layer in self._viewer.layers:
             if layer.layer.label == layer_label:
                 layer.visible = visible
+            elif hasattr(layer.layer, 'data') and layer.layer.data.label == layer_label:
+                layer.visible = layer.layer.label in self.visible_layers
         return self.visible_layers
 
     def toggle_layer_visibility(self, layer_label):
@@ -159,4 +161,4 @@ class DataMenu(TemplateMixin, LayerSelectMixin):
         return visible
 
     def vue_set_layer_visibility(self, info, *args):
-        return self.set_layer_visibility(info.get('layer'), info.get('value'))
+        return self.set_layer_visibility(info.get('layer'), info.get('value'))  # pragma: no cover
