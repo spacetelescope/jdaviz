@@ -63,6 +63,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         # intensive.
         self.state.image_external_padding = 0.5
 
+        self.data_menu._obj.dataset.add_filter('is_image')
+
     def on_mouse_or_key_event(self, data):
         active_image_layer = self.active_image_layer
         if active_image_layer is None:

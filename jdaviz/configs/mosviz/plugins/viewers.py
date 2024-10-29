@@ -95,6 +95,10 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
         for k in ('x_min', 'x_max'):
             self.state.add_callback(k, self._handle_x_axis_orientation)
 
+        def is_2d_or_trace(data):
+            return data.ndim == 2 or 'Trace' in data.meta
+        self.data_menu._obj.dataset.add_filter(is_2d_or_trace)
+
     @cached_property
     def reference_spectral_axis(self):
         return self.state.reference_data.get_object().spectral_axis.value
@@ -242,6 +246,14 @@ class MosvizProfileView(SpecvizProfileView):
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # NOTE: is_spectrum filter already applied by SpecvizProfileView
+        def is_not_trace(data):
+            return 'Trace' not in data.meta
+        self.data_menu.layer.add_filter(is_not_trace)
 
     def set_plot_axes(self):
         super().set_plot_axes()

@@ -204,6 +204,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         data_label : str
             The label of the dataset to add to the viewer.
         """
+        if data_label not in self.dataset.choices:
+            raise ValueError(f"Data label '{data_label}' not able to be loaded into '{self.viewer_id}'.  Must be one of: {self.dataset.choices}")  # noqa
         return self.app.add_data_to_viewer(self.viewer_reference, data_label)
 
     def vue_add_data_to_viewer(self, info, *args):

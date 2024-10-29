@@ -3536,6 +3536,12 @@ class DatasetSelect(SelectPluginComponent):
         def is_cube(data):
             return len(data.shape) == 3
 
+        def is_cube_or_image(data):
+            return len(data.shape) >= 2
+
+        def is_spectrum(data):
+            return len(data.shape) == 1 and hasattr(data, 'spectral_axis')
+
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):
                 uncert_label = getattr(self.app._jdaviz_helper._loaded_uncert_cube, 'label', None)
