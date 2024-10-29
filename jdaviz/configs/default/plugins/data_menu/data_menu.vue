@@ -8,12 +8,12 @@
       v-model="data_menu_open">
       <template v-slot:activator="{ on, attrs }">
         <div :id="'layer-legend-'+ viewer_id">
-          <div v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0" class="viewer-label">
+          <div v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open" class="viewer-label"> 
             <span style="float: right;">
               <j-layer-viewer-icon-stylized
-                tooltip="View data layers and subsets"
+                :tooltip="data_menu_open ? 'close menu' : 'View data layers and subsets'"
                 :label="viewer_id"
-                :icon="viewer_icons[viewer_id]"
+                :icon="data_menu_open ? 'mdi-close' : viewer_icons[viewer_id]"
                 :visible="true"
                 :is_subset="false"
                 :colors="['#939393']"
