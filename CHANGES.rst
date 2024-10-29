@@ -1,4 +1,4 @@
-3.10.4 (unreleased)
+3.10.4 (2024-10-29)
 ===================
 
 Bug Fixes
@@ -6,19 +6,10 @@ Bug Fixes
 
 - Stretch histogram in zoom limits no longer attempts unnecessary updates when zoom limits are changed. [#3151]
 
-Cubeviz
-^^^^^^^
-
 Imviz
 ^^^^^
 
 - Remove "From File.." option when running on an external server. [#3239]
-
-Mosviz
-^^^^^^
-
-Specviz
-^^^^^^^
 
 Specviz2d
 ^^^^^^^^^
