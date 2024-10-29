@@ -16,17 +16,17 @@
       </j-tooltip>
     </template>
     <v-list dense style="width: 200px">
-      <v-subheader class="strike" v-if="dataset_items.length > 0"><span>Load Data</span></v-subheader>
+      <v-subheader v-if="dataset_items.length > 0" class="strike"><span>Load Data</span></v-subheader>
       <v-list-item
-        v-for="item in dataset_items"
+        v-for="data in dataset_items"
       >
         <v-list-item-content>
           <j-tooltip tooltipcontent="add data to viewer">
             <span
               style="cursor: pointer; width: 100%"
-              @click="() => {$emit('add-data', item.label)}"
+              @click="() => {$emit('add-data', data.label)}"
             >
-              {{  item.label }}
+              {{ data.label }}
             </span>
           </j-tooltip>
         </v-list-item-content>
@@ -63,7 +63,7 @@ module.exports = {
 <style scoped>
 .strike {
     display: block;
-    text-align: center;
+    text-align: center !important;
     height: 28px !important;
 }
 
