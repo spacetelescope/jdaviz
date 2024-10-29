@@ -32,22 +32,19 @@
         </v-list-item-content>
       </v-list-item>
       <v-subheader class="strike"><span>Create Subset</span></v-subheader>
-      <v-list-item>
+      <v-list-item
+      >
         <v-list-item-content style="display: inline-block">
           <j-tooltip
+            v-for="tool in subset_tools"
             span_style="display: inline-block"
-            tooltipcontent="Create new circular subset"
+            :tooltipcontent="'Create new '+tool.name+' subset'"
           >
-            <v-btn icon>
-              <v-icon>mdi-circle</v-icon>
-            </v-btn>
-          </j-tooltip>
-          <j-tooltip
-            span_style="display: inline-block"
-            tooltipcontent="Create new square subset"
-          >
-            <v-btn icon>
-              <v-icon>mdi-square</v-icon>
+            <v-btn 
+              icon
+              @click="() => {$emit('create-subset', tool.name)}"
+            >
+              <img :src="tool.img" width="20"/>
             </v-btn>
           </j-tooltip>
         </v-list-item-content>
@@ -59,7 +56,7 @@
 
 <script>
 module.exports = {
-  props: ['dataset_items'],
+  props: ['dataset_items', 'subset_tools'],
 };
 </script>
 

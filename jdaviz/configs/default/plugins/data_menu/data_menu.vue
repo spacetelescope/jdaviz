@@ -77,7 +77,9 @@
           <v-list-item-action>
             <data-menu-add-data
               :dataset_items="dataset_items"
+              :subset_tools="subset_tools"
               @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
+              @create-subset="(subset_type) => {create_subset({subset_type: subset_type})}"
             >
             </data-menu-add-data>
           </v-list-item-action>

@@ -9,6 +9,16 @@ from jdaviz.utils import cmap_samples, is_not_wcs_only
 __all__ = ['DataMenu']
 
 
+SUBSET_TOOL_IDS = {'circle': 'bqplot:truecircle',
+                   'rectangle': 'bqplot:rectangle',
+                   'ellipse': 'bqplot:ellipse',
+                   'annulus': 'bqplot:circannulus',
+                   'xrange': 'bqplot:xrange',
+                   'yrange': 'bqplot:yrange'}
+
+SUBSET_NAMES = {v: k for k, v in SUBSET_TOOL_IDS.items()}
+
+
 class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     """Viewer Data Menu
 
@@ -19,6 +29,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         actively selected layer(s)
     * :meth:`set_layer_visibility`
     * :meth:`toggle_layer_visibility`
+    * :meth:`create_subset`
+    * :meth:`add_data`
     """
     template_file = __file__, "data_menu.vue"
 
@@ -29,8 +41,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     viewer_icons = Dict().tag(sync=True)  # read-only, see app.state.viewer_icons
 
     visible_layers = Dict().tag(sync=True)  # read-only, set by viewer
- 
+
     cmap_samples = Dict(cmap_samples).tag(sync=True)
+    subset_tools = List().tag(sync=True)
 
     dm_layer_selected = List().tag(sync=True)
 
@@ -61,9 +74,15 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.viewer_icons = dict(self.app.state.viewer_icons)
         self.layer_icons = dict(self.app.state.layer_icons)
 
+        # this currently assumes that toolbar.tools_data is set at init and does not change
+        # if we ever support dynamic tool registration, this will need to be updated
+        self.subset_tools = [{'id': k, 'img': v['img'], 'name': SUBSET_NAMES.get(k, k)}
+                             for k, v in self._viewer.toolbar.tools_data.items()
+                             if k in SUBSET_TOOL_IDS.values()]
+
     @property
     def user_api(self):
-        expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility']
+        expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility', 'create_subset', 'add_data']
         return UserApiWrapper(self, expose=expose)
 
     @observe('layer_items')
@@ -176,6 +195,36 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def vue_set_layer_visibility(self, info, *args):
         return self.set_layer_visibility(info.get('layer'), info.get('value'))  # pragma: no cover
 
+    def add_data(self, data_label):
+        """
+        Add a dataset to the viewer.
+
+        Parameters
+        ----------
+        data_label : str
+            The label of the dataset to add to the viewer.
+        """
+        return self.app.add_data_to_viewer(self.viewer_reference, data_label)
+
     def vue_add_data_to_viewer(self, info, *args):
-        data_label = info.get('data_label')
-        return self.app.add_data_to_viewer(self.viewer_reference, data_label)  # pragma: no cover
+        self.add_data(info.get('data_label'))  # pragma: no cover
+
+    def create_subset(self, subset_type):
+        """
+        Create a new subset in the viewer.  This sets the app-wide subset selection to 'Create New'
+        and selects the appropriate tool in this viewer's toolbar.
+
+        Parameters
+        ----------
+        subset_type : str
+            The type of subset to create.  Must be one of 'circle', 'rectangle', 'ellipse', 'annulus',
+            'xrange', or 'yrange'.
+        """
+        # clear previous selection, finalize subsets, temporarily sets default tool
+        self._viewer.toolbar.active_tool_id = None
+        # set toolbar tool to the selection, which will also set app-wide subset selection to "Create New"
+        # supports passing either the user-friendly name or the actual ID
+        self._viewer.toolbar.select_tool(SUBSET_TOOL_IDS.get(subset_type, subset_type))
+
+    def vue_create_subset(self, info, *args):
+        self.create_subset(info.get('subset_type'))  # pragma: no cover
