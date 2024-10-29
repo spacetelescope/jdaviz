@@ -86,17 +86,8 @@ def run_solara(host, port, theme, browser, production: bool = True):
     server.serve_threaded()
     server.wait_until_serving()
     if browser == "qt":
-        from qtpy.QtWidgets import QApplication
-        from qtpy.QtWebEngineWidgets import QWebEngineView
-        from qtpy import QtCore
-
-        app = QApplication([""])
-        web = QWebEngineView()
-        web.resize(1000, 1000)
-        web.setUrl(QtCore.QUrl(server.base_url))
-        web.show()
-
-        app.exec_()
+        from . import qt
+        qt.run_qt(server.base_url)
     else:
         import webbrowser
         controller = webbrowser.get(None if browser == 'default' else browser)
