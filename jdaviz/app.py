@@ -133,6 +133,8 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-plugin-popout': 'components/plugin_popout.vue',
                      'j-multiselect-toggle': 'components/multiselect_toggle.vue',
                      'j-subset-icon': 'components/subset_icon.vue',
+                     'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
+                     'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',

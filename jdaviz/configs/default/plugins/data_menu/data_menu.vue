@@ -46,8 +46,10 @@
                 />
               </span>
               <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
-                <j-subset-icon :subset_type="item.subset_type" />
-                {{item.label}}
+                <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                <j-child-layer-icon v-if="item.icon.length == 2" :icon="item.icon" />
+                <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                {{ item.label }}
               </span>
             </div>
           </div>
@@ -109,14 +111,9 @@
             <v-list-item-content>
               <span style="display: inline-block">
                 <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                <j-tooltip
-                  v-if="item.icon.length == 2"
-                  :tooltipcontent="'sublayer of '+item.icon[0].toUpperCase()"
-                  span_style="display: inline-block" 
-                >
-                  <v-icon dense>mdi-layers-outline</v-icon>
-                </j-tooltip>
-                {{  item.label }}
+                <j-child-layer-icon v-if="item.icon.length == 2" :icon="item.icon" />
+                <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                {{ item.label }}
               </span>
             </v-list-item-content>
             <v-list-item-action>
