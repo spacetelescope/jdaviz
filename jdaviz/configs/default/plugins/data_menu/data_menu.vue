@@ -3,6 +3,7 @@
     <v-menu
       offset-x
       left
+      nudge-left="8"
       transition="slide-x-reverse-transition"
       :close-on-content-click="false"
       v-model="data_menu_open">
