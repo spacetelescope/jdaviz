@@ -15,7 +15,7 @@
         </v-btn>
       </j-tooltip>
     </template>
-    <v-list dense style="width: 200px">
+    <v-list dense style="width: 200px; max-height: 300px; overflow-y: auto;">
       <v-subheader v-if="dataset_items.length > 0" class="strike"><span>Load Data</span></v-subheader>
       <v-list-item
         v-for="data in dataset_items"
