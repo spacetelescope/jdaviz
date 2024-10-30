@@ -261,6 +261,7 @@
   }
   .active-list-item {
     background-color: #d1f4ff75 !important;
+    font-weight: 500;
   }
   .dm-header, .dm-footer {
     background-color: #003B4D;
