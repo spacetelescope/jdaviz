@@ -195,12 +195,16 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 selected_repr += f" subsets ({self.selected_n_subsets})"
 
         # layer info rules
-        if self.selected_n_layers == 1 and not self.layer_items[self.dm_layer_selected[0]].get('from_plugin', False):
-            self.info_enabled = True
-            if self.selected_n_data == 1:
-                self.info_tooltip = 'View metadata for selected data'
+        if self.selected_n_layers == 1:
+            if self.layer_items[self.dm_layer_selected[0]].get('from_plugin', False):
+                self.info_enabled = False
+                self.info_tooltip = 'Selected data layer is a plugin product and does not have metadata'
             else:
-                self.info_tooltip = 'View subset info for selected subset'
+                self.info_enabled = True
+                if self.selected_n_data == 1:
+                    self.info_tooltip = 'View metadata for selected data'
+                else:
+                    self.info_tooltip = 'View subset info for selected subset'
         else:
             self.info_enabled = False
             if self.selected_n_layers == 0:
