@@ -1,5 +1,6 @@
 <template>
   <v-menu
+    v-if="selected_n_subsets > 0"
     absolute
     offset-y
     bottom
@@ -7,7 +8,6 @@
   >
     <template v-slot:activator="{ on, attrs }">
       <j-tooltip
-        v-if="selected_n_subsets > 0"
         :span_style="'display: inline-block; float: right; ' + (subset_edit_enabled ? '' : 'cursor: default;')"
         :tooltipcontent="subset_edit_tooltip"
       >
