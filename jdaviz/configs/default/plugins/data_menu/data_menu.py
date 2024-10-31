@@ -82,7 +82,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     @property
     def user_api(self):
-        expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility', 'create_subset', 'add_data']
+        expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility',
+                  'create_subset', 'add_data']
         return UserApiWrapper(self, expose=expose)
 
     @observe('layer_items')
@@ -219,13 +220,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         Parameters
         ----------
         subset_type : str
-            The type of subset to create.  Must be one of 'circle', 'rectangle', 'ellipse', 'annulus',
-            'xrange', or 'yrange'.
+            The type of subset to create.  Must be one of 'circle', 'rectangle', 'ellipse',
+            'annulus', 'xrange', or 'yrange'.
         """
         # clear previous selection, finalize subsets, temporarily sets default tool
         self._viewer.toolbar.active_tool_id = None
-        # set toolbar tool to the selection, which will also set app-wide subset selection to "Create New"
-        # supports passing either the user-friendly name or the actual ID
+        # set toolbar to the selection, will also set app-wide subset selection to "Create New"
+        # NOTE: supports passing either the user-friendly name or the actual ID
         self._viewer.toolbar.select_tool(SUBSET_TOOL_IDS.get(subset_type, subset_type))
 
     def vue_create_subset(self, info, *args):

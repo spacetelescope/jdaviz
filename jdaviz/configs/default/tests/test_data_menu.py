@@ -83,7 +83,7 @@ def test_data_menu_add_data(imviz_helper):
 
 
 def test_data_menu_create_subset(imviz_helper):
-    imviz_helper.load_data(np.zeros((2, 2)), data_label=f'image', show_in_viewer=True)
+    imviz_helper.load_data(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
 
     dm = imviz_helper.viewers['imviz-0']._obj.data_menu
     assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
