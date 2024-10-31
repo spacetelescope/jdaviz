@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from traitlets import Bool, Dict, Unicode, List, observe
+from traitlets import Bool, Dict, Unicode, Integer, List, observe
 
 from jdaviz.core.template_mixin import (TemplateMixin, LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
@@ -31,7 +31,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     * :meth:`toggle_layer_visibility`
     * :meth:`create_subset`
     * :meth:`add_data`
-    * :meth:`view_metadata`
+    * :meth:`view_info`
     """
     template_file = __file__, "data_menu.vue"
 
@@ -47,6 +47,19 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     subset_tools = List().tag(sync=True)
 
     dm_layer_selected = List().tag(sync=True)
+
+    selected_n_layers = Integer(0).tag(sync=True)
+    selected_n_data = Integer(0).tag(sync=True)
+    selected_n_subsets = Integer(0).tag(sync=True)
+
+    info_enabled = Bool(False).tag(sync=True)
+    info_tooltip = Unicode().tag(sync=True)
+
+    delete_enabled = Bool(False).tag(sync=True)
+    delete_tooltip = Unicode().tag(sync=True)
+
+    subset_edit_enabled = Bool(False).tag(sync=True)
+    subset_edit_tooltip = Unicode().tag(sync=True)
 
     dev_data_menu = Bool(False).tag(sync=True)
 
@@ -84,7 +97,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def user_api(self):
         expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility',
-                  'create_subset', 'add_data', 'view_metadata']
+                  'create_subset', 'add_data', 'view_info']
         return UserApiWrapper(self, expose=expose)
 
     @observe('layer_items')
@@ -145,13 +158,62 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def _update_dm_layer_selected(self, event={}):
         if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
             return
-        if self._during_select_sync:
-            return
-        with self.during_select_sync():
-            # map list of strings in self.layer.selected to indices in dm_layer_selected
-            layer_labels = [layer['label'] for layer in self.layer_items][::-1]
-            self.dm_layer_selected = [layer_labels.index(label) for label in self.layer.selected
-                                      if label in layer_labels]
+        if not self._during_select_sync:
+            with self.during_select_sync():
+                # map list of strings in self.layer.selected to indices in dm_layer_selected
+                layer_labels = [layer['label'] for layer in self.layer_items][::-1]
+                self.dm_layer_selected = [layer_labels.index(label) for label in self.layer.selected
+                                          if label in layer_labels]
+
+        # update internal counts and tooltips
+        self.selected_n_layers = len(self.layer.selected)
+        self.selected_n_subsets = len([l for l in self.layer.selected if l.startswith('Subset')])
+        self.selected_n_data = self.selected_n_layers - self.selected_n_subsets
+
+        # user-friendly representation of selection
+        selected_repr = ""
+        if self.selected_n_data:
+            selected_repr += f"data ({self.selected_n_data})"
+        if self.selected_n_subsets:
+            if self.selected_n_data:
+                selected_repr += " and"
+            if self.selected_n_subsets == 1:
+                selected_repr += f" subset ({self.selected_n_subsets})"
+            else:
+                selected_repr += f" subsets ({self.selected_n_subsets})"
+
+        # layer info rules
+        if self.selected_n_layers == 1 and not self.layer_items[self.dm_layer_selected[0]].get('from_plugin', False):
+            self.info_enabled = True
+            if self.selected_n_data == 1:
+                self.info_tooltip = 'View metadata for selected data'
+            else:
+                self.info_tooltip = 'View subset info for selected subset'
+        else:
+            self.info_enabled = False
+            if self.selected_n_layers == 0:
+                self.info_tooltip = 'Select a layer to view info'
+            else:
+                self.info_tooltip = 'Select a single layer to view info'
+
+        # delete layer rules
+        if self.selected_n_layers == 0:
+            self.delete_tooltip = "Select layer(s) to delete"
+            self.delete_enabled = False
+        else:
+            self.delete_tooltip = f"Remove selected {selected_repr}"
+            self.delete_enabled = True
+
+        # subset edit rules
+        if self.selected_n_subsets == 1:
+            self.subset_edit_enabled = True
+            self.subset_edit_tooltip = "Edit selected subset (COMING SOON)"
+        else:
+            self.subset_edit_enabled = False
+            if self.selected_n_subsets == 0:
+                self.subset_edit_tooltip = "Select a subset to edit"
+            else:
+                self.subset_edit_tooltip = "Select a single subset to edit"
 
     def set_layer_visibility(self, layer_label, visible=True):
         """
@@ -233,21 +295,31 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def vue_create_subset(self, info, *args):
         self.create_subset(info.get('subset_type'))  # pragma: no cover
 
-    def view_metadata(self):
+    def view_info(self):
         """
-        View metadata for the selected layer.
+        View info for the selected layer by opening either the metadata or subset plugin to the
+        selected entry.
         """
         if len(self.layer.selected) != 1:
-            raise ValueError("Only one layer can be selected to view metadata.")
-        # view metadata for the selected layer (UI only shows if a single selection AND data entry)
-        mp = self._viewer.jdaviz_helper.plugins.get('Metadata', None)
-        if mp is None:
-            return
-        try:
-            mp.dataset.selected = self.layer.selected[0]
-        except ValueError:
-            return
-        mp.open_in_tray()
+            raise ValueError("Only one layer can be selected to view info.")
+        if self.layer.selected[0].startswith('Subset'):
+            sp = self._viewer.jdaviz_helper.plugins.get('Subset Tools', None)
+            if sp is None:
+                return
+            try:
+                sp._obj.subset_select.selected = self.layer.selected[0]
+            except ValueError:
+                return
+            sp.open_in_tray()
+        else:
+            mp = self._viewer.jdaviz_helper.plugins.get('Metadata', None)
+            if mp is None:
+                return
+            try:
+                mp.dataset.selected = self.layer.selected[0]
+            except ValueError:
+                return
+            mp.open_in_tray()
 
-    def vue_view_metadata(self, *args):
-        self.view_metadata()  # pragma: no cover
+    def vue_view_info(self, *args):
+        self.view_info()  # pragma: no cover

@@ -136,35 +136,36 @@
         <v-list-item class="dm-footer">
           <v-list-item-content style="display: inline-block">
             <j-tooltip
-              span_style="display: inline-block; float: right"
-              tooltipcontent="Remove data/subset (COMING SOON)"
+              :span_style="'display: inline-block; float: right; ' + (delete_enabled ? '' : 'cursor: default;')"
+              :tooltipcontent="delete_tooltip"
             >
               <v-btn
                 icon
-                disabled
+                :disabled="!delete_enabled"
               >
                 <v-icon class="invert-if-dark">mdi-delete</v-icon>
               </v-btn>
             </j-tooltip>
             <j-tooltip
-              v-if="dm_layer_selected.length == 1 && layer_items[layer_items.length - 1 - dm_layer_selected[0]].icon.length == 1 && !layer_items[layer_items.length - 1 - dm_layer_selected[0]].is_subset && !layer_items[layer_items.length - 1 - dm_layer_selected[0]].from_plugin"
-              span_style="display: inline-block; float: right"
-              tooltipcontent="View Metadata"
+              :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
+              :tooltipcontent="info_tooltip"
             >
               <v-btn
                 icon
-                @click="view_metadata"
-                >
+                @click="view_info"
+                :disabled="!info_enabled"
+              >
                 <v-icon class="invert-if-dark">mdi-label</v-icon>
               </v-btn>
             </j-tooltip>
             <j-tooltip
-              span_style="display: inline-block; float: right"
-              tooltipcontent="Edit Selected Subset (COMING SOON)"
+              v-if="selected_n_subsets > 0"
+              :span_style="'display: inline-block; float: right; ' + (subset_edit_enabled ? '' : 'cursor: default;')"
+              :tooltipcontent="subset_edit_tooltip"
             >
               <v-btn
                 text
-                disabled
+                :disabled="!subset_edit_enabled"
                 class="invert-if-dark"
               >
                 Edit Subset

@@ -1734,7 +1734,7 @@ class LayerSelect(SelectPluginComponent):
 
         layers = [[layer for layer in viewer.layers
                    if layer.layer.label in selected and self._is_valid_item(layer.layer)]
-                  for viewer in viewers]
+                  for viewer in viewers if viewer is not None]
 
         if not self.is_multiselect and len(layers) == 1:
             return layers[0]
