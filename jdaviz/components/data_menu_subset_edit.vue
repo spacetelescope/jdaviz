@@ -67,16 +67,17 @@
         </v-list-item-content>
         <v-list-item-action style="display: inline-block" v-if="hover_mode == mode_item.glue_name">
           <j-tooltip
-              v-for="subset_tool in ['circle', 'square']"
+              v-for="tool in subset_tools.slice().reverse()"
               :span_style="'display: inline-block; float: right;'"
-              :tooltipcontent="'Interactively apply \'' + mode_item.glue_name + '\' logic to ' + subset_selected + ' using the ' + subset_tool + ' tool'"
+              :tooltipcontent="'Interactively apply \'' + mode_item.glue_name + '\' logic to ' + subset_selected + ' using the ' + tool.name + ' tool'"
             >
               <v-btn
                 icon
                 max-height="24px"
                 max-width="24px"
+                @click="() => {$emit('modify-subset', mode_item.glue_name, tool.name)}"
               >
-                <v-icon>mdi-{{ subset_tool }}</v-icon>
+                <img :src="tool.img" width="20"/>
               </v-btn>
             </j-tooltip>
         </v-list-item-action>
@@ -93,7 +94,7 @@ module.exports = {
         hover_mode: '',
       }
     },
-  props: ['subset_selected', 'subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets', 'subset_edit_modes'],
+  props: ['subset_selected', 'subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets', 'subset_edit_modes', 'subset_tools'],
 };
 </script>
 

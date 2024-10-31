@@ -155,8 +155,13 @@
               :subset_edit_tooltip="subset_edit_tooltip"
               :selected_n_subsets="selected_n_subsets"
               :subset_edit_modes="subset_edit_modes"
+              :subset_tools="subset_tools"
               :subset_selected="layer_selected[0]"
               @view-info="view_info"
+              @modify-subset="(combination_mode, tool) => {modify_subset({subset: layer_selected[0],
+                                                                          combination_mode: combination_mode,
+                                                                          subset_type: tool});
+                                                          data_menu_open = false}"
             />
           </v-list-item-content>
         </v-list-item>

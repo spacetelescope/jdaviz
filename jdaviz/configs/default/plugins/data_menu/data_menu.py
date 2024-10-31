@@ -8,6 +8,8 @@ from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import IconsUpdatedMessage, AddDataMessage
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
+from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
+                                        ReplaceMode, XorMode, NewMode)
 from glue.icons import icon_path
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
@@ -22,6 +24,15 @@ SUBSET_TOOL_IDS = {'circle': 'bqplot:truecircle',
                    'yrange': 'bqplot:yrange'}
 
 SUBSET_NAMES = {v: k for k, v in SUBSET_TOOL_IDS.items()}
+
+SUBSET_MODES = {
+    'new': NewMode,
+    'replace': ReplaceMode,
+    'or': OrMode,
+    'and': AndMode,
+    'xor': XorMode,
+    'andnot': AndNotMode,
+}
 
 
 class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
@@ -113,7 +124,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def user_api(self):
         expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility',
-                  'create_subset', 'add_data', 'view_info',
+                  'create_subset', 'modify_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
         return UserApiWrapper(self, expose=expose)
 
@@ -324,6 +335,34 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def vue_create_subset(self, info, *args):
         self.create_subset(info.get('subset_type'))  # pragma: no cover
+
+    def modify_subset(self, subset, combination_mode, subset_type):
+        """
+        Modify an existing subset interactively in the viewer.
+
+        Parameters
+        ----------
+        subset : str
+            The label of the subset to modify.
+        combination_mode : str
+            The combination mode to apply to the subset.  Must be one of 'replace', 'or', 'and',
+            'xor', or 'andnot'.
+        subset_type : str
+            The type of subset to modify.  Must be one of 'circle', 'rectangle', 'ellipse',
+            'annulus', 'xrange', or 'yrange'.
+        """
+        # set tool first since that might default to "Create New"
+        self._viewer.toolbar.select_tool(SUBSET_TOOL_IDS.get(subset_type, subset_type))
+        # set subset selection to the subset to modify
+        subset_grp = [sg for sg in self.app.data_collection.subset_groups if sg.label == subset]
+        self.session.edit_subset_mode.edit_subset = subset_grp
+        # set combination mode
+        self.session.edit_subset_mode.mode = SUBSET_MODES.get(combination_mode)
+
+    def vue_modify_subset(self, info, *args):
+        self.modify_subset(info.get('subset'),
+                           info.get('combination_mode'),
+                           info.get('subset_type'))  # pragma: no cover
 
     def view_info(self):
         """
