@@ -3,7 +3,6 @@ from contextlib import contextmanager
 import sys
 import os
 import time
-from astropy import units as u
 
 try:
     from strauss.sonification import Sonification
@@ -77,8 +76,7 @@ class CubeListenerData:
             self.atten_level = int(np.clip(100/vol, 0, 2**15-1))
         else:
             self.atten_level = 1
-        print(vol, self.atten_level)
-            
+
         self.wl_bounds = wl_bounds
         self.wl_unit = wl_unit
         self.wlens = wlens
@@ -112,8 +110,6 @@ class CubeListenerData:
         """
         wsrt = np.sort([w1, w2])
         self.wl_bounds = tuple(wsrt)
-        print(w1, w2, 'test')
-        print(self.wl_bounds)
         
     def audify_cube(self):
         """

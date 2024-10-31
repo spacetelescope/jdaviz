@@ -159,7 +159,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         # and re-clip
         clipped_arr = np.clip(clipped_arr, 0, np.inf)
 
-        print(f"making cube with {self.audification_wl_bounds}")
         self.audified_cube = CubeListenerData(clipped_arr ** assidx, wlens, duration=0.8,
                                               samplerate=sample_rate, buffsize=buffer_size,
                                               wl_bounds=self.audification_wl_bounds,
@@ -173,7 +172,6 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.stream = sd.OutputStream(samplerate=sample_rate, blocksize=buffer_size, device=device,
                                       channels=1, dtype='int16', latency='low',
                                       callback=self.audified_cube.player_callback)
-        print(sd.query_devices(), device)
         self.audified_cube.cbuff = True
 
 

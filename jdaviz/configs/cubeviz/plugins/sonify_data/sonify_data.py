@@ -39,17 +39,14 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
     # TODO: can we referesh the list, so sounddevices are up-to-date when dropdown clicked?
     sound_devices_items = List().tag(sync=True)
     sound_devices_selected = Unicode('').tag(sync=True)
-    # sound_device_indexes = {}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.has_strauss:
-            self.sound_devices_items = [device['name'] for device in sd.query_devices()]
-            self.sound_devices_selected = sd.query_devices()[sd.default.device[1]]['name']
-        # devices, indexes = self.build_device_lists()
-        # self.sound_device_indexes = dict(zip(devices, indexes))
-        # self.sound_devices_items = devices
-        # self.sound_devices_selected = dict(zip(indexes, devices))[sd.default.device[1]]
+            devices, indexes = self.build_device_lists()
+            self.sound_device_indexes = dict(zip(devices, indexes))
+            self.sound_devices_items = devices
+            self.sound_devices_selected = dict(zip(indexes, devices))[sd.default.device[1]]
 
         # TODO: Remove hardcoded range and flux viewer
         self.spec_viewer = self.app.get_viewer('spectrum-viewer')
@@ -59,10 +56,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
         
     @with_spinner()
     def vue_sonify_cube(self, *args):
-        # Get index of selected device since name may not be unique
-        # selected_device_index = self.sound_device_indexes[self.sound_devices_selected] #
-        selected_device_index = self.sound_devices_items.index(self.sound_devices_selected)
-        print(selected_device_index)
+        # Get index of selected device
+        selected_device_index = self.sound_device_indexes[self.sound_devices_selected]
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
                                            self.pccut, self.audfrqmin,
@@ -98,12 +93,10 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
     def build_device_lists(self):
         # dedicated function to build the current *output*
         # device and index lists
-        devdx = 0
         devices = []
-        didxs = []
-        for device in sd.query_devices():
-            if device['max_output_channels'] > 0:
+        device_indexes = []
+        for index, device in enumerate(sd.query_devices()):
+            if device['max_output_channels'] > 0 and device['name'] not in devices:
                 devices.append(device['name'])
-                didxs.append(devdx)
-            devdx += 1
-        return devices, didxs
+                device_indexes.append(index)
+        return devices, device_indexes
