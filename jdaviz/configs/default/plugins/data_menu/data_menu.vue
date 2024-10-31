@@ -135,17 +135,12 @@
         </v-list-item-group>
         <v-list-item class="dm-footer">
           <v-list-item-content style="display: inline-block">
-            <j-tooltip
-              :span_style="'display: inline-block; float: right; ' + (delete_enabled ? '' : 'cursor: default;')"
-              :tooltipcontent="delete_tooltip"
-            >
-              <v-btn
-                icon
-                :disabled="!delete_enabled"
-              >
-                <v-icon class="invert-if-dark">mdi-delete</v-icon>
-              </v-btn>
-            </j-tooltip>
+            <data-menu-remove
+              :delete_enabled="delete_enabled"
+              :delete_tooltip="delete_tooltip"
+              @remove-from-viewer="remove_from_viewer"
+              @remove-from-app="remove_from_app"
+            />
             <j-tooltip
               :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
               :tooltipcontent="info_tooltip"
