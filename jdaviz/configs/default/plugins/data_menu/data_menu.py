@@ -31,6 +31,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     * :meth:`toggle_layer_visibility`
     * :meth:`create_subset`
     * :meth:`add_data`
+    * :meth:`view_metadata`
     """
     template_file = __file__, "data_menu.vue"
 
@@ -83,7 +84,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     @property
     def user_api(self):
         expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility',
-                  'create_subset', 'add_data']
+                  'create_subset', 'add_data', 'view_metadata']
         return UserApiWrapper(self, expose=expose)
 
     @observe('layer_items')
@@ -231,3 +232,22 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def vue_create_subset(self, info, *args):
         self.create_subset(info.get('subset_type'))  # pragma: no cover
+
+    def view_metadata(self):
+        """
+        View metadata for the selected layer.
+        """
+        if len(self.layer.selected) != 1:
+            raise ValueError("Only one layer can be selected to view metadata.")
+        # view metadata for the selected layer (UI only shows if a single selection AND data entry)
+        mp = self._viewer.jdaviz_helper.plugins.get('Metadata', None)
+        if mp is None:
+            return
+        try:
+            mp.dataset.selected = self.layer.selected[0]
+        except ValueError:
+            return
+        mp.open_in_tray()
+
+    def vue_view_metadata(self, *args):
+        self.view_metadata()  # pragma: no cover

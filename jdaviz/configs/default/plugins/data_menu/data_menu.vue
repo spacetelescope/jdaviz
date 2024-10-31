@@ -153,7 +153,7 @@
             >
               <v-btn
                 icon
-                disabled
+                @click="view_metadata"
                 >
                 <v-icon class="invert-if-dark">mdi-label</v-icon>
               </v-btn>
