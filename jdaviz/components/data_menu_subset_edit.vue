@@ -24,18 +24,6 @@
     <v-list dense style="width: 300px">
       <v-list-item>
         <v-list-item-content>
-          <j-tooltip tooltipcontent="Select as active for interactive resizing in viewer (COMING SOON)">
-            <span
-              style="cursor: default; width: 100%"
-              @click="() => {alert('coming soon!')}"
-            >
-              Resize in viewer
-            </span>
-          </j-tooltip>
-        </v-list-item-content>
-      </v-list-item>
-      <v-list-item>
-        <v-list-item-content>
           <j-tooltip :tooltipcontent="'Open '+subset_selected+' in Subset Tools plugin'">
             <span
               style="cursor: pointer; width: 100%"
