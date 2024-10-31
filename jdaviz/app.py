@@ -153,7 +153,9 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-input-header': 'components/plugin_input_header.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
                      'data-menu-add-data': 'components/data_menu_add_data.vue',
-                     'data-menu-remove': 'components/data_menu_remove.vue'}
+                     'data-menu-remove': 'components/data_menu_remove.vue',
+                     'data-menu-subset-edit': 'components/data_menu_subset_edit.vue',
+                     'data-menu-subset-edit-modify': 'components/data_menu_subset_edit_modify.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')
 

@@ -153,19 +153,12 @@
                 <v-icon class="invert-if-dark">mdi-label</v-icon>
               </v-btn>
             </j-tooltip>
-            <j-tooltip
-              v-if="selected_n_subsets > 0"
-              :span_style="'display: inline-block; float: right; ' + (subset_edit_enabled ? '' : 'cursor: default;')"
-              :tooltipcontent="subset_edit_tooltip"
-            >
-              <v-btn
-                text
-                :disabled="!subset_edit_enabled"
-                class="invert-if-dark"
-              >
-                Edit Subset
-              </v-btn>
-            </j-tooltip>
+            <data-menu-subset-edit
+              :subset_edit_enabled="subset_edit_enabled"
+              :subset_edit_tooltip="subset_edit_tooltip"
+              :selected_n_subsets="selected_n_subsets"
+              @view-info="view_info"
+            />
           </v-list-item-content>
         </v-list-item>
       </v-list>
