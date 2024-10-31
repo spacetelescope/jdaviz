@@ -252,7 +252,7 @@ class MosvizProfileView(SpecvizProfileView):
 
         # NOTE: is_spectrum filter already applied by SpecvizProfileView
         def is_not_trace(data):
-            return 'Trace' not in data.meta
+            return 'Trace' not in getattr(data, 'meta', [])
         self.data_menu.layer.add_filter(is_not_trace)
 
     def set_plot_axes(self):
