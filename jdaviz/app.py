@@ -132,6 +132,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-number-uncertainty': 'components/number_uncertainty.vue',
                      'j-plugin-popout': 'components/plugin_popout.vue',
                      'j-multiselect-toggle': 'components/multiselect_toggle.vue',
+                     'j-subset-icon': 'components/subset_icon.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
@@ -206,7 +207,6 @@ class ApplicationState(State):
             'tray': True,
             'tab_headers': True,
         },
-        'viewer_labels': True,
         'dense_toolbar': True,
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
         'context': {

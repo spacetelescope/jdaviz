@@ -1,5 +1,5 @@
 <template>
-  <j-tooltip :tooltipcontent="tooltipContent(tooltip, label, visible, colormode, colors, linewidth, is_subset)">
+  <j-tooltip :tooltipcontent="tooltipContent(tooltip, label, visible, colormode, colors, linewidth, is_subset)" :disabled="disabled">
     <v-btn
       :rounded="is_subset"
       @click="(e) => $emit('click', e)"
@@ -9,7 +9,10 @@
       height="30px"
       :disabled="disabled"
     >
-      <span :style="'color: white; text-shadow: 0px 0px 3px black; '+borderStyle(linewidth)">
+      <v-icon v-if="String(icon).startsWith('mdi-')" style="color: white">
+        {{  icon }}
+      </v-icon>"
+      <span v-else :style="'color: white; text-shadow: 0px 0px 3px black; '+borderStyle(linewidth)">
         {{ icon }}
       </span>
     </v-btn>
