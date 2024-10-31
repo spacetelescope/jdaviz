@@ -3,9 +3,12 @@
     absolute
     offset-y
     left
-  >
+    v-if="dataset_items.length > 0 || subset_tools.length > 0"
+    >
     <template v-slot:activator="{ on, attrs }">
-      <j-tooltip tooltipcontent="Add data or subset to viewer">
+      <j-tooltip
+          tooltipcontent="Add data or subset to viewer"
+       >
         <v-btn
           icon
           v-bind="attrs"
@@ -33,6 +36,7 @@
       </v-list-item>
       <v-subheader class="strike"><span>Create Subset</span></v-subheader>
       <v-list-item
+        v-if="subset_tools.length > 0"
       >
         <v-list-item-content style="display: inline-block">
           <j-tooltip
