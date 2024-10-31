@@ -1,3 +1,5 @@
+import os
+
 from contextlib import contextmanager
 from traitlets import Bool, Dict, Unicode, Integer, List, observe
 
@@ -5,6 +7,9 @@ from jdaviz.core.template_mixin import (TemplateMixin, LayerSelectMixin, Dataset
 from jdaviz.core.user_api import UserApiWrapper
 from jdaviz.core.events import IconsUpdatedMessage, AddDataMessage
 from jdaviz.utils import cmap_samples, is_not_wcs_only
+
+from glue.icons import icon_path
+from glue_jupyter.common.toolbar_vuetify import read_icon
 
 __all__ = ['DataMenu']
 
@@ -63,6 +68,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     subset_edit_enabled = Bool(False).tag(sync=True)
     subset_edit_tooltip = Unicode().tag(sync=True)
 
+    subset_edit_modes = List().tag(sync=True)
+
     dev_data_menu = Bool(False).tag(sync=True)
 
     def __init__(self, viewer, *args, **kwargs):
@@ -89,6 +96,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
         self.viewer_icons = dict(self.app.state.viewer_icons)
         self.layer_icons = dict(self.app.state.layer_icons)
+
+        self.subset_edit_modes = [{'glue_name': 'replace', 'icon': read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')},
+                                  {'glue_name': 'or', 'icon': read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')},
+                                  {'glue_name': 'and', 'icon': read_icon(os.path.join(icon_path("glue_and", icon_format="svg")), 'svg+xml')},
+                                  {'glue_name': 'xor', 'icon': read_icon(os.path.join(icon_path("glue_xor", icon_format="svg")), 'svg+xml')},
+                                  {'glue_name': 'andnot', 'icon': read_icon(os.path.join(icon_path("glue_andnot", icon_format="svg")), 'svg+xml')}
+                                 ]
 
         # this currently assumes that toolbar.tools_data is set at init and does not change
         # if we ever support dynamic tool registration, this will need to be updated
@@ -221,9 +235,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.delete_enabled = True
 
         # subset edit rules
-        if self.selected_n_subsets == 1:
+        if self.selected_n_subsets == 1 and self.selected_n_layers == 1:
             self.subset_edit_enabled = True
-            self.subset_edit_tooltip = "Edit selected subset..."
+            self.subset_edit_tooltip = f"Edit {self.layer_selected[0]}..."
         else:
             self.subset_edit_enabled = False
             if self.selected_n_subsets == 0:

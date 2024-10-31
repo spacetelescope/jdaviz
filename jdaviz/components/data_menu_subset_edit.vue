@@ -21,7 +21,7 @@
         </v-btn>
       </j-tooltip>
     </template>
-    <v-list dense style="width: 200px">
+    <v-list dense style="width: 300px">
       <v-list-item>
         <v-list-item-content>
           <j-tooltip tooltipcontent="Select as active for interactive resizing in viewer (COMING SOON)">
@@ -36,7 +36,7 @@
       </v-list-item>
       <v-list-item>
         <v-list-item-content>
-          <j-tooltip tooltipcontent="Open in Subset Tools plugin">
+          <j-tooltip :tooltipcontent="'Open '+subset_selected+' in Subset Tools plugin'">
             <span
               style="cursor: pointer; width: 100%"
               @click="() => {$emit('view-info')}"
@@ -49,12 +49,37 @@
 
       <v-divider></v-divider>
 
-      <v-list-item v-for="mode in ['replace', 'add', 'and', 'xor', 'remove']">
+      <v-list-item
+        v-for="mode_item in subset_edit_modes"
+        @mouseover="() => {hover_mode=mode_item.glue_name}"
+        @mouseleave="() => {if (hover_mode == mode_item.glue_name) {hover_mode=''}}"
+      >
+        <v-list-item-icon style="margin-right: 4px">
+          <img :src="mode_item.icon"/>
+        </v-list-item-icon>
         <v-list-item-content>
+          <!--
           <data-menu-subset-edit-modify
-            :mode="mode"
+            :mode_item="mode_item"
           />
+         -->
+         {{ mode_item.glue_name }}
         </v-list-item-content>
+        <v-list-item-action style="display: inline-block" v-if="hover_mode == mode_item.glue_name">
+          <j-tooltip
+              v-for="subset_tool in ['circle', 'square']"
+              :span_style="'display: inline-block; float: right;'"
+              :tooltipcontent="'Interactively apply \'' + mode_item.glue_name + '\' logic to ' + subset_selected + ' using the ' + subset_tool + ' tool'"
+            >
+              <v-btn
+                icon
+                max-height="24px"
+                max-width="24px"
+              >
+                <v-icon>mdi-{{ subset_tool }}</v-icon>
+              </v-btn>
+            </j-tooltip>
+        </v-list-item-action>
       </v-list-item>
 
     </v-list>
@@ -63,7 +88,12 @@
 
 <script>
 module.exports = {
-  props: ['subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets'],
+  data: function () {
+      return {
+        hover_mode: '',
+      }
+    },
+  props: ['subset_selected', 'subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets', 'subset_edit_modes'],
 };
 </script>
 

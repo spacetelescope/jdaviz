@@ -154,6 +154,8 @@
               :subset_edit_enabled="subset_edit_enabled"
               :subset_edit_tooltip="subset_edit_tooltip"
               :selected_n_subsets="selected_n_subsets"
+              :subset_edit_modes="subset_edit_modes"
+              :subset_selected="layer_selected[0]"
               @view-info="view_info"
             />
           </v-list-item-content>

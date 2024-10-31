@@ -34,7 +34,7 @@
       </v-list-item>
       <v-list-item>
         <v-list-item-content>
-          <j-tooltip tooltipcontent="Remove from application">
+          <j-tooltip tooltipcontent="Remove from all viewers and application (permanent)">
             <span
               style="cursor: pointer; width: 100%"
               @click="() => {$emit('remove-from-app')}"
