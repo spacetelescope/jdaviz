@@ -1554,7 +1554,7 @@ class LayerSelect(SelectPluginComponent):
                     if from_plugin is None:
                         from_plugin = layer.layer.data.meta.get('Plugin', None)
                     if live_plugin_results is None:
-                        live_plugin_results = layer.layer.data.meta.get('_update_live_plugin_results', None) is not None
+                        live_plugin_results = layer.layer.data.meta.get('_update_live_plugin_results', None) is not None  # noqa
 
                     if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
                             and hasattr(layer.state, 'cmap')):

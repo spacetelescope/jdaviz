@@ -108,12 +108,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.viewer_icons = dict(self.app.state.viewer_icons)
         self.layer_icons = dict(self.app.state.layer_icons)
 
-        self.subset_edit_modes = [{'glue_name': 'replace', 'icon': read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')},
-                                  {'glue_name': 'or', 'icon': read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')},
-                                  {'glue_name': 'and', 'icon': read_icon(os.path.join(icon_path("glue_and", icon_format="svg")), 'svg+xml')},
-                                  {'glue_name': 'xor', 'icon': read_icon(os.path.join(icon_path("glue_xor", icon_format="svg")), 'svg+xml')},
-                                  {'glue_name': 'andnot', 'icon': read_icon(os.path.join(icon_path("glue_andnot", icon_format="svg")), 'svg+xml')}
-                                 ]
+        self.subset_edit_modes = [{'glue_name': 'replace', 'icon': read_icon(os.path.join(icon_path("glue_replace", icon_format="svg")), 'svg+xml')},  # noqa
+                                  {'glue_name': 'or', 'icon': read_icon(os.path.join(icon_path("glue_or", icon_format="svg")), 'svg+xml')},  # noqa
+                                  {'glue_name': 'and', 'icon': read_icon(os.path.join(icon_path("glue_and", icon_format="svg")), 'svg+xml')},  # noqa
+                                  {'glue_name': 'xor', 'icon': read_icon(os.path.join(icon_path("glue_xor", icon_format="svg")), 'svg+xml')},  # noqa
+                                  {'glue_name': 'andnot', 'icon': read_icon(os.path.join(icon_path("glue_andnot", icon_format="svg")), 'svg+xml')}]  # noqa
 
         # this currently assumes that toolbar.tools_data is set at init and does not change
         # if we ever support dynamic tool registration, this will need to be updated
@@ -204,7 +203,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # update internal counts and tooltips
         self.selected_n_layers = len(self.layer.selected)
         subset_labels = self.existing_subset_labels
-        self.selected_n_subsets = len([l for l in self.layer.selected if l in subset_labels])
+        self.selected_n_subsets = len([lyr for lyr in self.layer.selected if lyr in subset_labels])
         self.selected_n_data = self.selected_n_layers - self.selected_n_subsets
 
         # user-friendly representation of selection
@@ -223,7 +222,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if self.selected_n_layers == 1:
             if self.layer_items[self.dm_layer_selected[0]].get('from_plugin', False):
                 self.info_enabled = False
-                self.info_tooltip = 'Selected data layer is a plugin product and does not have metadata'
+                self.info_tooltip = 'Selected data layer is a plugin product and does not have metadata'  # noqa
             else:
                 self.info_enabled = True
                 if self.selected_n_data == 1:
