@@ -335,14 +335,12 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def vue_create_subset(self, info, *args):
         self.create_subset(info.get('subset_type'))  # pragma: no cover
 
-    def modify_subset(self, subset, combination_mode, subset_type):
+    def modify_subset(self, combination_mode, subset_type):
         """
         Modify an existing subset interactively in the viewer.
 
         Parameters
         ----------
-        subset : str
-            The label of the subset to modify.
         combination_mode : str
             The combination mode to apply to the subset.  Must be one of 'replace', 'or', 'and',
             'xor', or 'andnot'.
@@ -350,6 +348,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             The type of subset to modify.  Must be one of 'circle', 'rectangle', 'ellipse',
             'annulus', 'xrange', or 'yrange'.
         """
+        # future improvement: allow overriding layer.selected, with pre-validation
+        if len(self.layer.selected) != 1:
+            raise ValueError("Only one layer can be selected to modify subset.")
+        if self.layer.selected[0] not in self.existing_subset_labels:
+            raise ValueError("Selected layer is not a subset.")
+        subset = self.layer.selected[0]
+
         # set tool first since that might default to "Create New"
         self._viewer.toolbar.select_tool(SUBSET_TOOL_IDS.get(subset_type, subset_type))
         # set subset selection to the subset to modify
@@ -359,8 +364,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.session.edit_subset_mode.mode = SUBSET_MODES.get(combination_mode)
 
     def vue_modify_subset(self, info, *args):
-        self.modify_subset(info.get('subset'),
-                           info.get('combination_mode'),
+        self.modify_subset(info.get('combination_mode'),
                            info.get('subset_type'))  # pragma: no cover
 
     def view_info(self):
