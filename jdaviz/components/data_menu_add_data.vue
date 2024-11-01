@@ -20,7 +20,7 @@
       </j-tooltip>
     </template>
     <v-list dense style="width: 200px; max-height: 300px; overflow-y: auto;">
-      <v-subheader v-if="dataset_items.length > 0" class="strike"><span>Load Data</span></v-subheader>
+      <v-subheader v-if="dataset_items.length > 0"><span>Load Data</span></v-subheader>
       <v-list-item
         v-for="data in dataset_items"
       >
@@ -35,7 +35,7 @@
           </j-tooltip>
         </v-list-item-content>
       </v-list-item>
-      <v-subheader v-if="subset_tools.length > 0" class="strike"><span>Create Subset</span></v-subheader>
+      <v-subheader v-if="subset_tools.length > 0"><span>Create Subset</span></v-subheader>
       <v-list-item
         v-if="subset_tools.length > 0"
       >
@@ -64,38 +64,3 @@ module.exports = {
   props: ['dataset_items', 'subset_tools'],
 };
 </script>
-
-<style scoped>
-.strike {
-    display: block;
-    text-align: center !important;
-    height: 28px !important;
-}
-
-.strike > span {
-    position: relative;
-    display: inline-block;
-    text-transform: uppercase;
-    font-weight: bold;
-}
-
-.strike > span:before,
-.strike > span:after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    width: 9999px;
-    height: 1px;
-    background: gray;
-}
-
-.strike > span:before {
-    right: 100%;
-    margin-right: 6px;
-}
-
-.strike > span:after {
-    left: 100%;
-    margin-left: 6px;
-}
-</style>
