@@ -46,6 +46,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     * :meth:`set_layer_visibility`
     * :meth:`toggle_layer_visibility`
     * :meth:`create_subset`
+    * :meth:`modify_subset`
     * :meth:`add_data`
     * :meth:`view_info`
     * :meth:`remove_from_viewer`
@@ -299,32 +300,35 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def vue_set_layer_visibility(self, info, *args):
         return self.set_layer_visibility(info.get('layer'), info.get('value'))  # pragma: no cover
 
-    def add_data(self, data_label):
+    def add_data(self, *data_labels):
         """
         Add a dataset to the viewer.
 
         Parameters
         ----------
-        data_label : str
-            The label of the dataset to add to the viewer.
+        *data_labels : str
+            The label(s) of the dataset to add to the viewer.
         """
-        if data_label not in self.dataset.choices:
-            raise ValueError(f"Data label '{data_label}' not able to be loaded into '{self.viewer_id}'.  Must be one of: {self.dataset.choices}")  # noqa
-        return self.app.add_data_to_viewer(self.viewer_id, data_label)
+        unavailable = [data_label for data_label in data_labels
+                       if data_label not in self.dataset.choices]
+        if len(unavailable):
+            raise ValueError(f"Data labels {unavailable} not able to be loaded into '{self.viewer_id}'.  Must be one of: {self.dataset.choices}")  # noqa
+        for data_label in data_labels:
+            self.app.add_data_to_viewer(self.viewer_id, data_label)
 
     def vue_add_data_to_viewer(self, info, *args):
         self.add_data(info.get('data_label'))  # pragma: no cover
 
     def create_subset(self, subset_type):
         """
-        Create a new subset in the viewer.  This sets the app-wide subset selection to 'Create New'
-        and selects the appropriate tool in this viewer's toolbar.
+        Interactively create a new subset in the viewer.  This sets the app-wide subset
+        selection to 'Create New' and selects the appropriate tool in this viewer's toolbar.
 
         Parameters
         ----------
         subset_type : str
             The type of subset to create.  Must be one of 'circle', 'rectangle', 'ellipse',
-            'annulus', 'xrange', or 'yrange'.
+            'annulus', 'xrange', or 'yrange', and must be an available tool in this viewer.
         """
         # clear previous selection, finalize subsets, temporarily sets default tool
         self._viewer.toolbar.active_tool_id = None
@@ -337,7 +341,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def modify_subset(self, combination_mode, subset_type):
         """
-        Modify an existing subset interactively in the viewer.
+        Interactively modify an existing subset in the viewer.  This sets the app-wide subset
+        selection to the currently selected subset, mode to the selected combination_mode,
+        and selects the appropriate tool in this viewer's toolbar.
 
         Parameters
         ----------
@@ -346,7 +352,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             'xor', or 'andnot'.
         subset_type : str
             The type of subset to modify.  Must be one of 'circle', 'rectangle', 'ellipse',
-            'annulus', 'xrange', or 'yrange'.
+            'annulus', 'xrange', or 'yrange', and must be an available tool in this viewer.
         """
         # future improvement: allow overriding layer.selected, with pre-validation
         if len(self.layer.selected) != 1:
@@ -372,25 +378,20 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         View info for the selected layer by opening either the metadata or subset plugin to the
         selected entry.
         """
+        # future improvement: allow overriding layer.selected, with pre-validation
         if len(self.layer.selected) != 1:
             raise ValueError("Only one layer can be selected to view info.")
         if self.layer.selected[0] in self.existing_subset_labels:
             sp = self._viewer.jdaviz_helper.plugins.get('Subset Tools', None)
-            if sp is None:
-                return
-            try:
-                sp._obj.subset_select.selected = self.layer.selected[0]
-            except ValueError:
-                return
+            if sp is None:  # pragma: no cover
+                raise ValueError("subset tools plugin not available")
+            sp._obj.subset_select.selected = self.layer.selected[0]
             sp.open_in_tray()
         else:
             mp = self._viewer.jdaviz_helper.plugins.get('Metadata', None)
-            if mp is None:
-                return
-            try:
-                mp.dataset.selected = self.layer.selected[0]
-            except ValueError:
-                return
+            if mp is None:  # pragma: no cover
+                raise ValueError("metadata plugin not available")
+            mp.dataset.selected = self.layer.selected[0]
             mp.open_in_tray()
 
     def vue_view_info(self, *args):
@@ -398,8 +399,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def remove_from_viewer(self):
         """
-        Remove the selected layers from the viewer.
+        Remove the selected layers from the viewer.  For subset layers, this
+        sets the visibility of the subset layer.  For data layers,
+        this unloads the data from the viewer, but keeps it in the application or other viewers.
         """
+        # future improvement: allow overriding layer.selected via *args, with pre-validation
         for layer in self.layer.selected:
             if layer in self.existing_subset_labels:
                 self.set_layer_visibility(layer, visible=False)
@@ -413,11 +417,13 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         """
         Remove the selected layers from the entire app and all viewers.
         """
+        # future improvement: allow overriding layer.selected via *args, with pre-validation
         for layer in self.layer.selected:
             if layer in self.existing_subset_labels:
-                subset_grp = [sg for sg in self.app.data_collection.subset_groups
-                              if sg.label == layer][0]
-                self.app.data_collection.remove_subset_group(subset_grp)
+                for sg in self.app.data_collection.subset_groups:
+                    if sg.label == layer:
+                        self.app.data_collection.remove_subset_group(sg)
+                        break
             else:
                 self.app.vue_data_item_remove({'item_name': layer})
 
