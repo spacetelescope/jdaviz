@@ -76,6 +76,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     delete_enabled = Bool(False).tag(sync=True)
     delete_tooltip = Unicode().tag(sync=True)
+    delete_app_enabled = Bool(False).tag(sync=True)
+    delete_app_tooltip = Unicode().tag(sync=True)
 
     subset_edit_enabled = Bool(False).tag(sync=True)
     subset_edit_tooltip = Unicode().tag(sync=True)
@@ -244,6 +246,24 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         else:
             self.delete_tooltip = f"Remove selected {selected_repr}..."
             self.delete_enabled = True
+
+        # delete from entire app rules
+        delete_app_tooltip = "Remove from all viewers and application (permanent, might affect existing subsets)"  # noqa
+        if self.app.config == 'cubeviz':
+            # forbid deleting non-plugin generated data
+            selected_items = self.layer.selected_item
+            for i, layer in enumerate(self.layer.selected):
+                if (layer not in self.existing_subset_labels
+                        and selected_items['from_plugin'][i] is None):
+                    self.delete_app_enabled = False
+                    self.delete_app_tooltip = f"Cannot delete imported data from {self.app.config}"
+                    break
+            else:
+                self.delete_app_enabled = True
+                self.delete_app_tooltip = delete_app_tooltip
+        else:
+            self.delete_app_enabled = True
+            self.delete_app_tooltip = delete_app_tooltip
 
         # subset edit rules
         if self.selected_n_subsets == 1 and self.selected_n_layers == 1:

@@ -34,10 +34,14 @@
       </v-list-item>
       <v-list-item>
         <v-list-item-content>
-          <j-tooltip tooltipcontent="Remove from all viewers and application (permanent)">
+          <j-tooltip
+            :span_style="'display: inline-block; float: right; ' + (delete_app_enabled ? '' : 'cursor: default;')"
+            :tooltipcontent="delete_app_tooltip"
+          >
             <span
-              style="cursor: pointer; width: 100%"
-              @click="() => {$emit('remove-from-app')}"
+              :style="'width: 100%; ' + (delete_app_enabled ? 'cursor: pointer;' : '')"
+              :disabled="!delete_app_enabled"
+              @click="() => {if (delete_app_enabled) {$emit('remove-from-app')}}"
             >
               Remove from app
             </span>
@@ -50,6 +54,6 @@
 
 <script>
 module.exports = {
-  props: ['delete_enabled', 'delete_tooltip'],
+  props: ['delete_enabled', 'delete_tooltip', 'delete_app_enabled', 'delete_app_tooltip'],
 };
 </script>
