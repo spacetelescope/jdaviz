@@ -63,7 +63,7 @@
                 icon
                 disabled
               >
-                <v-icon>mdi-format-vertical-align-center</v-icon>
+                <v-icon class="invert-if-dark">mdi-format-vertical-align-center</v-icon>
               </v-btn>
             </j-tooltip>
           </v-list-item-icon>
@@ -143,7 +143,7 @@
                 icon
                 disabled
               >
-                <v-icon>mdi-delete</v-icon>
+                <v-icon class="invert-if-dark">mdi-delete</v-icon>
               </v-btn>
             </j-tooltip>
             <j-tooltip
@@ -155,7 +155,7 @@
                 icon
                 disabled
                 >
-                <v-icon>mdi-label</v-icon>
+                <v-icon class="invert-if-dark">mdi-label</v-icon>
               </v-btn>
             </j-tooltip>
             <j-tooltip
@@ -165,6 +165,7 @@
               <v-btn
                 text
                 disabled
+                class="invert-if-dark"
               >
                 Edit Subset
               </v-btn>
@@ -270,6 +271,7 @@
   .dm-footer > .v-list-item__icon, .dm-footer > .v-list-item__content, .dm-footer > .v-list-item__action {
     filter: invert(1);
   }
+
   .dm-header.v-btn--disabled  .v-icon {
     color: green !important;
   }
