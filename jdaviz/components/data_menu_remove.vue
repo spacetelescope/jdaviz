@@ -15,7 +15,7 @@
             v-on="on"
             :disabled="!delete_enabled"
             >
-            <v-icon>mdi-delete</v-icon>
+            <v-icon class="invert-if-dark">mdi-delete</v-icon>
         </v-btn>
       </j-tooltip>
     </template>

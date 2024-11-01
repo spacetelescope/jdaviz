@@ -13,6 +13,7 @@
       >
         <v-btn
           text
+          class="invert-if-dark"
           v-bind="attrs"
           v-on="on"
           :disabled="!subset_edit_enabled"
@@ -65,7 +66,7 @@
                 max-width="24px"
                 @click="() => {$emit('modify-subset', mode_item.glue_name, tool.name)}"
               >
-                <img :src="tool.img" width="20"/>
+                <img :src="tool.img" class="invert-if-dark" width="20"/>
               </v-btn>
             </j-tooltip>
         </v-list-item-action>
