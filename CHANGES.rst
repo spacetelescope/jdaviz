@@ -17,6 +17,8 @@ Mosviz
 
 Specviz
 ^^^^^^^
+- Specviz parser will now split a spectrum with a 2D flux array into multiple spectra on load
+  (useful for certain SDSS file types). [#3229]
 
 Specviz2d
 ^^^^^^^^^
