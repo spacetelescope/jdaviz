@@ -1527,6 +1527,12 @@ class LayerSelect(SelectPluginComponent):
             # so we want to exclude spatial subsets
             return get_subset_type(lyr) != 'spatial'
 
+        def is_trace(lyr):
+            return 'Trace' in getattr(getattr(lyr, 'data', None), 'meta', [])
+
+        def not_trace(lyr):
+            return not is_trace(lyr)
+
         return super()._is_valid_item(lyr, locals())
 
     def _layer_to_dict(self, layer_label):
@@ -3525,7 +3531,7 @@ class DatasetSelect(SelectPluginComponent):
             return data.label in [lyr.layer.label for lyr in self.flux_viewer.layers]  # noqa E741
 
         def is_trace(data):
-            return hasattr(data, 'meta') and 'Trace' in data.meta
+            return 'Trace' in getattr(data, 'meta', [])
 
         def not_trace(data):
             return not is_trace(data)
@@ -3533,8 +3539,25 @@ class DatasetSelect(SelectPluginComponent):
         def is_image(data):
             return len(data.shape) == 2
 
+        def is_image_not_spectrum(data):
+            return (is_image(data)
+                    and not getattr(data.coords, 'is_spectral', True))
+
         def is_cube(data):
             return len(data.shape) == 3
+
+        def is_cube_or_image(data):
+            return len(data.shape) >= 2
+
+        def is_spectrum(data):
+            return (len(data.shape) == 1
+                    and data.coords is not None
+                    and getattr(data.coords, 'is_spectral', True))
+
+        def is_2d_spectrum_or_trace(data):
+            return (data.ndim == 2
+                    and data.coords is not None
+                    and getattr(data.coords, 'is_spectral', True)) or 'Trace' in data.meta
 
         def is_flux_cube(data):
             if hasattr(self.app._jdaviz_helper, '_loaded_uncert_cube'):
@@ -3549,6 +3572,19 @@ class DatasetSelect(SelectPluginComponent):
         def not_child_layer(data):
             # ignore layers that are children in associations:
             return self.app._get_assoc_data_parent(data.label) is None
+
+        def same_mosviz_row(data):
+            # NOTE: requires calling _on_data_changed on a change to row
+            # currently handled by mosviz helper _row_click_message_handler
+            meta = getattr(data, 'meta', None)
+            if meta is None:
+                return True
+            data_row = meta.get('mosviz_row', None)
+            app_row = self.app.state.settings.get('mosviz_row', None)
+
+            if data_row is None or app_row is None:
+                return True
+            return data_row == app_row
 
         layer_is_not_dq = layer_is_not_dq_global
 

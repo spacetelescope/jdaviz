@@ -66,3 +66,28 @@ def test_data_menu_selection(specviz_helper, spectrum1d):
     assert len(dm._obj.layer_items) == 1
     assert dm._obj.dm_layer_selected == [0]
     assert dm.layer.selected == ['test']
+
+
+def test_data_menu_add_data(imviz_helper):
+    for i in range(3):
+        imviz_helper.load_data(np.zeros((2, 2)) + i, data_label=f'image_{i}', show_in_viewer=False)
+
+    dm = imviz_helper.viewers['imviz-0']._obj.data_menu
+    assert len(dm._obj.layer_items) == 0
+    assert len(dm.layer.choices) == 0
+    assert len(dm._obj.dataset.choices) == 3
+
+    dm.add_data('image_0')
+    assert dm.layer.choices == ['image_0']
+    assert len(dm._obj.dataset.choices) == 2
+
+
+def test_data_menu_create_subset(imviz_helper):
+    imviz_helper.load_data(np.zeros((2, 2)), data_label='image', show_in_viewer=True)
+
+    dm = imviz_helper.viewers['imviz-0']._obj.data_menu
+    assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
+
+    dm.create_subset('circle')
+    assert imviz_helper.app.session.edit_subset_mode.edit_subset == []
+    assert imviz_helper.viewers['imviz-0']._obj.toolbar.active_tool_id == 'bqplot:truecircle'

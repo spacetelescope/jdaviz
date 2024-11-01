@@ -63,7 +63,7 @@
                 icon
                 disabled
               >
-                <v-icon>mdi-format-vertical-align-center</v-icon>
+                <v-icon class="invert-if-dark">mdi-format-vertical-align-center</v-icon>
               </v-btn>
             </j-tooltip>
           </v-list-item-icon>
@@ -75,14 +75,13 @@
             </j-tooltip>
           </v-list-item-content>
           <v-list-item-action>
-            <j-tooltip tooltipcontent="Add data or subset (COMING SOON)">
-              <v-btn
-                icon
-                disabled
-              >
-                <v-icon>mdi-plus</v-icon>
-              </v-btn>
-            </j-tooltip>
+            <data-menu-add-data
+              :dataset_items="dataset_items"
+              :subset_tools="subset_tools"
+              @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
+              @create-subset="(subset_type) => {create_subset({subset_type: subset_type}); data_menu_open = false}"
+            >
+            </data-menu-add-data>
           </v-list-item-action>
         </v-list-item>
         <v-list-item-group
@@ -144,7 +143,7 @@
                 icon
                 disabled
               >
-                <v-icon>mdi-delete</v-icon>
+                <v-icon class="invert-if-dark">mdi-delete</v-icon>
               </v-btn>
             </j-tooltip>
             <j-tooltip
@@ -156,7 +155,7 @@
                 icon
                 disabled
                 >
-                <v-icon>mdi-label</v-icon>
+                <v-icon class="invert-if-dark">mdi-label</v-icon>
               </v-btn>
             </j-tooltip>
             <j-tooltip
@@ -166,6 +165,7 @@
               <v-btn
                 text
                 disabled
+                class="invert-if-dark"
               >
                 Edit Subset
               </v-btn>
@@ -271,6 +271,7 @@
   .dm-footer > .v-list-item__icon, .dm-footer > .v-list-item__content, .dm-footer > .v-list-item__action {
     filter: invert(1);
   }
+
   .dm-header.v-btn--disabled  .v-icon {
     color: green !important;
   }

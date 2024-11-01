@@ -43,6 +43,9 @@ class MosvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewe
         self.state.show_axes = False  # Axes are wrong anyway
         self.figure.fig_margin = {'left': 0, 'bottom': 0, 'top': 0, 'right': 0}
 
+        self.data_menu._obj.dataset.add_filter('is_image_not_spectrum')
+        self.data_menu._obj.dataset.add_filter('same_mosviz_row')
+
     def data(self, cls=None):
         return [layer_state.layer.get_object(cls=cls or self.default_class)
                 for layer_state in self.state.layers
@@ -94,6 +97,9 @@ class MosvizProfile2DView(JdavizViewerMixin, BqplotImageView):
 
         for k in ('x_min', 'x_max'):
             self.state.add_callback(k, self._handle_x_axis_orientation)
+
+        self.data_menu._obj.dataset.add_filter('is_2d_spectrum_or_trace')
+        self.data_menu._obj.dataset.add_filter('same_mosviz_row')
 
     @cached_property
     def reference_spectral_axis(self):
@@ -242,6 +248,13 @@ class MosvizProfileView(SpecvizProfileView):
                     ['jdaviz:selectline'],
                     ['jdaviz:sidebar_plot', 'jdaviz:sidebar_export']
                 ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # NOTE: is_spectrum filter already applied by SpecvizProfileView
+        self.data_menu.layer.add_filter('not_trace')
+        self.data_menu._obj.dataset.add_filter('same_mosviz_row')
 
     def set_plot_axes(self):
         super().set_plot_axes()

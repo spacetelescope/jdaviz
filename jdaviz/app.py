@@ -151,7 +151,8 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-slider': 'components/plugin_slider.vue',
                      'plugin-color-picker': 'components/plugin_color_picker.vue',
                      'plugin-input-header': 'components/plugin_input_header.vue',
-                     'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue'}
+                     'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
+                     'data-menu-add-data': 'components/data_menu_add_data.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')
 

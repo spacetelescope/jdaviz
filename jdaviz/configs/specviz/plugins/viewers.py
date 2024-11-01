@@ -32,6 +32,10 @@ class SpecvizProfileView(JdavizProfileView):
     _state_cls = FreezableProfileViewerState
     _default_profile_subset_type = 'spectral'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.data_menu._obj.dataset.add_filter('is_spectrum')
+
     @property
     def redshift(self):
         return self.jdaviz_helper._redshift

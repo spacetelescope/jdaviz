@@ -160,6 +160,10 @@ class Mosviz(ConfigHelper, LineListMixin):
         self._handle_image_zoom(msg)
         # expose the row to vue for each of the viewers
         self.app.state.settings = {**self.app.state.settings, 'mosviz_row': msg.selected_index}
+        # update data filters in each viewer's data_menu
+        for viewer in self.viewers.values():
+            if data_menu := getattr(viewer._obj, '_data_menu', None):
+                data_menu.dataset._on_data_changed()
 
     def _handle_image_zoom(self, msg):
         mos_data = self.app.data_collection['MOS Table']
