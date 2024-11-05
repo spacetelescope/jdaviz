@@ -15,18 +15,19 @@
       :chips="multiselect"
       item-text="label"
       item-value="label"
-      persistent-hint
+      :persistent-hint="!disable_persistent_hint"
+      :hide-details="disable_persistent_hint"
     >
     <template slot="selection" slot-scope="data">
       <div class="single-line" style="width: 100%">
         <v-chip v-if="multiselect" style="width: calc(100% - 10px)">
           <span>
-            <j-layer-viewer-icon :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+            <j-layer-viewer-icon v-if="data.item.icon" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
             {{ data.item.label }}
           </span>
         </v-chip>
         <span v-else>
-          <j-layer-viewer-icon span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+          <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
           {{ data.item.label }}
         </span>
       </div>
@@ -66,7 +67,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'icons', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled'
+          'api_hint', 'api_hints_enabled', 'disable_persistent_hint'
   ]
 };
 </script>

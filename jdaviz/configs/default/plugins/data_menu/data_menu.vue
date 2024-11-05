@@ -74,12 +74,51 @@
                   </v-btn>
                 </j-tooltip>
               </v-list-item-icon>
-              <v-list-item-content v-if="loaded_n_data > 0">
+              <v-list-item-content
+                v-if="loaded_n_data > 0"
+                style="display: inline-block"
+              >
                 <j-tooltip
-                  tooltipcontent="Change orientation (COMING SOON)"
-                >
-                  orientation
+                  v-if="orientation_enabled"
+                  :tooltipcontent="orientation_align_by_wcs ? 'Open orientation plugin' : 'data is linked by pixel (app-wide).  To choose orientation, open the orientation plugin and link by WCS.'"
+                  span_style="display: inline-block"
+                  >
+                  <span
+                    style="cursor: pointer; display: inline-block; height: 100%; vertical-align: bottom;"
+                    @click="() => {open_orientation_plugin()}"
+                  >
+                    <v-icon style="margin-right: 8px">mdi-compass-outline</v-icon>
+                    <span v-if="!orientation_align_by_wcs">linked by pixel</span>
+                  </span>
                 </j-tooltip>
+                <v-select
+                  v-if="orientation_enabled && orientation_align_by_wcs && orientation_layer_items.length > 0"
+                  dense
+                  :items="orientation_layer_items"
+                  v-model="orientation_layer_selected"
+                  label="Orientation"
+                  item-text="label"
+                  item-value="label"
+                  :hide-details="true"
+                  style="padding-top: 8px !important; display: inline-block; width: 212px"
+                >
+                  <template slot="selection" slot-scope="data">
+                    <div class="single-line" style="width: 100%">
+                      <span>
+                        <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+                        {{ data.item.label }}
+                      </span>
+                    </div>
+                  </template>
+                  <template slot="item" slot-scope="data">
+                    <div class="single-line">
+                      <span>
+                        <j-layer-viewer-icon span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+                        {{ data.item.label }}
+                      </span>
+                    </div>
+                  </template>
+                </v-select>
               </v-list-item-content>
               <v-list-item-content v-else>
                 <span>No data in viewer</span>
