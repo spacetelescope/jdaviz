@@ -201,6 +201,7 @@ class WithCache:
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
+    api_hints_enabled = Bool(False).tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
 
     def __new__(cls, *args, **kwargs):
@@ -234,6 +235,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         self._viewer_callbacks = {}
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
+
+        self.app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
+        self._update_api_hints_enabled()
 
     @property
     def app(self):
@@ -286,6 +290,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         # assumed destroyed, so we do not need to remove the event callback itself from the viewer)
         self._viewer_callbacks = {k: v for k, v in self._viewer_callbacks.items()
                                   if k.split(':')[0] != viewer_id}
+
+    def _update_api_hints_enabled(self, *args):
+        self.api_hints_enabled = self.app.state.show_api_hints
 
 
 def skip_if_no_updates_since_last_active(skip_if_not_active=True):
@@ -403,7 +410,6 @@ class PluginTemplateMixin(TemplateMixin):
     is_active = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to plugin_opened and keep_active
     scroll_to = Bool(False).tag(sync=True)  # noqa once set to True, vue will scroll to the element and reset to False
     spinner = Bool(False).tag(sync=True)  # noqa use along-side @with_spinner() and <plugin-add-results :action_spinner="spinner">
-    api_hints_enabled = Bool(False).tag(sync=True)
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
@@ -426,9 +432,6 @@ class PluginTemplateMixin(TemplateMixin):
         # in repeated toggling of is_active.  To use, decorate any method that observes traitlet
         # changes (including is_active) with @skip_if_no_updates_since_last_active()
         self._methods_skip_since_last_active = []
-
-        app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
-        self._update_api_hints_enabled()
 
         # get default viewer names from the helper, according to the requirements of the plugin
         for registry_name, tray_item in tray_registry.members.items():
@@ -466,9 +469,6 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
-
-    def _update_api_hints_enabled(self, *args):
-        self.api_hints_enabled = self.app.state.show_api_hints
 
     @observe('irrelevant_msg')
     def _irrelevant_msg_changed(self, *args):
