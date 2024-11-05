@@ -186,6 +186,8 @@ class ApplicationState(State):
         True, docstring="State of the plugins drawer.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
+    show_api_hints = CallbackProperty(
+        False, docstring="Whether to show API hints.")
     logger_overlay = CallbackProperty(
         False, docstring="State of the logger history overlay.")
 

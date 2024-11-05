@@ -427,6 +427,9 @@ class PluginTemplateMixin(TemplateMixin):
         # changes (including is_active) with @skip_if_no_updates_since_last_active()
         self._methods_skip_since_last_active = []
 
+        app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
+        self._update_api_hints_enabled()
+
         # get default viewer names from the helper, according to the requirements of the plugin
         for registry_name, tray_item in tray_registry.members.items():
             if tray_item['cls'] == self.__class__:
@@ -463,6 +466,9 @@ class PluginTemplateMixin(TemplateMixin):
         # plugins should override this to pass their own list of expose functionality, which
         # can even be dependent on config, etc.
         return PluginUserApi(self, expose=[])
+
+    def _update_api_hints_enabled(self, *args):
+        self.api_hints_enabled = self.app.state.show_api_hints
 
     @observe('irrelevant_msg')
     def _irrelevant_msg_changed(self, *args):

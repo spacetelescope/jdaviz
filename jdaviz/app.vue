@@ -55,6 +55,11 @@
             <v-icon medium>mdi-help-box</v-icon>
           </v-btn>
         </j-tooltip>
+        <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-api-hints">
+          <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
+            <v-icon medium style="padding-top: 2px">mdi-code-tags</v-icon>
+          </v-btn>
+        </j-tooltip>
         <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-snackbar-history">
           <v-btn icon @click="state.logger_overlay = !state.logger_overlay" :class="{active : state.logger_overlay}">
             <v-icon medium style="padding-top: 2px">mdi-message-reply-text</v-icon>
