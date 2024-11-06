@@ -103,6 +103,9 @@ class Slice(PluginTemplateMixin):
                                    handler=self._on_global_display_unit_changed)
         self._initialize_location()
 
+        self.docs_description = 'The slice can also be changed interactively\
+                                 in the spectrum viewer by activating the slice tool.'
+
     @property
     def _cube_viewer_default_label(self):
         if hasattr(self.app, '_jdaviz_helper') and self.app._jdaviz_helper is not None:

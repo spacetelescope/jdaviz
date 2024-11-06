@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    :description="docs_description || 'Press l to plot line profiles across X and Y under cursor. You can also manually enter X, Y and then click PLOT.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#image-profiles-xy'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"

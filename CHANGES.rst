@@ -62,6 +62,7 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+- Added a short description of each plugin in the side menu, visible before the plugin is opened. [#3268]
 
 4.0.1 (unreleased)
 ==================

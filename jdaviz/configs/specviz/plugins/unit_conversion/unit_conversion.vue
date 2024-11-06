@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Unit Conversion"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Convert the units of displayed physical quantities.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"

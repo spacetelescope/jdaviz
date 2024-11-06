@@ -112,10 +112,17 @@
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
                   <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter)">
-                    <v-expansion-panel-header >
-                      <j-tooltip :tipid="trayItem.name">
-                        {{ trayItem.label }}
-                      </j-tooltip>
+                    <v-expansion-panel-header>
+                      <v-list-item style="display: grid; min-height: 6px">
+                        <v-list-item-title>
+                          <j-tooltip :tipid="trayItem.name">
+                            {{ trayItem.label }}
+                          </j-tooltip>
+                        </v-list-item-title>
+                        <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
+                          {{ trayItem.description }}
+                        </v-list-item-subtitle>
+                      </v-list-item>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px;">
                       <jupyter-widget v-if="state.tray_items_open.includes(index)" :widget="trayItem.widget"></jupyter-widget>

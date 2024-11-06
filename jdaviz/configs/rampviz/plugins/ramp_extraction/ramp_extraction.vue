@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    :description="docs_description || 'Extract a '+resulting_product_name+' from a ramp cube.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#ramp-extraction'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"

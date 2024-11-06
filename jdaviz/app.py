@@ -46,6 +46,7 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 ViewerAddedMessage, ViewerRemovedMessage,
                                 ViewerRenamedMessage, ChangeRefDataMessage,
                                 IconsUpdatedMessage)
+from jdaviz.core.plugin_descriptions import get_plugin_description
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
@@ -2766,10 +2767,14 @@ class Application(VuetifyTemplate, HubListener):
             # plugin itself
             tray_item_label = tray.get('label')
 
+            tray_item_description = get_plugin_description(self.config,
+                                                           tray_item_label)
+
             # NOTE: is_relevant is later updated by observing irrelevant_msg traitlet
             self.state.tray_items.append({
                 'name': name,
                 'label': tray_item_label,
+                'description': tray_item_description,
                 'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })

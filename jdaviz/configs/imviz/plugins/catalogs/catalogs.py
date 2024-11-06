@@ -78,6 +78,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         self.table.item_key = 'id'
         self.table.show_rowselect = True
 
+        self.docs_description = "Queries an area encompassed by the viewer using\
+                                 a specified catalog and marks all the objects\
+                                 found within the area."
+
     @staticmethod
     def _file_parser(path):
         try:

@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Model Fitting"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Fit an analytic model to data or a subset.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#model-fitting'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
