@@ -17,6 +17,7 @@ except ImportError:
 
 __all__ = ['CubevizImageView', 'CubevizProfileView']
 
+
 @viewer_registry("cubeviz-image-viewer", label="Image 2D (Cubeviz)")
 class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
     # categories: zoom resets, (zoom, pan), subset, select tools, shortcuts
@@ -37,7 +38,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         # provide reference from state back to viewer to use for zoom syncing
         self.state._viewer = self
 
@@ -53,7 +54,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.audification_wl_unit = None
         self.volume_level = None
         self.stream_active = True
-        
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.jdaviz_helper._default_spectrum_viewer_reference_name
@@ -104,17 +105,18 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             self.stream.stop()
 
     def update_cube(self, x, y):
-        if not self.audified_cube or not hasattr(self.audified_cube, 'newsig') or not hasattr(self.audified_cube, 'sigcube'):
+        if (not self.audified_cube or not hasattr(self.audified_cube, 'newsig')
+                or not hasattr(self.audified_cube, 'sigcube')):
             return
         self.audified_cube.newsig = self.audified_cube.sigcube[x, y, :]
         self.audified_cube.cbuff = True
 
-    def update_listener_wl_bounds(self, w1,w2):
+    def update_listener_wl_bounds(self, w1, w2):
         if not self.audified_cube:
             return
         self.audified_cube.set_wl_bounds(w1, w2)
 
-    def update_listener_wls(self, w1,w2, wunit):
+    def update_listener_wls(self, w1, w2, wunit):
         if not self.audified_cube:
             return
         self.audification_wl_bounds = (w1, w2)
@@ -137,12 +139,12 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
 
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln):
-        spectrum = self.active_image_layer.layer.get_object(statistic=None)       
+        spectrum = self.active_image_layer.layer.get_object(statistic=None)
         wlens = spectrum.wavelength.to('m').value
         flux = spectrum.flux.value
         self.sample_rate = sample_rate
         self.buffer_size = buffer_size
-        
+
         if self.audification_wl_bounds:
             wl_unit = getattr(u, self.audification_wl_unit)
             si_wl_bounds = (self.audification_wl_bounds * wl_unit).to('m')
@@ -150,7 +152,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
                                  wlens <= si_wl_bounds[1].value)
             wlens = wlens[wdx]
             flux = flux[:, :, wdx]
-            
+
         pc_cube = np.percentile(np.nan_to_num(flux), np.clip(pccut, 0, 99), axis=-1)
 
         # clip zeros and remove NaNs

@@ -22,7 +22,7 @@ def suppress_stderr():
     with open(os.devnull, "w") as devnull:
         old_stderr = sys.stderr
         sys.stderr = devnull
-        try:  
+        try:
             yield
         finally:
             sys.stderr = old_stderr
@@ -42,15 +42,15 @@ def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
                              'equal_loudness_normalisation': eln})
 
     data = {'spectrum': [spec], 'pitch': [1]}
-    
+
     # again, use maximal range for the mapped parameters
     lims = {'spectrum': ('0', '100')}
-    
+
     # set up source
     sources = Events(data.keys())
     sources.fromdict(data)
     sources.apply_mapping_functions(map_lims=lims)
-    
+
     # render and play sonification!
     soni = Sonification(score, sources, generator, system, samprate=srate)
     soni.render()
@@ -80,7 +80,7 @@ class CubeListenerData:
         self.wl_bounds = wl_bounds
         self.wl_unit = wl_unit
         self.wlens = wlens
-        
+
         # control fades
         fade = np.linspace(0, 1, buffsize+1)
         self.ifade = fade[:-1]
@@ -92,16 +92,16 @@ class CubeListenerData:
 
         # do we normalise for equal loudness?
         self.eln = eln
-        
+
         self.idx1 = 0
         self.idx2 = 0
         self.cbuff = False
         self.cursig = np.zeros(self.siglen, dtype='int16')
         self.newsig = np.zeros(self.siglen, dtype='int16')
-        
-        if self.cursig.nbytes * pow(1024,-3) > 2:
+
+        if self.cursig.nbytes * pow(1024, -3) > 2:
             raise Exception("Cube projected to be > 2Gb!")
-            
+
         self.sigcube = np.zeros((*self.cube.shape[:2], self.siglen), dtype='int16')
 
     def set_wl_bounds(self, w1, w2):
@@ -110,7 +110,7 @@ class CubeListenerData:
         """
         wsrt = np.sort([w1, w2])
         self.wl_bounds = tuple(wsrt)
-        
+
     def audify_cube(self):
         """
         Iterate through the cube, convert each spectrum to a signal, and store
@@ -129,7 +129,7 @@ class CubeListenerData:
                 with suppress_stderr():
                     if self.cube[i, j, lo2hi].any():
                         sig = audify_spectrum(self.cube[i, j, lo2hi], self.dur,
-                                              srate=self.srate,  
+                                              srate=self.srate,
                                               fmin=self.audfrqmin,
                                               fmax=self.audfrqmax,
                                               eln=self.eln)
@@ -146,7 +146,7 @@ class CubeListenerData:
         cur = self.cursig
         new = self.newsig
         sdx = int(time.outputBufferDacTime*self.srate)
-        dxs = np.arange(sdx, sdx+frames).astype(int) % self.sigcube.shape[-1]  
+        dxs = np.arange(sdx, sdx+frames).astype(int) % self.sigcube.shape[-1]
         if self.cbuff:
             outdata[:, 0] = (cur[dxs] * self.ofade).astype('int16')
             outdata[:, 0] += (new[dxs] * self.ifade).astype('int16')

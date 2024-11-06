@@ -142,7 +142,7 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         # Use the selected layer from coords_info as long as it's 3D
         coords_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
         if coords_dataset == 'auto':
-           cube_data = self.viewer.active_image_layer.layer
+            cube_data = self.viewer.active_image_layer.layer
         elif coords_dataset == 'none':
             if len(self.viewer.layers):
                 cube_data = self.viewer.layers[0].layer

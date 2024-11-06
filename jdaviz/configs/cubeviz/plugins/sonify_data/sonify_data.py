@@ -53,7 +53,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
         self.flux_viewer = self.app.get_viewer('flux-viewer')
         self.spec_viewer.state.add_callback("x_min", self._update_x_values)
         self.spec_viewer.state.add_callback("x_max", self._update_x_values)
-        
+
     @with_spinner()
     def vue_sonify_cube(self, *args):
         # Get index of selected device
@@ -79,7 +79,8 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
     def update_viewer_range(self, event):
         with delay_callback(self.spec_viewer.state, 'x_min', 'x_max'):
             self.spec_viewer.state.x_min, self.spec_viewer.state.x_max = self.wavemin, self.wavemax
-            self.flux_viewer.update_listener_wls(self.wavemin, self.wavemax, self.spec_viewer.state.x_display_unit)
+            self.flux_viewer.update_listener_wls(self.wavemin, self.wavemax,
+                                                 self.spec_viewer.state.x_display_unit)
 
     @observe('volume')
     def update_volume_level(self, event):
