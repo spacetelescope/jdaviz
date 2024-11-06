@@ -79,6 +79,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
     def update_viewer_range(self, event):
         with delay_callback(self.spec_viewer.state, 'x_min', 'x_max'):
             self.spec_viewer.state.x_min, self.spec_viewer.state.x_max = self.wavemin, self.wavemax
+            self.flux_viewer.update_listener_wls(self.wavemin, self.wavemax, self.spec_viewer.state.x_display_unit)
 
     @observe('volume')
     def update_volume_level(self, event):
