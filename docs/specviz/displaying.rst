@@ -29,19 +29,16 @@ for each button.
 Selecting/Showing Data Sets
 ===========================
 
-Data can be selected and de-selected in each viewer's data menu, opened by clicking the
-|icon-viewer-data-select| button in the top left of the viewer. Here, you can click a
-checkbox next to the listed data to make the data visible (checked) or invisible (unchecked).
-
-.. image:: img/data_tab.png
+Data layers can be toggled in each viewer's data menu, opened by clicking the
+leged in the top right of the viewer. Here, you can click the "eye" icon
+next to the listed data to make the data visible (checked) or invisible (unchecked).
 
 In addition to toggling the visibility of a data layer, the data can be unloaded from a viewer
-by clicking the ``X`` button on the right.  Data unloaded from the viewer will also be excluded
+by clicking on the data row, and selecting "Remove from viewer" in the delete submenu on the
+bottom bar.  Data unloaded from the viewer will also be excluded
 as options from dataset dropdown menus in the various plugins.  Unloaded data will be available
-to re-load into the viewer (by clicking the ``+`` icon) or remove permanently from the app (by
-clicking the trashcan icon) from an expandable section in the data menu:
+to re-load into the viewer (by clicking the ``+`` icon in the top right of the data menu).
 
-.. image:: img/specviz_remove_data.png
 
 .. _specviz_cursor_info:
 
