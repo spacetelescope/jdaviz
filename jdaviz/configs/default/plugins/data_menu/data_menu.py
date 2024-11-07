@@ -76,6 +76,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     delete_enabled = Bool(False).tag(sync=True)
     delete_tooltip = Unicode().tag(sync=True)
+    delete_viewer_tooltip = Unicode().tag(sync=True)
     delete_app_enabled = Bool(False).tag(sync=True)
     delete_app_tooltip = Unicode().tag(sync=True)
 
@@ -248,6 +249,14 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.delete_enabled = True
 
         # delete from entire app rules
+        subset_str = "subset" if self.selected_n_subsets == 1 else "subsets"
+        if self.selected_n_subsets and self.selected_n_data:
+            self.delete_viewer_tooltip = f"Remove selected data and hide selected {subset_str} in this viewer"  # noqa
+        elif self.selected_n_data:
+            self.delete_viewer_tooltip = "Remove selected data from this viewer"
+        elif self.selected_n_subsets:
+            self.delete_viewer_tooltip = f"Hide selected {subset_str} in this viewer"
+
         delete_app_tooltip = "Remove from all viewers and application (permanent, might affect existing subsets)"  # noqa
         if self.app.config == 'cubeviz':
             # forbid deleting non-plugin generated data

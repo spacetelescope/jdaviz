@@ -135,6 +135,7 @@
             <data-menu-remove
               :delete_enabled="delete_enabled"
               :delete_tooltip="delete_tooltip"
+              :delete_viewer_tooltip="delete_viewer_tooltip"
               :delete_app_enabled="delete_app_enabled"
               :delete_app_tooltip="delete_app_tooltip"
               @remove-from-viewer="remove_from_viewer"

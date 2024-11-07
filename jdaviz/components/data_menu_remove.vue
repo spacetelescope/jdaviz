@@ -22,7 +22,9 @@
     <v-list dense style="width: 200px">
       <v-list-item>
         <v-list-item-content>
-          <j-tooltip tooltipcontent="Remove from this viewer only">
+          <j-tooltip
+            :tooltipcontent="delete_viewer_tooltip"
+          >
             <span
               style="cursor: pointer; width: 100%"
               @click="() => {$emit('remove-from-viewer')}"
@@ -54,6 +56,6 @@
 
 <script>
 module.exports = {
-  props: ['delete_enabled', 'delete_tooltip', 'delete_app_enabled', 'delete_app_tooltip'],
+  props: ['delete_enabled', 'delete_tooltip', 'delete_viewer_tooltip', 'delete_app_enabled', 'delete_app_tooltip'],
 };
 </script>
