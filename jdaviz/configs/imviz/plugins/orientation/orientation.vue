@@ -120,7 +120,7 @@
             :icons="icons"
             :show_if_single_entry="true"
             label="Orientation in viewer"
-            api_hint="plg.orientation_layer ="
+            api_hint="plg.orientation ="
             :api_hints_enabled="api_hints_enabled"
             hint="Select the viewer orientation"
           />
