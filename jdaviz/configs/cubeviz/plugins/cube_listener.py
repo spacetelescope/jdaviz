@@ -13,8 +13,6 @@ try:
 except ImportError:
     pass
 
-# some beginner utility functions for STRAUSS + CubeViz
-
 
 @contextmanager
 def suppress_stderr():
@@ -54,8 +52,7 @@ def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
     soni = Sonification(score, sources, generator, system, samprate=srate)
     soni.render()
     soni._make_seamless(overlap)
-    # print(soni.loop_channels)
-    # sd.play(soni.loop_channels['0'].values * 0.5,loop=True)
+
     return soni.loop_channels['0'].values
 
 
@@ -116,12 +113,7 @@ class CubeListenerData:
         in class attributes
         """
         lo2hi = self.wlens.argsort()[::-1]
-        # if self.wl_bounds:
-        #     si_wl_bounds = (self.wl_bounds * getattr(u, self.wl_unit)).to('m')
-        #     wdx = np.logical_and(self.wlens >= si_wl_bounds[0].value,
-        #                          self.wlens <= si_wl_bounds[1].value)
-        #     lo2hi = lo2hi[wdx]
-        #     print (wdx, self.wlens, dir(self.wlens))
+
         t0 = time.time()
         for i in tqdm(range(self.cube.shape[0])):
             for j in range(self.cube.shape[1]):

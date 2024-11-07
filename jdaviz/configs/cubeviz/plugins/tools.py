@@ -97,7 +97,7 @@ class SpectrumPerSpaxel(ProfileFromCube):
         self._is_moving = False
 
     def activate(self):
-        sv_state = self._spectrum_viewer.state
+        sv_state = self._profile_viewer.state
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
         # update listener bounds
         self.viewer.audification_wl_bounds = (sv_state.x_min, sv_state.x_max)
@@ -111,7 +111,7 @@ class SpectrumPerSpaxel(ProfileFromCube):
             self._profile_viewer.state.remove_callback(k, self.on_limits_change)
 
         self.viewer.remove_event_callback(self.on_mouse_move)
-        self._reset_spectrum_viewer_bounds()
+        self._reset_profile_viewer_bounds()
         self.viewer.stop_stream()
         super().deactivate()
 
