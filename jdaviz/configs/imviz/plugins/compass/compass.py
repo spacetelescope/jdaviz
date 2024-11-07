@@ -30,7 +30,7 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     icon = Unicode("").tag(sync=True)
     data_label = Unicode("").tag(sync=True)
     img_data = Unicode("").tag(sync=True)
-    canvas_flip_horizontal = Bool(False).tag(sync=True)  # set by canvas rotation plugin
+    flip_horizontal = Bool(False).tag(sync=True)  # set by canvas rotation plugin
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
