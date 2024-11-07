@@ -6,8 +6,7 @@ import time
 
 try:
     from strauss.sonification import Sonification
-    from strauss.sources import Events, Objects
-    from strauss import channels
+    from strauss.sources import Events
     from strauss.score import Score
     from strauss.generator import Spectralizer
     from tqdm import tqdm

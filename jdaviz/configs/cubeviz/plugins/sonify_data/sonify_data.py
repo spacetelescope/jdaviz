@@ -9,7 +9,7 @@ from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, 
 __all__ = ['SonifyData']
 
 try:
-    import strauss
+    import strauss  # noqa
     import sounddevice as sd
 except ImportError:
     _has_strauss = False
