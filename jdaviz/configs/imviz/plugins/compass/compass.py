@@ -62,8 +62,6 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
             if vid == self.viewer.selected_id:
                 viewer.compass = self
                 viewer.on_limits_change()  # Force redraw
-
-                self._set_compass_rotation()
             else:
                 viewer.compass = None
 
