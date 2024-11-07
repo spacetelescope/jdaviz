@@ -464,6 +464,13 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
+    def reset_app(self):
+        """
+        Re-initialize the entire application. Any current settings and loaded data will
+        be lost.
+        """
+        self.app.load_configuration(self.app._loaded_configuration)
+
     def _handle_display_units(self, data, use_display_units=True):
         if use_display_units:
             if isinstance(data, Spectrum1D):

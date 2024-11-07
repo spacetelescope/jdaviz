@@ -1723,6 +1723,7 @@ class Application(VuetifyTemplate, HubListener):
     def get_viewer_reference_names(self):
         """Return a list of available viewer reference names."""
         # Cannot sort because of None
+
         return [self._viewer_item_by_id(vid).get('reference') for vid in self._viewer_store]
 
     def _update_viewer_reference_name(
@@ -2769,6 +2770,7 @@ class Application(VuetifyTemplate, HubListener):
     def _reset_state(self):
         """ Resets the application state """
         self.state = ApplicationState()
+        self._viewer_store = {}
         self._application_handler._tools = {}
 
     def get_configuration(self, path=None, section=None):
