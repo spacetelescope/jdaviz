@@ -118,7 +118,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                        'orientation_layer_items',
                                        'orientation_layer_selected',
                                        'viewer_id',
-                                        only_wcs_layers=True)
+                                       only_wcs_layers=True)
         self.orientation_enabled = self.config == 'imviz'
 
         # first attach callback to catch any updates to viewer/layer icons and then
@@ -176,7 +176,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def _on_refdata_change(self, msg):
         if msg.viewer_id != self.viewer_id:
             return
-        self.orientation_align_by_wcs = self._viewer.state.reference_data.meta.get('_WCS_ONLY', False)
+        self.orientation_align_by_wcs = self._viewer.state.reference_data.meta.get('_WCS_ONLY', False)  # noqa
         if self.orientation_align_by_wcs:
             with self.during_select_sync():
                 self.orientation.selected = str(self._viewer.state.reference_data.label)
