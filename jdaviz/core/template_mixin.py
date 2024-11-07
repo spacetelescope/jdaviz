@@ -1538,6 +1538,8 @@ class LayerSelect(SelectPluginComponent):
     def _layer_to_dict(self, layer_label):
         is_subset = None
         subset_type = None
+        from_plugin = None
+        live_plugin_results = None
         colors = []
         visibilities = []
         linewidths = []
@@ -1549,6 +1551,10 @@ class LayerSelect(SelectPluginComponent):
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
                         if is_subset:
                             subset_type = get_subset_type(layer.layer)
+                    if from_plugin is None:
+                        from_plugin = layer.layer.data.meta.get('Plugin', None)
+                    if live_plugin_results is None:
+                        live_plugin_results = layer.layer.data.meta.get('_update_live_plugin_results', None) is not None  # noqa
 
                     if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
                             and hasattr(layer.state, 'cmap')):
@@ -1563,6 +1569,8 @@ class LayerSelect(SelectPluginComponent):
         return {"label": layer_label,
                 "is_subset": is_subset,
                 "subset_type": subset_type,
+                "from_plugin": from_plugin,
+                "live_plugin_results": live_plugin_results,
                 "icon": self.app.state.layer_icons.get(layer_label),
                 "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
                 "linewidth": linewidths[0] if len(list(set(linewidths))) == 1 else 'mixed',
@@ -1730,7 +1738,7 @@ class LayerSelect(SelectPluginComponent):
 
         layers = [[layer for layer in viewer.layers
                    if layer.layer.label in selected and self._is_valid_item(layer.layer)]
-                  for viewer in viewers]
+                  for viewer in viewers if viewer is not None]
 
         if not self.is_multiselect and len(layers) == 1:
             return layers[0]

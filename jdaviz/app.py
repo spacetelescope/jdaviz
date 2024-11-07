@@ -133,6 +133,8 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-plugin-popout': 'components/plugin_popout.vue',
                      'j-multiselect-toggle': 'components/multiselect_toggle.vue',
                      'j-subset-icon': 'components/subset_icon.vue',
+                     'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
+                     'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
@@ -152,7 +154,9 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-color-picker': 'components/plugin_color_picker.vue',
                      'plugin-input-header': 'components/plugin_input_header.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
-                     'data-menu-add-data': 'components/data_menu_add_data.vue'}
+                     'data-menu-add-data': 'components/data_menu_add_data.vue',
+                     'data-menu-remove': 'components/data_menu_remove.vue',
+                     'data-menu-subset-edit': 'components/data_menu_subset_edit.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')
 
@@ -2287,7 +2291,7 @@ class Application(VuetifyTemplate, HubListener):
         data_label = event['item_name']
         data = self.data_collection[data_label]
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
-        if orientation_plugin is not None:
+        if orientation_plugin is not None and orientation_plugin.align_by == "WCS":
             from jdaviz.configs.imviz.plugins.orientation.orientation import base_wcs_layer_label
             orient = orientation_plugin.orientation.selected
             if orient == data_label:

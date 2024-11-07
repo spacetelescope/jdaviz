@@ -46,8 +46,10 @@
                 />
               </span>
               <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
-                <j-subset-icon :subset_type="item.subset_type" />
-                {{item.label}}
+                <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
+                <j-child-layer-icon v-if="item.icon.length == 2" :icon="item.icon" />
+                <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                {{ item.label }}
               </span>
             </div>
           </div>
@@ -109,14 +111,9 @@
             <v-list-item-content>
               <span style="display: inline-block">
                 <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                <j-tooltip
-                  v-if="item.icon.length == 2"
-                  :tooltipcontent="'sublayer of '+item.icon[0].toUpperCase()"
-                  span_style="display: inline-block" 
-                >
-                  <v-icon dense>mdi-layers-outline</v-icon>
-                </j-tooltip>
-                {{  item.label }}
+                <j-child-layer-icon v-if="item.icon.length == 2" :icon="item.icon" />
+                <j-plugin-live-results-icon v-if="item.live_plugin_results" />
+                {{ item.label }}
               </span>
             </v-list-item-content>
             <v-list-item-action>
@@ -135,41 +132,39 @@
         </v-list-item-group>
         <v-list-item class="dm-footer">
           <v-list-item-content style="display: inline-block">
+            <data-menu-remove
+              :delete_enabled="delete_enabled"
+              :delete_tooltip="delete_tooltip"
+              :delete_viewer_tooltip="delete_viewer_tooltip"
+              :delete_app_enabled="delete_app_enabled"
+              :delete_app_tooltip="delete_app_tooltip"
+              @remove-from-viewer="remove_from_viewer"
+              @remove-from-app="remove_from_app"
+            />
             <j-tooltip
-              span_style="display: inline-block; float: right"
-              tooltipcontent="Remove data/subset (COMING SOON)"
+              :span_style="'display: inline-block; float: right; ' + (info_enabled ? '' : 'cursor: default;')"
+              :tooltipcontent="info_tooltip"
             >
               <v-btn
                 icon
-                disabled
+                @click="view_info"
+                :disabled="!info_enabled"
               >
-                <v-icon class="invert-if-dark">mdi-delete</v-icon>
-              </v-btn>
-            </j-tooltip>
-            <j-tooltip
-              v-if="dm_layer_selected.length == 1 && layer_items[layer_items.length - 1 - dm_layer_selected[0]].icon.length == 1 && !layer_items[layer_items.length - 1 - dm_layer_selected[0]].is_subset && !layer_items[layer_items.length - 1 - dm_layer_selected[0]].from_plugin"
-              span_style="display: inline-block; float: right"
-              tooltipcontent="View Metadata"
-            >
-              <v-btn
-                icon
-                disabled
-                >
                 <v-icon class="invert-if-dark">mdi-label</v-icon>
               </v-btn>
             </j-tooltip>
-            <j-tooltip
-              span_style="display: inline-block; float: right"
-              tooltipcontent="Edit Selected Subset (COMING SOON)"
-            >
-              <v-btn
-                text
-                disabled
-                class="invert-if-dark"
-              >
-                Edit Subset
-              </v-btn>
-            </j-tooltip>
+            <data-menu-subset-edit
+              :subset_edit_enabled="subset_edit_enabled"
+              :subset_edit_tooltip="subset_edit_tooltip"
+              :selected_n_subsets="selected_n_subsets"
+              :subset_edit_modes="subset_edit_modes"
+              :subset_tools="subset_tools"
+              :subset_selected="layer_selected[0]"
+              @view-info="view_info"
+              @modify-subset="(combination_mode, tool) => {modify_subset({combination_mode: combination_mode,
+                                                                          subset_type: tool});
+                                                          data_menu_open = false}"
+            />
           </v-list-item-content>
         </v-list-item>
       </v-list>
