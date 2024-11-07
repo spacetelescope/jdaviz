@@ -1,4 +1,4 @@
-from traitlets import Bool, Float, Unicode, observe
+from traitlets import Bool, Unicode, observe
 
 from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
