@@ -25,6 +25,7 @@ Specviz2d
 
 API Changes
 -----------
+- Removed API access to plugins that have passed the deprecation period: Links Control, Canvas Rotation, Export Plot. [#3270]
 
 Cubeviz
 ^^^^^^^
