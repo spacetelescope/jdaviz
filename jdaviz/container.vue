@@ -65,7 +65,7 @@
           <jupyter-widget
             :widget="viewer.widget"
             :ref="'viewer-widget-'+viewer.id"
-            :style="'width: 100%; height: 100%; overflow: hidden; transform: rotateY('+viewer_rotateY(viewer.canvas_flip_horizontal)+') rotate('+viewer.canvas_angle+'deg)'"
+            style="width: 100%; height: 100%; overflow: hidden;"
           ></jupyter-widget>
         </v-card>
     </gl-component>
@@ -73,10 +73,6 @@
 </template>
 
 <style>
-  .imviz div.v-card.v-card--flat.v-sheet.v-sheet--tile {
-    /* black background beyond edges of canvas for canvas rotation */
-    background-color: black
-  }
 </style>
 
 <script>
@@ -102,13 +98,6 @@ module.exports = {
        * between a user closing a tab or a re-render. However, when the user closes a tab, the
        * source of the event is a vue component. We can use that distinction as a close signal. */
       source.$root && this.closefn(viewerId);
-    },
-    viewer_rotateY(canvas_flip_horizontal) {
-      if (canvas_flip_horizontal) {
-        return '180deg'
-      } else {
-        return '0deg'
-      }
     }
   },
   computed: {
