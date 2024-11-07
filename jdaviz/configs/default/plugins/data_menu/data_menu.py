@@ -224,6 +224,11 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
         # layer info rules
         if self.selected_n_layers == 1:
+            if max(self.dm_layer_selected) >= len(self.layer_items):  # pragma: no cover
+                # can happen during state transition but should immediately be followed up
+                # with an update
+                self.info_enabled = False
+                self.info_tooltip = ''
             if self.layer_items[self.dm_layer_selected[0]].get('from_plugin', False):
                 self.info_enabled = False
                 self.info_tooltip = 'Selected data layer is a plugin product and does not have metadata'  # noqa
