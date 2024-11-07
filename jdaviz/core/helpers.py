@@ -13,12 +13,10 @@ from inspect import isclass
 
 import numpy as np
 from glue.core import HubListener
-from glue.core.data_collection import DataCollection
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
-from glue_jupyter.app import JupyterApplication
 from ipywidgets.widgets import widget_serialization
 
 import astropy.units as u
