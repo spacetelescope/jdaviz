@@ -13,10 +13,12 @@ from inspect import isclass
 
 import numpy as np
 from glue.core import HubListener
+from glue.core.data_collection import DataCollection
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
+from glue_jupyter.app import JupyterApplication
 from ipywidgets.widgets import widget_serialization
 
 import astropy.units as u
@@ -469,6 +471,20 @@ class ConfigHelper(HubListener):
         Re-initialize the entire application. Any current settings and loaded data will
         be lost.
         """
+        # Remove all data from the data collection
+        data = [d for d in self.app.data_collection]
+        for d in data:
+            self.app.data_collection.remove(d)
+
+        # Remove all subsets from the data collection
+        subsets = [s for s in self.app.data_collection.subset_groups]
+        for s in subsets:
+            self.app.data_collection.remove_subset_group(s)
+
+        # Remove existing subsets from the edit subset menu
+        self.app.session.edit_subset_mode.edit_subset = []
+
+        # Reset everything else
         self.app.load_configuration(self.app._loaded_configuration)
 
     def _handle_display_units(self, data, use_display_units=True):

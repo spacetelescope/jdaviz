@@ -571,6 +571,7 @@ class Application(VuetifyTemplate, HubListener):
             children_layers = self._get_assoc_data_children(layer_name)
 
         elif hasattr(msg, 'subset'):
+            print("Got subset message")
             layer_name = msg.subset.label
             is_wcs_only = False
             is_not_child = True
@@ -2772,6 +2773,12 @@ class Application(VuetifyTemplate, HubListener):
         self.state = ApplicationState()
         self._viewer_store = {}
         self._application_handler._tools = {}
+
+        # Need to re-add callbacks to emit messages when icons are updated
+        self.state.add_callback('viewer_icons',
+                                lambda value: self.hub.broadcast(IconsUpdatedMessage('viewer', value, sender=self)))  # noqa
+        self.state.add_callback('layer_icons',
+                                lambda value: self.hub.broadcast(IconsUpdatedMessage('layer', value, sender=self)))  # noqa
 
     def get_configuration(self, path=None, section=None):
         """Returns a copy of the application configuration.
