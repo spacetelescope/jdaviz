@@ -109,8 +109,6 @@ class SpectrumPerSpaxel(ProfileFromCube):
     def deactivate(self):
         for k in ("y_min", "y_max"):
             self._profile_viewer.state.remove_callback(k, self.on_limits_change)
-
-        self.viewer.remove_event_callback(self.on_mouse_move)
         self._reset_profile_viewer_bounds()
         self.viewer.stop_stream()
         super().deactivate()
