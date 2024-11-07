@@ -67,6 +67,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     dm_layer_selected = List().tag(sync=True)
 
+    loaded_n_data = Integer(0).tag(sync=True)
     selected_n_layers = Integer(0).tag(sync=True)
     selected_n_data = Integer(0).tag(sync=True)
     selected_n_subsets = Integer(0).tag(sync=True)
@@ -135,12 +136,6 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     def existing_subset_labels(self):
         return [sg.label for sg in self.app.data_collection.subset_groups]
 
-    @observe('layer_items')
-    def _update_data_not_in_viewer(self, msg):
-        # changing the layers in the viewer needs to trigger an update to dataset_items
-        # through the set filters
-        self.dataset._on_data_changed()
-
     def _set_viewer_id(self):
         # viewer_ids are not populated on the viewer at init, so we'll keep checking and set
         # these the first time that they are available
@@ -180,7 +175,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             # not possible from UI interaction, but instead caused by a selected
             # layer being removed (deleting a selected subset, etc).  We want
             # to update dm_layer_selected in order to preserve layer.selected
-            self._update_dm_layer_selected(event)
+            self._layers_changed(event)
             return
         with self.during_select_sync():
             # map index in dm_layer_selected (inverse order of layer_items)
@@ -190,7 +185,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                                    for i in self.dm_layer_selected]
 
     @observe('layer_selected', 'layer_items')
-    def _update_dm_layer_selected(self, event={}):
+    def _layers_changed(self, event={}):
         if not hasattr(self, 'layer') or not self.layer.multiselect:  # pragma: no cover
             return
         if not self._during_select_sync:
@@ -200,13 +195,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 self.dm_layer_selected = [layer_labels.index(label) for label in self.layer.selected
                                           if label in layer_labels]
 
+        subset_labels = self.existing_subset_labels
+
         if event.get('name') == 'layer_items':
-            # don't need to make the updates below unless the selection has been changed
+            # changing the layers in the viewer needs to trigger an update to dataset_items
+            # through the set filters
+            self.dataset._on_data_changed()
+            self.loaded_n_data = len([lyr for lyr in self.layer.choices
+                                      if lyr not in subset_labels])
             return
 
         # update internal counts and tooltips
         self.selected_n_layers = len(self.layer.selected)
-        subset_labels = self.existing_subset_labels
         self.selected_n_subsets = len([lyr for lyr in self.layer.selected if lyr in subset_labels])
         self.selected_n_data = self.selected_n_layers - self.selected_n_subsets
 
@@ -229,7 +229,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                 # with an update
                 self.info_enabled = False
                 self.info_tooltip = ''
-            if self.layer_items[self.dm_layer_selected[0]].get('from_plugin', False):
+            elif self.layer_items[self.dm_layer_selected[0]].get('from_plugin', False):
                 self.info_enabled = False
                 self.info_tooltip = 'Selected data layer is a plugin product and does not have metadata'  # noqa
             else:

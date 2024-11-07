@@ -61,9 +61,7 @@
         </div>
 
         <v-card tile flat style="flex: 1; margin-top: -2px; overflow: hidden;">
-          <div class="viewer-label-container">
-            <jupyter-widget :widget="viewer.data_menu"></jupyter-widget>
-          </div>
+          <jupyter-widget :widget="viewer.data_menu"></jupyter-widget>
           <jupyter-widget
             :widget="viewer.widget"
             :ref="'viewer-widget-'+viewer.id"
@@ -75,12 +73,6 @@
 </template>
 
 <style>
-  .viewer-label-container {
-    position: absolute;
-    right: 0;
-    z-index: 1;
-    width: 24px;
-  }
   .imviz div.v-card.v-card--flat.v-sheet.v-sheet--tile {
     /* black background beyond edges of canvas for canvas rotation */
     background-color: black
