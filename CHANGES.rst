@@ -4,7 +4,10 @@
 New Features
 ------------
 
-* New design for viewer legend. [#3220, #3254, #3263]
+-  New design for viewer legend. [#3220, #3254, #3263]
+
+- Helper classes (Imviz, Specviz, etc) now have ``reset_app`` method to reset the
+  application to a fresh state. [#3273]
 
 Cubeviz
 ^^^^^^^
@@ -74,7 +77,7 @@ Bug Fixes
 - Fixed Aperture Photometry radial profile fit crashing when NaN is present in
   aperture data for Cubeviz and Imviz. [#3246]
 
-- Prevent PluginMarks from converting y-range so they maintain their position 
+- Prevent PluginMarks from converting y-range so they maintain their position
   in the spectrum-viewer when spectral y units are converted. [#3242]
 
 Cubeviz
