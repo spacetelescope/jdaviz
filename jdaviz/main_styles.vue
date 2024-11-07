@@ -268,7 +268,7 @@ a:active {
 }
 
 span.api-hint, span.api-hint-header {
-  color: #c75109 !important;
+  color: #007BA1 !important;
   font-family: monospace;
   font-size: 12px;  
 }
@@ -278,7 +278,7 @@ span.api-hint-header {
 }
 
 .api-hint :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
-    color: #c75109 !important;
+    color: #007BA1 !important;
     font-family: monospace;
     font-size: 10px !important;
     overflow-wrap: break-word;
@@ -291,13 +291,13 @@ span.api-hint-header {
 
 
 .api-hint .v-alert__content, .api-hint.slider-label {
-  color: #c75109 !important;
+  color: #007BA1 !important;
   font-family: monospace;
   font-size: 10px !important;
 }
 
 .api-hint.v-btn {
-  color: #c75109 !important;
+  color: #007BA1 !important;
   font-family: monospace !important;
   font-size: 12px !important;
   overflow-wrap: break-word;
