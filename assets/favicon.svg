@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" width="77.35" height="77.35" viewBox="0 0 77.35 77.35">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: #0a6382;
+      }
+    </style>
+  </defs>
+  <circle class="cls-2" cx="38.68" cy="38.68" r="38.67"/>
+  <polygon class="cls-1" points="41.28 41.73 20.48 51.71 20.16 26.69 40.12 15.88 41.28 41.73"/>
+  <ellipse class="cls-2" cx="25.75" cy="33.21" rx="2.07" ry=".58" transform="translate(-15.73 39.96) rotate(-61.45)"/>
+  <ellipse class="cls-2" cx="25.75" cy="33.21" rx=".6" ry="1.83" transform="translate(-15.73 39.96) rotate(-61.45)"/>
+  <ellipse class="cls-2" cx="34.92" cy="34.88" rx="3.2" ry="1.02" transform="translate(-7.04 8.9) rotate(-13.2)"/>
+  <ellipse class="cls-2" cx="34.92" cy="34.88" rx="1.06" ry="3.25" transform="translate(-7.04 8.9) rotate(-13.2)"/>
+  <ellipse class="cls-2" cx="25.06" cy="44.03" rx=".34" ry="1.36" transform="translate(-25.36 48.9) rotate(-65.87)"/>
+  <ellipse class="cls-2" cx="25.05" cy="44.05" rx="1.1" ry=".36" transform="translate(-25.39 48.9) rotate(-65.87)"/>
+  <ellipse class="cls-2" cx="32.99" cy="27.09" rx=".41" ry="1.29" transform="translate(-9.27 33.08) rotate(-47.46)"/>
+  <ellipse class="cls-2" cx="32.99" cy="27.09" rx="1.59" ry=".43" transform="translate(-9.27 33.08) rotate(-47.46)"/>
+  <ellipse class="cls-2" cx="27.69" cy="27.99" rx=".29" ry=".91" transform="translate(-11.65 29.46) rotate(-47.46)"/>
+  <ellipse class="cls-2" cx="27.69" cy="27.99" rx=".92" ry=".3" transform="translate(-11.65 29.46) rotate(-47.46)"/>
+  <ellipse class="cls-2" cx="28.57" cy="39.09" rx=".34" ry="1.08" transform="translate(-18.18 26.48) rotate(-38.74)"/>
+  <ellipse class="cls-2" cx="28.57" cy="39.09" rx="1.1" ry=".36" transform="translate(-18.18 26.48) rotate(-38.74)"/>
+  <path class="cls-1" d="m29.4,56.57c-.92-.03-1.65-.8-1.62-1.72.02-.6.36-1.15.9-1.43l18-8.24-.86-22.52c-.06-.92.64-1.71,1.56-1.77h0c.9-.08,1.69.58,1.77,1.48,0,0,0,.01,0,.02,0,.04,0,.07,0,.11l.85,23.69c.01.68-.38,1.3-1,1.58l-19,8.66c-.19.09-.39.14-.6.14Z"/>
+  <path class="cls-1" d="m41.1,60.89c-.92,0-1.67-.75-1.68-1.67,0-.63.35-1.2.91-1.48l15.16-7.62-.76-20.22c-.03-.92.7-1.69,1.62-1.72,0,0,0,0,0,0h0c.9,0,1.65.7,1.69,1.6l.78,21.28c.03.65-.33,1.26-.91,1.55l-16.1,8.1c-.22.12-.46.18-.71.18Z"/>
+</svg>

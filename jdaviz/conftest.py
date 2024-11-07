@@ -14,7 +14,7 @@ from astropy.nddata import CCDData, StdDevUncertainty
 from astropy.wcs import WCS
 from specutils import Spectrum1D, SpectrumCollection, SpectrumList
 
-from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d
+from jdaviz import __version__, Cubeviz, Imviz, Mosviz, Specviz, Specviz2d, Rampviz
 from jdaviz.configs.imviz.tests.utils import create_wfi_image_model
 from jdaviz.configs.imviz.plugins.parsers import HAS_ROMAN_DATAMODELS
 from jdaviz.utils import NUMPY_LT_2_0
@@ -48,6 +48,57 @@ def specviz_helper():
 @pytest.fixture
 def specviz2d_helper():
     return Specviz2d()
+
+
+@pytest.fixture
+def rampviz_helper():
+    return Rampviz()
+
+
+@pytest.fixture
+def roman_level_1_ramp():
+    from roman_datamodels.maker_utils import mk_datamodel
+    from roman_datamodels.datamodels import RampModel
+    rng = np.random.default_rng(seed=42)
+
+    shape = (10, 25, 25)
+    data_model = mk_datamodel(RampModel, shape=shape, dq=False)
+
+    data_model.data = u.Quantity(
+        100 + 3 * np.cumsum(rng.uniform(size=shape), axis=0), u.DN
+    )
+    return data_model
+
+
+def _make_jwst_ramp(shape=(1, 10, 25, 25)):
+    from stdatamodels.jwst.datamodels import Level1bModel
+
+    rng = np.random.default_rng(seed=42)
+
+    # JWST Level 1b ramp files have an additional preceding dimension
+    # compared with Roman. This dimension is the integration number
+    # in a sequence (if there's more than one in the visit).
+    data_model = Level1bModel(shape)
+    data_model.data = 100 + 3 * np.cumsum(rng.uniform(size=shape), axis=0)
+
+    return data_model
+
+
+@pytest.fixture
+def jwst_level_1b_ramp():
+    return _make_jwst_ramp()
+
+
+@pytest.fixture
+def jwst_level_1b_rectangular_ramp():
+    return _make_jwst_ramp(shape=(1, 10, 32, 25))
+
+
+@pytest.fixture
+def jwst_level_2c_rate_image():
+    flux_hdu = fits.ImageHDU(np.ones((32, 25)))
+    flux_hdu.name = 'FLUX'
+    return fits.HDUList([fits.PrimaryHDU(), flux_hdu])
 
 
 @pytest.fixture
@@ -246,8 +297,8 @@ def spectrum1d_cube_largest():
                 "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
                 "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0}
     w = WCS(wcs_dict)
-    flux = np.zeros((30, 20, 3001), dtype=np.float32)  # nx=20 ny=30 nz=3001
-    flux[5:15, 1:11, :] = 1  # Bright corner
+    flux = np.zeros((20, 30, 3001), dtype=np.float32)  # nx=20 ny=30 nz=3001
+    flux[1:11, 5:15, :] = 1  # Bright corner
     return Spectrum1D(flux=flux * u.Jy, wcs=w, meta=wcs_dict)
 
 
@@ -260,6 +311,13 @@ def spectrum1d_cube_custom_fluxunit():
 def spectrum1d_cube_fluxunit_jy_per_steradian():
     return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy/u.sr, shape=(10, 4, 5),
                                                  with_uncerts=True)
+
+
+@pytest.fixture
+def spectrum1d_cube_sb_unit():
+    # similar fixture to spectrum1d_cube_fluxunit_jy_per_steradian, but no uncerts
+    # and different shape. can probably remove one of these eventually
+    return _create_spectrum1d_cube_with_fluxunit(fluxunit=u.Jy / u.sr)
 
 
 @pytest.fixture
@@ -402,7 +460,7 @@ def pytest_configure(config):
     PYTEST_HEADER_MODULES['ipysplitpanes'] = 'ipysplitpanes'
     PYTEST_HEADER_MODULES['ipygoldenlayout'] = 'ipygoldenlayout'
     PYTEST_HEADER_MODULES['ipypopout'] = 'ipypopout'
-    PYTEST_HEADER_MODULES['voila'] = 'voila'
+    PYTEST_HEADER_MODULES['solara'] = 'solara'
     PYTEST_HEADER_MODULES['vispy'] = 'vispy'
     PYTEST_HEADER_MODULES['gwcs'] = 'gwcs'
     PYTEST_HEADER_MODULES['asdf'] = 'asdf'

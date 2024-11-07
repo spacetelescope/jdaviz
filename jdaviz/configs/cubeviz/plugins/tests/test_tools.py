@@ -1,11 +1,10 @@
 import pytest
 import numpy as np
-from echo import delay_callback
+from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion
 
 
-@pytest.mark.filterwarnings('ignore:No observer defined on WCS')
-def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube_with_uncerts):
+def test_spectrum_at_spaxel_no_alt(cubeviz_helper, spectrum1d_cube_with_uncerts):
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
@@ -19,6 +18,8 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert len(flux_viewer.native_marks) == 2
     assert len(spectrum_viewer.data()) == 1
 
+    assert_allclose(spectrum_viewer.get_limits(), (4.6228e-07, 4.6236e-07, 28, 92))
+
     # Move to spaxel location
     flux_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mousemove', 'domain': {'x': x, 'y': y}, 'altKey': False})
@@ -30,6 +31,11 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube_with_uncerts):
         {'event': 'click', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert len(flux_viewer.native_marks) == 3
     assert len(spectrum_viewer.data()) == 2
+
+    assert_allclose(spectrum_viewer.get_limits(),
+                    (4.6228e-07, 4.6236e-07, 4, 15.6))  # Zoomed to spaxel
+    spectrum_viewer.set_limits(
+        x_min=4.623e-07, x_max=4.6232e-07, y_min=42, y_max=88)  # Zoom in X and Y
 
     # Check that a new subset was created
     subsets = cubeviz_helper.app.get_subsets()
@@ -46,6 +52,9 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube_with_uncerts):
     flux_viewer.toolbar.active_tool.on_mouse_move(
         {'event': 'mouseleave', 'domain': {'x': x, 'y': y}, 'altKey': False})
     assert flux_viewer.toolbar.active_tool._mark.visible is False
+
+    # Check that zoom in both X and Y is kept.
+    assert_allclose(spectrum_viewer.get_limits(), (4.623e-07, 4.6232e-07, 42, 88))
 
     # Deselect tool
     flux_viewer.toolbar.active_tool = None
@@ -68,8 +77,22 @@ def test_spectrum_at_spaxel(cubeviz_helper, spectrum1d_cube_with_uncerts):
     assert uncert_viewer.toolbar.active_tool._mark.visible is True
 
 
-def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
-    cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+@pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
+def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube,
+                                        spectrum1d_cube_sb_unit, cube_type):
+
+    # test is parameterize to test a cube that is in Jy / sr (Surface Brightness)
+    # as well as Jy (Flux), to test that flux cubes, which are converted in the
+    # parser to flux / pix^2 surface brightness cubes, both work correctly.
+
+    if cube_type == 'Surface Brightness':
+        cube = spectrum1d_cube_sb_unit
+        cube_unit = 'Jy / sr'
+    elif cube_type == 'Flux':
+        cube = spectrum1d_cube
+        cube_unit = 'Jy / pix2'
+
+    cubeviz_helper.load_data(cube, data_label='test')
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
     uncert_viewer = cubeviz_helper.app.get_viewer("uncert-viewer")
@@ -87,10 +110,10 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     assert flux_viewer.slice == 1
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
-                                        {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
-    assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.30000e+01 Jy',
-                                         'World 13h39m59.9461s +27d00m00.7200s (ICRS)',
-                                         '204.9997755344 27.0001999998 (deg)')
+                                        {'event': 'mousemove', 'domain': {'x': 2, 'y': 1}})
+    assert label_mouseover.as_text() == (f'Pixel x=02.0 y=01.0 Value +1.40000e+01 {cube_unit}',
+                                         'World 13h39m59.9192s +27d00m00.7200s (ICRS)',
+                                         '204.9996633015 27.0001999996 (deg)')
 
     # Click on spaxel location
     x = 1
@@ -122,7 +145,7 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     # Make sure coordinate info panel did not change
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1, 'y': 1}})
-    assert label_mouseover.as_text() == ('Pixel x=01.0 y=01.0 Value +1.30000e+01 Jy',
+    assert label_mouseover.as_text() == (f'Pixel x=01.0 y=01.0 Value +1.30000e+01 {cube_unit}',
                                          'World 13h39m59.9461s +27d00m00.7200s (ICRS)',
                                          '204.9997755344 27.0001999998 (deg)')
 
@@ -130,13 +153,11 @@ def test_spectrum_at_spaxel_altkey_true(cubeviz_helper, spectrum1d_cube):
     t_linkedpan = flux_viewer.toolbar.tools['jdaviz:pixelpanzoommatch']
     t_linkedpan.activate()
     # TODO: When Cubeviz uses Astrowidgets, can just use center_on() for this part.
-    with delay_callback(flux_viewer.state, 'x_min', 'x_max', 'y_min', 'y_max'):
-        flux_viewer.state.x_min = 20
-        flux_viewer.state.y_min = 15
-        flux_viewer.state.x_max = 40
-        flux_viewer.state.y_max = 35
+    flux_viewer.set_limits(x_min=20, x_max=40, y_min=15, y_max=35)
     v = uncert_viewer
-    assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (20, 40, 15, 35)
+    assert v.state.zoom_center_x == flux_viewer.state.zoom_center_x
+    assert v.state.zoom_center_y == flux_viewer.state.zoom_center_y
+    assert v.state.zoom_radius == flux_viewer.state.zoom_radius
     t_linkedpan.deactivate()
 
 

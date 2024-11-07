@@ -24,7 +24,7 @@ class BaseLinkHandler:
         assert all([isinstance(link, (AffineLink, OffsetLink)) for link in links])
 
     def test_pixel_linking(self):
-        self.imviz.link_data(link_type='pixels')
+        self.imviz.link_data(align_by='pixels')
         self.check_all_pixel_links()
 
     @property
@@ -38,9 +38,9 @@ class BaseLinkHandler:
 class TestLink_WCS_NoWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
     def test_wcslink_fallback_pixels(self):
-        self.imviz.link_data(link_type='wcs')
+        self.imviz.link_data(align_by='wcs')
 
-        assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'wcs'
+        assert self.viewer.get_alignment_method('has_wcs[SCI,1]') == 'wcs'
 
         # Also check the coordinates display: Last loaded is on top.
 
@@ -63,8 +63,8 @@ class TestLink_WCS_FakeWCS(BaseImviz_WCS_NoWCS, BaseLinkHandler):
 
         self.check_all_pixel_links()
 
-        assert self.viewer.get_link_type('has_wcs[SCI,1]') == 'self'
-        assert self.viewer.get_link_type('no_wcs[SCI,1]') == 'pixels'
+        assert self.viewer.get_alignment_method('has_wcs[SCI,1]') == 'self'
+        assert self.viewer.get_alignment_method('no_wcs[SCI,1]') == 'pixels'
 
         # Also check the coordinates display: Last loaded is on top.
 
@@ -88,11 +88,11 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
         orig_pixel_limits = self.default_viewer_limits
         assert_allclose(orig_pixel_limits, (-0.5, 9.5, -0.5, 9.5))
 
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None)
+        self.imviz.link_data(align_by='wcs', wcs_fallback_scheme=None)
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 2
         assert isinstance(links[0], (AffineLink, OffsetLink))
-        assert self.viewer.get_link_type('has_wcs_2[SCI,1]') == 'wcs'
+        assert self.viewer.get_alignment_method('has_wcs_2[SCI,1]') == 'wcs'
 
         # Customize display on second image (last loaded).
         self.viewer.set_colormap('Viridis')
@@ -101,7 +101,8 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Add subsets, both interactive and static.
         self.imviz._apply_interactive_region('bqplot:truecircle', (1.5, 2.5), (3.6, 4.6))
-        self.imviz.load_regions([
+        self.imviz.plugins['Subset Tools']._obj.combination_mode.selected = 'new'
+        self.imviz.plugins['Subset Tools']._obj.import_region([
             CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5).to_sky(self.wcs_1),
             PolygonPixelRegion(vertices=PixCoord(x=[1, 2, 2], y=[1, 1, 2])).to_sky(self.wcs_1),
             PolygonPixelRegion(vertices=PixCoord(x=[2, 3, 3], y=[2, 2, 3])).to_sky(self.wcs_1)])
@@ -159,37 +160,38 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Changing link type will raise an error
         with pytest.raises(ValueError, match=".*only be changed after existing subsets are deleted"):  # noqa: E501
-            self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None)
+            self.imviz.link_data(align_by='pixels', wcs_fallback_scheme=None)
 
         self.viewer.reset_markers()
         self.imviz.plugins["Orientation"].delete_subsets()
-        self.imviz.link_data(link_type='pixels', wcs_fallback_scheme=None)
+        self.imviz.link_data(align_by='pixels', wcs_fallback_scheme=None)
         assert 'xy_markers' not in self.imviz.app.data_collection.labels
         assert len(self.viewer._marktags) == 0
 
     def test_wcslink_fullblown(self):
-        self.imviz.link_data(link_type='wcs', wcs_fallback_scheme=None, wcs_use_affine=False)
+        self.imviz.link_data(align_by='wcs', wcs_fallback_scheme=None,
+                             wcs_fast_approximation=False)
         links = self.imviz.app.data_collection.external_links
         assert len(links) == 2
         assert isinstance(links[0], WCSLink)
-        assert self.viewer.get_link_type('has_wcs_1[SCI,1]') == 'wcs'
-        assert self.viewer.get_link_type('has_wcs_2[SCI,1]') == 'wcs'
+        assert self.viewer.get_alignment_method('has_wcs_1[SCI,1]') == 'wcs'
+        assert self.viewer.get_alignment_method('has_wcs_2[SCI,1]') == 'wcs'
 
     # Also test other exception handling here.
 
     def test_invalid_inputs(self):
         with pytest.raises(KeyError):
-            self.imviz.link_data(link_type='foo')
+            self.imviz.link_data(align_by='foo')
 
         with pytest.raises(ValueError, match='not found in data collection external links'):
-            self.viewer.get_link_type('foo')
+            self.viewer.get_alignment_method('foo')
 
 
 class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
 
     def test_wcslink_rotated(self):
         # FITS WCS will be reference, GWCS is rotated, no_wcs linked by pixel to ref.
-        self.imviz.link_data(link_type='wcs')
+        self.imviz.link_data(align_by='wcs')
 
         # The zoom box for GWCS is now a rotated rombus.
         fits_wcs_zoom_limits = self.viewer._get_zoom_limits(
@@ -263,7 +265,7 @@ class TestLink_WCS_GWCS(BaseImviz_WCS_GWCS):
 class TestLink_GWCS_GWCS(BaseImviz_GWCS_GWCS):
 
     def test_pixel_linking(self):
-        self.imviz.link_data(link_type='pixels')
+        self.imviz.link_data(align_by='pixels')
 
         # Check the coordinates display: Last loaded is on top.
         label_mouseover = self.imviz.app.session.application._tools['g-coords-info']
@@ -300,4 +302,4 @@ def test_imviz_no_data(imviz_helper):
     assert len(links) == 0
 
     with pytest.raises(ValueError, match='No reference data for link look-up'):
-        imviz_helper.default_viewer._obj.get_link_type('foo')
+        imviz_helper.default_viewer._obj.get_alignment_method('foo')

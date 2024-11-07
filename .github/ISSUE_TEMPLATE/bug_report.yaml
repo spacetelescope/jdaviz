@@ -93,7 +93,7 @@ body:
         import ipygoldenlayout; print("ipygoldenlayout", ipygoldenlayout.__version__)
         import ipypopout; print("ipypopout", ipypopout.__version__)
         import jinja2; print("Jinja2", jinja2.__version__)
-        import voila; print("voila", voila.__version__)
+        import solara; print("solara", solara.__version__)
         import vispy; print("vispy", vispy.__version__)
         import sidecar; print("sidecar", sidecar.__version__)
         import jdaviz; print("Jdaviz", jdaviz.__version__)

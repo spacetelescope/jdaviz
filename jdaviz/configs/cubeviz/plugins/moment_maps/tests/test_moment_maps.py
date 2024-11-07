@@ -1,23 +1,31 @@
-import os
 import warnings
 from pathlib import Path
 
 import numpy as np
 import pytest
 from astropy import units as u
-from astropy.io import fits
 from astropy.nddata import CCDData
+from astropy.tests.helper import assert_quantity_allclose
 from astropy.wcs import WCS
-from glue.core.roi import XRangeROI
 from numpy.testing import assert_allclose
+from specutils import SpectralRegion
 
-from jdaviz.configs.cubeviz.plugins.moment_maps.moment_maps import SPECUTILS_LT_1_15_1
 
+@pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
+def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube_type):
 
-def test_user_api(cubeviz_helper, spectrum1d_cube):
+    # test is parameterize to test a cube that is in Jy / sr (Surface Brightness)
+    # as well as Jy (Flux), to test that flux cubes, which are converted in the
+    # parser to flux / pix^2 surface brightness cubes, both work correctly.
+
+    if cube_type == 'Surface Brightness':
+        cube = spectrum1d_cube_sb_unit
+    elif cube_type == 'Flux':
+        cube = spectrum1d_cube
+
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+        cubeviz_helper.load_data(cube, data_label='test')
 
     mm = cubeviz_helper.plugins['Moment Maps']
     assert not mm._obj.continuum_marks['center'].visible
@@ -45,23 +53,33 @@ def test_user_api(cubeviz_helper, spectrum1d_cube):
         mm.n_moment = 1
         with pytest.raises(ValueError, match="not one of"):
             mm._obj.output_unit_selected = "Bad Unit"
-        mm._obj.output_unit_selected = "Flux"
+        mm._obj.output_unit_selected = "Surface Brightness"
         with pytest.raises(ValueError, match="units must be in"):
             mm.calculate_moment()
 
 
-def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
-    if SPECUTILS_LT_1_15_1:
-        moment_unit = "Jy"
-        moment_value_str = "+8.00000e+00"
-    else:
-        moment_unit = "Jy m"
-        moment_value_str = "+6.40166e-10"
+@pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
+def test_moment_calculation(cubeviz_helper, spectrum1d_cube,
+                            spectrum1d_cube_sb_unit, cube_type, tmp_path):
+
+    moment_unit = "Jy m"
+    moment_value_str = "+6.40166e-10"
+
+    if cube_type == 'Surface Brightness':
+        moment_unit += " / sr"
+        cube = spectrum1d_cube_sb_unit
+        cube_unit = cube.unit.to_string()
+
+    elif cube_type == 'Flux':
+        moment_unit += " / pix2"
+        cube = spectrum1d_cube
+        cube_unit = cube.unit.to_string() + " / pix2"  # cube in Jy will become cube in Jy / pix2
 
     dc = cubeviz_helper.app.data_collection
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
-        cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
+        cubeviz_helper.load_data(cube, data_label='test')
+
     flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
 
     # Since we are not really displaying, need this to trigger GUI stuff.
@@ -73,7 +91,9 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
 
     mm.n_moment = 0  # Collapsed sum, will get back 2D spatial image
     assert mm._obj.results_label == 'moment 0'
-    assert mm.output_unit == "Flux"
+
+    # result is always a SB unit - if flux cube loaded, per pix2
+    assert mm.output_unit == 'Surface Brightness'
 
     mm._obj.add_results.viewer.selected = cubeviz_helper._default_uncert_viewer_reference_name
     mm._obj.vue_calculate_moment()
@@ -93,13 +113,13 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     assert mm._obj.results_label == 'moment 0'
     assert mm._obj.results_label_overwrite is True
 
-    # Make sure coordinate display works
+    # Make sure coordinate display works in flux viewer (loaded data, not the moment map)
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer, {'event': 'mousemove',
                                                       'domain': {'x': 0, 'y': 0}})
     assert flux_viewer.state.slices == (0, 0, 1)
     # Slice 0 has 8 pixels, this is Slice 1
-    assert label_mouseover.as_text() == ("Pixel x=00.0 y=00.0 Value +8.00000e+00 Jy",
+    assert label_mouseover.as_text() == (f"Pixel x=00.0 y=00.0 Value +8.00000e+00 {cube_unit}",
                                          "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
                                          "204.9998877673 27.0001000000 (deg)")
 
@@ -109,7 +129,7 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
     )
 
     result = dc[-1].get_object(cls=CCDData)
-    assert result.shape == (4, 2)  # Cube shape is (2, 2, 4)
+    assert result.shape == (2, 4)  # Cube shape is (2, 2, 4), moment transposes
     assert isinstance(dc[-1].coords, WCS)
 
     # Make sure coordinate display now show moment map info (no WCS)
@@ -121,11 +141,6 @@ def test_moment_calculation(cubeviz_helper, spectrum1d_cube, tmp_path):
         f"Pixel x=00.0 y=00.0 Value {moment_value_str} {moment_unit}",
         "World 13h39m59.9731s +27d00m00.3600s (ICRS)",
         "204.9998877673 27.0001000000 (deg)")
-
-    assert mm._obj.filename == 'moment0_test_FLUX.fits'  # Auto-populated on calculate.
-    mm._obj.filename = str(tmp_path / mm._obj.filename)  # But we want it in tmp_path for testing.
-    mm._obj.vue_save_as_fits()
-    assert os.path.isfile(mm._obj.filename)
 
     mm._obj.n_moment = 1
     mm._obj.output_unit_selected = "Spectral Unit"
@@ -212,8 +227,10 @@ def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger
 
     uc = cubeviz_helper.plugins['Unit Conversion']
     mm = cubeviz_helper.plugins['Moment Maps']
-    viewer = cubeviz_helper.app.get_viewer('spectrum-viewer')
-    viewer.apply_roi(XRangeROI(4.624e-07, 4.627e-07))
+
+    unit = u.Unit(uc.spectral_unit.selected)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(SpectralRegion(4.624e-07 * unit,
+                                                                             4.627e-07 * unit))
 
     uc.spectral_unit = 'Hz'
     mm.spectral_subset = 'Subset 1'
@@ -221,9 +238,12 @@ def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger
     mm.n_moment = 1
     mm.output_unit = 'Spectral Unit'
     moment_1_data = mm.calculate_moment()
+    mm.n_moment = 0
+    moment_0_data = mm.calculate_moment()
 
     # Check to make sure there are no nans
     assert len(np.where(moment_1_data.data > 0)[0]) == 8
+    assert_quantity_allclose(moment_0_data, -2.9607526e+09*u.Unit("Hz Jy / pix2"))
 
 
 def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
@@ -231,7 +251,6 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
 
     # Simulate an existing file on disk to check for overwrite warning
     test_file = tmp_path / "test_file.fits"
-    test_file_str = str(test_file)
     existing_sentinel_text = "This is a simulated, existing file on disk"
     test_file.write_text(existing_sentinel_text)
 
@@ -239,34 +258,15 @@ def test_write_momentmap(cubeviz_helper, spectrum1d_cube, tmp_path):
         warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
         cubeviz_helper.load_data(spectrum1d_cube, data_label='test')
     plugin = cubeviz_helper.plugins['Moment Maps']
-    moment = plugin.calculate_moment()
+    plugin.calculate_moment()
 
-    # By default, we shouldn't be warning the user of anything
-    assert plugin._obj.overwrite_warn is False
-
-    # Attempt to write the moment map to the same file we created earlier.
-    plugin._obj.filename = test_file_str
-    plugin._obj.vue_save_as_fits()
-
-    # We should get an overwrite warning
-    assert plugin._obj.overwrite_warn is True
     # and shouldn't have written anything (the file should be intact)
     assert test_file.read_text() == existing_sentinel_text
 
-    # Force overwrite the existing file
-    plugin._obj.vue_overwrite_fits()
+    label = plugin._obj.add_results.label
+    export_plugin = cubeviz_helper.plugins['Export']._obj
 
-    # Read back in the file and check that it is equal to the one we calculated
-    with fits.open(test_file_str) as pf:
-        assert_allclose(pf[0].data, moment.data)
-        w = WCS(pf[0].header)
-        sky = w.pixel_to_world(0, 0)
-        assert_allclose(sky.ra.deg, 204.9998877673)
-        assert_allclose(sky.dec.deg, 27.0001)
-
-    plugin._obj.filename = "fake_path/test_file.fits"
-    with pytest.raises(ValueError, match="Invalid path"):
-        plugin._obj.vue_save_as_fits()
+    assert label in export_plugin.data_collection.labels
 
 
 @pytest.mark.remote_data
@@ -280,7 +280,7 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
-    uc.flux_or_sb.selected = 'Surface Brightness'
+    uc.spectral_y_type.selected = 'Surface Brightness'
     mm = cubeviz_helper.plugins['Moment Maps']._obj
     mm.open_in_tray()  # plugin has to be open for unit change to take hold
     mm._set_data_units()
@@ -295,11 +295,9 @@ def test_momentmap_nirspec_prism(cubeviz_helper, tmp_path):
                     (sky_cube.ra.deg, sky_cube.dec.deg))
 
 
-def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
-    if SPECUTILS_LT_1_15_1:
-        moment_unit = "Jy / sr"
-    else:
-        moment_unit = "Jy m / sr"
+def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
+
+    moment_unit = "Jy m / sr"
 
     # test that the output unit labels in the moment map plugin reflect any
     # changes made in the unit conversion plugin.
@@ -316,7 +314,7 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
     uc = cubeviz_helper.plugins["Unit Conversion"]
     uc.open_in_tray()  # plugin has to be open for unit change to take hold
     uc._obj.show_translator = True
-    uc.flux_or_sb.selected = 'Surface Brightness'
+    uc.spectral_y_type.selected = 'Surface Brightness'
     mm = cubeviz_helper.plugins['Moment Maps']._obj
     mm.open_in_tray()  # plugin has to be open for unit change to take hold
     mm._set_data_units()
@@ -326,21 +324,29 @@ def test_correct_output_flux_or_sb_units(cubeviz_helper, spectrum1d_cube_custom_
     # in this list. also check that the initial unit is correct.
     output_unit_moment_0 = mm.output_unit_items[0]
     assert output_unit_moment_0['label'] == 'Surface Brightness'
-    assert output_unit_moment_0['unit_str'] == 'MJy / sr'
+    assert output_unit_moment_0['unit_str'] == 'MJy m / sr'
 
-    # check that calculated moment has the correct units
+    # check that calculated moment has the correct units of MJy m / sr
     mm.calculate_moment()
     assert mm.moment.unit == f'M{moment_unit}'
 
     # now change surface brightness units in the unit conversion plugin
 
-    uc.sb_unit = 'Jy / sr'
+    uc.flux_unit = 'Jy'
 
     # and make sure this change is propogated
     output_unit_moment_0 = mm.output_unit_items[0]
     assert output_unit_moment_0['label'] == 'Surface Brightness'
-    assert output_unit_moment_0['unit_str'] == 'Jy / sr'
+    assert output_unit_moment_0['unit_str'] == 'Jy m / sr'
 
     # and that calculated moment has the correct units
     mm.calculate_moment()
     assert mm.moment.unit == moment_unit
+
+    # now change the spectral unit and make sure that change is
+    # reflected in MM plugin
+    uc.spectral_unit = 'um'
+    assert output_unit_moment_0['unit_str'] == 'Jy um / sr'
+
+    mm.calculate_moment()
+    assert mm.moment.unit == moment_unit.replace('m', 'um')

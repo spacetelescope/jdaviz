@@ -31,6 +31,7 @@ const tooltips = {
       some ad blockers or browser settings may block popup windows,
       causing this feature not to work.
     </div>`,
+  'plugin-api-hints': 'Toggle displaying inline API hints',
   'plugin-popout': `Display in a new window<br /><br />
     <div style="width: 200px; border: 1px solid gray;" class="pa-2">
       <strong>Note:</strong>
@@ -100,9 +101,7 @@ const tooltips = {
   'plugin-line-lists-spectral-range': 'Toggle filter to only lines observable within the range of the Spectrum Viewer',
   'plugin-line-analysis-sync-identify': 'Lock/unlock selection with identified line',
   'plugin-line-analysis-assign': 'Assign the centroid wavelength and update the redshift',
-  'plugin-moment-save-fits': 'Save moment map as FITS file',
   'plugin-extract-save-fits': 'Save spectral extraction as FITS file',
-  'plugin-collapse-save-fits': 'Save collapsed cube as FITS file',
   'plugin-link-apply': 'Apply linking to data',
   'plugin-footprints-color-picker': 'Change the color of the footprint overlay',
   'plugin-dq-show-all': 'Show all quality flags',
@@ -129,7 +128,7 @@ module.exports = {
       return tooltips[this.$props.tipid];
     },
     getSpanStyle() {
-      return this.$props.span_style || "height: inherit; display: inherit";
+      return this.$props.span_style || "height: inherit; display: inherit; cursor: default";
     },
     getOpenDelay() {
       return this.$props.delay || "0";

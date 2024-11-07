@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    :plugin_key="plugin_key || 'Slice'"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Select slice of the cube to show in the image viewers.  The slice can also be changed interactively in the spectrum viewer by activating the slice tool.'"
     :irrelevant_msg="irrelevant_msg"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#slice'"
@@ -14,35 +17,38 @@
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
             <v-row v-if="allow_disable_snapping">
-              <v-switch
+              <plugin-switch
+                :value.sync="snap_to_slice"
                 label="Snap to Slice"
+                api_hint="plg.snap_to_slice = "
+                :api_hints_enabled="api_hints_enabled"
                 hint="Snap indicator (and value) to the nearest slice in the cube."
-                v-model="snap_to_slice"
-                persistent-hint>
-              </v-switch>
+              />
             </v-row>
             <v-row>
-              <v-switch
+              <plugin-switch
+                :value.sync="show_indicator"
                 label="Show Indicator"
+                api_hint="plg.show_indicator = "
+                :api_hints_enabled="api_hints_enabled"
                 hint="Show slice indicator even when slice tool is inactive."
-                v-model="show_indicator"
-                persistent-hint>
-              </v-switch>
+              />
             </v-row>
             <v-row>
-              <v-switch
+              <plugin-switch
+                :value.sync="show_value"
                 label="Show Value"
+                api_hint="plg.show_value = "
+                :api_hints_enabled="api_hints_enabled"
                 :hint="'Show slice '+value_label.toLowerCase()+' in label to right of indicator.'"
-                v-model="show_value"
-                persistent-hint>
-              </v-switch>
+              />
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
     </v-row>
 
-    <v-row justify="end">
+    <v-row justify="end" class="ignore-api-hints">
       <v-btn color="primary" text v-if="!cube_viewer_exists" @click="create_cube_viewer">
         Show Cube Viewer
       </v-btn>
@@ -54,14 +60,14 @@
         v-model.number="value"
         @focus="(e) => value_editing = true"
         @blur="(e) => value_editing = false"
-        class="mt-0 pt-0"
-        :label="value_label"
+        :label="api_hints_enabled ? 'plg.value =' : value_label"
+        :class="api_hints_enabled ? 'api-hint' : null"
         :hint="value_label+' corresponding to slice.'+(snap_to_slice && value_editing ? '  Indicator will snap to slice when clicking or tabbing away from input.' : '')"
         :suffix="value_unit"
       ></v-text-field>
     </v-row>
 
-    <v-row class="row-no-outside-padding row-min-bottom-padding">
+    <v-row class="row-no-outside-padding row-min-bottom-padding ignore-api-hints">
       <v-col>
         <v-tooltip top>
           <template v-slot:activator="{ on, attrs }">

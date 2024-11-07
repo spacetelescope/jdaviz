@@ -55,6 +55,16 @@ Jdaviz
 
          Jump to Mosviz
 
+   .. grid-item-card::
+      :img-top: logos/rampviz.svg
+
+      .. button-ref:: rampviz/index
+         :expand:
+         :color: primary
+         :click-parent:
+
+         Jump to Rampviz
+
 ``jdaviz`` is a package of astronomical data analysis visualization
 tools based on the Jupyter platform.  These GUI-based tools link data
 visualization and interactive analysis.  They are designed to work
@@ -73,6 +83,7 @@ cube.
 spectra, typically the output of a multi-object spectrograph (e.g.,
 JWST NIRSpec), and includes viewers for 1D and 2D spectra as well as
 contextual information like on-sky views of the spectrograph slit.
+:ref:`rampviz` is a visualization tool for Level 1 "ramp" data products.
 
 .. warning::
 

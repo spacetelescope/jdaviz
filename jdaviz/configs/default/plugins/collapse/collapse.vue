@@ -1,5 +1,8 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Collapse"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Collapse a spectral cube along one axis.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'"
     :popout_button="popout_button"
@@ -10,16 +13,18 @@
       :selected.sync="dataset_selected"
       :show_if_single_entry="false"
       label="Data"
+      api_hint="plg.dataset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select the data set to collapse."
     />
 
     <v-row>
       <v-select
-        :menu-props="{ left: true }"
         attach
         :items="function_items.map(i => i.label)"
         v-model="function_selected"
-        label="Function"
+        :label="api_hints_enabled ? 'plg.function =' : 'Function'"
+        :class="api_hints_enabled ? 'api-hint' : null"
         hint="Function to use in the collapse."
         persistent-hint
       ></v-select>
@@ -32,6 +37,8 @@
       :show_if_single_entry="true"
       has_subregions_warning="The selected selected subset has subregions, the entire range will be used, ignoring any gaps."
       label="Spectral region"
+      api_hint="plg.spectral_subset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region to apply the collapse."
     />
 
@@ -47,67 +54,10 @@
       action_label="Collapse"
       action_tooltip="Collapse data"
       :action_spinner="spinner"
+      add_results_api_hint='plg.add_results'
+      action_api_hint='plg.collapse(add_data=True)'
+      :api_hints_enabled="api_hints_enabled"
       @click:action="collapse"
     ></plugin-add-results>
-
-    <j-plugin-section-header v-if="collapsed_spec_available && export_enabled">Results</j-plugin-section-header>
-
-    <div style="display: grid; position: relative"> <!-- overlay container -->
-      <div style="grid-area: 1/1">
-        <div v-if="collapsed_spec_available && export_enabled">
-
-          <v-row>
-            <v-text-field
-            v-model="filename"
-            label="Filename"
-            hint="Export the latest collapsed spectrum."
-            :rules="[() => !!filename || 'This field is required']"
-            persistent-hint>
-            </v-text-field>
-          </v-row>
-
-          <v-row>
-            <span class="v-messages v-messages__message text--secondary" style="color: red !important">
-              DeprecationWarning: Save as FITS functionality has moved to the Export plugin as of v3.9 and will be removed from here in a future release.
-            </span>
-          </v-row>
-
-          <v-row justify="end">
-            <j-tooltip tipid='plugin-collapse-save-fits'>
-              <v-btn color="primary" text @click="save_as_fits">Save as FITS</v-btn>
-
-            </j-tooltip>
-          </v-row>
-
-        </div>
-      </div>
-
-      <v-overlay
-        absolute
-        opacity=1.0
-        :value="overwrite_warn && export_enabled"
-        :zIndex=3
-        style="grid-area: 1/1;
-               margin-left: -24px;
-               margin-right: -24px">
-
-      <v-card color="transparent" elevation=0 >
-        <v-card-text width="100%">
-          <div class="white--text">
-            A file with this name is already on disk. Overwrite?
-          </div>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-row justify="end">
-            <v-btn tile small color="primary" class="mr-2" @click="overwrite_warn=false">Cancel</v-btn>
-            <v-btn tile small color="accent" class="mr-4" @click="overwrite_fits" >Overwrite</v-btn>
-          </v-row>
-        </v-card-actions>
-      </v-card>
-
-      </v-overlay>
-
-    </div>
   </j-tray-plugin>
 </template>

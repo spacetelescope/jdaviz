@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.nddata import InverseVariance
-from astropy.wcs import WCS
-from regions import PixCoord, CirclePixelRegion
 from specutils import Spectrum1D
+
+from jdaviz.core.custom_units import SPEC_PHOTON_FLUX_DENSITY_UNITS
 
 
 # On failure, should not crash; essentially a no-op.
@@ -33,6 +33,15 @@ def test_value_error_exception(specviz_helper, spectrum1d, new_spectral_axis, ne
     assert len(specviz_helper.app.data_collection) == 1
     assert u.Unit(viewer.state.x_display_unit) == u.Unit(expected_spectral_axis)
     assert u.Unit(viewer.state.y_display_unit) == u.Unit(expected_flux)
+
+
+def test_initialize_specviz_sb(specviz_helper, spectrum1d):
+    spec_sb = Spectrum1D(spectrum1d.flux/u.sr, spectrum1d.spectral_axis)
+    specviz_helper.load_data(spec_sb, data_label="Test 1D Spectrum")
+    plg = specviz_helper.plugins["Unit Conversion"]
+    assert plg._obj.flux_unit == "Jy"
+    assert plg._obj.spectral_y_type == "Surface Brightness"
+    assert plg._obj.angle_unit == "sr"
 
 
 @pytest.mark.parametrize('uncert', (False, True))
@@ -88,24 +97,19 @@ def test_conv_wave_flux(specviz_helper, spectrum1d, uncert):
 def test_conv_no_data(specviz_helper, spectrum1d):
     """plugin unit selections won't have valid choices yet, preventing
     attempting to set display units."""
-    plg = specviz_helper.plugins["Unit Conversion"]
     # spectrum not load is in Flux units, sb_unit and flux_unit
-    # should be enabled, flux_or_sb should not be
-    assert hasattr(plg, 'sb_unit')
-    assert hasattr(plg, 'flux_unit')
-    assert not hasattr(plg, 'flux_or_sb')
-    with pytest.raises(ValueError, match="no valid unit choices"):
+    # should be enabled, spectral_y_type should not be
+    plg = specviz_helper.plugins["Unit Conversion"]
+    with pytest.raises(ValueError, match="could not find match in valid x display units"):
         plg.spectral_unit = "micron"
     assert len(specviz_helper.app.data_collection) == 0
 
     specviz_helper.load_data(spectrum1d, data_label="Test 1D Spectrum")
-    plg = specviz_helper.plugins["Unit Conversion"]
 
-    # spectrum loaded in Flux units, make sure sb_units don't
-    # display in the API and exposed translation isn't possible
+    # make sure we don't expose translations in Specviz
     assert hasattr(plg, 'flux_unit')
-    assert not hasattr(plg, 'sb_unit')
-    assert not hasattr(plg, 'flux_or_sb')
+    assert hasattr(plg, 'angle_unit')
+    assert not hasattr(plg, 'spectral_y_type')
 
 
 def test_non_stddev_uncertainty(specviz_helper):
@@ -133,118 +137,20 @@ def test_non_stddev_uncertainty(specviz_helper):
     )
 
 
-def test_unit_translation(cubeviz_helper):
-    # custom cube so PIXAR_SR is in metadata, and Flux units, and in MJy
-    wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
-                "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
-                "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
-                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 8e-11}
-    w = WCS(wcs_dict)
-    flux = np.zeros((30, 20, 3001), dtype=np.float32)
-    flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * u.MJy, wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
+@pytest.mark.parametrize("flux_unit, expected_choices", [(u.count, ['ct']),
+                                                         (u.Jy, SPEC_PHOTON_FLUX_DENSITY_UNITS),
+                                                         (u.nJy, SPEC_PHOTON_FLUX_DENSITY_UNITS + ['nJy'])])  # noqa
+def test_flux_unit_choices(specviz_helper, flux_unit, expected_choices):
+    """
+    Test that cubes loaded with various flux units have the expected default
+    flux unit selection in the unit conversion plugin, and that the list of
+    convertable flux units in the dropdown is correct.
+    """
 
-    center = PixCoord(5, 10)
-    cubeviz_helper.load_regions(CirclePixelRegion(center, radius=2.5))
+    spec = Spectrum1D([1, 2, 3] * flux_unit, [4, 5, 6] * u.um)
+    specviz_helper.load_data(spec)
 
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
+    uc_plg = specviz_helper.plugins['Unit Conversion']
 
-    # test that the scale factor was set
-    assert np.all(cubeviz_helper.app.data_collection['Spectrum (sum)'].meta['_pixel_scale_factor'] != 1)  # noqa
-
-    # When the dropdown is displayed, this ensures the loaded
-    # data collection item units will be used for translations.
-    assert uc_plg._obj.flux_or_sb_selected == 'Flux'
-
-    # to have access to display units
-    viewer_1d = cubeviz_helper.app.get_viewer(
-        cubeviz_helper._default_spectrum_viewer_reference_name)
-
-    # change global y-units from Flux -> Surface Brightness
-    uc_plg._obj.flux_or_sb_selected = 'Surface Brightness'
-
-    assert uc_plg._obj.flux_or_sb_selected == 'Surface Brightness'
-    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-
-    # check if units translated
-    assert y_display_unit == u.MJy / u.sr
-
-
-def test_sb_unit_conversion(cubeviz_helper):
-    # custom cube to have Surface Brightness units
-    wcs_dict = {"CTYPE1": "WAVE-LOG", "CTYPE2": "DEC--TAN", "CTYPE3": "RA---TAN",
-                "CRVAL1": 4.622e-7, "CRVAL2": 27, "CRVAL3": 205,
-                "CDELT1": 8e-11, "CDELT2": 0.0001, "CDELT3": -0.0001,
-                "CRPIX1": 0, "CRPIX2": 0, "CRPIX3": 0, "PIXAR_SR": 8e-11}
-    w = WCS(wcs_dict)
-    flux = np.zeros((30, 20, 3001), dtype=np.float32)
-    flux[5:15, 1:11, :] = 1
-    cube = Spectrum1D(flux=flux * (u.MJy / u.sr), wcs=w, meta=wcs_dict)
-    cubeviz_helper.load_data(cube, data_label="test")
-
-    uc_plg = cubeviz_helper.plugins['Unit Conversion']
-    uc_plg.open_in_tray()
-
-    # ensure that per solid angle cube defaults to Flux spectrum
-    assert uc_plg.flux_or_sb == 'Flux'
-    # flux choices is populated with flux units
-    assert uc_plg.flux_unit.choices
-
-    # to have access to display units
-    viewer_1d = cubeviz_helper.app.get_viewer(
-        cubeviz_helper._default_spectrum_viewer_reference_name)
-
-    uc_plg.flux_or_sb.selected = 'Surface Brightness'
-
-    # Surface Brightness conversion
-    uc_plg.sb_unit = 'Jy / sr'
-    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    assert y_display_unit == u.Jy / u.sr
-    label_mouseover = cubeviz_helper.app.session.application._tools["g-coords-info"]
-    flux_viewer = cubeviz_helper.app.get_viewer(
-        cubeviz_helper._default_flux_viewer_reference_name
-    )
-    label_mouseover._viewer_mouse_event(
-        flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
-    )
-    assert label_mouseover.as_text() == (
-            "Pixel x=00010.0 y=00008.0 Value +1.00000e+06 Jy / sr",
-            "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
-            "204.9987654313 27.0008999946 (deg)")
-
-    # Try a second conversion
-    uc_plg.sb_unit = 'W / Hz sr m2'
-    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    assert y_display_unit == u.Unit("W / (Hz sr m2)")
-
-    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    label_mouseover._viewer_mouse_event(
-        flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
-    )
-    assert label_mouseover.as_text() == (
-            "Pixel x=00010.0 y=00008.0 Value +1.00000e-20 W / (Hz sr m2)",
-            "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
-            "204.9987654313 27.0008999946 (deg)")
-
-    # really a translation test, test_unit_translation loads a Flux
-    # cube, this test load a Surface Brightness Cube, this ensures
-    # two-way translation
-    uc_plg.sb_unit = 'MJy / sr'
-    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-    label_mouseover._viewer_mouse_event(
-        flux_viewer, {"event": "mousemove", "domain": {"x": 10, "y": 8}}
-    )
-    assert label_mouseover.as_text() == (
-            "Pixel x=00010.0 y=00008.0 Value +1.00000e+00 MJy / sr",
-            "World 13h39m59.7037s +27d00m03.2400s (ICRS)",
-            "204.9987654313 27.0008999946 (deg)")
-
-    uc_plg._obj.flux_or_sb_selected = 'Flux'
-    uc_plg.flux_unit = 'MJy'
-    y_display_unit = u.Unit(viewer_1d.state.y_display_unit)
-
-    assert y_display_unit == u.MJy
-
-    la = cubeviz_helper.plugins['Line Analysis']._obj
-    assert la.dataset.get_selected_spectrum(use_display_units=True)
+    assert uc_plg.flux_unit.selected == flux_unit.to_string()
+    assert uc_plg.flux_unit.choices == expected_choices

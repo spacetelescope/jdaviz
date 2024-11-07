@@ -1,17 +1,13 @@
-import os
-from pathlib import Path
+from functools import cached_property
 
 import numpy as np
 import astropy
-import astropy.units as u
-from astropy.nddata import (
-    NDDataArray, StdDevUncertainty
-)
-from functools import cached_property
+from astropy import units as u
+from astropy.nddata import NDDataArray, StdDevUncertainty
 from traitlets import Any, Bool, Dict, Float, List, Unicode, observe
 
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
-from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage
+from jdaviz.core.events import SnackbarMessage, SliceValueUpdatedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.marks import PluginLine
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
@@ -24,8 +20,10 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
+from jdaviz.utils import _eqv_pixar_sr
 
 
 __all__ = ['SpectralExtraction']
@@ -37,7 +35,7 @@ __all__ = ['SpectralExtraction']
 class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
                          DatasetSelectMixin, AddResultsMixin):
     """
-    See the :ref:`Spectral Extraction Plugin Documentation <spex>` for more details.
+    See the :ref:`Spectral Extraction Plugin Documentation <spectral-extraction>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
@@ -52,7 +50,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
       to intersect ``aperture`` at ``reference_spectral_value``.
     * ``reference_spectral_value``:
       The wavelength that will be used to calculate the radius of the cone through the cube.
-    * ``background`` (:class:`~jdaviz.comre.template_mixin.ApertureSubsetSelect`):
+    * ``background`` (:class:`~jdaviz.core.template_mixin.ApertureSubsetSelect`):
       Subset to use for background subtraction, or ``None``.
     * ``bg_wavelength_dependent``:
       Whether the ``background`` aperture should be considered wavelength-dependent (requires
@@ -67,7 +65,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     * ``aperture_method`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Method to use for extracting spectrum (and background, if applicable).
     * ``add_results`` (:class:`~jdaviz.core.template_mixin.AddResults`)
-    * :meth:`collapse`
+    * :meth:`extract`
     """
     template_file = __file__, "spectral_extraction.vue"
     uses_active_status = Bool(True).tag(sync=True)
@@ -105,7 +103,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     function_selected = Unicode('Sum').tag(sync=True)
     filename = Unicode().tag(sync=True)
     extraction_available = Bool(False).tag(sync=True)
-    overwrite_warn = Bool(False).tag(sync=True)
+
+    results_units = Unicode().tag(sync=True)
+    spectrum_y_units = Unicode().tag(sync=True)
+    flux_units = Unicode().tag(sync=True)
+    sb_units = Unicode().tag(sync=True)
 
     aperture_method_items = List().tag(sync=True)
     aperture_method_selected = Unicode('Center').tag(sync=True)
@@ -174,6 +176,8 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         self.session.hub.subscribe(self, SliceValueUpdatedMessage,
                                    handler=self._on_slice_changed)
+        self.hub.subscribe(self, GlobalDisplayUnitChanged,
+                           handler=self._on_global_display_unit_changed)
 
         self._update_disabled_msg()
 
@@ -184,7 +188,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     @property
     def user_api(self):
-        expose = ['dataset', 'function', 'aperture',
+        expose = ['show_live_preview', 'dataset', 'function', 'aperture',
                   'background', 'bg_wavelength_dependent',
                   'bg_spec_per_spaxel', 'bg_spec_add_results', 'extract_bg_spectrum',
                   'add_results', 'extract',
@@ -245,8 +249,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             return
         if not hasattr(self, 'aperture'):
             return
+        orig_labels = [item['label'] for item in msg['old']]
         for item in msg['new']:
-            if item not in msg['old']:
+            if item['label'] not in orig_labels:
                 if item.get('type') != 'spatial':
                     continue
                 subset_lbl = item.get('label')
@@ -307,6 +312,38 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             self.background.scale_factor = 1.0
         else:
             self.background.scale_factor = self.slice_spectral_value/self.reference_spectral_value
+
+    def _on_global_display_unit_changed(self, msg=None):
+        if msg is None:
+            self.flux_units = str(self.app._get_display_unit('flux'))
+            self.sb_units = str(self.app._get_display_unit('sb'))
+            self.spectrum_y_units = str(self.app._get_display_unit('spectral_y'))
+        elif msg.axis == 'flux':
+            self.flux_units = str(msg.unit)
+        elif msg.axis == 'sb':
+            self.sb_units = str(msg.unit)
+        elif msg.axis == 'spectral_y':
+            self.spectrum_y_units = str(msg.unit)
+            # no need to update results_units as separate messages will have been
+            # sent by unit conversion for flux and/or sb.
+            # updates to spectrum_y_units will trigger updating the extraction preview
+            return
+        else:
+            # ignore
+            return
+        # update results_units based on flux_units, sb_units, and currently selected function
+        self._update_results_units()
+
+    @observe('function_selected')
+    def _update_results_units(self, *args):
+        # NOTE this is also called by _on_global_display_unit_changed
+        # after flux_units and/or sb_units is set.
+        # results_units is ONLY used for the warning in the UI, so does not
+        # need to trigger an update to the preview
+        if self.function_selected.lower() == 'sum':
+            self.results_units = self.flux_units
+        else:
+            self.results_units = self.sb_units
 
     @observe('function_selected', 'aperture_method_selected')
     def _update_aperture_method_on_function_change(self, *args):
@@ -437,6 +474,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             wcs = cube.meta['_orig_spec'].wcs.spectral
         elif hasattr(cube.coords, 'spectral'):
             wcs = cube.coords.spectral
+        elif hasattr(cube.coords, 'spectral_wcs'):
+            # This is the attribute for a PaddedSpectrumWCS in the 3D case
+            wcs = cube.coords.spectral_wcs
         else:
             wcs = None
 
@@ -469,9 +509,19 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
             collapsed_nddata = getattr(nddata_reshaped, selected_func)(
                 axis=self.spatial_axes, **kwargs
             )  # returns an NDDataArray
-            # Remove per steradian denominator
-            if astropy.units.sr in collapsed_nddata.unit.bases:
-                aperture_area = self.cube.meta.get('PIXAR_SR', 1.0) * u.sr
+
+            # Remove per solid angle denominator to turn sb into flux
+            sq_angle_unit = check_if_unit_is_per_solid_angle(collapsed_nddata.unit,
+                                                             return_unit=True)
+            if sq_angle_unit is not None:
+                # convert aperture area in steradians to the selected square angle unit
+                # NOTE: just forcing these units for now!! this is in steradians and
+                # needs to be converted to the selected square angle unit but for now just
+                # force to correct units
+                if sq_angle_unit == u.sr:
+                    aperture_area = self.cube.meta.get('PIXAR_SR', 1.0) * sq_angle_unit
+                else:
+                    aperture_area = 1 * sq_angle_unit
                 collapsed_nddata = collapsed_nddata.multiply(aperture_area,
                                                              propagate_uncertainties=True)
         else:
@@ -498,7 +548,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         uncertainty = collapsed_nddata.uncertainty
 
         collapsed_spec = _return_spectrum_with_correct_units(
-            flux, wcs, collapsed_nddata.meta, 'flux',
+            flux, wcs, collapsed_nddata.meta, data_type='flux',
             target_wave_unit=target_wave_unit,
             uncertainty=uncertainty,
             mask=mask
@@ -506,10 +556,12 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return collapsed_spec
 
     def _preview_x_from_extracted(self, extracted):
-        return extracted.spectral_axis.value
+        return extracted.spectral_axis
 
     def _preview_y_from_extracted(self, extracted):
-        return extracted.flux.value
+        # TODO: use extracted.meta.get('PIXAR_SR') once populated
+        return extracted.flux.to(self.spectrum_y_units,
+                                 equivalencies=_eqv_pixar_sr(self.dataset.selected_obj.meta.get('PIXAR_SR', 1.0)))  # noqa:
 
     @with_spinner()
     def extract(self, return_bg=False, add_data=True, **kwargs):
@@ -545,15 +597,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # per https://jwst-docs.stsci.edu/jwst-near-infrared-camera/nircam-performance/nircam-absolute-flux-calibration-and-zeropoints # noqa
         pix_scale_factor = self.cube.meta.get('PIXAR_SR', 1.0)
         spec.meta['_pixel_scale_factor'] = pix_scale_factor
-
-        # inform the user if scale factor keyword not in metadata
-        if 'PIXAR_SR' not in self.cube.meta:
-            snackbar_message = SnackbarMessage(
-                ("PIXAR_SR FITS header keyword not found when parsing spectral cube. "
-                 "Flux/Surface Brightness will use default PIXAR_SR value of 1 sr/pix^2."),
-                color="warning",
-                sender=self)
-            self.hub.broadcast(snackbar_message)
 
         # stuff for exporting to file
         self.extracted_spec = spec
@@ -626,50 +669,6 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def vue_create_bg_spec(self, *args, **kwargs):
         self.extract_bg_spectrum(add_data=True)
 
-    def vue_save_as_fits(self, *args):
-        self._save_extracted_spec_to_fits()
-
-    def vue_overwrite_fits(self, *args):
-        """Attempt to force writing the spectral extraction if the user
-        confirms the desire to overwrite."""
-        self.overwrite_warn = False
-        self._save_extracted_spec_to_fits(overwrite=True)
-
-    def _save_extracted_spec_to_fits(self, overwrite=False, *args):
-
-        if not self.export_enabled:
-            # this should never be triggered since this is intended for UI-disabling and the
-            # UI section is hidden, but would prevent any JS-hacking
-            raise ValueError(f"Writing out extracted {self.resulting_product_name} to file is currently disabled")  # noqa
-
-        # Make sure file does not end up in weird places in standalone mode.
-        path = os.path.dirname(self.filename)
-        if path and not os.path.exists(path):
-            raise ValueError(f"Invalid path={path}")
-        elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
-            filename = Path(os.environ["JDAVIZ_START_DIR"]) / self.filename
-        else:
-            filename = Path(self.filename).resolve()
-
-        if filename.exists():
-            if overwrite:
-                # Try to delete the file
-                filename.unlink()
-                if filename.exists():
-                    # Warn the user if the file still exists
-                    raise FileExistsError(f"Unable to delete {filename}. Check user permissions.")
-            else:
-                self.overwrite_warn = True
-                return
-
-        filename = str(filename)
-        self.extracted_spec.write(filename)
-
-        # Let the user know where we saved the file.
-        self.hub.broadcast(SnackbarMessage(
-            f"Extracted {self.resulting_product_name} saved to {os.path.abspath(filename)}",
-            sender=self, color="success"))
-
     @observe('aperture_selected', 'function_selected')
     def _set_default_results_label(self, event={}):
         if not hasattr(self, 'aperture'):
@@ -702,8 +701,15 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
              'wavelength_dependent', 'bg_wavelength_dependent', 'reference_spectral_value',
              'function_selected',
              'aperture_method_selected',
+             'spectrum_y_units',
              'previews_temp_disabled')
     def _live_update_marks(self, event={}):
+        if self.spectrum_y_units == '':
+            # ensure that units are populated
+            # which in turn will make a call back here
+            # from the observe on spectrum_y_units
+            self._on_global_display_unit_changed(None)
+            return
         self._update_marks(event)
 
     @skip_if_not_tray_instance()
@@ -718,7 +724,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.marks['bg_extract'].visible = self.active_step == 'bg' and self.bg_selected != self.background.default_text  # noqa
         self.marks['extract'].visible = True
 
-        # _live_update will skip if no updates since last active
+        # _live_update_extract will skip if no updates since last active
         self._live_update_extract(event)
 
     @skip_if_no_updates_since_last_active()

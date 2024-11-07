@@ -1,31 +1,14 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Plot Options"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Viewer and data/layer options.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
-
-    <v-row>
-      <v-expansion-panels popout>
-        <v-expansion-panel>
-          <v-expansion-panel-header v-slot="{ open }">
-            <span style="padding: 6px">Settings</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content class="plugin-expansion-panel-content">
-            <v-row>
-              <v-switch
-                v-model="show_viewer_labels"
-                label="Show labels in viewers"
-                hint="Whether to show viewer/layer labels on each viewer"
-                persistent-hint
-              ></v-switch>
-            </v-row>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
-    </v-row>
 
     <!-- VIEWER OPTIONS -->
     <plugin-viewer-select
@@ -36,6 +19,9 @@
       :icon_checktoradial="icon_checktoradial"
       :icon_radialtocheck="icon_radialtocheck"
       :label="viewer_multiselect ? 'Viewers' : 'Viewer'"
+      api_hint='plg.viewer = '
+      api_hint_multiselect='plg.viewer.multiselect = '
+      :api_hints_enabled="api_hints_enabled"
       :show_if_single_entry="viewer_multiselect"
       :hint="viewer_multiselect ? 'Select viewers to set options simultaneously' : 'Select the viewer to set options.'"
     />
@@ -50,7 +36,8 @@
             <glue-state-sync-wrapper :sync="x_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('x_min')">
               <glue-float-field
                 ref="x_min"
-                label="X Min"
+                :label="api_hints_enabled ? 'plg.x_min =' : 'X Min'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="x_min_value"
                 type="number"
                 :step="x_bound_step"
@@ -60,7 +47,8 @@
             <glue-state-sync-wrapper :sync="x_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('x_max')">
               <glue-float-field
                 ref="x_max"
-                label="X Max"
+                :label="api_hints_enabled ? 'plg.x_max =' : 'X Max'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="x_max_value"
                 type="number"
                 :step="x_bound_step"
@@ -70,7 +58,8 @@
             <glue-state-sync-wrapper :sync="y_min_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('y_min')">
               <glue-float-field
                 ref="y_min"
-                label="Y Min"
+                :label="api_hints_enabled ? 'plg.y_min =' : 'Y Min'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="y_min_value"
                 type="number"
                 :step="y_bound_step"
@@ -80,7 +69,8 @@
             <glue-state-sync-wrapper :sync="y_max_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('y_max')">
               <glue-float-field
                 ref="y_max"
-                label="Y Max"
+                :label="api_hints_enabled ? 'plg.y_max =' : 'Y Max'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="y_max_value"
                 type="number"
                 :step="y_bound_step"
@@ -90,7 +80,8 @@
             <glue-state-sync-wrapper :sync="zoom_center_x_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_center_x')">
               <glue-float-field
                 ref="zoom_center_x"
-                label="X Center"
+                :label="api_hints_enabled ? 'plg.zoom_center_x =' : 'X Center'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="zoom_center_x_value"
                 type="number"
                 :step="zoom_step"
@@ -100,7 +91,8 @@
             <glue-state-sync-wrapper :sync="zoom_center_y_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_center_y')">
               <glue-float-field
                 ref="zoom_center_y"
-                label="Y Center"
+                :label="api_hints_enabled ? 'plg.zoom_center_y =' : 'Y Center'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="zoom_center_y_value"
                 type="number"
                 :step="zoom_step"
@@ -110,7 +102,8 @@
             <glue-state-sync-wrapper :sync="zoom_radius_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('zoom_radius')">
               <glue-float-field
                 ref="zoom_radius"
-                label="Zoom-radius"
+                :label="api_hints_enabled ? 'plg.zoom_radius =' : 'Zoom-radius'"
+                :class="api_hints_enabled ? 'api-hint' : null"
                 :value.sync="zoom_radius_value"
                 type="number"
                 :step="zoom_step"
@@ -120,9 +113,14 @@
             <v-row justify="end">
               <plugin-action-button
                 :results_isolated_to_plugin="false"
+                :api_hints_enabled="api_hints_enabled"
                 @click="reset_viewer_bounds"
               >
-                Reset viewer bounds
+                {{api_hints_enabled ? 
+                  'plg.reset_viewer_bounds()'
+                  :
+                  'Reset viewer bounds'
+                }}
               </plugin-action-button>
             </v-row>
           </v-expansion-panel-content>
@@ -137,7 +135,8 @@
           :menu-props="{ left: true }"
           :items="image_color_mode_sync.choices"
           v-model="image_color_mode_value"
-          label="Color Mode"
+          :label="api_hints_enabled ? 'plg.image_color_mode = ' : 'Color Mode'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           hint="Whether each layer gets a single color or colormap."
           persistent-hint
           dense
@@ -165,9 +164,14 @@
           <plugin-action-button
             :spinner="apply_RGB_presets_spinner"
             :results_isolated_to_plugin="false"
+            :class="api_hints_enabled ? 'api-hint' : null"
             @click="apply_RGB_presets"
           >
-            Assign RGB Presets
+            {{ api_hints_enabled ?
+              'plg.apply_RGB_presets()'
+              :
+              'Assign RGB Presets'
+            }}
           </plugin-action-button>
         </j-tooltip>
       </v-row>
@@ -175,20 +179,37 @@
 
     <!-- GENERAL:AXES -->
     <glue-state-sync-wrapper v-if="axes_visible_sync.in_subscribed_states && viewer_selected.length > 0 && config !== 'imviz'" :sync="axes_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('axes_visible')">
-      <v-switch
-        v-model="axes_visible_value"
+      <plugin-switch
+        :value.sync="axes_visible_value"
         label="Show axes"
+        api_hint="plt.axes_visible = "
+        :api_hints_enabled="api_hints_enabled"
         />
     </glue-state-sync-wrapper>
 
     <glue-state-sync-wrapper v-if="uncertainty_visible_sync.in_subscribed_states" :sync="uncertainty_visible_sync" :multiselect="viewer_multiselect" @unmix-state="unmix_state('uncertainty_visible')">
-      <v-switch
-        v-model="uncertainty_visible_value"
+      <plugin-switch
+        :value.sync="uncertainty_visible_value"
         label="Plot uncertainties"
+        api_hint='plg.uncertainty_visible = '
+        :api_hints_enabled="api_hints_enabled"
         />
     </glue-state-sync-wrapper>
 
     <!-- LAYER OPTIONS -->
+    <div v-if="api_hints_enabled">
+      <v-row v-if="layer_items.length > 1">
+        <span class="api-hint">
+          plg.layer.multiselect = {{ boolToString(layer_multiselect) }}
+        </span>
+      </v-row>
+      <v-row>
+        <span class="api-hint">
+          plg.layer = {{ layer_multiselect ? layer_selected : '\''+layer_selected+'\'' }}
+        </span>
+      </v-row>
+    </div>
+
     <plugin-layer-select-tabs
       :items="layer_items"
       :selected.sync="layer_selected"
@@ -208,102 +229,106 @@
     <div v-else class='layer-tab-selected' style="margin-left: -24px; padding-left: 24px; margin-top: -42px; margin-right: -24px; padding-right: 24px; border-bottom: 2px solid #00617E">
       <j-plugin-section-header v-if="layer_selected.length && (line_visible_sync.in_subscribed_states || subset_visible_sync.in_subscribed_states)">Layer Visibility</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="marker_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_visible')">
-        <span>
-          <v-btn icon @click.stop="marker_visible_value = !marker_visible_value">
-            <v-icon>mdi-eye{{ marker_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          Show Scatter Layer
-        </span>
+        <plugin-switch
+          :value.sync="marker_visible_value"
+          label="Show Scatter Layer"
+          api_hint='plg.marker_visible = '
+          :api_hints_enabled="api_hints_enabled"
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="!marker_visible_sync.in_subscribed_states" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
-        <span>
-          <v-btn icon @click.stop="line_visible_value = !line_visible_value">
-            <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          Show Line
-        </span>
+        <plugin-switch
+          :value.sync="line_visible_value"
+          label="Show Line"
+          api_hint='plg.line_visible = '
+          :api_hints_enabled="api_hints_enabled"
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper :sync="subset_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_visible')">
-        <span>
-          <v-btn icon @click.stop="subset_visible_value = !subset_visible_value">
-            <v-icon>mdi-eye{{ subset_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          Show Subset
-        </span>
+        <plugin-switch
+          :value.sync="subset_visible_value"
+          label="Show Subset"
+          api_hint='plg.subset_visible = '
+          :api_hints_enabled="api_hints_enabled"
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="subset_visible_value" :sync="subset_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_color')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">Subset Color</v-subheader>
-          <v-menu>
-            <template v-slot:activator="{ on }">
-                <span class="color-menu"
-                      :style="`background:${subset_color_value}; cursor: pointer`"
-                      @click.stop="on.click"
-                >&nbsp;</span>
-            </template>
-            <div @click.stop="" style="text-align: end; background-color: white">
-                <v-color-picker :value="subset_color_value"
-                                @update:color="throttledSetValue('subset_color_value', $event.hexa)"></v-color-picker>
-            </div>
-          </v-menu>
-        </div>
+        <plugin-color-picker
+          label='Subset Color'
+          api_hint="plg.subset_color = "
+          :api_hints_enabled="api_hints_enabled"
+          :value="subset_color_value"
+          @color-update="throttledSetValue('subset_color_value', $event.hexa)"
+        />
       </glue-state-sync-wrapper>
 
-      <glue-state-sync-wrapper :sync="subset_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_opacity')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px">Subset Opacity</v-subheader>
-          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="subset_opacity_value" hide-details class="no-hint" />
-        </div>
+      <glue-state-sync-wrapper v-if="subset_visible_value" :sync="subset_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('subset_opacity')">
+        <plugin-slider
+            label='Subset Opacity'
+            api_hint="plg.subset_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01" 
+            :value.sync="subset_opacity_value"
+          />
       </glue-state-sync-wrapper>
 
 
       <!-- PROFILE/LINE -->
       <j-plugin-section-header v-if="(line_visible_sync.in_subscribed_states && ((!marker_visible_sync.in_subscribed_states && line_visible_value) || (marker_visible_sync.in_subscribed_states && marker_visible_value)))">Line</j-plugin-section-header>
       <glue-state-sync-wrapper v-if="marker_visible_sync.in_subscribed_states && marker_visible_value" :sync="line_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_visible')">
-        <span>
-          <v-btn icon @click.stop="line_visible_value = !line_visible_value">
-            <v-icon>mdi-eye{{ line_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          Show Line
-        </span>
+        <plugin-switch
+          :value.sync="line_visible_value"
+          label="Show Line"
+          api_hint='plg.line_visible = '
+          :api_hints_enabled="api_hints_enabled"
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_color')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">Line Color</v-subheader>
-          <v-menu>
-            <template v-slot:activator="{ on }">
-                <span class="color-menu"
-                      :style="`background:${line_color_value}; cursor: pointer`"
-                      @click.stop="on.click"
-                >&nbsp;</span>
-            </template>
-            <div @click.stop="" style="text-align: end; background-color: white">
-                <v-color-picker :value="line_color_value"
-                                @update:color="throttledSetValue('line_color_value', $event.hexa)"></v-color-picker>
-            </div>
-          </v-menu>
-        </div>
+        <plugin-color-picker
+          label='Line Color'
+          api_hint="plg.line_color = "
+          :api_hints_enabled="api_hints_enabled"
+          :value="line_color_value"
+          @color-update="throttledSetValue('line_color_value', $event.hexa)"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_width_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_width')">
-        <glue-float-field label="Line Width" :value.sync="line_width_value" />
+        <glue-float-field
+          :label="api_hints_enabled ? 'plg.line_width =' : 'Line Width'"
+          :class="api_hints_enabled ? 'api-hint' : null"
+          :value.sync="line_width_value"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_opacity')">
-        <div>
-          <v-subheader class="pl-0 slider-label" style="height: 12px">Line Opacity</v-subheader>
-          <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="line_opacity_value" hide-details class="no-hint" />
-        </div>
+        <plugin-slider
+            label='Line Opacity'
+            api_hint="plg.line_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="line_opacity_value"
+          />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper v-if="line_visible_value  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)" :sync="line_as_steps_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('line_as_steps')">
-        <v-switch
-          v-model="line_as_steps_value"
+        <plugin-switch
+          :value.sync="line_as_steps_value"
           label="Plot profile as steps"
+          api_hint="plg.line_as_steps = "
+          :api_hints_enabled="api_hints_enabled"
           />
       </glue-state-sync-wrapper>
 
@@ -311,17 +336,24 @@
       <div v-if="marker_visible_sync.in_subscribed_states  && (!marker_visible_sync.in_subscribed_states || marker_visible_value)">
         <j-plugin-section-header>Marker</j-plugin-section-header>
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_fill_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_fill')">
-          <v-switch
-            v-model="marker_fill_value"
+          <plugin-switch
+            :value.sync="marker_fill_value"
             label="Fill Marker"
+            api_hint='plg.marker_fill = '
+            :api_hints_enabled="api_hints_enabled"
             />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_opacity')">
-          <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px">Opacity</v-subheader>
-            <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="marker_opacity_value" hide-details class="no-hint" />
-          </div>
+          <plugin-slider
+            label='Opacity'
+            api_hint="plg.marker_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="marker_opacity_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_size_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_mode')">
@@ -330,23 +362,33 @@
             :menu-props="{ left: true }"
             :items="marker_size_mode_sync.choices"
             v-model="marker_size_mode_value"
-            label="Size Mode"
-            class="no-hint"
+            :label="api_hints_enabled ? 'plg.marker_size_mode =' : 'Size Mode'"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value==='Fixed'" :sync="marker_size_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size')">
-          <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px">Size</v-subheader>
-            <glue-throttled-slider wait="300" max="10" step="0.1" :value.sync="marker_size_value" hide-details class="no-hint" />
-          </div>
+          <plugin-slider
+            label='Size'
+            api_hint="plg.marker_size = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="10"
+            step="0.1"
+            :value.sync="marker_size_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_size_scale_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_scale')">
-          <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px">Scale</v-subheader>
-            <glue-throttled-slider wait="300" max="10" step="0.1" :value.sync="marker_size_scale_value" hide-details class="no-hint" />
-          </div>
+          <plugin-slider
+            label='Scale'
+            api_hint="plg.marker_size_scale = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="10"
+            step="0.1"
+            :value.sync="marker_size_scale_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_col_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_col')">
@@ -355,15 +397,16 @@
             :menu-props="{ left: true }"
             :items="marker_size_col_sync.choices"
             v-model="marker_size_col_value"
-            label="Column"
-            class="no-hint"
+            :label="api_hints_enabled ? 'plg.marker_size_col =' : 'Column'"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_vmin')">
           <v-text-field
             ref="marker_size_vmin"
-            label="vmin"
+            :label="api_hints_enabled ? 'plg.marker_size_vmin =' : 'vmin'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="marker_size_vmin_value"
             type="number"
             step="0.01"
@@ -373,7 +416,8 @@
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_vmax_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_vmax')">
           <v-text-field
             ref="marker_size_vmax"
-            label="vmax"
+            :label="api_hints_enabled ? 'plg.marker_size_vmax =' : 'vmax'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="marker_size_vmax_value"
             type="number"
             step="0.01"
@@ -387,27 +431,19 @@
             :menu-props="{ left: true }"
             :items="marker_color_mode_sync.choices"
             v-model="marker_color_mode_value"
-            label="Color Mode"
-            class="no-hint"
+            :label="api_hints_enabled ? 'plg.marker_color_mode =' : 'Color Mode'"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value==='Fixed'" :sync="marker_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color')">
-          <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">Color</v-subheader>
-            <v-menu>
-              <template v-slot:activator="{ on }">
-                  <span class="color-menu"
-                        :style="`background:${marker_color_value}; cursor: pointer`"
-                        @click.stop="on.click"
-                  >&nbsp;</span>
-              </template>
-              <div @click.stop="" style="text-align: end; background-color: white">
-                  <v-color-picker :value="marker_color_value"
-                                  @update:color="throttledSetValue('marker_color_value', $event.hexa)"></v-color-picker>
-              </div>
-            </v-menu>
-          </div>
+          <plugin-color-picker
+            label='Color'
+            api_hint="plg.marker_color = "
+            :api_hints_enabled="api_hints_enabled"
+            :value="marker_color_value"
+            @color-update="throttledSetValue('marker_color_value', $event.hexa)"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_color_col_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color_col')">
@@ -416,8 +452,8 @@
             :menu-props="{ left: true }"
             :items="marker_color_col_sync.choices"
             v-model="marker_color_col_value"
-            label="Column"
-            class="no-hint"
+            :label="api_hints_enabled ? 'plg.marker_color_col =' : 'Column'"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
@@ -427,15 +463,16 @@
             :menu-props="{ left: true }"
             :items="marker_colormap_sync.choices"
             v-model="marker_colormap_value"
-            label="Colormap"
-            class="no-hint"
+            :label="api_hints_enabled ? 'plg.marker_colormap =' : 'Colormap'"
+            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
           ></v-select>
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_colormap_vmin')">
           <v-text-field
             ref="marker_colormap_vmin"
-            label="vmin"
+            :label="api_hints_enabled ? 'plg.marker_colormap_vmin =' : 'vmin'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="marker_colormap_vmin_value"
             type="number"
             step="0.01"
@@ -445,7 +482,8 @@
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_vmax_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_colormap_vmax')">
           <v-text-field
             ref="marker_colormap_vmax"
-            label="vmax"
+            :label="api_hints_enabled ? 'plg.marker_colormap_vmax =' : 'vmax'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             v-model.number="marker_colormap_vmax_value"
             type="number"
             step="0.01"
@@ -457,12 +495,13 @@
       <!-- IMAGE:IMAGE -->
       <j-plugin-section-header v-if="image_visible_sync.in_subscribed_states">Image</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="image_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_visible')">
-        <span>
-          <v-btn icon @click.stop="image_visible_value = !image_visible_value">
-            <v-icon>mdi-eye{{ image_visible_value ? '' : '-off' }}</v-icon>
-          </v-btn>
-          Show Image
-        </span>
+        <plugin-switch
+          :value.sync="image_visible_value"
+          label="Show Image"
+          api_hint='plg.image_visible = '
+          :api_hints_enabled="api_hints_enabled"
+          :use_eye_icon="true"
+        />
       </glue-state-sync-wrapper>
 
       <div v-if="image_visible_sync.in_subscribed_states && (image_visible_value || image_visible_sync['mixed'])">
@@ -472,7 +511,8 @@
             :menu-props="{ left: true }"
             :items="image_colormap_sync.choices"
             v-model="image_colormap_value"
-            label="Colormap"
+            :label="api_hints_enabled ? 'plg.image_colormap =' : 'Colormap'"
+            :class="api_hints_enabled ? 'api-hint' : null"
             dense
           >
             <template v-slot:selection="{ item, index }">
@@ -504,45 +544,49 @@
 
         </glue-state-sync-wrapper>
         <glue-state-sync-wrapper v-if="image_color_mode_value !== 'Colormaps' || image_color_mode_sync['mixed']" :sync="image_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_color')">
-          <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px; margin-bottom: 4px">Image Color</v-subheader>
-            <v-menu>
-              <template v-slot:activator="{ on }">
-                  <span class="color-menu"
-                        :style="`background:${image_color_value}; cursor: pointer`"
-                        @click.stop="on.click"
-                  >&nbsp;</span>
-              </template>
-              <div @click.stop="" style="text-align: end; background-color: white">
-                  <v-color-picker :value="image_color_value"
-                                  :swatches="swatches_palette"
-                                  show-swatches
-                                  @update:color="throttledSetValue('image_color_value', $event.hexa)"
-                                  ></v-color-picker>
-              </div>
-            </v-menu>
-          </div>
+          <plugin-color-picker
+            label='Image Color'
+            api_hint="plg.image_color = "
+            :api_hints_enabled="api_hints_enabled"
+            :value="image_color_value"
+            @color-update="throttledSetValue('image_color_value', $event.hexa)"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper :sync="image_opacity_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_opacity')">
-          <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px">Opacity</v-subheader>
-            <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_opacity_value" hide-details class="no-hint" />
-          </div>
+          <plugin-slider
+            label='Image Opacity'
+            api_hint="plg.image_opacity = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="image_opacity_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper :sync="image_contrast_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_contrast')">
-          <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px">Contrast</v-subheader>
-            <glue-throttled-slider wait="300" max="4" step="0.01" :value.sync="image_contrast_value" hide-details />
-          </div>
+          <plugin-slider
+            label='Contrast'
+            api_hint="plg.image_contrast = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="4"
+            step="0.01"
+            :value.sync="image_contrast_value"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper :sync="image_bias_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('image_bias')">
-          <div>
-            <v-subheader class="pl-0 slider-label" style="height: 12px">Bias</v-subheader>
-            <glue-throttled-slider wait="300" max="1" step="0.01" :value.sync="image_bias_value" hide-details />
-          </div>
+          <plugin-slider
+            label='Bias'
+            api_hint="plg.image_bias = "
+            :api_hints_enabled="api_hints_enabled"
+            wait="300"
+            max="1"
+            step="0.01"
+            :value.sync="image_bias_value"
+          />
         </glue-state-sync-wrapper>
       </div>
 
@@ -554,8 +598,8 @@
           :menu-props="{ left: true }"
           :items="stretch_function_sync.choices"
           v-model="stretch_function_value"
-          label="Stretch Function"
-          class="no-hint"
+          :label="api_hints_enabled ? 'plg.stretch_function =' : 'Stretch Function'"
+          :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
         ></v-select>
       </glue-state-sync-wrapper>
 
@@ -565,8 +609,8 @@
           :menu-props="{ left: true }"
           :items="stretch_preset_sync.choices"
           v-model="stretch_preset_value"
-          label="Stretch Percentile Preset"
-          class="no-hint"
+          :label="api_hints_enabled ? 'plg.stretch_preset =' : 'Stretch Percentile Preset'"
+          :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
         ></v-select>
       </glue-state-sync-wrapper>
 
@@ -574,7 +618,8 @@
       <glue-state-sync-wrapper v-if="layer_multiselect" :sync="stretch_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_vmin')">
         <v-text-field
           ref="stretch_vmin"
-          label="Stretch VMin"
+          :label="api_hints_enabled ? 'plg.stretch_vmin =' : 'Stretch VMin'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           v-model.number="stretch_vmin_value"
           type="number"
           :step="stretch_vstep"
@@ -584,7 +629,8 @@
       <glue-state-sync-wrapper v-if="layer_multiselect" :sync="stretch_vmax_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_vmax')">
         <v-text-field
           ref="stretch_vmax"
-          label="Stretch VMax"
+          :label="api_hints_enabled ? 'plg.stretch_vmax =' : 'Stretch VMax'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           v-model.number="stretch_vmax_value"
           type="number"
           :step="stretch_vstep"
@@ -630,7 +676,8 @@
                 <v-row>
                   <v-text-field
                       ref="stretch_hist_nbins"
-                      label="Number of Bins"
+                      :label="api_hints_enabled ? 'plg.stretch_hist_nbins =' : 'Number of Bins'"
+                      :class="api_hints_enabled ? 'api-hint' : null"
                       v-model.number="stretch_hist_nbins"
                       type="number"
                       hint="The amount of bins used in the histogram."
@@ -640,24 +687,29 @@
                   ></v-text-field>
                 </v-row>
                 <v-row>
-                  <v-switch
-                    v-model="stretch_hist_zoom_limits"
+                  <plugin-switch
+                    :value.sync="stretch_hist_zoom_limits"
                     class="hide-input"
                     label="Limit histogram to current zoom limits"
+                    api_hint='plg.stretch_hist_zoom_limits ='
+                    :api_hints_enabled="api_hints_enabled"
                     :disabled="viewer_multiselect && viewer_selected.length > 1"
-                  ></v-switch>
+                  />
                 </v-row>
                 <v-row>
-                  <v-switch
-                    v-model="stretch_curve_visible"
+                  <plugin-switch
+                    :value.sync="stretch_curve_visible"
                     class="hide-input"
                     label="Show stretch function curve"
-                  ></v-switch>
+                    api_hint="plg.stretch_curve_visible ="
+                    :api_hints_enabled="api_hints_enabled"
+                  />
                 </v-row>
                 <glue-state-sync-wrapper :sync="stretch_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_vmin')">
                   <v-text-field
                     ref="stretch_vmin"
-                    label="Stretch VMin"
+                    :label="api_hints_enabled ? 'plg.stretch_vmin =' : 'Stretch VMin'"
+                    :class="api_hints_enabled ? 'api-hint' : null"
                     v-model.number="stretch_vmin_value"
                     type="number"
                     :step="stretch_vstep"
@@ -666,7 +718,8 @@
                 <glue-state-sync-wrapper :sync="stretch_vmax_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_vmax')">
                   <v-text-field
                     ref="stretch_vmax"
-                    label="Stretch VMax"
+                    :label="api_hints_enabled ? 'plg.stretch_vmax =' : 'Stretch VMax'"
+                    :class="api_hints_enabled ? 'api-hint' : null"
                     v-model.number="stretch_vmax_value"
                     type="number"
                     :step="stretch_vstep"
@@ -684,12 +737,13 @@
       <div style="display: grid"> <!-- overlay container -->
         <div style="grid-area: 1/1">
           <glue-state-sync-wrapper :sync="contour_visible_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_visible')">
-            <span>
-              <v-btn icon @click.stop="contour_visible_value = !contour_visible_value">
-                <v-icon>mdi-eye{{ contour_visible_value ? '' : '-off' }}</v-icon>
-              </v-btn>
-              Show Contours
-            </span>
+            <plugin-switch
+              :value.sync="contour_visible_value"
+              label="Show Contours"
+              api_hint='plg.contour_visible = '
+              :api_hints_enabled="api_hints_enabled"
+              :use_eye_icon="true"
+            />
           </glue-state-sync-wrapper>
 
           <div v-if="contour_visible_sync.in_subscribed_states && contour_visible_value">
@@ -717,21 +771,34 @@
 
             <div v-if="contour_mode_value === 'Linear'">
               <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_min')">
-                <glue-float-field label="Contour Min" :value.sync="contour_min_value" />
+                <glue-float-field 
+                  :label="api_hints_enabled ? 'plg.contour_min =' : 'Contour Min'"
+                  :class="api_hints_enabled ? 'api-hint' : null"
+                  :value.sync="contour_min_value"
+                />
               </glue-state-sync-wrapper>
 
               <glue-state-sync-wrapper :sync="contour_max_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_max')">
-                <glue-float-field label="Contour Max" :value.sync="contour_max_value" />
+                <glue-float-field
+                  :label="api_hints_enabled ? 'plg.contour_max = ' : 'Contour Max'"
+                  :class="api_hints_enabled ? 'api-hint' : null"
+                  :value.sync="contour_max_value"
+                />
               </glue-state-sync-wrapper>
 
               <glue-state-sync-wrapper :sync="contour_nlevels_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_nlevels')">
-                <glue-float-field label="Number of Contour Levels" :value.sync="contour_nlevels_value" />
+                <glue-float-field
+                  :label="api_hints_enabled ? 'plg.contour_nlevels =' : 'Number of Contour Levels'"
+                  :class="api_hints_enabled ? 'api-hint' : null"
+                  :value.sync="contour_nlevels_value"
+                />
               </glue-state-sync-wrapper>
             </div>
             <div v-else>
               <glue-state-sync-wrapper :sync="contour_custom_levels_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_levels')">
                 <v-text-field
-                  label="Contour Levels"
+                  :label="api_hints_enabled ? 'plg.contour_custom_levels =' : 'Contour Levels'"
+                  :class="api_hints_enabled ? 'api-hint' : null"
                   :value="contour_custom_levels_txt"
                   @focus="contour_custom_levels_focus"
                   @blur="contour_custom_levels_blur"
@@ -777,6 +844,13 @@ module.exports = {
     }
   },
   methods: {
+    boolToString(b) {
+      if (b) {
+        return 'True'
+      } else {
+        return 'False'
+      }
+    },
     contour_custom_levels_focus(e) {
       this.contour_custom_levels_user_editing = true
     },
@@ -805,7 +879,6 @@ module.exports = {
         }
       }
       style += ')'
-      console.log(style)
       return style
     }
   },

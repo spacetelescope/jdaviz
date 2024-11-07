@@ -1,0 +1,45 @@
+settings:
+  configuration: rampviz
+  data:
+    auto_populate: true
+    parser: rampviz-data-parser
+  visible:
+    menu_bar: false
+    toolbar: true
+    tray: true
+    tab_headers: true
+  dense_toolbar: false
+  server_is_remote: false
+  context:
+    notebook:
+      max_height: 750px
+toolbar:
+  - g-data-tools
+  - g-subset-tools
+  - g-coords-info
+tray:
+  - g-metadata-viewer
+  - g-plot-options
+  - g-data-quality
+  - g-subset-plugin
+  - ramp-extraction
+  - g-markers
+  - cube-slice
+  - export
+  - about
+viewer_area:
+  - container: col
+    children:
+      - container: row
+        viewers:
+          - name: Flux
+            plot: rampviz-image-viewer
+            reference: group-viewer
+          - name: Difference
+            plot: rampviz-image-viewer
+            reference: diff-viewer
+      - container: row
+        viewers:
+          - name: Integration profile
+            plot: rampviz-profile-viewer
+            reference: integration-viewer

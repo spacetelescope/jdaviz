@@ -11,7 +11,8 @@ __all__ = ['NewViewerMessage', 'ViewerAddedMessage', 'ViewerRemovedMessage', 'Lo
            'CanvasRotationChangedMessage',
            'GlobalDisplayUnitChanged', 'ChangeRefDataMessage',
            'PluginTableAddedMessage', 'PluginTableModifiedMessage',
-           'PluginPlotAddedMessage', 'PluginPlotModifiedMessage']
+           'PluginPlotAddedMessage', 'PluginPlotModifiedMessage',
+           'IconsUpdatedMessage']
 
 
 class NewViewerMessage(Message):
@@ -91,6 +92,9 @@ class LoadDataMessage(Message):
 
 
 class AddDataMessage(Message):
+    """
+    Emitted AFTER data is added to a viewer
+    """
     def __init__(self, data, viewer, viewer_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -197,6 +201,9 @@ class ConfigurationLoadedMessage(Message):
 
 
 class AddDataToViewerMessage(Message):
+    """
+    Emitted to request data is added to a viewer (BEFORE the data is actually added)
+    """
     def __init__(self, viewer_reference, data_label, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -343,11 +350,11 @@ class SliceToolStateMessage(Message):
 
 class LinkUpdatedMessage(Message):
     '''Message generated when the WCS/pixel linking is changed'''
-    def __init__(self, link_type, wcs_use_fallback, wcs_use_affine, *args, **kwargs):
+    def __init__(self, link_type, wcs_use_fallback, wcs_fast_approximation, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._link_type = link_type
         self._wcs_use_fallback = wcs_use_fallback
-        self._wcs_use_affine = wcs_use_affine
+        self._wcs_fast_approximation = wcs_fast_approximation
 
     @property
     def link_type(self):
@@ -358,8 +365,8 @@ class LinkUpdatedMessage(Message):
         return self._wcs_use_fallback
 
     @property
-    def wcs_use_affine(self):
-        return self._wcs_use_affine
+    def wcs_fast_approximation(self):
+        return self._wcs_fast_approximation
 
 
 class ExitBatchLoadMessage(Message):
@@ -408,7 +415,10 @@ class CanvasRotationChangedMessage(Message):
 
 
 class GlobalDisplayUnitChanged(Message):
-    '''Message generated when the global app-wide display unit is changed'''
+    '''Message generated when the (x or y axis) unit of the spectrum viewer is
+    changed, which is used app-wide to inform display units that depend on the
+    unit choice and flux<>sb toggle of the spectrum viewer.'''
+
     def __init__(self, axis, unit, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._axis = axis
@@ -461,3 +471,13 @@ class PluginPlotModifiedMessage(PluginPlotAddedMessage):
     '''Message generated when the items in a plugin plot are changed'''
     def __init__(self, sender):
         super().__init__(sender)
+
+
+class IconsUpdatedMessage(Message):
+    '''Message generated when the viewer or layer icons are updated'''
+    def __init__(self, icon_type, icons, **kwargs):
+        # icon_type = 'layer' or 'viewer'
+        super().__init__(**kwargs)
+        self.icon_type = icon_type
+        # icons might be a CallbackDict, cast to ensure its a dictionary
+        self.icons = dict(icons)

@@ -3,9 +3,8 @@ import pytest
 from astropy import units as u
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.data import get_pkg_data_filename
-from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI, XRangeROI
+from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
 from glue.core.subset_group import GroupedSubset
-from glue.core.edit_subset_mode import AndMode, AndNotMode, OrMode, XorMode
 from regions import (PixCoord, CirclePixelRegion, CircleSkyRegion, RectanglePixelRegion,
                      EllipsePixelRegion, CircleAnnulusPixelRegion)
 from numpy.testing import assert_allclose
@@ -18,11 +17,12 @@ from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 def test_region_from_subset_2d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 
-    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 2D Flux')
 
-    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(EllipticalROI(1, 3.5, 1.2, 3.3))
+    subset_plugin.import_region(
+        EllipsePixelRegion(center=PixCoord(x=1, y=3.5), width=2.4, height=6.6))
 
     subsets = cubeviz_helper.app.get_subsets()
     reg = subsets.get('Subset 1')[0]['region']
@@ -54,12 +54,12 @@ def test_region_from_subset_2d(cubeviz_helper):
 def test_region_from_subset_3d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 256)), data_label='Test 3D Flux')
 
-    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     assert subset_plugin.subset_selected == "Create New"
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
-    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
+    subset_plugin.import_region(RectangularROI(1, 3.5, -0.2, 3.3))
 
     subsets = cubeviz_helper.app.get_subsets()
     reg = cubeviz_helper.app.get_subsets('Subset 1', object_only=True)[0]
@@ -120,10 +120,9 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.angle.to_value(u.deg), 45)  # Might be stored in radians
 
     # Circular Subset
-    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
-    # We set the active tool here to trigger a reset of the Subset state to "Create New"
-    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:truecircle']
-    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(xc=3, yc=4, radius=2.4))
+    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.import_region(CircularROI(xc=3, yc=4, radius=2.4))
+
     assert subset_plugin.subset_selected == "Subset 2"
     assert subset_plugin.subset_types == ["CircularROI"]
     assert subset_plugin.is_centerable
@@ -133,13 +132,9 @@ def test_region_from_subset_3d(cubeviz_helper):
         assert subset_plugin._get_value_from_subset_definition(0, "Radius (pixels)", key) == 2.4
 
     # Circular Annulus Subset
-    flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
-    # We set the active tool here to trigger a reset of the Subset state to "Create New"
-    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:circannulus']
-    cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularAnnulusROI(xc=5,
-                                                                              yc=6,
-                                                                              inner_radius=2,
-                                                                              outer_radius=4))
+    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.import_region(CircularAnnulusROI(xc=5, yc=6, inner_radius=2, outer_radius=4))
+
     assert subset_plugin.subset_selected == "Subset 3"
     assert subset_plugin.subset_types == ["CircularAnnulusROI"]
     for key in ("orig", "value"):
@@ -151,11 +146,12 @@ def test_region_from_subset_3d(cubeviz_helper):
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
-    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
 
     cubeviz_helper.load_data(data, data_label='Test 1D Flux')
 
-    cubeviz_helper.app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(5, 15.5))
+    spectral_axis_unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    subset_plugin.import_region(SpectralRegion(5*spectral_axis_unit, 15.5*spectral_axis_unit))
 
     subsets = cubeviz_helper.app.get_subsets(spectral_only=True)
     reg = subsets.get('Subset 1')
@@ -197,16 +193,14 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
 
 
 def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
-    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
     cubeviz_helper.load_data(data, data_label="Test Flux")
 
-    spec_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
-    spec_viewer.apply_roi(XRangeROI(5, 15.5))
-
-    # Add second region to Subset 1
-    cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
-    spec_viewer.apply_roi(XRangeROI(30, 35))
+    spectral_axis_unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit, 15.5 * spectral_axis_unit))
+    subset_plugin.combination_mode.selected = 'or'
+    subset_plugin.import_region(SpectralRegion(30 * spectral_axis_unit, 35 * spectral_axis_unit))
 
     reg = cubeviz_helper.app.get_subsets('Subset 1')
 
@@ -246,40 +240,45 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
-    viewer = cubeviz_helper.app.get_viewer('flux-viewer')
 
-    viewer.apply_roi(CircularROI(xc=25, yc=25, radius=5))
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
+
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(RectangularROI(25, 30, 25, 30))
+    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.import_region(RectangularROI(25, 30, 25, 30))
+
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=27.5, y=27.5),
                                       width=5, height=5, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    cubeviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(EllipticalROI(xc=30, yc=30, radius_x=3, radius_y=6))
+    subset_plugin.combination_mode.selected = 'or'
+    subset_plugin.import_region(EllipticalROI(xc=30, yc=30, radius_x=3, radius_y=6))
+
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
                                   width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'OrState', 'region': ellipse1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
-    viewer.apply_roi(RectangularROI(20, 25, 20, 25))
+    subset_plugin.combination_mode.selected = 'and'
+    subset_plugin.import_region(RectangularROI(20, 25, 20, 25))
+
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     rectangle2 = RectanglePixelRegion(center=PixCoord(x=22.5, y=22.5),
                                       width=5, height=5, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndState', 'region': rectangle2,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(CircularROI(xc=21, yc=24, radius=1))
+    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.import_region(CircularROI(xc=21, yc=24, radius=1))
+
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle2 = CirclePixelRegion(center=PixCoord(x=21, y=24), radius=1)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'AndNotState', 'region': circle2,
@@ -295,26 +294,27 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
 
 def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
     viewer = cubeviz_helper.app.get_viewer('flux-viewer')
 
-    viewer.apply_roi(CircularROI(xc=25, yc=25, radius=5))
+    subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=25, y=25), radius=5)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(RectangularROI(25, 30, 25, 30))
+    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.import_region(RectangularROI(25, 30, 25, 30))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=27.5, y=27.5),
                                       width=5, height=5, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    cubeviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(EllipticalROI(xc=30, yc=30, radius_x=3, radius_y=6))
+    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.import_region(EllipticalROI(xc=30, yc=30, radius_x=3, radius_y=6))
     reg = cubeviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=30, y=30),
                                   width=6, height=12, angle=0.0 * u.deg)
@@ -333,7 +333,6 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     spatial_list = cubeviz_helper.app.get_subsets("Subset 1", spatial_only=True)
     assert len(spatial_list) == 3
 
-    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI']
     assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'AndNotState']
@@ -361,40 +360,38 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
 
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-
+    subset_plugin = imviz_helper.plugins['Subset Tools']._obj
     data_label = 'image-data'
-    viewer = imviz_helper.default_viewer._obj
     imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=True)
-    viewer.apply_roi(CircularROI(xc=5, yc=5, radius=2))
+    subset_plugin.import_region(CircularROI(xc=5, yc=5, radius=2))
     reg = imviz_helper.app.get_subsets("Subset 1")
     circle1 = CirclePixelRegion(center=PixCoord(x=5, y=5), radius=2)
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'RoiSubsetState', 'region': circle1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(RectangularROI(xmin=2, xmax=4, ymin=2, ymax=4))
+    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.import_region(RectangularROI(xmin=2, xmax=4, ymin=2, ymax=4))
     reg = imviz_helper.app.get_subsets("Subset 1")
     rectangle1 = RectanglePixelRegion(center=PixCoord(x=3, y=3),
                                       width=2, height=2, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'RectangularROI', 'glue_state': 'AndNotState', 'region': rectangle1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    imviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(EllipticalROI(xc=3, yc=3, radius_x=3, radius_y=6))
+    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.import_region(EllipticalROI(xc=3, yc=3, radius_x=3, radius_y=6))
     reg = imviz_helper.app.get_subsets("Subset 1")
     ellipse1 = EllipsePixelRegion(center=PixCoord(x=3, y=3),
                                   width=6, height=12, angle=0.0 * u.deg)
     assert reg[-1] == {'name': 'EllipticalROI', 'glue_state': 'AndNotState', 'region': ellipse1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    imviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(CircularAnnulusROI(xc=5, yc=5, inner_radius=2.5, outer_radius=5))
+    subset_plugin.combination_mode.selected = 'or'
+    subset_plugin.import_region(CircularAnnulusROI(xc=5, yc=5, inner_radius=2.5, outer_radius=5))
     reg = imviz_helper.app.get_subsets("Subset 1")
     ann1 = CircleAnnulusPixelRegion(center=PixCoord(x=5, y=5), inner_radius=2.5, outer_radius=5)
     assert reg[-1] == {'name': 'CircularAnnulusROI', 'glue_state': 'OrState', 'region': ann1,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    subset_plugin = imviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI',
                                           'CircularAnnulusROI']
@@ -413,12 +410,12 @@ def test_recenter_linked_by_wcs(imviz_helper):
         'data/gauss100_fits_wcs_block_reduced.fits', package='jdaviz.configs.imviz.tests'))
 
     # Link them by WCS
-    imviz_helper.link_data(link_type='wcs')
+    imviz_helper.link_data(align_by='wcs')
     w = imviz_helper.app.data_collection[0].coords
 
     # This rectangle is over a real object in reference image but
     # only the last row in the second image if linked by pixel.
-    imviz_helper.load_regions(
+    imviz_helper.plugins['Subset Tools']._obj.import_region(
         RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w))
 
     subset_plugin = imviz_helper.plugins["Subset Tools"]._obj
@@ -437,8 +434,8 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # Now create a new subset that has a source in the corner and test
     # recentering with multiselect.
-
-    imviz_helper.load_regions(
+    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.import_region(
         CirclePixelRegion(center=PixCoord(x=145, y=175), radius=17).to_sky(w))
     subset_plugin.multiselect = True
     subset_plugin.subset_selected = ["Subset 1", "Subset 2"]
@@ -466,41 +463,45 @@ def test_with_invalid_subset_name(cubeviz_helper):
 def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
-    viewer.apply_roi(XRangeROI(6000, 7000))
-    reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
+    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+
     subset1 = SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
                              7000 * spectrum1d.spectral_axis.unit)
+    subset_plugin.import_region(subset1)
+    reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
+
     assert reg[-1]['region'].lower == subset1.lower and reg[-1]['region'].upper == subset1.upper
     assert reg[-1]['glue_state'] == 'RangeSubsetState'
 
-    specviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-
-    viewer.apply_roi(XRangeROI(6500, 6800))
-    reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
+    subset_plugin.combination_mode.selected = 'andnot'
     subset1 = SpectralRegion(6500 * spectrum1d.spectral_axis.unit,
                              6800 * spectrum1d.spectral_axis.unit)
+    subset_plugin.import_region(subset1)
+    reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
+
     assert reg[-1]['region'].lower == subset1.lower and reg[-1]['region'].upper == subset1.upper
     assert reg[-1]['glue_state'] == 'AndNotState'
 
-    specviz_helper.app.session.edit_subset_mode.mode = OrMode
-
-    viewer.apply_roi(XRangeROI(7200, 7800))
-    reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
+    subset_plugin.combination_mode.selected = 'or'
     subset1 = SpectralRegion(7200 * spectrum1d.spectral_axis.unit,
                              7800 * spectrum1d.spectral_axis.unit)
+    subset_plugin.import_region(subset1)
+
+    reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
+
     assert reg[-1]['region'].lower == subset1.lower and reg[-1]['region'].upper == subset1.upper
     assert reg[-1]['glue_state'] == 'OrState'
 
-    specviz_helper.app.session.edit_subset_mode.mode = AndMode
-
-    viewer.apply_roi(XRangeROI(6800, 7500))
-    reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
+    subset_plugin.combination_mode.selected = 'and'
     subset1 = SpectralRegion(6800 * spectrum1d.spectral_axis.unit,
                              7500 * spectrum1d.spectral_axis.unit)
+    subset_plugin.import_region(subset1)
+
+    reg = specviz_helper.app.get_subsets("Subset 1", simplify_spectral=False)
+
     assert reg[-1]['region'].lower == subset1.lower and reg[-1]['region'].upper == subset1.upper
     assert reg[-1]['glue_state'] == 'AndState'
 
-    subset_plugin = specviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ['Range', 'Range', 'Range', 'Range']
     assert subset_plugin.glue_state_types == ['AndState', 'AndNotState', 'OrState', 'AndState']
@@ -515,19 +516,17 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
 
 def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
 
-    viewer.apply_roi(XRangeROI(6200, 6800))
-    specviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(XRangeROI(7200, 7600))
-
-    specviz_helper.app.session.edit_subset_mode.mode = XorMode
-    viewer.apply_roi(XRangeROI(6200, 7600))
+    unit = spectrum1d.spectral_axis.unit
+    subset = [SpectralRegion(6200 * unit, 6800 * unit),
+              SpectralRegion(7200 * unit, 7600 * unit),
+              SpectralRegion(6200 * unit, 7600 * unit)]
+    mode = ['new', 'or', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
     reg = specviz_helper.app.get_subsets("Subset 1")
     assert reg.lower.value == 6800 and reg.upper.value == 7200
-
-    subset_plugin = specviz_helper.app.get_tray_item_from_name('g-subset-plugin')
 
     # We will now update one of the bounds of the composite subset
     subset_plugin._set_value_in_subset_definition(0, "Lower bound", "value", 6000)
@@ -542,8 +541,8 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
 
     # This makes it so that only spectral regions within this bound
     # are visible, so the API should reflect that.
-    specviz_helper.app.session.edit_subset_mode.mode = AndMode
-    viewer.apply_roi(XRangeROI(6600, 7400))
+    subset_plugin.combination_mode.selected = 'and'
+    subset_plugin.import_region(SpectralRegion(6600 * unit, 7400 * unit))
 
     reg = specviz_helper.app.get_subsets("Subset 1")
     assert reg.lower.value == 6800 and reg[0].upper.value == 7200
@@ -557,43 +556,112 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
 
     assert subset_plugin.can_simplify
 
-    viewer.apply_roi(XRangeROI(7800, 8000))
+    subset_plugin.combination_mode.selected = 'and'
+    subset_plugin.import_region(SpectralRegion(7800 * unit, 8000 * unit))
     with pytest.raises(ValueError, match="AND mode should overlap with existing subset"):
         specviz_helper.app.get_subsets("Subset 1")
 
 
-def test_edit_composite_spectral_with_xor(specviz_helper, spectrum1d):
+def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
 
-    viewer.apply_roi(XRangeROI(6400, 6600))
-    specviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(XRangeROI(7200, 7400))
+    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
 
-    viewer.apply_roi(XRangeROI(7600, 7800))
+    unit = spectrum1d.spectral_axis.unit
+    subset = [SpectralRegion(6200 * unit, 6800 * unit),
+              SpectralRegion(7200 * unit, 7600 * unit),
+              SpectralRegion(6100 * unit, 7600 * unit)]
+    mode = ['new', 'or', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
-    specviz_helper.app.session.edit_subset_mode.mode = XorMode
-    viewer.apply_roi(XRangeROI(6700, 7700))
     reg = specviz_helper.app.get_subsets("Subset 1")
 
-    assert reg[0].lower.value == 6400 and reg[0].upper.value == 6600
-    assert reg[1].lower.value == 6700 and reg[1].upper.value == 7200
-    assert reg[2].lower.value == 7400 and reg[2].upper.value == 7600
-    assert reg[3].lower.value == 7700 and reg[3].upper.value == 7800
+    assert reg[0].lower.value == 6100 and reg[0].upper.value == 6200
+    assert reg[1].lower.value == 6800 and reg[1].upper.value == 7200
+
+    subset_plugin.combination_mode.selected = 'new'
+    subset = [SpectralRegion(7000 * unit, 7200 * unit),
+              SpectralRegion(7100 * unit, 7300 * unit),
+              SpectralRegion(6900 * unit, 7105 * unit)]
+    mode = ['new', 'xor', 'or']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
+
+    reg = specviz_helper.app.get_subsets("Subset 2")
+    assert reg[0].lower.value == 6900 and reg[0].upper.value == 7105
+    assert reg[1].lower.value == 7200 and reg[1].upper.value == 7300
+
+    subset_plugin.combination_mode.selected = 'new'
+    subset = [SpectralRegion(6000 * unit, 6500 * unit),
+              SpectralRegion(6100 * unit, 6200 * unit)]
+    mode = ['new', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
+
+    reg = specviz_helper.app.get_subsets("Subset 3")
+    assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
+    assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
+
+    subset_plugin.combination_mode.selected = 'new'
+    subset = [SpectralRegion(6100 * unit, 6200 * unit),
+              SpectralRegion(6000 * unit, 6500 * unit)]
+    mode = ['new', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
+
+    reg = specviz_helper.app.get_subsets("Subset 4")
+    assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
+    assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
+
+    subset_plugin.combination_mode.selected = 'new'
+    subset = [SpectralRegion(7500 * unit, 7600 * unit),
+              SpectralRegion(6000 * unit, 6010 * unit)]
+    mode = ['new', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
+
+    reg = specviz_helper.app.get_subsets("Subset 5")
+    assert reg[0].lower.value == 6000 and reg[0].upper.value == 6010
+    assert reg[1].lower.value == 7500 and reg[1].upper.value == 7600
+
+
+def test_composite_spectral_with_xor_complicated(specviz_helper, spectrum1d):
+    specviz_helper.load_data(spectrum1d)
+
+    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+
+    unit = spectrum1d.spectral_axis.unit
+    subset = [SpectralRegion(6100 * unit, 6700 * unit),
+              SpectralRegion(6200 * unit, 6300 * unit),
+              SpectralRegion(6050 * unit, 6800 * unit),
+              SpectralRegion(7000 * unit, 7200 * unit),
+              SpectralRegion(6010 * unit, 6020 * unit),
+              SpectralRegion(6090 * unit, 6850 * unit)
+              ]
+    mode = ['new', 'andnot', 'xor', 'or', 'or', 'xor']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
+
+    # (6100, 6200), (6300, 6700)
+    # (6050, 6100), (6200, 6300), (6700, 6800)
+    # (6050, 6100), (6200, 6300), (6700, 6800), (7000, 7200)
+    # (6010, 6020), (6050, 6100), (6200, 6300), (6700, 6800), (7000, 7200)
+    # (6010, 6020), (6050, 6090), (6100, 6200), (6300, 6700), (6800, 6850), (7000, 7200)
+
+    reg = specviz_helper.app.get_subsets("Subset 1")
+    assert reg[0].lower.value == 6010 and reg[0].upper.value == 6020
+    assert reg[1].lower.value == 6050 and reg[1].upper.value == 6090
+    assert reg[2].lower.value == 6100 and reg[2].upper.value == 6200
+    assert reg[3].lower.value == 6300 and reg[3].upper.value == 6700
+    assert reg[4].lower.value == 6800 and reg[4].upper.value == 6850
+    assert reg[5].lower.value == 7000 and reg[5].upper.value == 7200
 
 
 def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+    unit = spectrum1d.spectral_axis.unit
+    subset = [SpectralRegion(6400 * unit, 7400 * unit),
+              SpectralRegion(6600 * unit, 7200 * unit),
+              SpectralRegion(6600 * unit, 7300 * unit)]
+    mode = ['new', 'andnot', 'or']
+    subset_plugin.import_region(region=subset, combination_mode=mode)
 
-    viewer.apply_roi(XRangeROI(6400, 7400))
-    specviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(XRangeROI(6600, 7200))
-
-    specviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(XRangeROI(6600, 7300))
-
-    subset_plugin = specviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.can_simplify
     subset_plugin.vue_simplify_subset()
 
@@ -603,18 +671,17 @@ def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
 
 def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+    unit = spectrum1d.spectral_axis.unit
+    subset_plugin.import_region(SpectralRegion(6400 * unit, 6600 * unit))
 
-    viewer.apply_roi(XRangeROI(6400, 6600))
     assert specviz_helper.app.is_there_overlap_spectral_subset("Subset 1") is False
-    specviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(XRangeROI(7000, 7400))
 
-    viewer.apply_roi(XRangeROI(6600, 7300))
+    subset_plugin.combination_mode.selected = 'or'
+    subset_plugin.import_region(SpectralRegion(7000 * unit, 7400 * unit))
+    subset_plugin.import_region(SpectralRegion(6600 * unit, 7300 * unit))
+    subset_plugin.import_region(SpectralRegion(7600 * unit, 7800 * unit))
 
-    viewer.apply_roi(XRangeROI(7600, 7800))
-
-    subset_plugin = specviz_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.can_simplify
     subset_plugin.vue_simplify_subset()
 
@@ -625,17 +692,16 @@ def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
 
 def test_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
-    viewer = specviz2d_helper.app.get_viewer(
-        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
-    viewer.apply_roi(XRangeROI(6400, 7400))
-    specviz2d_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(XRangeROI(6600, 7200))
+    subset_plugin = specviz2d_helper.plugins['Subset Tools']._obj
+    unit = mos_spectrum2d.spectral_axis.unit
 
-    specviz2d_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(XRangeROI(6600, 7300))
+    subset_plugin.import_region(SpectralRegion(6400 * unit, 7400 * unit))
+    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.import_region(SpectralRegion(6600 * unit, 7200 * unit))
+    subset_plugin.combination_mode.selected = 'or'
+    subset_plugin.import_region(SpectralRegion(6600 * unit, 7300 * unit))
 
-    subset_plugin = specviz2d_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.can_simplify
     subset_plugin.vue_simplify_subset()
 
@@ -645,18 +711,16 @@ def test_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
 
 def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
-    viewer = specviz2d_helper.app.get_viewer(
-        specviz2d_helper._default_spectrum_2d_viewer_reference_name)
 
-    viewer.apply_roi(XRangeROI(6400, 6600))
-    specviz2d_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(XRangeROI(7000, 7400))
+    subset_plugin = specviz2d_helper.plugins['Subset Tools']._obj
+    unit = mos_spectrum2d.spectral_axis.unit
 
-    viewer.apply_roi(XRangeROI(6600, 7300))
+    subset_plugin.import_region(SpectralRegion(6400 * unit, 6600 * unit))
+    subset_plugin.combination_mode.selected = 'or'
+    subset_plugin.import_region(SpectralRegion(7000 * unit, 7400 * unit))
+    subset_plugin.import_region(SpectralRegion(6600 * unit, 7300 * unit))
+    subset_plugin.import_region(SpectralRegion(7600 * unit, 7800 * unit))
 
-    viewer.apply_roi(XRangeROI(7600, 7800))
-
-    subset_plugin = specviz2d_helper.app.get_tray_item_from_name('g-subset-plugin')
     assert subset_plugin.can_simplify
     subset_plugin.vue_simplify_subset()
 
@@ -667,20 +731,19 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
 
 def test_multi_mask_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
+    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+    unit = spectrum1d.spectral_axis.unit
+    subset_plugin.import_region(SpectralRegion(6200 * unit, 6800 * unit))
 
-    viewer.apply_roi(XRangeROI(6200, 6800))
-
-    plugin = specviz_helper.app.get_tray_item_from_name("g-subset-plugin")
-    plugin.can_freeze = True
-    plugin.vue_freeze_subset()
+    subset_plugin.can_freeze = True
+    subset_plugin.vue_freeze_subset()
 
     reg = specviz_helper.app.get_subsets()
     assert reg["Subset 1"][0]["region"] == 3
     assert isinstance(reg["Subset 1"][0]["subset_state"], MultiMaskSubsetState)
 
-    specviz_helper.app.session.edit_subset_mode.mode = OrMode
-    viewer.apply_roi(XRangeROI(7200, 7600))
+    subset_plugin.combination_mode.selected = 'or'
+    subset_plugin.import_region(SpectralRegion(7200 * unit, 7600 * unit))
 
     # Simplify subset ignores Mask subsets
     reg = specviz_helper.app.get_subsets()
@@ -692,23 +755,23 @@ def test_multi_mask_subset(specviz_helper, spectrum1d):
     assert (reg["Subset 1"][1]["region"].lower.value == 7200
             and reg["Subset 1"][1]["region"].upper.value == 7600)
     assert reg["Subset 1"][0]["region"] == 3
-    assert plugin.can_simplify is False
+    assert subset_plugin.can_simplify is False
 
     # If we freeze again, all subregions become a Mask subset object
-    plugin.vue_freeze_subset()
+    subset_plugin.vue_freeze_subset()
     reg = specviz_helper.app.get_subsets()
     assert reg["Subset 1"][0]["region"] == 5
 
     # When freezing an AndNot state, the number of mask values should decrease
-    specviz_helper.app.session.edit_subset_mode.mode = AndNotMode
-    viewer.apply_roi(XRangeROI(6600, 7200))
+    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.import_region(SpectralRegion(6600 * unit, 7200 * unit))
 
     reg = specviz_helper.app.get_subsets(simplify_spectral=False)
     assert (reg["Subset 1"][1]["region"].lower.value == 6600
             and reg["Subset 1"][1]["region"].upper.value == 7200)
     assert reg["Subset 1"][0]["region"] == 5
 
-    plugin.vue_freeze_subset()
+    subset_plugin.vue_freeze_subset()
     reg = specviz_helper.app.get_subsets()
     assert reg["Subset 1"][0]["region"] == 4
 
@@ -722,17 +785,19 @@ def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
     dc = cubeviz_helper.app.data_collection
 
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
-    spectrum_viewer.toolbar.active_tool = spectrum_viewer.toolbar.tools['bqplot:xrange']
-    spectrum_viewer.apply_roi(XRangeROI(5, 15.5))
+
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    subset_plugin.import_region(SpectralRegion(6200 * unit, 6800 * unit))
 
     dc.remove_subset_group(dc.subset_groups[0])
 
     assert spectrum_viewer.toolbar.active_tool_id == "jdaviz:selectslice"
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
-    # We set the active tool here to trigger a reset of the Subset state to "Create New"
-    flux_viewer.toolbar.active_tool = flux_viewer.toolbar.tools['bqplot:rectangle']
-    flux_viewer.apply_roi(RectangularROI(1, 3.5, -0.2, 3.3))
+
+    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.import_region(RectangularROI(1, 3.5, -0.2, 3.3))
 
     dc.remove_subset_group(dc.subset_groups[0])
 
@@ -750,7 +815,8 @@ class TestRegionsFromSubsets:
         cubeviz_helper.load_data(data)
 
         # basic test, a single circular region
-        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(25, 25, 10))
+        subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = cubeviz_helper.app.get_subsets(include_sky_region=True)
         sky_region = subsets['Subset 1'][0]['sky_region']
         assert isinstance(sky_region, CircleSkyRegion)
@@ -763,8 +829,8 @@ class TestRegionsFromSubsets:
         assert subsets['Subset 1'][0]['sky_region'] is None
 
         # now test a composite subset, each component should have a sky region
-        cubeviz_helper.app.session.edit_subset_mode.mode = AndMode
-        cubeviz_helper.app.get_viewer('flux-viewer').apply_roi(CircularROI(30, 30, 10))
+        subset_plugin.combination_mode.selected = 'and'
+        subset_plugin.import_region(CircularROI(30, 30, 10))
 
         subsets = cubeviz_helper.app.get_subsets(include_sky_region=True)
         assert len(subsets['Subset 1']) == 2
@@ -795,7 +861,8 @@ class TestRegionsFromSubsets:
         imviz_helper.load_data(data)
 
         # basic test, a single circular region
-        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(25, 25, 10))
+        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         sky_region = subsets['Subset 1'][0]['sky_region']
         assert isinstance(sky_region, CircleSkyRegion)
@@ -804,8 +871,8 @@ class TestRegionsFromSubsets:
         assert_allclose(sky_region.radius.arcsec, 28001.08106569353)
 
         # now test a composite subset, each component should have a sky region
-        imviz_helper.app.session.edit_subset_mode.mode = AndMode
-        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(30, 30, 10))
+        subset_plugin.combination_mode.selected = 'and'
+        subset_plugin.import_region(CircularROI(30, 30, 10))
 
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         assert len(subsets['Subset 1']) == 2
@@ -827,16 +894,17 @@ class TestRegionsFromSubsets:
         data = NDData(np.ones((40, 40)) * u.nJy)
         imviz_helper.load_data(data)
 
-        imviz_helper.app.get_viewer('imviz-0').apply_roi(CircularROI(25, 25, 10))
+        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         assert subsets['Subset 1'][0]['sky_region'] is None
 
     def test_subset_renaming(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d, 'myfile')
-        spectrum_viewer_name = specviz_helper._default_spectrum_viewer_reference_name
-        viewer = specviz_helper.app.get_viewer(spectrum_viewer_name)
 
-        viewer.apply_roi(XRangeROI(6200, 7200))
+        subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+        subset_plugin.import_region(SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
+                                                   7200 * spectrum1d.spectral_axis.unit))
         get_data_no_sub = specviz_helper.get_data('myfile')
         get_data_1 = specviz_helper.get_data('myfile', spectral_subset='Subset 1')
 

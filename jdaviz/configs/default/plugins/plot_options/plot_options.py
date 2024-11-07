@@ -10,7 +10,7 @@ from echo import delay_callback
 from traitlets import Any, Dict, Float, Bool, Int, List, Unicode, observe
 
 from glue.core.subset_group import GroupedSubset
-from glue.config import colormaps, stretches
+from glue.config import stretches as glue_stretches
 from glue.viewers.scatter.state import ScatterViewerState
 from glue.viewers.profile.state import ProfileViewerState, ProfileLayerState
 from glue.viewers.image.state import ImageSubsetLayerState, ImageViewerState
@@ -20,45 +20,22 @@ from glue_jupyter.bqplot.image.state import BqplotImageLayerState
 from glue_jupyter.common.toolbar_vuetify import read_icon
 
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelect, LayerSelect,
+from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin, LayerSelect,
                                         PlotOptionsSyncState, Plot,
                                         skip_if_no_updates_since_last_active, with_spinner)
 from jdaviz.core.events import ChangeRefDataMessage
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.custom_traitlets import IntHandleEmpty
-from jdaviz.utils import is_not_wcs_only
+# by importing from utils, glue_colormaps will include the custom Random colormap
+from jdaviz.utils import is_not_wcs_only, cmap_samples, glue_colormaps
 
 
 from scipy.interpolate import PchipInterpolator
-from photutils.utils import make_random_cmap
 
 __all__ = ['PlotOptions']
 
 RANDOM_SUBSET_SIZE = 10_000
-
-
-def _register_random_cmap(
-    cmap_name,
-    bkg_color=[0, 0, 0],
-    bkg_alpha=1,
-    seed=42,
-    ncolors=10_000
-):
-    """
-    Custom random colormap, useful for rendering image
-    segmentation maps. The default background for
-    `label==0` is *transparent*. If the segmentation map
-    contains more than 10,000 labels, adjust the `ncolors`
-    kwarg to ensure uniqueness.
-    """
-    cmap = make_random_cmap(ncolors=ncolors, seed=seed)
-    cmap.colors[0] = bkg_color + [bkg_alpha]
-    cmap.name = cmap_name
-    colormaps.add(cmap_name, cmap)
-
-
-_register_random_cmap('Random', bkg_alpha=1)
 
 
 class SplineStretch:
@@ -117,8 +94,8 @@ class SplineStretch:
 
 
 # Add the spline stretch to the glue stretch registry if not registered
-if "spline" not in stretches:
-    stretches.add("spline", SplineStretch, display="Spline")
+if "spline" not in glue_stretches:
+    glue_stretches.add("spline", SplineStretch, display="Spline")
 
 
 def _round_step(step):
@@ -128,11 +105,11 @@ def _round_step(step):
     decimals = -int(np.log10(abs(step))) + 1 if step != 0 else 6
     if decimals < 0:
         decimals = 0
-    return np.round(step, decimals), decimals
+    return float(np.round(step, decimals)), decimals
 
 
 @tray_registry('g-plot-options', label="Plot Options")
-class PlotOptions(PluginTemplateMixin):
+class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
     """
     The Plot Options Plugin gives access to per-viewer and per-layer options and enables
     setting across multiple viewers/layers simultaneously.
@@ -215,9 +192,6 @@ class PlotOptions(PluginTemplateMixin):
     # read-only display units
     display_units = Dict().tag(sync=True)
 
-    viewer_multiselect = Bool(False).tag(sync=True)
-    viewer_items = List().tag(sync=True)
-    viewer_selected = Any().tag(sync=True)  # Any needed for multiselect
     viewer_limits = Dict().tag(sync=True)
 
     layer_multiselect = Bool(False).tag(sync=True)
@@ -397,16 +371,13 @@ class PlotOptions(PluginTemplateMixin):
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
-    show_viewer_labels = Bool(True).tag(sync=True)
-
-    cmap_samples = Dict().tag(sync=True)
+    cmap_samples = Dict(cmap_samples).tag(sync=True)
     swatches_palette = List().tag(sync=True)
     apply_RGB_presets_spinner = Bool(False).tag(sync=True)
     stretch_hist_spinner = Bool(False).tag(sync=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.viewer = ViewerSelect(self, 'viewer_items', 'viewer_selected', 'viewer_multiselect')
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
 
@@ -652,10 +623,6 @@ class PlotOptions(PluginTemplateMixin):
         self.axes_visible = PlotOptionsSyncState(self, self.viewer, self.layer, 'show_axes',
                                                  'axes_visible_value', 'axes_visible_sync',
                                                  state_filter=not_profile)
-
-        self.show_viewer_labels = self.app.state.settings['viewer_labels']
-        self.app.state.add_callback('settings', self._on_app_settings_changed)
-
         sv = self.spectrum_viewer
         if sv is not None:
             sv.state.add_callback('x_display_unit',
@@ -666,17 +633,10 @@ class PlotOptions(PluginTemplateMixin):
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
 
-        # give UI access to sampled version of the available colormap choices
-        def hex_for_cmap(cmap):
-            N = 50
-            cm_sampled = cmap.resampled(N)
-            return [matplotlib.colors.to_hex(cm_sampled(i)) for i in range(N)]
-        self.cmap_samples = {cmap[1].name: hex_for_cmap(cmap[1]) for cmap in colormaps.members}
-
     @property
     def user_api(self):
         expose = ['multiselect', 'viewer', 'viewer_multiselect', 'layer', 'layer_multiselect',
-                  'select_all', 'subset_visible']
+                  'select_all', 'subset_visible', 'reset_viewer_bounds']
         if self.config == "cubeviz":
             expose += ['uncertainty_visible']
         if self.config != "imviz":
@@ -696,13 +656,6 @@ class PlotOptions(PluginTemplateMixin):
                        'stretch_curve_visible', 'apply_RGB_presets']
 
         return PluginUserApi(self, expose)
-
-    @observe('show_viewer_labels')
-    def _on_show_viewer_labels_changed(self, event):
-        self.app.state.settings['viewer_labels'] = event['new']
-
-    def _on_app_settings_changed(self, value):
-        self.show_viewer_labels = value['viewer_labels']
 
     @property
     def multiselect(self):
@@ -741,7 +694,7 @@ class PlotOptions(PluginTemplateMixin):
         self.send_state('display_units')
 
     def _on_refdata_change(self, *args):
-        if self.app._link_type.lower() == 'wcs':
+        if self.app._align_by.lower() == 'wcs':
             self.display_units['image'] = 'deg'
         else:
             self.display_units['image'] = 'pix'
@@ -866,6 +819,9 @@ class PlotOptions(PluginTemplateMixin):
         self.zoom_step, _ = _round_step(max(x_max-x_min, y_max-y_min) / 100.)
 
     def vue_reset_viewer_bounds(self, _):
+        self.reset_viewer_bounds()
+
+    def reset_viewer_bounds(self):
         # This button is currently only exposed if only the spectrum viewer is selected
         viewers = [self.viewer.selected_obj] if not self.viewer_multiselect else self.viewer.selected_obj # noqa
         for viewer in viewers:
@@ -892,22 +848,18 @@ class PlotOptions(PluginTemplateMixin):
             # plugin hasn't been fully initialized yet
             return
 
-        if not isinstance(msg, dict):  # pragma: no cover
-            # then this is from the limits callbacks
-            # IMPORTANT: this assumes the only non-observe callback to this method comes
-            # from state callbacks from zoom limits.
-            if not self.stretch_hist_zoom_limits:
-                # there isn't anything to update, let's not waste resources
-                return
-            # override msg as an empty dict so that the rest of the logic doesn't have to check
-            # its type
-            msg = {}
-
         # NOTE: this method is separate from _update_stretch_histogram so that
         # _update_stretch_histogram can be called manually (or from the
         # update_callback on the Plot object itself) without going through
-        # the skip_if_no_updates_since_last_active check
+        # the skip_if_no_updates_since_last_active check (and can therefore
+        # be executed even if the plugin is not active)
         self._update_stretch_histogram(msg)
+
+    def _zoom_limits_update_stretch_histogram(self, msg={}):
+        if not self.stretch_hist_zoom_limits:
+            # there isn't anything to update, let's not waste resources
+            return
+        self._update_stretch_histogram()
 
     @with_spinner('stretch_hist_spinner')
     def _update_stretch_histogram(self, msg={}):
@@ -935,7 +887,7 @@ class PlotOptions(PluginTemplateMixin):
                 or not self.stretch_hist_zoom_limits):
             vs = viewer.state
             for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
-                vs.add_callback(attr, self._update_stretch_histogram)
+                vs.add_callback(attr, self._zoom_limits_update_stretch_histogram)
         if isinstance(msg, dict) and msg.get('name') == 'viewer_selected':
             viewer_label_old = msg.get('old')
             if isinstance(viewer_label_old, list):
@@ -944,7 +896,7 @@ class PlotOptions(PluginTemplateMixin):
             if viewer_label_old in self.app._viewer_store:
                 vs_old = self.app.get_viewer(viewer_label_old).state
                 for attr in ('x_min', 'x_max', 'y_min', 'y_max'):
-                    vs_old.remove_callback(attr, self._update_stretch_histogram)
+                    vs_old.remove_callback(attr, self._zoom_limits_update_stretch_histogram)
 
         if not len(self.layer.selected_obj):
             # skip further updates if no data are available:
@@ -1086,7 +1038,7 @@ class PlotOptions(PluginTemplateMixin):
         data = stretch(data, out=data)
 
         if color_mode == 'Colormaps':
-            cmap = colormaps[self.image_colormap.text]
+            cmap = glue_colormaps[self.image_colormap.text]
             if hasattr(cmap, "get_bad"):
                 bad_color = cmap.get_bad().tolist()[:3]
                 layer_cmap = cmap.with_extremes(bad=bad_color + [self.image_opacity_value])
@@ -1097,6 +1049,10 @@ class PlotOptions(PluginTemplateMixin):
             plane = layer_cmap(data)
 
         else:  # Color (Monochromatic)
+            if self.image_color_value is None:
+                # do not crash if image_color_value is not yet assigned,
+                # _update_stretch_curve observes image_color_value so will get called again
+                return False
             # Get color
             color = COLOR_CONVERTER.to_rgba_array(self.image_color_value)[0]
             plane = data[:, np.newaxis] * color
@@ -1165,10 +1121,12 @@ class PlotOptions(PluginTemplateMixin):
         from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
         from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
         from jdaviz.configs.mosviz.plugins.viewers import MosvizImageView, MosvizProfile2DView
+        from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
 
         def _is_image_viewer(viewer):
             return isinstance(viewer, (ImvizImageView, CubevizImageView,
-                                       MosvizImageView, MosvizProfile2DView))
+                                       MosvizImageView, MosvizProfile2DView,
+                                       RampvizImageView))
 
         viewers = self.viewer.selected_obj
         if not isinstance(viewers, list):

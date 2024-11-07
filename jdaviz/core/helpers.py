@@ -12,25 +12,25 @@ from contextlib import contextmanager
 from inspect import isclass
 
 import numpy as np
-import astropy.units as u
-from astropy.nddata import CCDData, StdDevUncertainty
-from regions.core.core import Region
 from glue.core import HubListener
 from glue.core.edit_subset_mode import NewMode
 from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage
 from glue.core.subset import Subset, MaskSubsetState
 from glue.config import data_translator
 from ipywidgets.widgets import widget_serialization
+
+import astropy.units as u
+from astropy.nddata import NDDataArray, CCDData, StdDevUncertainty
+from regions.core.core import Region
 from specutils import Spectrum1D, SpectralRegion
 
-
 from jdaviz.app import Application
-from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage
+from jdaviz.core.events import SnackbarMessage, ExitBatchLoadMessage, SliceSelectSliceMessage
 from jdaviz.core.template_mixin import show_widget
 from jdaviz.utils import data_has_valid_wcs, flux_conversion, spectral_axis_conversion
 
 
-__all__ = ['ConfigHelper', 'ImageConfigHelper']
+__all__ = ['ConfigHelper', 'ImageConfigHelper', 'CubeConfigHelper']
 
 
 class ConfigHelper(HubListener):
@@ -470,7 +470,7 @@ class ConfigHelper(HubListener):
                 spectral_unit = self.app._get_display_unit('spectral')
                 if not spectral_unit:
                     return data
-                flux_unit = self.app._get_display_unit('flux')
+                y_unit = self.app._get_display_unit('spectral_y')
                 # TODO: any other attributes (meta, wcs, etc)?
                 # TODO: implement uncertainty.to upstream
                 uncertainty = data.uncertainty
@@ -486,21 +486,28 @@ class ConfigHelper(HubListener):
                     else:
                         # if not specified as NDUncertainty, assume stddev:
                         new_uncert = uncertainty
-                    new_uncert_converted = flux_conversion(data, new_uncert.quantity.value,
-                                                           new_uncert.unit, flux_unit)
-                    new_uncert = StdDevUncertainty(new_uncert_converted, unit=flux_unit)
+                    if ('_pixel_scale_factor' in data.meta):
+                        new_uncert_converted = flux_conversion(new_uncert.quantity.value,
+                                                               new_uncert.unit, y_unit, spec=data)
+                        new_uncert = StdDevUncertainty(new_uncert_converted, unit=y_unit)
+                    else:
+                        new_uncert = StdDevUncertainty(new_uncert, unit=data.flux.unit)
+
                 else:
                     new_uncert = None
-
-                new_flux = flux_conversion(data, data.flux.value, data.flux.unit,
-                                           flux_unit) * u.Unit(flux_unit)
+                if ('_pixel_scale_factor' in data.meta):
+                    new_y = flux_conversion(data.flux.value, data.flux.unit,
+                                            y_unit, data) * u.Unit(y_unit)
+                else:
+                    new_y = flux_conversion(data.flux.value, data.flux.unit,
+                                            data.flux.unit, spec=data) * u.Unit(data.flux.unit)
                 new_spec = (spectral_axis_conversion(data.spectral_axis.value,
                                                      data.spectral_axis.unit,
                                                      spectral_unit)
                             * u.Unit(spectral_unit))
 
                 data = Spectrum1D(spectral_axis=new_spec,
-                                  flux=new_flux,
+                                  flux=new_y,
                                   uncertainty=new_uncert,
                                   mask=data.mask)
             else:  # pragma: nocover
@@ -508,7 +515,7 @@ class ConfigHelper(HubListener):
         return data
 
     def _get_data(self, data_label=None, spatial_subset=None, spectral_subset=None,
-                  mask_subset=None, cls=None, use_display_units=False):
+                  temporal_subset=None, mask_subset=None, cls=None, use_display_units=False):
         list_of_valid_subset_names = [x.label for x in self.app.data_collection.subset_groups]
         for subset in (spatial_subset, spectral_subset, mask_subset):
             if subset and subset not in list_of_valid_subset_names:
@@ -535,6 +542,11 @@ class ConfigHelper(HubListener):
             # apps which would then need to do their own type checks, if necessary)
             mask_subset = spectral_subset
 
+        if temporal_subset:
+            if mask_subset is not None:
+                raise ValueError("cannot use both mask_subset and spectral_subset")
+            mask_subset = temporal_subset
+
         # End validity checks and start data retrieval
         data = self.app.data_collection[data_label]
 
@@ -546,7 +558,11 @@ class ConfigHelper(HubListener):
             elif data.ndim == 2:
                 cls = CCDData
             elif data.ndim in [1, 3]:
-                cls = Spectrum1D
+                if self.app.config == 'rampviz':
+                    cls = NDDataArray
+                else:
+                    # for cubeviz, specviz, mosviz, this must be a spectrum:
+                    cls = Spectrum1D
 
         object_kwargs = {}
         if cls == Spectrum1D:
@@ -790,7 +806,7 @@ class ImageConfigHelper(ConfigHelper):
                                     RectangularAperture, CircularAnnulus,
                                     CirclePixelRegion, EllipsePixelRegion,
                                     RectanglePixelRegion, CircleAnnulusPixelRegion))
-                    and self.app._link_type == "wcs"):
+                    and self.app._align_by == "wcs"):
                 bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
                 continue
 
@@ -891,7 +907,7 @@ class ImageConfigHelper(ConfigHelper):
 
         regions = {}
         failed_regs = set()
-        to_sky = self.app._link_type == 'wcs'
+        to_sky = self.app._align_by == 'wcs'
 
         # Subset is global, so we just use default viewer.
         for lyr in self.default_viewer._obj.layers:
@@ -975,3 +991,27 @@ def _next_subset_num(label_prefix, subset_groups):
                         max_i = i
 
     return max_i + 1
+
+
+class CubeConfigHelper(ImageConfigHelper):
+    """Base config helper class for cubes"""
+
+    _loaded_flux_cube = None
+    _loaded_uncert_cube = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def select_slice(self, value):
+        """
+        Select the slice closest to the provided value.
+
+        Parameters
+        ----------
+        value : float or int, optional
+            Slice value to select in units of the x-axis of the profile viewer.
+            The nearest slice will be selected if "snap to slice" is enabled in
+            the slice plugin.
+        """
+        msg = SliceSelectSliceMessage(value=value, sender=self)
+        self.app.hub.broadcast(msg)

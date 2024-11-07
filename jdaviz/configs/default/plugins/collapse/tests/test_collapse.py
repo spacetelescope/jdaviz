@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-from astropy.nddata import CCDData
 from astropy import units as u
 from specutils import Spectrum1D
 
@@ -38,7 +37,7 @@ def test_linking_after_collapse(cubeviz_helper, spectral_cube_wcs):
     assert dc.external_links[3].cids2[0] == dc[-1].pixel_component_ids[0]
 
 
-def test_save_collapsed_to_fits(cubeviz_helper, spectral_cube_wcs, tmp_path):
+def test_collapsed_to_extract_plugin(cubeviz_helper, spectral_cube_wcs, tmp_path):
 
     cubeviz_helper.load_data(Spectrum1D(flux=np.ones((3, 4, 5)) * u.nJy, wcs=spectral_cube_wcs))
 
@@ -58,31 +57,7 @@ def test_save_collapsed_to_fits(cubeviz_helper, spectral_cube_wcs, tmp_path):
     assert collapse_plugin._obj.filename == fname
     collapse_plugin._obj.filename = str(tmp_path / fname)
 
-    # save output file with default name, make sure it exists
-    collapse_plugin._obj.vue_save_as_fits()
-    assert (tmp_path / fname).is_file()
+    label = collapse_plugin._obj.add_results.label
+    export_plugin = cubeviz_helper.plugins['Export']._obj
 
-    # read file back in, make sure it matches
-    dat = CCDData.read(collapse_plugin._obj.filename)
-    np.testing.assert_array_equal(dat.data, collapse_plugin._obj.collapsed_spec.data)
-    assert dat.unit == collapse_plugin._obj.collapsed_spec.unit
-
-    # make sure correct error message is raised when export_enabled is False
-    # this won't appear in UI, but just to be safe.
-    collapse_plugin._obj.export_enabled = False
-    msg = "Writing out collapsed cube to file is currently disabled"
-    with pytest.raises(ValueError, match=msg):
-        collapse_plugin._obj.vue_save_as_fits()
-    collapse_plugin._obj.export_enabled = True  # set back to True
-
-    # check that trying to overwrite without overwrite=True sets overwrite_warn to True, to
-    # display popup in UI
-    assert collapse_plugin._obj.overwrite_warn is False
-    collapse_plugin._obj.vue_save_as_fits()
-    assert collapse_plugin._obj.overwrite_warn
-
-    # check that writing out to a non existent directory fails as expected
-    collapse_plugin._obj.filename = '/this/path/doesnt/exist.fits'
-    with pytest.raises(ValueError, match="Invalid path=/this/path/doesnt"):
-        collapse_plugin._obj.vue_save_as_fits()
-    collapse_plugin._obj.filename == fname  # set back to original filename
+    assert label in export_plugin.data_collection.labels

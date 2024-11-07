@@ -67,7 +67,7 @@ def test_destroy_viewer_with_subset(imviz_helper):
 
     # Create a Subset.
     reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=2)
-    imviz_helper.load_regions(reg)
+    imviz_helper.plugins['Subset Tools']._obj.import_region(reg)
 
     # Remove the second viewer.
     imviz_helper.destroy_viewer('second')
@@ -95,6 +95,15 @@ def test_mastviz_config():
 
     assert im.app.get_viewer_ids() == ['mastviz-0']
     assert im.app.data_collection[0].shape == (2, 2)
+
+
+def test_zoom_center_radius_init(imviz_helper):
+    """Regression test for https://github.com/spacetelescope/jdaviz/issues/3217"""
+    arr = np.ones((10, 10))
+    imviz_helper.load_data(arr, data_label='my_array')
+    assert imviz_helper.default_viewer._obj.state.zoom_center_x > 0
+    assert imviz_helper.default_viewer._obj.state.zoom_center_y > 0
+    assert imviz_helper.default_viewer._obj.state.zoom_radius > 0
 
 
 class TestDeleteData(BaseImviz_WCS_NoWCS):

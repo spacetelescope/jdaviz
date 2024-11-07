@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 import numpy as np
 import specutils
 from astropy import units as u
@@ -20,7 +17,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralContinuumMixin,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner)
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['MomentMap']
@@ -30,7 +26,7 @@ SPECUTILS_LT_1_15_1 = not minversion(specutils, "1.15.1.dev")
 spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
 u.add_enabled_units([spaxel])
 
-moment_unit_options = {0: ["Surface Brightness", "Flux"],
+moment_unit_options = {0: ["Surface Brightness"],
                        1: ["Velocity", "Spectral Unit"],
                        2: ["Velocity", "Velocity^N"]}
 
@@ -81,7 +77,6 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     n_moment = IntHandleEmpty(0).tag(sync=True)
     filename = Unicode().tag(sync=True)
     moment_available = Bool(False).tag(sync=True)
-    overwrite_warn = Bool(False).tag(sync=True)
     output_unit_items = List().tag(sync=True)
     output_radio_items = List().tag(sync=True)
     output_unit_selected = Unicode().tag(sync=True)
@@ -103,6 +98,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                                                'continuum_dataset_selected',
                                                filters=['not_child_layer',
                                                         'layer_in_spectrum_viewer'])
+        # since the continuum is just an approximation preview,
+        # automatically convert the units instead of recomputing
+        self.continuum_auto_update_units = True
 
         # when plugin is initialized, there won't be a dataset selected, so
         # call the output unit 'Flux' for now (rather than surface brightness).
@@ -111,8 +109,10 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         self.output_unit = SelectPluginComponent(self,
                                                  items='output_unit_items',
                                                  selected='output_unit_selected',
-                                                 manual_options=['Flux', 'Spectral Unit',
-                                                                 'Velocity', 'Velocity^N'])
+                                                 manual_options=['Surface Brightness',
+                                                                 'Spectral Unit',
+                                                                 'Velocity',
+                                                                 'Velocity^N'])
 
         self.dataset.add_filter('is_cube')
         self.add_results.viewer.filters = ['is_image_viewer']
@@ -169,15 +169,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         if isinstance(self.n_moment, str) or self.n_moment < 0:
             return
-        unit_options_index = 2 if self.n_moment > 2 else self.n_moment
+        unit_options_index = min(self.n_moment, 2)
         if self.output_unit_selected not in moment_unit_options[unit_options_index]:
             self.output_unit_selected = moment_unit_options[unit_options_index][0]
         self.send_state("output_unit_selected")
 
-        # either 'Flux' or 'Surface Brightness'
-        orig_flux_or_sb = self.output_unit_items[0]['label']
-
-        unit_dict = {orig_flux_or_sb: "",
+        unit_dict = {"Surface Brightness": "",
                      "Spectral Unit": "",
                      "Velocity": "km/s",
                      "Velocity^N": f"km{self.n_moment}/s{self.n_moment}"}
@@ -194,37 +191,11 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
                 sunit = ""
             self.dataset_spectral_unit = sunit
             unit_dict["Spectral Unit"] = sunit
-
-            # get flux/SB units
-            if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
-                if self.spectrum_viewer.state.y_display_unit is not None:
-                    unit_dict[orig_flux_or_sb] = self.spectrum_viewer.state.y_display_unit
-                else:
-                    # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
-                    # been done if not, get default flux units which should be the units displayed
-                    unit_dict[orig_flux_or_sb] = data.get_component('flux').units
-            else:
-                # spectrum_viewer.state will only have x/y_display_unit if unit conversion has
-                # been done if not, get default flux units which should be the units displayed
-                unit_dict[orig_flux_or_sb] = data.get_component('flux').units
-
-            # figure out if label should say 'Flux' or 'Surface Brightness'
-            sb_or_flux_label = "Flux"
-            is_unit_solid_angle = check_if_unit_is_per_solid_angle(unit_dict[orig_flux_or_sb])
-            if is_unit_solid_angle is True:
-                sb_or_flux_label = "Surface Brightness"
+            unit_dict["Surface Brightness"] = str(self.moment_zero_unit)
 
         # Update units in selection item dictionary
         for item in self.output_unit_items:
             item["unit_str"] = unit_dict[item["label"]]
-            if item["label"] in ["Flux", "Surface Brightness"]:
-                # change unit label to reflect if unit is flux or SB
-                item["label"] = sb_or_flux_label
-
-        if self.dataset_selected != "":
-            # output_unit_selected might not match (potentially) changed flux/SB label
-            if self.output_unit_selected in ['Flux', 'Surface Brightness']:
-                self.output_unit_selected = sb_or_flux_label
 
         # Filter what we want based on n_moment
         if self.n_moment == 0:
@@ -296,14 +267,18 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         # slice out desired region
         # TODO: should we add a warning for a composite spectral subset?
-        spec_min, spec_max = self.spectral_subset.selected_min_max(cube)
-        display_spectral_axis_unit = self.app._get_display_unit(self.slice_display_unit_name)
+        if self.spectral_subset.selected == "Entire Spectrum":
+            spec_reg = None
+        else:
+            spec_reg = self.app.get_subsets(self.spectral_subset.selected,
+                                            simplify_spectral=True,
+                                            use_display_units=True)
+        # We need to convert the spectral region to the display units
 
-        # Convert units of min and max if necessary
-        if display_spectral_axis_unit and display_spectral_axis_unit != str(spec_min.unit):
-            spec_min = spec_min.to(display_spectral_axis_unit, equivalencies=u.spectral())
-            spec_max = spec_max.to(display_spectral_axis_unit, equivalencies=u.spectral())
-        slab = manipulation.spectral_slab(cube, spec_min, spec_max)
+        if spec_reg is None:
+            slab = cube
+        else:
+            slab = manipulation.extract_region(cube, spec_reg)
 
         # Calculate the moment and convert to CCDData to add to the viewers
         # Need transpose to align JWST mirror shape: This is because specutils
@@ -330,7 +305,12 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
             ref_wavelength = self.reference_wavelength * u.Unit(self.dataset_spectral_unit)
             slab_sa = slab.spectral_axis.to("km/s", doppler_convention="relativistic",
                                             doppler_rest=ref_wavelength)
-            slab = Spectrum1D(slab.flux, slab_sa)
+            slab = Spectrum1D(slab.flux, slab_sa, uncertainty=slab.uncertainty)
+        # Otherwise convert spectral axis to display units, have to do frequency <-> wavelength
+        # before calculating
+        else:
+            slab_sa = slab.spectral_axis.to(self.app._get_display_unit('spectral'))
+            slab = Spectrum1D(slab.flux, slab_sa, uncertainty=slab.uncertainty)
 
         # Finally actually calculate the moment
         self.moment = analysis.moment(slab, order=n_moment).T
@@ -341,22 +321,7 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # convert units for moment 0, which is the only currently supported
         # moment for using converted units.
         if n_moment == 0:
-            # get flux/SB units
-            if self.spectrum_viewer and hasattr(self.spectrum_viewer.state, 'y_display_unit'):
-                if self.spectrum_viewer.state.y_display_unit is not None:
-                    flux_sb_unit = self.spectrum_viewer.state.y_display_unit
-                else:
-                    flux_sb_unit = data.get_component('flux').units
-            else:
-                flux_sb_unit = data.get_component('flux').units
-
-            # convert unit string to u.Unit so moment map data can be converted
-            flux_or_sb_display_unit = u.Unit(flux_sb_unit)
-            if SPECUTILS_LT_1_15_1:
-                moment_new_unit = flux_or_sb_display_unit
-            else:
-                moment_new_unit = flux_or_sb_display_unit * self.spectrum_viewer.state.x_display_unit  # noqa: E501
-            self.moment = self.moment.to(moment_new_unit)
+            self.moment = self.moment.to(self.moment_zero_unit)
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)
@@ -375,48 +340,22 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
         return self.moment
 
+    @property
+    def moment_zero_unit(self):
+        if self.spectrum_viewer.state.x_display_unit is not None:
+            return (
+                u.Unit(self.app._get_display_unit('sb')) *
+                self.spectrum_viewer.state.x_display_unit
+            )
+        return ''
+
+    @property
+    def spectral_unit_selected(self):
+        return self.app._get_display_unit('spectral')
+
     def vue_calculate_moment(self, *args):
         self.calculate_moment(add_data=True)
-
-    def vue_save_as_fits(self, *args):
-        self._write_moment_to_fits()
 
     def vue_overwrite_fits(self, *args):
         """Attempt to force writing the moment map if the user confirms the desire to overwrite."""
         self.overwrite_warn = False
-        self._write_moment_to_fits(overwrite=True)
-
-    def _write_moment_to_fits(self, overwrite=False, *args):
-        if self.moment is None or not self.filename:  # pragma: no cover
-            return
-        if not self.export_enabled:
-            # this should never be triggered since this is intended for UI-disabling and the
-            # UI section is hidden, but would prevent any JS-hacking
-            raise ValueError("Writing out moment map to file is currently disabled")
-
-        # Make sure file does not end up in weird places in standalone mode.
-        path = os.path.dirname(self.filename)
-        if path and not os.path.exists(path):
-            raise ValueError(f"Invalid path={path}")
-        elif (not path or path.startswith("..")) and os.environ.get("JDAVIZ_START_DIR", ""):  # noqa: E501 # pragma: no cover
-            filename = Path(os.environ["JDAVIZ_START_DIR"]) / self.filename
-        else:
-            filename = Path(self.filename).resolve()
-
-        if filename.exists():
-            if overwrite:
-                # Try to delete the file
-                filename.unlink()
-                if filename.exists():
-                    # Warn the user if the file still exists
-                    raise FileExistsError(f"Unable to delete {filename}. Check user permissions.")
-            else:
-                self.overwrite_warn = True
-                return
-
-        filename = str(filename)
-        self.moment.write(filename)
-
-        # Let the user know where we saved the file.
-        self.hub.broadcast(SnackbarMessage(
-            f"Moment map saved to {os.path.abspath(filename)}", sender=self, color="success"))

@@ -8,17 +8,32 @@ from glue.core.message import EditSubsetMessage, SubsetUpdateMessage
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
                                         ReplaceMode, XorMode, NewMode)
 from glue.core.roi import CircularROI, CircularAnnulusROI, EllipticalROI, RectangularROI
-from glue.core.subset import RoiSubsetState, RangeSubsetState, CompositeSubsetState
+from glue.core.subset import (RoiSubsetState, RangeSubsetState, CompositeSubsetState,
+                              MaskSubsetState)
 from glue.icons import icon_path
 from glue_jupyter.widgets.subset_mode_vuetify import SelectionModeMenu
 from glue_jupyter.common.toolbar_vuetify import read_icon
 from traitlets import Any, List, Unicode, Bool, observe
 
+from specutils import SpectralRegion
+from photutils.aperture import (CircularAperture, SkyCircularAperture,
+                                EllipticalAperture, SkyEllipticalAperture,
+                                RectangularAperture, SkyRectangularAperture,
+                                CircularAnnulus, SkyCircularAnnulus)
+from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
+                     EllipsePixelRegion, EllipseSkyRegion,
+                     RectanglePixelRegion, RectangleSkyRegion,
+                     CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)
+
+from jdaviz.core.region_translators import regions2roi, aperture2regions
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUpdatedMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, SubsetSelect
+from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
+                                        SubsetSelect, SelectPluginComponent)
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.utils import MultiMaskSubsetState
+from jdaviz.core.user_api import PluginUserApi
+from jdaviz.core.helpers import _next_subset_num
+from jdaviz.utils import MultiMaskSubsetState, data_has_valid_wcs
 
 from jdaviz.configs.default.plugins.subset_plugin import utils
 
@@ -26,6 +41,7 @@ from jdaviz.configs.default.plugins.subset_plugin import utils
 __all__ = ['SubsetPlugin']
 
 SUBSET_MODES = {
+    'new': NewMode,
     'replace': ReplaceMode,
     'OrState': OrMode,
     'AndState': AndMode,
@@ -34,10 +50,30 @@ SUBSET_MODES = {
     'RangeSubsetState': RangeSubsetState,
     'RoiSubsetState': RoiSubsetState
 }
+SUBSET_MODES_PRETTY = {
+    'new': NewMode,
+    'replace': ReplaceMode,
+    'or': OrMode,
+    'and': AndMode,
+    'xor': XorMode,
+    'andnot': AndNotMode,
+}
+SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
+COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
 @tray_registry('g-subset-plugin', label="Subset Tools")
 class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
+    """
+    See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    """
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
     subset_items = List([]).tag(sync=True)
@@ -66,6 +102,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     icon_radialtocheck = Unicode(read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml')).tag(sync=True)  # noqa
     icon_checktoradial = Unicode(read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml')).tag(sync=True)  # noqa
 
+    combination_items = List([]).tag(sync=True)
+    combination_selected = Any().tag(sync=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -90,8 +129,18 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.subset_states = []
         self.spectral_display_unit = None
 
-        link_type = getattr(self.app, '_link_type', None)
-        self.display_sky_coordinates = (link_type == 'wcs' and not self.multiselect)
+        align_by = getattr(self.app, '_align_by', None)
+        self.display_sky_coordinates = (align_by == 'wcs' and not self.multiselect)
+
+        self.combination_mode = SelectPluginComponent(self,
+                                                      items='combination_items',
+                                                      selected='combination_selected',
+                                                      manual_options=COMBO_OPTIONS)
+
+    @property
+    def user_api(self):
+        expose = []
+        return PluginUserApi(self, expose)
 
     def _on_link_update(self, *args):
         """When linking is changed pixels<>wcs, change display units of the
@@ -100,8 +149,8 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         to the UI upon link change by calling _get_subset_definition, which
         will re-determine how to display subset information."""
 
-        link_type = getattr(self.app, '_link_type', None)
-        self.display_sky_coordinates = (link_type == 'wcs')
+        align_by = getattr(self.app, '_align_by', None)
+        self.display_sky_coordinates = (align_by == 'wcs')
 
         if self.subset_selected != self.subset_select.default_text:
             self._get_subset_definition(*args)
@@ -121,6 +170,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                     self._sync_available_from_state()
                 self.subset_selected = self.session.edit_subset_mode.edit_subset[0].label
                 self.show_region_info = True
+        self._update_combination_mode()
 
     def _on_subset_update(self, *args):
         self._sync_selected_from_state(*args)
@@ -305,11 +355,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         # types cannot be simplified so subsets contained that are skipped.
         if 'Mask' in self.subset_types:
             self.can_simplify = False
-        elif (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
-                and len(simplifiable_states - set(self.glue_state_types)) < 3):
-            self.can_simplify = True
-        elif (len(self.subset_states) > 1 and isinstance(self.subset_states[0], RangeSubsetState)
-              and self.app.is_there_overlap_spectral_subset(self.subset_selected)):
+        elif ((len(self.subset_states) > 1) and isinstance(self.subset_states[0], RangeSubsetState)
+              and ((len(simplifiable_states - set(self.glue_state_types)) < 3)
+                   or self.app.is_there_overlap_spectral_subset(self.subset_selected))):
             self.can_simplify = True
         else:
             self.can_simplify = False
@@ -656,32 +704,295 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self.subset_definitions[index][i]['value'] = new_value
                 break
 
-    def _import_spectral_regions(self, spec_region, mode=NewMode, viewer=None):
+    def import_region(self, region, combination_mode=None, max_num_regions=None,
+                      refdata_label=None, return_bad_regions=False, **kwargs):
         """
-        Method for importing a SpectralRegion object or list of SpectralRegion objects.
+        Method for creating subsets from regions or region files.
 
         Parameters
         ----------
-        spec_region : ~`specutils.SpectralRegion` object or list
-            The object that contains bounds for the spectral region or regions
-        mode : AndMode, AndNotMode, OrMode, ReplaceMode, XorMode, NewMode, or list
-            By default this is set to NewMode which creates a new subset per subregion.
-            OrMode will create a composite subset with each subregion corresponding
-            to a subregion of a single subset.
+        region : region, list of region objects, or str
+            A region object can be one of the following:
+
+            * Astropy ``regions`` object
+            * ``photutils`` apertures (limited support until ``photutils``
+              fully supports ``regions``)
+            * specutils ``SpectralRegion`` object
+
+            A string which represents a ``regions`` or ``SpectralRegion`` file.
+            If given as a list, it can only contain spectral or non-spectral regions, not both.
+
+        combination_mode : list, str, or `None`
+            The way that regions are created or combined. If a list, then it must be the
+            same length as regions. If `None`, then it will follow the default glue
+            functionality for subset creation.
+
+        max_num_regions : int or `None`
+            Maximum number of regions to load, starting from top of the list.
+            Default is to load everything.  If you are providing a large file/list
+            input for ``region``, it is recommended
+
+        refdata_label : str or `None`
+            **This is only applicable to non-spectral regions.**
+            Label of data to use for sky-to-pixel conversion for a region, or
+            mask creation. Data must already be loaded into Jdaviz.
+            If `None`, defaults to the reference data in the default viewer.
+            Choice of this data is particularly important when sky
+            region is involved.
+
+        return_bad_regions : bool
+            If `True`, return the regions that failed to load (see ``bad_regions``);
+            This is useful for debugging. If `False`, do not return anything (`None`).
+
+        Returns
+        -------
+        bad_regions : list of (obj, str) or `None`
+            If requested (see ``return_bad_regions`` option), return a
+            list of ``(region, reason)`` tuples for region objects that failed to load.
+            If all the regions loaded successfully, this list will be empty.
+            If not requested, return `None`.
+
         """
-        viewer_name = viewer or self.app._jdaviz_helper._default_spectrum_viewer_reference_name
-        range_viewer = self.app.get_viewer(viewer_name)
-        for index, sub_region in enumerate(spec_region):
-            if isinstance(mode, list):
-                if len(mode) != (len(spec_region) - 1):
-                    raise ValueError("list of mode must be size of spec_region minus one")
-                if index == 0:
-                    m = NewMode
-                else:
-                    m = mode[index - 1]
+        if isinstance(region, str):
+            if os.path.exists(region):
+                from regions import Regions
+                region_format = kwargs.pop('region_format', None)
+                try:
+                    raw_regs = Regions.read(region, format=region_format)
+                except Exception:  # nosec
+                    raw_regs = SpectralRegion.read(region)
+
+                return self._load_regions(raw_regs, combination_mode, max_num_regions,
+                                          refdata_label, return_bad_regions, **kwargs)
+        else:
+            return self._load_regions(region, combination_mode, max_num_regions, refdata_label,
+                                      return_bad_regions, **kwargs)
+
+    def _load_regions(self, regions, combination_mode=None, max_num_regions=None,
+                      refdata_label=None, return_bad_regions=False, **kwargs):
+        """Load given region(s) into the viewer.
+        WCS-to-pixel translation and mask creation, if needed, is relative
+        to the image defined by ``refdata_label``. Meanwhile, the rest of
+        the Subset operations are based on reference image as defined by Glue.
+
+        .. note:: Loading too many regions will affect performance.
+
+        A valid region can be loaded into one of the following categories:
+
+        * An interactive Subset, as if it was drawn by hand. This is
+          always done for supported shapes. Its label will be
+          ``'Subset N'``, where ``N`` is an integer.
+        * A masked Subset that will display on the image but cannot be
+          modified once loaded. This is done if the shape cannot be
+          made interactive. Its label will be ``'MaskedSubset N'``,
+          where ``N`` is an integer.
+
+        Parameters
+        ----------
+        regions : list of obj
+            A list of region objects. A region object can be one of the following:
+
+            * Astropy ``regions`` object
+            * ``photutils`` apertures (limited support until ``photutils``
+              fully supports ``regions``)
+            * specutils ``SpectralRegion`` object
+
+        combination_mode : list, str, or `None`
+            The way that regions are created or combined. If a list, then it must be the
+            same length as regions. Each element describes how the corresponding region
+            in regions will be applied. If `None`, then it will follow the default glue
+            functionality for subset creation. Options are ['new', 'replace', 'or', 'and',
+            'xor', 'andnot']
+
+        max_num_regions : int or `None`
+            Maximum number of regions to load, starting from top of the list.
+            Default is to load everything.
+
+        refdata_label : str or `None`
+            Label of data to use for sky-to-pixel conversion for a region, or
+            mask creation. Data must already be loaded into Jdaviz.
+            If `None`, defaults to the reference data in the default viewer.
+            Choice of this data is particularly important when sky
+            region is involved.
+
+        return_bad_regions : bool
+            If `True`, return the regions that failed to load (see ``bad_regions``);
+            This is useful for debugging. If `False`, do not return anything (`None`).
+
+        kwargs : dict
+            Extra keywords to be passed into the region's ``to_mask`` method.
+            **This is ignored if the region can be made interactive.**
+
+        Returns
+        -------
+        bad_regions : list of (obj, str) or `None`
+            If requested (see ``return_bad_regions`` option), return a
+            list of ``(region, reason)`` tuples for region objects that failed to load.
+            If all the regions loaded successfully, this list will be empty.
+            If not requested, return `None`.
+
+        """
+        if len(self.app.data_collection) == 0:
+            raise ValueError('Cannot load regions without data.')
+
+        if not isinstance(regions, (list, tuple, Regions, SpectralRegion)):
+            regions = [regions]
+
+        n_loaded = 0
+        bad_regions = []
+
+        # To keep track of masked subsets.
+        msg_prefix = 'MaskedSubset'
+        msg_count = _next_subset_num(msg_prefix, self.app.data_collection.subset_groups)
+
+        viewer_parameter = kwargs.pop('viewer', None)
+        viewer_name = viewer_parameter or list(self.app._jdaviz_helper.viewers.keys())[0]
+        viewer = self.app.get_viewer(viewer_name)
+        # Subset is global but reference data is viewer-dependent.
+        if refdata_label is None:
+            data = viewer.state.reference_data
+        else:
+            data = self.app.data_collection[refdata_label]
+
+        has_wcs = data_has_valid_wcs(data, ndim=2)
+
+        combo_mode_is_list = isinstance(combination_mode, list)
+        if combo_mode_is_list and len(combination_mode) != (len(regions)):
+            raise ValueError("list of mode must be size of regions")
+        elif combo_mode_is_list:
+            unknown_options = list(set(combination_mode) - set(COMBO_OPTIONS))
+            if len(unknown_options) > 0:
+                raise ValueError(f"{unknown_options} not one of {COMBO_OPTIONS}")
+
+        previous_mode = self.app.session.edit_subset_mode.mode
+
+        for index, region in enumerate(regions):
+            # Set combination mode for how region will be applied to current subset
+            # or created as a new subset
+            if combo_mode_is_list:
+                combo_mode = combination_mode[index]
             else:
-                m = mode
-            self.app.session.edit_subset_mode.mode = m
-            s = RangeSubsetState(lo=sub_region.lower.value, hi=sub_region.upper.value,
-                                 att=range_viewer.slice_component_label)
-            range_viewer.apply_subset_state(s)
+                combo_mode = combination_mode
+
+            if combo_mode == 'new':
+                # Remove selection of subset so that new one will be created
+                self.app.session.edit_subset_mode.edit_subset = None  # No overwrite next iteration
+                self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY['new']
+            elif combo_mode:
+                self.combination_mode.selected = combo_mode
+
+            if (isinstance(region, (SkyCircularAperture, SkyEllipticalAperture,
+                                    SkyRectangularAperture, SkyCircularAnnulus,
+                                    CircleSkyRegion, EllipseSkyRegion,
+                                    RectangleSkyRegion, CircleAnnulusSkyRegion))
+                    and not has_wcs):
+                bad_regions.append((region, 'Sky region provided but data has no valid WCS'))
+                continue
+
+            if (isinstance(region, (CircularAperture, EllipticalAperture,
+                                    RectangularAperture, CircularAnnulus,
+                                    CirclePixelRegion, EllipsePixelRegion,
+                                    RectanglePixelRegion, CircleAnnulusPixelRegion))
+                    and (hasattr(self.app, '_link_type') and self.app._link_type == "wcs")):
+                bad_regions.append((region, 'Pixel region provided by data is linked by WCS'))
+                continue
+
+            # photutils: Convert to region shape first
+            if isinstance(region, (CircularAperture, SkyCircularAperture,
+                                   EllipticalAperture, SkyEllipticalAperture,
+                                   RectangularAperture, SkyRectangularAperture,
+                                   CircularAnnulus, SkyCircularAnnulus)):
+                region = aperture2regions(region)
+
+            # region: Convert to ROI.
+            # NOTE: Out-of-bounds ROI will succeed; this is native glue behavior.
+            if isinstance(region, (CirclePixelRegion, CircleSkyRegion,
+                                   EllipsePixelRegion, EllipseSkyRegion,
+                                   RectanglePixelRegion, RectangleSkyRegion,
+                                   CircleAnnulusPixelRegion, CircleAnnulusSkyRegion)):
+                state = regions2roi(region, wcs=data.coords)
+                viewer.apply_roi(state)
+
+            elif isinstance(region, (CircularROI, CircularAnnulusROI,
+                                     EllipticalROI, RectangularROI)):
+                viewer.apply_roi(region)
+
+            elif isinstance(region, SpectralRegion):
+                # Use viewer_name if provided in kwarg, otherwise use
+                # default spectrum viewer name
+                viewer_name = (viewer_parameter or
+                               self.app._jdaviz_helper._default_spectrum_viewer_reference_name)
+                range_viewer = self.app.get_viewer(viewer_name)
+
+                s = RangeSubsetState(lo=region.lower.value, hi=region.upper.value,
+                                     att=range_viewer.state.x_att)
+                range_viewer.apply_subset_state(s)
+
+            # Last resort: Masked Subset that is static (if data is not a cube)
+            elif data.ndim == 2:
+                im = None
+                if hasattr(region, 'to_pixel'):  # Sky region: Convert to pixel region
+                    if not has_wcs:
+                        bad_region.append((region, 'Sky region provided but data has no valid WCS'))  # noqa
+                        continue
+                    region = region.to_pixel(data.coords)
+
+                if hasattr(region, 'to_mask'):
+                    try:
+                        mask = region.to_mask(**kwargs)
+                        im = mask.to_image(data.shape)  # Can be None
+                    except Exception as e:  # pragma: no cover
+                        bad_regions.append((region, f'Failed to load: {repr(e)}'))
+                        continue
+
+                # Boolean mask as input is supported but not advertised.
+                elif (isinstance(region, np.ndarray) and region.shape == data.shape
+                      and region.dtype == np.bool_):
+                    im = region
+
+                if im is None:
+                    bad_regions.append((region, 'Mask creation failed'))
+                    continue
+
+                # NOTE: Region creation info is thus lost.
+                try:
+                    subset_label = f'{msg_prefix} {msg_count}'
+                    state = MaskSubsetState(im, data.pixel_component_ids)
+                    self.app.data_collection.new_subset_group(subset_label, state)
+                    msg_count += 1
+                except Exception as e:  # pragma: no cover
+                    bad_regions.append((region, f'Failed to load: {repr(e)}'))
+                    continue
+            else:
+                bad_regions.append((region, 'Mask creation failed'))
+                continue
+            n_loaded += 1
+            if max_num_regions is not None and n_loaded >= max_num_regions:
+                break
+
+        # Revert edit mode to before the import_region call
+        self.app.session.edit_subset_mode.mode = previous_mode
+
+        n_reg_in = len(regions)
+        n_reg_bad = len(bad_regions)
+        if n_loaded == 0:
+            snack_color = "error"
+        elif n_reg_bad > 0:
+            snack_color = "warning"
+        else:
+            snack_color = "success"
+        self.app.hub.broadcast(SnackbarMessage(
+            f"Loaded {n_loaded}/{n_reg_in} regions, max_num_regions={max_num_regions}, "
+            f"bad={n_reg_bad}", color=snack_color, timeout=8000, sender=self.app))
+
+        if return_bad_regions:
+            return bad_regions
+
+    @observe('combination_selected')
+    def _combination_selected_updated(self, change):
+        self.app.session.edit_subset_mode.mode = SUBSET_MODES_PRETTY[change['new']]
+
+    def _update_combination_mode(self):
+        if self.app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
+            self.combination_mode.selected = SUBSET_TO_PRETTY[
+                self.app.session.edit_subset_mode.mode]

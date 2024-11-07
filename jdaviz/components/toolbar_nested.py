@@ -156,6 +156,39 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
             if event['old'] is not None:
                 self.active_tool_id = event['old']
 
+    def _select_tool(self, tool_id, menu_ind):
+        for search_tool_id, info in self.tools_data.items():
+            if info['menu_ind'] == menu_ind and info['primary']:
+                prev_id = search_tool_id
+                prev_info = info
+                break
+        else:
+            raise ValueError("could not find previous selection")
+
+        if isinstance(self.tools[tool_id], CheckableTool):
+            # only switch to primary if its actually checkable, otherwise
+            # just activate once
+            self.tools_data = {
+                **self.tools_data,
+                prev_id: {
+                    **prev_info,
+                    'primary': False
+                },
+                tool_id: {
+                    **self.tools_data[tool_id],
+                    'primary': True
+                }
+            }
+
+        # and finally, set to be the active tool (this triggers _on_change_v_model which in turn
+        # triggers BasicJupyterToolbar._on_change_active_tool)
+        self.active_tool_id = tool_id
+
+    def select_tool(self, tool_id):
+        # find the previous primary tool in the same menu_ind
+        menu_ind = self.tools_data[tool_id]['menu_ind']
+        self._select_tool(tool_id, menu_ind)
+
     def add_tool(self, tool, menu_ind, has_suboptions=True, primary=False, visible=True):
         # NOTE: this method is essentially copied from glue-jupyter's BasicJupyterToolbar,
         # but we need extra values in the tools_data dictionary.  We could call super(),
@@ -183,29 +216,4 @@ class NestedJupyterToolbar(BasicJupyterToolbar, HubListener):
         Activate the primary tool from a given menu index
         """
         menu_ind, tool_id = args
-        for search_tool_id, info in self.tools_data.items():
-            if info['menu_ind'] == menu_ind and info['primary']:
-                prev_id = search_tool_id
-                prev_info = info
-                break
-        else:
-            raise ValueError("could not find previous selection")
-
-        if isinstance(self.tools[tool_id], CheckableTool):
-            # only switch to primary if its actually checkable, otherwise
-            # just activate once
-            self.tools_data = {
-                **self.tools_data,
-                prev_id: {
-                    **prev_info,
-                    'primary': False
-                },
-                tool_id: {
-                    **self.tools_data[tool_id],
-                    'primary': True
-                }
-            }
-
-        # and finally, set to be the active tool (this triggers _on_change_v_model which in turn
-        # triggers BasicJupyterToolbar._on_change_active_tool)
-        self.active_tool_id = tool_id
+        self._select_tool(tool_id, menu_ind)

@@ -1,6 +1,11 @@
 <template>
   <div>
-  <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -6px; z-index: 999">
+    <v-row v-if="show_multiselect_toggle && api_hints_enabled && api_hint_multiselect"> 
+      <span :class="api_hints_enabled && api_hint_multiselect ? 'api-hint' : null">
+        {{  api_hint_multiselect }} {{  multiselect ? 'True' : 'False' }}
+      </span>
+    </v-row>
+    <div v-if="show_multiselect_toggle" style="position: absolute; width: 32px; right: 0px; margin-right: 12px; margin-top: -6px; z-index: 999">
     <j-tooltip tipid='viewer-multiselect-toggle'>
       <v-btn
         icon
@@ -11,14 +16,15 @@
       </v-btn>
     </j-tooltip>
   </div>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry">
+  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       :menu-props="{ left: true }"
       attach
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
-      :label="label ? label : 'Viewer'"
+      :class="api_hints_enabled && api_hint ? 'api-hint' : null"
+      :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Viewer')"
       :hint="hint ? hint : 'Select viewer.'"
       :rules="rules ? rules : []"
       :multiple="multiselect"
@@ -76,7 +82,8 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck']
+          'show_multiselect_toggle', 'icon_checktoradial', 'icon_radialtocheck',
+          'api_hint', 'api_hint_multiselect', 'api_hints_enabled']
 };
 </script>
 

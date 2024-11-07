@@ -12,9 +12,8 @@ from astropy.time import Time
 from echo import CallbackProperty, DictCallbackProperty, ListCallbackProperty
 from ipygoldenlayout import GoldenLayout
 from ipysplitpanes import SplitPanes
-import matplotlib.cm as cm
 import numpy as np
-from glue.config import colormaps, settings as glue_settings
+from glue.config import data_translator, settings as glue_settings
 from glue.core import HubListener
 from glue.core.link_helpers import LinkSame, LinkSameWithUnits
 from glue.core.message import (DataCollectionAddMessage,
@@ -45,13 +44,18 @@ from jdaviz.core.events import (LoadDataMessage, NewViewerMessage, AddDataMessag
                                 SnackbarMessage, RemoveDataMessage,
                                 AddDataToViewerMessage, RemoveDataFromViewerMessage,
                                 ViewerAddedMessage, ViewerRemovedMessage,
-                                ViewerRenamedMessage, ChangeRefDataMessage)
+                                ViewerRenamedMessage, ChangeRefDataMessage,
+                                IconsUpdatedMessage)
 from jdaviz.core.registries import (tool_registry, tray_registry, viewer_registry,
                                     data_parser_registry)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label, flux_conversion,
                           spectral_axis_conversion)
+from jdaviz.core.custom_units import SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.validunits import (check_if_unit_is_per_solid_angle,
+                                    combine_flux_and_angle_units,
+                                    supported_sq_angle_units)
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
@@ -70,24 +74,15 @@ class UnitConverterWithSpectral:
     def equivalent_units(self, data, cid, units):
         if cid.label == "flux":
             eqv = u.spectral_density(1 * u.m)  # Value does not matter here.
+            all_flux_units = SPEC_PHOTON_FLUX_DENSITY_UNITS + ['ct']
+            angle_units = supported_sq_angle_units()
+            all_sb_units = combine_flux_and_angle_units(all_flux_units, angle_units)
+
+            # list of all possible units for spectral y axis, independent of data loaded
+            #
             list_of_units = set(list(map(str, u.Unit(units).find_equivalent_units(
-                include_prefix_units=True, equivalencies=eqv)))
-                + [
-                    'Jy', 'mJy', 'uJy', 'MJy',
-                    'W / (m2 Hz)', 'W / (Hz m2)',  # Order is different in astropy v5.3
-                    'eV / (s m2 Hz)', 'eV / (Hz s m2)',
-                    'erg / (s cm2 Angstrom)', 'erg / (s cm2 Angstrom)',
-                    'erg / (s cm2 Hz)', 'erg / (Hz s cm2)',
-                    'ph / (Angstrom s cm2)',
-                    'ph / (Hz s cm2)', 'ph / (Hz s cm2)', 'bol', 'AB', 'ST'
-                ]
-                + [
-                    'Jy / sr', 'mJy / sr', 'uJy / sr', 'MJy / sr',
-                    'W / (Hz sr m2)',
-                    'eV / (Hz s sr m2)',
-                    'erg / (s sr cm2)',
-                    'AB / sr'
-                ])
+                include_prefix_units=True, equivalencies=eqv))) + all_flux_units + all_sb_units
+                )
         else:  # spectral axis
             # prefer Hz over Bq and um over micron
             exclude = {'Bq', 'micron'}
@@ -101,14 +96,18 @@ class UnitConverterWithSpectral:
         # should return the converted values. Note that original_units
         # gives the units of the values array, which might not be the same
         # as the original native units of the component in the data.
-        if cid.label == "flux":
+
+        if cid.label == 'Pixel Axis 0 [z]' and target_units == '':
+            # handle ramps loaded into Rampviz by avoiding conversion
+            # of the groups axis:
+            return values
+        elif cid.label == "flux":
             try:
                 spec = data.get_object(cls=Spectrum1D)
-
             except RuntimeError:
                 data = data.get_object(cls=NDDataArray)
                 spec = Spectrum1D(flux=data.data * u.Unit(original_units))
-            return flux_conversion(spec, values, original_units, target_units)
+            return flux_conversion(values, original_units, target_units, spec)
         else:  # spectral axis
             return spectral_axis_conversion(values, original_units, target_units)
 
@@ -126,12 +125,14 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-viewer-data-select': 'components/viewer_data_select.vue',
                      'j-viewer-data-select-item': 'components/viewer_data_select_item.vue',
                      'j-layer-viewer-icon': 'components/layer_viewer_icon.vue',
+                     'j-layer-viewer-icon-stylized': 'components/layer_viewer_icon_stylized.vue',
                      'j-tray-plugin': 'components/tray_plugin.vue',
                      'j-play-pause-widget': 'components/play_pause_widget.vue',
                      'j-plugin-section-header': 'components/plugin_section_header.vue',
                      'j-number-uncertainty': 'components/number_uncertainty.vue',
                      'j-plugin-popout': 'components/plugin_popout.vue',
                      'j-multiselect-toggle': 'components/multiselect_toggle.vue',
+                     'j-subset-icon': 'components/subset_icon.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
@@ -142,11 +143,16 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-editable-select': 'components/plugin_editable_select.vue',
                      'plugin-inline-select': 'components/plugin_inline_select.vue',
                      'plugin-inline-select-item': 'components/plugin_inline_select_item.vue',
+                     'plugin-switch': 'components/plugin_switch.vue',
                      'plugin-action-button': 'components/plugin_action_button.vue',
                      'plugin-add-results': 'components/plugin_add_results.vue',
                      'plugin-auto-label': 'components/plugin_auto_label.vue',
                      'plugin-file-import-select': 'components/plugin_file_import_select.vue',
-                     'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue'}
+                     'plugin-slider': 'components/plugin_slider.vue',
+                     'plugin-color-picker': 'components/plugin_color_picker.vue',
+                     'plugin-input-header': 'components/plugin_input_header.vue',
+                     'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
+                     'data-menu-add-data': 'components/data_menu_add_data.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')
 
@@ -202,7 +208,6 @@ class ApplicationState(State):
             'tray': True,
             'tab_headers': True,
         },
-        'viewer_labels': True,
         'dense_toolbar': True,
         'server_is_remote': False,  # sets some defaults, should be set before loading the config
         'context': {
@@ -293,21 +298,6 @@ class Application(VuetifyTemplate, HubListener):
         #  can reference their state easily since glue does not store viewers
         self._viewer_store = {}
 
-        # Add new and inverse colormaps to Glue global state. Also see ColormapRegistry in
-        # https://github.com/glue-viz/glue/blob/main/glue/config.py
-        new_cms = (['Rainbow', cm.rainbow],
-                   ['Seismic', cm.seismic],
-                   ['Reversed: Gray', cm.gray_r],
-                   ['Reversed: Viridis', cm.viridis_r],
-                   ['Reversed: Plasma', cm.plasma_r],
-                   ['Reversed: Inferno', cm.inferno_r],
-                   ['Reversed: Magma', cm.magma_r],
-                   ['Reversed: Hot', cm.hot_r],
-                   ['Reversed: Rainbow', cm.rainbow_r])
-        for cur_cm in new_cms:
-            if cur_cm not in colormaps.members:
-                colormaps.add(*cur_cm)
-
         from jdaviz.core.events import PluginTableAddedMessage, PluginPlotAddedMessage
         self._plugin_tables = {}
         self.hub.subscribe(self, PluginTableAddedMessage,
@@ -324,9 +314,9 @@ class Application(VuetifyTemplate, HubListener):
         self.auto_link = kwargs.pop('auto_link', True)
 
         # Imviz linking
-        self._link_type = 'pixels'
+        self._align_by = 'pixels'
         if self.config == "imviz":
-            self._wcs_use_affine = None
+            self._wcs_fast_approximation = None
 
         # Subscribe to messages indicating that a new viewer needs to be
         #  created. When received, information is passed to the application
@@ -384,6 +374,12 @@ class Application(VuetifyTemplate, HubListener):
         self.hub.subscribe(self, SubsetCreateMessage,
                            handler=self._on_layers_changed)
         # SubsetDeleteMessage will also call _on_layers_changed via _on_subset_delete_message
+
+        # Emit messages when icons are updated
+        self.state.add_callback('viewer_icons',
+                                lambda value: self.hub.broadcast(IconsUpdatedMessage('viewer', value, sender=self)))  # noqa
+        self.state.add_callback('layer_icons',
+                                lambda value: self.hub.broadcast(IconsUpdatedMessage('layer', value, sender=self)))  # noqa
 
     def _on_plugin_table_added(self, msg):
         if msg.plugin._plugin_name is None:
@@ -593,11 +589,20 @@ class Application(VuetifyTemplate, HubListener):
                 self.state.layer_icons = {**self.state.layer_icons,
                                           layer_name: orientation_icons.get(layer_name,
                                                                             wcs_only_refdata_icon)}
-            elif is_not_child:
+            elif not is_not_child:
+                parent_icon = self.state.layer_icons.get(self._get_assoc_data_parent(layer_name))
+                index = len([ln for ln, ic in self.state.layer_icons.items()
+                             if not ic[:4] == 'mdi-' and
+                             self._get_assoc_data_parent(ln) == parent_icon]) + 1
+                self.state.layer_icons = {
+                    **self.state.layer_icons,
+                    layer_name: f"{parent_icon}{index}"
+                }
+            else:
                 self.state.layer_icons = {
                     **self.state.layer_icons,
                     layer_name: alpha_index(len([ln for ln, ic in self.state.layer_icons.items()
-                                                 if not ic.startswith('mdi-') and
+                                                 if not ic[:4] == 'mdi-' and
                                                  self._get_assoc_data_parent(ln) is None]))
                 }
 
@@ -608,12 +613,14 @@ class Application(VuetifyTemplate, HubListener):
             if children_layers is not None:
                 parent_icon = self.state.layer_icons[layer_name]
                 for i, child_layer in enumerate(children_layers, start=1):
-                    child_layer_icons[child_layer] = f'{parent_icon}{i}'
+                    if child_layer not in self.state.layer_icons:
+                        child_layer_icons[child_layer] = f'{parent_icon}{i}'
 
-        self.state.layer_icons = {
-            **self.state.layer_icons,
-            **child_layer_icons
-        }
+        if child_layer_icons:
+            self.state.layer_icons = {
+                **self.state.layer_icons,
+                **child_layer_icons
+            }
 
     def _change_reference_data(self, new_refdata_label, viewer_id=None):
         """
@@ -720,8 +727,9 @@ class Application(VuetifyTemplate, HubListener):
             return
 
         elif self.config == 'cubeviz' and linked_data.ndim == 1:
-            ref_wavelength_component = dc[0].components[-2]
-            ref_flux_component = dc[0].components[-1]
+            # Don't want to use negative indices in case there are extra components like a mask
+            ref_wavelength_component = dc[0].components[5]
+            ref_flux_component = dc[0].components[6]
             linked_wavelength_component = dc[-1].components[1]
             linked_flux_component = dc[-1].components[-1]
 
@@ -1039,13 +1047,24 @@ class Application(VuetifyTemplate, HubListener):
                                  simplify_spectral=True, use_display_units=False):
         # TODO: Use global display units
         # units = dc[0].data.coords.spectral_axis.unit
-        viewer = self.get_viewer(self._jdaviz_helper. _default_spectrum_viewer_reference_name)
-        data = viewer.data()
-        if data and len(data) > 0 and isinstance(data[0], Spectrum1D):
-            units = data[0].spectral_axis.unit
+        if not hasattr(subset_state.att, "parent"):  # e.g., Cubeviz
+            viewer = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
+            data = viewer.data()
+            if data and len(data) > 0 and isinstance(data[0], Spectrum1D):
+                units = data[0].spectral_axis.unit
+            else:
+                raise ValueError("Unable to find spectral axis units")
         else:
-            raise ValueError("Unable to find spectral axis units")
-        if use_display_units:
+            data = subset_state.att.parent
+            ndim = data.get_component("flux").ndim
+            if ndim == 2:
+                units = u.pix
+            else:
+                handler, _ = data_translator.get_handler_for(Spectrum1D)
+                spec = handler.to_object(data)
+                units = spec.spectral_axis.unit
+
+        if use_display_units and units != u.pix:
             # converting may result in flipping order (wavelength <-> frequency)
             ret_units = self._get_display_unit('spectral')
             subset_bounds = [(subset_state.lo * units).to(ret_units, u.spectral()),
@@ -1102,6 +1121,11 @@ class Application(VuetifyTemplate, HubListener):
                 two = self.get_sub_regions(subset_state.state2,
                                            simplify_spectral, use_display_units,
                                            get_sky_regions=get_sky_regions)
+                if simplify_spectral and isinstance(two, SpectralRegion):
+                    merge_func = self._merge_overlapping_spectral_regions_worker
+                else:
+                    def merge_func(spectral_region):  # noop
+                        return spectral_region
 
                 if isinstance(one, list) and "glue_state" in one[0]:
                     one[0]["glue_state"] = subset_state.__class__.__name__
@@ -1135,9 +1159,7 @@ class Application(VuetifyTemplate, HubListener):
                     else:
                         if isinstance(two, list):
                             two[0]['glue_state'] = "AndNotState"
-                        # Return two first so that we preserve the chronology of how
-                        # subset regions are applied.
-                        return one + two
+                        return merge_func(one + two)
                 elif subset_state.op is operator.and_:
                     # This covers the AND subset mode
 
@@ -1163,18 +1185,18 @@ class Application(VuetifyTemplate, HubListener):
 
                         return oppo.invert(one.lower, one.upper)
                     else:
-                        return two + one
+                        return merge_func(two + one)
                 elif subset_state.op is operator.or_:
                     # This covers the ADD subset mode
                     # one + two works for both Range and ROI subsets
                     if one and two:
-                        return two + one
+                        return merge_func(two + one)
                     elif one:
                         return one
                     elif two:
                         return two
                 elif subset_state.op is operator.xor:
-                    # This covers the ADD subset mode
+                    # This covers the XOR subset mode
 
                     # Example of how this works, with "one" acting
                     # as the XOR region and "two" as two ranges joined
@@ -1198,34 +1220,55 @@ class Application(VuetifyTemplate, HubListener):
                     #   (4.0 um, 4.5 um)    (5.0 um, 6.0 um)    (9.0 um, 12.0 um)
 
                     if isinstance(two, SpectralRegion):
+                        # This is the main application of XOR to other regions
+                        if one.lower > two.lower and one.upper < two.upper:
+                            if len(two) < 2:
+                                inverted_region = one.invert(two.lower, two.upper)
+                            else:
+                                two_2 = None
+                                for subregion in two:
+                                    temp_region = None
+                                    # No overlap
+                                    if subregion.lower > one.upper or subregion.upper < one.lower:
+                                        continue
+                                    temp_lo = max(subregion.lower, one.lower)
+                                    temp_hi = min(subregion.upper, one.upper)
+                                    temp_region = SpectralRegion(temp_lo, temp_hi)
+                                    if two_2:
+                                        two_2 += temp_region
+                                    else:
+                                        two_2 = temp_region
+                                inverted_region = two_2.invert(one.lower, one.upper)
+                        else:
+                            inverted_region = two.invert(one.lower, one.upper)
+
                         new_region = None
-                        temp_region = None
                         for subregion in two:
+                            temp_region = None
                             # Add all subregions that do not intersect with XOR region
                             # to a new SpectralRegion object
                             if subregion.lower > one.upper or subregion.upper < one.lower:
-                                if not new_region:
-                                    new_region = subregion
-                                else:
-                                    new_region += subregion
-                            # All other subregions are added to temp_region
+                                temp_region = subregion
+                            # Partial overlap
+                            elif subregion.lower < one.lower and subregion.upper < one.upper:
+                                temp_region = SpectralRegion(subregion.lower, one.lower)
+                            elif subregion.upper > one.upper and subregion.lower > one.lower:
+                                temp_region = SpectralRegion(one.upper, subregion.upper)
+
+                            if not temp_region:
+                                continue
+
+                            if new_region:
+                                new_region += temp_region
                             else:
-                                if not temp_region:
-                                    temp_region = subregion
-                                else:
-                                    temp_region += subregion
-                        # This is the main application of XOR to other regions
-                        if not new_region:
-                            new_region = temp_region.invert(one.lower, one.upper)
-                        else:
-                            new_region = new_region + temp_region.invert(one.lower, one.upper)
+                                new_region = temp_region
+
                         # This adds the edge regions that are otherwise not included
-                        if not (one.lower == temp_region.lower and one.upper == temp_region.upper):
-                            new_region = new_region + one.invert(temp_region.lower,
-                                                                 temp_region.upper)
-                        return new_region
+                        if new_region:
+                            return merge_func(new_region + inverted_region)
+                        return inverted_region
                     else:
-                        return two + one
+                        return merge_func(two + one)
             else:
                 # This gets triggered in the InvertState case where state1
                 # is an object and state2 is None
@@ -1244,19 +1287,63 @@ class Application(VuetifyTemplate, HubListener):
                 return self._get_multi_mask_subset_definition(subset_state)
 
     def _get_display_unit(self, axis):
-        if self._jdaviz_helper is None or self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
+        if self._jdaviz_helper is None:
+            # cannot access either the plugin or the spectrum viewer.
+            # Plugins that access the unit at this point will need to
+            # detect that they are set to unitless and attempt again later.
+            return ''
+        elif self._jdaviz_helper.plugins.get('Unit Conversion') is None:  # noqa
             # fallback on native units (unit conversion is not enabled)
             if axis == 'spectral':
                 sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
                 return sv.data()[0].spectral_axis.unit
-            elif axis == 'flux':
+            elif axis in ('flux', 'sb', 'spectral_y'):
                 sv = self.get_viewer(self._jdaviz_helper._default_spectrum_viewer_reference_name)
-                return sv.data()[0].flux.unit
+                sv_y_unit = sv.data()[0].flux.unit
+                if axis == 'spectral_y':
+                    return sv_y_unit
+                # since this is where we're falling back on native units (UC plugin might not exist)
+                # first check the spectrum viewer y axis for any solid angle unit (i think that it
+                # will ALWAYS be in flux, but just to be sure). If no solid angle unit is found,
+                # check the flux viewer for surface brightness units
+                sv_y_angle_unit = check_if_unit_is_per_solid_angle(sv_y_unit, return_unit=True)
+
+                # check flux viewer if none in spectral viewer
+                fv_angle_unit = None
+                if not sv_y_angle_unit:
+                    if hasattr(self._jdaviz_helper, '_default_flux_viewer_reference_name'):
+                        vname = self._jdaviz_helper._default_flux_viewer_reference_name
+                        fv = self.get_viewer(vname)
+                        fv_unit = fv.data()[0].get_object().flux.unit
+                        fv_angle_unit = check_if_unit_is_per_solid_angle(fv_unit,
+                                                                         return_unit=True)
+                    else:
+                        # mosviz, not sure what to do here but can't access flux
+                        # viewer the same way. once we force the UC plugin to
+                        # exist this won't matter anyway because units can be
+                        # acessed from the plugin directly. assume u.sr for now
+                        fv_angle_unit = u.sr
+
+                solid_angle_unit = sv_y_angle_unit or fv_angle_unit
+
+                if axis == 'flux':
+                    if sv_y_angle_unit:
+                        return sv_y_unit * solid_angle_unit
+                    return sv_y_unit
+                elif axis == 'sb':
+                    if sv_y_angle_unit:
+                        return sv_y_unit
+                    return sv_y_unit / solid_angle_unit
+            elif axis == 'temporal':
+                # No unit for ramp's time (group/resultant) axis:
+                return None
             else:
                 raise ValueError(f"could not find units for axis='{axis}'")
+        uc = self._jdaviz_helper.plugins.get('Unit Conversion')._obj
+        if axis == 'spectral_y':
+            return uc.spectral_y_unit
         try:
-            return getattr(self._jdaviz_helper.plugins.get('Unit Conversion')._obj,
-                           f'{axis}_unit_selected')
+            return getattr(uc, f'{axis}_unit_selected')
         except AttributeError:
             raise ValueError(f"could not find display unit for axis='{axis}'")
 
@@ -1304,13 +1391,32 @@ class Application(VuetifyTemplate, HubListener):
         Returns True if the spectral subset with subset_name has overlapping
         subregions.
         """
-        spectral_region = self.get_subsets(subset_name, spectral_only=True)
-        if not spectral_region or len(spectral_region) < 2:
+        spectral_region = self.get_subsets(subset_name, simplify_spectral=False, spectral_only=True)
+        n_reg = len(spectral_region)
+        if not spectral_region or n_reg < 2:
             return False
-        for index in range(0, len(spectral_region) - 1):
-            if spectral_region[index].upper.value >= spectral_region[index + 1].lower.value:
+        for index in range(n_reg - 1):
+            if spectral_region[index]['region'].upper.value >= spectral_region[index + 1]['region'].lower.value:  # noqa: E501
                 return True
         return False
+
+    @staticmethod
+    def _merge_overlapping_spectral_regions_worker(spectral_region):
+        if len(spectral_region) < 2:  # noop
+            return spectral_region
+
+        merged_regions = spectral_region[0]  # Instantiate merged regions
+        for cur_reg in spectral_region[1:]:
+            # If the lower value of the current subregion is less than or equal to the upper
+            # value of the last subregion added to merged_regions, update last region in
+            # merged_regions with the max upper value between the two regions.
+            if cur_reg.lower <= merged_regions.upper:
+                merged_regions._subregions[-1] = (
+                    merged_regions._subregions[-1][0],
+                    max(cur_reg.upper, merged_regions._subregions[-1][1]))
+            else:
+                merged_regions += cur_reg
+        return merged_regions
 
     def merge_overlapping_spectral_regions(self, subset_name, att):
         """
@@ -1324,34 +1430,15 @@ class Application(VuetifyTemplate, HubListener):
         att : str
             Attribute that the subset uses to apply to data.
         """
-        spectral_region = self.get_subsets(subset_name, spectral_only=True)
-        merged_regions = None
-        # Convert SpectralRegion object into a list with tuples representing
-        # the lower and upper values of each region.
-        reg_as_tup = [(sr.lower.value, sr.upper.value) for sr in spectral_region]
-        for index in range(0, len(spectral_region)):
-            # Instantiate merged regions
-            if not merged_regions:
-                merged_regions = [reg_as_tup[index]]
-            else:
-                last_merged = merged_regions[-1]
-                # If the lower value of the current subregion is less than or equal to the upper
-                # value of the last subregion added to merged_regions, update last_merged
-                # with the max upper value between the two regions.
-                if reg_as_tup[index][0] <= last_merged[1]:
-                    last_merged = (last_merged[0], max(last_merged[1], reg_as_tup[index][1]))
-                    merged_regions = merged_regions[:-1]
-                    merged_regions.append(last_merged)
-                else:
-                    merged_regions.append(reg_as_tup[index])
+        merged_regions = self.get_subsets(subset_name, spectral_only=True)
 
         new_state = None
         for region in reversed(merged_regions):
-            convert_to_range = RangeSubsetState(region[0], region[1], att)
-            if new_state is None:
-                new_state = convert_to_range
-            else:
+            convert_to_range = RangeSubsetState(region.lower.value, region.upper.value, att)
+            if new_state:
                 new_state = new_state | convert_to_range
+            else:
+                new_state = convert_to_range
 
         return new_state
 
@@ -1706,7 +1793,8 @@ class Application(VuetifyTemplate, HubListener):
             require_spectrum_2d_viewer=False,
             require_table_viewer=False,
             require_flux_viewer=False,
-            require_image_viewer=False
+            require_image_viewer=False,
+            require_profile_viewer=False,
     ):
         """
         Return the viewer reference name of the first available viewer.
@@ -1720,12 +1808,16 @@ class Application(VuetifyTemplate, HubListener):
         from jdaviz.configs.mosviz.plugins.viewers import (
             MosvizTableViewer, MosvizProfile2DView
         )
+        from jdaviz.configs.rampviz.plugins.viewers import (
+            RampvizImageView, RampvizProfileView
+        )
 
         spectral_viewers = (SpecvizProfileView, CubevizProfileView)
         spectral_2d_viewers = (MosvizProfile2DView, )
         table_viewers = (MosvizTableViewer, )
-        image_viewers = (ImvizImageView, CubevizImageView)
-        flux_viewers = (CubevizImageView, )
+        image_viewers = (ImvizImageView, CubevizImageView, RampvizImageView)
+        flux_viewers = (CubevizImageView, RampvizImageView)
+        ramp_viewers = (RampvizProfileView, )
 
         for vid in self._viewer_store:
             viewer_item = self._viewer_item_by_id(vid)
@@ -1747,6 +1839,9 @@ class Application(VuetifyTemplate, HubListener):
                     return viewer_item['reference']
             elif require_flux_viewer:
                 if isinstance(self._viewer_store[vid], flux_viewers) and is_returnable:
+                    return viewer_item['reference']
+            elif require_profile_viewer:
+                if isinstance(self._viewer_store[vid], ramp_viewers) and is_returnable:
                     return viewer_item['reference']
             else:
                 if is_returnable:
@@ -1922,7 +2017,7 @@ class Application(VuetifyTemplate, HubListener):
 
                     # Translate bounds through WCS if needed
                     if (self.config == "imviz" and
-                            self._jdaviz_helper.plugins["Orientation"].link_type == "WCS"):
+                            self._jdaviz_helper.plugins["Orientation"].align_by == "WCS"):
 
                         # Default shape for WCS-only layers is 10x10, but it doesn't really matter
                         # since we only need the angles.
@@ -2203,7 +2298,7 @@ class Application(VuetifyTemplate, HubListener):
 
         # Make sure the data isn't loaded in any viewers and isn't the selected orientation
         for viewer_id, viewer in self._viewer_store.items():
-            if orientation_plugin is not None and self._link_type == 'wcs':
+            if orientation_plugin is not None and self._align_by == 'wcs':
                 if viewer.state.reference_data.label == data_label:
                     self._change_reference_data(base_wcs_layer_label, viewer_id)
             self.remove_data_from_viewer(viewer_id, data_label)
@@ -2428,7 +2523,14 @@ class Application(VuetifyTemplate, HubListener):
         # own attribute instead.
         viewer._reference_id = vid  # For reverse look-up
 
-        self.state.viewer_icons.setdefault(vid, len(self.state.viewer_icons)+1)
+        if vid not in self.state.viewer_icons:
+            self.state.viewer_icons = {**self.state.viewer_icons,
+                                       vid: len(self.state.viewer_icons) + 1}
+            # for some reason that state callback is not triggering this
+            self.hub.broadcast(IconsUpdatedMessage('viewer',
+                                                   self.state.viewer_icons,
+                                                   sender=self)
+                               )
 
         wcs_only_layers = getattr(viewer.state, 'wcs_only_layers', [])
 
@@ -2441,10 +2543,9 @@ class Application(VuetifyTemplate, HubListener):
             'name': name or vid,
             'widget': "IPY_MODEL_" + viewer.figure_widget.model_id,
             'toolbar': "IPY_MODEL_" + viewer.toolbar.model_id if viewer.toolbar else '',  # noqa
-            'layer_options': "IPY_MODEL_" + viewer.layer_options.model_id,
-            'viewer_options': "IPY_MODEL_" + viewer.viewer_options.model_id,
+            'data_menu': 'IPY_MODEL_' + viewer._data_menu.model_id if hasattr(viewer, '_data_menu') else '',  # noqa
+            # TODO: remove unused entries after old data menu deprecation period
             'selected_data_items': {},  # noqa data_id: visibility state (visible, hidden, mixed), READ-ONLY
-            'visible_layers': {},  # label: {color}, READ-ONLY
             'wcs_only_layers': wcs_only_layers,
             'reference_data_label': reference_data_label,
             'canvas_angle': 0,  # canvas rotation clockwise rotation angle in deg
@@ -2490,12 +2591,12 @@ class Application(VuetifyTemplate, HubListener):
             msg.cls, data=msg.data, show=False)
         viewer.figure_widget.layout.height = '100%'
 
-        linked_by_wcs = self._link_type == 'wcs'
+        linked_by_wcs = self._align_by == 'wcs'
 
         if hasattr(viewer.state, 'linked_by_wcs'):
             orientation_plugin = self._jdaviz_helper.plugins.get('Orientation', None)
             if orientation_plugin is not None:
-                linked_by_wcs = orientation_plugin.link_type.selected == 'WCS'
+                linked_by_wcs = orientation_plugin.align_by.selected == 'WCS'
             elif len(self._viewer_store) and hasattr(self._jdaviz_helper, 'default_viewer'):
                 # The plugin would only not exist for instances of Imviz where the user has
                 # intentionally removed the Orientation plugin, but in that case we will

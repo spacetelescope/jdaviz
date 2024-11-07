@@ -23,11 +23,11 @@ jobs:
       matrix:
         os: [ubuntu, windows]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       with:
         fetch-depth: 0
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
       with:
         python-version: "3.11"
 
@@ -51,10 +51,10 @@ jobs:
     - name: Install pytest
       run: pip install pytest-playwright
 
-    - name: Wait for Voila to get online
+    - name: Wait for Solara to get online
       uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
       with:
-        resource: tcp:8866
+        resource: tcp:8765
         timeout: 60000
 
     - name: Test standalone
@@ -62,14 +62,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882  # v4.4.3
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (non-OSX)
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882  # v4.4.3
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: |
@@ -85,17 +85,17 @@ jobs:
     steps:
     # osx signing based on https://melatonin.dev/blog/how-to-code-sign-and-notarize-macos-audio-plugins-in-ci/
     - name: Import Certificates (macOS)
-      uses: apple-actions/import-codesign-certs@v3
+      uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d  # v3
       if: ${{ matrix.os == 'macos' }}
       with:
         p12-file-base64: ${{ secrets.DEV_ID_APP_CERT }}
         p12-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
       with:
         fetch-depth: 0
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
       with:
         python-version: "3.11"
 
@@ -174,10 +174,10 @@ jobs:
     - name: Install pytest
       run: pip install pytest-playwright
 
-    - name: Wait for Voila to get online
+    - name: Wait for Solara to get online
       uses: ifaxity/wait-on-action@a7d13170ec542bdca4ef8ac4b15e9c6aa00a6866  # v1.2.1
       with:
-        resource: tcp:8866
+        resource: tcp:8765
         timeout: 60000
 
     - name: Test standalone
@@ -185,14 +185,14 @@ jobs:
 
     - name: Upload Test artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882  # v4.4.3
       with:
         name: test-results-${{ matrix.os }}
         path: standalone/test-results
 
     - name: Upload jdaviz standalone (OSX)
       if: ${{ always() && (matrix.os == 'macos') }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882  # v4.4.3
       with:
         name: jdaviz-standlone-${{ matrix.os }}
         path: standalone/dist/jdaviz.dmg

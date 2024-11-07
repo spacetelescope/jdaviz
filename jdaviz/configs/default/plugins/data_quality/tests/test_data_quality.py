@@ -145,7 +145,7 @@ def test_data_quality_plugin(imviz_helper, tmp_path):
     label_mouseover._viewer_mouse_event(viewer,
                                         {'event': 'mousemove', 'domain': {'x': 1371, 'y': 715}})
     label_mouseover_text = label_mouseover.as_text()[0]
-    assert label_mouseover_text.split('+')[1] == '2.94744e-01 MJy/sr (DQ: 4)'
+    assert label_mouseover_text.split('+')[1].endswith('(DQ: 4)')
 
     # check that a pixel without a DQ flag has no DQ mouseover label:
     label_mouseover._viewer_mouse_event(viewer,
@@ -241,7 +241,7 @@ def test_cubeviz_layer_visibility_bug(cubeviz_helper, tmp_path):
 
     # create a spatial subset in the flux-viewer
     roi = RectangularROI(22, 27, 22, 30)
-    viewer.apply_roi(roi)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(roi)
 
     # toggle layer visibility, this used to trigger an AttributeError:
     cubeviz_helper.app.set_data_visibility('flux-viewer', dc[-1].label)

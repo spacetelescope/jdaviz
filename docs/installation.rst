@@ -71,13 +71,28 @@ instead of ``pip``:
     conda install bottleneck
     conda install -c conda-forge notebook
     conda install -c conda-forge jupyterlab
-    conda install -c conda-forge voila
 
 You might also want to enable the ``ipywidgets`` notebook extension, as follows:
 
 .. code-block:: bash
 
     jupyter nbextension enable --py widgetsnbextension
+
+
+.. _optional-deps-roman:
+
+Optional Dependencies for Roman
+-------------------------------
+
+Dependencies for working with data products from the Roman Space Telescope
+are available for optional installation from PyPI with::
+
+    pip install -U jdaviz[roman]
+
+or while building from source with::
+
+    pip install -U .[roman]
+
 
 Developer Installation
 ----------------------

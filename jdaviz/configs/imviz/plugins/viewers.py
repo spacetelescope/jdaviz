@@ -36,7 +36,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # provide reference from state back to viewer to use for zoom syncing
-        self.state._viewer = self
+        self.state._set_viewer(self)
         self.init_astrowidgets_api()
         self._subscribe_to_layers_update()
 
@@ -62,6 +62,8 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         # when the image does need to update as it will be more computationally
         # intensive.
         self.state.image_external_padding = 0.5
+
+        self.data_menu._obj.dataset.add_filter('is_image')
 
     def on_mouse_or_key_event(self, data):
         active_image_layer = self.active_image_layer
@@ -199,11 +201,11 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             # we aren't actually guaranteed to get a SkyCoord out, just for images
             # with valid celestial WCS
             try:
-                link_type = self.get_link_type(image.label).lower()
+                align_by = self.get_alignment_method(image.label).lower()
 
                 # Convert X,Y from reference data to the one we are actually seeing.
                 # world_to_pixel return scalar ndarray that we need to convert to float.
-                if link_type == 'wcs':
+                if align_by == 'wcs':
                     if not reverse:
                         outside_ref_bounding_box = wcs_utils.data_outside_gwcs_bounding_box(
                             self.state.reference_data, x, y)
@@ -288,7 +290,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
                 if hasattr(layer_state, 'layer') and
                 layer_is_image_data(layer_state.layer)]
 
-    def get_link_type(self, data_label):
+    def get_alignment_method(self, data_label):
         """Find the type of ``glue`` linking between the given
         data label with the reference data in viewer.
 
@@ -299,7 +301,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
 
         Returns
         -------
-        link_type : {'pixels', 'wcs', 'self'}
+        align_by : {'pixels', 'wcs', 'self'}
             One of the link types accepted by the Orientation plugin
             or ``'self'`` if the data label belongs to the reference data itself.
 
@@ -319,25 +321,25 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         if ref_label in self.state.wcs_only_layers:
             return 'wcs'
 
-        link_type = None
+        align_by = None
         for elink in self.session.application.data_collection.external_links:
             elink_labels = (elink.data1.label, elink.data2.label)
             if data_label in elink_labels and ref_label in elink_labels:
                 if isinstance(elink, LinkSame):  # Assumes WCS link never uses LinkSame
-                    link_type = 'pixels'
+                    align_by = 'pixels'
                 else:  # If not pixels, must be WCS
-                    link_type = 'wcs'
+                    align_by = 'wcs'
                 break  # Might have duplicate, just grab first match
 
-        if link_type is None:
+        if align_by is None:
             raise ValueError(f'{data_label} not found in data collection external links')
 
-        return link_type
+        return align_by
 
     def _get_fov(self, wcs=None):
         if wcs is None:
             wcs = self.state.reference_data.coords
-        if self.jdaviz_app._link_type != "wcs" or wcs is None:
+        if self.jdaviz_app._align_by != "wcs" or wcs is None:
             return
 
         # compute the mean of the height and width of the
@@ -364,7 +366,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         x_cen = (self.state.x_min + self.state.x_max) * 0.5
         y_cen = (self.state.y_min + self.state.y_max) * 0.5
 
-        if (self.jdaviz_app._link_type == "wcs" or data is None
+        if (self.jdaviz_app._align_by == "wcs" or data is None
                 or data.label == self.state.reference_data.label):
             return self.state.reference_data.coords.pixel_to_world(x_cen, y_cen)
 

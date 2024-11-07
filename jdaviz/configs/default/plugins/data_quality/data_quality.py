@@ -33,6 +33,24 @@ telescope_names = {
 
 @tray_registry('g-data-quality', label="Data Quality", viewer_requirements="image")
 class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
+    """
+    See the :ref:`Data Quality Plugin Documentation <imviz-data-quality>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``science_layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`)
+    * ``dq_layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
+        data quality layer corresponding to the science data in ``science_layer``
+    * ``dq_layer_opacity``: Opacity of the data quality layer.
+    * ``decoded_flags``: List of decoded flags from the selected flag map.
+    * ``flags_filter``: List of flags to display.
+    * ``flag_map``: Name of the selected flag map.
+    * ``flag_map_definitions_selected``: Dictionary of the selected flag map.
+    """
     template_file = __file__, "data_quality.vue"
 
     irrelevant_msg = Unicode("").tag(sync=True)
@@ -43,7 +61,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
     science_layer_selected = Any().tag(sync=True)  # Any needed for multiselect
 
     # `dq_layer` is the data quality layer corresponding to the
-    # science data in `layer`
+    # science data in `science_layer`
     dq_layer_multiselect = Bool(False).tag(sync=True)
     dq_layer_items = List().tag(sync=True)
     dq_layer_selected = Any().tag(sync=True)  # Any needed for multiselect
@@ -88,8 +106,9 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
         def is_image_viewer(viewer):
             from jdaviz.configs.imviz.plugins.viewers import ImvizImageView
             from jdaviz.configs.cubeviz.plugins.viewers import CubevizImageView
+            from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView
 
-            return isinstance(viewer, (ImvizImageView, CubevizImageView))
+            return isinstance(viewer, (ImvizImageView, CubevizImageView, RampvizImageView))
 
         viewer_filter_names = [filt.__name__ for filt in self.viewer.filters]
         if 'is_image_viewer' not in viewer_filter_names:
@@ -133,6 +152,9 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
     @property
     def dq_layer_selected_flattened(self):
+        if not hasattr(self, 'dq_layer'):
+            return []
+
         selected_dq = self.dq_layer.selected_obj
         if not len(selected_dq):
             return []
@@ -152,6 +174,7 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
             return []
 
         dq = selected_dq[0].get_image_data()
+
         return np.unique(dq[~np.isnan(dq)])
 
     @property
@@ -192,11 +215,15 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
             # for cubeviz, also change uncert-viewer defaults to
             # map the out-of-bounds regions to the cmap's `bad` color:
-            if self.app.config == 'cubeviz':
-                uncert_viewer = self.app.get_viewer(
-                    self.app._jdaviz_helper._default_uncert_viewer_reference_name
+            if self.app.config in ('cubeviz', 'rampviz'):
+                viewer = self.app.get_viewer(
+                    getattr(
+                        self.app._jdaviz_helper,
+                        '_default_uncert_viewer_reference_name', 'level-2'
+                    )
                 )
-                for layer in uncert_viewer.layers:
+
+                for layer in viewer.layers:
                     # allow bad alpha for image layers, not subsets:
                     if not hasattr(layer, 'subset_array'):
                         layer.composite._allow_bad_alpha = True

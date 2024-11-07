@@ -1,0 +1,10 @@
+.solara-content-main {
+    padding-top: 0 !important;
+}
+.widget-output {
+    margin: 0;
+}
+.v-content.jdaviz__content--not-in-notebook {
+    height: 100vh;
+    max-height: 100vh;
+}

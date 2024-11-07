@@ -129,7 +129,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         orig_world_x = np.asarray(self.table._qtable['world_ra'][in_viewer])
         orig_world_y = np.asarray(self.table._qtable['world_dec'][in_viewer])
 
-        if self.app._link_type.lower() == 'wcs':
+        if self.app._align_by.lower() == 'wcs':
             # convert from the sky coordinates in the table to pixels via the WCS of the current
             # reference data
             new_wcs = viewer.state.reference_data.coords
@@ -139,7 +139,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
             except Exception:
                 # fail gracefully
                 new_x, new_y = [], []
-        elif self.app._link_type == 'pixels':
+        elif self.app._align_by == 'pixels':
             # we need to convert based on the WCS of the individual data layers on which each mark
             # was first created
             new_x, new_y = np.zeros_like(orig_world_x), np.zeros_like(orig_world_y)
@@ -156,7 +156,7 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                     new_x, new_y = [], []
                     break
         else:
-            raise NotImplementedError(f"link_type {self.app._link_type} not implemented")
+            raise NotImplementedError(f"align_by {self.app._align_by} not implemented")
 
         # check for entries that do not correspond to a layer or only have pixel coordinates
         pixel_only_inds = data_labels == ''

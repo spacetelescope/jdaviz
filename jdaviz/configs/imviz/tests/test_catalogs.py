@@ -117,6 +117,21 @@ class TestCatalogs:
         assert catalogs_plugin.results_available
         assert catalogs_plugin.number_of_results == prev_results
 
+        catalogs_plugin.table.selected_rows = catalogs_plugin.table.items[0:2]
+        assert len(catalogs_plugin.table.selected_rows) == 2
+
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 2047.5
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 1488.5
+
+        catalogs_plugin.vue_zoom_in()
+
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_min == 858.24969
+        assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 958.38461
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_min == 278.86265
+        assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 378.8691
+
 
 def test_from_file_parsing(imviz_helper, tmp_path):
     catalogs_plugin = imviz_helper.plugins["Catalog Search"]._obj
@@ -174,3 +189,19 @@ def test_offline_ecsv_catalog(imviz_helper, image_2d_wcs, tmp_path):
     catalogs_plugin.clear(hide_only=False)
     assert not catalogs_plugin.results_available
     assert len(imviz_helper.app.data_collection) == 1  # markers gone for good
+
+    catalogs_plugin.table.selected_rows = [catalogs_plugin.table.items[0]]
+
+    assert len(catalogs_plugin.table.selected_rows) == 1
+
+    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -0.5
+    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 9.5
+    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -0.5
+    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 9.5
+
+    catalogs_plugin.vue_zoom_in()
+
+    assert imviz_helper.viewers['imviz-0']._obj.state.x_min == -49.99966
+    assert imviz_helper.viewers['imviz-0']._obj.state.x_max == 50.00034
+    assert imviz_helper.viewers['imviz-0']._obj.state.y_min == -48.99999
+    assert imviz_helper.viewers['imviz-0']._obj.state.y_max == 51.00001

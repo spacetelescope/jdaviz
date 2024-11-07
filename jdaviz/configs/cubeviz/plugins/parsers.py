@@ -10,10 +10,11 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
-from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
+from jdaviz.core.custom_units import PIX2
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
-
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+from jdaviz.utils import (standardize_metadata, PRIHDR_KEY, download_uri_to_path,
+                          _eqv_flux_to_sb_pixel)
 
 __all__ = ['parse_data']
 
@@ -178,16 +179,31 @@ def _get_celestial_wcs(wcs):
     return wcs.celestial if hasattr(wcs, 'celestial') else None
 
 
-def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_wave_unit=None,
-                                        hdulist=None, uncertainty=None, mask=None):
+def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
+                                        target_wave_unit=None, hdulist=None,
+                                        uncertainty=None, mask=None, apply_pix2=False):
     """Upstream issue of WCS not using the correct units for data must be fixed here.
-    Issue: https://github.com/astropy/astropy/issues/3658
+    Issue: https://github.com/astropy/astropy/issues/3658.
+
+    Also converts flux units to flux/pix2 solid angle units, if `flux` is not a surface
+    brightness and `apply_pix2` is True.
     """
+    # handle scale factors when they are included in the unit
+    # (has to be done before Spectrum1D creation)
+    if not np.isclose(flux.unit.scale, 1, rtol=1e-5):
+        flux = flux.to(flux.unit / flux.unit.scale)
+
     with warnings.catch_warnings():
         warnings.filterwarnings(
             'ignore', message='Input WCS indicates that the spectral axis is not last',
             category=UserWarning)
-        sc = Spectrum1D(flux=flux, wcs=wcs, uncertainty=uncertainty, mask=mask)
+        sc = Spectrum1D(flux=flux, wcs=wcs, meta=metadata, uncertainty=uncertainty, mask=mask)
+
+    # convert flux and uncertainty to per-pix2 if input is not a surface brightness
+    target_flux_unit = None
+    if (apply_pix2 and (data_type != "mask") and
+            (not check_if_unit_is_per_solid_angle(flux.unit))):
+        target_flux_unit = flux.unit / PIX2
 
     if target_wave_unit is None and hdulist is not None:
         found_target = False
@@ -206,23 +222,22 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, target_w
                     found_target = True
                     break
 
-    if (data_type == 'flux' and target_wave_unit is not None
-            and target_wave_unit != sc.spectral_axis.unit):
-        metadata['_orig_spec'] = sc
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                'ignore', message='Input WCS indicates that the spectral axis is not last',
-                category=UserWarning)
-            new_sc = Spectrum1D(
-                flux=sc.flux,
-                spectral_axis=sc.spectral_axis.to(target_wave_unit, u.spectral()),
-                meta=metadata,
-                uncertainty=sc.uncertainty,
-                mask=sc.mask
-            )
-    else:
-        sc.meta = metadata
+    if target_wave_unit == sc.spectral_axis.unit:
+        target_wave_unit = None
+
+    if (target_wave_unit is None) and (target_flux_unit is None):  # Nothing to convert
         new_sc = sc
+    elif target_flux_unit is None:  # Convert wavelength only
+        new_sc = sc.with_spectral_axis_unit(target_wave_unit)
+    elif target_wave_unit is None:  # Convert flux only and only PIX2 stuff
+        new_sc = sc.with_flux_unit(target_flux_unit, equivalencies=_eqv_flux_to_sb_pixel())
+    else:  # Convert both
+        new_sc = sc.with_spectral_axis_and_flux_units(
+            target_wave_unit, target_flux_unit, flux_equivalencies=_eqv_flux_to_sb_pixel())
+
+    if target_wave_unit is not None:
+        new_sc.meta['_orig_spec'] = sc  # Need this for later
+
     return new_sc
 
 
@@ -282,7 +297,9 @@ def _parse_hdulist(app, hdulist, file_name=None,
         # to sky regions, where the parent data of the subset might have dropped spatial WCS info
         metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
 
-        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+        apply_pix2 = data_type in ['flux', 'uncert']
+        sc = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=data_type,
+                                                 hdulist=hdulist, apply_pix2=apply_pix2)
 
         app.add_data(sc, data_label)
 
@@ -296,7 +313,8 @@ def _parse_hdulist(app, hdulist, file_name=None,
 
         else:  # flux
             # Forced wave unit conversion made it lose stuff, so re-add
-            app.data_collection[data_label].get_component("flux").units = flux_unit
+            # also re-get unit from sc in case a factor of pix2 was applied
+            app.data_collection[data_label].get_component("flux").units = sc.unit
             # Add flux to top left image viewer
             app.add_data_to_viewer(flux_viewer_reference_name, data_label)
             app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
@@ -338,11 +356,15 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
     if hdu.name != 'PRIMARY' and 'PRIMARY' in hdulist:
         metadata[PRIHDR_KEY] = standardize_metadata(hdulist['PRIMARY'].header)
 
-    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+    data = _return_spectrum_with_correct_units(
+        flux, wcs, metadata, data_type=data_type, hdulist=hdulist)
     app.add_data(data, data_label, parent=parent)
 
     # get glue data and update if DQ:
     if ext == 'DQ':
+        # prevent circular import:
+        from jdaviz.configs.imviz.plugins.parsers import prep_data_layer_as_dq
+
         data = app.data_collection[-1]
         prep_data_layer_as_dq(data)
 
@@ -395,7 +417,8 @@ def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_n
     # to sky regions, where the parent data of the subset might have dropped spatial WCS info
     metadata['_orig_spatial_wcs'] = _get_celestial_wcs(wcs)
 
-    data = _return_spectrum_with_correct_units(flux, wcs, metadata, data_type, hdulist=hdulist)
+    data = _return_spectrum_with_correct_units(
+        flux, wcs, metadata, data_type=data_type, hdulist=hdulist)
 
     app.add_data(data, data_label)
 
@@ -430,8 +453,6 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         else:
             flux = val
 
-        flux = np.moveaxis(flux, 1, 0)
-
         with warnings.catch_warnings():
             warnings.filterwarnings(
                 'ignore', message='Input WCS indicates that the spectral axis is not last',
@@ -445,7 +466,10 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
             if hasattr(file_obj, 'wcs'):
                 meta['_orig_spatial_wcs'] = _get_celestial_wcs(file_obj.wcs)
 
-            s1d = Spectrum1D(flux=flux, wcs=file_obj.wcs, meta=meta)
+            # Also convert data loaded in flux units to a per-square-pixel surface
+            # brightness unit (e.g Jy to Jy/pix**2)
+            s1d = _return_spectrum_with_correct_units(
+                flux, file_obj.wcs, meta, data_type=attr, apply_pix2=True)
 
         cur_data_label = app.return_data_label(data_label, attr.upper())
         app.add_data(s1d, cur_data_label)
@@ -473,6 +497,12 @@ def _parse_spectrum1d(app, file_obj, data_label=None, spectrum_viewer_reference_
     # TODO: glue-astronomy translators only look at the flux property of
     #  specutils Spectrum1D objects. Fix to support uncertainties and masks.
 
+    # convert data loaded in flux units to a per-square-pixel surface
+    # brightness unit (e.g Jy to Jy/pix**2)
+    if not check_if_unit_is_per_solid_angle(file_obj.flux.unit):
+        file_obj = file_obj.with_flux_unit(
+            file_obj.flux.unit / PIX2, equivalencies=_eqv_flux_to_sb_pixel())
+
     app.add_data(file_obj, data_label)
     app.add_data_to_viewer(spectrum_viewer_reference_name, data_label)
 
@@ -491,10 +521,16 @@ def _parse_ndarray(app, file_obj, data_label=None, data_type=None,
     flux = file_obj
 
     if not hasattr(flux, 'unit'):
-        flux = flux << u.count
+        flux = flux << (u.count / PIX2)
 
     meta = standardize_metadata({'_orig_spatial_wcs': None})
     s3d = Spectrum1D(flux=flux, meta=meta)
+
+    # convert data loaded in flux units to a per-square-pixel surface
+    # brightness unit (e.g Jy to Jy/pix**2)
+    if not check_if_unit_is_per_solid_angle(s3d.flux.unit):
+        s3d = s3d.with_flux_unit(s3d.flux.unit / PIX2, equivalencies=_eqv_flux_to_sb_pixel())
+
     app.add_data(s3d, data_label)
 
     if data_type == 'flux':
@@ -519,7 +555,7 @@ def _parse_gif(app, file_obj, data_label=None, flux_viewer_reference_name=None):
     flux = np.rot90(np.moveaxis(flux, 0, 2), k=-1, axes=(0, 1))
 
     meta = {'filename': file_name, '_orig_spatial_wcs': None}
-    s3d = Spectrum1D(flux=flux * u.count, meta=standardize_metadata(meta))
+    s3d = Spectrum1D(flux=flux * (u.count / PIX2), meta=standardize_metadata(meta))
 
     app.add_data(s3d, data_label)
     app.add_data_to_viewer(flux_viewer_reference_name, data_label)

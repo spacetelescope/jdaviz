@@ -13,3 +13,5 @@ For example:
   plugin = viz.plugins['Plot Options']
   plugin.open_in_tray()
   plugin.show('popout')
+
+When running in a notebook, some plugins provide API hints directly in the UI.  To enable these, toggle the ``<>`` button in the top of the plugin.

@@ -40,7 +40,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         super().__init__(*args, **kwargs)
 
         # provide reference from state back to viewer to use for zoom syncing
-        self.state._viewer = self
+        self.state._set_viewer(self)
 
         self._subscribe_to_layers_update()
         self.state.add_callback('reference_data', self._initial_x_axis)
@@ -54,6 +54,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         self.audification_wl_unit = None
         self.volume_level = None
         self.stream_active = True
+
+        self.data_menu._obj.dataset.add_filter('is_cube_or_image')
 
     @property
     def _default_spectrum_viewer_reference_name(self):

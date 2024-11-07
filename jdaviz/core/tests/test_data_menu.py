@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 
-from glue.core.roi import XRangeROI
 from astropy.utils.data import download_file
+from specutils import SpectralRegion
 
 from jdaviz.core.data_formats import identify_helper
 
@@ -54,7 +54,8 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
     assert sv.layers[1].visible is False
 
     # add a subset and make sure it appears for the first data entry but not the second
-    app.get_viewer("spectrum-viewer").apply_roi(XRangeROI(6000, 6500))
+    specviz_helper.plugins['Subset Tools']._obj.import_region(
+        SpectralRegion(6000 * spectrum1d.spectral_axis.unit, 6500 * spectrum1d.spectral_axis.unit))
 
     assert len(sv.layers) == 4
     assert sv.layers[2].visible is True   # subset corresponding to first (visible) data entry

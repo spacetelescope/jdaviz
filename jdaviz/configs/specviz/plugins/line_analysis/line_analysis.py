@@ -25,6 +25,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
+from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
 
 
 __all__ = ['LineAnalysis']
@@ -293,10 +294,21 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                     flux_unit = u.Unit(self.spectrum_viewer.state.y_display_unit)
                 else:
                     add_flux = False
+
+                solid_angle_in_flux_unit = check_if_unit_is_per_solid_angle(flux_unit,
+                                                                            return_unit=True)
+                if solid_angle_in_flux_unit is None:
+                    # use dimensionless_unscaled as a placeholder unit.
+                    # is_equivalent() checks won't pass anyway if theres no
+                    # solid angle in the unit, so it won't matter what this is
+                    solid_angle_in_flux_unit = u.dimensionless_unscaled
+
+                solid_angle_string = solid_angle_in_flux_unit.to_string()
+
                 # If the flux unit is equivalent to Jy, or Jy per spaxel for Cubeviz,
                 # enforce integration in frequency space
                 if (flux_unit.is_equivalent(u.Jy) or
-                        flux_unit.is_equivalent(u.Jy/u.sr)):
+                   flux_unit.is_equivalent(u.Jy / solid_angle_in_flux_unit)):
                     # Perform integration in frequency space
                     freq_spec = Spectrum1D(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.Hz,
@@ -320,8 +332,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         return
 
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
-                    if flux_unit.is_equivalent(u.Jy/u.sr):
-                        final_unit = u.Unit('W/(m2 sr)')
+                    if flux_unit.is_equivalent(u.Jy/solid_angle_in_flux_unit):
+                        final_unit = u.Unit(f'W/(m2 {solid_angle_string})')
                     else:
                         final_unit = u.Unit('W/m2')
 
@@ -332,7 +344,7 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                 # If the flux unit is instead equivalent to power density
                 # (Jy, but defined in wavelength), enforce integration in wavelength space
                 elif (flux_unit.is_equivalent(u.Unit('W/(m2 m)')) or
-                        flux_unit.is_equivalent(u.Unit('W/(m2 m sr)'))):
+                        flux_unit.is_equivalent(u.Unit(f'W/(m2 m {solid_angle_string})'))):
                     # Perform integration in wavelength space using MKS unit (meters)
                     wave_spec = Spectrum1D(
                         spectral_axis=spec_subtracted.spectral_axis.to(u.m,
@@ -354,8 +366,8 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
                         self.update_results(None)
                         return
                     # When flux is equivalent to Jy, lineflux result should be shown in W/m2
-                    if flux_unit.is_equivalent(u.Unit('W/(m2 m)'/u.sr)):
-                        final_unit = u.Unit('W/(m2 sr)')
+                    if flux_unit.is_equivalent(u.Unit('W/(m2 m)'/solid_angle_in_flux_unit)):
+                        final_unit = u.Unit(f'W/(m2 {solid_angle_string})')
                     else:
                         final_unit = u.Unit('W/m2')
 

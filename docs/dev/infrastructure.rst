@@ -49,7 +49,7 @@ The target interfaces are:
 * **Desktop**: This interface is meant to behave like a more traditional "desktop app",
   i.e., a window with a fixed set of functionality and a particular layout for a
   specific set of scientific use cases. This interface is accessed via a
-  `Voilà <https://voila.readthedocs.io>`_ wrapper that loads the same machinery as the
+  `Solara <https://solara.dev>`_ wrapper that loads the same machinery as the
   other interfaces but presents the outputs of notebook "cells" as the only view.
   This trades the flexibility of the notebook interface for a consistent and
   reproducible layout and simpler interface without the distraction of the notebook

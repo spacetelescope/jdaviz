@@ -18,7 +18,8 @@ __all__ = ["specviz_spectrum1d_parser"]
 
 @data_parser_registry("specviz-spectrum1d-parser")
 def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_viewer=True,
-                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None):
+                              concat_by_file=False, cache=None, local_path=os.curdir, timeout=None,
+                              load_as_list=False):
     """
     Loads a data file or `~specutils.Spectrum1D` object into Specviz.
 
@@ -46,18 +47,32 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         remote requests in seconds (passed to
         `~astropy.utils.data.download_file` or
         `~astroquery.mast.Conf.timeout`).
+    load_as_list : bool, optional
+        Force the parser to load the input file with the `~specutils.SpectrumList` read function
+        instead of `~specutils.Spectrum1D`.
     """
 
     spectrum_viewer_reference_name = app._jdaviz_helper._default_spectrum_viewer_reference_name
     # If no data label is assigned, give it a unique name
     if not data_label:
         data_label = app.return_data_label(data, alt_name="specviz_data")
+    # Still need to standardize the label
+    elif isinstance(data_label, (list, tuple)):
+        data_label = [app.return_data_label(label, alt_name="specviz_data") for label in data_label]  # noqa
+    else:
+        data_label = app.return_data_label(data_label, alt_name="specviz_data")
+
     if isinstance(data, SpectrumCollection):
         raise TypeError("SpectrumCollection detected."
                         " Please provide a Spectrum1D or SpectrumList")
     elif isinstance(data, Spectrum1D):
-        data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
-        data = [data]
+        # Handle the possibility of 2D spectra by splitting into separate spectra
+        if data.flux.ndim == 1:
+            data_label = [data_label]
+            data = [data]
+        elif data.flux.ndim == 2:
+            data = split_spectrum_with_2D_flux_array(data)
+            data_label = [f"{data_label} [{i}]" for i in range(len(data))]
     # No special processing is needed in this case, but we include it for completeness
     elif isinstance(data, SpectrumList):
         pass
@@ -65,40 +80,48 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
         # special processing for HDUList
         if isinstance(data, fits.HDUList):
             data = [Spectrum1D.read(data)]
-            data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
+            data_label = [data_label]
         else:
             # list treated as SpectrumList if not an HDUList
             data = SpectrumList.read(data, format=format)
     else:
         # try parsing file_obj as a URI/URL:
-        data = download_uri_to_path(
-            data, cache=cache, local_path=local_path, timeout=timeout
-        )
+        data = download_uri_to_path(data, cache=cache, local_path=local_path, timeout=timeout)
 
         path = pathlib.Path(data)
 
-        if path.is_file():
-            try:
-                data = [Spectrum1D.read(str(path), format=format)]
-                data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
-
-            except IORegistryError:
-                # Multi-extension files may throw a registry error
-                data = SpectrumList.read(str(path), format=format)
-        elif path.is_dir():
+        if path.is_dir() or load_as_list:
             data = SpectrumList.read(str(path), format=format)
             if data == []:
                 raise ValueError(f"`specutils.SpectrumList.read('{str(path)}')` "
                                  "returned an empty list")
+        elif path.is_file():
+            try:
+                data = Spectrum1D.read(str(path), format=format)
+                if data.flux.ndim == 2:
+                    data = split_spectrum_with_2D_flux_array(data)
+                else:
+                    data = [data]
+                    data_label = [app.return_data_label(data_label, alt_name="specviz_data")]
+
+            except IORegistryError:
+                # Multi-extension files may throw a registry error
+                data = SpectrumList.read(str(path), format=format)
         else:
             raise FileNotFoundError("No such file: " + str(path))
 
+    # step through SpectrumList and convert any 2D spectra to 1D spectra
     if isinstance(data, SpectrumList):
+        new_data = []
+        for spec in data:
+            if spec.flux.ndim == 2:
+                new_data.extend(split_spectrum_with_2D_flux_array(spec))
+            else:
+                new_data.append(spec)
+        data = SpectrumList(new_data)
+
         if not isinstance(data_label, (list, tuple)):
-            temp_labels = []
-            for i in range(len(data)):
-                temp_labels.append(f"{data_label} {i}")
-            data_label = temp_labels
+            data_label = [f"{data_label} [{i}]" for i in range(len(data))]
         elif len(data_label) != len(data):
             raise ValueError(f"Length of data labels list ({len(data_label)}) is different"
                              f" than length of list of data ({len(data)})")
@@ -121,7 +144,7 @@ def specviz_spectrum1d_parser(app, data, data_label=None, format=None, show_in_v
                 # if the concatenated list of uncertanties is all nan (meaning
                 # they were all nan to begin with, or all None), it will be set
                 # to None on the final Spectrum1D
-                if spec.uncertainty[wlind] is not None:
+                if spec.uncertainty is not None and spec.uncertainty[wlind] is not None:
                     dfnuallorig.append(spec.uncertainty[wlind].array)
                 else:
                     dfnuallorig.append(np.nan)
@@ -246,3 +269,31 @@ def combine_lists_to_1d_spectrum(wl, fnu, dfnu, wave_units, flux_units):
     spec = Spectrum1D(flux=fnuall * flux_units, spectral_axis=wlall * wave_units,
                       uncertainty=unc)
     return spec
+
+
+def split_spectrum_with_2D_flux_array(data):
+    """
+    Helper function to split Spectrum1D of 2D flux to a SpectrumList of nD objects.
+
+    Parameters
+    ----------
+    data : `~specutils.Spectrum1D`
+        Spectrum with 2D flux array
+
+    Returns
+    -------
+    new_data : `~specutils.SpectrumList`
+        List of unpacked spectra.
+    """
+    new_data = []
+    for i in range(data.flux.shape[0]):
+        unc = None
+        mask = None
+        if data.uncertainty is not None:
+            unc = data.uncertainty[i, :]
+        if data.mask is not None:
+            mask = data.mask[i, :]
+        new_data.append(Spectrum1D(flux=data.flux[i, :], spectral_axis=data.spectral_axis,
+                                   uncertainty=unc, mask=mask, meta=data.meta))
+
+    return new_data

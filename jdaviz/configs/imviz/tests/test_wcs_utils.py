@@ -114,7 +114,7 @@ class TestWCSOnly(BaseImviz_WCS_GWCS):
 
     # TODO: Replace private API calls with more public ones when available.
     def test_non_wcs_layer_labels(self):
-        self.imviz.link_data(link_type="wcs")
+        self.imviz.link_data(align_by="wcs")
         assert len(self.imviz.app.data_collection) == 3
 
         # Confirm the WCS-only layer is created by WCS-linking .

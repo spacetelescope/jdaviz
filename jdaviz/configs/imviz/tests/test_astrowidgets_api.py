@@ -30,32 +30,22 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
     def test_center_offset_pixel(self):
         self.viewer.center_on((0, 1))
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-5, 5, -4, 6))
+        assert_allclose(self.viewer.get_limits(), (-5, 5, -4, 6))
 
         self.viewer.offset_by(1 * u.pix, -1 * u.dimensionless_unscaled)
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-4, 6, -5, 5))
+        assert_allclose(self.viewer.get_limits(), (-4, 6, -5, 5))
 
         self.viewer.offset_by(1, 0)
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-3, 7, -5, 5))
+        assert_allclose(self.viewer.get_limits(), (-3, 7, -5, 5))
 
         # Out-of-bounds centering is now allowed because it is needed
         # for dithering use case.
         self.viewer.center_on((-1, 99999))
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-6, 4, 9.99940e+04, 1.00004e+05))
+        assert_allclose(self.viewer.get_limits(), (-6, 4, 9.99940e+04, 1.00004e+05))
 
         # Sometimes invalid WCS also gives such output, should be no-op
         self.viewer.center_on((np.array(np.nan), np.array(np.nan)))
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-6, 4, 9.99940e+04, 1.00004e+05))
+        assert_allclose(self.viewer.get_limits(), (-6, 4, 9.99940e+04, 1.00004e+05))
 
     def test_center_offset_sky(self):
         # Blink to the one with WCS because the last loaded data is shown.
@@ -63,14 +53,11 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 
         sky = self.wcs.pixel_to_world(0, 1)
         self.viewer.center_on(sky)
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        (-5, 5, -4, 6))
+        assert_allclose(self.viewer.get_limits(), (-5, 5, -4, 6))
 
         dsky = 0.1 * u.arcsec
         self.viewer.offset_by(-dsky, dsky)
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
+        assert_allclose(self.viewer.get_limits(),
                         (-4.9, 5.1, -3.90000000002971, 6.09999999997029))
 
         # Cannot mix pixel with sky
@@ -96,30 +83,24 @@ class TestCenterOffset(BaseImviz_WCS_NoWCS):
 class TestCenter(BaseImviz_WCS_WCS):
 
     def test_center_on_pix(self):
-        self.imviz.link_data(link_type='wcs')
+        self.imviz.link_data(align_by='wcs')
 
         # This is the second loaded data that is dithered by 1-pix.
         self.viewer.center_on((0, 0))
         expected_position = [-6.75, 4.25, -5.75, 5.25]
         rtol = 1e-4
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        expected_position, rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), expected_position, rtol=rtol)
 
         # This is the first data.
         self.viewer.blink_once()
         self.viewer.center_on((0, 0))
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        [-5.75, 5.25, -5.75, 5.25], rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), [-5.75, 5.25, -5.75, 5.25], rtol=rtol)
 
         # Centering by sky on second data.
         self.viewer.blink_once()
         sky = self.wcs_2.pixel_to_world(0, 0)
         self.viewer.center_on(sky)
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
-                        expected_position, rtol=rtol)
+        assert_allclose(self.viewer.get_limits(), expected_position, rtol=rtol)
 
 
 class TestZoom(BaseImviz_WCS_NoWCS):
@@ -135,8 +116,7 @@ class TestZoom(BaseImviz_WCS_NoWCS):
 
     def assert_zoom_results(self, zoom_level, x_min, x_max, y_min, y_max, dpix):
         assert_allclose(self.viewer.zoom_level, zoom_level)
-        assert_allclose((self.viewer.state.x_min, self.viewer.state.x_max,
-                         self.viewer.state.y_min, self.viewer.state.y_max),
+        assert_allclose(self.viewer.get_limits(),
                         (x_min + dpix, x_max + dpix,
                          y_min + dpix, y_max + dpix))
 
@@ -182,9 +162,10 @@ class TestCmapStretchCuts(BaseImviz_WCS_NoWCS):
             'Gray', 'Viridis', 'Plasma', 'Inferno', 'Magma', 'Purple-Blue',
             'Yellow-Green-Blue', 'Yellow-Orange-Red', 'Red-Purple', 'Blue-Green',
             'Hot', 'Red-Blue', 'Red-Yellow-Blue', 'Purple-Orange', 'Purple-Green',
-            'Random', 'Rainbow', 'Seismic',
+            'Rainbow', 'Seismic',
             'Reversed: Gray', 'Reversed: Viridis', 'Reversed: Plasma', 'Reversed: Inferno',
-            'Reversed: Magma', 'Reversed: Hot', 'Reversed: Rainbow']
+            'Reversed: Magma', 'Reversed: Hot', 'Reversed: Rainbow',
+            'Random']
 
     def test_invalid_colormap(self):
         with pytest.raises(ValueError, match='Invalid colormap'):

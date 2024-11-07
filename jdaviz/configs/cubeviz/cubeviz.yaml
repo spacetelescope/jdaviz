@@ -23,7 +23,7 @@ tray:
   - g-data-quality
   - g-subset-plugin
   - g-markers
-  - cubeviz-slice
+  - cube-slice
   - g-unit-conversion
   - cubeviz-spectral-extraction
   - g-gaussian-smooth

@@ -1,13 +1,14 @@
 <template>
   <div>
-  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry">
+  <v-row v-if="items.length > 1 || selected.length===0 || show_if_single_entry || api_hints_enabled">
     <v-select
       :menu-props="{ left: true }"
       attach
       :items="items"
       v-model="selected"
       @change="$emit('update:selected', $event)"
-      :label="label ? label : 'Layer'"
+      :label="api_hints_enabled && api_hint ? api_hint : (label ? label : 'Layer')"
+      :class="api_hints_enabled ? 'api-hint' : null"
       :hint="hint ? hint : 'Select layer.'"
       :rules="rules ? rules : []"
       :multiple="multiselect"
@@ -64,7 +65,9 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'hint', 'rules', 'icons', 'show_if_single_entry', 'multiselect']
+  props: ['items', 'selected', 'label', 'hint', 'rules', 'icons', 'show_if_single_entry', 'multiselect',
+          'api_hint', 'api_hints_enabled'
+  ]
 };
 </script>
 

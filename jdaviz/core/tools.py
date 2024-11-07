@@ -3,6 +3,7 @@ import time
 
 import numpy as np
 from echo import delay_callback
+from functools import cached_property
 from glue.config import viewer_tool
 from glue.core import HubListener
 from glue.viewers.common.tool import Tool
@@ -39,8 +40,7 @@ class _BaseZoomHistory:
     # Mixin for custom zoom tools to be able to save their previous zoom state
     # which is then used by the PrevZoom tool
     def save_prev_zoom(self):
-        self.viewer._prev_limits = (self.viewer.state.x_min, self.viewer.state.x_max,
-                                    self.viewer.state.y_min, self.viewer.state.y_max)
+        self.viewer._prev_limits = self.viewer.get_limits()
 
 
 class _MatchedZoomMixin:
@@ -66,6 +66,14 @@ class _MatchedZoomMixin:
         for ax in self.match_axes:
             keys += [f'{ax}_min', f'{ax}_max']
         return keys
+
+    @cached_property
+    def delay_callback_keys(self):
+        all_keys = ['x_min', 'x_max', 'y_min', 'y_max',
+                    'zoom_center_x', 'zoom_center_y', 'zoom_radius']
+        return [k for k in all_keys
+                if np.all([hasattr(v.state, k)
+                           for v in self._iter_matched_viewers(include_self=True)])]
 
     def activate(self):
         if self.disable_matched_zoom_in_other_viewer:
@@ -105,7 +113,7 @@ class _MatchedZoomMixin:
             to_lims = self._map_limits(self.viewer, viewer, from_lims)
             matched_refdata = viewer.state.reference_data
 
-            if hasattr(viewer, '_get_fov'):
+            if hasattr(viewer, '_get_fov') and matched_refdata is not None:
                 to_fov_sky = viewer._get_fov(wcs=matched_refdata.coords)
             else:
                 to_fov_sky = None
@@ -115,8 +123,8 @@ class _MatchedZoomMixin:
                 viewer.zoom_level = old_level * float(to_fov_sky / orig_fov_sky)
                 viewer.center_on(sky_cen)
 
-            else:
-                with delay_callback(viewer.state, *self.match_keys):
+            elif len(self.match_axes):
+                with delay_callback(viewer.state, *self.delay_callback_keys):
                     for ax in self.match_axes:
                         if None in orig_lims.values():
                             orig_range = np.inf
@@ -134,6 +142,13 @@ class _MatchedZoomMixin:
                             if not np.isnan(value) and (orig_value is None or
                                                         abs(value-orig_lims.get(k, np.inf)) > tol):
                                 setattr(viewer.state, k, value)
+            else:
+                # match keys, but not match axes (e.g., zoom_center and zoom_radius)
+                with delay_callback(viewer.state, *self.delay_callback_keys):
+                    for k in self.match_keys:
+                        value = to_lims.get(k)
+                        if not np.isnan(value):
+                            setattr(viewer.state, k, value)
 
     def is_visible(self):
         return len(self.viewer.jdaviz_app._viewer_store) > 1
@@ -164,7 +179,13 @@ class HomeZoom(HomeTool, _BaseZoomHistory):
 
     def activate(self):
         self.save_prev_zoom()
-        super().activate()
+
+        # typical case:
+        if not hasattr(self.viewer, 'reset_limits'):
+            super().activate()
+        else:
+            # if the viewer has its own reset_limits method, use it:
+            self.viewer.reset_limits()
 
 
 @viewer_tool
@@ -534,7 +555,11 @@ class SinglePixelRegion(CheckableTool):
 
         if data['altKey'] is True:
             reg = self.get_subset(x, y, as_roi=False)
-            self.viewer.jdaviz_helper.load_regions(reg)
+            self.viewer.jdaviz_app.get_tray_item_from_name('g-subset-plugin').combination_mode.selected = 'new'  # noqa
+            self.viewer.jdaviz_app.get_tray_item_from_name('g-subset-plugin').import_region(
+                reg, return_bad_regions=True)
+            self.viewer.jdaviz_app.get_tray_item_from_name('g-subset-plugin').combination_mode.selected = 'replace'  # noqa
+
         else:
             roi = self.get_subset(x, y, as_roi=True)
             self.viewer.apply_roi(roi)

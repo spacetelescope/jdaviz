@@ -3,14 +3,13 @@ import os
 
 from glue.config import viewer_tool
 from glue_jupyter.bqplot.image import BqplotImageView
-from glue_jupyter.bqplot.profile import BqplotProfileView
 from glue.viewers.common.tool import CheckableTool
 import numpy as np
 from specutils import Spectrum1D
 
 from jdaviz.core.events import SliceToolStateMessage, SliceSelectSliceMessage
-from jdaviz.core.tools import PanZoom, BoxZoom, SinglePixelRegion, _MatchedZoomMixin
-from jdaviz.core.marks import PluginLine
+from jdaviz.core.tools import PanZoom, BoxZoom, _MatchedZoomMixin
+from jdaviz.configs.default.plugins.tools import ProfileFromCube
 
 
 __all__ = []
@@ -19,8 +18,12 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', 'ic
 
 
 class _PixelMatchedZoomMixin(_MatchedZoomMixin):
-    match_keys = ('x_min', 'x_max', 'y_min', 'y_max')
-    disable_matched_zoom_in_other_viewer = False
+    match_axes = []
+    disable_matched_zoom_in_other_viewer = True
+
+    @property
+    def match_keys(self):
+        return ['zoom_center_x', 'zoom_center_y', 'zoom_radius']
 
     def _is_matched_viewer(self, viewer):
         return isinstance(viewer, BqplotImageView)
@@ -82,7 +85,7 @@ class SelectSlice(CheckableTool):
 
 
 @viewer_tool
-class SpectrumPerSpaxel(SinglePixelRegion):
+class SpectrumPerSpaxel(ProfileFromCube):
 
     icon = os.path.join(ICON_DIR, 'pixelspectra.svg')
     tool_id = 'jdaviz:spectrumperspaxel'
@@ -91,54 +94,48 @@ class SpectrumPerSpaxel(SinglePixelRegion):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._spectrum_viewer = None
-        self._previous_bounds = None
-        self._mark = None
-        self._data = None
-
-    def _reset_spectrum_viewer_bounds(self):
-        sv_state = self._spectrum_viewer.state
-        sv_state.x_min = self._previous_bounds[0]
-        sv_state.x_max = self._previous_bounds[1]
-        sv_state.y_min = self._previous_bounds[2]
-        sv_state.y_max = self._previous_bounds[3]
+        self._is_moving = False
 
     def activate(self):
-        self.viewer.add_event_callback(self.on_mouse_move, events=['mousemove', 'mouseleave'])
-        if self._spectrum_viewer is None:
-            # Get first profile viewer
-            for _, viewer in self.viewer.jdaviz_helper.app._viewer_store.items():
-                if isinstance(viewer, BqplotProfileView):
-                    self._spectrum_viewer = viewer
-                    break
-        if self._mark is None:
-            self._mark = PluginLine(self._spectrum_viewer, visible=False)
-            self._spectrum_viewer.figure.marks = self._spectrum_viewer.figure.marks + [self._mark,]
-        # Store these so we can revert to previous user-set zoom after preview view
         sv_state = self._spectrum_viewer.state
         self._previous_bounds = [sv_state.x_min, sv_state.x_max, sv_state.y_min, sv_state.y_max]
         # update listener bounds
         self.viewer.audification_wl_bounds = (sv_state.x_min, sv_state.x_max)
         self.viewer.audification_wl_unit = sv_state.x_display_unit
         super().activate()
+        for k in ("y_min", "y_max"):
+            self._profile_viewer.state.add_callback(k, self.on_limits_change)
 
     def deactivate(self):
+        for k in ("y_min", "y_max"):
+            self._profile_viewer.state.remove_callback(k, self.on_limits_change)
+
         self.viewer.remove_event_callback(self.on_mouse_move)
         self._reset_spectrum_viewer_bounds()
         self.viewer.stop_stream()
         super().deactivate()
 
+    def on_limits_change(self, *args):
+        if not self._is_moving:
+            self._previous_bounds = self._profile_viewer.get_limits()
+
     def on_mouse_move(self, data):
         if data['event'] == 'mouseleave':
             self._mark.visible = False
-            self._reset_spectrum_viewer_bounds()
             self.viewer.stop_stream()
+            self._reset_profile_viewer_bounds()
+            self._is_moving = False
             return
 
-        x = int(np.round(data['domain']['x']))
-        y = int(np.round(data['domain']['y']))
+        self._is_moving = True
+        try:
+            x = int(np.round(data['domain']['x']))
+            y = int(np.round(data['domain']['y']))
+            self._mouse_move_worker(x, y)
+        finally:
+            self._is_moving = False
 
-        # some alternative scaling
+    def _mouse_move_worker(self, x, y):
         # Use the selected layer from coords_info as long as it's 3D
         coords_dataset = self.viewer.session.application._tools['g-coords-info'].dataset.selected
         if coords_dataset == 'auto':
@@ -164,24 +161,25 @@ class SpectrumPerSpaxel(SinglePixelRegion):
         else:
             spectrum = cube_data.get_object(statistic=None)
         # Note: change this when Spectrum1D.with_spectral_axis is fixed.
-        x_unit = self._spectrum_viewer.state.x_display_unit
+        x_unit = self._profile_viewer.state.x_display_unit
         if spectrum.spectral_axis.unit != x_unit:
             new_spectral_axis = spectrum.spectral_axis.to(x_unit)
             spectrum = Spectrum1D(spectrum.flux, new_spectral_axis)
 
         if x >= spectrum.flux.shape[0] or x < 0 or y >= spectrum.flux.shape[1] or y < 0:
-            self._reset_spectrum_viewer_bounds()
+            self._reset_profile_viewer_bounds()
             self._mark.visible = False
             self.viewer.stop_stream()
         else:
-            y_values = spectrum.flux[x, y, :]
+            y_values = spectrum.flux[x, y, :].value
             if np.all(np.isnan(y_values)):
                 self._mark.visible = False
                 return
             self._mark.update_xy(spectrum.spectral_axis.value, y_values)
             self._mark.visible = True
-            self._spectrum_viewer.state.y_max = np.nanmax(y_values.value) * 1.2
-            self._spectrum_viewer.state.y_min = np.nanmin(y_values.value) * 0.8
 
             self.viewer.start_stream()
             self.viewer.update_cube(x, y)
+
+            self._profile_viewer.set_limits(
+                y_min=np.nanmin(y_values) * 0.8, y_max=np.nanmax(y_values) * 1.2)

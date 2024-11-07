@@ -1,17 +1,21 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Model Fitting"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description || 'Fit an analytic model to data or a subset.'"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#model-fitting'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
     <v-row v-if="config=='cubeviz'">
-      <v-switch
-        v-model="cube_fit"
+      <plugin-switch
+        :value.sync="cube_fit"
         label="Cube Fit"
+        api_hint="plg.cube_fit ="
+        :api_hints_enabled="api_hints_enabled"
         hint="Whether to fit to an extracted spectrum or full cube."
-        persistent-hint
-      ></v-switch>
+      />
     </v-row>
 
     <!-- for mosviz, the entries change on row change
@@ -20,8 +24,10 @@
     <plugin-dataset-select
       :items="dataset_items"
       :selected.sync="dataset_selected"
-      :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1"
+      :show_if_single_entry="['mosviz', 'cubeviz'].indexOf(config) !== -1 || api_hints_enabled"
       label="Data"
+      api_hint="plg.dataset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select the data set to be fitted."
     />
 
@@ -30,6 +36,8 @@
       :selected.sync="spectral_subset_selected"
       :show_if_single_entry="true"
       label="Spectral region"
+      api_hint="plg.spectral_subset ="
+      :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region to fit."
     />
 
@@ -44,10 +52,10 @@
       <v-row v-if="model_comp_items">
         <v-select
           attach
-          :menu-props="{ left: true }"
           :items="model_comp_items.map(i => i.label)"
           v-model="model_comp_selected"
-          label="Model Component"
+          :label="api_hints_enabled ? 'plg.model_component =' : 'Model Component'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           hint="Select a model component to add."
           persistent-hint
         ></v-select>
@@ -55,9 +63,10 @@
 
       <v-row v-if="display_order">
         <v-text-field
-          label="Order"
           type="number"
           v-model.number="poly_order"
+          :label="api_hints_enabled ? 'plg.poly_order' : 'Order'"
+          :class="api_hints_enabled ? 'api-hint' : null"
           :rules="[() => poly_order!=='' || 'This field is required']"
           hint="Order of polynomial to fit."
           persistent-hint
@@ -71,6 +80,8 @@
         :default="comp_label_default"
         :auto.sync="comp_label_auto"
         :invalid_msg="comp_label_invalid_msg"
+        api_hint="plg.model_component_label ="
+        :api_hints_enabled="api_hints_enabled"
         hint="Label for this new model component."
       ></plugin-auto-label>
 
@@ -79,9 +90,14 @@
           <plugin-action-button
             :disabled="!form_valid_model_component || comp_label_invalid_msg.length > 0"
             :results_isolated_to_plugin="true"
+            :api_hints_enabled="api_hints_enabled"
             @click="add_model"
           >
-            Add Component
+            {{ api_hints_enabled ?
+              'plg.create_model_component()'
+              :
+              'Add Component'
+            }}
           </plugin-action-button>
         </j-tooltip>
       </v-row>
@@ -232,6 +248,8 @@
         :default="model_equation_default"
         :auto.sync="model_equation_auto"
         :invalid_msg="model_equation_invalid_msg"
+        :label="api_hints_enabled ? 'plg.equation =' : null"
+        :class="api_hints_enabled ? 'api-hint' : null"
         hint="Enter an equation specifying how to combine the component models, using their model IDs and basic arithmetic operators (ex. component1+component2)."
       ></plugin-auto-label>
 
@@ -255,16 +273,21 @@
         action_tooltip="Fit the model to the data"
         :action_disabled="model_equation_invalid_msg.length > 0 || !spectral_subset_valid"
         :action_spinner="spinner"
+        add_results_api_hint='plg.add_results'
+        action_api_hint='plg.calculate_fit(add_data=True)'
+        :api_hints_enabled="api_hints_enabled"
         @click:action="apply"
       >
         <div v-if="config!=='cubeviz' || !cube_fit">
           <v-row>
-            <v-switch
-              v-model="residuals_calculate"
+            <plugin-switch
+              :value.sync="residuals_calculate"
               label="Calculate residuals"
+              api_hint="plg.residuals_calculate = "
+              :api_hints_enabled="api_hints_enabled"
               hint="Whether to compute and export residuals (data minus model)."
               persistent-hint
-            ></v-switch>
+            />
           </v-row>
 
           <plugin-auto-label
@@ -274,6 +297,8 @@
             :auto.sync="residuals_label_auto"
             :invalid_msg="residuals_label_invalid_msg"
             label="Residuals Data Label"
+            api_hint="plg.residuals ="
+            :api_hints_enabled="api_hints_enabled"
             hint="Label for the residuals.  Data entry will not be loaded into the viewer automatically."
           ></plugin-auto-label>
 

@@ -2,8 +2,7 @@ import numpy as np
 import pytest
 from astropy import units as u
 from astropy.wcs import WCS
-from specutils import Spectrum1D
-from glue.core.roi import XRangeROI
+from specutils import Spectrum1D, SpectralRegion
 from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 from numpy.testing import assert_allclose, assert_array_equal
 
@@ -45,10 +44,17 @@ def test_fits_image_hdu_with_microns(image_cube_hdu_obj_microns, cubeviz_helper)
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    flux_unit_str = "erg / (Angstrom s cm2)"
-    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +5.00000e+00 1e-17 {flux_unit_str}',  # noqa
+
+    # This secondarily tests a scale factor embedded in a unit at parse-time to make sure it
+    # is applied to the values, then it is removed from the actual display unit
+    flux_unit_str = "erg / (Angstrom s cm2 pix2)"
+    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +5.00000e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m45.5759s +27d00m12.3044s (ICRS)',
                                          '205.4398995981 27.0034178810 (deg)')  # noqa
+
+    # verify that scale factor embedded in unit is removed
+    assert np.allclose(flux_cube.unit.scale, 1.0)
+
     unc_viewer = cubeviz_helper.app.get_viewer('uncert-viewer')
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
@@ -64,7 +70,9 @@ def test_spectrum1d_with_fake_fixed_units(spectrum1d, cubeviz_helper):
     dc[0].meta["_orig_spec"] = spectrum1d
 
     cubeviz_helper.app.add_data_to_viewer('spectrum-viewer', 'test')
-    cubeviz_helper.app.get_viewer('spectrum-viewer').apply_roi(XRangeROI(6600, 7400))
+    unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
+    cubeviz_helper.plugins['Subset Tools']._obj.import_region(SpectralRegion(6600 * unit,
+                                                                             7400 * unit))
 
     subsets = cubeviz_helper.app.get_subsets()
     reg = subsets.get('Subset 1')
@@ -87,7 +95,6 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     assert cubeviz_helper.app.data_collection[0].label == "test_fits_image.fits[FLUX]"
 
     # This tests the same data as test_fits_image_hdu_parse above.
-
     cubeviz_helper.app.data_collection[0].meta['EXTNAME'] == 'FLUX'
     cubeviz_helper.app.data_collection[1].meta['EXTNAME'] == 'MASK'
     cubeviz_helper.app.data_collection[2].meta['EXTNAME'] == 'ERR'
@@ -98,8 +105,8 @@ def test_fits_image_hdu_parse_from_file(tmpdir, image_cube_hdu_obj, cubeviz_help
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    flux_unit_str = "erg / (Angstrom s cm2)"
-    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 {flux_unit_str}',  # noqa
+    flux_unit_str = "erg / (Angstrom s cm2 pix2)"
+    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')
 
@@ -128,13 +135,12 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
     label_mouseover._viewer_mouse_event(flux_viewer,
                                         {'event': 'mousemove', 'domain': {'x': 0, 'y': 0}})
-    flux_unit_str = "erg / (Angstrom s cm2)"
-    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e+00 1e-17 {flux_unit_str}',  # noqa
+    flux_unit_str = "erg / (Angstrom s cm2 pix2)"
+    assert label_mouseover.as_text() == (f'Pixel x=00.0 y=00.0 Value +1.00000e-17 {flux_unit_str}',  # noqa
                                          'World 13h41m46.5994s +26d59m58.6136s (ICRS)',
                                          '205.4441642302 26.9996148973 (deg)')
 
     # These viewers have no data.
-
     unc_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_uncert_viewer_reference_name)
     label_mouseover._viewer_mouse_event(unc_viewer,
                                         {'event': 'mousemove', 'domain': {'x': -1, 'y': 0}})
@@ -149,10 +155,10 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper):
     data = cubeviz_helper.app.data_collection[0]
     flux = data.get_component('flux')
     assert data.label.endswith('[FLUX]')
-    assert data.shape == (3, 2, 4)  # y, x, z
+    assert data.shape == (2, 3, 4)  # x, y, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
     assert_array_equal(flux.data, 1)
-    assert flux.units == 'nJy'
+    assert flux.units == 'nJy / pix2'
 
 
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
@@ -188,7 +194,7 @@ def test_numpy_cube(cubeviz_helper):
     assert data.label == 'Array'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
-    assert flux.units == 'ct'
+    assert flux.units == 'ct / pix2'
 
     # Check context of second cube.
     data = cubeviz_helper.app.data_collection[1]
@@ -196,7 +202,7 @@ def test_numpy_cube(cubeviz_helper):
     assert data.label == 'uncert_array'
     assert data.shape == (4, 3, 2)  # x, y, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
-    assert flux.units == 'ct'
+    assert flux.units == 'ct / pix2'
 
 
 def test_invalid_data_types(cubeviz_helper):

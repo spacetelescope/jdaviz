@@ -15,60 +15,66 @@ class TestPanZoomTools(BaseImviz_WCS_WCS):
 
         t = v.toolbar.tools['jdaviz:boxzoommatch']
         # original limits (x_min, x_max, y_min, y_max): -0.5 9.5 -0.5 9.5
-        original_limits = (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max)
+        # original limits (zoom_center_x, zoom_center_y, zoom_radius): 4.5 4.5 5.0
+        original_limits = v.get_limits()
         assert_allclose(original_limits, (-0.5, 9.5, -0.5, 9.5))
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), original_limits)  # noqa
+        original_center_rad = (v.state.zoom_center_x, v.state.zoom_center_y, v.state.zoom_radius)
+        assert_allclose(original_center_rad, (4.5, 4.5, 5.0))
+        assert_allclose(v2.get_limits(), original_limits)
+        assert_allclose((v2.state.zoom_center_x, v2.state.zoom_center_y, v2.state.zoom_radius), original_center_rad)  # noqa
         t.activate()
         t.save_prev_zoom()
-        v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max = (1, 8, 1, 8)
-        # second viewer should match these changes
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
+        v.set_limits(x_min=1, x_max=8, y_min=1, y_max=8)
+        # second viewer should match these changes, wrt zoom center and radius
+        assert v2.state.zoom_center_x == v.state.zoom_center_x
+        assert v2.state.zoom_center_y == v.state.zoom_center_y
+        assert v2.state.zoom_radius == v.state.zoom_radius
+
+        v.toolbar.tools['jdaviz:prevzoom'].activate()
+        # both should revert since they're still linked (boxzoommatch will re-activate)
+        assert_allclose((v.state.zoom_center_x, v.state.zoom_center_y, v.state.zoom_radius), original_center_rad)  # noqa
+        assert_allclose((v2.state.zoom_center_x, v2.state.zoom_center_y, v2.state.zoom_radius), original_center_rad)  # noqa
 
         v.toolbar.tools['jdaviz:prevzoom'].activate()
         # both should revert since they're still linked
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), original_limits)  # noqa
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), original_limits)  # noqa
-
-        v.toolbar.tools['jdaviz:prevzoom'].activate()
-        # both should revert since they're still linked
-        assert (v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max) == (1, 8, 1, 8)
-        assert (v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max) == (1, 8, 1, 8)
+        assert v.get_limits() == (1, 8, 1, 8)
+        assert v2.get_limits() == (1, 8, 1, 8)
 
         v.toolbar.tools['jdaviz:boxzoommatch'].deactivate()
         v.toolbar.tools['jdaviz:homezoom'].activate()
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), original_limits)  # noqa
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (1, 8, 1, 8))  # noqa
+        assert_allclose(v.get_limits(), original_limits)
+        assert_allclose(v2.get_limits(), (1, 8, 1, 8))
         v.toolbar.tools['jdaviz:prevzoom'].activate()
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (1, 8, 1, 8))
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (1, 8, 1, 8))  # noqa
+        assert_allclose(v.get_limits(), (1, 8, 1, 8))
+        assert_allclose(v2.get_limits(), (1, 8, 1, 8))
         t.deactivate()
 
         t_linkedpan = v.toolbar.tools['jdaviz:panzoommatch']
         t_linkedpan.activate()
         v.center_on((0, 0))
         # make sure both viewers moved to the new center
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-3.5, 3.5, -3.5, 3.5))  # noqa
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-3.5, 3.5, -3.5, 3.5))  # noqa
+        assert_allclose(v.get_limits(), (-3.5, 3.5, -3.5, 3.5))
+        assert_allclose(v2.get_limits(), (-3.5, 3.5, -3.5, 3.5))
         t_linkedpan.deactivate()
 
         t_normpan = v.toolbar.tools['jdaviz:imagepanzoom']
         t_normpan.activate()
         t_normpan.on_click({'event': 'click', 'domain': {'x': 1, 'y': 1}})
         # make sure only first viewer re-centered since this mode is not linked mode
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-2.5, 4.5, -2.5, 4.5))  # noqa
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-3.5, 3.5, -3.5, 3.5))  # noqa
+        assert_allclose(v.get_limits(), (-2.5, 4.5, -2.5, 4.5))
+        assert_allclose(v2.get_limits(), (-3.5, 3.5, -3.5, 3.5))
         t_normpan.deactivate()
 
         t_linkedpan.activate()
         t_linkedpan.on_click({'event': 'click', 'domain': {'x': 2, 'y': 2}})
         # make sure both viewers moved to the new center
-        assert_allclose((v.state.x_min, v.state.x_max, v.state.y_min, v.state.y_max), (-1.5, 5.5, -1.5, 5.5))  # noqa
-        assert_allclose((v2.state.x_min, v2.state.x_max, v2.state.y_min, v2.state.y_max), (-1.5, 5.5, -1.5, 5.5))  # noqa
+        assert_allclose(v.get_limits(), (-1.5, 5.5, -1.5, 5.5))
+        assert_allclose(v2.get_limits(), (-1.5, 5.5, -1.5, 5.5))
         t_linkedpan.deactivate()
 
 
-@pytest.mark.parametrize("link_type", ["Pixels", "WCS"])
-def test_panzoom_click_center_linking(imviz_helper, link_type):
+@pytest.mark.parametrize("align_by", ["Pixels", "WCS"])
+def test_panzoom_click_center_linking(imviz_helper, align_by):
     """https://github.com/spacetelescope/jdaviz/issues/2749"""
     v = imviz_helper.default_viewer._obj
 
@@ -85,11 +91,11 @@ def test_panzoom_click_center_linking(imviz_helper, link_type):
     imviz_helper.load_data(NDData(arr_small, wcs=w_small), data_label="small")
 
     lc_plugin = imviz_helper.plugins['Orientation']
-    lc_plugin.link_type = link_type
+    lc_plugin.align_by = align_by
 
     coo = SkyCoord(ra=197.89262754541807, dec=-1.3644568140486624, unit="deg")
 
-    if link_type == "WCS":
+    if align_by == "WCS":
         mouseover_loc = v.state.reference_data.coords.world_to_pixel(coo)
     else:  # Pixels
         mouseover_loc = w_small.world_to_pixel(coo)

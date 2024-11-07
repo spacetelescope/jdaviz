@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     :description="docs_description || 'Perform aperture photometry for drawn regions.'"
-    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#simple-aperture-photometry'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aperture-photometry'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
@@ -79,7 +79,8 @@
             label="Background value"
             v-model.number="background_value"
             type="number"
-            hint="Background to subtract, same unit as data"
+            hint="Background to subtract"
+            :suffix="display_unit"
             :disabled="background_selected!='Manual'"
             persistent-hint
           >
@@ -94,12 +95,13 @@
             persistent-hint
           />
         </v-row>
-        <v-row v-if="!multiselect || !pixel_area_multi_auto">
+        <v-row v-if="(!multiselect || !pixel_area_multi_auto) && display_solid_angle_unit!='pix2'">
+
           <v-text-field
             label="Pixel area"
             v-model.number="pixel_area"
             type="number"
-            hint="Pixel area in arcsec squared, only used if sr in data unit"
+            hint="Pixel area in arcsec squared, only used if data is in units of surface brightness."
             persistent-hint
           >
           </v-text-field>
@@ -112,6 +114,7 @@
             type="number"
             hint="Factor to convert data unit to counts, in unit of flux/counts"
             persistent-hint
+            :rules="[() => counts_factor>=0 || 'Counts conversion factor cannot be negative.']"
           >
           </v-text-field>
         </v-row>
@@ -129,7 +132,8 @@
             label="Flux scaling"
             v-model.number="flux_scaling"
             type="number"
-            hint="Same unit as data, used in -2.5 * log(flux / flux_scaling)"
+            :suffix="flux_scaling_display_unit"
+            hint="Used in -2.5 * log(flux / flux_scaling)"
             persistent-hint
           >
           </v-text-field>
@@ -173,7 +177,7 @@
             :results_isolated_to_plugin="true"
             @click="do_aper_phot"
             :spinner="spinner"
-            :disabled="aperture_selected === background_selected || !aperture_selected_validity.is_aperture"
+            :disabled="aperture_selected === background_selected || !aperture_selected_validity.is_aperture || counts_factor < 0"
           >
             Calculate
           </plugin-action-button>
@@ -188,7 +192,7 @@
     </v-row>
 
     <v-row v-if="!multiselect && plot_available">
-      <jupyter-widget :widget="plot_widget"/> 
+      <jupyter-widget :widget="plot_widget"/>
     </v-row>
 
     <div v-if="!multiselect && plot_available && fit_radial_profile && current_plot_type != 'Curve of Growth'">
@@ -213,22 +217,22 @@
 
       <v-row no-gutters>
         <v-col cols=6><U>Result</U></v-col>
-        <v-col cols=6><U>Value</U></v-col>
+        <v-col cols=4><U>Value</U></v-col>
+        <v-col cols=2><U>Unit</U></v-col>
       </v-row>
       <v-row
         v-for="item in results"
         :key="item.function"
         no-gutters>
-        <v-col cols=6>
-          {{  item.function  }}
-        </v-col>
-        <v-col cols=6>{{ item.result }}</v-col>
+        <v-col style="font-size: 8pt" cols=6>{{ item.function }}</v-col>
+        <v-col style="font-size: 9pt" cols=4>{{ item.result }}</v-col>
+        <v-col style="font-size: 9pt" cols=2>{{ item.unit }}</v-col>
       </v-row>
     </div>
 
     <div v-if="result_available">
       <j-plugin-section-header>Results History</j-plugin-section-header>
-      <jupyter-widget :widget="table_widget"></jupyter-widget> 
+      <jupyter-widget :widget="table_widget"></jupyter-widget>
     </div>
   </j-tray-plugin>
 </template>
