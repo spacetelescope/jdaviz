@@ -6,7 +6,7 @@ from jdaviz.configs.cubeviz.plugins.mixins import WithSliceIndicator, WithSliceS
 from jdaviz.configs.default.plugins.viewers import JdavizViewerMixin
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
 from jdaviz.core.freezable_state import FreezableBqplotImageViewerState
-from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData
+from jdaviz.configs.cubeviz.plugins.cube_listener import CubeListenerData, MINVOL
 import numpy as np
 from astropy import units as u
 
@@ -130,8 +130,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
         if not self.audified_cube:
             return
         self.volume_level = level
-        self.audified_cube.atten_level = int(np.clip((100/level)**2, 0, 2**15-1))
-
+        self.audified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
+        
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln):
         spectrum = self.active_image_layer.layer.get_object(statistic=None)
