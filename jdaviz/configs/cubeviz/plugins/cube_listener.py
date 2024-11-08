@@ -15,6 +15,7 @@ except ImportError:
 
 MINVOL = 1/(2**15 - 1)
 
+
 @contextmanager
 def suppress_stderr():
     with open(os.devnull, "w") as devnull:
@@ -24,6 +25,7 @@ def suppress_stderr():
             yield
         finally:
             sys.stderr = old_stderr
+
 
 def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fmin=40, fmax=1300,
                     eln=False):
@@ -59,7 +61,7 @@ def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fm
 class CubeListenerData:
     def __init__(self, cube, wlens, samplerate=44100, duration=1, overlap=0.05, buffsize=1024,
                  bdepth=16, wl_bounds=None, wl_unit=None, audfrqmin=50, audfrqmax=1500,
-                 eln=False, vol=False):
+                 eln=False, vol=None):
         self.siglen = int(samplerate*(duration-overlap))
         self.cube = cube
         self.dur = duration
@@ -68,10 +70,10 @@ class CubeListenerData:
         self.maxval = pow(2, bdepth-1) - 1
         self.fadedx = 0
 
-        if vol == None:
+        if vol is None:
             self.atten_level = 1
         else:
-            self.atten_level = int(np.clip((level/100)**2, MINVOL, 1))
+            self.atten_level = int(np.clip((vol/100)**2, MINVOL, 1))
 
         self.wl_bounds = wl_bounds
         self.wl_unit = wl_unit

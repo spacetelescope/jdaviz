@@ -107,8 +107,8 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             self.stream.stop()
 
     def update_cube(self, x, y):
-        if (not self.audified_cube or not hasattr(self.audified_cube, 'newsig')
-                or not hasattr(self.audified_cube, 'sigcube')):
+        if (not self.audified_cube or not hasattr(self.audified_cube, 'newsig') or
+                not hasattr(self.audified_cube, 'sigcube')):
             return
         self.audified_cube.newsig = self.audified_cube.sigcube[x, y, :]
         self.audified_cube.cbuff = True
@@ -131,7 +131,7 @@ class CubevizImageView(JdavizViewerMixin, WithSliceSelection, BqplotImageView):
             return
         self.volume_level = level
         self.audified_cube.atten_level = int(1/np.clip((level/100.)**2, MINVOL, 1))
-        
+
     def get_sonified_cube(self, sample_rate, buffer_size, device, assidx, ssvidx,
                           pccut, audfrqmin, audfrqmax, eln):
         spectrum = self.active_image_layer.layer.get_object(statistic=None)
