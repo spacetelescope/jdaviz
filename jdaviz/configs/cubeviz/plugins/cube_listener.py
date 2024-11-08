@@ -13,6 +13,7 @@ try:
 except ImportError:
     pass
 
+MINVOL = 1/(2**15 - 1)
 
 @contextmanager
 def suppress_stderr():
@@ -23,7 +24,6 @@ def suppress_stderr():
             yield
         finally:
             sys.stderr = old_stderr
-
 
 def audify_spectrum(spec, duration, overlap=0.05, system='mono', srate=44100, fmin=40, fmax=1300,
                     eln=False):
@@ -68,10 +68,10 @@ class CubeListenerData:
         self.maxval = pow(2, bdepth-1) - 1
         self.fadedx = 0
 
-        if vol:
-            self.atten_level = int(np.clip(100/vol, 0, 2**15-1))
-        else:
+        if vol == None:
             self.atten_level = 1
+        else:
+            self.atten_level = int(np.clip((level/100)**2, MINVOL, 1))
 
         self.wl_bounds = wl_bounds
         self.wl_unit = wl_unit
