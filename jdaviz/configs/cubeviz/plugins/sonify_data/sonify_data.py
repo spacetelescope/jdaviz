@@ -1,9 +1,11 @@
 from echo import delay_callback
 from traitlets import Bool, List, Unicode, observe
+import astropy.units as u
 
 from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import PluginTemplateMixin, DatasetSelectMixin, with_spinner
+from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
+                                        SpectralSubsetSelectMixin, with_spinner)
 
 
 __all__ = ['SonifyData']
@@ -19,7 +21,7 @@ else:
 
 @tray_registry('cubeviz-sonify-data', label="Sonify Data",
                viewer_requirements=['spectrum', 'image'])
-class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
+class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     template_file = __file__, "sonify_data.vue"
 
     sample_rate = IntHandleEmpty(44100).tag(sync=True)
@@ -27,8 +29,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
     assidx = FloatHandleEmpty(2.5).tag(sync=True)
     ssvidx = FloatHandleEmpty(0.65).tag(sync=True)
     eln = Bool(False).tag(sync=True)
-    wavemin = FloatHandleEmpty().tag(sync=True)
-    wavemax = FloatHandleEmpty().tag(sync=True)
     audfrqmin = FloatHandleEmpty(50).tag(sync=True)
     audfrqmax = FloatHandleEmpty(1500).tag(sync=True)
     pccut = IntHandleEmpty(20).tag(sync=True)
@@ -51,8 +51,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
         # TODO: Remove hardcoded range and flux viewer
         self.spec_viewer = self.app.get_viewer('spectrum-viewer')
         self.flux_viewer = self.app.get_viewer('flux-viewer')
-        self.spec_viewer.state.add_callback("x_min", self._update_x_values)
-        self.spec_viewer.state.add_callback("x_max", self._update_x_values)
 
     @with_spinner()
     def vue_sonify_cube(self, *args):
@@ -71,16 +69,14 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin):
         self.stream_active = not self.stream_active
         self.flux_viewer.stream_active = not self.flux_viewer.stream_active
 
-    def _update_x_values(self, event):
-        with delay_callback(self.spec_viewer.state, 'x_min', 'x_max'):
-            self.wavemin, self.wavemax = self.spec_viewer.state.x_min, self.spec_viewer.state.x_max
-
-    @observe('wavemin', 'wavemax')
-    def update_viewer_range(self, event):
-        with delay_callback(self.spec_viewer.state, 'x_min', 'x_max'):
-            self.spec_viewer.state.x_min, self.spec_viewer.state.x_max = self.wavemin, self.wavemax
-            self.flux_viewer.update_listener_wls(self.wavemin, self.wavemax,
-                                                 self.spec_viewer.state.x_display_unit)
+    @observe('spectral_subset_selected')
+    def update_wavelength_range(self, event):
+        if not hasattr(self, 'spec_viewer'):
+            return
+        display_unit = self.spec_viewer.state.x_display_unit
+        min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
+        max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
+        self.flux_viewer.update_listener_wls(min_wavelength, max_wavelength, display_unit)
 
     @observe('volume')
     def update_volume_level(self, event):

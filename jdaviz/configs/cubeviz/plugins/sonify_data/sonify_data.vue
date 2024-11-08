@@ -34,109 +34,111 @@
         persistent-hint
         ></v-select>
     </v-row>
-
-    <v-row>
-      <v-text-field
-        ref="sample_rate"
-        type="number"
-        label="Sample Rate"
-        v-model.number="sample_rate"
-        hint="The desired sample rate."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-    <v-row>
-      <v-text-field
-        ref="buffer_size"
-        type="number"
-        label="Buffer Size"
-        v-model.number="buffer_size"
-        hint="The desired buffer size."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-    <v-row>
-      <v-text-field
-        ref="audfrqmin"
-        type="number"
-        label="Minimum Audio Frequency"
-        v-model.number="audfrqmin"
-        hint="The minimum audio frequency used to represent the spectra (Hz)"
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-    <v-row>
-      <v-text-field
-        ref="audfrqmax"
-        type="number"
-        label="Maximum Audio Frequency"
-        v-model.number="audfrqmax"
-        hint="The maximum audio frequency used to represent the spectra (Hz)"
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-    <v-row>
-      <v-text-field
-        ref="assidx"
-        type="number"
-        label="Audio Spectrum Scaling Index"
-        v-model.number="assidx"
-        hint="The desired audio spectrum scaling index, typically > 1."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-    <v-row>
-      <v-text-field
-        ref="ssvidx"
-        type="number"
-        label="Spectrum-Spectrum Volume Index"
-        v-model.number="ssvidx"
-        hint="The desired spectrum-spectrum volume index, typically [0,1]."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-    <v-row>
-      <v-text-field
-        ref="wavemin"
-        type="number"
-        label="Minimum Wavelength"
-        v-model.number="wavemin"
-        hint="The desired minimum wavelength."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-    <v-row>
-      <v-text-field
-        ref="wavemax"
-        type="number"
-        label="Maximum Wavelength"
-        v-model.number="wavemax"
-        hint="The desired maximum wavelength."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
-    <v-row>
-      <v-text-field
-        ref="pccut"
-        type="number"
-        label="Flux Percentile Cut"
-        v-model.number="pccut"
-        hint="The minimum flux percentile to be heard."
-        persistent-hint
-      ></v-text-field>
-    </v-row>
     <v-row>
         Volume
         <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
     </v-row>
+
+    <plugin-subset-select
+      :items="spectral_subset_items"
+      :selected.sync="spectral_subset_selected"
+      :show_if_single_entry="true"
+      label="Spectral range"
+      api_hint="plg.spectral_subset ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Select spectral region that defines the wavelength range."
+    />
+
     <v-row>
-       <v-switch
-         v-model="eln"
-         label="Equal Loudness Equalisation"
-         hint="Whether to equalise for uniform perceived loudness"
-         persistent-hint
-        ></v-switch>
+      <v-expansion-panels accordion>
+        <v-expansion-panel>
+          <v-expansion-panel-header v-slot="{ open }">
+            <span style="padding: 6px">Advanced Sound Options</span>
+          </v-expansion-panel-header>
+          <v-expansion-panel-content class="plugin-expansion-panel-content">
+            <v-row>
+              <v-text-field
+                ref="sample_rate"
+                type="number"
+                label="Sample Rate"
+                v-model.number="sample_rate"
+                hint="The desired sample rate."
+                persistent-hint
+              ></v-text-field>
+            </v-row>
+            <v-row>
+              <v-text-field
+                ref="buffer_size"
+                type="number"
+                label="Buffer Size"
+                v-model.number="buffer_size"
+                hint="The desired buffer size."
+                persistent-hint
+              ></v-text-field>
+            </v-row>
+            <v-row>
+              <v-text-field
+                ref="audfrqmin"
+                type="number"
+                label="Minimum Audio Frequency"
+                v-model.number="audfrqmin"
+                hint="The minimum audio frequency used to represent the spectra (Hz)"
+                persistent-hint
+              ></v-text-field>
+            </v-row>
+            <v-row>
+              <v-text-field
+                ref="audfrqmax"
+                type="number"
+                label="Maximum Audio Frequency"
+                v-model.number="audfrqmax"
+                hint="The maximum audio frequency used to represent the spectra (Hz)"
+                persistent-hint
+              ></v-text-field>
+            </v-row>
+            <v-row>
+              <v-text-field
+                ref="assidx"
+                type="number"
+                label="Audio Spectrum Scaling Index"
+                v-model.number="assidx"
+                hint="The desired audio spectrum scaling index, typically > 1."
+                persistent-hint
+              ></v-text-field>
+            </v-row>
+            <v-row>
+              <v-text-field
+                ref="ssvidx"
+                type="number"
+                label="Spectrum-Spectrum Volume Index"
+                v-model.number="ssvidx"
+                hint="The desired spectrum-spectrum volume index, typically [0,1]."
+                persistent-hint
+              ></v-text-field>
+            </v-row>
+            <v-row>
+              <v-text-field
+                ref="pccut"
+                type="number"
+                label="Flux Percentile Cut"
+                v-model.number="pccut"
+                hint="The minimum flux percentile to be heard."
+                persistent-hint
+              ></v-text-field>
+            </v-row>
+            <v-row>
+               <v-switch
+                 v-model="eln"
+                 label="Equal Loudness Equalisation"
+                 hint="Whether to equalise for uniform perceived loudness"
+                 persistent-hint
+                ></v-switch>
+            </v-row>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </v-row>
+
     <v-row>
       <plugin-action-button
         :disabled="!has_strauss"
