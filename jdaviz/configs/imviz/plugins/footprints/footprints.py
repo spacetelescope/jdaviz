@@ -197,7 +197,13 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         # call other plugin so that other options (wcs_fast_approximation, wcs_use_fallback)
         # are retained.  Remove this method if support for plotting footprints
         # when pixel-linked is reintroduced.
-        self.app._jdaviz_helper.plugins['Orientation'].align_by = 'WCS'
+        op = self.app._jdaviz_helper.plugins['Orientation']
+        try:
+            self.app._jdaviz_helper.plugins['Orientation'].align_by = 'WCS'
+        except ValueError:
+            # require the user to go to through the orientation plugin to
+            # delete subsets and change link type
+            op.open_in_tray()
 
     def _ensure_first_overlay(self):
         if not len(self._overlays):
