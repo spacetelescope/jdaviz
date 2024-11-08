@@ -11,6 +11,7 @@ from jdaviz.configs.imviz.tests.utils import create_example_gwcs
 
 
 @pytest.mark.remote_data
+@pytest.mark.filterwarnings(r"ignore::gwcs.wcs.GwcsBoundingBoxWarning")
 def test_2d_parser_jwst(specviz2d_helper):
     fn = download_file('https://stsci.box.com/shared/static/exnkul627fcuhy5akf2gswytud5tazmw.fits', cache=True)  # noqa
 
