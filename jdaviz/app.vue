@@ -55,7 +55,7 @@
             <v-icon medium>mdi-help-box</v-icon>
           </v-btn>
         </j-tooltip>
-        <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-api-hints">
+        <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
           <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
             <v-icon medium style="padding-top: 2px">mdi-code-tags</v-icon>
           </v-btn>
