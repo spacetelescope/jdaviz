@@ -23,21 +23,6 @@
       label="Data"
       hint="Select the data set."
     />
-    <v-row>
-      <v-select
-        :menu-props="{ left: true }"
-        attach
-        :items="sound_devices_items"
-        v-model="sound_devices_selected"
-        label="Sound device"
-        hint="Device which sound will be output from. Must be selected BEFORE cube is sonified."
-        persistent-hint
-        ></v-select>
-    </v-row>
-    <v-row>
-        Volume
-        <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
-    </v-row>
 
     <plugin-subset-select
       :items="spectral_subset_items"
@@ -157,6 +142,21 @@
       >
         Stop stream
       </plugin-action-button>
+    </v-row>
+    <v-row>
+      <v-select
+        :menu-props="{ left: true }"
+        attach
+        :items="sound_devices_items"
+        v-model="sound_devices_selected"
+        label="Sound device"
+        hint="Device which sound will be output from. Must be selected BEFORE cube is sonified."
+        persistent-hint
+        ></v-select>
+    </v-row>
+    <v-row>
+        Volume
+        <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
     </v-row>
  </j-tray-plugin>
 </template>
