@@ -23,12 +23,20 @@
         </v-alert>
 
         <v-alert
-          v-if="wcs_linking_available"
+          v-if="wcs_linking_available && !need_clear_astrowidget_markers &&!need_clear_subsets"
           type='warning'
           class="ignore-api-hints"
           style="margin-left: -12px; margin-right: -12px"
         >
-          Switching link type will reset zoom.
+          Switching alignment will reset zoom.
+        </v-alert>
+
+        <v-alert
+          v-if="plugin_markers_exist && !need_clear_astrowidget_markers &&!need_clear_subsets"
+          type='warning'
+          style="margin-left: -12px; margin-right: -12px"
+        >
+          Marker positions may not be pixel-perfect when changing alignment/linking options.
         </v-alert>
 
         <v-alert v-if="need_clear_astrowidget_markers" type='warning' style="margin-left: -12px; margin-right: -12px">
@@ -38,12 +46,9 @@
           </v-row>
         </v-alert>
 
-        <v-alert v-if="plugin_markers_exist" type='warning' style="margin-left: -12px; margin-right: -12px">
-          Marker positions may not be pixel-perfect when changing alignment/linking options.
-        </v-alert>
 
         <v-alert v-if="need_clear_subsets" type='warning' style="margin-left: -12px; margin-right: -12px">
-          Existing subsets will be deleted on changing alignment/linking options.
+          Existing subsets must be deleted before changing alignment/linking options.
           <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
             <v-btn @click="delete_subsets">
               {{ api_hints_enabled ?
