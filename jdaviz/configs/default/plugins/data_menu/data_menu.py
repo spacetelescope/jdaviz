@@ -188,8 +188,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if self._during_select_sync:
             return
         op = self._viewer.jdaviz_helper.plugins['Orientation']
-        if event.get('new') in op.orientation.choices:
-            op.orientation = event.get('new')
+        op._obj.set_orientation_for_viewer(event.get('new'), self.viewer_id)
 
     @contextmanager
     def during_select_sync(self):

@@ -451,15 +451,18 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     def vue_add_orientation(self, *args, **kwargs):
         self._add_orientation(set_on_create=True, from_ui=True)
 
-    @observe('orientation_layer_selected')
-    def _change_reference_data(self, *args, **kwargs):
+    def set_orientation_for_viewer(self, orientation, viewer_id):
         if self._refdata_change_available:
             self.app._change_reference_data(
-                self.orientation.selected, viewer_id=self.viewer.selected
+                orientation, viewer_id=viewer_id
             )
-            viewer_item = self.app._viewer_item_by_id(self.viewer.selected)
-            if viewer_item['reference_data_label'] != self.orientation.selected:
-                viewer_item['reference_data_label'] = self.orientation.selected
+            viewer_item = self.app._viewer_item_by_id(viewer_id)
+            if viewer_item['reference_data_label'] != orientation:
+                viewer_item['reference_data_label'] = orientation
+
+    @observe('orientation_layer_selected')
+    def _change_reference_data(self, *args, **kwargs):
+        self.set_orientation_for_viewer(self.orientation.selected, self.viewer.selected)
 
     def _on_refdata_change(self, msg):
 
