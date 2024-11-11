@@ -99,7 +99,7 @@ object, you can load it into Imviz as follows:
     from jdaviz import Imviz
 
     # mydatamodel is a jwst.datamodels object
-    ndd = NDData(np.array(mydatamodel.data), wcs=mydatamodel.get_fits_wcs())
+    ndd = NDData(mydatamodel.data, StdDevUncertainty(mydatamodel.err), mydatamodel.dq, mydatamodel.meta.wcs, meta=dict(mydatamodel.meta.items()))
     imviz = Imviz()
     imviz.load_data(ndd, data_label='my_data_model')
     imviz.show()
