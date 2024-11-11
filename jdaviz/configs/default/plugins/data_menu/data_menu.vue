@@ -304,6 +304,14 @@
         element = element.parentElement;
       }
     },
+    watch: {
+      force_open_menu: function (val) {
+        if (val) {
+          this.data_menu_open = true;
+          this.force_open_menu = false;
+        }
+      }
+    },
     methods: {
       onScroll(e) {
         const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height

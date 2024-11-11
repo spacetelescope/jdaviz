@@ -42,6 +42,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     Only the following attributes and methods are available through the
     :ref:`public API <plugin-apis>`:
 
+    * :meth:`open_menu`
     * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
         actively selected layer(s)
     * ``orientation`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
@@ -56,6 +57,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     * :meth:`remove_from_app`
     """
     template_file = __file__, "data_menu.vue"
+
+    force_open_menu = Bool(False).tag(sync=True)
 
     viewer_id = Unicode().tag(sync=True)
     viewer_reference = Unicode().tag(sync=True)
@@ -146,12 +149,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     @property
     def user_api(self):
-        expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility',
+        expose = ['open_menu', 'layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
         if self.app.config == 'imviz':
             expose += ['orientation']
         return UserApiWrapper(self, expose=expose)
+
+    def open_menu(self):
+        """
+        Open all instances of the data menu.
+        """
+        self.force_open_menu = True
 
     @property
     def existing_subset_labels(self):
