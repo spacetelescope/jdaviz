@@ -1,6 +1,7 @@
 name: rc-testing
 
 on:
+  pull_request:
   workflow_dispatch:
   schedule:
     # run at 9am UTC on Tuesdays
