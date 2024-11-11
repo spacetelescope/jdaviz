@@ -23,7 +23,7 @@
         </v-alert>
 
         <v-alert
-          v-if="wcs_linking_available && !need_clear_astrowidget_markers &&!need_clear_subsets"
+          v-if="wcs_linking_available && !need_clear_astrowidget_markers && !need_clear_subsets"
           type='warning'
           class="ignore-api-hints"
           style="margin-left: -12px; margin-right: -12px"
@@ -32,7 +32,7 @@
         </v-alert>
 
         <v-alert
-          v-if="plugin_markers_exist && !need_clear_astrowidget_markers &&!need_clear_subsets"
+          v-if="plugin_markers_exist && !need_clear_astrowidget_markers && !need_clear_subsets"
           type='warning'
           style="margin-left: -12px; margin-right: -12px"
         >
