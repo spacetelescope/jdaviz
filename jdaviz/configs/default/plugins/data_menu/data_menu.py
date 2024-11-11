@@ -60,6 +60,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     viewer_id = Unicode().tag(sync=True)
     viewer_reference = Unicode().tag(sync=True)
 
+    icons = Dict().tag(sync=True)
     layer_icons = Dict().tag(sync=True)  # read-only, see app.state.layer_icons
     viewer_icons = Dict().tag(sync=True)  # read-only, see app.state.viewer_icons
 
@@ -140,6 +141,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.subset_tools = [{'id': k, 'img': v['img'], 'name': SUBSET_NAMES.get(k, k)}
                              for k, v in self._viewer.toolbar.tools_data.items()
                              if k in SUBSET_TOOL_IDS.values()]
+
+        self.icons = {k: v for k, v in self.app.state.icons.items()}
 
     @property
     def user_api(self):
