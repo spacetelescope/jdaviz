@@ -94,8 +94,7 @@ object, you can load it into Imviz as follows:
 
 .. code-block:: python
 
-    import numpy as np
-    from astropy.nddata import NDData
+    from astropy.nddata import NDData, StdDevUncertainty
     from jdaviz import Imviz
 
     # mydatamodel is a jwst.datamodels object with stddev ERR array
