@@ -24,6 +24,11 @@ Imviz
 
 - Remove "From File.." option when running on an external server. [#3239]
 
+- Button in the footprints plugin to change the link-type now redirects to the orientation plugin
+  when the change fails due to the presence of subsets or markers. [#3276]
+
+- Updates UI language in the orientation plugin to better match API. [#3276]
+
 Mosviz
 ^^^^^^
 
