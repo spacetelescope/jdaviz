@@ -7,6 +7,7 @@
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#plot-options'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
+    :keep_active.sync="keep_active"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
@@ -116,7 +117,7 @@
                 :api_hints_enabled="api_hints_enabled"
                 @click="reset_viewer_bounds"
               >
-                {{api_hints_enabled ? 
+                {{api_hints_enabled ?
                   'plg.reset_viewer_bounds()'
                   :
                   'Reset viewer bounds'
@@ -275,7 +276,7 @@
             :api_hints_enabled="api_hints_enabled"
             wait="300"
             max="1"
-            step="0.01" 
+            step="0.01"
             :value.sync="subset_opacity_value"
           />
       </glue-state-sync-wrapper>
@@ -771,7 +772,7 @@
 
             <div v-if="contour_mode_value === 'Linear'">
               <glue-state-sync-wrapper :sync="contour_min_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('contour_min')">
-                <glue-float-field 
+                <glue-float-field
                   :label="api_hints_enabled ? 'plg.contour_min =' : 'Contour Min'"
                   :class="api_hints_enabled ? 'api-hint' : null"
                   :value.sync="contour_min_value"

@@ -1,5 +1,5 @@
 <template>
-  <v-container 
+  <v-container
     class="tray-plugin"
     style="padding-left: 24px; padding-right: 24px; padding-top: 12px" >
     <v-row>
@@ -9,9 +9,9 @@
       <div style="width: 32px">
         <j-tooltip tipid='plugin-api-hints'>
           <v-btn
-            v-if="api_hints_enabled !== undefined && config && plugin_key && checkNotebookContext()" 
+            v-if="api_hints_enabled !== undefined && config && plugin_key && checkNotebookContext()"
             id="api-hints-button"
-            icon 
+            icon
             :class="api_hints_enabled ? 'api-hint' : null"
             @click="() => {$emit('update:api_hints_enabled', !api_hints_enabled)}"
           >
@@ -75,7 +75,7 @@ module.exports = {
       if (!this.$el.isConnected) {
         return
       }
-      if (!document.hidden) {
+      if (!document.hidden && !this.keep_active) {
         this.$emit('plugin-ping', Date.now())
       }
       if (this.scroll_to) {
@@ -86,7 +86,7 @@ module.exports = {
         return
       }
       setTimeout(() => {
-        this.sendPing(true)          
+        this.sendPing(true)
       }, 200)  // ms
     },
     checkNotebookContext() {
@@ -141,7 +141,7 @@ module.exports = {
     /* tighten default padding on any sub expansion headers */
     padding: 6px !important;
   }
-  
+
   .v-expansion-panel-header .row {
     /* override margin from above and replace with equal top and bottom margins
     for the text in the panel header */
