@@ -50,7 +50,7 @@
                   </span>
                   <span class="invert-if-dark" style="margin-left: 30px; margin-right: 36px; line-height: 28px">
                     <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                    <j-child-layer-icon v-if="item.icon.length == 2" :icon="item.icon" />
+                    <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
                     <j-plugin-live-results-icon v-if="item.live_plugin_results" />
                     {{ item.label }}
                   </span>
@@ -183,7 +183,7 @@
                 <v-list-item-content>
                   <span style="display: inline-block">
                     <j-subset-icon v-if="item.subset_type" :subset_type="item.subset_type" />
-                    <j-child-layer-icon v-if="item.icon.length == 2" :icon="item.icon" />
+                    <j-child-layer-icon v-if="/\d/.test(item.icon)" :icon="item.icon" />
                     <j-plugin-live-results-icon v-if="item.live_plugin_results" />
                     {{ item.label }}
                   </span>
