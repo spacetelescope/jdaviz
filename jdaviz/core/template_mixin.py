@@ -66,7 +66,8 @@ from jdaviz.utils import (
 )
 
 
-__all__ = ['show_widget', 'TemplateMixin', 'PluginTemplateMixin',
+__all__ = ['show_widget', 'TemplateMixin',
+           'PluginTemplateMixin', 'RequiresWCSLinkingMixin',
            'skip_if_no_updates_since_last_active', 'skip_if_not_tray_instance',
            'with_spinner', 'with_temp_disable',
            'WithCache', 'ViewerPropertiesMixin',
@@ -1157,6 +1158,83 @@ class HasFileImportSelect(VuetifyTemplate, HubListener):
     def vue_file_import_cancel(self, *args, **kwargs):
         self._file_chooser._select_component.select_previous()
         self.from_file = ''
+
+
+class RequiresWCSLinkingMixin(VuetifyTemplate, HubListener):
+    wcs_linking_available = Bool(False).tag(sync=True)
+    need_clear_astrowidget_markers = Bool(False).tag(sync=True)
+    plugin_markers_exist = Bool(False).tag(sync=True)
+    need_clear_subsets = Bool(False).tag(sync=True)
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        from jdaviz.core.events import (AstrowidgetMarkersChangedMessage,
+                                        MarkersPluginUpdate,
+                                        ExitBatchLoadMessage)
+        from glue.core.message import (DataCollectionAddMessage,
+                                       SubsetCreateMessage,
+                                       SubsetDeleteMessage)
+
+        self.hub.subscribe(self, AstrowidgetMarkersChangedMessage,
+                           handler=self._on_astrowidget_markers_changed)
+
+        self.hub.subscribe(self, MarkersPluginUpdate,
+                           handler=self._on_markers_plugin_update)
+
+        self.hub.subscribe(self, SubsetCreateMessage,
+                           handler=self._on_subset_change)
+
+        self.hub.subscribe(self, SubsetDeleteMessage,
+                           handler=self._on_subset_change)
+
+        self.hub.subscribe(self, DataCollectionAddMessage,
+                           handler=self._on_new_app_data)
+
+        self.hub.subscribe(self, ExitBatchLoadMessage,
+                           handler=self._on_new_app_data)
+
+    def _on_astrowidget_markers_changed(self, msg):
+        self.need_clear_astrowidget_markers = msg.has_markers
+
+    def _on_markers_plugin_update(self, msg):
+        self.plugin_markers_exist = msg.table_length > 0
+
+    def _on_subset_change(self, msg):
+        self.need_clear_subsets = len(self.app.data_collection.subset_groups) > 0
+
+    def _check_if_data_with_wcs_exists(self):
+        for data in self.app.data_collection:
+            if hasattr(data.coords, 'pixel_to_world'):
+                self.wcs_linking_available = True
+                return
+        self.wcs_linking_available = False
+
+    def _on_new_app_data(self, msg):
+        if self.app._jdaviz_helper._in_batch_load > 0:
+            return
+        if isinstance(msg, DataCollectionAddMessage):
+            components = [str(comp) for comp in msg.data.main_components]
+            if "ra" in components or "Lon" in components:
+                # linking currently removes any markers, so we want to skip
+                # linking immediately after new markers are added.
+                # Eventually we'll probably want to support linking WITH markers,
+                # at which point this if-statement should be removed.
+                return
+        self._check_if_data_with_wcs_exists()
+
+    def delete_subsets(self):
+        # subsets will be deleted on changing link type:
+        for subset_group in self.app.data_collection.subset_groups:
+            self.app.data_collection.remove_subset_group(subset_group)
+
+    def vue_delete_subsets(self, *args):
+        self.delete_subsets()
+
+    def vue_reset_astrowidget_markers(self, *args):
+        for viewer in self.app._viewer_store.values():
+            viewer.reset_markers()
 
 
 class EditableSelectPluginComponent(SelectPluginComponent):
