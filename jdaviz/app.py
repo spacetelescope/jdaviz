@@ -847,7 +847,11 @@ class Application(VuetifyTemplate, HubListener):
                     parser = data_parser_registry.members.get(data_parser)
 
             if parser is not None:
-                parser(self, file_obj, **kwargs)
+                with warnings.catch_warnings():
+                    # https://github.com/spacetelescope/gwcs/pull/522
+                    warnings.filterwarnings(
+                        "ignore", message="The bounding_box was set in C order.*")
+                    parser(self, file_obj, **kwargs)
             else:
                 self._application_handler.load_data(file_obj)
 
