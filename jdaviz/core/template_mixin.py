@@ -4058,15 +4058,18 @@ class AddResults(BasePluginComponent):
             else:
                 this_replace = isinstance(this_viewer, BqplotImageView)
 
-            self.app.add_data_to_viewer(viewer_ref,
-                                        label,
-                                        visible=visible, clear_other_data=this_replace)
+            if self.app._jdaviz_helper._in_batch_load:
+                self.app._jdaviz_helper._delayed_show_in_viewer_labels[label] = viewer_ref
+            else:
+                self.app.add_data_to_viewer(viewer_ref,
+                                            label,
+                                            visible=visible, clear_other_data=this_replace)
 
-            if preserved != {}:
-                layer_state = [layer.state for layer in this_viewer.layers if
-                               layer.layer.label == label][0]
-                for att in preserved:
-                    setattr(layer_state, att, preserved[att])
+                if preserved != {}:
+                    layer_state = [layer.state for layer in this_viewer.layers if
+                                   layer.layer.label == label][0]
+                    for att in preserved:
+                        setattr(layer_state, att, preserved[att])
 
         # update overwrite warnings, etc
         self._on_label_changed()
