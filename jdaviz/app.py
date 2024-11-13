@@ -2130,6 +2130,10 @@ class Application(VuetifyTemplate, HubListener):
         if cid in self._viewer_store:
             del self._viewer_store[cid]
 
+        # clear from the viewer icons dictionary
+        if cid in self.state.viewer_icons:
+            del self.state.viewer_icons[cid]
+
         self.hub.broadcast(ViewerRemovedMessage(cid, sender=self))
 
     def vue_data_item_unload(self, event):
