@@ -25,9 +25,12 @@
 # Thus, any C-extensions that are needed to build the documentation will *not*
 # be accessible, and the documentation will not build correctly.
 
+import datetime
 import subprocess
 import sys
-import datetime
+
+from docutils import nodes
+from sphinx.util.docutils import SphinxDirective
 
 from jdaviz import __version__
 
@@ -293,3 +296,17 @@ intersphinx_mapping.update({  # noqa: F405
 
 # Options for linkcheck
 linkcheck_ignore = ['https://github.com/spacetelescope/jdaviz/settings/branches']
+
+
+# -- Custom directive -------------------------------------------
+
+class JdavizCLIHelpDirective(SphinxDirective):
+
+    def run(self):
+        help_text = subprocess.check_output(["jdaviz", "--help"], encoding="utf-8")
+        paragraph_node = nodes.literal_block(text=help_text)
+        return [paragraph_node]
+
+
+def setup(app):
+    app.add_directive('jdavizclihelp', JdavizCLIHelpDirective)
