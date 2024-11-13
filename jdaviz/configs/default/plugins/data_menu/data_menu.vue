@@ -11,8 +11,11 @@
           v-model="data_menu_open">
           <template v-slot:activator="{ on, attrs }">
             <div :id="'layer-legend-'+ viewer_id">
-              <div v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open" class="viewer-label"> 
-                <span style="float: right;">
+              <div 
+                v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open"
+                :class="loaded_n_data === 0 && !data_menu_open ? 'viewer-label pulse' : 'viewer-label'"
+              > 
+                <span style="float: right">
                   <j-layer-viewer-icon-stylized
                     :tooltip="data_menu_open ? 'close menu' : 'View data layers and subsets'"
                     :label="viewer_id"
@@ -32,7 +35,7 @@
 
               <div v-for="item in layer_items.slice().reverse()" class="viewer-label">
                 <div v-if="item.visible">
-                  <span style="float: right;">
+                  <span style="float: right">
                     <j-layer-viewer-icon-stylized
                       tooltip="View data layers and subsets"
                       :label="item.label"
@@ -71,17 +74,21 @@
                   </v-btn>
                 </j-tooltip>
               </v-list-item-icon>
-              <v-list-item-content>
+              <v-list-item-content v-if="loaded_n_data > 0">
                 <j-tooltip
                   tooltipcontent="Change orientation (COMING SOON)"
                 >
                   orientation
                 </j-tooltip>
               </v-list-item-content>
+              <v-list-item-content v-else>
+                <span>No data in viewer</span>
+              </v-list-item-content>
               <v-list-item-action>
                 <data-menu-add
                   :dataset_items="dataset_items"
                   :subset_tools="subset_tools"
+                  :loaded_n_data="loaded_n_data"
                   @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
                   @create-subset="(subset_type) => {create_subset({subset_type: subset_type}); data_menu_open = false}"
                 >
@@ -132,7 +139,7 @@
               </v-list-item>
               </div>
             </v-list-item-group>
-            <v-list-item class="dm-footer">
+            <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
               <v-list-item-content style="display: inline-block">
                 <data-menu-remove
                   :delete_enabled="delete_enabled"
@@ -299,4 +306,23 @@
   .dm-header.v-btn--disabled  .v-icon {
     color: green !important;
   }
+  .pulse {
+    animation: pulse_anim 2s infinite;
+  }
+  @keyframes pulse_anim {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+}
 </style>
