@@ -282,6 +282,7 @@ span.api-hint-header {
     font-family: monospace;
     font-size: 10px !important;
     overflow-wrap: break-word;
+
 }
 
 .api-hint :is(.v-select__slot, .v-text-field__slot) > .v-label {
@@ -301,6 +302,10 @@ span.api-hint-header {
   font-size: 12px !important;
   overflow-wrap: break-word;
   text-transform: none !important;
+}
+
+.api-hint-invert-color :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
+  filter: invert(1) !important;
 }
 
 </style>

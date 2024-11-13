@@ -103,7 +103,8 @@
                   dense
                   :items="orientation_layer_items"
                   v-model="orientation_layer_selected"
-                  label="Orientation"
+                  :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'" 
+                  :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : ''" 
                   item-text="label"
                   item-value="label"
                   :hide-details="true"
