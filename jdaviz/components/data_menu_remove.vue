@@ -27,9 +27,14 @@
           >
             <span
               style="cursor: pointer; width: 100%"
+              :class="api_hints_enabled ? 'api-hint' : ''"
               @click="() => {$emit('remove-from-viewer')}"
             >
-              Remove from viewer
+              {{ api_hints_enabled ?
+                'dm.remove_from_viewer()'
+                :
+                'Remove from viewer'
+              }}
             </span>
           </j-tooltip>
         </v-list-item-content>
@@ -42,10 +47,15 @@
           >
             <span
               :style="'width: 100%; ' + (delete_app_enabled ? 'cursor: pointer;' : '')"
+              :class="api_hints_enabled ? 'api-hint' : ''"
               :disabled="!delete_app_enabled"
               @click="() => {if (delete_app_enabled) {$emit('remove-from-app')}}"
             >
-              Remove from app
+            {{ api_hints_enabled ?
+                'dm.remove_from_app()'
+                :
+                'Remove from app'
+              }}
             </span>
           </j-tooltip>
         </v-list-item-content>
@@ -56,6 +66,6 @@
 
 <script>
 module.exports = {
-  props: ['delete_enabled', 'delete_tooltip', 'delete_viewer_tooltip', 'delete_app_enabled', 'delete_app_tooltip'],
+  props: ['delete_enabled', 'delete_tooltip', 'delete_viewer_tooltip', 'delete_app_enabled', 'delete_app_tooltip', 'api_hints_enabled'],
 };
 </script>

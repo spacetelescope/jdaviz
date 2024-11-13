@@ -58,12 +58,14 @@
           <j-tooltip
               v-for="tool in subset_tools.slice().reverse()"
               :span_style="'display: inline-block; float: right;'"
-              :tooltipcontent="'Interactively apply \'' + mode_item.glue_name + '\' logic to ' + subset_selected + ' using the ' + tool.name + ' tool'"
+              :tooltipcontent="api_hints_enabled ? '' : 'Interactively apply \'' + mode_item.glue_name + '\' logic to ' + subset_selected + ' using the ' + tool.name + ' tool'"
             >
               <v-btn
                 icon
                 max-height="24px"
                 max-width="24px"
+                @mouseover="() => {hover_tool=tool.name}"
+                @mouseleave="() => {if (hover_tool == tool.name) {hover_tool=''}}"
                 @click="() => {$emit('modify-subset', mode_item.glue_name, tool.name)}"
               >
                 <img :src="tool.img" class="invert-if-dark" width="20"/>
@@ -71,7 +73,16 @@
             </j-tooltip>
         </v-list-item-action>
       </v-list-item>
-
+      <v-list-item
+        v-if="api_hints_enabled && hover_mode.length > 0 && hover_tool.length > 0"
+        style="min-height: 12px"
+      >
+        <v-list-item-content>
+          <span class="api-hint">
+            dm.modify_subset('{{ hover_mode }}', '{{ hover_tool }}')
+          </span>
+        </v-list-item-content>
+      </v-list-item>
     </v-list>
   </v-menu>
 </template>
@@ -81,9 +92,10 @@ module.exports = {
   data: function () {
       return {
         hover_mode: '',
+        hover_tool: '',
       }
     },
-  props: ['subset_selected', 'subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets', 'subset_edit_modes', 'subset_tools'],
+  props: ['subset_selected', 'subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets', 'subset_edit_modes', 'subset_tools', 'api_hints_enabled'],
 };
 </script>
 

@@ -20,7 +20,7 @@
         </v-btn>
       </j-tooltip>
     </template>
-    <v-list dense style="width: 200px; max-height: 300px; overflow-y: auto;">
+    <v-list dense style="width: 300px; max-height: 300px; overflow-y: auto;">
       <v-subheader v-if="dataset_items.length > 0"><span>Load Data</span></v-subheader>
       <v-list-item
         v-for="data in dataset_items"
@@ -29,9 +29,14 @@
           <j-tooltip tooltipcontent="add data to viewer">
             <span
               style="cursor: pointer; width: 100%"
+              :class="api_hints_enabled ? 'api-hint' : ''"
               @click="() => {$emit('add-data', data.label)}"
             >
-              {{ data.label }}
+              {{ api_hints_enabled ?
+                'dm.add_data(\''+data.label+'\')'
+                :
+                data.label
+              }} 
             </span>
           </j-tooltip>
         </v-list-item-content>
@@ -44,15 +49,27 @@
           <j-tooltip
             v-for="tool in subset_tools"
             span_style="display: inline-block"
-            :tooltipcontent="'Create new '+tool.name+' subset'"
+            :tooltipcontent="api_hints_enabled ? '' : 'Create new '+tool.name+' subset'"
           >
             <v-btn 
               icon
+              @mouseover="() => {hover_tool=tool.name}"
+              @mouseleave="() => {if (hover_tool == tool.name) {hover_tool=''}}"
               @click="() => {$emit('create-subset', tool.name)}"
             >
               <img :src="tool.img" width="20" class="invert-if-dark"/>
             </v-btn>
           </j-tooltip>
+        </v-list-item-content>
+      </v-list-item>
+      <v-list-item
+        v-if="api_hints_enabled && hover_tool.length > 0"
+        style="min-height: 12px"
+      >
+        <v-list-item-content>
+          <span class="api-hint">
+            dm.create_subset('{{ hover_tool }}')
+          </span>
         </v-list-item-content>
       </v-list-item>
     </v-list>
@@ -62,6 +79,11 @@
 
 <script>
 module.exports = {
-  props: ['dataset_items', 'subset_tools', 'loaded_n_data'],
+  data: function () {
+      return {
+        hover_tool: '',
+      }
+    },
+  props: ['dataset_items', 'subset_tools', 'loaded_n_data', 'api_hints_enabled'],
 };
 </script>
