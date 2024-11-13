@@ -4,7 +4,7 @@
 New Features
 ------------
 
-* New design for viewer legend. [#3220, #3254, #3263, #3264]
+* New design for viewer legend. [#3220, #3254, #3263, #3264, #3272]
 
 Cubeviz
 ^^^^^^^

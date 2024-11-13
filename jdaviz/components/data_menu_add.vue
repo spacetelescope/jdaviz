@@ -12,10 +12,11 @@
       >
         <v-btn
           icon
+          :class="loaded_n_data > 0 ? 'invert-if-dark' : 'invert-if-dark pulse'"
           v-bind="attrs"
           v-on="on"
         >
-          <v-icon class="invert-if-dark">mdi-plus</v-icon>
+          <v-icon>mdi-plus</v-icon>
         </v-btn>
       </j-tooltip>
     </template>
@@ -61,6 +62,6 @@
 
 <script>
 module.exports = {
-  props: ['dataset_items', 'subset_tools'],
+  props: ['dataset_items', 'subset_tools', 'loaded_n_data'],
 };
 </script>
