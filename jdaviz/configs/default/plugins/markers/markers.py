@@ -102,6 +102,9 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
                                 mouseover information section of the app-level\
                                 toolbar."
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Create markers on viewers.'
+
     def _create_viewer_callbacks(self, viewer):
         if not self.is_active:
             return

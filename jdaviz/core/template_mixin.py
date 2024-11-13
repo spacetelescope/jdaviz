@@ -54,7 +54,6 @@ from jdaviz.core.marks import (LineAnalysisContinuum,
                                LineAnalysisContinuumLeft,
                                LineAnalysisContinuumRight,
                                ShadowLine, ApertureMark)
-from jdaviz.core.plugin_descriptions import get_plugin_description
 from jdaviz.core.region_translators import (regions2roi, regions2aperture,
                                             _get_region_from_spatial_subset)
 from jdaviz.core.tools import ICON_DIR
@@ -455,9 +454,6 @@ class PluginTemplateMixin(TemplateMixin):
 
         super().__init__(app=app, **kwargs)
 
-        if self._plugin_name is not None:
-            self.plugin_description = get_plugin_description(self.app.config, self._plugin_name)
-
     def new(self):
         new = self.__class__(app=self.app)
         new._plugin_name = self._plugin_name
@@ -469,6 +465,9 @@ class PluginTemplateMixin(TemplateMixin):
 
     @plugin_description.setter
     def plugin_description(self, description=''):
+        """
+        Overwrite plugin description displayed under plugin title in tray.
+        """
 
         if len(self.app.state.tray_items) > 0:
             self._plugin_description = description

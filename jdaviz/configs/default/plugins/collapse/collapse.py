@@ -67,6 +67,9 @@ class Collapse(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixi
             # on the user's machine, so export support in cubeviz should be disabled
             self.export_enabled = False
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Collapse a spectral cube along one axis.'
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return self.jdaviz_helper._default_spectrum_viewer_reference_name

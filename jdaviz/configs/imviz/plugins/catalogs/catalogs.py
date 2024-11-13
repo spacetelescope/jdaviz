@@ -11,9 +11,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         FileImportSelectPluginComponent, HasFileImportSelect,
                                         with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
-
 from jdaviz.core.marks import CatalogMark
-
 from jdaviz.core.template_mixin import TableMixin
 from jdaviz.core.user_api import PluginUserApi
 
@@ -55,6 +53,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Query catalog for objects within region on sky.'
+
         cat_options = ['SDSS', 'Gaia']
         if not self.app.state.settings.get('server_is_remote', False):
             cat_options.append('From File...')

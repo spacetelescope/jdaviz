@@ -27,6 +27,9 @@ class LineProfileXY(PluginTemplateMixin, ViewerSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Plot line profiles across X and Y.'
+
         self.plot_across_x = Plot(self, name='across_x')
         self.plot_across_y = Plot(self, name='across_y')
         for plot in (self.plot_across_x, self.plot_across_y):

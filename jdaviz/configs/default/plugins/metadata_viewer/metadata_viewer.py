@@ -42,6 +42,9 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
         # override the default filters on dataset entries to require metadata in entries
         self.dataset.add_filter('not_from_plugin')
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'View metadata.'
+
     @property
     def user_api(self):
         return PluginUserApi(self, expose=('dataset', 'show_primary'), readonly=('metadata',))

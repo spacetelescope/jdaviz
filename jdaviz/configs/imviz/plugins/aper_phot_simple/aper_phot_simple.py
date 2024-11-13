@@ -85,6 +85,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Perform aperture photometry for drawn regions.'
+
         self.background = SubsetSelect(self,
                                        'background_items',
                                        'background_selected',
@@ -103,6 +106,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
                    'data_label', 'subset_label']
         self.table.headers_avail = headers
         self.table.headers_visible = headers
+
+        # description displayed under plugin title in tray
+        self.plugin_description = 'Perform aperture photometry for drawn regions.'
 
         self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]

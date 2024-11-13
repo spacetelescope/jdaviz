@@ -91,6 +91,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Create a 2D image from a data cube.'
+
         self.moment = None
 
         self.continuum_dataset = DatasetSelect(self,

@@ -120,6 +120,9 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
         self._initialized_models = {}
         self._display_order = False
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Fit an analytic model to data or a subset of data.'
+
         # create the label first so that when model_component defaults to the first selection,
         # the label automatically defaults as well
         self.model_component_label = AutoTextField(self, 'comp_label', 'comp_label_default',
