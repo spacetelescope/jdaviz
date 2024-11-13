@@ -191,7 +191,7 @@
                       :value="item.visible"
                       @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
                       @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}" 
-                      @mouseleave = "() => {hover_api_hint = ''}" 
+                      @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
                       :api_hints_enabled="false"
                       :use_eye_icon="true"
                     />
@@ -200,16 +200,11 @@
               </v-list-item>
               </div>
             </v-list-item-group>
-            <v-list-item 
+            <hover-api-hint 
               v-if="api_hints_enabled" 
-              style="min-height: 32px" 
-            > 
-              <v-list-item-content> 
-                <span class="api-hint"> 
-                  {{ hover_api_hint }} 
-                </span> 
-              </v-list-item-content> 
-            </v-list-item> 
+              :hover_api_hint.sync="hover_api_hint" 
+              :lock_hover_api_hint.sync="lock_hover_api_hint" 
+            /> 
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
               <v-list-item-content style="display: inline-block">
                 <data-menu-remove
@@ -281,7 +276,8 @@
     data: function () {
       return {
         data_menu_open: false,
-        hover_api_hint: ''
+        hover_api_hint: '',
+        lock_hover_api_hint: false
       }
     },
     mounted() {

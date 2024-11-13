@@ -64,8 +64,8 @@
                 icon
                 max-height="24px"
                 max-width="24px"
-                @mouseover="() => {hover_tool=tool.name}"
-                @mouseleave="() => {if (hover_tool == tool.name) {hover_tool=''}}"
+                @mouseover="() => {hover_api_hint = 'dm.modify_subset(\''+mode_item.glue_name+'\', \''+tool.name+'\')'}"
+                @mouseleave="() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
                 @click="() => {$emit('modify-subset', mode_item.glue_name, tool.name)}"
               >
                 <img :src="tool.img" class="invert-if-dark" width="20"/>
@@ -73,16 +73,11 @@
             </j-tooltip>
         </v-list-item-action>
       </v-list-item>
-      <v-list-item
-        v-if="api_hints_enabled && hover_mode.length > 0 && hover_tool.length > 0"
-        style="min-height: 12px"
-      >
-        <v-list-item-content>
-          <span class="api-hint">
-            dm.modify_subset('{{ hover_mode }}', '{{ hover_tool }}')
-          </span>
-        </v-list-item-content>
-      </v-list-item>
+      <hover-api-hint
+        v-if="api_hints_enabled"
+        :hover_api_hint.sync="hover_api_hint"
+        :lock_hover_api_hint.sync="lock_hover_api_hint"
+      />
     </v-list>
   </v-menu>
 </template>
@@ -92,7 +87,8 @@ module.exports = {
   data: function () {
       return {
         hover_mode: '',
-        hover_tool: '',
+        hover_api_hint: '',
+        lock_hover_api_hint: false,
       }
     },
   props: ['subset_selected', 'subset_edit_enabled', 'subset_edit_tooltip', 'selected_n_subsets', 'subset_edit_modes', 'subset_tools', 'api_hints_enabled'],

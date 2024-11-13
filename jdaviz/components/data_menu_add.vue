@@ -53,8 +53,8 @@
           >
             <v-btn 
               icon
-              @mouseover="() => {hover_tool=tool.name}"
-              @mouseleave="() => {if (hover_tool == tool.name) {hover_tool=''}}"
+              @mouseover="() => {hover_api_hint = 'dm.create_subset(\''+tool.name+'\')'}"
+              @mouseleave="() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
               @click="() => {$emit('create-subset', tool.name)}"
             >
               <img :src="tool.img" width="20" class="invert-if-dark"/>
@@ -62,16 +62,11 @@
           </j-tooltip>
         </v-list-item-content>
       </v-list-item>
-      <v-list-item
-        v-if="api_hints_enabled && hover_tool.length > 0"
-        style="min-height: 12px"
-      >
-        <v-list-item-content>
-          <span class="api-hint">
-            dm.create_subset('{{ hover_tool }}')
-          </span>
-        </v-list-item-content>
-      </v-list-item>
+      <hover-api-hint
+        v-if="api_hints_enabled"
+        :hover_api_hint.sync="hover_api_hint"
+        :lock_hover_api_hint.sync="lock_hover_api_hint"
+      />
     </v-list>
   </v-menu>
 
@@ -81,7 +76,8 @@
 module.exports = {
   data: function () {
       return {
-        hover_tool: '',
+        hover_api_hint: '',
+        lock_hover_api_hint: false,
       }
     },
   props: ['dataset_items', 'subset_tools', 'loaded_n_data', 'api_hints_enabled'],
