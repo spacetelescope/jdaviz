@@ -94,12 +94,15 @@ object, you can load it into Imviz as follows:
 
 .. code-block:: python
 
-    import numpy as np
-    from astropy.nddata import NDData
+    from astropy.nddata import NDData, StdDevUncertainty
     from jdaviz import Imviz
 
-    # mydatamodel is a jwst.datamodels object
-    ndd = NDData(np.array(mydatamodel.data), wcs=mydatamodel.get_fits_wcs())
+    # mydatamodel is a jwst.datamodels object with stddev ERR array
+    ndd = NDData(mydatamodel.data,
+                 uncertainty=StdDevUncertainty(mydatamodel.err),
+                 mask=mydatamodel.dq,
+                 wcs=mydatamodel.meta.wcs,
+                 meta=dict(mydatamodel.meta.items()))
     imviz = Imviz()
     imviz.load_data(ndd, data_label='my_data_model')
     imviz.show()
