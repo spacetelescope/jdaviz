@@ -107,9 +107,6 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
         self.table.headers_avail = headers
         self.table.headers_visible = headers
 
-        # description displayed under plugin title in tray
-        self.plugin_description = 'Perform aperture photometry for drawn regions.'
-
         self.plot_types = ["Curve of Growth", "Radial Profile", "Radial Profile (Raw)"]
         self.current_plot_type = self.plot_types[0]
         self._fitted_model_name = 'phot_radial_profile'
