@@ -120,7 +120,7 @@
                           </j-tooltip>
                         </v-list-item-title>
                         <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
-                          {{ trayItem.description }}
+                          {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
                       </v-list-item>
                     </v-expansion-panel-header>
@@ -181,7 +181,7 @@ export default {
         return true
       }
       // simple exact text search match on the plugin title for now.
-      return trayItem.label.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1
+      return trayItem.label.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1 || trayItem.tray_item_description.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1
     },
     onLayoutChange() {
       /* Workaround for #1677, can be removed when bqplot/bqplot#1531 is released */
