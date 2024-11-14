@@ -35,6 +35,9 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Show active data label, compass, and zoom box.'
+
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
 

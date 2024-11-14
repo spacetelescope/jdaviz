@@ -19,7 +19,6 @@ from jdaviz.core.events import (
     AstrowidgetMarkersChangedMessage, MarkersPluginUpdate,
     SnackbarMessage, ViewerAddedMessage, AddDataMessage, LinkUpdatedMessage
 )
-
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
     PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
@@ -92,6 +91,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Rotate viewer orientation and choose alignment (pixel or sky).'
 
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 

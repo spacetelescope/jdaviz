@@ -85,6 +85,9 @@ class SimpleAperturePhotometry(PluginTemplateMixin, ApertureSubsetSelectMixin,
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Perform aperture photometry for drawn regions.'
+
         self.background = SubsetSelect(self,
                                        'background_items',
                                        'background_selected',

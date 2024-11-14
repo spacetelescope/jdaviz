@@ -96,6 +96,15 @@ class Markers(PluginTemplateMixin, ViewerSelectMixin, TableMixin):
         self.hub.subscribe(self, RemoveDataMessage,
                            handler=lambda msg: self._recompute_mark_positions(msg.viewer))
 
+        self.docs_description = "Press 'm' with the cursor over a viewer to log\
+                                the mouseover information. To change the\
+                                selected layer, click the layer cycler in the\
+                                mouseover information section of the app-level\
+                                toolbar."
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Create markers on viewers.'
+
     def _create_viewer_callbacks(self, viewer):
         if not self.is_active:
             return

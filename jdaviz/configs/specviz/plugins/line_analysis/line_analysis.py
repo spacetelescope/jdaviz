@@ -107,6 +107,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
 
         super().__init__(**kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Return statistics for spectral line.'
+
         self.update_results(None)
 
         # when accessing the selected data, access the spectrum-viewer version

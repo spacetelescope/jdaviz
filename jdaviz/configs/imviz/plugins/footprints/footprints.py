@@ -100,6 +100,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self._overlays = {}
 
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Show instrument footprints as overlays on image viewers.'
+
         self.viewer.multiselect = True  # multiselect always enabled
         # require a viewer's reference data to have WCS so that footprints can be mapped to sky
         self.viewer.add_filter('reference_has_wcs')

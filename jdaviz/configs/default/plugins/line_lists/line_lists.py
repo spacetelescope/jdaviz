@@ -126,6 +126,9 @@ class LineListTool(PluginTemplateMixin):
 
         self._disable_if_no_data()
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Plot spectral lines from preset or custom line lists.'
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return getattr(

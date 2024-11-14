@@ -3,7 +3,7 @@
     :config="config"
     :plugin_key="plugin_key || 'Spectral Extraction'"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Extract a '+resulting_product_name+' from a spectral cube.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"

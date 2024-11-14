@@ -75,6 +75,9 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
         # set the filter on the dataset and viewer options
         self._update_dataset_viewer_filters()
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Smooth data with a Gaussian kernel.'
+
     @property
     def _default_spectrum_viewer_reference_name(self):
         return getattr(

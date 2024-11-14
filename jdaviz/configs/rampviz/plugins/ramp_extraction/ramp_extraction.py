@@ -84,6 +84,10 @@ class RampExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Extract a ramp from a ramp cube.'
+
         self.dataset.filters = ['is_flux_cube']
 
         # TODO: in the future this could be generalized with support in SelectPluginComponent

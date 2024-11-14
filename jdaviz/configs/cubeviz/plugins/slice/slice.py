@@ -69,6 +69,10 @@ class Slice(PluginTemplateMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Select and interact with slice of cube in image viewers.'
+
         self._cached_properties = ['valid_selection_values', 'valid_selection_values_sorted',
                                    'valid_indicator_values', 'valid_indicator_values_sorted',
                                    'valid_values', 'valid_values_sorted']
@@ -102,6 +106,9 @@ class Slice(PluginTemplateMixin):
         self.session.hub.subscribe(self, GlobalDisplayUnitChanged,
                                    handler=self._on_global_display_unit_changed)
         self._initialize_location()
+
+        self.docs_description = 'The slice can also be changed interactively\
+                                 in the spectrum viewer by activating the slice tool.'
 
     @property
     def _cube_viewer_default_label(self):

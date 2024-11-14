@@ -63,6 +63,8 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+- Added a short description of each plugin in the side menu, visible before the plugin is opened. Removes redundant descriptions above link
+  out to documentation when plugin is opened. Enable search on plugin description in addition to title. [#3268]
 
 4.0.1 (unreleased)
 ==================
