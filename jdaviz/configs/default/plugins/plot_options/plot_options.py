@@ -380,7 +380,7 @@ class PlotOptions(PluginTemplateMixin, ViewerSelectMixin):
         super().__init__(*args, **kwargs)
 
         # description displayed under plugin title in tray
-        self._plugin_description = 'Set viewer and layer data options.'
+        self._plugin_description = 'Set viewer and layer display options.'
 
         self.layer = LayerSelect(self, 'layer_items', 'layer_selected',
                                  'viewer_selected', 'layer_multiselect')
