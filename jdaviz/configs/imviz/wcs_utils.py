@@ -516,7 +516,7 @@ def _get_rotated_nddata_from_label(
     ):
         # if an east/west flip is necessary, pass that along to the compass:
         compass_plugin = app.get_tray_item_from_name('imviz-compass')
-        compass_plugin.canvas_flip_horizontal = not compass_plugin.canvas_flip_horizontal
+        compass_plugin.flip_horizontal = not compass_plugin.flip_horizontal
 
     if cdelt_signs is None:
         cdelt_signs = [None, None]
