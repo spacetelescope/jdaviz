@@ -29,6 +29,10 @@ API Changes
   
 - Renamed the ``Subset Tools`` plugin to ``Subsets`` which now exposes the ``subset``, ``combination_mode``, ``get_center``, and ``set_center`` in the user API. [#3293]
 
+- Metadata plugin: ``metadata_plugin.metadata`` API as been renamed to
+  ``metadata_plugin.meta`` and now is a Python dictionary instead of
+  list of tuples. [#3292]
+
 Cubeviz
 ^^^^^^^
 

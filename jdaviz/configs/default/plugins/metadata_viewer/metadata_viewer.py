@@ -23,7 +23,7 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
       Dataset to expose the metadata.
     * :attr:`show_primary`:
       Whether to show MEF primary header metadata instead.
-    * :attr:`metadata`:
+    * ``meta``:
       Read-only metadata. If the data is loaded from a multi-extension FITS file,
       this can be the extension header or the primary header, depending on
       ``show_primary`` setting.
@@ -39,6 +39,7 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.meta = {}
         # override the default filters on dataset entries to require metadata in entries
         self.dataset.add_filter('not_from_plugin')
 
@@ -47,7 +48,7 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
 
     @property
     def user_api(self):
-        return PluginUserApi(self, expose=('dataset', 'show_primary'), readonly=('metadata',))
+        return PluginUserApi(self, expose=('dataset', 'show_primary'), readonly=('meta',))
 
     def reset(self):
         self.has_metadata = False
@@ -55,6 +56,7 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
         self.show_primary = False
         self.has_comments = False
         self.metadata = []
+        self.meta = {}
 
     @observe("dataset_selected")
     def show_metadata(self, event):
@@ -101,7 +103,8 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
         d = flatten_nested_dict(meta)
         # Some FITS keywords cause "# ipykernel cannot clean for JSON" messages.
         # Also, we want to hide internal metadata that starts with underscore.
-        badkeys = ['COMMENT', 'HISTORY', ''] + [k for k in d if k.startswith('_')]
+        badkeys = (['COMMENT', 'HISTORY', ''] + [k for k in d if k.startswith('_')]
+                   + [k for k in d if k.startswith('original_')])
         for badkey in badkeys:
             if badkey in d:
                 del d[badkey]
@@ -125,6 +128,7 @@ class MetadataViewer(PluginTemplateMixin, DatasetSelectMixin):
         public_meta = sorted(zip(d.keys(), map(str, d.values()), map(get_comment, d.keys())))
         if len(public_meta) > 0:
             self.metadata = public_meta
+            self.meta = d
             self.has_metadata = True
             self.has_comments = has_comments
         else:
