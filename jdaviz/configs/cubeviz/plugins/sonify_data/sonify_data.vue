@@ -10,7 +10,8 @@
 
     <j-plugin-section-header>Sonify Cube</j-plugin-section-header>
     <v-alert v-if="!has_strauss" type="warning" style="margin-left: -12px; margin-right: -12px">
-      To use Sonify Data, install strauss and restart jdaviz.
+      To use Sonify Data, install strauss and restart Jdaviz. You can do this by running `pip install .[strauss]`
+      in the command line and then launching Jdaviz.
     </v-alert>
     <v-row>
       <j-docs-link>Choose the input cube (currently hardcoded to be the cube in the flux viewer) and spectral subset.</j-docs-link>
