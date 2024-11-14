@@ -3,9 +3,10 @@ import os
 from contextlib import contextmanager
 from traitlets import Bool, Dict, Unicode, Integer, List, observe
 
-from jdaviz.core.template_mixin import (TemplateMixin, LayerSelectMixin, DatasetSelectMixin)
+from jdaviz.core.template_mixin import (TemplateMixin, LayerSelect,
+                                        LayerSelectMixin, DatasetSelectMixin)
 from jdaviz.core.user_api import UserApiWrapper
-from jdaviz.core.events import IconsUpdatedMessage, AddDataMessage
+from jdaviz.core.events import IconsUpdatedMessage, AddDataMessage, ChangeRefDataMessage
 from jdaviz.utils import cmap_samples, is_not_wcs_only
 
 from glue.core.edit_subset_mode import (AndMode, AndNotMode, OrMode,
@@ -43,6 +44,8 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     * ``layer`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
         actively selected layer(s)
+    * ``orientation`` (:class:`~jdaviz.core.template_mixin.LayerSelect`):
+        orientation chosen for the viewer, if applicable
     * :meth:`set_layer_visibility`
     * :meth:`toggle_layer_visibility`
     * :meth:`create_subset`
@@ -57,10 +60,16 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
     viewer_id = Unicode().tag(sync=True)
     viewer_reference = Unicode().tag(sync=True)
 
+    icons = Dict().tag(sync=True)
     layer_icons = Dict().tag(sync=True)  # read-only, see app.state.layer_icons
     viewer_icons = Dict().tag(sync=True)  # read-only, see app.state.viewer_icons
 
     visible_layers = Dict().tag(sync=True)  # read-only, set by viewer
+
+    orientation_enabled = Bool(False).tag(sync=True)
+    orientation_align_by_wcs = Bool(False).tag(sync=True)
+    orientation_layer_items = List().tag(sync=True)
+    orientation_layer_selected = Unicode().tag(sync=True)
 
     cmap_samples = Dict(cmap_samples).tag(sync=True)
     subset_tools = List().tag(sync=True)
@@ -106,10 +115,18 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             return data.label not in self.layer.choices
         self.dataset.filters = ['is_not_wcs_only', 'not_child_layer', data_not_in_viewer]
 
+        self.orientation = LayerSelect(self,
+                                       'orientation_layer_items',
+                                       'orientation_layer_selected',
+                                       'viewer_id',
+                                       only_wcs_layers=True)
+        self.orientation_enabled = self.config == 'imviz'
+
         # first attach callback to catch any updates to viewer/layer icons and then
         # set their initial state
         self.hub.subscribe(self, IconsUpdatedMessage, self._on_app_icons_updated)
         self.hub.subscribe(self, AddDataMessage, handler=lambda _: self._set_viewer_id())
+        self.hub.subscribe(self, ChangeRefDataMessage, handler=self._on_refdata_change)
         self.viewer_icons = dict(self.app.state.viewer_icons)
         self.layer_icons = dict(self.app.state.layer_icons)
 
@@ -125,11 +142,15 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
                              for k, v in self._viewer.toolbar.tools_data.items()
                              if k in SUBSET_TOOL_IDS.values()]
 
+        self.icons = {k: v for k, v in self.app.state.icons.items()}
+
     @property
     def user_api(self):
         expose = ['layer', 'set_layer_visibility', 'toggle_layer_visibility',
                   'create_subset', 'modify_subset', 'add_data', 'view_info',
                   'remove_from_viewer', 'remove_from_app']
+        if self.app.config == 'imviz':
+            expose += ['orientation']
         return UserApiWrapper(self, expose=expose)
 
     @property
@@ -154,6 +175,23 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         elif msg.icon_type == 'layer':
             self.layer_icons = msg.icons
         self._set_viewer_id()
+
+    def _on_refdata_change(self, msg):
+        if msg.viewer_id != self.viewer_id:
+            return
+        self.orientation_align_by_wcs = self._viewer.state.reference_data.meta.get('_WCS_ONLY', False)  # noqa
+        if self.orientation_align_by_wcs:
+            with self.during_select_sync():
+                self.orientation.selected = str(self._viewer.state.reference_data.label)
+
+    @observe('orientation_layer_selected')
+    def _orientation_layer_selected_changed(self, event={}):
+        if not hasattr(self, 'orientation'):
+            return
+        if self._during_select_sync:
+            return
+        op = self._viewer.jdaviz_helper.plugins['Orientation']
+        op._obj.set_orientation_for_viewer(event.get('new'), self.viewer_id)
 
     @contextmanager
     def during_select_sync(self):
@@ -463,3 +501,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
 
     def vue_remove_from_app(self, *args):
         self.remove_from_app()  # pragma: no cover
+
+    def vue_open_orientation_plugin(self, *args):
+        op = self._viewer.jdaviz_helper.plugins.get('Orientation', None)
+        if op is None:  # pragma: no cover
+            raise ValueError("orientation plugin not available")
+        op.open_in_tray()

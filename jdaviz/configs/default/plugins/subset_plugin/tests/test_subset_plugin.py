@@ -224,5 +224,5 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
 
     assert cubeviz_helper.app.session.edit_subset_mode.mode == OrMode
 
-    with pytest.raises(ValueError, match='test not one of'):
+    with pytest.raises(ValueError, match='\'test\' not one of'):
         plg.combination_mode.selected = 'test'

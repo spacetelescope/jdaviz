@@ -978,17 +978,18 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def _selected_changed(self, event):
         self._selected_previous = event['old']
         self._clear_cache()
+        valid = self.labels
         if self.is_multiselect:
             if not isinstance(event['new'], list):
                 self.selected = [event['new']]
                 return
-            if not np.all([item in self.labels + [''] for item in event['new']]):
+            if not np.all([item in valid + [''] for item in event['new']]):
                 self.selected = event['old']
-                raise ValueError(f"not all items in {event['new']} are one of {self.labels}, reverting selection to {event['old']}")  # noqa
+                raise ValueError(f"not all items in {event['new']} are one of {valid}, reverting selection to {event['old']}")  # noqa
         else:
-            if event['new'] not in self.labels + ['']:
+            if event['new'] not in valid + ['']:
                 self.selected = event['old']
-                raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
+                raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
 
 
 class UnitSelectPluginComponent(SelectPluginComponent):
