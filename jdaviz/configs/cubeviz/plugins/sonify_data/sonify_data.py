@@ -5,6 +5,7 @@ from jdaviz.core.custom_traitlets import IntHandleEmpty, FloatHandleEmpty
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
                                         SpectralSubsetSelectMixin, with_spinner)
+from jdaviz.core.user_api import PluginUserApi
 
 
 __all__ = ['SonifyData']
@@ -21,6 +22,16 @@ else:
 @tray_registry('cubeviz-sonify-data', label="Sonify Data",
                viewer_requirements=['spectrum', 'image'])
 class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
+    """
+    See the :ref:`Sonify Data <cubeviz-sonify-data>` for more details.
+
+    Only the following attributes and methods are available through the
+    :ref:`public plugin API <plugin-apis>`:
+
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
+    * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    """
     template_file = __file__, "sonify_data.vue"
 
     sample_rate = IntHandleEmpty(44100).tag(sync=True)
@@ -50,6 +61,11 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         # TODO: Remove hardcoded range and flux viewer
         self.spec_viewer = self.app.get_viewer('spectrum-viewer')
         self.flux_viewer = self.app.get_viewer('flux-viewer')
+
+    @property
+    def user_api(self):
+        expose = []
+        return PluginUserApi(self, expose)
 
     @with_spinner()
     def vue_sonify_cube(self, *args):
