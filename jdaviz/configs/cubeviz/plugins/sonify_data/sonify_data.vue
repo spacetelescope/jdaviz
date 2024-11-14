@@ -1,7 +1,7 @@
 <template>
   <j-tray-plugin
     :description="docs_description || 'Create a 2D image from a data cube.'"
-    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html'"
+    :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#cubeviz-sonify-data'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
@@ -13,16 +13,8 @@
       To use Sonify Data, install strauss and restart jdaviz.
     </v-alert>
     <v-row>
-      <j-docs-link>Choose the input cube and spectral subset.</j-docs-link>
+      <j-docs-link>Choose the input cube (currently hardcoded to be the cube in the flux viewer) and spectral subset.</j-docs-link>
     </v-row>
-
-    <plugin-dataset-select
-      :items="dataset_items"
-      :selected.sync="dataset_selected"
-      :show_if_single_entry="false"
-      label="Data"
-      hint="Select the data set."
-    />
 
     <plugin-subset-select
       :items="spectral_subset_items"

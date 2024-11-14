@@ -335,6 +335,18 @@ have valid flux units. For 3D data, the current :ref:`slice` is used.
     :ref:`Imviz Aperture Photometry <aper-phot-simple>`
         Imviz documentation describing the concept of aperture photometry in Jdaviz.
 
+.. _cubeviz-sonify-data:
+
+Sonify Data
+===========
+
+This plugin uses the Strauss package to turn data cubes into audio grids (by pressing the
+:guilabel:`Sonify Data` button) that can be played while the spectrum-at-spaxel tool is active
+and the mouse is hovering over the flux viewer. A range of the cube can be sonified by creating
+and selecting a spectral subset from the :guilabel:`Spectral range` dropdown and then pressing
+the :guilabel:`Sonify Data` button. The output device for sound can be changed by using the
+:guilabel:`Sound device` dropdown.
+
 .. _cubeviz-export-plot:
 
 Export
