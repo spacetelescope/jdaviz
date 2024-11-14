@@ -75,8 +75,10 @@ Bug Fixes
 - Fixed Aperture Photometry radial profile fit crashing when NaN is present in
   aperture data for Cubeviz and Imviz. [#3246]
 
-- Prevent PluginMarks from converting y-range so they maintain their position 
+- Prevent PluginMarks from converting y-range so they maintain their position
   in the spectrum-viewer when spectral y units are converted. [#3242]
+
+- Added ``nbclassic`` dependency to fix ``solara``-based popouts. [#3282]
 
 Cubeviz
 ^^^^^^^
