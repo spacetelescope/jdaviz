@@ -80,7 +80,7 @@ class TestExportSubsets:
         cubeviz_helper.load_data(data)
         subset_plugin = cubeviz_helper.plugins['Subsets']
         subset_plugin.import_region(CircularROI(xc=255, yc=255, radius=50))
-        subset_plugin.combination_mode.selected = 'and'
+        subset_plugin.combination_mode = 'and'
         subset_plugin.import_region(CircularROI(xc=200, yc=250, radius=50))
 
         export_plugin = cubeviz_helper.plugins['Export']._obj

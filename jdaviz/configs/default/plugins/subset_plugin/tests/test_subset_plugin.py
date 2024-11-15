@@ -102,7 +102,7 @@ def test_circle_recenter_linking(roi_class, subset_info, imviz_helper, image_2d_
     imviz_helper.plugins['Subsets'].import_region(roi_class(**roi_params))
 
     # get plugin and check that attribute tracking link type is set properly
-    plugin = imviz_helper.plugins['Subsets']
+    plugin = imviz_helper.plugins['Subsets']._obj
     assert not plugin.display_sky_coordinates
 
     # get initial subset definitions from ROI applied
@@ -212,7 +212,7 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
     subsets = cubeviz_helper.app.get_subsets()
     assert len(subsets) == 1
 
-    plg.combination_mode.selected = 'or'
+    plg.combination_mode = 'or'
     plg.import_region(SpectralRegion(7 * u.um, 8 * u.um))
 
     subsets = cubeviz_helper.app.get_subsets()
@@ -225,4 +225,4 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
     assert cubeviz_helper.app.session.edit_subset_mode.mode == OrMode
 
     with pytest.raises(ValueError, match='\'test\' not one of'):
-        plg.combination_mode.selected = 'test'
+        plg.combination_mode = 'test'
