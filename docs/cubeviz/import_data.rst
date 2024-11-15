@@ -197,7 +197,7 @@ can load the regions into Cubeviz as follows:
 
 .. code-block:: python
 
-    cubeviz.plugins['Subset Tools']._obj.import_region("/path/to/data/myregions.reg")
+    cubeviz.plugins['Subsets']._obj.import_region("/path/to/data/myregions.reg")
 
 Unsupported regions will be skipped and trigger a warning. Those that
 failed to load, if any, can be returned as a list of tuples of the
@@ -205,7 +205,7 @@ form ``(region, reason)``:
 
 .. code-block:: python
 
-    bad_regions = cubeviz.plugins['Subset Tools']._obj.import_region("/path/to/data/myregions.reg", return_bad_regions=True)
+    bad_regions = cubeviz.plugins['Subsets']._obj.import_region("/path/to/data/myregions.reg", return_bad_regions=True)
 
 .. note:: Sky regions are currently unsupported in Cubeviz, unlike Imviz.
 

@@ -94,8 +94,8 @@ in the "Filter by bits" dropdown, or from the API we could:
 
 .. _imviz-subset-plugin:
 
-Subset Tools
-============
+Subsets
+=======
 
 This plugin allows you to select an existing subset to modify, or to select
 :guilabel:`Create new` to create a new subset by selecting and using the region selector

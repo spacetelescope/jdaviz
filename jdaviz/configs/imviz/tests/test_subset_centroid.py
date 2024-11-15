@@ -9,7 +9,7 @@ from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_GWCS
 class TestImvizSpatialSubsetCentroidPixelLinked(BaseImviz_WCS_GWCS):
     def test_centroiding_pixel(self):
         reg = CirclePixelRegion(PixCoord(2, 2), 3)
-        plg = self.imviz.plugins['Subset Tools']._obj
+        plg = self.imviz.plugins['Subsets']._obj
         plg.import_region(reg)
 
         plg.subset_selected = 'Subset 1'
@@ -40,7 +40,7 @@ class TestImvizSpatialSubsetCentroidWCSLinked(BaseImviz_WCS_GWCS):
         self.imviz.link_data(align_by='wcs')
 
         reg = CirclePixelRegion(PixCoord(2, 2), 3).to_sky(self.wcs_1)
-        plg = self.imviz.plugins['Subset Tools']._obj
+        plg = self.imviz.plugins['Subsets']._obj
         plg.import_region(reg)
 
         plg.subset_selected = 'Subset 1'

@@ -62,10 +62,10 @@ SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
 COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
-@tray_registry('g-subset-plugin', label="Subset Tools")
+@tray_registry('g-subset-plugin', label="Subsets")
 class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     """
-    See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
+    See the :ref:`Subsets <imviz-subset-plugin>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
@@ -73,6 +73,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``combination_mode`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+      Allows selection of combination modes for subsets, such as new, replace, or, and, xor, or andnot.
+    * :meth:`get_center`
+    * :meth:`set_center`
+    * :meth:`import_region`
     """
     template_file = __file__, "subset_plugin.vue"
     select = List([]).tag(sync=True)
@@ -121,11 +126,11 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.session.hub.subscribe(self, LinkUpdatedMessage,
                                    handler=self._on_link_update)
 
-        self.subset_select = SubsetSelect(self,
-                                          'subset_items',
-                                          'subset_selected',
-                                          multiselect='multiselect',
-                                          default_text="Create New")
+        self.subset = SubsetSelect(self,
+                                   'subset_items',
+                                   'subset_selected',
+                                   multiselect='multiselect',
+                                   default_text="Create New")
         self.subset_states = []
         self.spectral_display_unit = None
 
@@ -139,7 +144,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     @property
     def user_api(self):
-        expose = []
+        expose = ['subset', 'combination_mode', 'get_center', 'set_center', 'import_region']
         return PluginUserApi(self, expose)
 
     def _on_link_update(self, *args):
@@ -152,16 +157,16 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         align_by = getattr(self.app, '_align_by', None)
         self.display_sky_coordinates = (align_by == 'wcs')
 
-        if self.subset_selected != self.subset_select.default_text:
+        if self.subset_selected != self.subset.default_text:
             self._get_subset_definition(*args)
 
     def _sync_selected_from_state(self, *args):
-        if not hasattr(self, 'subset_select') or self.multiselect:
+        if not hasattr(self, 'subset') or self.multiselect:
             # during initial init, this can trigger before the component is initialized
             return
         if self.session.edit_subset_mode.edit_subset == []:
-            if self.subset_selected != self.subset_select.default_text:
-                self.subset_selected = self.subset_select.default_text
+            if self.subset_selected != self.subset.default_text:
+                self.subset_selected = self.subset.default_text
                 self.show_region_info = False
         else:
             new_label = self.session.edit_subset_mode.edit_subset[0].label
@@ -183,14 +188,14 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             return
         self._get_subset_definition(*args)
         subset_to_update = self.session.edit_subset_mode.edit_subset[0]
-        self.subset_select._update_subset(subset_to_update, attribute="type")
+        self.subset._update_subset(subset_to_update, attribute="type")
 
     def _sync_available_from_state(self, *args):
-        if not hasattr(self, 'subset_select'):
+        if not hasattr(self, 'subset'):
             # during initial init, this can trigger before the component is initialized
             return
-        self.subset_items = [{'label': self.subset_select.default_text}] + [
-                             self.subset_select._subset_to_dict(subset) for subset in
+        self.subset_items = [{'label': self.subset.default_text}] + [
+                             self.subset._subset_to_dict(subset) for subset in
                              self.data_collection.subset_groups]
 
     @observe('subset_selected')
@@ -200,12 +205,12 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         self.glue_state_types = []
         self.is_centerable = False
 
-        if not hasattr(self, 'subset_select'):
+        if not hasattr(self, 'subset'):
             # during initial init, this can trigger before the component is initialized
             return
-        if change['new'] != self.subset_select.default_text:
+        if change['new'] != self.subset.default_text:
             self._get_subset_definition(change['new'])
-        self.show_region_info = change['new'] != self.subset_select.default_text
+        self.show_region_info = change['new'] != self.subset.default_text
         m = [s for s in self.app.data_collection.subset_groups if s.label == change['new']]
         if m != self.session.edit_subset_mode.edit_subset:
             self.session.edit_subset_mode.edit_subset = m
@@ -403,7 +408,7 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
         # We only care about the spectral units, since flux units don't affect spectral subsets
         if msg.axis == "spectral":
             self.spectral_display_unit = msg.unit
-            if self.subset_selected != self.subset_select.default_text:
+            if self.subset_selected != self.subset.default_text:
                 self._get_subset_definition(self.subset_selected)
 
     def vue_update_subset(self, *args):
@@ -583,15 +588,15 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
                 self.set_center((x, y), subset_name=subset, update=True)
 
         if not self.multiselect:
-            _do_recentering(self.subset_selected, self.subset_select.selected_subset_state)
+            _do_recentering(self.subset_selected, self.subset.selected_subset_state)
         else:
             for sub, subset_state in zip(self.subset_selected,
-                                         self.subset_select.selected_subset_state):
-                if (sub != self.subset_select.default_text and
+                                         self.subset.selected_subset_state):
+                if (sub != self.subset.default_text and
                         not isinstance(subset_state, CompositeSubsetState)):
                     self.is_centerable = True
                     _do_recentering(sub, subset_state)
-                elif (sub != self.subset_select.default_text and
+                elif (sub != self.subset.default_text and
                       isinstance(subset_state, CompositeSubsetState)):
                     self.hub.broadcast(SnackbarMessage(f"Unable to recenter "
                                                        f"composite subset {sub}",
@@ -602,9 +607,9 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
             raise ValueError("Please include subset_name in when in multiselect mode")
 
         if subset_name is not None:
-            return self.subset_select._get_subset_state(subset_name)
+            return self.subset._get_subset_state(subset_name)
         # guaranteed to only return a single entry because of check above
-        return self.subset_select.selected_subset_state
+        return self.subset.selected_subset_state
 
     def get_center(self, subset_name=None):
         """Return the center of the Subset.

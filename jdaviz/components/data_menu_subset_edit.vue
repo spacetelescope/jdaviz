@@ -25,7 +25,7 @@
     <v-list dense style="width: 300px">
       <v-list-item>
         <v-list-item-content>
-          <j-tooltip :tooltipcontent="'Open '+subset_selected+' in Subset Tools plugin'">
+          <j-tooltip :tooltipcontent="'Open '+subset_selected+' in Subsets plugin'">
             <span
               style="cursor: pointer; width: 100%"
               @click="() => {$emit('view-info')}"

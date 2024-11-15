@@ -24,7 +24,7 @@ class TestExportSubsets:
         data = NDData(np.ones((500, 500)) * u.nJy)
 
         imviz_helper.load_data(data)
-        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = imviz_helper.plugins['Subsets']._obj
         subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
         export_plugin = imviz_helper.plugins['Export']._obj
@@ -78,7 +78,7 @@ class TestExportSubsets:
         data = Spectrum1D(flux=np.ones((500, 500, 2)) * u.nJy,
                           wcs=spectral_cube_wcs)
         cubeviz_helper.load_data(data)
-        subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = cubeviz_helper.plugins['Subsets']._obj
         subset_plugin.import_region(CircularROI(xc=255, yc=255, radius=50))
         subset_plugin.combination_mode.selected = 'and'
         subset_plugin.import_region(CircularROI(xc=200, yc=250, radius=50))
@@ -100,7 +100,7 @@ class TestExportSubsets:
         imviz_helper.load_data(data)
 
         imviz_helper.link_data(align_by='wcs')
-        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = imviz_helper.plugins['Subsets']._obj
         subset_plugin.import_region(CircularROI(xc=8, yc=6, radius=.2))
 
         export_plugin = imviz_helper.plugins['Export']._obj
@@ -122,7 +122,7 @@ class TestExportSubsets:
         data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
 
         cubeviz_helper.load_data(data)
-        subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = cubeviz_helper.plugins['Subsets']._obj
         subset_plugin.import_region(CircularROI(xc=50, yc=50, radius=10))
 
         export_plugin = cubeviz_helper.plugins['Export']._obj
@@ -308,7 +308,6 @@ class TestExportPluginPlots:
         assert available_plots[0] == 'Plot Options: stretch_hist'
 
     def test_ap_phot_plot_export(self, imviz_helper):
-
         """
         Test export functionality for plot from the aperture photometry
         plugin.
@@ -319,7 +318,7 @@ class TestExportPluginPlots:
         imviz_helper.load_data(data)
 
         export_plugin = imviz_helper.plugins['Export']._obj
-        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = imviz_helper.plugins['Subsets']._obj
         subset_plugin.import_region(CircularROI(xc=250, yc=250, radius=100))
 
         phot_plugin = imviz_helper.app.get_tray_item_from_name('imviz-aper-phot-simple')
