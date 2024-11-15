@@ -4,7 +4,7 @@
 New Features
 ------------
 
-* New design for viewer legend and data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310]
+* New design for viewer legend and data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310, #3281]
 
 * Improve performance while importing multiple regions. [#3321]
 
@@ -113,7 +113,7 @@ Cubeviz
 - Fixed "spectrum at spaxel" tool so it no longer resets spectral axis zoom. [#3249]
 
 - Fixed initializing a Gaussian1D model component when ``Cube Fit`` is toggled on. [#3295]
-
+ 
 Imviz
 ^^^^^
 
