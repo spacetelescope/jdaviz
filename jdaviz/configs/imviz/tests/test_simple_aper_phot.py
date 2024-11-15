@@ -120,7 +120,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
 
         # Make sure it also works on an ellipse subset.
         reg = EllipsePixelRegion(center=PixCoord(x=4.5, y=2.0), width=9.0, height=4.0).to_sky(self.wcs_1)  # noqa: E501
-        self.imviz.plugins['Subsets'].combination_mode.selected = 'new'
+        self.imviz.plugins['Subsets'].combination_mode = 'new'
         self.imviz.plugins['Subsets'].import_region(reg)
 
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'
@@ -144,7 +144,7 @@ class TestSimpleAperPhot(BaseImviz_WCS_WCS):
         # Make sure it also works on a rectangle subset.
         # We also subtract off background from itself here.
         reg = RectanglePixelRegion(center=PixCoord(x=4.5, y=4.5), width=9, height=9).to_sky(self.wcs_1)  # noqa: E501
-        self.imviz.plugins['Subsets'].combination_mode.selected = 'new'
+        self.imviz.plugins['Subsets'].combination_mode = 'new'
         self.imviz.plugins['Subsets'].import_region(reg)
 
         phot_plugin.dataset_selected = 'has_wcs_1[SCI,1]'

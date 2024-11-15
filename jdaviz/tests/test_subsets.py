@@ -120,7 +120,7 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.angle.to_value(u.deg), 45)  # Might be stored in radians
 
     # Circular Subset
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(CircularROI(xc=3, yc=4, radius=2.4))
 
     assert subset_plugin.subset_selected == "Subset 2"
@@ -132,7 +132,7 @@ def test_region_from_subset_3d(cubeviz_helper):
         assert subset_plugin._get_value_from_subset_definition(0, "Radius (pixels)", key) == 2.4
 
     # Circular Annulus Subset
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(CircularAnnulusROI(xc=5, yc=6, inner_radius=2, outer_radius=4))
 
     assert subset_plugin.subset_selected == "Subset 3"
@@ -434,7 +434,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # Now create a new subset that has a source in the corner and test
     # recentering with multiselect.
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(
         CirclePixelRegion(center=PixCoord(x=145, y=175), radius=17).to_sky(w))
     subset_plugin.multiselect = True
@@ -579,7 +579,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6100 and reg[0].upper.value == 6200
     assert reg[1].lower.value == 6800 and reg[1].upper.value == 7200
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset = [SpectralRegion(7000 * unit, 7200 * unit),
               SpectralRegion(7100 * unit, 7300 * unit),
               SpectralRegion(6900 * unit, 7105 * unit)]
@@ -590,7 +590,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6900 and reg[0].upper.value == 7105
     assert reg[1].lower.value == 7200 and reg[1].upper.value == 7300
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset = [SpectralRegion(6000 * unit, 6500 * unit),
               SpectralRegion(6100 * unit, 6200 * unit)]
     mode = ['new', 'xor']
@@ -600,7 +600,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
     assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset = [SpectralRegion(6100 * unit, 6200 * unit),
               SpectralRegion(6000 * unit, 6500 * unit)]
     mode = ['new', 'xor']
@@ -610,7 +610,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
     assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset = [SpectralRegion(7500 * unit, 7600 * unit),
               SpectralRegion(6000 * unit, 6010 * unit)]
     mode = ['new', 'xor']
@@ -796,7 +796,7 @@ def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(RectangularROI(1, 3.5, -0.2, 3.3))
 
     dc.remove_subset_group(dc.subset_groups[0])

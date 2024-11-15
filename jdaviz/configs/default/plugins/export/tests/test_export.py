@@ -197,7 +197,7 @@ class TestExportSubsets:
             export_plugin.export()
 
         # Test saving spectral subset
-        subset_plugin.combination_mode.selected = 'new'
+        subset_plugin.combination_mode = 'new'
         spectral_axis_unit = u.Unit(
             cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
         subset_plugin.import_region(SpectralRegion(5 * spectral_axis_unit,

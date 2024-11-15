@@ -63,7 +63,7 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
 
     # create a spectral region
     unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    cubeviz_helper.plugins['Subsets'].combination_mode.selected = 'new'
+    cubeviz_helper.plugins['Subsets'].combination_mode = 'new'
     cubeviz_helper.plugins['Subsets'].import_region(SpectralRegion(3.623e-7 * unit,
                                                                    3.627e-7 * unit))
     cubeviz_helper.app.state.drawer = True
@@ -365,7 +365,7 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
                                                                    7000 * unit))
     specviz_helper.app.state.drawer = True
 
-    specviz_helper.plugins['Subsets'].combination_mode.selected = 'new'
+    specviz_helper.plugins['Subsets'].combination_mode = 'new'
     specviz_helper.plugins['Subsets'].import_region(SpectralRegion(7100 * unit,
                                                                    7700 * unit))
     specviz_helper.app.state.drawer = True

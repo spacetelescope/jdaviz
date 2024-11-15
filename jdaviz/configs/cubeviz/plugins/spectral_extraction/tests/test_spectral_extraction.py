@@ -434,7 +434,7 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
 #    orig_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
 
     # replace Subset 1 with a larger subset, resulting fluxes should increase
-    cubeviz_helper.plugins['Subsets'].combination_mode.selected = 'replace'
+    cubeviz_helper.plugins['Subsets'].combination_mode = 'replace'
     cubeviz_helper.plugins['Subsets'].import_region(CircularROI(xc=5, yc=5, radius=3))
 
     # update should take place automatically, but since its async, we'll call manually to ensure
@@ -480,7 +480,7 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     upper_aperture = RectangularROI(2.5, 3.5, -0.5, 1.5)
 
     subset_plugin.import_region(lower_aperture)
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(upper_aperture)
 
     spec_extr_plugin.aperture_selected = 'Subset 1'
@@ -491,7 +491,7 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
 
     rectangle = RectangularROI(-0.5, 3.5, -0.5, 1.5)
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(rectangle)
 
     subset_plugin.subset_selected = 'Subset 3'

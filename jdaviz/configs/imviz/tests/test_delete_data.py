@@ -31,7 +31,7 @@ class TestDeleteData(BaseImviz_WCS_WCS):
         reg = CirclePixelRegion(PixCoord(2, 2), 3).to_sky(self.wcs_1)
         self.imviz.plugins['Subsets'].import_region(reg)
 
-        self.imviz.plugins['Subsets'].combination_mode.selected = 'new'
+        self.imviz.plugins['Subsets'].combination_mode = 'new'
         reg = RectanglePixelRegion(PixCoord(1, 1), 2, 2).to_sky(self.wcs_1)
         self.imviz.plugins['Subsets'].import_region(reg)
 
