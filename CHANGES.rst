@@ -89,6 +89,8 @@ Cubeviz
 
 - Fixed "spectrum at spaxel" tool so it no longer resets spectral axis zoom. [#3249]
 
+- Fixed initializing a Gaussian1D model component when ``Cube Fit`` is toggled on. [#3295]
+
 Imviz
 ^^^^^
 
