@@ -6,6 +6,7 @@ from specutils import Spectrum1D, SpectralRegion
 from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 from numpy.testing import assert_allclose, assert_array_equal
 
+from jdaviz.core.custom_units import PIX2
 from jdaviz.utils import PRIHDR_KEY
 
 
@@ -147,8 +148,9 @@ def test_spectrum3d_parse(image_cube_hdu_obj, cubeviz_helper):
     assert label_mouseover.as_text() == ('', '', '')
 
 
-def test_spectrum3d_no_wcs_parse(cubeviz_helper):
-    sc = Spectrum1D(flux=np.ones(24).reshape((2, 3, 4)) * u.nJy)  # x, y, z
+@pytest.mark.parametrize("flux_unit", [u.nJy, u.DN, u.DN / u.s])
+def test_spectrum3d_no_wcs_parse(cubeviz_helper, flux_unit):
+    sc = Spectrum1D(flux=np.ones(24).reshape((2, 3, 4)) * flux_unit)  # x, y, z
     cubeviz_helper.load_data(sc)
     assert sc.spectral_axis.unit == u.pix
 
@@ -158,7 +160,7 @@ def test_spectrum3d_no_wcs_parse(cubeviz_helper):
     assert data.shape == (2, 3, 4)  # x, y, z
     assert isinstance(data.coords, PaddedSpectrumWCS)
     assert_array_equal(flux.data, 1)
-    assert flux.units == 'nJy / pix2'
+    assert flux.units == f'{flux_unit / PIX2}'
 
 
 def test_spectrum1d_parse(spectrum1d, cubeviz_helper):
