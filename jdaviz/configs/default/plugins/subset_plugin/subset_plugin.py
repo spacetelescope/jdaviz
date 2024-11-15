@@ -73,8 +73,10 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.show`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.open_in_tray`
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
+    * ``subset`` (:class:`~jdaviz.core.template_mixin.SubsetSelect`):
+      Manages subset selection and creation
     * ``combination_mode`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
-      Allows selection of combination modes for subsets, such as new, replace, or, and, xor, or andnot.
+      Allows selection of combination modes for subsets
     * :meth:`get_center`
     * :meth:`set_center`
     * :meth:`import_region`
