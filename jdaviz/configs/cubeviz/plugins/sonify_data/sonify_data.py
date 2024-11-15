@@ -52,6 +52,9 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._plugin_description = 'Sonify a data cube'
+        self.docs_description = 'Sonify a data cube using the Strauss package.'
+
         if self.has_strauss:
             devices, indexes = self.build_device_lists()
             self.sound_device_indexes = dict(zip(devices, indexes))
