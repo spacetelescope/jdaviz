@@ -155,7 +155,15 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
         modelfit_plugin.calculate_fit()
     assert test_label in cubeviz_helper.app.data_collection
 
-    # We also check that we can initialize a Gaussian1D with cube fit toggled on
+
+def test_initialize_gaussian_with_cube(cubeviz_helper, spectrum1d_cube_larger):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        cubeviz_helper.load_data(spectrum1d_cube_larger)
+    modelfit_plugin = cubeviz_helper.plugins['Model Fitting']
+
+    modelfit_plugin.cube_fit = True
+    # Check that we can initialize a Gaussian1D with cube fit toggled on
     modelfit_plugin.create_model_component('Gaussian1D', 'G')
 
 
