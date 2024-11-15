@@ -1010,5 +1010,5 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
 
     def _update_combination_mode(self):
         if self.app.session.edit_subset_mode.mode in SUBSET_TO_PRETTY.keys():
-            self.combination_mode.selected = SUBSET_TO_PRETTY[
+            self.combination_mode = SUBSET_TO_PRETTY[
                 self.app.session.edit_subset_mode.mode]
