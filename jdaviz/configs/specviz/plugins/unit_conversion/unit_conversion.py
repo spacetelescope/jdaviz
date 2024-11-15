@@ -110,6 +110,9 @@ class UnitConversion(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Convert the units of displayed physical quantities.'
+
         self._cached_properties = ['image_layers']
 
         if self.config not in ['specviz', 'cubeviz']:

@@ -113,6 +113,15 @@ class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        config = self.app.config
+        if config in ['cubeviz', 'specviz2d', 'mosviz', 'rampviz']:
+            self._plugin_description = 'Select and interact with spectral/spatial subsets.'
+        elif config == 'imviz':
+            self._plugin_description = 'Select and interact with spatial subsets.'
+        elif config == 'specviz':
+            self._plugin_description = 'Select and interact with spectral subsets.'
+
         self.components = {
             'g-subset-mode': SelectionModeMenu(session=self.session)
         }

@@ -39,6 +39,9 @@ class SlitOverlay(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Add a slit to the image viewer.'
+
         table = self.app.get_viewer(self._default_table_viewer_reference_name)
         table.figure_widget.observe(self.place_slit_overlay, names=['highlighted'])
 

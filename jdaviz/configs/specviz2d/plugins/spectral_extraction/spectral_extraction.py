@@ -225,6 +225,9 @@ class SpectralExtraction(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Extract 1D spectrum from 2D image.'
+
         self._marks = {}
 
         # TRACE

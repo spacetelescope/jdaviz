@@ -397,6 +397,7 @@ class PluginTemplateMixin(TemplateMixin):
     plugin_key = Unicode("").tag(sync=True)  # noqa set to non-empty to override value in vue file (when supported by vue file)
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     docs_description = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
+    _plugin_description = Unicode("").tag(sync=True)  # noqa shorter description of plugin, displayed below title in menu
     plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
@@ -457,6 +458,29 @@ class PluginTemplateMixin(TemplateMixin):
         new = self.__class__(app=self.app)
         new._plugin_name = self._plugin_name
         return new
+
+    @property
+    def plugin_description(self):
+        return self._plugin_description
+
+    @plugin_description.setter
+    def plugin_description(self, description=''):
+        """
+        Overwrite plugin description displayed under plugin title in tray.
+        """
+
+        if len(self.app.state.tray_items) > 0:
+            self._plugin_description = description
+
+            # update text in tray item. this is not a dictionary
+            # so we have to search for the correct plugin in the list
+            for i, item in enumerate(self.app.state.tray_items):
+                if item['label'] == self._plugin_name:
+                    self.app.state.tray_items[i]['description'] = description
+                    break
+
+        else:  # not fully initialized, fall back on empty string
+            self._plugin_description = ''
 
     @property
     def user_api(self):

@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Gaussian Smooth"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Smooth data with a Gaussian kernel.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">

@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Export"
     :api_hints_enabled.sync="api_hints_enabled"
-    description='Export data or plots from the app to a file.'
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#export'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">

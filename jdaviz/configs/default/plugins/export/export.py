@@ -16,6 +16,7 @@ from glue.core.message import SubsetCreateMessage, SubsetDeleteMessage, SubsetUp
 
 from jdaviz.core.events import AddDataMessage, SnackbarMessage
 from jdaviz.core.user_api import PluginUserApi
+
 from specutils import Spectrum1D
 from astropy import units as u
 from astropy.nddata import CCDData
@@ -114,6 +115,9 @@ class Export(PluginTemplateMixin, ViewerSelectMixin, SubsetSelectMixin,
                                       'filename_default',
                                       'filename_auto',
                                       'filename_invalid_msg')
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Export data/plots and other outputs to a file.'
 
         # NOTE: if adding export support for non-plugin products, also update the language
         # in the UI as well as in _set_dataset_not_supported_msg

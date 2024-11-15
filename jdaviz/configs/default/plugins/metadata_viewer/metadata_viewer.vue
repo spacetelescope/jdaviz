@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Metadata"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'View metadata.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#metadata-viewer'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">

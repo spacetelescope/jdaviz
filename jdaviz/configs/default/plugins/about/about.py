@@ -28,6 +28,9 @@ class About(PluginTemplateMixin):
         super().__init__(*args, **kwargs)
         self.jdaviz_version = __version__
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Information about Jdaviz.'
+
         if __version__ != "unknown":
             _ver_pypi = latest_version_from_pypi("jdaviz")
             if _ver_pypi:

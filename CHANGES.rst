@@ -63,6 +63,8 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+- Added a short description of each plugin in the side menu, visible before the plugin is opened. Removes redundant descriptions above link
+  out to documentation when plugin is opened. Enable search on plugin description in addition to title. [#3268]
 
 4.0.1 (unreleased)
 ==================
@@ -75,8 +77,10 @@ Bug Fixes
 - Fixed Aperture Photometry radial profile fit crashing when NaN is present in
   aperture data for Cubeviz and Imviz. [#3246]
 
-- Prevent PluginMarks from converting y-range so they maintain their position 
+- Prevent PluginMarks from converting y-range so they maintain their position
   in the spectrum-viewer when spectral y units are converted. [#3242]
+
+- Added ``nbclassic`` dependency to fix ``solara``-based popouts. [#3282]
 
 Cubeviz
 ^^^^^^^
