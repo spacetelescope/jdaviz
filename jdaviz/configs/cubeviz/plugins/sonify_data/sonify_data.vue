@@ -9,12 +9,23 @@
     :scroll_to.sync="scroll_to"
     :disabled_msg="disabled_msg">
 
-    <j-plugin-section-header>Sonify Cube</j-plugin-section-header>
+    <j-plugin-section-header>Cube Pre-Sonification Options</j-plugin-section-header>
     <v-alert v-if="!has_strauss" type="warning" style="margin-left: -12px; margin-right: -12px">
       To use Sonify Data, install strauss and restart Jdaviz. You can do this by running pip install strauss
       in the command line and then launching Jdaviz.
     </v-alert>
-
+    <v-row>
+      <j-docs-link>Choose the input cube, spectral subset and any advanced sonification options.</j-docs-link>
+    </v-row>
+    <plugin-dataset-select
+      :items="dataset_items"
+      :selected.sync="dataset_selected"
+      :show_if_single_entry="false"
+      label="Data"
+      api_hint="plg.dataset ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Select the data set."
+    />
     <plugin-subset-select
       :items="spectral_subset_items"
       :selected.sync="spectral_subset_selected"
@@ -24,7 +35,6 @@
       :api_hints_enabled="api_hints_enabled"
       hint="Select spectral region that defines the wavelength range."
     />
-
     <v-row>
       <v-expansion-panels accordion>
         <v-expansion-panel>
@@ -133,6 +143,10 @@
         Stop stream
       </plugin-action-button>
     </v-row>
+<<<<<<< HEAD
+=======
+    <j-plugin-section-header>Live Sound Options</j-plugin-section-header>
+>>>>>>> 9abf2b3b (sonification plugin options: rearrange, label, defaults.)
     <v-row>
       <v-select
         :menu-props="{ left: true }"
@@ -140,13 +154,22 @@
         :items="sound_devices_items"
         v-model="sound_devices_selected"
         label="Sound device"
+<<<<<<< HEAD
         hint="Device which sound will be output from. Must be selected BEFORE cube is sonified."
+=======
+        hint="Device which sound will be output from."
+>>>>>>> 9abf2b3b (sonification plugin options: rearrange, label, defaults.)
         persistent-hint
         ></v-select>
     </v-row>
     <v-row>
         Volume
         <glue-throttled-slider label="Volume" wait="300" max="100" step="1" :value.sync="volume" hide-details class="no-hint" />
+<<<<<<< HEAD
     </v-row>
+=======
+   </v-row>
+
+>>>>>>> 9abf2b3b (sonification plugin options: rearrange, label, defaults.)
  </j-tray-plugin>
 </template>
