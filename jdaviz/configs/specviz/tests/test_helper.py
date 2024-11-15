@@ -122,7 +122,7 @@ class TestSpecvizHelper:
         assert spec_region == {}
 
     def test_get_spectral_regions_one(self):
-        self.spec_app.plugins['Subsets']._obj.import_region(
+        self.spec_app.plugins['Subsets'].import_region(
             SpectralRegion(6000*self.spec.spectral_axis.unit, 6500*self.spec.spectral_axis.unit))
         spec_region = self.spec_app.get_spectral_regions()
         assert len(spec_region['Subset 1'].subregions) == 1
@@ -132,7 +132,7 @@ class TestSpecvizHelper:
                                  6500*self.spec.spectral_axis.unit) +
                   SpectralRegion(7300*self.spec.spectral_axis.unit,
                                  7800*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subsets']._obj.import_region(subset, combination_mode='or')
+        self.spec_app.plugins['Subsets'].import_region(subset, combination_mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
 
@@ -145,7 +145,7 @@ class TestSpecvizHelper:
                                  7000*self.spec.spectral_axis.unit) +
                   SpectralRegion(7300*self.spec.spectral_axis.unit,
                                  7800*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subsets']._obj.import_region(subset, combination_mode='or')
+        self.spec_app.plugins['Subsets'].import_region(subset, combination_mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
 
@@ -171,7 +171,7 @@ class TestSpecvizHelper:
                                  3*self.spec.spectral_axis.unit) +
                   SpectralRegion(4*self.spec.spectral_axis.unit,
                                  6*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subsets']._obj.import_region(subset, combination_mode='or')
+        self.spec_app.plugins['Subsets'].import_region(subset, combination_mode='or')
 
         spec_region = self.spec_app.get_spectral_regions()
         assert_quantity_allclose(spec_region['Subset 1'].subregions[0][0].value,
@@ -191,7 +191,7 @@ class TestSpecvizHelper:
                                  7000*self.spec.spectral_axis.unit) +
                   SpectralRegion(7300*self.spec.spectral_axis.unit,
                                  7800*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subsets']._obj.import_region(
+        self.spec_app.plugins['Subsets'].import_region(
             subset, combination_mode=['new', 'andnot', 'and'])
 
         spec_region = self.spec_app.get_spectral_regions()
@@ -210,7 +210,7 @@ class TestSpecvizHelper:
                                  6600*self.spec.spectral_axis.unit) +
                   SpectralRegion(7300*self.spec.spectral_axis.unit,
                                  7700*self.spec.spectral_axis.unit))
-        self.spec_app.plugins['Subsets']._obj.import_region(
+        self.spec_app.plugins['Subsets'].import_region(
             subset, combination_mode=['new', 'andnot', 'andnot'])
 
         spec_region = self.spec_app.get_spectral_regions()
@@ -261,7 +261,7 @@ def test_add_spectrum_after_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="test")
     subset = SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
                             7000 * spectrum1d.spectral_axis.unit)
-    specviz_helper.plugins['Subsets']._obj.import_region(subset)
+    specviz_helper.plugins['Subsets'].import_region(subset)
 
     new_spec = specviz_helper.get_spectra(apply_slider_redshift=True)["test"]*0.9
     specviz_helper.load_data(new_spec, data_label="test2")
@@ -272,7 +272,7 @@ def test_get_spectral_regions_unit(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     subset = SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
                             7000 * spectrum1d.spectral_axis.unit)
-    specviz_helper.plugins['Subsets']._obj.import_region(subset)
+    specviz_helper.plugins['Subsets'].import_region(subset)
 
     subsets = specviz_helper.get_spectral_regions()
     reg = subsets.get('Subset 1')
@@ -314,7 +314,7 @@ def test_get_spectral_regions_unit_conversion(specviz_helper, spectrum1d):
     specviz_helper.plugins['Unit Conversion'].spectral_unit = new_spectral_axis
     spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset = SpectralRegion(0.6 * spectral_axis_unit, 0.7 * spectral_axis_unit)
-    specviz_helper.plugins['Subsets']._obj.import_region(subset)
+    specviz_helper.plugins['Subsets'].import_region(subset)
 
     # Retrieve the Subset
     subsets = specviz_helper.get_spectral_regions(use_display_units=False)
@@ -349,7 +349,7 @@ def test_subset_default_thickness(specviz_helper, spectrum1d):
     spectral_axis_unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset = SpectralRegion(2.5 * spectral_axis_unit,
                             3.5 * spectral_axis_unit)
-    specviz_helper.plugins['Subsets']._obj.import_region(subset)
+    specviz_helper.plugins['Subsets'].import_region(subset)
     # _on_layers_update is not triggered within CI
     sv._on_layers_update()
     assert sv.state.layers[-1].linewidth == 3
@@ -513,7 +513,7 @@ def test_delete_data_with_subsets(specviz_helper, spectrum1d, spectrum1d_nm):
 
     subset = SpectralRegion(6200 * spectral_axis_unit,
                             7000 * spectral_axis_unit)
-    specviz_helper.plugins['Subsets']._obj.import_region(subset)
+    specviz_helper.plugins['Subsets'].import_region(subset)
 
     assert len(specviz_helper.app.data_collection.subset_groups) == 1
     subset1 = specviz_helper.app.data_collection.subset_groups[0]

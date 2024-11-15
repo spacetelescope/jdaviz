@@ -17,7 +17,7 @@ from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 def test_region_from_subset_2d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 2D Flux')
 
@@ -54,7 +54,7 @@ def test_region_from_subset_2d(cubeviz_helper):
 def test_region_from_subset_3d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 256)), data_label='Test 3D Flux')
 
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
     assert subset_plugin.subset_selected == "Create New"
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
@@ -146,7 +146,7 @@ def test_region_from_subset_3d(cubeviz_helper):
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
     data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
 
     cubeviz_helper.load_data(data, data_label='Test 1D Flux')
 
@@ -193,7 +193,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
 
 
 def test_disjoint_spectral_subset(cubeviz_helper, spectral_cube_wcs):
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
     data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
     cubeviz_helper.load_data(data, data_label="Test Flux")
 
@@ -241,7 +241,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
     subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
 
     reg = cubeviz_helper.app.get_subsets("Subset 1")
@@ -294,7 +294,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
 
 def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 10)), data_label='Test 3D Flux')
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
     viewer = cubeviz_helper.app.get_viewer('flux-viewer')
@@ -360,7 +360,7 @@ def test_composite_region_with_consecutive_and_not_states(cubeviz_helper):
 
 def test_composite_region_with_imviz(imviz_helper, image_2d_wcs):
     arr = NDData(np.ones((10, 10)), wcs=image_2d_wcs)
-    subset_plugin = imviz_helper.plugins['Subsets']._obj
+    subset_plugin = imviz_helper.plugins['Subsets']
     data_label = 'image-data'
     imviz_helper.load_data(arr, data_label=data_label, show_in_viewer=True)
     subset_plugin.import_region(CircularROI(xc=5, yc=5, radius=2))
@@ -415,7 +415,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # This rectangle is over a real object in reference image but
     # only the last row in the second image if linked by pixel.
-    imviz_helper.plugins['Subsets']._obj.import_region(
+    imviz_helper.plugins['Subsets'].import_region(
         RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w))
 
     subset_plugin = imviz_helper.plugins["Subsets"]._obj
@@ -463,7 +463,7 @@ def test_with_invalid_subset_name(cubeviz_helper):
 def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
     viewer = specviz_helper.app.get_viewer(specviz_helper._default_spectrum_viewer_reference_name)
-    subset_plugin = specviz_helper.plugins['Subsets']._obj
+    subset_plugin = specviz_helper.plugins['Subsets']
 
     subset1 = SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
                              7000 * spectrum1d.spectral_axis.unit)
@@ -516,7 +516,7 @@ def test_composite_region_from_subset_2d(specviz_helper, spectrum1d):
 
 def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    subset_plugin = specviz_helper.plugins['Subsets']._obj
+    subset_plugin = specviz_helper.plugins['Subsets']
 
     unit = spectrum1d.spectral_axis.unit
     subset = [SpectralRegion(6200 * unit, 6800 * unit),
@@ -565,7 +565,7 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
 def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    subset_plugin = specviz_helper.plugins['Subsets']._obj
+    subset_plugin = specviz_helper.plugins['Subsets']
 
     unit = spectrum1d.spectral_axis.unit
     subset = [SpectralRegion(6200 * unit, 6800 * unit),
@@ -624,7 +624,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
 def test_composite_spectral_with_xor_complicated(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    subset_plugin = specviz_helper.plugins['Subsets']._obj
+    subset_plugin = specviz_helper.plugins['Subsets']
 
     unit = spectrum1d.spectral_axis.unit
     subset = [SpectralRegion(6100 * unit, 6700 * unit),
@@ -654,7 +654,7 @@ def test_composite_spectral_with_xor_complicated(specviz_helper, spectrum1d):
 
 def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    subset_plugin = specviz_helper.plugins['Subsets']._obj
+    subset_plugin = specviz_helper.plugins['Subsets']
     unit = spectrum1d.spectral_axis.unit
     subset = [SpectralRegion(6400 * unit, 7400 * unit),
               SpectralRegion(6600 * unit, 7200 * unit),
@@ -671,7 +671,7 @@ def test_overlapping_spectral_regions(specviz_helper, spectrum1d):
 
 def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    subset_plugin = specviz_helper.plugins['Subsets']._obj
+    subset_plugin = specviz_helper.plugins['Subsets']
     unit = spectrum1d.spectral_axis.unit
     subset_plugin.import_region(SpectralRegion(6400 * unit, 6600 * unit))
 
@@ -693,7 +693,7 @@ def test_only_overlapping_spectral_regions(specviz_helper, spectrum1d):
 def test_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
 
-    subset_plugin = specviz2d_helper.plugins['Subsets']._obj
+    subset_plugin = specviz2d_helper.plugins['Subsets']
     unit = mos_spectrum2d.spectral_axis.unit
 
     subset_plugin.import_region(SpectralRegion(6400 * unit, 7400 * unit))
@@ -712,7 +712,7 @@ def test_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
 def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
     specviz2d_helper.load_data(spectrum_2d=mos_spectrum2d)
 
-    subset_plugin = specviz2d_helper.plugins['Subsets']._obj
+    subset_plugin = specviz2d_helper.plugins['Subsets']
     unit = mos_spectrum2d.spectral_axis.unit
 
     subset_plugin.import_region(SpectralRegion(6400 * unit, 6600 * unit))
@@ -731,7 +731,7 @@ def test_only_overlapping_in_specviz2d(specviz2d_helper, mos_spectrum2d):
 
 def test_multi_mask_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
-    subset_plugin = specviz_helper.plugins['Subsets']._obj
+    subset_plugin = specviz_helper.plugins['Subsets']
     unit = spectrum1d.spectral_axis.unit
     subset_plugin.import_region(SpectralRegion(6200 * unit, 6800 * unit))
 
@@ -786,7 +786,7 @@ def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
 
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
 
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
     unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset_plugin.import_region(SpectralRegion(6200 * unit, 6800 * unit))
 
@@ -814,7 +814,7 @@ class TestRegionsFromSubsets:
         cubeviz_helper.load_data(data)
 
         # basic test, a single circular region
-        subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+        subset_plugin = cubeviz_helper.plugins['Subsets']
         subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = cubeviz_helper.app.get_subsets(include_sky_region=True)
         sky_region = subsets['Subset 1'][0]['sky_region']
@@ -859,7 +859,7 @@ class TestRegionsFromSubsets:
         imviz_helper.load_data(data)
 
         # basic test, a single circular region
-        subset_plugin = imviz_helper.plugins['Subsets']._obj
+        subset_plugin = imviz_helper.plugins['Subsets']
         subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         sky_region = subsets['Subset 1'][0]['sky_region']
@@ -891,7 +891,7 @@ class TestRegionsFromSubsets:
         data = NDData(np.ones((40, 40)) * u.nJy)
         imviz_helper.load_data(data)
 
-        subset_plugin = imviz_helper.plugins['Subsets']._obj
+        subset_plugin = imviz_helper.plugins['Subsets']
         subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         assert subsets['Subset 1'][0]['sky_region'] is None
@@ -899,7 +899,7 @@ class TestRegionsFromSubsets:
     def test_subset_renaming(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d, 'myfile')
 
-        subset_plugin = specviz_helper.plugins['Subsets']._obj
+        subset_plugin = specviz_helper.plugins['Subsets']
         subset_plugin.import_region(SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
                                                    7200 * spectrum1d.spectral_axis.unit))
         get_data_no_sub = specviz_helper.get_data('myfile')
