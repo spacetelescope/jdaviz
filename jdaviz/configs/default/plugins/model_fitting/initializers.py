@@ -188,6 +188,10 @@ class _LineProfile1DInitializer(object):
             The initialized model.
         """
 
+        if y.ndim == 3:
+            # For cube fitting, need to collapse before these calculations
+            y = np.nanmean(y, axis=(0, 1))
+
         # X centroid estimates the position
         centroid = np.sum(x * y) / np.sum(y)
 
