@@ -73,7 +73,11 @@ def test_view_dict(imviz_helper):
                            ('EXTEND', 'True', ''),
                            ('NAXIS', '0', 'number of array dimensions'),
                            ('SIMPLE', 'True', 'conforms to FITS standard')]
-    assert sorted(mv.meta.keys()) == ['APERTURE', 'BITPIX', 'EXTEND', 'NAXIS', 'SIMPLE']
+    assert mv.meta == {'APERTURE': {"description": 'Aperture', "value": '#TODO'},
+                       'BITPIX': {"description": 'array data type', "value": '8'},
+                       'EXTEND': {"description": '', "value": 'True'},
+                       'NAXIS': {"description": 'number of array dimensions', "value": '0'},
+                       'SIMPLE': {"description": 'conforms to FITS standard', "value": 'True'}}
 
     mv.dataset_selected = 'no_meta'
     assert not mv.has_primary

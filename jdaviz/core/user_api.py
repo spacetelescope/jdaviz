@@ -4,7 +4,7 @@ import astropy.units as u
 __all__ = ['UserApiWrapper', 'PluginUserApi', 'ViewerUserApi']
 
 _internal_attrs = ('_obj', '_expose', '_items', '_readonly', '_exclude_from_dict',
-                   '__doc__', '_deprecation_msg')
+                   '__doc__', '_deprecation_msg', '_deprecated')
 
 
 class UserApiWrapper:
@@ -12,12 +12,13 @@ class UserApiWrapper:
     This is an API wrapper around an internal object.  For a full list of attributes/methods,
     call dir(object).
     """
-    def __init__(self, obj, expose=[], readonly=[], exclude_from_dict=[]):
+    def __init__(self, obj, expose=[], readonly=[], exclude_from_dict=[], deprecated=[]):
         self._obj = obj
         self._expose = list(expose) + list(readonly)
         self._readonly = readonly
         self._exclude_from_dict = exclude_from_dict
         self._deprecation_msg = None
+        self._deprecated = deprecated
         if obj.__doc__ is not None:
             self.__doc__ = self.__doc__ + "\n\n\n" + obj.__doc__
 
@@ -33,6 +34,9 @@ class UserApiWrapper:
     def __getattr__(self, attr):
         if attr in _internal_attrs or attr not in self._expose:
             return super().__getattribute__(attr)
+
+        if attr in self._deprecated:
+            logging.warning("DeprecationWarning: %s is deprecated" % attr)
 
         exp_obj = getattr(self._obj, attr)
         return getattr(exp_obj, 'user_api', exp_obj)
@@ -127,13 +131,13 @@ class PluginUserApi(UserApiWrapper):
     For example::
       help(plugin_object.show)
     """
-    def __init__(self, plugin, expose=[], readonly=[], excl_from_dict=[]):
+    def __init__(self, plugin, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
         expose = list(set(list(expose) + ['open_in_tray', 'close_in_tray',
                                           'show']))
         if plugin.uses_active_status:
             expose += ['keep_active', 'as_active']
         self._deprecation_msg = None
-        super().__init__(plugin, expose, readonly, excl_from_dict)
+        super().__init__(plugin, expose, readonly, excl_from_dict, deprecated)
 
     def __repr__(self):
         if self._deprecation_msg:
@@ -151,9 +155,9 @@ class ViewerUserApi(UserApiWrapper):
     For example::
       help(viewer_object.show)
     """
-    def __init__(self, viewer, expose=[], readonly=[], excl_from_dict=[]):
+    def __init__(self, viewer, expose=[], readonly=[], excl_from_dict=[], deprecated=[]):
         expose = list(set(list(expose) + []))
-        super().__init__(viewer, expose, readonly, excl_from_dict)
+        super().__init__(viewer, expose, readonly, excl_from_dict, deprecated)
 
     def __repr__(self):
         return f'<{self._obj.reference} API>'
