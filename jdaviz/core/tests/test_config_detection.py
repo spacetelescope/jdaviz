@@ -1,9 +1,5 @@
 import pytest
-import numpy as np
-
 from astropy.utils.data import download_file
-from specutils import SpectralRegion
-
 from jdaviz.core.data_formats import identify_helper
 
 # URIs to example JWST/HST files on MAST, and their
@@ -25,6 +21,7 @@ example_uri_helper = [
      ['mast:JWST/product/jw02732-o004_t004_miri_ch1-shortmediumlong_x1d.fits',
       'specviz']
 ]
+
 
 @pytest.mark.skip(reason="filenames changed")
 @pytest.mark.remote_data
