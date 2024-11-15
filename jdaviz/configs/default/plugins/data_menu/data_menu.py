@@ -109,6 +109,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         self.layer.remove_filter('filter_is_root')
         self.layer.add_filter(is_not_wcs_only)
         self.layer.multiselect = True
+        self.layer.sort_by = 'zorder'
         self.layer._default_mode = 'empty'
 
         # we'll use a modified version of the dataset mixin to have a filtered
@@ -227,8 +228,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         with self.during_select_sync():
             # map index in dm_layer_selected (inverse order of layer_items)
             # to set self.layer.selected
-            length = len(self.layer_items)
-            self.layer.selected = [self.layer_items[length-1-i]['label']
+            self.layer.selected = [self.layer_items[i]['label']
                                    for i in self.dm_layer_selected]
 
     @observe('layer_selected', 'layer_items')
@@ -238,7 +238,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if not self._during_select_sync:
             with self.during_select_sync():
                 # map list of strings in self.layer.selected to indices in dm_layer_selected
-                layer_labels = [layer['label'] for layer in self.layer_items][::-1]
+                layer_labels = [layer['label'] for layer in self.layer_items]
                 self.dm_layer_selected = [layer_labels.index(label) for label in self.layer.selected
                                           if label in layer_labels]
 
