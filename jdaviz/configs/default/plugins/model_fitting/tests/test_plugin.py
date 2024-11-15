@@ -155,10 +155,13 @@ def test_register_cube_model(cubeviz_helper, spectrum1d_cube):
         modelfit_plugin.calculate_fit()
     assert test_label in cubeviz_helper.app.data_collection
 
+    # We also check that we can initialize a Gaussian1D with cube fit toggled on
+    modelfit_plugin.create_model_component('Gaussian1D', 'G')
+
 
 def test_fit_cube_no_wcs(cubeviz_helper):
-    # This is like when user do something to a cube outside of Jdaviz
-    # and then load it back into a new instance of Cubeviz for further analysis.
+    # This is like when user does something to a cube outside of Jdaviz
+    # and then loads it back into a new instance of Cubeviz for further analysis.
     sp = Spectrum1D(flux=np.ones((7, 8, 9)) * u.nJy)  # nx, ny, nz
     cubeviz_helper.load_data(sp, data_label="test_cube")
     mf = cubeviz_helper.plugins['Model Fitting']
