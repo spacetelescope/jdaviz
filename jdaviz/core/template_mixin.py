@@ -4486,7 +4486,10 @@ class PlotOptionsSyncState(BasePluginComponent):
     def unmix_state(self, new_value=None):
         if new_value is None:
             new_value = self.value
-        self._on_value_changed({'new': new_value})
+        if new_value != self.value:
+            self.value = new_value
+        else:
+            self._on_value_changed({'new': new_value})
         self.sync = {**self.sync,
                      'mixed': False}
 
