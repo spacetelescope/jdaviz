@@ -40,10 +40,14 @@ def test_region_from_subset_2d(cubeviz_helper):
     assert subset_plugin._obj.subset_types == ["EllipticalROI"]
     assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "X Center (pixels)", key) == 1
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 3.5
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "X Radius (pixels)", key) == 1.2
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Y Radius (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "X Center (pixels)", key) == 1
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Y Center (pixels)", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "X Radius (pixels)", key) == 1.2
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Y Radius (pixels)", key) == 3.3
         assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 0
 
     # Recenter GUI should not be exposed, but API call would raise exception.
@@ -127,9 +131,12 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert subset_plugin._obj.subset_types == ["CircularROI"]
     assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "X Center (pixels)", key) == 3
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 4
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Radius (pixels)", key) == 2.4
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "X Center (pixels)", key) == 3
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Y Center (pixels)", key) == 4
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Radius (pixels)", key) == 2.4
 
     # Circular Annulus Subset
     subset_plugin.combination_mode = 'new'
@@ -138,9 +145,12 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert subset_plugin._obj.subset_selected == "Subset 3"
     assert subset_plugin._obj.subset_types == ["CircularAnnulusROI"]
     for key in ("orig", "value"):
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "X Center (pixels)", key) == 5
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 6
-        assert subset_plugin._obj._get_value_from_subset_definition(0, "Inner Radius (pixels)", key) == 2
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "X Center (pixels)", key) == 5
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Y Center (pixels)", key) == 6
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Inner Radius (pixels)", key) == 2
         assert subset_plugin._obj._get_value_from_subset_definition(
             0, "Outer Radius (pixels)", key) == 4
 
