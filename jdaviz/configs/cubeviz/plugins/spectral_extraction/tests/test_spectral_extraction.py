@@ -473,7 +473,7 @@ def test_aperture_composite_detection(cubeviz_helper, spectrum1d_cube):
 def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
 
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
     spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
 
     lower_aperture = RectangularROI(-0.5, 0.5, -0.5, 1.5)
@@ -494,7 +494,7 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(rectangle)
 
-    subset_plugin.subset_selected = 'Subset 3'
+    subset_plugin._obj.subset_selected = 'Subset 3'
     circle = CircularROI(1.5, 0.5, 1.1)
 
     subset_plugin.combination_mode = 'andnot'

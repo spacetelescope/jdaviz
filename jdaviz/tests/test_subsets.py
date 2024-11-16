@@ -17,7 +17,7 @@ from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 def test_region_from_subset_2d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
+    subset_plugin = cubeviz_helper.plugins['Subsets']
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 2D Flux')
 
@@ -36,26 +36,26 @@ def test_region_from_subset_2d(cubeviz_helper):
     assert_allclose(reg.height, 6.6)
     assert_allclose(reg.angle.value, 0)
 
-    assert subset_plugin.subset_selected == "Subset 1"
-    assert subset_plugin.subset_types == ["EllipticalROI"]
-    assert subset_plugin.is_centerable
+    assert subset_plugin._obj.subset_selected == "Subset 1"
+    assert subset_plugin._obj.subset_types == ["EllipticalROI"]
+    assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "X Center (pixels)", key) == 1
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 3.5
-        assert subset_plugin._get_value_from_subset_definition(0, "X Radius (pixels)", key) == 1.2
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Radius (pixels)", key) == 3.3
-        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "X Center (pixels)", key) == 1
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "X Radius (pixels)", key) == 1.2
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Y Radius (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 0
 
     # Recenter GUI should not be exposed, but API call would raise exception.
     with pytest.raises(NotImplementedError, match='Cannot recenter'):
-        subset_plugin.vue_recenter_subset()
+        subset_plugin._obj.vue_recenter_subset()
 
 
 def test_region_from_subset_3d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 256)), data_label='Test 3D Flux')
 
-    subset_plugin = cubeviz_helper.plugins['Subsets']._obj
-    assert subset_plugin.subset_selected == "Create New"
+    subset_plugin = cubeviz_helper.plugins['Subsets']
+    assert subset_plugin._obj.subset_selected == "Create New"
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
@@ -73,32 +73,32 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.height, 3.5)
     assert_allclose(reg.angle.value, 0)
 
-    assert subset_plugin.subset_selected == "Subset 1"
-    assert subset_plugin.subset_types == ["RectangularROI"]
-    assert subset_plugin.is_centerable
+    assert subset_plugin._obj.subset_selected == "Subset 1"
+    assert subset_plugin._obj.subset_types == ["RectangularROI"]
+    assert subset_plugin._obj.is_centerable
     assert subset_plugin.get_center() == (2.25, 1.55)
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 1
-        assert subset_plugin._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
-        assert subset_plugin._get_value_from_subset_definition(0, "Ymin (pixels)", key) == -0.2
-        assert subset_plugin._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
-        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 1
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", key) == -0.2
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 0
 
     # Mimic user changing something in Subset GUI.
-    subset_plugin._set_value_in_subset_definition(0, "Xmin (pixels)", "value", 2)
-    subset_plugin._set_value_in_subset_definition(0, "Ymin (pixels)", "value", 0)
-    subset_plugin._set_value_in_subset_definition(0, "Angle", "value", 45)  # ccw deg
+    subset_plugin._obj._set_value_in_subset_definition(0, "Xmin (pixels)", "value", 2)
+    subset_plugin._obj._set_value_in_subset_definition(0, "Ymin (pixels)", "value", 0)
+    subset_plugin._obj._set_value_in_subset_definition(0, "Angle", "value", 45)  # ccw deg
     # "orig" is unchanged until user clicks Update button.
-    assert subset_plugin._get_value_from_subset_definition(0, "Xmin (pixels)", "orig") == 1
-    assert subset_plugin._get_value_from_subset_definition(0, "Ymin (pixels)", "orig") == -0.2
-    assert subset_plugin._get_value_from_subset_definition(0, "Angle", "orig") == 0
-    subset_plugin.vue_update_subset()
+    assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", "orig") == 1
+    assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", "orig") == -0.2
+    assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", "orig") == 0
+    subset_plugin._obj.vue_update_subset()
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 2
-        assert subset_plugin._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
-        assert subset_plugin._get_value_from_subset_definition(0, "Ymin (pixels)", key) == 0
-        assert subset_plugin._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
-        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 45
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 2
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", key) == 0
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 45
 
     subsets = cubeviz_helper.app.get_subsets()
     reg = subsets.get('Subset 1')[0]['region']
@@ -123,25 +123,26 @@ def test_region_from_subset_3d(cubeviz_helper):
     subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(CircularROI(xc=3, yc=4, radius=2.4))
 
-    assert subset_plugin.subset_selected == "Subset 2"
-    assert subset_plugin.subset_types == ["CircularROI"]
-    assert subset_plugin.is_centerable
+    assert subset_plugin._obj.subset_selected == "Subset 2"
+    assert subset_plugin._obj.subset_types == ["CircularROI"]
+    assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "X Center (pixels)", key) == 3
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 4
-        assert subset_plugin._get_value_from_subset_definition(0, "Radius (pixels)", key) == 2.4
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "X Center (pixels)", key) == 3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 4
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Radius (pixels)", key) == 2.4
 
     # Circular Annulus Subset
     subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(CircularAnnulusROI(xc=5, yc=6, inner_radius=2, outer_radius=4))
 
-    assert subset_plugin.subset_selected == "Subset 3"
-    assert subset_plugin.subset_types == ["CircularAnnulusROI"]
+    assert subset_plugin._obj.subset_selected == "Subset 3"
+    assert subset_plugin._obj.subset_types == ["CircularAnnulusROI"]
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "X Center (pixels)", key) == 5
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 6
-        assert subset_plugin._get_value_from_subset_definition(0, "Inner Radius (pixels)", key) == 2
-        assert subset_plugin._get_value_from_subset_definition(0, "Outer Radius (pixels)", key) == 4
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "X Center (pixels)", key) == 5
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 6
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Inner Radius (pixels)", key) == 2
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Outer Radius (pixels)", key) == 4
 
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
@@ -418,13 +419,13 @@ def test_recenter_linked_by_wcs(imviz_helper):
     imviz_helper.plugins['Subsets'].import_region(
         RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w))
 
-    subset_plugin = imviz_helper.plugins["Subsets"]._obj
-    subset_plugin.subset_selected = "Subset 1"
-    subset_plugin.dataset_selected = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
+    subset_plugin = imviz_helper.plugins["Subsets"]
+    subset_plugin._obj.subset_selected = "Subset 1"
+    subset_plugin._obj.dataset_selected = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
 
     # Do it a few times to converge.
     for _ in range(5):
-        subset_plugin.vue_recenter_subset()
+        subset_plugin._obj.vue_recenter_subset()
 
     # If handled correctly, it won't change much.
     # But if not, it move down by 7 pix or so (229.05, 145.92) and fails the test.
@@ -437,12 +438,12 @@ def test_recenter_linked_by_wcs(imviz_helper):
     subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(
         CirclePixelRegion(center=PixCoord(x=145, y=175), radius=17).to_sky(w))
-    subset_plugin.multiselect = True
-    subset_plugin.subset_selected = ["Subset 1", "Subset 2"]
+    subset_plugin._obj.multiselect = True
+    subset_plugin._obj.subset_selected = ["Subset 1", "Subset 2"]
 
     # Do it a few times to converge.
     for _ in range(5):
-        subset_plugin.vue_recenter_subset()
+        subset_plugin._obj.vue_recenter_subset()
 
     xy = imviz_helper.default_viewer._obj._get_real_xy(
         imviz_helper.app.data_collection[0], *subset_plugin.get_center("Subset 2"))[:2]
