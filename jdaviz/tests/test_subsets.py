@@ -429,7 +429,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
     imviz_helper.plugins['Subset Tools'].import_region(
         RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w))
 
-    subset_plugin = imviz_helper.plugins["Subsets"]
+    subset_plugin = imviz_helper.plugins['Subset Tools']
     subset_plugin._obj.subset_selected = "Subset 1"
     subset_plugin._obj.dataset_selected = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
 

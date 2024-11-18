@@ -412,7 +412,7 @@ def test_annulus_background(imviz_helper):
     assert_allclose(phot_plugin.background_value, bg_4gauss_2)
 
     # Edit the annulus and make sure background updates
-    subset_plugin = imviz_helper.plugins["Subsets"]._obj
+    subset_plugin = imviz_helper.plugins['Subset Tools']._obj
     subset_plugin.subset_selected = "Subset 4"
     subset_plugin._set_value_in_subset_definition(0, "X Center (pixels)", "value", 25.5)
     subset_plugin._set_value_in_subset_definition(0, "Y Center (pixels)", "value", 42.5)
