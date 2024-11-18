@@ -14,6 +14,8 @@ Bug Fixes
 
 - Added ``nbclassic`` dependency to fix ``solara``-based popouts. [#3282]
 
+- Fixed viewer widgets displaying improperly if initialized out of view in Jupyter Lab. [#3299]
+
 Cubeviz
 ^^^^^^^
 
