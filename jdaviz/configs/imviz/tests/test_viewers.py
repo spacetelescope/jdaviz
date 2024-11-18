@@ -67,7 +67,7 @@ def test_destroy_viewer_with_subset(imviz_helper):
 
     # Create a Subset.
     reg = CirclePixelRegion(center=PixCoord(x=4, y=4), radius=2)
-    imviz_helper.plugins['Subset Tools']._obj.import_region(reg)
+    imviz_helper.plugins['Subsets'].import_region(reg)
 
     # Remove the second viewer.
     imviz_helper.destroy_viewer('second')

@@ -42,7 +42,7 @@ class BaseImviz_WCS_NoWCS:
         self.wcs = WCS(hdu.header)
         self.imviz = imviz_helper
         self.viewer = imviz_helper.default_viewer._obj
-        self.subset_plugin = self.imviz.plugins['Subset Tools']._obj
+        self.subset_plugin = self.imviz.plugins['Subsets']
 
         # Since we are not really displaying, need this to test zoom.
         self.viewer.shape = (100, 100)

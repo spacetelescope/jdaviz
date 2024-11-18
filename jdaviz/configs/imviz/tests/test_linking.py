@@ -101,8 +101,8 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Add subsets, both interactive and static.
         self.imviz._apply_interactive_region('bqplot:truecircle', (1.5, 2.5), (3.6, 4.6))
-        self.imviz.plugins['Subset Tools']._obj.combination_mode.selected = 'new'
-        self.imviz.plugins['Subset Tools']._obj.import_region([
+        self.imviz.plugins['Subsets'].combination_mode = 'new'
+        self.imviz.plugins['Subsets'].import_region([
             CirclePixelRegion(center=PixCoord(x=6, y=2), radius=5).to_sky(self.wcs_1),
             PolygonPixelRegion(vertices=PixCoord(x=[1, 2, 2], y=[1, 1, 2])).to_sky(self.wcs_1),
             PolygonPixelRegion(vertices=PixCoord(x=[2, 3, 3], y=[2, 2, 3])).to_sky(self.wcs_1)])

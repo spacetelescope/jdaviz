@@ -218,7 +218,7 @@ can load the regions into Imviz as follows:
 
 .. code-block:: python
 
-    imviz.plugins['Subset Tools']._obj.import_region("/path/to/data/myregions.reg")
+    imviz.plugins['Subsets'].import_region("/path/to/data/myregions.reg")
 
 Unsupported regions will be skipped and trigger a warning. Those that
 failed to load, if any, can be returned as a list of tuples of the
@@ -226,7 +226,7 @@ form ``(region, reason)``:
 
 .. code-block:: python
 
-    bad_regions = imviz.plugins['Subset Tools']._obj.import_region("/path/to/data/myregions.reg", return_bad_regions=True)
+    bad_regions = imviz.plugins['Subsets'].import_region("/path/to/data/myregions.reg", return_bad_regions=True)
 
 You could also define :ref:`regions:shapes` programmatically and load them; e.g.:
 
