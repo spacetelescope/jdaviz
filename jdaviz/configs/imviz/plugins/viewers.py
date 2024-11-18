@@ -81,7 +81,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
             key_pressed = data['key']
 
             if key_pressed in ('b', 'B'):
-                self.blink_once(reversed=key_pressed == 'B')  # noqa: E225
+                self.blink_once(reversed=key_pressed == 'B')
 
     def blink_once(self, reversed=False):
         # Simple blinking of images - this will make it so that only one
