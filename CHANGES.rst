@@ -29,7 +29,7 @@ API Changes
   
 - Renamed the ``Subset Tools`` plugin to ``Subsets`` which now exposes the ``subset``, ``combination_mode``, ``get_center``, and ``set_center`` in the user API. [#3293]
 
-- Metadata plugin: ``metadata_plugin.metadata`` API as been deprecated; use
+- Metadata plugin: ``metadata_plugin.metadata`` API has been deprecated; use
   ``metadata_plugin.meta`` instead, which will return a Python dictionary instead of
   list of tuples. [#3292]
 
