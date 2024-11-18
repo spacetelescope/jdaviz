@@ -20,7 +20,7 @@ def test_sonify_data(cubeviz_helper, spectrum1d_cube_larger):
     assert sonify_plg.flux_viewer.volume_level == 90
 
     # Test using spectral subset for setting audification bounds
-    spec_region = SpectralRegion(4.62360028e-07*u.m,  4.62920561e-07*u.m)
+    spec_region = SpectralRegion(4.62360028e-07*u.m, 4.62920561e-07*u.m)
     subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
     subset_plugin.import_region(spec_region)
     sonify_plg.spectral_subset_selected = 'Subset 1'

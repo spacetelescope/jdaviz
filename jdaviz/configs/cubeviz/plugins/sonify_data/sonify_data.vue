@@ -126,11 +126,13 @@
         Sonify data
       </plugin-action-button>
       <plugin-action-button v-if="!stream_active"
+        :disabled="!has_strauss"
         @click="start_stop_stream"
       >
         Start stream
       </plugin-action-button>
       <plugin-action-button v-if="stream_active"
+        :disabled="!has_strauss"
         @click="start_stop_stream"
       >
         Stop stream
