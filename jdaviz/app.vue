@@ -76,6 +76,7 @@
         <splitpanes>
           <pane size="75">
             <golden-layout
+              v-if="outputCellHasHeight"
               style="height: 100%;"
               :has-headers="state.settings.visible.tab_headers"
               @state="onLayoutChange"
@@ -162,6 +163,11 @@
 
 <script>
 export default {
+  data() {
+    return {
+      outputCellHasHeight: false,
+    };
+  },
   methods: {
     checkNotebookContext() {
       this.notebook_context = document.getElementById("ipython-main-app")
@@ -188,6 +194,13 @@ export default {
     if (jpOutputElem) {
       jpOutputElem.classList.remove('jupyter-widgets');
     }
+    /* Workaround for Lab 4.2: cells outside the viewport get the style "display: none" which causes the content to not
+     * have height. This causes an error in size calculations of golden layout from which it doesn't recover.
+     */
+    new ResizeObserver(entries => {
+      this.outputCellHasHeight = entries[0].contentRect.height > 0;
+    }).observe(this.$refs.mainapp.$el);
+    this.outputCellHasHeight = this.$refs.mainapp.$el.offsetHeight > 0
   }
 };
 </script>

@@ -1,4 +1,4 @@
-A.B.1 (unreleased)
+4.0.1 (unreleased)
 ==================
 
 Bug Fixes
@@ -14,12 +14,14 @@ Bug Fixes
 
 - Added ``nbclassic`` dependency to fix ``solara``-based popouts. [#3282]
 
+- Fixed viewer widgets displaying improperly if initialized out of view in Jupyter Lab. [#3299]
+
 Cubeviz
 ^^^^^^^
 
 - Add missing styling to API hints entry for aperture_method in the spectral extraction plugin. [#3231]
 
-- Fixed "spectrum at spaxel" tool so it no longer resets spectral axis zoom. [#3249] 
+- Fixed "spectrum at spaxel" tool so it no longer resets spectral axis zoom. [#3249]
 
 - Fixed initializing a Gaussian1D model component when ``Cube Fit`` is toggled on. [#3295]
 
