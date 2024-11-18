@@ -62,6 +62,17 @@ Slice
 Ramp Extraction
 ===============
 
-Coming soon.
+Extract a ramp from a ramp cube.
 
+Data products from infrared detectors flow through the official
+`JWST <https://jwst-pipeline.readthedocs.io/en/latest/>`_ or
+`Roman <https://roman-pipeline.readthedocs.io/en/latest/>`_ mission pipelines in levels. Infrared detectors use
+an "up-the-ramp" readout pattern, which is summarized in the
+`JWST documentation <https://jwst-docs.stsci.edu/understanding-exposure-times>`_.
 
+The Ramp Extraction plugin is a quick-look tool, and it does not support all of the features of the mission pipelines.
+The mission pipelines produce rate images from ramp cubes by fitting the samples up the ramp while accounting for
+non-linearity, jumps detected during an integration, saturation, and detector defects. These data quality checks and
+corrections are not applied in the Ramp Extraction plugin. For details on how rate images are derived from ramps, see
+the `JWST pipeline's ramp fitting step <https://roman-pipeline.readthedocs.io/en/latest/roman/ramp_fitting/index.html>`_
+or the `Roman pipeline's ramp fitting step <https://jwst-pipeline.readthedocs.io/en/latest/jwst/ramp_fitting/index.html#ramp-fitting-step>`_.
