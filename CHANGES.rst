@@ -86,6 +86,8 @@ Bug Fixes
 
 - Fixed viewer widgets displaying improperly if initialized out of view in Jupyter Lab. [#3299]
 
+- Fixed width of sliders in plugins to use full-width of plugin. [#3303]
+
 Cubeviz
 ^^^^^^^
 
