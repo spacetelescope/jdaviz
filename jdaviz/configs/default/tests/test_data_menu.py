@@ -128,15 +128,15 @@ def test_data_menu_remove_subset(specviz_helper, spectrum1d):
                                     6100 * spectrum1d.spectral_axis.unit),
                      combination_mode='new')
 
-    assert dm.layer.choices == ['test', 'test2', 'Subset 1', 'Subset 2']
+    assert dm.layer.choices == ['Subset 2', 'Subset 1', 'test2', 'test']
     dm.layer.selected = ['Subset 1']
     dm.remove_from_viewer()
 
     # subset visibility is set to false, but still appears in menu (unlike removing data)
-    assert dm.layer.choices == ['test', 'test2', 'Subset 1', 'Subset 2']
-    assert dm._obj.layer_items[2]['label'] == 'Subset 1'
+    assert dm.layer.choices == ['Subset 2', 'Subset 1', 'test2', 'test']
+    assert dm._obj.layer_items[1]['label'] == 'Subset 1'
     # TODO: sometimes appearing as mixed right now, known bug
-    assert dm._obj.layer_items[2]['visible'] is not True
+    assert dm._obj.layer_items[1]['visible'] is not True
 
     # selection should not have changed by removing subset from viewer
     assert dm.layer.selected == ['Subset 1']
@@ -178,7 +178,7 @@ def test_data_menu_view_info(specviz_helper, spectrum1d):
                                     6300 * spectrum1d.spectral_axis.unit),
                      combination_mode='new')
 
-    assert dm.layer.choices == ['test', 'test2', 'Subset 1', 'Subset 2']
+    assert dm.layer.choices == ['Subset 2', 'Subset 1', 'test2', 'test']
 
     dm.layer.selected = ["test2"]
     dm.view_info()

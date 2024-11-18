@@ -1438,6 +1438,7 @@ class LayerSelect(SelectPluginComponent):
         hint="Select layer."
       />
     """
+    sort_by = Unicode('icon').tag(sync=True)
 
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
@@ -1446,7 +1447,8 @@ class LayerSelect(SelectPluginComponent):
                  only_wcs_layers=False,
                  is_root=True,
                  has_children=False,
-                 is_child_of=None):
+                 is_child_of=None,
+                 sort_by='icon'):
         """
         Parameters
         ----------
@@ -1469,6 +1471,10 @@ class LayerSelect(SelectPluginComponent):
         default_mode : str, optional
             What mode to use when making the default selection.  Valid options: first, default_text,
             empty.
+        sort_by : str, optional
+            How to sort the ordering of items.  Valid options: zorder (top layers are first),
+            icon (alphabetical by icon, effectively by order in which layers were first
+            added and assigned an icon)
         """
         super().__init__(plugin,
                          items=items,
@@ -1491,6 +1497,7 @@ class LayerSelect(SelectPluginComponent):
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_layer_items())
 
+        self.sort_by = sort_by
         self.app.state.add_callback('layer_icons', self._update_layer_items)
         self.add_observe(viewer, self._on_viewer_selected_changed)
         self.add_observe(selected, self._update_layer_items)
@@ -1569,6 +1576,7 @@ class LayerSelect(SelectPluginComponent):
     def _layer_to_dict(self, layer_label):
         is_subset = None
         subset_type = None
+        zorder = None
         from_plugin = None
         live_plugin_results = None
         colors = []
@@ -1582,6 +1590,8 @@ class LayerSelect(SelectPluginComponent):
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
                         if is_subset:
                             subset_type = get_subset_type(layer.layer)
+                    if zorder is None:
+                        zorder = layer.state.zorder
                     if from_plugin is None:
                         from_plugin = layer.layer.data.meta.get('Plugin', None)
                     if live_plugin_results is None:
@@ -1600,6 +1610,7 @@ class LayerSelect(SelectPluginComponent):
         return {"label": layer_label,
                 "is_subset": is_subset,
                 "subset_type": subset_type,
+                "zorder": zorder,
                 "from_plugin": from_plugin,
                 "live_plugin_results": live_plugin_results,
                 "icon": self.app.state.layer_icons.get(layer_label),
@@ -1631,6 +1642,7 @@ class LayerSelect(SelectPluginComponent):
                     if is_wcs_only(layer.layer):
                         continue
                     layer.remove_callback('color', self._update_layer_items)
+                    layer.remove_callback('zorder', self._update_layer_items)
                     if hasattr(layer, 'cmap'):
                         layer.remove_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -1649,6 +1661,7 @@ class LayerSelect(SelectPluginComponent):
                     if is_wcs_only(layer.layer):
                         continue
                     layer.add_callback('color', self._update_layer_items)
+                    layer.add_callback('zorder', self._update_layer_items)
                     if hasattr(layer, 'cmap'):
                         layer.add_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -1693,7 +1706,7 @@ class LayerSelect(SelectPluginComponent):
 
         self._update_layer_items({'source': 'data_added'})
 
-    @observe('filters')
+    @observe('filters', 'sort_by')
     def _update_layer_items(self, msg={}):
         # NOTE: _on_layers_changed is passed without a msg object during init
         # TODO: Handle changes to just one item without recompiling the whole thing
@@ -1721,7 +1734,14 @@ class LayerSelect(SelectPluginComponent):
             icon = items_dict['icon']
             return icon if icon is not None else ''
 
-        layer_items.sort(key=_sort_by_icon)
+        def _sort_by_zorder(items_dict):
+            # NOTE: this works best if subscribed to a single viewer
+            return -1 * items_dict.get('zorder', 0)
+
+        if self.sort_by == 'zorder':
+            layer_items.sort(key=_sort_by_zorder)
+        else:  # icon
+            layer_items.sort(key=_sort_by_icon)
 
         self.items = manual_items + layer_items
 
