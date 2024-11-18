@@ -32,7 +32,7 @@ def test_plugin(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6500 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                    7400 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -58,13 +58,13 @@ def test_spatial_subset(cubeviz_helper, image_cube_hdu_obj):
     cubeviz_helper.load_data(image_cube_hdu_obj, data_label="Test Cube")
 
     # add a spatial region
-    cubeviz_helper.plugins['Subsets'].import_region(
+    cubeviz_helper.plugins['Subset Tools'].import_region(
         RectanglePixelRegion(center=PixCoord(x=3, y=5), width=4, height=6))
 
     # create a spectral region
     unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    cubeviz_helper.plugins['Subsets'].combination_mode = 'new'
-    cubeviz_helper.plugins['Subsets'].import_region(SpectralRegion(3.623e-7 * unit,
+    cubeviz_helper.plugins['Subset Tools'].combination_mode = 'new'
+    cubeviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(3.623e-7 * unit,
                                                                    3.627e-7 * unit))
     cubeviz_helper.app.state.drawer = True
 
@@ -130,7 +130,7 @@ def test_user_api(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label=label)
 
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6500 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                    7400 * unit))
 
     la = specviz_helper.plugins['Line Analysis']
@@ -247,7 +247,7 @@ def test_continuum_surrounding_spectral_subset(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6500 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                    7400 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -276,7 +276,7 @@ def test_continuum_spectral_same_value(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6500 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                    7400 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -305,7 +305,7 @@ def test_continuum_surrounding_invalid_width(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6500 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                    7400 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -332,7 +332,7 @@ def test_continuum_subset_spectral_entire(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6500 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                    7400 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -361,12 +361,12 @@ def test_continuum_subset_spectral_subset2(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6200 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6200 * unit,
                                                                    7000 * unit))
     specviz_helper.app.state.drawer = True
 
-    specviz_helper.plugins['Subsets'].combination_mode = 'new'
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(7100 * unit,
+    specviz_helper.plugins['Subset Tools'].combination_mode = 'new'
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(7100 * unit,
                                                                    7700 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -396,7 +396,7 @@ def test_continuum_surrounding_no_right(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6500 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                    8000 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -426,7 +426,7 @@ def test_continuum_surrounding_no_left(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6000 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6000 * unit,
                                                                    7500 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -456,7 +456,7 @@ def test_subset_changed(specviz_helper, spectrum1d):
 
     # add a region and rerun stats for that region
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6000 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6000 * unit,
                                                                    7500 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -467,7 +467,7 @@ def test_subset_changed(specviz_helper, spectrum1d):
     plugin.continuum_subset_selected = 'Surrounding'
     plugin.width = 3
 
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(6500 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(6500 * unit,
                                                                    7500 * unit))
     specviz_helper.app.state.drawer = True
 
@@ -488,7 +488,7 @@ def test_invalid_subset(specviz_helper, spectrum1d):
     # NOTE: using a subset that overlaps the right_spectrum (reference) results in errors when
     # retrieving the subset (https://github.com/spacetelescope/jdaviz/issues/1868)
     unit = u.Unit(specviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
-    specviz_helper.plugins['Subsets'].import_region(SpectralRegion(5000 * unit,
+    specviz_helper.plugins['Subset Tools'].import_region(SpectralRegion(5000 * unit,
                                                                    6000 * unit))
 
     plugin = specviz_helper.plugins['Line Analysis']

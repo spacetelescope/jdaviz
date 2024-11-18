@@ -54,7 +54,7 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
     assert sv.layers[1].visible is False
 
     # add a subset and make sure it appears for the first data entry but not the second
-    specviz_helper.plugins['Subsets'].import_region(
+    specviz_helper.plugins['Subset Tools'].import_region(
         SpectralRegion(6000 * spectrum1d.spectral_axis.unit, 6500 * spectrum1d.spectral_axis.unit))
 
     assert len(sv.layers) == 4

@@ -8,7 +8,7 @@ from traitlets import Int, List
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin
 
-__all__ = ['SubsetTools']
+__all__ = ['SubsetAppBarWidget']
 
 SUBSET_MODES = {
     'replace': ReplaceMode,
@@ -20,7 +20,7 @@ SUBSET_MODES = {
 
 
 @tool_registry('g-subset-tools')
-class SubsetTools(TemplateMixin):
+class SubsetAppBarWidget(TemplateMixin):
     template_file = __file__, "subset_tools.vue"
     select = List([]).tag(sync=True)
     subset_mode = Int(0).tag(sync=True)

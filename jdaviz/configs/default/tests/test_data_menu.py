@@ -24,7 +24,7 @@ def test_data_menu_toggles(specviz_helper, spectrum1d):
     assert len(dm._obj.visible_layers) == 1
 
     # add a subset and make sure it appears for the first data entry but not the second
-    specviz_helper.plugins['Subsets'].import_region(
+    specviz_helper.plugins['Subset Tools'].import_region(
         SpectralRegion(6000 * spectrum1d.spectral_axis.unit, 6500 * spectrum1d.spectral_axis.unit))
 
     assert len(dm._obj.layer_items) == 3
@@ -119,7 +119,7 @@ def test_data_menu_remove_subset(specviz_helper, spectrum1d):
     specviz_helper.load_data(new_spec, data_label="test2")
 
     dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
-    sp = specviz_helper.plugins['Subsets']
+    sp = specviz_helper.plugins['Subset Tools']
 
     sp.import_region(SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
                                     6100 * spectrum1d.spectral_axis.unit),
@@ -153,7 +153,7 @@ def test_data_menu_subset_appearance(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d, data_label="test")
 
     dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
-    sp = specviz_helper.plugins['Subsets']
+    sp = specviz_helper.plugins['Subset Tools']
 
     sp.import_region(SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
                                     6100 * spectrum1d.spectral_axis.unit))
@@ -169,7 +169,7 @@ def test_data_menu_view_info(specviz_helper, spectrum1d):
 
     dm = specviz_helper.viewers['spectrum-viewer']._obj.data_menu
     mp = specviz_helper.plugins['Metadata']
-    sp = specviz_helper.plugins['Subsets']
+    sp = specviz_helper.plugins['Subset Tools']
 
     sp.import_region(SpectralRegion(6000 * spectrum1d.spectral_axis.unit,
                                     6100 * spectrum1d.spectral_axis.unit),
