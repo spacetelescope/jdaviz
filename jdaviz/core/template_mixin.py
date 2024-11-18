@@ -1472,7 +1472,9 @@ class LayerSelect(SelectPluginComponent):
             What mode to use when making the default selection.  Valid options: first, default_text,
             empty.
         sort_by : str, optional
-            How to sort the ordering of items.  Valid options: zorder, icon
+            How to sort the ordering of items.  Valid options: zorder (top layers are first),
+            icon (alphabetical by icon, effectively by order in which layers were first
+            added and assigned an icon)
         """
         super().__init__(plugin,
                          items=items,
