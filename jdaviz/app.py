@@ -156,7 +156,8 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
                      'data-menu-add': 'components/data_menu_add.vue',
                      'data-menu-remove': 'components/data_menu_remove.vue',
-                     'data-menu-subset-edit': 'components/data_menu_subset_edit.vue'}
+                     'data-menu-subset-edit': 'components/data_menu_subset_edit.vue',
+                     'hover-api-hint': 'components/hover_api_hint.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')
 
@@ -186,6 +187,8 @@ class ApplicationState(State):
         True, docstring="State of the plugins drawer.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
+    show_api_hints = CallbackProperty(
+        False, docstring="Whether to show API hints.")
     logger_overlay = CallbackProperty(
         False, docstring="State of the logger history overlay.")
 

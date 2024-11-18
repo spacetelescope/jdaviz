@@ -10,7 +10,7 @@
           :close-on-content-click="false"
           v-model="data_menu_open">
           <template v-slot:activator="{ on, attrs }">
-            <div :id="'layer-legend-'+ viewer_id">
+            <div :id="'layer-legend-'+ viewer_id" class="layer-legend">
               <div 
                 v-if="Object.keys(viewer_icons).length > 1 || Object.keys(visible_layers).length == 0 || data_menu_open"
                 :class="loaded_n_data === 0 && !data_menu_open ? 'viewer-label pulse' : 'viewer-label'"
@@ -61,6 +61,13 @@
             </div>
           </template>
           <v-list :id="'dm-content-' + viewer_id" style="width: 400px" class="overflow-y-auto">
+            <v-list-item v-if="api_hints_enabled" style="min-height: 12px"> 
+              <v-list-item-content> 
+                <span class="api-hint"> 
+                  <b>dm = {{ config }}.viewers['{{viewer_id}}'].data_menu</b>
+                </span> 
+              </v-list-item-content> 
+            </v-list-item> 
             <v-list-item class="dm-header">
               <v-list-item-icon>
                 <j-tooltip
@@ -96,7 +103,8 @@
                   dense
                   :items="orientation_layer_items"
                   v-model="orientation_layer_selected"
-                  label="Orientation"
+                  :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'" 
+                  :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : ''" 
                   item-text="label"
                   item-value="label"
                   :hide-details="true"
@@ -128,12 +136,20 @@
                   :dataset_items="dataset_items"
                   :subset_tools="subset_tools"
                   :loaded_n_data="loaded_n_data"
+                  :api_hints_enabled="api_hints_enabled"
                   @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
                   @create-subset="(subset_type) => {create_subset({subset_type: subset_type}); data_menu_open = false}"
                 >
                 </data-menu-add>
               </v-list-item-action>
             </v-list-item>
+            <v-list-item 
+              v-if="api_hints_enabled" 
+            > 
+              <v-list-item-content> 
+                <span class="api-hint">dm.layer = {{ layer_selected }}</span> 
+              </v-list-item-content> 
+            </v-list-item> 
             <v-list-item-group
               v-model="dm_layer_selected"
               active-class="active-list-item"
@@ -142,7 +158,10 @@
               dense
             >
               <div>
-              <v-list-item v-for="item in layer_items.slice().reverse()">
+              <v-list-item 
+                v-for="item in layer_items.slice().reverse()" 
+                class="layer-select" 
+              > 
                 <v-list-item-icon>
                   <j-layer-viewer-icon-stylized
                       :label="item.label"
@@ -165,11 +184,14 @@
                   </span>
                 </v-list-item-content>
                 <v-list-item-action>
-                  <j-tooltip tooltipcontent="Toggle visibility">
+                  <j-tooltip 
+                    :tooltipcontent="api_hints_enabled ? '' : 'Toggle visibility'" 
+                  > 
                     <plugin-switch
                       :value="item.visible"
                       @click="(value) => {set_layer_visibility({layer: item.label, value: value})}"
-                      :api_hint='"dm.set_layer_visibility("+viewer_id+", "'
+                      @mouseover = "() => {hover_api_hint = 'dm.set_layer_visibility(\'' + item.label + '\', '+boolToString(item.visible)+')'}" 
+                      @mouseleave = "() => {if (!lock_hover_api_hint) {hover_api_hint = ''}}"
                       :api_hints_enabled="false"
                       :use_eye_icon="true"
                     />
@@ -178,6 +200,11 @@
               </v-list-item>
               </div>
             </v-list-item-group>
+            <hover-api-hint 
+              v-if="api_hints_enabled" 
+              :hover_api_hint.sync="hover_api_hint" 
+              :lock_hover_api_hint.sync="lock_hover_api_hint" 
+            /> 
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
               <v-list-item-content style="display: inline-block">
                 <data-menu-remove
@@ -186,6 +213,7 @@
                   :delete_viewer_tooltip="delete_viewer_tooltip"
                   :delete_app_enabled="delete_app_enabled"
                   :delete_app_tooltip="delete_app_tooltip"
+                  :api_hints_enabled="api_hints_enabled" 
                   @remove-from-viewer="remove_from_viewer"
                   @remove-from-app="remove_from_app"
                 />
@@ -208,6 +236,7 @@
                   :subset_edit_modes="subset_edit_modes"
                   :subset_tools="subset_tools"
                   :subset_selected="layer_selected[0]"
+                  :api_hints_enabled="api_hints_enabled" 
                   @view-info="view_info"
                   @modify-subset="(combination_mode, tool) => {modify_subset({combination_mode: combination_mode,
                                                                               subset_type: tool});
@@ -247,6 +276,8 @@
     data: function () {
       return {
         data_menu_open: false,
+        hover_api_hint: '',
+        lock_hover_api_hint: false
       }
     },
     mounted() {
@@ -273,6 +304,14 @@
         element = element.parentElement;
       }
     },
+    watch: {
+      force_open_menu: function (val) {
+        if (val) {
+          this.data_menu_open = true;
+          this.force_open_menu = false;
+        }
+      }
+    },
     methods: {
       onScroll(e) {
         const dataMenuHeight = document.getElementById(`layer-legend-${this.viewer_id}`).parentElement.getBoundingClientRect().height
@@ -280,6 +319,13 @@
         if (this.data_menu_open && document.getElementById(`dm-target-${this.viewer_id}`)) {
           const menuContent = document.getElementById(`dm-content-${this.viewer_id}`);
           menuContent.parentElement.style.top = top + "px";
+        }
+      },
+      boolToString(b) {
+        if (b) {
+          return 'True'
+        } else {
+          return 'False'
         }
       }
     },
@@ -325,7 +371,7 @@
   .v-list-item__icon {
     margin-top: 6px !important;
   }
-  .v-list-item:nth-child(even) {
+  .layer-select:nth-child(even) {
     /* alternating row colors */
     background-color: #f1f2f85a;
   }
@@ -334,7 +380,7 @@
     font-weight: 500;
   }
   .dm-header, .dm-footer {
-    background-color: #003B4D;
+    background-color: #003B4D !important;
     font-weight: bold;
   }
   .dm-header > .v-list-item__icon, .dm-header > .v-list-item__content, .dm-header > .v-list-item__action,
