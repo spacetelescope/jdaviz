@@ -60,10 +60,10 @@
         <span class="v-messages v-messages__message text--secondary">
           Note: this plugin does not detecting defects in ramps, fit the ramps, or apply corrections. For details on
           how rate images are derived from ramps, see the documentation for the
-          <a href='https://roman-pipeline.readthedocs.io/en/latest/roman/ramp_fitting/index.html' target="_blank">
-            Roman calibration pipeline</a> or the
-          <a href='https://jwst-pipeline.readthedocs.io/en/latest/jwst/ramp_fitting/index.html#ramp-fitting-step' target="_blank">
-            JWST calibration pipeline</a>.
+          <j-external-link link='https://roman-pipeline.readthedocs.io/en/latest/roman/ramp_fitting/index.html' linktext='Roman pipeline'>
+          </j-external-link> or the
+          <j-external-link link='https://jwst-pipeline.readthedocs.io/en/latest/jwst/ramp_fitting/index.html#ramp-fitting-step' linktext='JWST pipeline'>
+          </j-external-link>.
         </span>
       </v-row>
 
