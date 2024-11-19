@@ -115,15 +115,11 @@ def check_if_unit_is_per_solid_angle(unit, return_unit=False):
             # to check type
             new_unit_str = ' '.join(i).translate(str.maketrans('', '', '()'))
             new_unit = u.Unit(new_unit_str)
-            if new_unit.physical_type == 'solid angle':
+            if new_unit.physical_type == 'solid angle' or new_unit == PIX2 or new_unit_str == 'spaxel':  # noqa
+                # square pixel and spaxel should be considered square angle units
                 if return_unit:  # area units present and requested to be returned
                     return new_unit
                 return True  # area units present but not requested to be returned
-            # square pixel should be considered a square angle unit
-            if new_unit == PIX2:
-                if return_unit:
-                    return new_unit
-                return True
 
     # in the case there are no area units, but return units were requested
     if return_unit:
