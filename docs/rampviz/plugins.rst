@@ -74,5 +74,5 @@ The Ramp Extraction plugin is a quick-look tool, and it does not support all of 
 The mission pipelines produce rate images from ramp cubes by fitting the samples up the ramp while accounting for
 non-linearity, jumps detected during an integration, saturation, and detector defects. These data quality checks and
 corrections are not applied in the Ramp Extraction plugin. For details on how rate images are derived from ramps, see
-the JWST pipeline's :doc:`jwst:jwst/ramp_fitting/index` step or the Roman pipeline's
+the JWST pipeline's :ref:`jwst:ramp_fitting_step` step or the Roman pipeline's
 :ref:`romancal:ramp_fitting_step` step.
