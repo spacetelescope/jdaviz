@@ -52,7 +52,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     * :meth:`~jdaviz.core.template_mixin.PluginTemplateMixin.close_in_tray`
     * ``align_by`` (`~jdaviz.core.template_mixin.SelectPluginComponent`)
     * ``wcs_fast_approximation``
-    * :meth:`delete_subsets``
+    * :meth:`delete_subsets`
     * ``viewer``
     * ``orientation``
     * ``rotation_angle``
@@ -289,6 +289,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         self.need_clear_subsets = len(self.app.data_collection.subset_groups) > 0
 
     def delete_subsets(self):
+        """
+        Delete all subsets app-wide.  Required before changing ``align_by``.
+        """
         # subsets will be deleted on changing link type:
         for subset_group in self.app.data_collection.subset_groups:
             self.app.data_collection.remove_subset_group(subset_group)
