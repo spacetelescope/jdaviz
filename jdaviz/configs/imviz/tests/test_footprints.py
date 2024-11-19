@@ -240,8 +240,8 @@ def test_footprint_updates_on_rotation(imviz_helper):
     assert np.concatenate([marks[0].y, marks[1].y]).min() < -3
 
     # now rotate to north-up east-left:
-    orientation = imviz_helper.plugins['Orientation']._obj
-    orientation.create_north_up_east_left(set_on_create=True)
+    orientation = imviz_helper.plugins['Orientation']
+    orientation.create_north_up_east_left(set_as_orientation=True)
 
     # If all footprint orientations have been updated, the lowest
     # mark should still be centered low. If the footprint
