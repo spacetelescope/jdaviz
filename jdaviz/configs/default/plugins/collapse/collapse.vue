@@ -19,15 +19,14 @@
     />
 
     <v-row>
-      <v-select
-        attach
+      <plugin-select
         :items="function_items.map(i => i.label)"
-        v-model="function_selected"
-        :label="api_hints_enabled ? 'plg.function =' : 'Function'"
-        :class="api_hints_enabled ? 'api-hint' : null"
+        :selected.sync="function_selected"
+        label="Function"
+        api_hint="plg.function ="
+        :api_hints_enabled="api_hints_enabled"
         hint="Function to use in the collapse."
-        persistent-hint
-      ></v-select>
+      />
     </v-row>
 
     <plugin-subset-select

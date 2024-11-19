@@ -137,6 +137,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
+                     'plugin-select': 'components/plugin_select.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
                      'plugin-subset-select': 'components/plugin_subset_select.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
