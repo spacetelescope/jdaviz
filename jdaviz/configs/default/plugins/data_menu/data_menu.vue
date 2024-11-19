@@ -112,9 +112,13 @@
                 >
                   <template slot="selection" slot-scope="data">
                     <div class="single-line" style="width: 100%">
-                      <span>
-                        <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-                        {{ data.item.label }}
+                      <span :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : null">
+                        <j-layer-viewer-icon v-if="data.item.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+                        {{ api_hints_enabled ?
+                          '\'' + data.item.label + '\''
+                          :
+                          data.item.label
+                        }}
                       </span>
                     </div>
                   </template>

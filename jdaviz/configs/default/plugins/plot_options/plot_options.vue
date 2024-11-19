@@ -142,8 +142,12 @@
           dense
         >
           <template v-slot:selection="{ item }">
-            <span>
-              {{ item.text }}
+            <span :class="api_hints_enabled ? 'api-hint' : null">
+              {{ api_hints_enabled ?
+                '\'' + item.text + '\''
+                :
+                item.text
+              }}
             </span>
           </template>
           <template v-slot:item="{ item }">
@@ -516,7 +520,13 @@
             dense
           >
             <template v-slot:selection="{ item, index }">
-              <span>{{ item.text }}</span>
+              <span :class="api_hints_enabled ? 'api-hint' : null">
+                {{ api_hints_enabled ?
+                  '\'' + item.text + '\''
+                  :
+                  item.text
+                }}
+              </span>
             </template>
             <template v-slot:item="{ item }">
               <v-card :style="'background: '+ colorStyle(item, cmap_samples)" width="100%" class="d-flex justify-center align-center text-center">

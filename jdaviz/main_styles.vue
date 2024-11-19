@@ -271,29 +271,32 @@ span.api-hint, span.api-hint-header {
   color: #007BA1 !important;
   font-family: monospace;
   font-size: 12px;  
+  letter-spacing: -0.05em !important;
 }
 
 span.api-hint-header {
   font-weight: bold;
 }
 
-.api-hint :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
+.api-hint :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label, .api-hint .v-label {
   color: #007BA1 !important;
   font-family: monospace;
   font-size: 10px !important;
   overflow-wrap: break-word;
-
+  letter-spacing: -0.05em !important;
+  user-select: text !important;
 }
 
 .api-hint :is(.v-select__slot, .v-text-field__slot) > .v-label {
   font-size: 13px !important;
 }
 
-
 .api-hint .v-alert__content, .api-hint.slider-label {
   color: #007BA1 !important;
   font-family: monospace;
   font-size: 10px !important;
+  letter-spacing: -0.05em !important;
+  user-select: text !important;
 }
 
 .api-hint.v-btn {
@@ -302,6 +305,11 @@ span.api-hint-header {
   font-size: 12px !important;
   overflow-wrap: break-word;
   text-transform: none !important;
+}
+
+.api-hint-invert-color span {
+  color: #C6F0FD !important;
+  filter: invert(1) !important;
 }
 
 .api-hint-invert-color :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {

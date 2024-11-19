@@ -8,19 +8,23 @@
         <v-icon v-if="multiselect">{{isSelected() ? "mdi-checkbox-marked" : "mdi-checkbox-blank-outline"}}</v-icon>
         <v-icon v-else>{{isSelected() ? "mdi-radiobox-marked" : "mdi-radiobox-blank"}}</v-icon>
     </v-btn>
-    <span>
-      <j-layer-viewer-icon v-if="item.icon" :icon="item.icon" :prevent_invert_if_dark="false"></j-layer-viewer-icon>
-      <v-icon v-else-if="item.color && item.type" left :color="item.color">
+    <span :class="api_hints_enabled ? 'api-hint' : null">
+      <j-layer-viewer-icon v-if="item.icon && !api_hints_enabled" :icon="item.icon" :prevent_invert_if_dark="false"></j-layer-viewer-icon>
+      <v-icon v-else-if="item.color && item.type && !api_hints_enabled" left :color="item.color">
         {{ item.type=='spectral' ? 'mdi-chart-bell-curve' : 'mdi-chart-scatter-plot' }}
       </v-icon>
-      {{ item.label }}
+      {{ api_hints_enabled ?
+          '\'' + item.label + '\''
+          :
+          item.label
+      }}
     </span>
   </div>
 </template>
 
 <script>
 module.exports = {
-  props: ['item', 'selected', 'multiselect', 'single_select_allow_blank'],
+  props: ['item', 'selected', 'multiselect', 'single_select_allow_blank', 'api_hints_enabled'],
   methods: {
     isSelected() {
       if (this.multiselect) {

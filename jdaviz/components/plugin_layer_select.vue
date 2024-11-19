@@ -26,9 +26,13 @@
             {{ data.item.label }}
           </span>
         </v-chip>
-        <span v-else>
-          <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-          {{ data.item.label }}
+        <span v-else :class="api_hints_enabled ? 'api-hint' : null">
+          <j-layer-viewer-icon v-if="data.item.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+          {{ api_hints_enabled ?
+            '\'' + data.item.label + '\''
+            :
+            data.item.label
+          }}
         </span>
       </div>
     </template>

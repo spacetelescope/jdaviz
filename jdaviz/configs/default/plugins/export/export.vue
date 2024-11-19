@@ -251,7 +251,7 @@
       :auto.sync="filename_auto"
       :invalid_msg="filename_invalid_msg"
       label="Filename"
-      api_hint="plg.filename ="
+      :api_hint="'plg.filename = \''+filename_value+'\''"
       :api_hints_enabled="api_hints_enabled"
       hint="Export to a file on disk."
     ></plugin-auto-label>
