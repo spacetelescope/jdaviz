@@ -12,27 +12,30 @@
       :hint="hint ? hint : 'Select layer.'"
       :rules="rules ? rules : []"
       :multiple="multiselect"
-      :chips="multiselect"
+      :chips="multiselect && !api_hints_enabled"
       item-text="label"
       item-value="label"
       :persistent-hint="!disable_persistent_hint"
       :hide-details="disable_persistent_hint"
     >
-    <template slot="selection" slot-scope="data">
+    <template v-slot:selection="{ item, index }">
       <div class="single-line" style="width: 100%">
-        <v-chip v-if="multiselect" style="width: calc(100% - 10px)">
+        <span v-if="api_hints_enabled" class="api-hint" :style="index > 0 ? 'display: none' : null">
+          {{ multiselect ?
+            selected
+            :
+            '\'' + selected + '\''
+          }}
+        </span>
+        <v-chip v-else-if="multiselect" style="width: calc(100% - 10px)">
           <span>
-            <j-layer-viewer-icon v-if="data.item.icon" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-            {{ data.item.label }}
+            <j-layer-viewer-icon v-if="data.item.icon" :icon="item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+            {{ item.label }}
           </span>
         </v-chip>
-        <span v-else :class="api_hints_enabled ? 'api-hint' : null">
-          <j-layer-viewer-icon v-if="data.item.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-          {{ api_hints_enabled ?
-            '\'' + data.item.label + '\''
-            :
-            data.item.label
-          }}
+        <span v-else >
+          <j-layer-viewer-icon v-if="item.icon" span_style="margin-right: 4px" :icon="item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+          {{ item.label }}
         </span>
       </div>
     </template>
