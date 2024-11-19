@@ -75,4 +75,4 @@ The mission pipelines produce rate images from ramp cubes by fitting the samples
 non-linearity, jumps detected during an integration, saturation, and detector defects. These data quality checks and
 corrections are not applied in the Ramp Extraction plugin. For details on how rate images are derived from ramps, see
 the JWST pipeline's :doc:`jwst:jwst/ramp_fitting/index` step or the Roman pipeline's
-:doc:`romancal:roman/ramp_fitting/index` step.
+:ref:`romancal:ramp_fitting_step` step.
