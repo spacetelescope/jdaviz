@@ -65,7 +65,7 @@ Ramp Extraction
 Extract a ramp from a ramp cube.
 
 Data products from infrared detectors flow through the official
-`JWST <https://jwst-pipeline.readthedocs.io/en/latest/>`_ or
+:ref:`JWST <jwst:user-docs>` or
 `Roman <https://roman-pipeline.readthedocs.io/en/latest/>`_ mission pipelines in levels. Infrared detectors use
 an "up-the-ramp" readout pattern, which is summarized in the
 `JWST documentation <https://jwst-docs.stsci.edu/understanding-exposure-times>`_.
