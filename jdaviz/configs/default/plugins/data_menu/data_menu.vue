@@ -108,7 +108,7 @@
                   item-text="label"
                   item-value="label"
                   :hide-details="true"
-                  style="padding-top: 8px !important; display: inline-block; width: 212px"
+                  style="padding-top: 8px !important; padding-bottom: 4px !important; display: inline-block; width: 212px"
                 >
                   <template slot="selection" slot-scope="data">
                     <div class="single-line" style="width: 100%">
@@ -370,6 +370,11 @@
   }
   .v-list-item__icon {
     margin-top: 6px !important;
+  }
+  .layer-select {
+    /* spacing between entries so selections are more apparent */
+    margin-top: 1px !important;
+    margin-bottom: 1px !important;
   }
   .layer-select:nth-child(even) {
     /* alternating row colors */

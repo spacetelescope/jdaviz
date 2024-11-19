@@ -278,15 +278,15 @@ span.api-hint-header {
 }
 
 .api-hint :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
-    color: #007BA1 !important;
-    font-family: monospace;
-    font-size: 10px !important;
-    overflow-wrap: break-word;
+  color: #007BA1 !important;
+  font-family: monospace;
+  font-size: 10px !important;
+  overflow-wrap: break-word;
 
 }
 
 .api-hint :is(.v-select__slot, .v-text-field__slot) > .v-label {
-    font-size: 13px !important;
+  font-size: 13px !important;
 }
 
 
@@ -306,6 +306,10 @@ span.api-hint-header {
 
 .api-hint-invert-color :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
   filter: invert(1) !important;
+}
+
+.api-hint-invert-color :is(.v-select__slot) > .v-label {
+  color: #C6F0FD !important;
 }
 
 </style>
