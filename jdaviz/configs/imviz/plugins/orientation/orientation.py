@@ -543,7 +543,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self.orientation.selected = label
 
     def create_north_up_east_left(self, label="North-up, East-left",
-                                  set_on_create=False):
+                                  set_on_create=True):
         """
         Set the rotation angle and flip to achieve North up and East left
         according to the reference image WCS.
@@ -568,7 +568,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self.orientation.selected = label
 
     def create_north_up_east_right(self, label="North-up, East-right",
-                                   set_on_create=False):
+                                   set_on_create=True):
         """
         Set the rotation angle and flip to achieve North up and East right
         according to the reference image WCS.
