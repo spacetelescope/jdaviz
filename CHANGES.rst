@@ -92,6 +92,8 @@ Bug Fixes
 
 - Fixed width of sliders in plugins to use full-width of plugin. [#3303]
 
+- Raise an error when attempting to open in a popout or sidecar when not supported (i.e. within VSCode). [#3309]
+
 Cubeviz
 ^^^^^^^
 
