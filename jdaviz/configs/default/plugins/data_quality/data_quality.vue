@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Data Quality"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#data-quality'"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button">
