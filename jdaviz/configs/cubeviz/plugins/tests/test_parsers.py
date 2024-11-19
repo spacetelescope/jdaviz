@@ -6,7 +6,7 @@ from specutils import Spectrum1D, SpectralRegion
 from glue_astronomy.translators.spectrum1d import PaddedSpectrumWCS
 from numpy.testing import assert_allclose, assert_array_equal
 
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.utils import PRIHDR_KEY
 
 

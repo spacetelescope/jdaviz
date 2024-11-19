@@ -24,16 +24,16 @@ from specutils import Spectrum1D
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.default.plugins.data_menu import DataMenu
 from jdaviz.core.astrowidgets_api import AstrowidgetsImageViewerMixin
+from jdaviz.core.custom_units_and_equivs import _eqv_sb_per_pixel_to_per_angle
 from jdaviz.core.events import SnackbarMessage
 from jdaviz.core.freezable_state import FreezableProfileViewerState
 from jdaviz.core.marks import LineUncertainties, ScatterMask, OffscreenLinesMarks
 from jdaviz.core.registries import viewer_registry
 from jdaviz.core.template_mixin import WithCache
 from jdaviz.core.user_api import ViewerUserApi
+from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
 from jdaviz.utils import (ColorCycler, get_subset_type, _wcs_only_label,
-                          layer_is_image_data, layer_is_not_dq,
-                          _eqv_sb_per_pixel_to_per_angle)
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+                          layer_is_image_data, layer_is_not_dq)
 
 uc = UnitConverter()
 

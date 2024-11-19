@@ -134,7 +134,7 @@ def test_data_quality_plugin(imviz_helper, tmp_path):
     label_mouseover_text = label_mouseover.as_text()[0]
 
     # bad pixels with flag == 0 have flux == NaN
-    expected_flux_label = '+nan MJy/sr'
+    expected_flux_label = '+nan MJy / sr'
     assert expected_flux_label in label_mouseover_text
 
     # check that the decomposed DQ flag is at the end of the flux label's line:

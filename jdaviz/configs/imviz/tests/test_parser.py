@@ -16,7 +16,7 @@ from stdatamodels import asdf_in_fits
 from jdaviz.configs.imviz.helper import split_filename_with_fits_ext
 from jdaviz.configs.imviz.plugins.parsers import (
     parse_data, _validate_fits_image2d, _validate_bunit, _parse_image, HAS_ROMAN_DATAMODELS)
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units_and_equivs import PIX2
 
 
 @pytest.mark.parametrize(

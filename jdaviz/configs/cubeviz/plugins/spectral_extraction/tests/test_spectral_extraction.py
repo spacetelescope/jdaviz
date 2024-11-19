@@ -8,13 +8,16 @@ from astropy.nddata import NDDataArray, StdDevUncertainty
 from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.exceptions import AstropyUserWarning
-
 from glue.core.roi import CircularROI, RectangularROI
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
 from specutils import Spectrum1D
 from specutils.manipulation import FluxConservingResampler
+
+from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               flux_conversion_general)
 
 calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/"
 
@@ -650,3 +653,68 @@ def test_spectral_extraction_scientific_validation(
         ).to_value(u.dimensionless_unscaled) - 1
     ))
     assert median_abs_relative_dev < expected_rtol
+
+
+@pytest.mark.parametrize("flux_angle_unit", [(u.Unit(x), u.sr) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS]  # noqa
+                                              + [(u.Unit(x), PIX2) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])  # noqa
+def test_spectral_extraction_flux_unit_conversions(cubeviz_helper,
+                                                   spectrum1d_cube_custom_fluxunit,
+                                                   flux_angle_unit):
+    """
+    Test that cubeviz spectral extraction plugin works with all possible
+    flux unit conversions for a cube loaded in units spectral/photon flux
+    density. The spectral extraction result will remain in the native
+    data unit, but the extraction preview should be converted to the
+    display unit.
+    """
+
+    flux_unit, angle_unit = flux_angle_unit
+
+    sb_cube = spectrum1d_cube_custom_fluxunit(fluxunit=flux_unit / angle_unit,
+                                              shape=(5, 4, 4),
+                                              with_uncerts=True)
+    cubeviz_helper.load_data(sb_cube)
+
+    spectrum_viewer = cubeviz_helper.app.get_viewer(
+        cubeviz_helper._default_spectrum_viewer_reference_name)
+
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    se = cubeviz_helper.plugins['Spectral Extraction']
+    se.keep_active = True  # keep active for access to preview markers
+
+    # equivalencies for unit conversion, for comparison of outputs
+    equivs = all_flux_unit_conversion_equivs(se.dataset.selected_obj.meta.get('PIXAR_SR', 1.0),
+                                             se.dataset.selected_obj.spectral_axis)
+
+    for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        if new_flux_unit != flux_unit:
+
+            uc.flux_unit.selected = flux_unit.to_string()
+            uc.spectral_y_type.selected = 'Flux'
+
+            # and set back to sum initially so units will always be flux not sb
+            se.function.selected = 'Sum'
+            se.extract()
+
+            original_sum_y_values = se._obj.marks['extract'].y
+
+            # set to new unit
+            uc.flux_unit.selected = new_flux_unit
+            assert spectrum_viewer.state.y_display_unit == new_flux_unit
+
+            # still using 'sum', results should be in flux
+            collapsed = se.extract()
+
+            # make sure extraction preview was translated to new display units
+            new_sum_y_values = se._obj.marks['extract'].y
+            new_converted_to_old_unit = flux_conversion_general(new_sum_y_values,
+                                                                u.Unit(new_flux_unit),
+                                                                u.Unit(flux_unit),
+                                                                equivs, with_unit=False)
+            np.testing.assert_allclose(original_sum_y_values, new_converted_to_old_unit)
+
+            # collapsed result will still have the native data flux unit
+            assert uc.spectral_y_type.selected == 'Flux'
+            assert collapsed.flux.unit == collapsed.uncertainty.unit == flux_unit
+            # but display units in spectrum viewer should reflect new flux unit selection
+            assert se._obj.spectrum_y_units == se._obj.results_units == new_flux_unit

@@ -1,8 +1,11 @@
 import os
 
+import astropy.units as u
 import numpy as np
 from numpy.testing import assert_allclose
+import pytest
 
+from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 from jdaviz.core.marks import MarkersMark
 from jdaviz.configs.imviz.tests.utils import BaseImviz_WCS_NoWCS
 
@@ -176,6 +179,67 @@ def test_markers_cubeviz(tmp_path, cubeviz_helper, spectrum1d_cube):
     assert mp.export_table() is None
     assert len(_get_markers_from_viewer(fv).x) == 0
     assert len(_get_markers_from_viewer(sv).x) == 0
+
+
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+def test_markers_cubeviz_flux_unit_conversion(cubeviz_helper,
+                                              spectrum1d_cube_custom_fluxunit,
+                                              flux_unit, angle_unit, new_flux_unit):
+    """
+    Test the markers plugin with all possible unit conversions for
+    cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
+
+    The markers plugin should respect the choice of flux and angle
+    unit selected in the Unit Conversion plugin, and inputs and results should
+    be converted based on selection. All conversions between units in the
+    flux dropdown menu in the unit conversion plugin should be supported.
+    """
+
+    if new_flux_unit == flux_unit:  # skip 'converting' to same unit
+        return
+
+    new_flux_unit_str = new_flux_unit.to_string()
+
+    # load cube with specified unit
+    cube = spectrum1d_cube_custom_fluxunit(fluxunit=flux_unit / angle_unit,
+                                           shape=(5, 5, 4),
+                                           with_uncerts=True)
+    cubeviz_helper.load_data(cube, data_label="test")
+
+    # get plugins
+    mp = cubeviz_helper.plugins['Markers']
+    uc = cubeviz_helper.plugins['Unit Conversion']._obj
+
+    mp.keep_active = True
+
+    fv = cubeviz_helper.app.get_viewer('flux-viewer')
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+    label_mouseover._viewer_mouse_event(fv,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 0, 'y': 0}})
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown',
+                                      'key': 'm'})
+
+    # set to new unit
+    uc.flux_unit.selected = new_flux_unit_str
+    new_cube_unit_str = (new_flux_unit / angle_unit).to_string()
+
+    # add a new marker at the same location
+    label_mouseover._viewer_mouse_event(fv,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 0,
+                                                    'y': 0}})
+    # mouseover should have changed to new unit
+    assert label_mouseover.as_dict()['value:unit'] == new_cube_unit_str
+
+    mp._obj._on_viewer_key_event(fv, {'event': 'keydown',
+                                      'key': 'm'})
+
+    # make sure last marker added to table reflects new unit selection
+    last_row = mp.export_table()[-1]
+    assert last_row['value:unit'] == new_cube_unit_str
 
 
 class TestImvizMultiLayer(BaseImviz_WCS_NoWCS):
