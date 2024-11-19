@@ -186,7 +186,7 @@
       <plugin-switch
         :value.sync="axes_visible_value"
         label="Show axes"
-        api_hint="plt.axes_visible = "
+        api_hint="plg.axes_visible = "
         :api_hints_enabled="api_hints_enabled"
         />
     </glue-state-sync-wrapper>

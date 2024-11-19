@@ -199,7 +199,7 @@
                 action_tooltip="Create Trace"
                 :action_spinner="trace_spinner"
                 add_results_api_hint="trace_results"
-                action_api_hint="plt.create_trace()"
+                action_api_hint="plg.create_trace()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_trace"
               ></plugin-add-results>
@@ -326,7 +326,7 @@
                 action_tooltip="Create Background Image"
                 :action_spinner="bg_img_spinner"
                 add_results_api_hint="plg.bg_results"
-                action_api_hint="plt.export_bg_img()"
+                action_api_hint=plg.export_bg_img()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_img"
               ></plugin-add-results>
@@ -353,7 +353,7 @@
                 action_label="Export"
                 action_tooltip="Create Background Spectrum"
                 add_results_api_hint="plg.bg_spec_results"
-                action_api_hint="plt.export_bg_spec()"
+                action_api_hint="plg.export_bg_spec()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_spec"
               ></plugin-add-results>
@@ -380,7 +380,7 @@
                 action_label="Export"
                 action_tooltip="Create Background Subtracted Image"
                 add_results_api_hint="plg.bg_sub_results"
-                action_api_hint="plt.export_bg_sub()"
+                action_api_hint="plg.export_bg_sub()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_sub"
               ></plugin-add-results>
@@ -521,7 +521,7 @@
         :action_disabled="ext_specreduce_err.length > 0"
         :action_spinner="spinner"
         add_results_api_hint="plg.ext_results"
-        action_api_hint="plt.export_extract_spectrum()"
+        action_api_hint=plg.export_extract_spectrum()"
         :api_hints_enabled="api_hints_enabled"
         @click:action="extract_spectrum"
       ></plugin-add-results>
