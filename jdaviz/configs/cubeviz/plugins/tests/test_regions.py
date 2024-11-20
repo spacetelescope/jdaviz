@@ -60,7 +60,7 @@ class TestLoadRegions(BaseRegionHandler):
         # Manually draw wavelength range.
         unit = u.Unit(self.cubeviz.plugins['Unit Conversion'].spectral_unit.selected)
         self.cubeviz.plugins['Subset Tools'].import_region(SpectralRegion(4.892 * unit,
-                                                                     4.896 * unit))
+                                                                          4.896 * unit))
         self.cubeviz.app.session.edit_subset_mode.edit_subset = None
 
         # Get interactive spatial regions only.
