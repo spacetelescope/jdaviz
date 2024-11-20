@@ -36,12 +36,12 @@ This plugin gives access to per-viewer and per-layer plotting options.
 
 .. _mosviz-subset-plugin:
 
-Subsets
-=======
+Subset Tools
+============
 
 .. seealso::
 
-    :ref:`Subsets <imviz-subset-plugin>`
+    :ref:`Subset Tools <imviz-subset-plugin>`
         Imviz documentation describing the concept of subsets in Jdaviz.
 
 .. _imviz_export_markers:

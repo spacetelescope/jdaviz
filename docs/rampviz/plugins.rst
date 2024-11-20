@@ -30,12 +30,12 @@ To show axes on image viewers, toggle on the "Show axes" option at the bottom of
 
 .. _rampviz-subset-plugin:
 
-Subsets
-=======
+Subset Tools
+============
 
 .. seealso::
 
-    :ref:`Subsets <imviz-subset-plugin>`
+    :ref:`Subset Tools <imviz-subset-plugin>`
         Imviz documentation describing the concept of subsets in Jdaviz.
 
 

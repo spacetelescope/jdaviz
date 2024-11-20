@@ -62,10 +62,10 @@ SUBSET_TO_PRETTY = {v: k for k, v in SUBSET_MODES_PRETTY.items()}
 COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
-@tray_registry('g-subset-plugin', label="Subsets")
+@tray_registry('g-subset-plugin', label="Subset Tools")
 class SubsetPlugin(PluginTemplateMixin, DatasetSelectMixin):
     """
-    See the :ref:`Subsets <imviz-subset-plugin>` for more details.
+    See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:

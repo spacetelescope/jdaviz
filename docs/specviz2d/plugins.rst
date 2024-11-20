@@ -30,12 +30,12 @@ Plot Options
 
 .. _specviz2d-subset-plugin:
 
-Subsets
-=======
+Subset Tools
+============
 
 .. seealso::
 
-    :ref:`Subsets <imviz-subset-plugin>`
+    :ref:`Subset Tools <imviz-subset-plugin>`
         Imviz documentation describing the concept of subsets in Jdaviz.
 
 Markers
