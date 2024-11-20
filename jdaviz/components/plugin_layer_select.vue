@@ -29,12 +29,12 @@
         </span>
         <v-chip v-else-if="multiselect" style="width: calc(100% - 10px)">
           <span>
-            <j-layer-viewer-icon v-if="data.item.icon" :icon="item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+            <j-layer-viewer-icon v-if="data.item.icon" :icon="item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
             {{ item.label }}
           </span>
         </v-chip>
         <span v-else >
-          <j-layer-viewer-icon v-if="item.icon" span_style="margin-right: 4px" :icon="item.icon" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+          <j-layer-viewer-icon v-if="item.icon" span_style="margin-right: 4px" :icon="item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
           {{ item.label }}
         </span>
       </div>
