@@ -29,7 +29,7 @@ API Changes
 -----------
 - Removed API access to plugins that have passed the deprecation period: Links Control, Canvas Rotation, Export Plot. [#3270]
   
-- Renamed the ``Subset Tools`` plugin to ``Subsets`` which now exposes the ``subset``, ``combination_mode``, ``get_center``, and ``set_center`` in the user API. [#3293]
+- Subset Tools plugin now exposes the ``subset``, ``combination_mode``, ``get_center``, and ``set_center`` in the user API. [#3293, #3304]
 
 - Metadata plugin: ``metadata_plugin.metadata`` API has been deprecated; use
   ``metadata_plugin.meta`` instead, which will return a Python dictionary instead of
