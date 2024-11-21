@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import StdDevUncertainty
+from astropy.nddata import StdDevUncertainty, InverseVariance
 from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
@@ -205,6 +205,7 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
         target_flux_unit = flux.unit / PIX2
     elif check_if_unit_is_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
         # We need to convert spaxel to pixel squared, since spaxel isn't fully supported by astropy
+        # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
         target_flux_unit = flux.unit * u.Unit('spaxel') / PIX2
 
     if target_wave_unit is None and hdulist is not None:
@@ -451,6 +452,9 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         if attr == "mask":
             flux = val << u.dimensionless_unscaled  # DQ flags have no unit
         elif attr == "uncertainty":
+            if isinstance(val, InverseVariance):
+                # We don't want to divide by 0 and get infs
+                val.array[np.where(val.array == 0)] = np.nan
             flux = val.represent_as(StdDevUncertainty).quantity
         else:
             flux = val

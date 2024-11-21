@@ -16,11 +16,6 @@ from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['GaussianSmooth']
 
-
-spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
-u.add_enabled_units([spaxel])
-
-
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth",
                viewer_requirements=['spectrum', 'flux'])
 class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):

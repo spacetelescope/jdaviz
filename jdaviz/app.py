@@ -52,7 +52,7 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label, flux_conversion,
                           spectral_axis_conversion)
-from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
 from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
                                                combine_flux_and_angle_units,
                                                supported_sq_angle_units)
@@ -61,6 +61,8 @@ __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
 SplitPanes()
 GoldenLayout()
+
+enable_spaxel_unit()
 
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
 EXT_TYPES = dict(flux=['flux', 'sci'],
