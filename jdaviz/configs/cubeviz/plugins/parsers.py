@@ -203,6 +203,9 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
     if (apply_pix2 and (data_type != "mask") and
             (not check_if_unit_is_per_solid_angle(flux.unit))):
         target_flux_unit = flux.unit / PIX2
+    elif check_if_unit_is_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
+        # We need to convert spaxel to pixel squared, since spaxel isn't fully supported by astropy
+        target_flux_unit = flux.unit * u.Unit('spaxel') / PIX2
 
     if target_wave_unit is None and hdulist is not None:
         found_target = False
