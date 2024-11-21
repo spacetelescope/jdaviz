@@ -292,7 +292,10 @@ intersphinx_mapping.update({  # noqa: F405
     'specreduce': ('https://specreduce.readthedocs.io/en/stable/', None),
     'specutils': ('https://specutils.readthedocs.io/en/stable/', None),
     'stdatamodels': ('https://stdatamodels.readthedocs.io/en/latest/', None),
-    'traitlets': ('https://traitlets.readthedocs.io/en/stable/', None)})
+    'traitlets': ('https://traitlets.readthedocs.io/en/stable/', None),
+    'jwst': ('https://jwst-pipeline.readthedocs.io/en/stable/', None),
+    'romancal': ('https://roman-pipeline.readthedocs.io/en/stable/', None),
+})
 
 # Options for linkcheck
 linkcheck_ignore = ['https://github.com/spacetelescope/jdaviz/settings/branches']

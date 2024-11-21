@@ -56,6 +56,17 @@
     <div @mouseover="() => active_step='extract'">
       <j-plugin-section-header :active="active_step==='extract'">Extract</j-plugin-section-header>
 
+      <v-row>
+        <span class="v-messages v-messages__message text--secondary">
+          Note: this plugin does not detecting defects in ramps, fit the ramps, or apply corrections. For details on
+          how rate images are derived from ramps, see the documentation for the
+          <j-external-link link='https://roman-pipeline.readthedocs.io/en/stable/roman/ramp_fitting/index.html' linktext='Roman pipeline'>
+          </j-external-link> or the
+          <j-external-link link='https://jwst-pipeline.readthedocs.io/en/stable/jwst/ramp_fitting/index.html#ramp-fitting-step' linktext='JWST pipeline'>
+          </j-external-link>.
+        </span>
+      </v-row>
+
       <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Aperture: '{{aperture_selected}}' does not support subpixel: {{aperture_selected_validity.aperture_message}}.
