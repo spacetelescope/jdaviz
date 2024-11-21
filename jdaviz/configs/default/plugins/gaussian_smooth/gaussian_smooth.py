@@ -1,6 +1,5 @@
 import numpy as np
 
-from astropy import units as u
 from astropy.convolution import convolve, Gaussian2DKernel
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
@@ -15,6 +14,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['GaussianSmooth']
+
 
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth",
                viewer_requirements=['spectrum', 'flux'])
