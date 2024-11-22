@@ -5,7 +5,7 @@ import warnings
 import numpy as np
 from astropy import units as u
 from astropy.io import fits
-from astropy.nddata import StdDevUncertainty, InverseVariance
+from astropy.nddata import StdDevUncertainty
 from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
