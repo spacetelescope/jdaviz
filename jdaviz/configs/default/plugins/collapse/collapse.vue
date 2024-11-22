@@ -18,16 +18,14 @@
       hint="Select the data set to collapse."
     />
 
-    <v-row>
-      <plugin-select
-        :items="function_items.map(i => i.label)"
-        :selected.sync="function_selected"
-        label="Function"
-        api_hint="plg.function ="
-        :api_hints_enabled="api_hints_enabled"
-        hint="Function to use in the collapse."
-      />
-    </v-row>
+    <plugin-select
+      :items="function_items.map(i => i.label)"
+      :selected.sync="function_selected"
+      label="Function"
+      api_hint="plg.function ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Function to use in the collapse."
+    />
 
     <plugin-subset-select
       :items="spectral_subset_items"
