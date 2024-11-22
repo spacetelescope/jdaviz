@@ -295,7 +295,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'AndNotState', 'region': circle2,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-tools')
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI',
                                           'RectangularROI', 'CircularROI']

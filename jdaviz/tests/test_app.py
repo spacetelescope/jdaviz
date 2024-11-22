@@ -35,7 +35,7 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
               'toolbar': ['g-data-tools', 'g-subset-tools'],
               'tray': ['g-metadata-viewer',
                        'g-plot-options',
-                       'g-subset-plugin',
+                       'g-subset-tools',
                        'g-gaussian-smooth',
                        'g-model-fitting',
                        'g-unit-conversion',

@@ -9,7 +9,7 @@ from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, Rectan
 from glue.core.edit_subset_mode import ReplaceMode, OrMode
 from numpy.testing import assert_allclose
 
-from jdaviz.configs.default.plugins.subset_plugin import utils
+from jdaviz.configs.default.plugins.subset_tools import utils
 from jdaviz.core.region_translators import regions2roi
 
 
@@ -33,7 +33,7 @@ def test_subset_definition_with_composite_subset(cubeviz_helper, spectrum1d_cube
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         cubeviz_helper.load_data(spectrum1d_cube)
-    cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    cubeviz_helper.app.get_tray_item_from_name('g-subset-tools')
 
 
 circle_subset_info = {'xc': {'pixel_name': 'X Center (pixels)', 'wcs_name':
