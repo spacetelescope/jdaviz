@@ -12,12 +12,6 @@
       </div>
     </v-row>
 
-    <v-row v-if="api_hints_enabled">
-        <span class="api-hint-header">
-          plg = {{ config }}.plugins['{{ plugin_key }}']
-        </span>
-      </v-row>
-
     <v-row v-if="isDisabled()">
       <span> {{ getDisabledMsg() }}</span>
     </v-row>

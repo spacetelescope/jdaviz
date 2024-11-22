@@ -125,6 +125,9 @@
                             {{ trayItem.label }}
                           </j-tooltip>
                         </v-list-item-title>
+                        <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  config }}.plugins['{{ trayItem.label }}']</span>
+                        </v-list-item-subtitle>
                         <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
                           {{ trayItem.tray_item_description }}
                         </v-list-item-subtitle>
