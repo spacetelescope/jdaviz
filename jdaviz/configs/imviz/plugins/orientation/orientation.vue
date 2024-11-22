@@ -13,52 +13,14 @@
       <div style="grid-area: 1/1; margin-top: -36px">
         <j-plugin-section-header>Align Layers</j-plugin-section-header>
 
-        <v-alert
-          v-if="!wcs_linking_available"
-          type='warning'
-          class="ignore-api-hints"
-          style="margin-left: -12px; margin-right: -12px"
-        >
-          Please add at least one data with valid WCS to align by sky (WCS).
-        </v-alert>
-
-        <v-alert
-          v-if="wcs_linking_available && !need_clear_astrowidget_markers && !need_clear_subsets"
-          type='warning'
-          class="ignore-api-hints"
-          style="margin-left: -12px; margin-right: -12px"
-        >
-          Switching alignment will reset zoom.
-        </v-alert>
-
-        <v-alert
-          v-if="plugin_markers_exist && !need_clear_astrowidget_markers && !need_clear_subsets"
-          type='warning'
-          style="margin-left: -12px; margin-right: -12px"
-        >
-          Marker positions may not be pixel-perfect when changing alignment/linking options.
-        </v-alert>
-
-        <v-alert v-if="need_clear_astrowidget_markers" type='warning' style="margin-left: -12px; margin-right: -12px">
-          Astrowidget markers must be cleared before changing alignment/linking options.
-          <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
-            <v-btn @click="reset_astrowidget_markers">Clear Markers</v-btn>
-          </v-row>
-        </v-alert>
-
-
-        <v-alert v-if="need_clear_subsets" type='warning' style="margin-left: -12px; margin-right: -12px">
-          Existing subsets must be deleted before changing alignment/linking options.
-          <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
-            <v-btn @click="delete_subsets">
-              {{ api_hints_enabled ?
-                'plg.delete_subsets()'
-                :
-                'Clear Subsets'
-              }}
-            </v-btn>
-          </v-row>
-        </v-alert>
+        <plugin-requires-wcs-linking
+          :wcs_linking_available="wcs_linking_available"
+          :need_clear_astrowidget_markers="need_clear_astrowidget_markers"
+          :need_clear_subsets="need_clear_subsets"
+          :api_hints_enabled="false"
+          @delete-subsets="delete_subsets"
+          @reset-astrowidget-markers="reset_astrowidget_markers"
+        />
 
         <v-row class="row-min-bottom-padding">
           <v-radio-group

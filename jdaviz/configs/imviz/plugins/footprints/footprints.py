@@ -10,6 +10,7 @@ from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import regions2roi
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
+                                        RequiresWCSLinkingMixin,
                                         EditableSelectPluginComponent,
                                         FileImportSelectPluginComponent, HasFileImportSelect)
 from jdaviz.core.user_api import PluginUserApi
@@ -21,7 +22,8 @@ __all__ = ['Footprints']
 
 
 @tray_registry('imviz-footprints', label="Footprints")
-class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
+class Footprints(PluginTemplateMixin, ViewerSelectMixin,
+                 RequiresWCSLinkingMixin, HasFileImportSelect):
     """
     See the :ref:`Footprints Plugin Documentation <imviz-footprints>` for more details.
 

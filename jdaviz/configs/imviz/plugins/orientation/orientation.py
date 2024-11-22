@@ -2,9 +2,6 @@ from astropy import units as u
 from astropy.utils import deprecated
 from astropy.wcs.wcsapi import BaseHighLevelWCS
 from glue.core.link_helpers import LinkSame
-from glue.core.message import (
-    DataCollectionAddMessage, SubsetCreateMessage, SubsetDeleteMessage
-)
 from glue.core.subset import Subset
 from glue.core.subset_group import GroupedSubset
 from glue.plugins.wcs_autolinking.wcs_autolinking import WCSLink, NoAffineApproximation
@@ -15,13 +12,13 @@ from jdaviz.configs.imviz.wcs_utils import (
 )
 from jdaviz.core.custom_traitlets import FloatHandleEmpty
 from jdaviz.core.events import (
-    ExitBatchLoadMessage, ChangeRefDataMessage,
-    AstrowidgetMarkersChangedMessage, MarkersPluginUpdate,
+    ChangeRefDataMessage,
     SnackbarMessage, ViewerAddedMessage, AddDataMessage, LinkUpdatedMessage
 )
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (
-    PluginTemplateMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
+    PluginTemplateMixin,
+    RequiresWCSLinkingMixin, SelectPluginComponent, LayerSelect, ViewerSelectMixin, AutoTextField
 )
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.utils import get_reference_image_data, layer_is_2d, _wcs_only_label
@@ -33,7 +30,7 @@ align_by_msg_to_trait = {'pixels': 'Pixels', 'wcs': 'WCS'}
 
 
 @tray_registry('imviz-orientation', label="Orientation", viewer_requirements="image")
-class Orientation(PluginTemplateMixin, ViewerSelectMixin):
+class Orientation(PluginTemplateMixin, RequiresWCSLinkingMixin, ViewerSelectMixin):
     """
     See the :ref:`Orientation Plugin Documentation <imviz-orientation>` for more details.
 
@@ -65,12 +62,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     align_by_selected = Unicode().tag(sync=True)
     wcs_use_fallback = Bool(True).tag(sync=True)
     wcs_fast_approximation = Bool(True).tag(sync=True)
-    wcs_linking_available = Bool(False).tag(sync=True)
 
-    need_clear_astrowidget_markers = Bool(False).tag(sync=True)
-    plugin_markers_exist = Bool(False).tag(sync=True)
     linking_in_progress = Bool(False).tag(sync=True)
-    need_clear_subsets = Bool(False).tag(sync=True)
 
     # rotation angle, counterclockwise [degrees]
     rotation_angle = FloatHandleEmpty(0).tag(sync=True)
@@ -110,26 +103,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             self, 'new_layer_label', 'new_layer_label_default', 'new_layer_label_auto', None
         )
 
-        self.hub.subscribe(self, DataCollectionAddMessage,
-                           handler=self._on_new_app_data)
-
-        self.hub.subscribe(self, ExitBatchLoadMessage,
-                           handler=self._on_new_app_data)
-
-        self.hub.subscribe(self, AstrowidgetMarkersChangedMessage,
-                           handler=self._on_astrowidget_markers_changed)
-
-        self.hub.subscribe(self, MarkersPluginUpdate,
-                           handler=self._on_markers_plugin_update)
-
         self.hub.subscribe(self, ChangeRefDataMessage,
                            handler=self._on_refdata_change)
-
-        self.hub.subscribe(self, SubsetCreateMessage,
-                           handler=self._on_subset_change)
-
-        self.hub.subscribe(self, SubsetDeleteMessage,
-                           handler=self._on_subset_change)
 
         self.hub.subscribe(self, ViewerAddedMessage,
                            handler=self._on_viewer_added)
@@ -189,32 +164,9 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         finally:
             self.linking_in_progress = False
 
-    def _check_if_data_with_wcs_exists(self):
-        for data in self.app.data_collection:
-            if hasattr(data.coords, 'pixel_to_world'):
-                self.wcs_linking_available = True
-                return
-        self.wcs_linking_available = False
-
     def _on_new_app_data(self, msg):
-        if self.app._jdaviz_helper._in_batch_load > 0:
-            return
-        if isinstance(msg, DataCollectionAddMessage):
-            components = [str(comp) for comp in msg.data.main_components]
-            if "ra" in components or "Lon" in components:
-                # linking currently removes any markers, so we want to skip
-                # linking immediately after new markers are added.
-                # Eventually we'll probably want to support linking WITH markers,
-                # at which point this if-statement should be removed.
-                return
+        super()._on_new_app_data(msg)
         self._link_image_data()
-        self._check_if_data_with_wcs_exists()
-
-    def _on_astrowidget_markers_changed(self, msg):
-        self.need_clear_astrowidget_markers = msg.has_markers
-
-    def _on_markers_plugin_update(self, msg):
-        self.plugin_markers_exist = msg.table_length > 0
 
     @observe('align_by_selected', 'wcs_use_fallback', 'wcs_fast_approximation')
     def _update_link(self, msg={}):
@@ -278,21 +230,6 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         # Clear previous zoom limits because they no longer mean anything.
         for v in self.app._viewer_store.values():
             v._prev_limits = None
-
-    def _on_subset_change(self, msg):
-        self.need_clear_subsets = len(self.app.data_collection.subset_groups) > 0
-
-    def delete_subsets(self):
-        # subsets will be deleted on changing link type:
-        for subset_group in self.app.data_collection.subset_groups:
-            self.app.data_collection.remove_subset_group(subset_group)
-
-    def vue_delete_subsets(self, *args):
-        self.delete_subsets()
-
-    def vue_reset_astrowidget_markers(self, *args):
-        for viewer in self.app._viewer_store.values():
-            viewer.reset_markers()
 
     def _get_wcs_angles(self, first_loaded_image=None):
         if first_loaded_image is None:

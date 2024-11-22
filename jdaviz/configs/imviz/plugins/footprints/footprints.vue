@@ -27,22 +27,17 @@
       >
     </plugin-editable-select>
 
-    <v-alert
+    <plugin-requires-wcs-linking
       v-if="is_pixel_linked"
-      type='warning'
-      style="margin-left: -12px; margin-right: -12px"
-    >
-      cannot plot footprint when aligned by pixels (see Orientation plugin).
-      <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
-        <v-btn @click="link_by_wcs">
-          link by WCS
-        </v-btn>
-      </v-row>
-    </v-alert>
-    <v-alert v-if="viewer_items.length===0" type='warning' style="margin-left: -12px; margin-right: -12px">
-      no valid viewers (with necessary WCS information) to show footprint overlay.
-    </v-alert>
-  
+      :wcs_linking_available="wcs_linking_available"
+      :need_clear_astrowidget_markers="need_clear_astrowidget_markers"
+      :need_clear_subsets="need_clear_subsets"
+      :api_hints_enabled="false"
+      :show_link_by_wcs_button="true"
+      @delete-subsets="delete_subsets"
+      @reset-astrowidget-markers="reset_astrowidget_markers"
+    />
+
     <div v-if="!is_pixel_linked && viewer_items.length > 0 && overlay_selected.length > 0">
       <j-plugin-section-header>Display Options</j-plugin-section-header>
 
