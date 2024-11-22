@@ -452,10 +452,13 @@ def _parse_spectrum1d_3d(app, file_obj, data_label=None,
         if attr == "mask":
             flux = val << u.dimensionless_unscaled  # DQ flags have no unit
         elif attr == "uncertainty":
+            bad_locs = None
             if isinstance(val, InverseVariance):
-                # We don't want to divide by 0 and get infs
-                val.array[np.where(val.array == 0)] = np.nan
+                bad_locs = val.array[np.where(val.array == 0)]
             flux = val.represent_as(StdDevUncertainty).quantity
+            if bad_locs is not None:
+                # Prefer 0 over inf for the masked out values here
+                flux[bad_locs] = 0
         else:
             flux = val
 
