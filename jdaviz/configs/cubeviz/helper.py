@@ -22,6 +22,7 @@ class Cubeviz(CubeConfigHelper, LineListMixin):
 
     _loaded_flux_cube = None
     _loaded_uncert_cube = None
+    _loaded_mask_cube = None
     _cube_viewer_cls = CubevizImageView
 
     def __init__(self, *args, **kwargs):
