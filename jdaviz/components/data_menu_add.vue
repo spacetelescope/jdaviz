@@ -66,6 +66,7 @@
         v-if="api_hints_enabled"
         :hover_api_hint.sync="hover_api_hint"
         :lock_hover_api_hint.sync="lock_hover_api_hint"
+        :icons="icons"
       />
     </v-list>
   </v-menu>
@@ -80,6 +81,6 @@ module.exports = {
         lock_hover_api_hint: false,
       }
     },
-  props: ['dataset_items', 'subset_tools', 'loaded_n_data', 'api_hints_enabled'],
+  props: ['dataset_items', 'subset_tools', 'loaded_n_data', 'api_hints_enabled', 'icons'],
 };
 </script>

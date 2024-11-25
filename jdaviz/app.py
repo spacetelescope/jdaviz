@@ -232,7 +232,9 @@ class ApplicationState(State):
         'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
         'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml'),
         'nuer': read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml'),
-        'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml')
+        'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml'),
+        'api': read_icon(os.path.join(ICON_DIR, 'api.svg'), 'svg+xml'),
+        'api-lock': read_icon(os.path.join(ICON_DIR, 'api_lock.svg'), 'svg+xml'),
     }, docstring="Custom application icons")
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa

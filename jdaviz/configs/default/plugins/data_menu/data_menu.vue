@@ -141,6 +141,7 @@
                   :subset_tools="subset_tools"
                   :loaded_n_data="loaded_n_data"
                   :api_hints_enabled="api_hints_enabled"
+                  :icons="icons"
                   @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
                   @create-subset="(subset_type) => {create_subset({subset_type: subset_type}); data_menu_open = false}"
                 >
@@ -208,6 +209,7 @@
               v-if="api_hints_enabled" 
               :hover_api_hint.sync="hover_api_hint" 
               :lock_hover_api_hint.sync="lock_hover_api_hint" 
+              :icons="icons"
             /> 
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
               <v-list-item-content style="display: inline-block">
