@@ -545,8 +545,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         elif set_as_orientation:
             self.orientation.selected = label
 
-    def set_north_up_east_left(self, label="North-up, East-left",
-                               set_as_orientation=True):
+    def set_north_up_east_left(self, label="North-up, East-left"):
         """
         Set (and create if necessary) the rotation angle and flip to achieve North up
         and East left according to the reference image WCS.
@@ -557,11 +556,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             Data label for the orientation layer.  If already exists, will be set as the
             current orientation layer according to ``set_as_orientation``.  Otherwise,
             a new layer will be created with this label.
-        set_as_orientation : bool
-            Whether to set as the current orientation.  If False, the new layer will still
-            be created and available for selection, but will not be set as the current orientation.
         """
-        self._set_north_up_east_left(label=label, set_as_orientation=set_as_orientation)
+        self._set_north_up_east_left(label=label, set_as_orientation=True)
 
     def _set_north_up_east_right(self, label="North-up, East-right", set_as_orientation=False,
                                  from_ui=False):
@@ -573,8 +569,7 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
         elif set_as_orientation:
             self.orientation.selected = label
 
-    def set_north_up_east_right(self, label="North-up, East-right",
-                                set_as_orientation=True):
+    def set_north_up_east_right(self, label="North-up, East-right"):
         """
         Set (and create, if necessary) the rotation angle and flip to achieve North up
         and East right according to the reference image WCS.
@@ -585,11 +580,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
             Data label for the orientation layer.  If already exists, will be set as the
             current orientation layer according to ``set_as_orientation``.  Otherwise,
             a new layer will be created with this label.
-        set_as_orientation : bool
-            Whether to set as the current orientation.  If False, the new layer will still
-            be created and available for selection, but will not be set as the current orientation.
         """
-        self._set_north_up_east_right(label=label, set_as_orientation=set_as_orientation)
+        self._set_north_up_east_right(label=label, set_as_orientation=True)
 
     def vue_select_north_up_east_left(self, *args, **kwargs):
         self._set_north_up_east_left(set_as_orientation=True, from_ui=True)
