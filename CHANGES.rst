@@ -12,6 +12,8 @@ Cubeviz
 Imviz
 ^^^^^
 
+* Orientation plugin API now exposes create_north_up_east_left and create_north_up_east_right methods. [#3308]
+
 Mosviz
 ^^^^^^
 

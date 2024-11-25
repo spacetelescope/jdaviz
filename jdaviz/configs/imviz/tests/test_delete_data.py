@@ -87,7 +87,7 @@ class TestDeleteWCSLayerWithSubset(BaseImviz_WCS_GWCS):
         lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
-        lc_plugin._obj.create_north_up_east_left(set_on_create=True)
+        lc_plugin.set_north_up_east_left()
 
         # Create a rotated ellipse.
         reg = EllipsePixelRegion(

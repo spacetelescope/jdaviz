@@ -128,18 +128,45 @@
             <span style="line-height: 36px">Presets:</span>
             <!-- NOTE: changes to icons here should be manually reflected in layer_icons in app.py -->
             <j-tooltip tooltipcontent="Default orientation">
-              <v-btn icon @click="select_default_orientation">
+              <v-btn
+                :icon="!api_hints_enabled"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                @click="select_default_orientation"
+              >
                 <v-icon>mdi-image-outline</v-icon>
+                {{ api_hints_enabled ?
+                  'plg.orientation = \''+base_wcs_layer_label+'\''
+                  :
+                  null
+                }}
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east left">
-              <v-btn icon @click="select_north_up_east_left">
+              <v-btn
+                :icon="!api_hints_enabled"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                @click="select_north_up_east_left"
+              >
                 <img :src="icons['nuel']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
+                {{ api_hints_enabled ?
+                  'plg.set_north_up_east_left()'
+                  :
+                  null
+                }}
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east right">
-              <v-btn icon @click="select_north_up_east_right">
+              <v-btn
+                :icon="!api_hints_enabled"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                @click="select_north_up_east_right"
+              >
                 <img :src="icons['nuer']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
+                {{ api_hints_enabled ?
+                  'plg.set_north_up_east_right()'
+                  :
+                  null
+                }}
               </v-btn>
             </j-tooltip>
           </v-row>
