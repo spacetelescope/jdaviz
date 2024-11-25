@@ -28,7 +28,7 @@ Specviz2d
 API Changes
 -----------
 - Removed API access to plugins that have passed the deprecation period: Links Control, Canvas Rotation, Export Plot. [#3270]
-  
+
 - Subset Tools plugin now exposes the ``subset``, ``combination_mode``, ``get_center``, and ``set_center`` in the user API. [#3293, #3304]
 
 - Metadata plugin: ``metadata_plugin.metadata`` API has been deprecated; use
@@ -108,6 +108,8 @@ Cubeviz
 - Fixed "spectrum at spaxel" tool so it no longer resets spectral axis zoom. [#3249]
 
 - Fixed initializing a Gaussian1D model component when ``Cube Fit`` is toggled on. [#3295]
+
+- Spectral extraction now correctly respects the loaded mask cube. [#3319]
 
 Imviz
 ^^^^^
