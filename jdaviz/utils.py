@@ -360,7 +360,7 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
     spec : `~specutils.Spectrum1D`, optional
         The Spectrum1D object that will have converted flux or surface brightness units.
 
-    eqv : list of `astropy.units.equivalencies`, optional
+    eqv : list of :ref:`astropy:unit_equivalencies`, optional
         A list of Astropy equivalencies necessary for complex unit conversions/translations.
 
     slice : `astropy.units.Quantity`, optional
