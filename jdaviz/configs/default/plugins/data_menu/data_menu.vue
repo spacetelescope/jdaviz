@@ -94,8 +94,8 @@
                     style="cursor: pointer; display: inline-block; height: 100%; vertical-align: bottom;"
                     @click="() => {open_orientation_plugin()}"
                   >
-                    <v-icon style="margin-right: 8px">mdi-compass-outline</v-icon>
-                    <span v-if="!orientation_align_by_wcs">linked by pixel</span>
+                    <v-icon class="invert-if-dark" style="margin-right: 8px">mdi-compass-outline</v-icon>
+                    <span v-if="!orientation_align_by_wcs" class="invert-if-dark">linked by pixel</span>
                   </span>
                 </j-tooltip>
                 <v-select
@@ -104,7 +104,7 @@
                   :items="orientation_layer_items"
                   v-model="orientation_layer_selected"
                   :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'" 
-                  :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : ''" 
+                  :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : 'invert-if-dark'" 
                   item-text="label"
                   item-value="label"
                   :hide-details="true"
