@@ -63,7 +63,8 @@ class Orientation(PluginTemplateMixin, ViewerSelectMixin):
     """
     template_file = __file__, "orientation.vue"
 
-    # defined as traitlet to allow access from UI - leave fixed
+    # defined as traitlet in addition to global variable above to
+    # allow access from UI - leave fixed
     base_wcs_layer_label = Unicode(base_wcs_layer_label).tag(sync=True)
 
     align_by_items = List().tag(sync=True)
