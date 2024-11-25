@@ -149,7 +149,7 @@
               >
                 <img :src="icons['nuel']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
                 {{ api_hints_enabled ?
-                  'plg.create_north_up_east_left()'
+                  'plg.set_north_up_east_left()'
                   :
                   null
                 }}
@@ -163,7 +163,7 @@
               >
                 <img :src="icons['nuer']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
                 {{ api_hints_enabled ?
-                  'plg.create_north_up_east_right()'
+                  'plg.set_north_up_east_right()'
                   :
                   null
                 }}

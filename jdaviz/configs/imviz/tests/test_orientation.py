@@ -125,14 +125,14 @@ class TestNonDefaultOrientation(BaseImviz_WCS_WCS):
         lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
-        lc_plugin.create_north_up_east_left(set_as_orientation=True)
+        lc_plugin.set_north_up_east_left(set_as_orientation=True)
 
         # This would set a different reference to second viewer.
         viewer_2 = self.imviz.create_image_viewer()
         self.imviz.app.add_data_to_viewer("imviz-1", "has_wcs_1[SCI,1]")
         lc_plugin.viewer = "imviz-1"
 
-        lc_plugin.create_north_up_east_right(set_as_orientation=True)
+        lc_plugin.set_north_up_east_right(set_as_orientation=True)
 
         assert self.viewer.state.reference_data.label == "North-up, East-left"
         assert viewer_2.state.reference_data.label == "North-up, East-right"
@@ -169,7 +169,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
-        lc_plugin.create_north_up_east_left(set_as_orientation=True)
+        lc_plugin.set_north_up_east_left(set_as_orientation=True)
 
         # This would set a different reference to second viewer.
         viewer_2 = self.imviz.create_image_viewer()
@@ -192,7 +192,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         lc_plugin.align_by = 'WCS'
 
         # Should automatically be applied as reference to first viewer.
-        lc_plugin.create_north_up_east_left(set_as_orientation=True)
+        lc_plugin.set_north_up_east_left(set_as_orientation=True)
 
         # Create rotated shape
         reg = klass(center=SkyCoord(ra=337.51931488, dec=-20.83187472, unit="deg"),
@@ -200,7 +200,7 @@ class TestDeleteOrientation(BaseImviz_WCS_WCS):
         self.imviz.plugins['Subsets'].import_region(reg)
 
         # Switch to N-up E-right
-        lc_plugin.create_north_up_east_right(set_as_orientation=True)
+        lc_plugin.set_north_up_east_right(set_as_orientation=True)
 
         self.imviz.app.vue_data_item_remove({"item_name": "North-up, East-left"})
 
@@ -234,13 +234,13 @@ class TestOrientationNoData(BaseImviz_WCS_WCS):
         lc_plugin.viewer = "imviz-1"
 
         with pytest.raises(ValueError, match="Viewer must have data loaded"):
-            lc_plugin.create_north_up_east_left(set_as_orientation=True)
+            lc_plugin.set_north_up_east_left(set_as_orientation=True)
 
     def test_select_no_data(self):
         lc_plugin = self.imviz.plugins['Orientation']
         lc_plugin.align_by = 'WCS'
 
-        lc_plugin.create_north_up_east_left(set_as_orientation=True)
+        lc_plugin.set_north_up_east_left(set_as_orientation=True)
 
         self.imviz.create_image_viewer()
         lc_plugin.viewer = "imviz-1"
