@@ -130,50 +130,6 @@ You can create your own :class:`~specutils.Spectrum1D` object by hand to load in
     cubeviz.load_data(cube, data_label='My Cube')
     cubeviz.show()
 
-JWST datamodels
----------------
-
-If you have a `stdatamodels.datamodels <https://stdatamodels.readthedocs.io/en/latest/jwst/datamodels/index.html#data-models>`_
-object, you can load it into Cubeviz as follows:
-
-.. code-block:: python
-
-    import numpy as np
-    from astropy.wcs import wcs
-    import astropy.units as u
-    from specutils import Spectrum1D
-    from jdaviz import Cubeviz
-    from jwst import datamodels
-
-    file = "/path/to/data/file.fits"
-    mydatamodel = datamodels.open(file)
-
-    # mydatamodel is a jwst.datamodels object
-    # Due to current schema in jwst.datamodels, you'll need to create your own WCS object before you create your Spectrum1D object
-    wcs_dict = {"CTYPE1": mydatamodel.meta.wcsinfo.ctype3, "CTYPE2": mydatamodel.meta.wcsinfo.ctype2,
-            "CTYPE3": mydatamodel.meta.wcsinfo.ctype1,
-            "CRVAL1": mydatamodel.meta.wcsinfo.crval3, "CRVAL2": mydatamodel.meta.wcsinfo.crval2,
-            "CRVAL3": mydatamodel.meta.wcsinfo.crval1,
-            "CDELT1": mydatamodel.meta.wcsinfo.cdelt3, "CDELT2": mydatamodel.meta.wcsinfo.cdelt2,
-            "CDELT3": mydatamodel.meta.wcsinfo.cdelt1,
-            "CRPIX1": mydatamodel.meta.wcsinfo.crpix3, "CRPIX2": mydatamodel.meta.wcsinfo.crpix2,
-            "CRPIX3": mydatamodel.meta.wcsinfo.crpix1}
-    my_wcs = WCS(wcs_dict)
-
-    # Next, you need to make sure your spectral axis is the 3rd dimension
-    data = mydatamodel.data * (u.MJy / u.sr)
-    data = np.swapaxes(data, 0, 1)
-    data = np.swapaxes(data, 1, 2)
-
-    # Create your spectrum1
-    spec3d = Spectrum1D(data, wcs=my_wcs)
-    cubeviz = Cubeviz()
-    cubeviz.load_data(spec3d, data_label='My Cube')
-    cubeviz.show()
-
-There is no plan to natively load such objects until ``datamodels``
-is separated from the ``jwst`` pipeline package.
-
 Numpy array
 -----------
 
