@@ -13,7 +13,7 @@ toolbar:
   - g-viewer-creator
   - g-subset-tools
 tray:
-  - g-subset-plugin
+  - g-subset-tools
   - g-gaussian-smooth
   - export
   - about

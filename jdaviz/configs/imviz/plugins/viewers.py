@@ -190,7 +190,7 @@ class ImvizImageView(JdavizViewerMixin, BqplotImageView, AstrowidgetsImageViewer
         When `True`, it sets the coords, otherwise it resets.
 
         ``reverse=True`` is only for internal roundtripping (e.g., centroiding
-        in Subsets plugin). Never use this for coordinates display panel.
+        in Subset Tools plugin). Never use this for coordinates display panel.
 
         """
         # By default we'll assume the coordinates are valid and within any applicable bounding box.

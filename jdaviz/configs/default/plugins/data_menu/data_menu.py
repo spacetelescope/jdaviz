@@ -463,9 +463,9 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         if len(self.layer.selected) != 1:
             raise ValueError("Only one layer can be selected to view info.")
         if self.layer.selected[0] in self.existing_subset_labels:
-            sp = self._viewer.jdaviz_helper.plugins.get('Subsets', None)
+            sp = self._viewer.jdaviz_helper.plugins.get('Subset Tools', None)
             if sp is None:  # pragma: no cover
-                raise ValueError("subsets plugin not available")
+                raise ValueError("subset tools plugin not available")
             sp._obj.subset.selected = self.layer.selected[0]
             sp.open_in_tray()
         else:

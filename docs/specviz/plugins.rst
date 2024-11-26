@@ -42,12 +42,12 @@ Plot Options
 
 .. _specviz-subset-plugin:
 
-Subsets
-=======
+Subset Tools
+============
 
 .. seealso::
 
-    :ref:`Subsets <imviz-subset-plugin>`
+    :ref:`Subset Tools <imviz-subset-plugin>`
         Imviz documentation describing the concept of subsets in Jdaviz. Subsets
         in Specviz are strictly spectral subsets and do not support rotation or
         recentering.

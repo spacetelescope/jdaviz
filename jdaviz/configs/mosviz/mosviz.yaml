@@ -18,7 +18,7 @@ toolbar:
 tray:
   - g-metadata-viewer
   - g-plot-options
-  - g-subset-plugin
+  - g-subset-tools
   - g-markers
   - g-gaussian-smooth
   - g-slit-overlay

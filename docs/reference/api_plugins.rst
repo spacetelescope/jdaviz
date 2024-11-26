@@ -33,9 +33,6 @@ Plugins API
 .. automodapi:: jdaviz.configs.default.plugins.plot_options.plot_options
    :no-inheritance-diagram:
 
-.. automodapi:: jdaviz.configs.default.plugins.subset_plugin.subset_plugin
-   :no-inheritance-diagram:
-
 .. automodapi:: jdaviz.configs.default.plugins.subset_tools.subset_tools
    :no-inheritance-diagram:
 
