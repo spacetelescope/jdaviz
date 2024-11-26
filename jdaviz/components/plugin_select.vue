@@ -69,8 +69,7 @@
 <script>
 module.exports = {
   props: ['items', 'selected', 'label', 'hint', 'rules', 'show_if_single_entry', 'multiselect',
-          'api_hint', 'api_hints_enabled', 'dense', 'disabled'
-  ]
+          'api_hint', 'api_hints_enabled', 'dense', 'disabled']
 };
 </script>
 

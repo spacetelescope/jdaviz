@@ -23,8 +23,7 @@
 
 <script>
 module.exports = {
-  props: ['items', 'selected', 'label', 'api_hint', 'api_hints_enabled'
-  ]
+  props: ['items', 'selected', 'label', 'api_hint', 'api_hints_enabled']
 };
 </script>
 
