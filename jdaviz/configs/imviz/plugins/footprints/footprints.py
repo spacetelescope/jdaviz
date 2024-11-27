@@ -10,7 +10,7 @@ from jdaviz.core.marks import FootprintOverlay
 from jdaviz.core.region_translators import regions2roi
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
-                                        EditableSelectPluginComponent,
+                                        EditableSelectPluginComponent, SelectPluginComponent,
                                         FileImportSelectPluginComponent, HasFileImportSelect)
 from jdaviz.core.user_api import PluginUserApi
 
@@ -47,6 +47,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         color of the currently selected overlay
     * ``fill_opacity``
         opacity of the filled region of the currently selected overlay
+    * ``preset_obs`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
+        selected observatories to filter ``preset`` choices.
     * ``preset`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
         selected overlay preset
     * :meth:`import_region`
@@ -85,8 +87,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     # PRESET OVERLAYS AND OPTIONS
     has_pysiaf = Bool(preset_regions._has_pysiaf).tag(sync=True)
-    preset_only_jwst = Bool(False).tag(sync=True)
-    preset_only_roman = Bool(False).tag(sync=True)
+    preset_obs_items = List().tag(sync=True)
+    preset_obs_selected = Unicode().tag(sync=True)
     preset_items = List().tag(sync=True)
     preset_selected = Unicode().tag(sync=True)
 
@@ -129,8 +131,15 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                'icon': obs_icons.get(observatory, None)}
                               for observatory, instruments in preset_regions._instruments.items()
                               for display_name, siaf_name in instruments.items()]
+            preset_obs_options = ['Any'] + list(preset_regions._instruments.keys())
         else:
             preset_options = ['None']
+            preset_obs_options = []
+
+        self.preset_obs = SelectPluginComponent(self,
+                                                items='preset_obs_items',
+                                                selected='preset_obs_selected',
+                                                manual_options=preset_obs_options)
 
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
@@ -153,7 +162,7 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         return PluginUserApi(self, expose=('overlay',
                                            'rename_overlay', 'add_overlay', 'remove_overlay',
                                            'viewer', 'visible', 'color', 'fill_opacity',
-                                           'preset', 'import_region',
+                                           'preset_obs', 'preset', 'import_region',
                                            'center_on_viewer', 'ra', 'dec', 'pa',
                                            'v2_offset', 'v3_offset',
                                            'overlay_regions'))
@@ -498,30 +507,20 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
             regs = []
         return regs
 
-    @observe('preset_only_jwst', 'preset_only_roman')
+    @observe('preset_obs_selected')
     def _update_preset_filters(self, event={}):
-        if event.get('new', True):
-            # toggle the others off and then recall
-            if event.get('name') == 'preset_only_jwst' and self.preset_only_roman:
-                self.preset_only_roman = False
-                return
-            elif event.get('name') == 'preset_only_roman' and self.preset_only_jwst:
-                self.preset_only_jwst = False
-                return
-
         def only_jwst(item):
             return item['label'] == 'From File...' or item.get('observatory') == 'JWST'
 
         def only_roman(item):
             return item['label'] == 'From File...' or item.get('observatory') == 'Roman' 
 
-        filters = []
-        if self.preset_only_jwst:
-            filters.append(only_jwst)
-        if self.preset_only_roman:
-            filters.append(only_roman)
-        self.preset.filters = filters
-        self._preset_args_changed()
+        if self.preset_obs_selected == 'JWST':
+            self.preset.filters = [only_jwst]
+        elif self.preset_obs_selected == 'Roman':
+            self.preset.filters = [only_roman]
+        else:
+            self.preset.filters = []
 
     @observe('preset_selected', 'from_file', 'ra', 'dec', 'pa', 'v2_offset', 'v3_offset')
     def _preset_args_changed(self, msg={}, overlay_selected=None):

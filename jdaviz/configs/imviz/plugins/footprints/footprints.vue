@@ -101,12 +101,12 @@
             :elevation=0
             x-small
             dense 
-            :color="preset_only_jwst ? 'turquoise' : 'transparent'"
+            :color="preset_obs_selected === 'JWST' ? 'turquoise' : 'transparent'"
             dark
             style="padding-left: 8px; padding-right: 6px;"
-            @click="() => {preset_only_roman = false; preset_only_jwst = !preset_only_jwst}"
+            @click="() => {if (preset_obs_selected === 'JWST') {preset_obs_selected = 'Any'} else {preset_obs_selected = 'JWST'}}"
           >
-            <span v-if="preset_only_jwst" style="color: white">JWST</span>
+            <span v-if="preset_obs_selected === 'JWST'" style="color: white">JWST</span>
             <span v-else style="color: black">JWST</span>
           </v-btn>
         </j-tooltip>
@@ -116,12 +116,12 @@
             :elevation=0
             x-small
             dense 
-            :color="preset_only_roman ? 'turquoise' : 'transparent'"
+            :color="preset_obs_selected === 'Roman' ? 'turquoise' : 'transparent'"
             dark
             style="padding-left: 8px; padding-right: 6px;"
-            @click="() => {preset_only_jwst = false; preset_only_roman = !preset_only_roman}"
+            @click="() => {if (preset_obs_selected === 'Roman') {preset_obs_selected = 'Any'} else {preset_obs_selected = 'Roman'}}"
           >
-          <span v-if="preset_only_roman" style="color: white">Roman</span>
+          <span v-if="preset_obs_selected === 'Roman'" style="color: white">Roman</span>
           <span v-else style="color: black">Roman</span>
          </v-btn>
         </j-tooltip>
