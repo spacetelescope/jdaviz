@@ -16,23 +16,30 @@ __all__ = [
     "_instruments",
     "_full_apertures",
     "_all_apertures",
-    "jwst_footprint"
+    "instrument_footprint"
 ]
 
-_instruments = {'NIRSpec': 'NIRSpec',
-                'NIRCam:short': 'NIRCam',
-                'NIRCam:long': 'NIRCam',
-                'NIRISS': 'NIRISS',
-                'MIRI': 'MIRI',
-                'FGS': 'FGS'
-                }
+_instruments = {
+    'JWST': {
+        'NIRSpec': 'NIRSpec',
+        'NIRCam:short': 'NIRCam',
+        'NIRCam:long': 'NIRCam',
+        'NIRISS': 'NIRISS',
+        'MIRI': 'MIRI',
+        'FGS': 'FGS',
+    },
+    'Roman': {
+        'WFI': 'Roman',
+        'WFI+CGI': 'Roman',
+    }
+}
 
 _full_apertures = {'NIRSpec': 'NRS_FULL_MSA',
                    'NIRCam:short': 'NRCALL_FULL',
                    'NIRCam:long': 'NRCALL_FULL',
                    'NIRISS': 'NIS_AMIFULL',
                    'MIRI': 'MIRIM_FULL',
-                   'FGS': 'FGS1_FULL'
+                   'FGS': 'FGS1_FULL',
                    }
 
 _all_apertures = {'NIRSpec': ["NRS_FULL_MSA1",
@@ -56,18 +63,27 @@ _all_apertures = {'NIRSpec': ["NRS_FULL_MSA1",
                   'NIRCam:long': ["NRCA5_FULL", "NRCB5_FULL"],
                   'NIRISS': ['NIS_AMIFULL'],
                   'MIRI': ['MIRIM_FULL'],
-                  'FGS': ['FGS1_FULL', 'FGS2_FULL']
+                  'FGS': ['FGS1_FULL', 'FGS2_FULL'],
+                  'WFI': [f'WFI{i+1:02d}_FULL' for i in range(18)],
+                  'WFI+CGI': [f'WFI{i+1:02d}_FULL' for i in range(18)] + ['CGI_CEN'],
                   }
 
 
-def jwst_footprint(instrument, ra, dec, pa, v2_offset=0.0, v3_offset=0.0, apertures=None):
+def instrument_footprint(
+        observatory, instrument, ra, dec, pa,
+        v2_offset=0.0, v3_offset=0.0, apertures=None
+):
     """
     Create footprint regions in sky coordinates from a jwst instrument.
 
     Parameters
     ----------
+    observatory : string
+        Observatory, one of {"JWST", "Roman"}.
     instrument : string
-        Instrument, one of 'nirspec', 'nircam:short', 'nircam:long'.
+        Instrument. For JWST, must be one of
+        {"NIRSpec", "NIRCam:short", "NIRCam:long", "NIRISS", "MIRI", "FGS"};
+        for Roman, must be one of {"WFI", "CGI"}.
     ra : float
         RA of NIRCam center, in degrees.
     dec : float
@@ -92,17 +108,30 @@ def jwst_footprint(instrument, ra, dec, pa, v2_offset=0.0, v3_offset=0.0, apertu
     if not _has_pysiaf:
         raise ImportError('jwst_footprint requires pysiaf to be installed')
 
-    if instrument not in _instruments:  # pragma: no cover
-        raise ValueError(f"instrument must be one of {', '.join(_instruments.keys())}")
+    if observatory not in _instruments:
+        raise ValueError(f"observatory must be one of {', '.join(_instruments.keys())}")
 
-    siaf_interface = pysiaf.Siaf(_instruments.get(instrument))
+    if instrument not in _instruments[observatory]:  # pragma: no cover
+        raise ValueError(f"instrument must be one of {', '.join(_instruments[observatory].keys())}")
 
-    # Get center and PA offset from full aperture
-    full = siaf_interface.apertures[_full_apertures.get(instrument)]
-    corners = full.corners("tel", rederive=False)
-    v2 = np.mean(corners[0]) - v2_offset
-    v3 = np.mean(corners[1]) + v3_offset
-    pa_offset = full.V3IdlYAngle
+    siaf_interface = pysiaf.Siaf(_instruments.get(observatory).get(instrument))
+
+    # use different definitions of the center for JWST and Roman:
+    if observatory == "Roman":
+        if instrument.startswith("WFI"):
+            center = siaf_interface.apertures['WFI_CEN']
+        else:
+            center = siaf_interface.apertures['CGI_CEN']
+        v2 = center.V2Ref - v2_offset
+        v3 = center.V3Ref + v3_offset
+        pa_offset = center.V3IdlYAngle
+    else:
+        # Get center and PA offset from full aperture
+        full = siaf_interface.apertures[_full_apertures.get(instrument)]
+        corners = full.corners("tel", rederive=False)
+        v2 = np.mean(corners[0]) - v2_offset
+        v3 = np.mean(corners[1]) + v3_offset
+        pa_offset = full.V3IdlYAngle
 
     # Attitude matrix for sky coordinates
     attmat = pysiaf.utils.rotations.attitude(v2, v3, ra, dec, pa - pa_offset)
@@ -115,7 +144,9 @@ def jwst_footprint(instrument, ra, dec, pa, v2_offset=0.0, v3_offset=0.0, apertu
     for aperture_name in apertures:
         aperture = siaf_interface.apertures[aperture_name]
         aperture.set_attitude_matrix(attmat)
-        poly_points = aperture.closed_polygon_points("sky")
+        poly_points = aperture.closed_polygon_points(
+            "sky", rederive='CGI' not in instrument
+        )
 
         sky_coord = coordinates.SkyCoord(*poly_points, unit="deg")
         reg = regions.PolygonSkyRegion(sky_coord)
