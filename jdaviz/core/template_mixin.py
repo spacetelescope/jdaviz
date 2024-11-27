@@ -4059,6 +4059,9 @@ class AddResults(BasePluginComponent):
                 this_replace = isinstance(this_viewer, BqplotImageView)
 
             if self.app._jdaviz_helper._in_batch_load:
+                # NOTE: this currently only stores the viewer reference, and so
+                # will not handle preserving layer options if overwriting an existing
+                # entry.
                 self.app._jdaviz_helper._delayed_show_in_viewer_labels[label] = viewer_ref
             else:
                 self.app.add_data_to_viewer(viewer_ref,
