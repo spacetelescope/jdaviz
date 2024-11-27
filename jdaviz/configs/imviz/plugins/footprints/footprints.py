@@ -85,6 +85,8 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
 
     # PRESET OVERLAYS AND OPTIONS
     has_pysiaf = Bool(preset_regions._has_pysiaf).tag(sync=True)
+    preset_only_jwst = Bool(False).tag(sync=True)
+    preset_only_roman = Bool(False).tag(sync=True)
     preset_items = List().tag(sync=True)
     preset_selected = Unicode().tag(sync=True)
 
@@ -495,6 +497,31 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         else:  # pragma: no cover
             regs = []
         return regs
+
+    @observe('preset_only_jwst', 'preset_only_roman')
+    def _update_preset_filters(self, event={}):
+        if event.get('new', True):
+            # toggle the others off and then recall
+            if event.get('name') == 'preset_only_jwst' and self.preset_only_roman:
+                self.preset_only_roman = False
+                return
+            elif event.get('name') == 'preset_only_roman' and self.preset_only_jwst:
+                self.preset_only_jwst = False
+                return
+
+        def only_jwst(item):
+            return item['label'] == 'From File...' or item.get('observatory') == 'JWST'
+
+        def only_roman(item):
+            return item['label'] == 'From File...' or item.get('observatory') == 'Roman' 
+
+        filters = []
+        if self.preset_only_jwst:
+            filters.append(only_jwst)
+        if self.preset_only_roman:
+            filters.append(only_roman)
+        self.preset.filters = filters
+        self._preset_args_changed()
 
     @observe('preset_selected', 'from_file', 'ra', 'dec', 'pa', 'v2_offset', 'v3_offset')
     def _preset_args_changed(self, msg={}, overlay_selected=None):

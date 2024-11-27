@@ -94,6 +94,37 @@
         To use JWST or Roman footprints, install pysiaf and restart jdaviz.
       </v-alert>
 
+      <v-row justify="end" class="row-no-outside-padding" style="margin-bottom: -6px !important">
+        <j-tooltip tooltipcontent="Show only JWST footprints in preset list">
+          <v-btn
+            tile
+            :elevation=0
+            x-small
+            dense 
+            :color="preset_only_jwst ? 'turquoise' : 'transparent'"
+            dark
+            style="padding-left: 8px; padding-right: 6px;"
+            @click="() => {preset_only_roman = false; preset_only_jwst = !preset_only_jwst}"
+          >
+            <v-icon small :color="preset_only_jwst ? 'white' : 'turquoise'">mdi-hexagon-outline</v-icon>
+          </v-btn>
+        </j-tooltip>
+        <j-tooltip tooltipcontent="Show only Roman footprints in preset list">
+          <v-btn
+            tile
+            :elevation=0
+            x-small
+            dense 
+            :color="preset_only_roman ? 'turquoise' : 'transparent'"
+            dark
+            style="padding-left: 8px; padding-right: 6px;"
+            @click="() => {preset_only_jwst = false; preset_only_roman = !preset_only_roman}"
+          >
+            <v-icon small :color="preset_only_roman ? 'white' : 'turquoise'">mdi-telescope</v-icon>
+          </v-btn>
+        </j-tooltip>
+      </v-row>
+
       <plugin-file-import-select
         :items="preset_items"
         :selected.sync="preset_selected"
