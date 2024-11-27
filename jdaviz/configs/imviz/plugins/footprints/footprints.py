@@ -20,13 +20,6 @@ from jdaviz.configs.imviz.plugins.footprints import preset_regions
 __all__ = ['Footprints']
 
 
-_available_instruments = {
-    display_name: {'label': display_name, 'siaf_name': siaf_name, 'observatory': observatory}
-    for observatory, instruments in preset_regions._instruments.items()
-    for display_name, siaf_name in instruments.items()
-}
-
-
 @tray_registry('imviz-footprints', label="Footprints")
 class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     """
@@ -126,12 +119,14 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_remove=self._on_overlay_remove)
 
         if self.has_pysiaf:
+            obs_icons = {'JWST': 'mdi-hexagon-outline', 'Roman': 'mdi-telescope'}
             preset_options = list(preset_regions._instruments.keys())
-            preset_options = [{'label': region,
-                               'instrument': instrument,
-                               'observatory': 'JWST',
-                               'icon': 'mdi-hexagon-outline'}
-                              for region, instrument in _available_instruments.items()]
+            preset_options = [{'label': display_name,
+                               'siaf_name': siaf_name,
+                               'observatory': observatory,
+                               'icon': obs_icons.get(observatory, None)}
+                              for observatory, instruments in preset_regions._instruments.items()
+                              for display_name, siaf_name in instruments.items()]
         else:
             preset_options = ['None']
 
@@ -492,9 +487,9 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                     regs = [regs]
                 overlay['regions'] = regs
             regs = overlay.get('regions', [])
-        elif self.has_pysiaf and self.preset_selected in _available_instruments.keys():
+        elif self.has_pysiaf:
             regs = preset_regions.instrument_footprint(
-                _available_instruments[self.preset_selected]['observatory'],
+                self.preset.selected_item['observatory'],
                 self.preset_selected, **callable_kwargs
             )
         else:  # pragma: no cover
