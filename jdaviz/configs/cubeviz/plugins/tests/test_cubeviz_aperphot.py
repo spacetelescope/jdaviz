@@ -7,15 +7,18 @@ from astropy.utils.exceptions import AstropyUserWarning
 from numpy.testing import assert_allclose
 from regions import RectanglePixelRegion, PixCoord
 
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.unit_conversion_utils import (flux_conversion_general,
+                                               handle_squared_flux_unit_conversions)
 
 
 def test_cubeviz_aperphot_cube_orig_flux(cubeviz_helper, image_cube_hdu_obj_microns):
     cubeviz_helper.load_data(image_cube_hdu_obj_microns, data_label="test")
-    flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-2")  # actually a sb
+    flux_unit = u.Unit("1E-17 erg*s^-1*cm^-2*Angstrom^-1*pix^-2")
     solid_angle_unit = PIX2
 
     aper = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=3, height=5)
+
     cubeviz_helper.plugins['Subset Tools'].import_region(aper)
 
     # Make sure MASK is not an option even when shown in viewer.
@@ -201,16 +204,18 @@ def test_cubeviz_aperphot_cube_sr_and_pix2(cubeviz_helper,
     assert_quantity_allclose(row["slice_wave"], 0.46236 * u.um)
 
 
-def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
-    # this test is essentially the same as test_cubeviz_aperphot_cube_sr_and_pix2 but for a single
-    # surface brightness unit and without changing the pixel area to make outputs the same. it
-    # was requested in review to keep both tests
+def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper,
+                                               spectrum1d_cube_custom_fluxunit):
+    # this test is essentially the same as test_cubeviz_aperphot_cube_sr_and_pix2
+    # but for a single surface brightness unit and without changing the pixel
+    # area to make outputs the same. it was requested in review to keep both tests
     cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr)
     cubeviz_helper.load_data(cube, data_label="test")
 
     aper = RectanglePixelRegion(center=PixCoord(x=3, y=1), width=1, height=1)
     bg = RectanglePixelRegion(center=PixCoord(x=2, y=0), width=1, height=1)
-    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg], combination_mode='new')
+    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg],
+                                                         combination_mode='new')
 
     plg = cubeviz_helper.plugins["Aperture Photometry"]._obj
     plg.dataset_selected = "test[FLUX]"
@@ -237,10 +242,11 @@ def test_cubeviz_aperphot_cube_orig_flux_mjysr(cubeviz_helper, spectrum1d_cube_c
 
 
 def _compare_table_units(orig_tab, new_tab, orig_flux_unit=None,
-                         new_flux_unit=None):
+                         new_flux_unit=None, equivalencies=None):
 
-    # compare two photometry tables with different units and make sure that the
-    # units are as expected, and that they are equivalent once translated
+    # compare two photometry tables with different units row by row, and make
+    # sure that the units are as expected, and that they are equivalent once
+    # translated
 
     for i, row in enumerate(orig_tab):
         new_unit = new_tab[i]['unit'] or '-'
@@ -253,90 +259,110 @@ def _compare_table_units(orig_tab, new_tab, orig_flux_unit=None,
             orig_unit = u.Unit(orig_unit)
             orig = float(row['result']) * orig_unit
 
-            # first check that the actual units differ as expected,
-            # as comparing them would pass if they were the same unit
-            if orig_flux_unit in orig_unit.bases:
-                assert new_flux_unit in new_unit.bases
+            if 'var' in row['function']:  # variance is in units of flux/sb squared
+                orig_converted = handle_squared_flux_unit_conversions(orig.value,
+                                                                      orig_unit,
+                                                                      new_unit,
+                                                                      equivalencies)
+            else:
+                orig_converted = flux_conversion_general(orig.value,
+                                                         orig_unit,
+                                                         new_unit,
+                                                         equivalencies)
 
-            orig_converted = orig.to(new_unit)
-            assert_quantity_allclose(orig_converted, new)
+            # low rtol for match, phot table is rounded
+            assert_quantity_allclose(orig_converted, new, rtol=1e-03)
 
 
-def test_cubeviz_aperphot_unit_conversion(cubeviz_helper, spectrum1d_cube_custom_fluxunit):
-    """Make sure outputs of the aperture photometry plugin in Cubeviz
-       reflect the correct choice of display units from the Unit
-       Conversion plugin.
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+@pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])
+def test_cubeviz_aperphot_unit_conversions(cubeviz_helper,
+                                           spectrum1d_cube_custom_fluxunit,
+                                           flux_unit, angle_unit, new_flux_unit):
+    """
+    Test cubeviz aperture photometry with all possible unit conversions for
+    cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
+
+    The aperture photometry plugin should respect the choice of flux and angle
+    unit selected in the Unit Conversion plugin, and inputs and results should
+    be converted based on selection. All conversions between units in the
+    flux dropdown menu in the unit conversion plugin should be supported
+    by aperture photometry.
     """
 
-    # create cube with units of MJy / sr
-    mjy_sr_cube = spectrum1d_cube_custom_fluxunit(fluxunit=u.MJy / u.sr,
-                                                  shape=(5, 5, 4))
+    if new_flux_unit == flux_unit:  # skip 'converting' to same unit
+        return
 
-    # create apertures for photometry and background
-    aper = RectanglePixelRegion(center=PixCoord(x=2, y=3), width=1, height=1)
-    bg = RectanglePixelRegion(center=PixCoord(x=1, y=2), width=1, height=1)
+    cube_unit = flux_unit / angle_unit
 
-    cubeviz_helper.load_data(mjy_sr_cube, data_label="test")
-    cubeviz_helper.plugins['Subset Tools'].import_region([aper, bg], combination_mode='new')
+    # get strings of input units
+    flux_unit_str = flux_unit.to_string()
+    angle_unit_str = angle_unit.to_string()
+    cube_unit_str = cube_unit.to_string()
+    new_flux_unit_str = new_flux_unit.to_string()
 
+    # load cube with specified unit
+    cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit, shape=(5, 5, 4),
+                                           with_uncerts=True)
+    cubeviz_helper.load_data(cube, data_label="test")
+
+    # get plugins
+    st = cubeviz_helper.plugins['Subset Tools']
     ap = cubeviz_helper.plugins['Aperture Photometry']._obj
+    uc = cubeviz_helper.plugins['Unit Conversion']
 
+    # load aperture
+    aper = RectanglePixelRegion(center=PixCoord(x=2, y=3), width=1, height=1)
+    st.import_region(aper, combination_mode='new')
+
+    # select dataset and aperture in plugin
     ap.dataset_selected = "test[FLUX]"
     ap.aperture_selected = "Subset 1"
-    ap.background_selected = "Subset 2"
-    ap.vue_do_aper_phot()
 
-    uc = cubeviz_helper.plugins['Unit Conversion']._obj
+    # equivalencies for unit conversion, we only need u.spectral_density because
+    # no flux<>sb conversions will occur in this plugin
+    equiv = u.spectral_density(ap._cube_wave)
 
-    # check that initial units are synced between plugins
-    assert uc.flux_unit.selected == 'MJy'
-    assert uc.angle_unit.selected == 'sr'
-    assert ap.display_unit == 'MJy / sr'
-    assert ap.flux_scaling_display_unit == 'MJy'
+    # check initial unit traitlets are synced between ap. phot and unit conv. plugins
+    assert uc.flux_unit.selected == ap.flux_scaling_display_unit == flux_unit_str
+    assert uc.angle_unit.selected == angle_unit_str
+    assert ap.display_unit == cube_unit_str
+    assert ap.flux_scaling_display_unit == flux_unit_str
 
-    # and defaults for inputs are in the correct unit
-    assert_allclose(ap.flux_scaling, 0.003631)
-    assert_allclose(ap.background_value, 49)
-
-    # output table in original units to compare to
-    # outputs after converting units
-    orig_tab = Table(ap.results)
-
-    # change units, which will change the numerator of the current SB unit
-    uc.flux_unit.selected = 'Jy'
-
-    # make sure inputs were re-computed in new units
-    # after the unit change
-    assert_allclose(ap.flux_scaling, 3631)
-    assert_allclose(ap.background_value, 4.9e7)
-
-    # re-do photometry and make sure table is in new units
-    # and consists of the same results as before converting units
-    ap.vue_do_aper_phot()
-    new_tab = Table(ap.results)
-
-    _compare_table_units(orig_tab, new_tab, orig_flux_unit=u.MJy,
-                         new_flux_unit=u.Jy)
-
-    # test manual background and flux scaling option input in current
-    # units (Jy / sr) will be used correctly and converted to data units
+    # set background to manual and background/flux scaling to 1 to make it
+    # easier to compare between unit conversions
     ap.background_selected == 'Manual'
-    ap.background_value = 1.0e7
-    ap.flux_scaling = 1000
+    ap.background_value = 1.
+    ap.flux_scaling = 1.
+
+    # do aperture photometry with inital cube units to compare original results
+    # to results after flux unit conversion
     ap.vue_do_aper_phot()
     orig_tab = Table(ap.results)
 
-    # change units back to MJy/sr from Jy/sr
-    uc.flux_unit.selected = 'MJy'
+    # set to new unit
+    uc.flux_unit.selected = new_flux_unit_str
 
-    # make sure background input in Jy/sr is now in MJy/sr
-    assert_allclose(ap.background_value, 10)
-    assert_allclose(ap.flux_scaling, 0.001)
+    # make sure display units in aperture phot plugin reflect change
+    assert (u.Unit(ap.display_unit) * angle_unit).to_string() == new_flux_unit
+    assert ap.flux_scaling_display_unit == new_flux_unit_str
 
-    # and that photometry results match those before unit converson,
-    # but with units converted
+    # make sure background and flux scaling were converted to new unit
+    assert_allclose((ap.background_value * new_flux_unit).to(flux_unit, equiv).value, 1.)
+    assert_allclose((ap.flux_scaling * new_flux_unit).to(flux_unit, equiv).value, 1.)
+
     ap.vue_do_aper_phot()
     new_tab = Table(ap.results)
 
-    _compare_table_units(orig_tab, new_tab, orig_flux_unit=u.Jy,
-                         new_flux_unit=u.MJy)
+    # if ap. phot silently fails, then 'new_tab' will just be the last
+    # calculated one, so make sure this didn't happen
+    assert not np.all(orig_tab == new_tab)
+
+    # compare output tables row by row between original and new unit
+    _compare_table_units(orig_tab, new_tab, orig_flux_unit=flux_unit,
+                         new_flux_unit=new_flux_unit_str,
+                         equivalencies=equiv)
+
+    # todo: figure out how to test radial profile and curve of growth plots
+    # related ticket: JDAT 4962

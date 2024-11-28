@@ -10,11 +10,10 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
-from jdaviz.utils import (standardize_metadata, PRIHDR_KEY, download_uri_to_path,
-                          _eqv_flux_to_sb_pixel)
+from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
 __all__ = ['parse_data']
 

@@ -53,6 +53,10 @@ Specviz2d
 Bug Fixes
 ---------
 
+- Fixed broken flux unit conversions in all plugins that respond to changes in flux unit changes. These cases
+  occured when certain flux-to flux-conversions occured, as well as certain conversions between flux and surface
+  brightness. This PR also fixed an issue with unit string formatting in the aperture photometry plugin. [#3228]
+
 Cubeviz
 ^^^^^^^
 - Removed the deprecated ``save as fits`` option from the Collapse, Moment Maps, and Spectral Extraction plugins; use the Export plugin instead. [#3256]

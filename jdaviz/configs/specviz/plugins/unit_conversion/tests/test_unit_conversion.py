@@ -4,7 +4,7 @@ from astropy import units as u
 from astropy.nddata import InverseVariance
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS
 
 
 # On failure, should not crash; essentially a no-op.

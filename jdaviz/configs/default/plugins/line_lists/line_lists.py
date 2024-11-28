@@ -24,7 +24,7 @@ from jdaviz.core.marks import SpectralLine
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import PluginTemplateMixin
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.validunits import create_spectral_equivalencies_list
+from jdaviz.core.unit_conversion_utils import create_equivalent_spectral_axis_units_list
 
 __all__ = ['LineListTool']
 
@@ -216,7 +216,7 @@ class LineListTool(PluginTemplateMixin):
         self._on_spectrum_viewer_limits_changed()  # will also trigger _auto_slider_step
 
         # set the choices (and default) for the units for new custom lines
-        self.custom_unit_choices = create_spectral_equivalencies_list(
+        self.custom_unit_choices = create_equivalent_spectral_axis_units_list(
             viewer_data.spectral_axis.unit)
         self.custom_unit = str(viewer_data.spectral_axis.unit)
 

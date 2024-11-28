@@ -91,6 +91,7 @@ def test_2d_parser_no_unit(specviz2d_helper, mos_spectrum2d):
     assert label_mouseover.as_text() == ('Cursor 7.20000e-06, 3.00000e+00',
                                          'Wave 7.00000e-06 m (6 pix)',
                                          'Flux -3.59571e+00')
+
     assert label_mouseover.icon == 'b'
 
 

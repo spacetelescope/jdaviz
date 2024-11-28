@@ -10,7 +10,7 @@ from astropy.wcs import FITSFixedWarning
 from numpy.testing import assert_allclose
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
                           _indirect_conversion, _eqv_pixar_sr)
 

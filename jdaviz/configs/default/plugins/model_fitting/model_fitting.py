@@ -7,6 +7,10 @@ from specutils import Spectrum1D
 from specutils.utils import QuantityModel
 from traitlets import Bool, List, Unicode, observe
 
+from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
+from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
+                                                                       initialize,
+                                                                       get_model_parameters)
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin,
@@ -21,11 +25,8 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.custom_traitlets import IntHandleEmpty
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.configs.default.plugins.model_fitting.fitting_backend import fit_model_to_spectrum
-from jdaviz.configs.default.plugins.model_fitting.initializers import (MODELS,
-                                                                       initialize,
-                                                                       get_model_parameters)
-from jdaviz.utils import _eqv_flux_to_sb_pixel
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               flux_conversion_general)
 
 __all__ = ['ModelFitting']
 
@@ -507,7 +508,17 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
                 # then the model parameter has default units.  We want to pass
                 # with jdaviz default units (based on x/y units) but need to
                 # convert the default parameter unit to these units
-                initial_val = default_param.quantity.to(default_units)
+                if default_param.unit != default_units:
+                    pixar_sr = self.app.data_collection[0].meta.get('PIXAR_SR', 1)
+                    viewer = self.app.get_viewer("spectrum-viewer")
+                    cube_wave = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
+                    equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
+
+                    initial_val = flux_conversion_general([default_param.value],
+                                                          default_param.unit,
+                                                          default_units, equivs)
+                else:
+                    initial_val = default_param
 
             initial_values[param_name] = initial_val
 
@@ -538,10 +549,15 @@ class ModelFitting(PluginTemplateMixin, DatasetSelectMixin,
             init_x = masked_spectrum.spectral_axis
             init_y = masked_spectrum.flux
 
-        # equivs for spectral density and flux<>flux/pix2. revisit
-        # when generalizing plugin UC equivs.
-        equivs = _eqv_flux_to_sb_pixel() + u.spectral_density(init_x)
-        init_y = init_y.to(self._units['y'], equivs)
+        if init_y.unit != self._units['y']:
+            # equivs for spectral density and flux<>sb
+            pixar_sr = masked_spectrum.meta.get('_pixel_scale_factor', 1.0)
+            equivs = all_flux_unit_conversion_equivs(pixar_sr, init_x)
+
+            init_y = flux_conversion_general([init_y.value],
+                                             init_y.unit,
+                                             self._units['y'],
+                                             equivs)
 
         initialized_model = initialize(
             MODELS[model_comp](name=comp_label,

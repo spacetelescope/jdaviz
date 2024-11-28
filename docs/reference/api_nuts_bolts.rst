@@ -79,7 +79,11 @@ Utilities API
    :no-inheritance-diagram:
    :no-inherited-members:
 
-.. automodapi:: jdaviz.core.validunits
+.. automodapi:: jdaviz.core.unit_conversion_utils
+   :no-inheritance-diagram:
+   :no-inherited-members:
+
+.. automodapi:: jdaviz.core.custom_units_and_equivs
    :no-inheritance-diagram:
    :no-inherited-members:
 

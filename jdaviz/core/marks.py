@@ -5,12 +5,14 @@ from bqplot import LinearScale
 from bqplot.marks import Lines, Label, Scatter
 from glue.core import HubListener
 from specutils import Spectrum1D
-from jdaviz.utils import _eqv_pixar_sr, _eqv_flux_to_sb_pixel
 
 from jdaviz.core.events import GlobalDisplayUnitChanged
 from jdaviz.core.events import (SliceToolStateMessage, LineIdentifyMessage,
                                 SpectralMarksChangedMessage,
                                 RedshiftMessage)
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               flux_conversion_general)
+
 
 __all__ = ['OffscreenLinesMarks', 'BaseSpectrumVerticalLine', 'SpectralLine',
            'SliceIndicatorMarks', 'ShadowMixin', 'ShadowLine', 'ShadowLabelFixedY',
@@ -36,11 +38,13 @@ class OffscreenLinesMarks(HubListener):
                                      handler=self._update_counts)
 
         self.left = Label(text=[''], x=[0.02], y=[0.8],
-                          scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
+                          scales={'x': LinearScale(min=0, max=1),
+                                  'y': LinearScale(min=0, max=1)},
                           colors=['gray'], default_size=12,
                           align='start')
         self.right = Label(text=[''], x=[0.98], y=[0.8],
-                           scales={'x': LinearScale(min=0, max=1), 'y': LinearScale(min=0, max=1)},
+                           scales={'x': LinearScale(min=0, max=1),
+                                   'y': LinearScale(min=0, max=1)},
                            colors=['gray'], default_size=12,
                            align='end')
 
@@ -127,21 +131,16 @@ class PluginMark:
 
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
             if self.viewer.default_class is Spectrum1D:
-                # used to obtain spectral density equivalencies with previous data and units
-                eqv = u.spectral_density(self.x*self.xunit)
 
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
 
-                if ('_pixel_scale_factor' in spec.meta):
-                    eqv += _eqv_pixar_sr(spec.meta['_pixel_scale_factor'])
+                pixar_sr = spec.meta.get('PIXAR_SR', 1)
+                cube_wave = self.x * self.xunit
+                equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
 
-                # add equiv for flux <> flux/pix2
-                eqv += _eqv_flux_to_sb_pixel()
+                y = flux_conversion_general(self.y, self.yunit, unit, equivs,
+                                            with_unit=False)
 
-                y = (self.y * self.yunit).to_value(unit, equivalencies=eqv)
-            else:
-                y = (self.y * self.yunit).to_value(unit)
-            self.yunit = unit
             self.y = y
 
         self.yunit = unit
@@ -157,12 +156,6 @@ class PluginMark:
             return
         axis = axis_map.get(msg.axis, None)
         if axis is not None:
-            scale = self.scales.get(axis, None)
-            # if PluginMark mark is LinearScale(0, 1), prevent it from entering unit conversion
-            # machinery so it maintains it's position in viewer.
-            if isinstance(scale, LinearScale) and (scale.min, scale.max) == (0, 1):
-                return
-
             getattr(self, f'set_{axis}_unit')(msg.unit)
 
     def clear(self):
