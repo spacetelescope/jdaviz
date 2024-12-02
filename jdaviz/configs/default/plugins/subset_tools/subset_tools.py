@@ -28,7 +28,7 @@ from regions import (Regions, CirclePixelRegion, CircleSkyRegion,
 from jdaviz.core.region_translators import regions2roi, aperture2regions
 from jdaviz.core.events import SnackbarMessage, GlobalDisplayUnitChanged, LinkUpdatedMessage
 from jdaviz.core.registries import tray_registry
-from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
+from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelect,
                                         SubsetSelect, SelectPluginComponent)
 from jdaviz.core.tools import ICON_DIR
 from jdaviz.core.user_api import PluginUserApi
@@ -63,7 +63,7 @@ COMBO_OPTIONS = list(SUBSET_MODES_PRETTY.keys())
 
 
 @tray_registry('g-subset-tools', label="Subset Tools")
-class SubsetTools(PluginTemplateMixin, DatasetSelectMixin):
+class SubsetTools(PluginTemplateMixin):
     """
     See the :ref:`Subset Tools <imviz-subset-plugin>` for more details.
 
@@ -77,6 +77,9 @@ class SubsetTools(PluginTemplateMixin, DatasetSelectMixin):
       Manages subset selection and creation
     * ``combination_mode`` (:class:`~jdaviz.core.template_mixin.SelectPluginComponent`):
       Allows selection of combination modes for subsets
+    * ``recenter_dataset`` (:class:`~jdaviz.core.template_mixin.DatasetSelect`):
+      Data used for recentering.
+    * :meth:`recenter`
     * :meth:`get_center`
     * :meth:`set_center`
     * :meth:`import_region`
@@ -92,6 +95,9 @@ class SubsetTools(PluginTemplateMixin, DatasetSelectMixin):
     subset_definitions = List([]).tag(sync=True)
     glue_state_types = List([]).tag(sync=True)
     has_subset_details = Bool(False).tag(sync=True)
+
+    recenter_dataset_items = List().tag(sync=True)
+    recenter_dataset_selected = Unicode().tag(sync=True)
 
     subplugins_opened = Any().tag(sync=True)
 
@@ -148,6 +154,10 @@ class SubsetTools(PluginTemplateMixin, DatasetSelectMixin):
         align_by = getattr(self.app, '_align_by', None)
         self.display_sky_coordinates = (align_by == 'wcs' and not self.multiselect)
 
+        self.recenter_dataset = DatasetSelect(self, 'recenter_dataset_items',
+                                              'recenter_dataset_selected',
+                                              multiselect=None)
+
         self.combination_mode = SelectPluginComponent(self,
                                                       items='combination_items',
                                                       selected='combination_selected',
@@ -155,7 +165,10 @@ class SubsetTools(PluginTemplateMixin, DatasetSelectMixin):
 
     @property
     def user_api(self):
-        expose = ['subset', 'combination_mode', 'get_center', 'set_center', 'import_region']
+        expose = ['subset', 'combination_mode',
+                  'recenter_data', 'recenter',
+                  'get_center', 'set_center',
+                  'import_region']
         return PluginUserApi(self, expose)
 
     def _on_link_update(self, *args):
@@ -556,7 +569,11 @@ class SubsetTools(PluginTemplateMixin, DatasetSelectMixin):
 
         return status, reason
 
-    def vue_recenter_subset(self, *args):
+    def recenter(self):
+        """
+        Recenter the selected subset on the centroid of the region of the current subset
+        in the selected data layer.
+        """
         # Composite region cannot be centered. This only works for Imviz.
         if not self.is_centerable or self.config != 'imviz':  # no-op
             raise NotImplementedError(
@@ -570,7 +587,7 @@ class SubsetTools(PluginTemplateMixin, DatasetSelectMixin):
             try:
                 reg = _get_region_from_spatial_subset(self, subset_state)
                 aperture = regions2aperture(reg)
-                data = self.dataset.selected_dc_item
+                data = self.recenter_dataset.selected_dc_item
                 comp = data.get_component(data.main_components[0])
                 comp_data = comp.data
                 phot_aperstats = ApertureStats(comp_data, aperture, wcs=data.coords)
@@ -612,6 +629,9 @@ class SubsetTools(PluginTemplateMixin, DatasetSelectMixin):
                     self.hub.broadcast(SnackbarMessage(f"Unable to recenter "
                                                        f"composite subset {sub}",
                                                        color='error', sender=self))
+
+    def vue_recenter_subset(self, *args):
+        self.recenter()
 
     def _get_subset_state(self, subset_name=None):
         if self.multiselect and not subset_name:
