@@ -38,6 +38,7 @@ from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
+from ipypopout.popout_button import get_kernel_id
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
@@ -126,6 +127,8 @@ def show_widget(widget, loc, title):  # pragma: no cover
         display(widget)
 
     elif loc.startswith('sidecar'):
+        if not get_kernel_id():
+            raise RuntimeError(f"loc='{loc}' is not supported.  Use loc='inline' or run within a JupyterLab environment.")  # noqa
         from sidecar import Sidecar
 
         # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
@@ -136,6 +139,8 @@ def show_widget(widget, loc, title):  # pragma: no cover
             display(widget)
 
     elif loc.startswith('popout'):
+        if not get_kernel_id():
+            raise RuntimeError(f"loc='{loc}' is not supported.  Use loc='inline' or run within a JupyterLab environment.")  # noqa
         anchor = None if loc == 'popout' else loc.split(':')[1]
 
         # Default behavior (no anchor specified): display popout in new window
