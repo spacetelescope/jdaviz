@@ -95,7 +95,8 @@
                     @click="() => {open_orientation_plugin()}"
                   >
                     <v-icon class="invert-if-dark" style="margin-right: 8px">mdi-compass-outline</v-icon>
-                    <span v-if="!orientation_align_by_wcs" class="invert-if-dark">linked by pixel</span>
+                    <label v-if="!orientation_align_by_wcs" style="font-size: 12px; line-height: 20px; color: rgba(0, 0, 0, 0.6); position: absolute; top: -5px">Orientation</label>
+                    <span v-if="!orientation_align_by_wcs" class="invert-if-dark" style="position: absolute; margin-top: 12px">linked by pixel</span>
                   </span>
                 </j-tooltip>
                 <v-select
