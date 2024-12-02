@@ -142,8 +142,12 @@
           dense
         >
           <template v-slot:selection="{ item }">
-            <span>
-              {{ item.text }}
+            <span :class="api_hints_enabled ? 'api-hint' : null">
+              {{ api_hints_enabled ?
+                '\'' + item.text + '\''
+                :
+                item.text
+              }}
             </span>
           </template>
           <template v-slot:item="{ item }">
@@ -182,7 +186,7 @@
       <plugin-switch
         :value.sync="axes_visible_value"
         label="Show axes"
-        api_hint="plt.axes_visible = "
+        api_hint="plg.axes_visible = "
         :api_hints_enabled="api_hints_enabled"
         />
     </glue-state-sync-wrapper>
@@ -357,14 +361,13 @@
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_size_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_mode')">
-          <v-select
-            attach
-            :menu-props="{ left: true }"
+          <glue-state-select
             :items="marker_size_mode_sync.choices"
-            v-model="marker_size_mode_value"
-            :label="api_hints_enabled ? 'plg.marker_size_mode =' : 'Size Mode'"
-            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
-          ></v-select>
+            :selected.syn="marker_size_mode_value"
+            label="Size Mode"
+            api_hint="plg.marker_size_mode = "
+            :api_hints_enabled="api_hints_enabled"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value==='Fixed'" :sync="marker_size_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size')">
@@ -392,14 +395,13 @@
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_col_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_col')">
-          <v-select
-            attach
-            :menu-props="{ left: true }"
+          <glue-state-select
             :items="marker_size_col_sync.choices"
-            v-model="marker_size_col_value"
-            :label="api_hints_enabled ? 'plg.marker_size_col =' : 'Column'"
-            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
-          ></v-select>
+            :selected.sync="marker_size_col_value"
+            label="Column"
+            api_hint="plg.marker_size_col = "
+            :api_hints_enabled="api_hints_enabled"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_size_mode_value!=='Fixed'" :sync="marker_size_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_size_vmin')">
@@ -426,14 +428,13 @@
 
 
         <glue-state-sync-wrapper v-if="marker_visible_value" :sync="marker_color_mode_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color_mode')">
-          <v-select
-            attach
-            :menu-props="{ left: true }"
+          <glue-state-select
             :items="marker_color_mode_sync.choices"
-            v-model="marker_color_mode_value"
-            :label="api_hints_enabled ? 'plg.marker_color_mode =' : 'Color Mode'"
-            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
-          ></v-select>
+            :selected.sync="marker_color_mode_value"
+            label="Color Mode"
+            api_hint="plg.marker_color_mode = "
+            :api_hints_enabled="api_hints_enabled"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value==='Fixed'" :sync="marker_color_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color')">
@@ -447,25 +448,23 @@
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_color_col_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_color_col')">
-          <v-select
-            attach
-            :menu-props="{ left: true }"
+          <glue-state-select
             :items="marker_color_col_sync.choices"
-            v-model="marker_color_col_value"
-            :label="api_hints_enabled ? 'plg.marker_color_col =' : 'Column'"
-            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
-          ></v-select>
+            :selected.sync="marker_color_col_value"
+            label="Column"
+            api_hint="plg.marker_color_col = "
+            :api_hints_enabled="api_hints_enabled"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_colormap')">
-          <v-select
-            attach
-            :menu-props="{ left: true }"
+          <glue-state-select
             :items="marker_colormap_sync.choices"
-            v-model="marker_colormap_value"
-            :label="api_hints_enabled ? 'plg.marker_colormap =' : 'Colormap'"
-            :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
-          ></v-select>
+            :selected.sync="marker_colormap_value"
+            label="Colormap"
+            api_hint="plg.marker_colormap = "
+            :api_hints_enabled="api_hints_enabled"
+          />
         </glue-state-sync-wrapper>
 
         <glue-state-sync-wrapper v-if="marker_visible_value && marker_color_mode_value!=='Fixed'" :sync="marker_colormap_vmin_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('marker_colormap_vmin')">
@@ -516,7 +515,13 @@
             dense
           >
             <template v-slot:selection="{ item, index }">
-              <span>{{ item.text }}</span>
+              <span :class="api_hints_enabled ? 'api-hint' : null">
+                {{ api_hints_enabled ?
+                  '\'' + item.text + '\''
+                  :
+                  item.text
+                }}
+              </span>
             </template>
             <template v-slot:item="{ item }">
               <v-card :style="'background: '+ colorStyle(item, cmap_samples)" width="100%" class="d-flex justify-center align-center text-center">
@@ -593,25 +598,23 @@
       <!-- IMAGE:STRETCH -->
       <j-plugin-section-header v-if="stretch_function_sync.in_subscribed_states">Stretch</j-plugin-section-header>
       <glue-state-sync-wrapper :sync="stretch_function_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_function')">
-        <v-select
-          attach
-          :menu-props="{ left: true }"
+        <glue-state-select
           :items="stretch_function_sync.choices"
-          v-model="stretch_function_value"
-          :label="api_hints_enabled ? 'plg.stretch_function =' : 'Stretch Function'"
-          :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
-        ></v-select>
+          :selected.sync="stretch_function_value"
+          label="Stretch Function"
+          api_hint="plg.stretch_function = "
+          :api_hints_enabled="api_hints_enabled"
+        />
       </glue-state-sync-wrapper>
 
       <glue-state-sync-wrapper :sync="stretch_preset_sync" :multiselect="layer_multiselect" @unmix-state="unmix_state('stretch_preset')">
-        <v-select
-          attach
-          :menu-props="{ left: true }"
+        <glue-state-select
           :items="stretch_preset_sync.choices"
-          v-model="stretch_preset_value"
-          :label="api_hints_enabled ? 'plg.stretch_preset =' : 'Stretch Percentile Preset'"
-          :class="api_hints_enabled ? 'api-hint no-hint' : 'no-hint'"
-        ></v-select>
+          :selected.sync="stretch_preset_value"
+          label="Stretch Percentile Preset"
+          api_hint="plg.stretch_preset = "
+          :api_hints_enabled="api_hints_enabled"
+        />
       </glue-state-sync-wrapper>
 
       <!-- for multiselect, show vmin/max here, otherwise they'll be in the "more stretch options" expandable section -->

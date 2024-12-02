@@ -172,14 +172,12 @@
 
               <v-row class="row-min-bottom-padding" style="display: block">
                 <j-tooltip tipid='plugin-line-lists-custom-unit'>
-                    <v-select
-                      :menu-props="{ left: true }"
-                      attach
+                    <plugin-select
                       :items="custom_unit_choices"
-                      v-model="custom_unit"
+                      :selected.sync="custom_unit"
                       label="Unit"
                       dense
-                    ></v-select>
+                    />
                 </j-tooltip>
               </v-row>
 

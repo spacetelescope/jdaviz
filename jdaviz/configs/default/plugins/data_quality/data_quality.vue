@@ -32,15 +32,11 @@
       :icons="icons"
     />
 
-    <v-row>
-    <v-select
-      attach
-      :menu-props="{ left: true }"
+    <plugin-select
       :items="flag_map_items"
-      v-model="flag_map_selected"
+      :selected.sync="flag_map_selected"
       label="Flag definitions"
-    ></v-select>
-    </v-row>
+    />
 
     <v-row class="row-no-padding">
       <v-col>

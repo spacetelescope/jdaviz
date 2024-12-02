@@ -2674,7 +2674,7 @@ class PluginTableSelect(SelectPluginComponent):
 
     Example template (label and hint are optional)::
 
-      <v-select
+      <plugin-select
         :items="table_items"
         :selected.sync="table_selected"
         label="Table"
@@ -2787,7 +2787,7 @@ class PluginPlotSelect(SelectPluginComponent):
 
     Example template (label and hint are optional)::
 
-      <v-select
+      <plugin-select
         :items="plot_items"
         :selected.sync="plot_selected"
         label="Plot"

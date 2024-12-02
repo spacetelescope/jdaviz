@@ -73,17 +73,13 @@
         </span>
       </v-row>
 
-      <v-row>
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          :items="function_items.map(i => i.label)"
-          v-model="function_selected"
-          label="Function"
-          :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        :items="function_items.map(i => i.label)"
+        :selected.sync="function_selected"
+        label="Function"
+        :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
+      />
+
       <v-row v-if="conflicting_aperture_and_function">
         <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           {{conflicting_aperture_error_message}}

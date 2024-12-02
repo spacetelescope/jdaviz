@@ -297,7 +297,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
             self.delete_tooltip = "Select layer(s) to delete"
             self.delete_enabled = False
         else:
-            self.delete_tooltip = f"Remove selected {selected_repr}..."
+            self.delete_tooltip = f"Remove selected {selected_repr}"
             self.delete_enabled = True
 
         # delete from entire app rules
@@ -329,7 +329,7 @@ class DataMenu(TemplateMixin, LayerSelectMixin, DatasetSelectMixin):
         # subset edit rules
         if self.selected_n_subsets == 1 and self.selected_n_layers == 1:
             self.subset_edit_enabled = True
-            self.subset_edit_tooltip = f"Edit {self.layer_selected[0]}..."
+            self.subset_edit_tooltip = f"Edit {self.layer_selected[0]}"
         else:
             self.subset_edit_enabled = False
             if self.selected_n_subsets == 0:

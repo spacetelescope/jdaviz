@@ -94,8 +94,9 @@
                     style="cursor: pointer; display: inline-block; height: 100%; vertical-align: bottom;"
                     @click="() => {open_orientation_plugin()}"
                   >
-                    <v-icon style="margin-right: 8px">mdi-compass-outline</v-icon>
-                    <span v-if="!orientation_align_by_wcs">linked by pixel</span>
+                    <v-icon class="invert-if-dark" style="margin-right: 8px">mdi-compass-outline</v-icon>
+                    <label v-if="!orientation_align_by_wcs" style="font-size: 12px; line-height: 20px; color: rgba(0, 0, 0, 0.6); position: absolute; top: -5px">Orientation</label>
+                    <span v-if="!orientation_align_by_wcs" class="invert-if-dark" style="position: absolute; margin-top: 12px">linked by pixel</span>
                   </span>
                 </j-tooltip>
                 <v-select
@@ -104,17 +105,21 @@
                   :items="orientation_layer_items"
                   v-model="orientation_layer_selected"
                   :label="api_hints_enabled ? 'dm.orientation = ' : 'Orientation'" 
-                  :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : ''" 
+                  :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : 'invert-if-dark'" 
                   item-text="label"
                   item-value="label"
                   :hide-details="true"
-                  style="padding-top: 8px !important; display: inline-block; width: 212px"
+                  style="padding-top: 8px !important; padding-bottom: 4px !important; display: inline-block; width: 212px"
                 >
                   <template slot="selection" slot-scope="data">
                     <div class="single-line" style="width: 100%">
-                      <span>
-                        <j-layer-viewer-icon v-if="data.item.icon" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
-                        {{ data.item.label }}
+                      <span :class="api_hints_enabled ? 'api-hint api-hint-invert-color' : null">
+                        <j-layer-viewer-icon v-if="data.item.icon && !api_hints_enabled" span_style="margin-right: 4px" :icon="data.item.icon" :icons="icons" :prevent_invert_if_dark="true"></j-layer-viewer-icon>
+                        {{ api_hints_enabled ?
+                          '\'' + data.item.label + '\''
+                          :
+                          data.item.label
+                        }}
                       </span>
                     </div>
                   </template>
@@ -137,6 +142,7 @@
                   :subset_tools="subset_tools"
                   :loaded_n_data="loaded_n_data"
                   :api_hints_enabled="api_hints_enabled"
+                  :icons="icons"
                   @add-data="(data_label) => {add_data_to_viewer({data_label: data_label})}"
                   @create-subset="(subset_type) => {create_subset({subset_type: subset_type}); data_menu_open = false}"
                 >
@@ -204,6 +210,7 @@
               v-if="api_hints_enabled" 
               :hover_api_hint.sync="hover_api_hint" 
               :lock_hover_api_hint.sync="lock_hover_api_hint" 
+              :icons="icons"
             /> 
             <v-list-item class="dm-footer" v-if="loaded_n_data > 0">
               <v-list-item-content style="display: inline-block">
@@ -370,6 +377,11 @@
   }
   .v-list-item__icon {
     margin-top: 6px !important;
+  }
+  .layer-select {
+    /* spacing between entries so selections are more apparent */
+    margin-top: 1px !important;
+    margin-bottom: 1px !important;
   }
   .layer-select:nth-child(even) {
     /* alternating row colors */

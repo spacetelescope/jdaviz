@@ -76,18 +76,14 @@
           hint="Select the data used to create the trace."
         />
 
-        <v-row>
-          <v-select
-            attach
-            :menu-props="{ left: true }"
-            :items="trace_type_items.map(i => i.label)"
-            v-model="trace_type_selected"
-            :label="api_hints_enabled ? 'plg.trace_type = ' : 'Trace Type'"
-            :class="api_hints_enabled ? 'api-hint' : null"
-            hint="Method to use for creating trace"
-            persistent-hint
-          ></v-select>
-        </v-row>
+        <plugin-select
+          :items="trace_type_items.map(i => i.label)"
+          :selected.sync="trace_type_selected"
+          label="Trace Type"
+          api_hint="plg.trace_type ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Method to use for creating trace"
+        />
 
         <v-row v-if="trace_type_selected!=='Flat'">
           <v-text-field
@@ -165,18 +161,15 @@
           </v-text-field>
         </v-row>
 
-        <v-row v-if="trace_type_selected!=='Flat'">
-          <v-select
-            attach
-            :menu-props="{ left: true }"
-            :items="trace_peak_method_items.map(i => i.label)"
-            v-model="trace_peak_method_selected"
-            :label="api_hints_enabled ? 'plg.trace_peak_method =' : 'Peak Method'"
-            :class="api_hints_enabled ? 'api-hint' : null"
-            hint="Method to use for identifying the peak cross-dispersion pixel in each bin"
-            persistent-hint
-          ></v-select>
-        </v-row>
+        <plugin-select
+          v-if="trace_type_selected!=='Flat'"
+          :items="trace_peak_method_items.map(i => i.label)"
+          :selected.sync="trace_peak_method_selected"
+          label="Peak Method"
+          api_hint="plg.trace_peak_method ="
+          :api_hints_enabled="api_hints_enabled"
+          hint="Method to use for identifying the peak cross-dispersion pixel in each bin"
+        />
       </div>
 
       <v-row>
@@ -199,7 +192,7 @@
                 action_tooltip="Create Trace"
                 :action_spinner="trace_spinner"
                 add_results_api_hint="trace_results"
-                action_api_hint="plt.create_trace()"
+                action_api_hint="plg.create_trace()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_trace"
               ></plugin-add-results>
@@ -231,18 +224,14 @@
         hint="Select the data used to determine the background."
       />
 
-      <v-row>
-        <v-select
-          attach
-          :menu-props="{ left: true }"
-          :items="bg_type_items.map(i => i.label)"
-          v-model="bg_type_selected"
-          :label="api_hints_enabled ? 'plg.bg_type' : 'Background Type'"
-          :class="api_hints_enabled ? 'api-hint' : null"
-          hint="Method to use for creating background"
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        :items="bg_type_items.map(i => i.label)"
+        :selected.sync="bg_type_selected"
+        label="Background Type"
+        api_hint="plg.bg_type ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Method to use for creating background"
+      />
 
       <plugin-dataset-select
         :items="bg_trace_items"
@@ -293,18 +282,14 @@
         </v-text-field>
       </v-row>
 
-      <v-row>
-        <v-select
-          attach
-          :menu-props="{ left: true }"
-          :items="bg_statistic_items.map(i => i.label)"
-          v-model="bg_statistic_selected"
-          :label="api_hints_enabled ? 'plg.bg_statistic = ' : 'Statistic'"
-          :class="api_hints_enabled ? 'api-hint' : null"
-          hint="Statistic to use over the background window."
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        :items="bg_statistic_items.map(i => i.label)"
+        :selected.sync="bg_statistic_selected"
+        label="Statistic"
+        api_hint="plg.bg_statistic ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Statistic to use over the background window."
+      />
 
       <v-row>
         <v-expansion-panels accordion>
@@ -326,7 +311,7 @@
                 action_tooltip="Create Background Image"
                 :action_spinner="bg_img_spinner"
                 add_results_api_hint="plg.bg_results"
-                action_api_hint="plt.export_bg_img()"
+                action_api_hint=plg.export_bg_img()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_img"
               ></plugin-add-results>
@@ -353,7 +338,7 @@
                 action_label="Export"
                 action_tooltip="Create Background Spectrum"
                 add_results_api_hint="plg.bg_spec_results"
-                action_api_hint="plt.export_bg_spec()"
+                action_api_hint="plg.export_bg_spec()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_spec"
               ></plugin-add-results>
@@ -380,7 +365,7 @@
                 action_label="Export"
                 action_tooltip="Create Background Subtracted Image"
                 add_results_api_hint="plg.bg_sub_results"
-                action_api_hint="plt.export_bg_sub()"
+                action_api_hint="plg.export_bg_sub()"
                 :api_hints_enabled="api_hints_enabled"
                 @click:action="create_bg_sub"
               ></plugin-add-results>
@@ -418,18 +403,14 @@
         hint="Trace to use as center of extraction window.  'From Plugin' uses trace defined in Trace section above."
       />
 
-      <v-row>
-        <v-select
-          attach
-          :menu-props="{ left: true }"
-          :items="ext_type_items.map(i => i.label)"
-          v-model="ext_type_selected"
-          :label="api_hints_enabled ? 'plg.ext_type =' : 'Extraction Type'"
-          :class="api_hints_enabled ? 'api-hint' : null"
-          hint="Method to use for extracting the spectrum."
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        :items="ext_type_items.map(i => i.label)"
+        :selected.sync="ext_type_selected"
+        label="Extraction Type"
+        api_hint="plg.ext_type ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Method to use for extracting the spectrum."
+      />
 
       <v-row v-if="ext_uncert_warn">
         <span class="v-messages v-messages__message text--secondary">
@@ -450,18 +431,15 @@
         </v-text-field>
       </v-row>
 
-      <v-row v-if="ext_type_selected === 'Horne'">
-        <v-select
-          attach
-          :menu-props="{ left: true }"
-          :items=" horne_ext_profile_items.map(i => i.label)"
-          v-model="horne_ext_profile_selected"
-          :label="api_hints_enabled ? 'plg.horne_ext_profile =' : 'Profile Type'"
-          :class="api_hints_enabled ? 'api-hint' : null"
-          hint="Profile to use for Horne extractoin."
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        v-if="ext_type_selected === 'Horne'"
+        :items=" horne_ext_profile_items.map(i => i.label)"
+        :selected.sync="horne_ext_profile_selected"
+        label="Profile Type"
+        api_hint="plg.horne_ext_profile ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Profile to use for Horne extractoin."
+      />
 
       <v-row v-if="horne_ext_profile_selected === 'Self (interpolated)'">
         <v-text-field
@@ -521,7 +499,7 @@
         :action_disabled="ext_specreduce_err.length > 0"
         :action_spinner="spinner"
         add_results_api_hint="plg.ext_results"
-        action_api_hint="plt.export_extract_spectrum()"
+        action_api_hint=plg.export_extract_spectrum()"
         :api_hints_enabled="api_hints_enabled"
         @click:action="extract_spectrum"
       ></plugin-add-results>

@@ -6,28 +6,22 @@
         {{ hover_api_hint }}
         </span>
     </v-list-item-content>
-    <v-list-item-action>
+    <v-list-item-action style="margin-right: -8px">
       <j-tooltip
         tooltipcontent="toggle whether API hints persist after hovering to allow for copying text"
       >
-        <v-badge
-          overlap
-          bottom
-          color="#007BA1"
-          :icon="lock_hover_api_hint ? 'mdi-lock-outline' : 'mdi-lock-open-outline'"
+        <v-btn
+          small
+          text
+          width="24"
+          :style="lock_hover_api_hint ? 'background-color: #c7510996 !important' : null"
+          @click="(e) => {e.stopPropagation(); $emit('update:lock_hover_api_hint', !lock_hover_api_hint); $emit('update:hover_api_hint', '')}"
         >
-          <v-btn
-            icon
-            small
-            @click="(e) => {e.stopPropagation(); $emit('update:lock_hover_api_hint', !lock_hover_api_hint); $emit('update:hover_api_hint', '')}"
-          >
-            <v-icon
-              :color="lock_hover_api_hint ? '#007BA1' : null"
-            >
-              mdi-code-tags
-            </v-icon>
-          </v-btn>
-        </v-badge>
+          <img
+            :src="icons['api-lock']"
+            width="20"
+            class="invert-if-dark"/>
+        </v-btn>
       </j-tooltip>
     </v-list-item-action>
   </v-list-item>
@@ -35,6 +29,6 @@
 
 <script>
   module.exports = {
-    props: ['hover_api_hint', 'lock_hover_api_hint'],
+    props: ['hover_api_hint', 'lock_hover_api_hint', 'icons'],
   };
 </script>

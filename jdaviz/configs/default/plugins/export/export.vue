@@ -30,17 +30,17 @@
       >
       </plugin-inline-select>
       <v-row class="row-min-bottom-padding">
-        <v-select
-          attach
-          v-model="viewer_format_selected"
-          :items="viewer_format_items.map(i => i.label)"
-          :label="api_hints_enabled ? 'plg.viewer_format =' : 'Format'"
-          :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
-          hint="Image format for exporting viewers."
-          :disabled="viewer_selected.length == 0"
-          persistent-hint
-        >
-        </v-select>
+        <div class="category-content">
+          <plugin-select
+            :items="viewer_format_items.map(i => i.label)"
+            :selected.sync="viewer_format_selected"
+            label="Format"
+            api_hint="plg.viewer_format ="
+            :api_hints_enabled="api_hints_enabled"
+            hint="Image format for exporting viewers."
+            :disabled="viewer_selected.length == 0"
+          />
+        </div>
       </v-row>
       <v-row v-if="viewer_invalid_msg.length > 0">
         <span class="category-content v-messages v-messages__message text--secondary" style="color: red !important">
@@ -116,17 +116,17 @@
         </span>
       </v-row>
       <v-row class="row-min-bottom-padding">
-          <v-select
-            attach
-            v-model="dataset_format_selected"
+        <div class="category-content">
+          <plugin-select
             :items="dataset_format_items.map(i => i.label)"
-            :label="api_hints_enabled ? 'plg.dataset_format =' : 'Format'"
-            :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
+            :selected.sync="dataset_format_selected"
+            label="Format"
+            api_hint="plg.dataset_format ="
+            :api_hints_enabled="api_hints_enabled"
             hint="Format for exporting datasets."
             :disabled="dataset_selected.length == 0"
-            persistent-hint
-          >
-          </v-select>
+          />
+        </div>
       </v-row>
     </div>
 
@@ -152,19 +152,17 @@
       </v-row>
 
       <v-row class="row-min-bottom-padding">
-        <v-select
-          attach
-          v-model="subset_format_selected"
-          :items="subset_format_items"
-          item-text="label"
-          item-disabled="disabled"
-          :label="api_hints_enabled ? 'plg.subset_format =' : 'Format'"
-          :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
-          hint="Format for exporting subsets."
-          :disabled="subset_selected == null || subset_selected.length == 0"
-          persistent-hint
-        >
-        </v-select>
+        <div class="category-content">
+          <plugin-select
+            :items="subset_format_items.map(i => i.label)"
+            :selected.sync="subset_format_selected"
+            label="Format"
+            api_hint="plg.subset_format ="
+            :api_hints_enabled="api_hints_enabled"
+            hint="Format for exporting subsets."
+            :disabled="subset_selected == null || subset_selected.length == 0"
+          />
+        </div>
       </v-row>
     </div>
 
@@ -183,17 +181,17 @@
       >
       </plugin-inline-select>
       <v-row class="row-min-bottom-padding">
-        <v-select
-          attach
-          v-model="plugin_table_format_selected"
-          :items="plugin_table_format_items.map(i => i.label)"
-          :label="api_hints_enabled ? 'plg.plugin_table_format =' : 'Format'"
-          :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
-          hint="File format for exporting plugin tables."
-          :disabled="plugin_table_selected.length == 0"
-          persistent-hint
-        >
-        </v-select>
+        <div class="category-content">
+          <plugin-select
+            :items="plugin_table_format_items.map(i => i.label)"
+            :selected.sync="plugin_table_format_selected"
+            label="Format"
+            api_hint="plg.table_format ="
+            :api_hints_enabled="api_hints_enabled"
+            hint="File format for exporting plugin tables."
+            :disabled="plugin_table_selected.length == 0"
+          />
+        </div>
       </v-row>
     </div>
 
@@ -216,17 +214,17 @@
           style="position: absolute; left: -100%"
           :widget="plugin_plot_selected_widget"/>
       <v-row class="row-min-bottom-padding">
-        <v-select
-          attach
-          v-model="plugin_plot_format_selected"
-          :items="plugin_plot_format_items.map(i => i.label)"
-          :label="api_hints_enabled ? 'plg.plugin_plot_format =' : 'Format'"
-          :class="api_hints_enabled ? 'api-hint category-content' : 'category-content'"
-          hint="File format for exporting plugin plots."
-          :disabled="plugin_plot_selected.length == 0"
-          persistent-hint
-        >
-        </v-select>
+        <div class="category-content">
+          <plugin-select
+            :items="plugin_plot_format_items.map(i => i.label)"
+            :selected.sync="plugin_plot_format_selected"
+            label="Format"
+            api_hint="plg.plugin_plot_format ="
+            :api_hints_enabled="api_hints_enabled"
+            hint="File format for exporting plugin plots."
+            :disabled="plugin_plot_selected.length == 0"
+          />
+        </div>
       </v-row>
     </div>
 
@@ -251,7 +249,7 @@
       :auto.sync="filename_auto"
       :invalid_msg="filename_invalid_msg"
       label="Filename"
-      api_hint="plg.filename ="
+      :api_hint="'plg.filename = \''+filename_value+'\''"
       :api_hints_enabled="api_hints_enabled"
       hint="Export to a file on disk."
     ></plugin-auto-label>
@@ -320,19 +318,21 @@
 
 <style scoped>
   .export-category {
-   margin-top: 24px;
-   margin-left: 20px;
-   margin-right: 20px;
-   display: block;
-   text-align: center;
-   overflow: hidden;
-   white-space: nowrap;
-   text-transform: uppercase;
-   color: gray;
-   font-weight: 500;
+    margin-top: 24px;
+    margin-left: 20px;
+    margin-right: 20px;
+    display: block;
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: gray;
+    font-weight: 500;
   }
   .category-content {
     margin-left: 32px;
+    width: 100%;
+    padding-right: 24px;
   }
 
 </style>

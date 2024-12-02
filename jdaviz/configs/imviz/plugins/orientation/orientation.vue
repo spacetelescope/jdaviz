@@ -62,7 +62,7 @@
 
         <v-row class="row-min-bottom-padding">
           <v-radio-group
-            :label="api_hints_enabled ? 'plg.align_by =' : 'Align by'"
+            :label="api_hints_enabled ? 'plg.align_by = ' : 'Align by'"
             :class="api_hints_enabled ? 'api-hint' : null"
             hint="Align individual image layers by pixels or on the sky by WCS."
             v-model="align_by_selected"
@@ -73,7 +73,8 @@
             <v-radio
               v-for="item in align_by_items"
               :key="item.label"
-              :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : item.label"
+              :class="api_hints_enabled ? 'api-hint' : null"
+              :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : (api_hints_enabled ? '\''+item.label+'\'' : item.label)"
               :value="item.label"
             ></v-radio>
           </v-radio-group>
@@ -108,7 +109,7 @@
             :selected.sync="viewer_selected"
             :multiselect="false"
             label="Viewer"
-            api_hint="plg.viewer ="
+            api_hint="plg.viewer = "
             :api_hints_enabled="api_hints_enabled"
             :show_if_single_entry="multiselect"
             :hint="'Select the viewer to set orientation'"
@@ -120,7 +121,7 @@
             :icons="icons"
             :show_if_single_entry="true"
             label="Orientation in viewer"
-            api_hint="plg.orientation ="
+            api_hint="plg.orientation = "
             :api_hints_enabled="api_hints_enabled"
             hint="Select the viewer orientation"
           />

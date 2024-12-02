@@ -139,6 +139,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
+                     'plugin-select': 'components/plugin_select.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
                      'plugin-subset-select': 'components/plugin_subset_select.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
@@ -156,6 +157,7 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-color-picker': 'components/plugin_color_picker.vue',
                      'plugin-input-header': 'components/plugin_input_header.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
+                     'glue-state-select': 'components/glue_state_select.vue',
                      'data-menu-add': 'components/data_menu_add.vue',
                      'data-menu-remove': 'components/data_menu_remove.vue',
                      'data-menu-subset-edit': 'components/data_menu_subset_edit.vue',
@@ -232,7 +234,9 @@ class ApplicationState(State):
         'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
         'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml'),
         'nuer': read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml'),
-        'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml')
+        'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml'),
+        'api': read_icon(os.path.join(ICON_DIR, 'api.svg'), 'svg+xml'),
+        'api-lock': read_icon(os.path.join(ICON_DIR, 'api_lock.svg'), 'svg+xml'),
     }, docstring="Custom application icons")
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
