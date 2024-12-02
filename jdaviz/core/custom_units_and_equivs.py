@@ -8,6 +8,13 @@ __all__ = ["PIX2", "SPEC_PHOTON_FLUX_DENSITY_UNITS",
 PIX2 = u.pix * u.pix
 
 
+# Add spaxel to enabled units
+def enable_spaxel_unit():
+    spaxel = u.Unit('spaxel', represents=u.pixel, parse_strict='silent')
+    u.add_enabled_units([spaxel])
+    return
+
+
 def _spectral_and_photon_flux_density_units(freq_only=False, wav_only=False,
                                             as_units=False):
     """
@@ -92,8 +99,15 @@ def _eqv_flux_to_sb_pixel():
                   u.ct,
                   u.DN,
                   u.DN / u.s]
-    return [(flux_unit, flux_unit / PIX2, lambda x: x, lambda x: x)
-            for flux_unit in flux_units]
+
+    equivs = [(flux_unit, flux_unit / PIX2, lambda x: x, lambda x: x)
+              for flux_unit in flux_units]
+
+    # We also need to convert between spaxel and pixel squared
+    equivs += [(flux_unit / u.Unit('spaxel'), flux_unit / PIX2,
+               lambda x: x, lambda x: x) for flux_unit in flux_units]
+
+    return equivs
 
 
 def _eqv_sb_per_pixel_to_per_angle(flux_unit, scale_factor=1):

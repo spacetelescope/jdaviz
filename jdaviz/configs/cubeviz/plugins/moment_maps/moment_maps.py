@@ -24,9 +24,6 @@ __all__ = ['MomentMap']
 
 SPECUTILS_LT_1_15_1 = not minversion(specutils, "1.15.1.dev")
 
-spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
-u.add_enabled_units([spaxel])
-
 moment_unit_options = {0: ["Surface Brightness"],
                        1: ["Velocity", "Spectral Unit"],
                        2: ["Velocity", "Velocity^N"]}

@@ -146,7 +146,7 @@ class UnitConversion(PluginTemplateMixin):
                                                     items='angle_unit_items',
                                                     selected='angle_unit_selected')
         # NOTE: will switch to pix2 only if first data loaded into viewer is in pix2 units
-        # initialize flux choices to empty list, will be populated when data is loaded
+        # initialize angle unit choices to empty list, will be populated when data is loaded
         self.angle_unit.choices = []
 
         self.has_sb = self.has_angle or self.config in ('imviz',)
