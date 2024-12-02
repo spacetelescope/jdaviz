@@ -36,7 +36,7 @@ def test_region_from_subset_2d(cubeviz_helper):
     assert_allclose(reg.height, 6.6)
     assert_allclose(reg.angle.value, 0)
 
-    assert subset_plugin._obj.subset_selected == "Subset 1"
+    assert subset_plugin.subset == "Subset 1"
     assert subset_plugin._obj.subset_types == ["EllipticalROI"]
     assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
@@ -52,7 +52,7 @@ def test_region_from_subset_2d(cubeviz_helper):
 
     # Recenter GUI should not be exposed, but API call would raise exception.
     with pytest.raises(NotImplementedError, match='Cannot recenter'):
-        subset_plugin._obj.vue_recenter_subset()
+        subset_plugin.recenter()
 
 
 def test_region_from_subset_3d(cubeviz_helper):
@@ -430,12 +430,12 @@ def test_recenter_linked_by_wcs(imviz_helper):
         RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w))
 
     subset_plugin = imviz_helper.plugins['Subset Tools']
-    subset_plugin._obj.subset_selected = "Subset 1"
-    subset_plugin._obj.dataset_selected = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
+    subset_plugin.subset = "Subset 1"
+    subset_plugin.recenter_dataset = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
 
     # Do it a few times to converge.
     for _ in range(5):
-        subset_plugin._obj.vue_recenter_subset()
+        subset_plugin.recenter()
 
     # If handled correctly, it won't change much.
     # But if not, it move down by 7 pix or so (229.05, 145.92) and fails the test.
@@ -453,7 +453,7 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # Do it a few times to converge.
     for _ in range(5):
-        subset_plugin._obj.vue_recenter_subset()
+        subset_plugin._obj.recenter()
 
     xy = imviz_helper.default_viewer._obj._get_real_xy(
         imviz_helper.app.data_collection[0], *subset_plugin.get_center("Subset 2"))[:2]

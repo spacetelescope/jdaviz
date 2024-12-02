@@ -166,7 +166,7 @@ class SubsetTools(PluginTemplateMixin):
     @property
     def user_api(self):
         expose = ['subset', 'combination_mode',
-                  'recenter_data', 'recenter',
+                  'recenter_dataset', 'recenter',
                   'get_center', 'set_center',
                   'import_region']
         return PluginUserApi(self, expose)
