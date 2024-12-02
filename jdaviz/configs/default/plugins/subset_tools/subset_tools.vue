@@ -1,10 +1,18 @@
 <template>
   <j-tray-plugin
+    :config="config"
+    plugin_key="Subset Tools"
+    :api_hints_enabled.sync="api_hints_enabled"
     :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#subset-tools'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
+    <v-row v-if="api_hints_enabled && config === 'imviz'">
+      <span class="api-hint">
+        plg.subset.multiselect = {{ boolToString(multiselect) }}
+      </span>
+    </v-row>
     <v-row v-if="config === 'imviz'">
       <div style="width: calc(100% - 32px)">
       </div>
@@ -29,6 +37,8 @@
           :multiselect="multiselect"
           :show_if_single_entry="true"
           label="Subset"
+          api_hint="plg.subset ="
+          :api_hints_enabled="api_hints_enabled"
           hint="Select subset to edit."
         />
       </v-col>
@@ -38,6 +48,12 @@
           <g-subset-mode></g-subset-mode>
         </j-tooltip>
       </v-col>
+    </v-row>
+
+    <v-row v-if="api_hints_enabled" style="margin-top: -32px">
+      <span class="api-hint">
+        plg.combination_mode = '{{ combination_selected }}'
+      </span>
     </v-row>
 
     <!-- Sub-plugin for recentering of spatial subset (Imviz only) -->
@@ -53,10 +69,25 @@
              :selected.sync="dataset_selected"
              :show_if_single_entry="true"
              label="Data"
+             api_hint="plg.data ="
+             :api_hints_enabled="api_hints_enabled"
              hint="Select the data for centroiding."
             />
             <v-row justify="end" no-gutters>
-              <v-btn color="primary" text @click="recenter_subset">Recenter</v-btn>
+              <j-tooltip tooltipcontent="Recenter subset to centroid of selected data">
+                <v-btn
+                  color="primary"
+                  text 
+                  @click="recenter_subset"
+                  :class="api_hints_enabled ? 'api-hint' : null"
+                >
+                  {{ api_hints_enabled ? 
+                    'plg.recenter()'
+                    :
+                    'Recenter'
+                  }}
+                </v-btn>
+              </j-tooltip>
             </v-row>
           </v-expansion-panel-content>
         </v-expansion-panel>
@@ -146,3 +177,17 @@
       </v-row>
   </j-tray-plugin>
 </template>
+
+<script>
+module.exports = {
+  methods: {
+    boolToString(b) {
+      if (b) {
+        return 'True'
+      } else {
+        return 'False'
+      }
+    },
+  }
+}
+</script>
