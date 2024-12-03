@@ -23,7 +23,7 @@ else:
                viewer_requirements=['spectrum', 'image'])
 class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMixin):
     """
-    See the :ref:`Sonify Data <cubeviz-sonify-data>` for more details.
+    See the :ref:`Sonify Data Plugin Documentation <cubeviz-sonify-data>` for more details.
 
     Only the following attributes and methods are available through the
     :ref:`public plugin API <plugin-apis>`:
@@ -54,6 +54,10 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
         super().__init__(*args, **kwargs)
         self._plugin_description = 'Sonify a data cube'
         self.docs_description = 'Sonify a data cube using the Strauss package.'
+        if not self.has_strauss:
+            self.disabled_msg = ('To use Sonify Data, install strauss and restart Jdaviz. You '
+                                 'can do this by running `pip install .[strauss]` in the command'
+                                 ' line and then launching Jdaviz.')
 
         if self.has_strauss:
             devices, indexes = self.build_device_lists()
@@ -74,6 +78,14 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     def vue_sonify_cube(self, *args):
         # Get index of selected device
         selected_device_index = self.sound_device_indexes[self.sound_devices_selected]
+
+        # Apply spectral subset bounds
+        if self.spectral_subset_selected is not self.spectral_subset.default_text:
+            display_unit = self.spec_viewer.state.x_display_unit
+            min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
+            max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
+            self.flux_viewer.update_listener_wls(min_wavelength, max_wavelength, display_unit)
+
         self.flux_viewer.get_sonified_cube(self.sample_rate, self.buffer_size,
                                            selected_device_index, self.assidx, self.ssvidx,
                                            self.pccut, self.audfrqmin,
@@ -86,15 +98,6 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
     def vue_start_stop_stream(self, *args):
         self.stream_active = not self.stream_active
         self.flux_viewer.stream_active = not self.flux_viewer.stream_active
-
-    @observe('spectral_subset_selected')
-    def update_wavelength_range(self, event):
-        if not hasattr(self, 'spec_viewer'):
-            return
-        display_unit = self.spec_viewer.state.x_display_unit
-        min_wavelength = self.spectral_subset.selected_obj.lower.to_value(u.Unit(display_unit))
-        max_wavelength = self.spectral_subset.selected_obj.upper.to_value(u.Unit(display_unit))
-        self.flux_viewer.update_listener_wls(min_wavelength, max_wavelength, display_unit)
 
     @observe('volume')
     def update_volume_level(self, event):

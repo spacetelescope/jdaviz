@@ -6,16 +6,14 @@
     @plugin-ping="plugin_ping($event)"
     :keep_active.sync="keep_active"
     :popout_button="popout_button"
-    :scroll_to.sync="scroll_to">
+    :scroll_to.sync="scroll_to"
+    :disabled_msg="disabled_msg">
 
     <j-plugin-section-header>Sonify Cube</j-plugin-section-header>
     <v-alert v-if="!has_strauss" type="warning" style="margin-left: -12px; margin-right: -12px">
       To use Sonify Data, install strauss and restart Jdaviz. You can do this by running `pip install .[strauss]`
       in the command line and then launching Jdaviz.
     </v-alert>
-    <v-row>
-      <j-docs-link>Choose the input cube (currently hardcoded to be the cube in the flux viewer) and spectral subset.</j-docs-link>
-    </v-row>
 
     <plugin-subset-select
       :items="spectral_subset_items"
@@ -119,20 +117,17 @@
 
     <v-row>
       <plugin-action-button
-        :disabled="!has_strauss"
         :spinner="spinner"
         @click="sonify_cube"
       >
         Sonify data
       </plugin-action-button>
       <plugin-action-button v-if="!stream_active"
-        :disabled="!has_strauss"
         @click="start_stop_stream"
       >
         Start stream
       </plugin-action-button>
       <plugin-action-button v-if="stream_active"
-        :disabled="!has_strauss"
         @click="start_stop_stream"
       >
         Stop stream

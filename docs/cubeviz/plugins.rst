@@ -340,7 +340,8 @@ have valid flux units. For 3D data, the current :ref:`slice` is used.
 Sonify Data
 ===========
 
-This plugin uses the Strauss package to turn data cubes into audio grids (by pressing the
+This plugin uses the `Strauss <https://strauss.readthedocs.io/en/latest/>`_ package
+to turn data cubes into audio grids (by pressing the
 :guilabel:`Sonify Data` button) that can be played while the spectrum-at-spaxel tool is active
 and the mouse is hovering over the flux viewer. A range of the cube can be sonified by creating
 and selecting a spectral subset from the :guilabel:`Spectral range` dropdown and then pressing
