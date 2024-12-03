@@ -2,11 +2,13 @@ from contextlib import contextmanager
 from echo import delay_callback, CallbackProperty
 import numpy as np
 
+from astropy import units as u
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
+from specutils import Spectrum1D
 
-from jdaviz.utils import get_reference_image_data
+from jdaviz.utils import get_reference_image_data, flux_conversion
 
 __all__ = ['FreezableState', 'FreezableProfileViewerState', 'FreezableBqplotImageViewerState']
 
@@ -52,6 +54,27 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
         with delay_callback(self, 'x_min', 'x_max'):
             self.x_min = x_min
             self.x_max = x_max
+
+    def _convert_units_y_limits(self, old_unit, new_unit):
+        # override glue's _convert_units_y_limits to account
+        # for equivalencies.  This converts all four corners
+        # of the limits to set new limits that contain those
+        # same corners
+
+        if old_unit != new_unit:
+            if old_unit is None or new_unit is None:
+                self._reset_y_limits()
+                return
+
+            x_corners = np.array([self.x_min, self.x_min, self.x_max, self.x_max])
+            y_corners = np.array([self.y_min, self.y_max, self.y_min, self.y_max])
+            spec = Spectrum1D(spectral_axis=x_corners * u.Unit(self.x_display_unit),
+                              flux=y_corners * u.Unit(old_unit))
+            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spec)
+
+            #with delay_callback(self, 'y_min', 'y_max'):
+            self.y_min = np.nanmin(y_corners_new)
+            self.y_max = np.nanmax(y_corners_new)
 
 
 class FreezableBqplotImageViewerState(BqplotImageViewerState, FreezableState):
