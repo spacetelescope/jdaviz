@@ -499,7 +499,10 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Also apply the cube's original mask array
         if mask_cube:
-            mask = np.logical_or(mask, mask_cube.get_component('flux').data.astype('bool'))
+            mask_from_cube = mask_cube.get_component('flux').data
+            # Some mask cubes have NaNs where they are not masked instead of 0
+            mask_from_cube[np.where(np.isnan(mask_from_cube))] = 0
+            mask = np.logical_or(mask, mask_from_cube.astype('bool'))
 
         nddata_reshaped = NDDataArray(
             flux, mask=mask, uncertainty=uncertainties, wcs=wcs, meta=nddata.meta
