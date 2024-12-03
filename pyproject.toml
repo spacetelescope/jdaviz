@@ -138,8 +138,6 @@ filterwarnings = [
     "ignore::DeprecationWarning:glue",
     "ignore::DeprecationWarning:asteval",
     "ignore:::specutils.spectra.spectrum1d",
-    # Remove the following line once https://github.com/astrofrog/mpl-scatter-density/issues/46 is addressed
-    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:mpl_scatter_density",
     # Ignore numpy 2.0 warning, see https://github.com/astropy/astropy/pull/15495
     # and https://github.com/scipy/scipy/pull/19275
     "ignore:.*numpy\\.core.*:DeprecationWarning",
