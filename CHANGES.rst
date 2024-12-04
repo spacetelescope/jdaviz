@@ -8,6 +8,8 @@ New Features
 
 * Improve performance while importing multiple regions. [#3321]
 
+* API method to toggle API hints. [#3336]
+
 Cubeviz
 ^^^^^^^
 
