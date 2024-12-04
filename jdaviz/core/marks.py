@@ -129,7 +129,14 @@ class PluginMark:
             unit = self.viewer.state.y_display_unit
         unit = u.Unit(unit)
 
+        # spectrum y-values in viewer have already been converted, don't convert again
+        # if a spectral_y_type is changed, just update the unit
+        if self.yunit is not None and check_if_unit_is_per_solid_angle(self.yunit) != check_if_unit_is_per_solid_angle(unit):  # noqa
+            self.yunit = unit
+            return
+
         if self.yunit is not None and not np.all([s == 0 for s in self.y.shape]):
+
             if self.viewer.default_class is Spectrum1D:
 
                 spec = self.viewer.state.reference_data.get_object(cls=Spectrum1D)
@@ -137,7 +144,6 @@ class PluginMark:
                 pixar_sr = spec.meta.get('PIXAR_SR', 1)
                 cube_wave = self.x * self.xunit
                 equivs = all_flux_unit_conversion_equivs(pixar_sr, cube_wave)
-
                 y = flux_conversion_general(self.y, self.yunit, unit, equivs,
                                             with_unit=False)
 
@@ -148,7 +154,9 @@ class PluginMark:
     def _on_global_display_unit_changed(self, msg):
         if not self.auto_update_units:
             return
-        if self.viewer.__class__.__name__ in ['SpecvizProfileView', 'CubevizProfileView']:
+        if self.viewer.__class__.__name__ in ['SpecvizProfileView',
+                                              'CubevizProfileView',
+                                              'MosvizProfileView']:
             axis_map = {'spectral': 'x', 'spectral_y': 'y'}
         elif self.viewer.__class__.__name__ == 'MosvizProfile2DView':
             axis_map = {'spectral': 'x'}
@@ -156,6 +164,12 @@ class PluginMark:
             return
         axis = axis_map.get(msg.axis, None)
         if axis is not None:
+            scale = self.scales.get(axis, None)
+            # if PluginMark mark is LinearScale(0, 1), prevent it from entering unit conversion
+            # machinery so it maintains it's position in viewer.
+            if isinstance(scale, LinearScale) and (scale.min, scale.max) == (0, 1):
+                return
+
             getattr(self, f'set_{axis}_unit')(msg.unit)
 
     def clear(self):
