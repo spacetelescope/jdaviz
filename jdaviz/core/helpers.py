@@ -453,6 +453,20 @@ class ConfigHelper(HubListener):
                       DeprecationWarning)
         return self.show(loc="sidecar:tab-after", title=title)
 
+    def toggle_api_hints(self, enabled=None):
+        """
+        Toggle the visibility of API hints in the application.
+
+        Parameters
+        ----------
+        enabled : bool, optional
+            If `True`, show API hints. If `False`, hide API hints.
+            If `None`, toggle the current state.
+        """
+        if enabled is None:
+            enabled = not self.app.state.show_api_hints
+        self.app.state.show_api_hints = enabled
+
     def _handle_display_units(self, data, use_display_units=True):
         if use_display_units:
             if isinstance(data, Spectrum1D):
