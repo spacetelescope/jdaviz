@@ -65,12 +65,11 @@ Jdaviz
 
          Jump to Rampviz
 
-``jdaviz`` is a package of astronomical data analysis visualization
-tools based on the Jupyter platform.  These GUI-based tools link data
-visualization and interactive analysis.  They are designed to work
-within a Jupyter notebook cell, as a standalone desktop application,
-or as embedded windows within a website -- all with nearly identical
-user interfaces.
+``jdaviz`` is a Python package for interactive data visualization
+and analysis tools for astronomical observations. ``jdaviz`` works
+within a Jupyter notebook, as a standalone desktop app, a
+command-line application, or embedded within a website -- all with
+nearly identical user interfaces.
 
 ``jdaviz`` applications currently include tools for interactive
 visualization of spectroscopic and imaging data.
