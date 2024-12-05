@@ -33,6 +33,7 @@ tray:
   - specviz-line-analysis
   - cubeviz-moment-maps
   - imviz-aper-phot-simple
+  - cubeviz-sonify-data
   - export
   - about
 viewer_area:
