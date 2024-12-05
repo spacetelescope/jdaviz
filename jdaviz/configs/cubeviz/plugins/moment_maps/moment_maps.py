@@ -17,14 +17,12 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         SpectralContinuumMixin,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner)
+from jdaviz.core.unit_conversion_utils import convert_integrated_sb_unit
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['MomentMap']
 
 SPECUTILS_LT_1_15_1 = not minversion(specutils, "1.15.1.dev")
-
-spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
-u.add_enabled_units([spaxel])
 
 moment_unit_options = {0: ["Surface Brightness"],
                        1: ["Velocity", "Spectral Unit"],
@@ -90,6 +88,9 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Create a 2D image from a data cube.'
 
         self.moment = None
 
@@ -321,7 +322,40 @@ class MomentMap(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMix
         # convert units for moment 0, which is the only currently supported
         # moment for using converted units.
         if n_moment == 0:
-            self.moment = self.moment.to(self.moment_zero_unit)
+            if self.moment_zero_unit != self.moment.unit:
+                spectral_axis_unit = u.Unit(self.spectrum_viewer.state.x_display_unit)
+
+                # if the flux unit is a per-frequency unit but the spectral axis unit
+                # is a wavelength, or vice versa, we need to convert the spectral axis
+                # unit that the flux was integrated over so they are compatible for
+                # unit conversion (e.g., Jy m / sr needs to become Jy Hz / sr, and
+                # (erg Hz)/(s * cm**2 * AA) needs to become (erg)/(s * cm**2)
+                desired_freq_unit = spectral_axis_unit if spectral_axis_unit.physical_type == 'frequency' else u.Hz  # noqa E501
+                desired_length_unit = spectral_axis_unit if spectral_axis_unit.physical_type == 'length' else u.AA  # noqa E501
+                moment_temp = convert_integrated_sb_unit(self.moment,
+                                                         spectral_axis_unit,
+                                                         desired_freq_unit,
+                                                         desired_length_unit)
+                moment_zero_unit_temp = convert_integrated_sb_unit(1 * u.Unit(self.moment_zero_unit),  # noqa E501
+                                                                   spectral_axis_unit,
+                                                                   desired_freq_unit,
+                                                                   desired_length_unit)
+
+                moment = moment_temp.to(moment_zero_unit_temp.unit, u.spectral())
+
+                # if flux and spectral axis units were incompatible in terms of freq/wav
+                # and needed to be converted to an intermediate unit for conversion, then
+                # re-instate the original chosen units (e.g Jy m /sr was converted to Jy Hz / sr
+                # for unit conversion, now back to Jy m / sr)
+                if spectral_axis_unit not in moment.unit.bases:
+                    if spectral_axis_unit.physical_type == 'frequency':
+                        moment *= (1*desired_length_unit).to(desired_freq_unit,
+                                                             u.spectral()) / desired_length_unit
+                    elif spectral_axis_unit.physical_type == 'length':
+                        moment *= (1*desired_freq_unit).to(desired_length_unit,
+                                                           u.spectral()) / desired_freq_unit
+
+                self.moment = moment
 
         # Reattach the WCS so we can load the result
         self.moment = CCDData(self.moment, wcs=data_wcs)

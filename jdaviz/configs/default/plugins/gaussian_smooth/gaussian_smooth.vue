@@ -3,23 +3,20 @@
     :config="config"
     plugin_key="Gaussian Smooth"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Smooth data with a Gaussian kernel.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#gaussian-smooth'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-      <v-row v-if="show_modes">
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          :items="mode_items.map(i => i.label)"
-          v-model="mode_selected"
-          :class="api_hints_enabled ? 'api-hint' : null"
-          :label="api_hints_enabled ? 'plg.mode =' : 'Mode'"
-          hint="Smooth data spectrally or spatially."
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        v-if="show_modes"
+        :items="mode_items.map(i => i.label)"
+        :selected.sync="mode_selected"
+        label="Mode"
+        api_hint="plg.mode ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Smooth data spectrally or spatially."
+      />
 
       <!-- for mosviz, the entries change on row change
            for cubeviz, the entries change when toggling "cube fit"

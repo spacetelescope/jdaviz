@@ -3,64 +3,51 @@
     :config="config"
     plugin_key="Unit Conversion"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Convert the units of displayed physical quantities.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#unit-conversion'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
 
-    <v-row v-if="has_spectral">
-      <v-select
-        :menu-props="{ left: true }"
-        attach
-        :items="spectral_unit_items.map(i => i.label)"
-        v-model="spectral_unit_selected"
-        :label="api_hints_enabled ? 'plg.spectral_unit =' : 'Spectral Unit'"
-        :class="api_hints_enabled ? 'api-hint' : null"
-        hint="Global display unit for spectral axis."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-select
+      v-if="has_spectral"
+      :items="spectral_unit_items.map(i => i.label)"
+      :selected.sync="spectral_unit_selected"
+      label="Spectral Unit"
+      api_hint="plg.spectral_unit ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Global display unit for spectral axis."
+    />
 
-    <v-row v-if="has_time">
-      <v-select
-        :menu-props="{ left: true }"
-        attach
-        :items="time_unit_items.map(i => i.label)"
-        v-model="time_unit_selected"
-        :label="api_hints_enabled ? 'plg.time_unit =' : 'Time Unit'"
-        :class="api_hints_enabled ? 'api-hint' : null"
-        hint="Global display unit for time axis."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-select
+      v-if="has_time"
+      :items="time_unit_items.map(i => i.label)"
+      :selected.sync="time_unit_selected"
+      label="Time Unit"
+      api_hint="plg.time_unit ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Global display unit for time axis."
+    />
 
-    <v-row v-if="has_flux">
-      <v-select
-        :menu-props="{ left: true }"
-        attach
-        :items="flux_unit_items.map(i => i.label)"
-        v-model="flux_unit_selected"
-        :label="api_hints_enabled ? 'plg.flux_unit =' : 'Flux Unit'"
-        :class="api_hints_enabled ? 'api-hint' : null"
-        hint="Global display unit for flux axis."
-        persistent-hint
-      ></v-select>
-    </v-row>
-  
-    <v-row v-if="has_angle">
-      <v-select
-        :menu-props="{ left: true }"
-        attach
-        :items="angle_unit_items.map(i => i.label)"
-        v-model="angle_unit_selected"
-        :label="api_hints_enabled ? 'plg.angle_unit =' : 'Solid Angle Unit'"
-        :class="api_hints_enabled ? 'api-hint' : null"
-        hint="Solid angle unit."
-        persistent-hint
+    <plugin-select
+      v-if="has_flux"
+      :items="flux_unit_items.map(i => i.label)"
+      :selected.sync="flux_unit_selected"
+      label="Flux Unit"
+      api_hint="plg.flux_unit ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Global display unit for flux axis."
+    />
 
-      ></v-select>
-    </v-row>
+    <plugin-select
+      v-if="has_angle"
+      :items="angle_unit_items.map(i => i.label)"
+      :selected.sync="angle_unit_selected"
+      label="Angle Unit"
+      api_hint="plg.angle_unit ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Solid angle unit."
+    />
 
     <v-row v-if="has_spectral">
       <v-text-field
@@ -78,18 +65,15 @@
         <v-divider></v-divider>
       </v-row>
 
-      <v-row>
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          :items="spectral_y_type_items.map(i => i.label)"
-          v-model="spectral_y_type_selected"
-          :label="api_hints_enabled ? 'plg.spectral_y_type =' : 'Spectral y-axis Type'"
-          :class="api_hints_enabled ? 'api-hint' : null"
-          hint="Select the y-axis physical type for the spectrum-viewer."
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        :items="spectral_y_type_items.map(i => i.label)"
+        :selected.sync="spectral_y_type_selected"
+        label="Spectral y-axis Type"
+        api_hint="plg.spectral_y_type ="
+        :api_hints_enabled="api_hints_enabled"
+        hint="Select the y-axis physical type for the spectrum-viewer."
+      />
+
 
       <v-alert type="warning" v-if="!pixar_sr_exists">
             PIXAR_SR FITS header keyword not found when parsing spectral cube.

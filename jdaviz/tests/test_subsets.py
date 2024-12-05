@@ -17,7 +17,7 @@ from jdaviz.utils import get_subset_type, MultiMaskSubsetState
 def test_region_from_subset_2d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 1)), data_label='Test 2D Flux')
 
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 2D Flux')
 
@@ -36,26 +36,30 @@ def test_region_from_subset_2d(cubeviz_helper):
     assert_allclose(reg.height, 6.6)
     assert_allclose(reg.angle.value, 0)
 
-    assert subset_plugin.subset_selected == "Subset 1"
-    assert subset_plugin.subset_types == ["EllipticalROI"]
-    assert subset_plugin.is_centerable
+    assert subset_plugin.subset == "Subset 1"
+    assert subset_plugin._obj.subset_types == ["EllipticalROI"]
+    assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "X Center (pixels)", key) == 1
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 3.5
-        assert subset_plugin._get_value_from_subset_definition(0, "X Radius (pixels)", key) == 1.2
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Radius (pixels)", key) == 3.3
-        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "X Center (pixels)", key) == 1
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Y Center (pixels)", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "X Radius (pixels)", key) == 1.2
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Y Radius (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 0
 
     # Recenter GUI should not be exposed, but API call would raise exception.
     with pytest.raises(NotImplementedError, match='Cannot recenter'):
-        subset_plugin.vue_recenter_subset()
+        subset_plugin.recenter()
 
 
 def test_region_from_subset_3d(cubeviz_helper):
     cubeviz_helper.load_data(np.ones((128, 128, 256)), data_label='Test 3D Flux')
 
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
-    assert subset_plugin.subset_selected == "Create New"
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
+    assert subset_plugin._obj.subset_selected == "Create New"
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
@@ -73,32 +77,32 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.height, 3.5)
     assert_allclose(reg.angle.value, 0)
 
-    assert subset_plugin.subset_selected == "Subset 1"
-    assert subset_plugin.subset_types == ["RectangularROI"]
-    assert subset_plugin.is_centerable
+    assert subset_plugin._obj.subset_selected == "Subset 1"
+    assert subset_plugin._obj.subset_types == ["RectangularROI"]
+    assert subset_plugin._obj.is_centerable
     assert subset_plugin.get_center() == (2.25, 1.55)
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 1
-        assert subset_plugin._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
-        assert subset_plugin._get_value_from_subset_definition(0, "Ymin (pixels)", key) == -0.2
-        assert subset_plugin._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
-        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 0
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 1
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", key) == -0.2
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 0
 
-    # Mimic user changing something in Subset Tool GUI.
-    subset_plugin._set_value_in_subset_definition(0, "Xmin (pixels)", "value", 2)
-    subset_plugin._set_value_in_subset_definition(0, "Ymin (pixels)", "value", 0)
-    subset_plugin._set_value_in_subset_definition(0, "Angle", "value", 45)  # ccw deg
+    # Mimic user changing something in Subset GUI.
+    subset_plugin._obj._set_value_in_subset_definition(0, "Xmin (pixels)", "value", 2)
+    subset_plugin._obj._set_value_in_subset_definition(0, "Ymin (pixels)", "value", 0)
+    subset_plugin._obj._set_value_in_subset_definition(0, "Angle", "value", 45)  # ccw deg
     # "orig" is unchanged until user clicks Update button.
-    assert subset_plugin._get_value_from_subset_definition(0, "Xmin (pixels)", "orig") == 1
-    assert subset_plugin._get_value_from_subset_definition(0, "Ymin (pixels)", "orig") == -0.2
-    assert subset_plugin._get_value_from_subset_definition(0, "Angle", "orig") == 0
-    subset_plugin.vue_update_subset()
+    assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", "orig") == 1
+    assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", "orig") == -0.2
+    assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", "orig") == 0
+    subset_plugin._obj.vue_update_subset()
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 2
-        assert subset_plugin._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
-        assert subset_plugin._get_value_from_subset_definition(0, "Ymin (pixels)", key) == 0
-        assert subset_plugin._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
-        assert subset_plugin._get_value_from_subset_definition(0, "Angle", key) == 45
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmin (pixels)", key) == 2
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Xmax (pixels)", key) == 3.5
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymin (pixels)", key) == 0
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Ymax (pixels)", key) == 3.3
+        assert subset_plugin._obj._get_value_from_subset_definition(0, "Angle", key) == 45
 
     subsets = cubeviz_helper.app.get_subsets()
     reg = subsets.get('Subset 1')[0]['region']
@@ -120,28 +124,35 @@ def test_region_from_subset_3d(cubeviz_helper):
     assert_allclose(reg.angle.to_value(u.deg), 45)  # Might be stored in radians
 
     # Circular Subset
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(CircularROI(xc=3, yc=4, radius=2.4))
 
-    assert subset_plugin.subset_selected == "Subset 2"
-    assert subset_plugin.subset_types == ["CircularROI"]
-    assert subset_plugin.is_centerable
+    assert subset_plugin._obj.subset_selected == "Subset 2"
+    assert subset_plugin._obj.subset_types == ["CircularROI"]
+    assert subset_plugin._obj.is_centerable
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "X Center (pixels)", key) == 3
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 4
-        assert subset_plugin._get_value_from_subset_definition(0, "Radius (pixels)", key) == 2.4
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "X Center (pixels)", key) == 3
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Y Center (pixels)", key) == 4
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Radius (pixels)", key) == 2.4
 
     # Circular Annulus Subset
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(CircularAnnulusROI(xc=5, yc=6, inner_radius=2, outer_radius=4))
 
-    assert subset_plugin.subset_selected == "Subset 3"
-    assert subset_plugin.subset_types == ["CircularAnnulusROI"]
+    assert subset_plugin._obj.subset_selected == "Subset 3"
+    assert subset_plugin._obj.subset_types == ["CircularAnnulusROI"]
     for key in ("orig", "value"):
-        assert subset_plugin._get_value_from_subset_definition(0, "X Center (pixels)", key) == 5
-        assert subset_plugin._get_value_from_subset_definition(0, "Y Center (pixels)", key) == 6
-        assert subset_plugin._get_value_from_subset_definition(0, "Inner Radius (pixels)", key) == 2
-        assert subset_plugin._get_value_from_subset_definition(0, "Outer Radius (pixels)", key) == 4
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "X Center (pixels)", key) == 5
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Y Center (pixels)", key) == 6
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Inner Radius (pixels)", key) == 2
+        assert subset_plugin._obj._get_value_from_subset_definition(
+            0, "Outer Radius (pixels)", key) == 4
 
 
 def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
@@ -169,7 +180,7 @@ def test_region_from_subset_profile(cubeviz_helper, spectral_cube_wcs):
         assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", key) == 5
         assert subset_plugin._get_value_from_subset_definition(0, "Upper bound", key) == 15.5
 
-    # Mimic user changing something in Subset Tool GUI.
+    # Mimic user changing something in Subset GUI.
     subset_plugin._set_value_in_subset_definition(0, "Lower bound", "value", 10)
     # "orig" is unchanged until user clicks Update button.
     assert subset_plugin._get_value_from_subset_definition(0, "Lower bound", "orig") == 5
@@ -241,7 +252,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
 
     cubeviz_helper.app.add_data_to_viewer('flux-viewer', 'Test 3D Flux')
 
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(CircularROI(xc=25, yc=25, radius=5))
 
     reg = cubeviz_helper.app.get_subsets("Subset 1")
@@ -284,7 +295,7 @@ def test_composite_region_from_subset_3d(cubeviz_helper):
     assert reg[-1] == {'name': 'CircularROI', 'glue_state': 'AndNotState', 'region': circle2,
                        'sky_region': None, 'subset_state': reg[-1]['subset_state']}
 
-    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-plugin')
+    subset_plugin = cubeviz_helper.app.get_tray_item_from_name('g-subset-tools')
     assert subset_plugin.subset_selected == "Subset 1"
     assert subset_plugin.subset_types == ['CircularROI', 'RectangularROI', 'EllipticalROI',
                                           'RectangularROI', 'CircularROI']
@@ -415,16 +426,16 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # This rectangle is over a real object in reference image but
     # only the last row in the second image if linked by pixel.
-    imviz_helper.plugins['Subset Tools']._obj.import_region(
+    imviz_helper.plugins['Subset Tools'].import_region(
         RectanglePixelRegion(center=PixCoord(x=229, y=152), width=17, height=7).to_sky(w))
 
-    subset_plugin = imviz_helper.plugins["Subset Tools"]._obj
-    subset_plugin.subset_selected = "Subset 1"
-    subset_plugin.dataset_selected = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
+    subset_plugin = imviz_helper.plugins['Subset Tools']
+    subset_plugin.subset = "Subset 1"
+    subset_plugin.recenter_dataset = "gauss100_fits_wcs_block_reduced[PRIMARY,1]"
 
     # Do it a few times to converge.
     for _ in range(5):
-        subset_plugin.vue_recenter_subset()
+        subset_plugin.recenter()
 
     # If handled correctly, it won't change much.
     # But if not, it move down by 7 pix or so (229.05, 145.92) and fails the test.
@@ -434,15 +445,15 @@ def test_recenter_linked_by_wcs(imviz_helper):
 
     # Now create a new subset that has a source in the corner and test
     # recentering with multiselect.
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(
         CirclePixelRegion(center=PixCoord(x=145, y=175), radius=17).to_sky(w))
-    subset_plugin.multiselect = True
-    subset_plugin.subset_selected = ["Subset 1", "Subset 2"]
+    subset_plugin._obj.multiselect = True
+    subset_plugin._obj.subset_selected = ["Subset 1", "Subset 2"]
 
     # Do it a few times to converge.
     for _ in range(5):
-        subset_plugin.vue_recenter_subset()
+        subset_plugin._obj.recenter()
 
     xy = imviz_helper.default_viewer._obj._get_real_xy(
         imviz_helper.app.data_collection[0], *subset_plugin.get_center("Subset 2"))[:2]
@@ -565,7 +576,7 @@ def test_edit_composite_spectral_subset(specviz_helper, spectrum1d):
 def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = specviz_helper.plugins['Subset Tools']
 
     unit = spectrum1d.spectral_axis.unit
     subset = [SpectralRegion(6200 * unit, 6800 * unit),
@@ -579,7 +590,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6100 and reg[0].upper.value == 6200
     assert reg[1].lower.value == 6800 and reg[1].upper.value == 7200
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset = [SpectralRegion(7000 * unit, 7200 * unit),
               SpectralRegion(7100 * unit, 7300 * unit),
               SpectralRegion(6900 * unit, 7105 * unit)]
@@ -590,7 +601,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6900 and reg[0].upper.value == 7105
     assert reg[1].lower.value == 7200 and reg[1].upper.value == 7300
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset = [SpectralRegion(6000 * unit, 6500 * unit),
               SpectralRegion(6100 * unit, 6200 * unit)]
     mode = ['new', 'xor']
@@ -600,7 +611,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
     assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset = [SpectralRegion(6100 * unit, 6200 * unit),
               SpectralRegion(6000 * unit, 6500 * unit)]
     mode = ['new', 'xor']
@@ -610,7 +621,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
     assert reg[0].lower.value == 6000 and reg[0].upper.value == 6100
     assert reg[1].lower.value == 6200 and reg[1].upper.value == 6500
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset = [SpectralRegion(7500 * unit, 7600 * unit),
               SpectralRegion(6000 * unit, 6010 * unit)]
     mode = ['new', 'xor']
@@ -624,7 +635,7 @@ def test_composite_spectral_with_xor(specviz_helper, spectrum1d):
 def test_composite_spectral_with_xor_complicated(specviz_helper, spectrum1d):
     specviz_helper.load_data(spectrum1d)
 
-    subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = specviz_helper.plugins['Subset Tools']
 
     unit = spectrum1d.spectral_axis.unit
     subset = [SpectralRegion(6100 * unit, 6700 * unit),
@@ -786,7 +797,7 @@ def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
 
     spectrum_viewer = cubeviz_helper.app.get_viewer("spectrum-viewer")
 
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     unit = u.Unit(cubeviz_helper.plugins['Unit Conversion'].spectral_unit.selected)
     subset_plugin.import_region(SpectralRegion(6200 * unit, 6800 * unit))
 
@@ -796,7 +807,7 @@ def test_delete_subsets(cubeviz_helper, spectral_cube_wcs):
 
     flux_viewer = cubeviz_helper.app.get_viewer("flux-viewer")
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(RectangularROI(1, 3.5, -0.2, 3.3))
 
     dc.remove_subset_group(dc.subset_groups[0])
@@ -808,14 +819,13 @@ class TestRegionsFromSubsets:
     """Tests for obtaining Sky Regions from subsets."""
 
     def test_get_regions_from_subsets_cubeviz(self, cubeviz_helper, spectral_cube_wcs):
-
         """ Basic tests for retrieving Sky Regions from spatial subsets in Cubeviz.
         """
         data = Spectrum1D(flux=np.ones((128, 128, 256)) * u.nJy, wcs=spectral_cube_wcs)
         cubeviz_helper.load_data(data)
 
         # basic test, a single circular region
-        subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = cubeviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = cubeviz_helper.app.get_subsets(include_sky_region=True)
         sky_region = subsets['Subset 1'][0]['sky_region']
@@ -849,7 +859,6 @@ class TestRegionsFromSubsets:
         assert subsets['Subset 1'][1]['sky_region'] is None
 
     def test_get_regions_from_subsets_imviz(self, imviz_helper, spectral_cube_wcs):
-
         """ Basic tests for retrieving Sky Regions from subsets in Imviz.
         """
 
@@ -861,7 +870,7 @@ class TestRegionsFromSubsets:
         imviz_helper.load_data(data)
 
         # basic test, a single circular region
-        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = imviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         sky_region = subsets['Subset 1'][0]['sky_region']
@@ -886,7 +895,6 @@ class TestRegionsFromSubsets:
         assert_allclose(sky_region_1.radius.arcsec, 25816.498273)
 
     def test_no_wcs_sky_regions(self, imviz_helper):
-
         """ Make sure that if sky regions are requested and there is no WCS,
             that it returns None with no error.
         """
@@ -894,7 +902,7 @@ class TestRegionsFromSubsets:
         data = NDData(np.ones((40, 40)) * u.nJy)
         imviz_helper.load_data(data)
 
-        subset_plugin = imviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = imviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(CircularROI(25, 25, 10))
         subsets = imviz_helper.app.get_subsets(include_sky_region=True)
         assert subsets['Subset 1'][0]['sky_region'] is None
@@ -902,7 +910,7 @@ class TestRegionsFromSubsets:
     def test_subset_renaming(self, specviz_helper, spectrum1d):
         specviz_helper.load_data(spectrum1d, 'myfile')
 
-        subset_plugin = specviz_helper.plugins['Subset Tools']._obj
+        subset_plugin = specviz_helper.plugins['Subset Tools']
         subset_plugin.import_region(SpectralRegion(6200 * spectrum1d.spectral_axis.unit,
                                                    7200 * spectrum1d.spectral_axis.unit))
         get_data_no_sub = specviz_helper.get_data('myfile')

@@ -3,7 +3,7 @@
     :config="config"
     :plugin_key="plugin_key || 'Spectral Extraction'"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Extract a '+resulting_product_name+' from a spectral cube.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#spectral-extraction'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
@@ -202,35 +202,30 @@
 
       <div v-if="((aperture_selected === 'Entire Cube' && bg_selected !== 'None') || aperture_selected_validity.is_aperture)
                  && (bg_selected === 'None' || bg_selected_validity.is_aperture)">
-        <v-row>
-          <v-select
-            attach
-            :items="aperture_method_items.map(i => i.label)"
-            v-model="aperture_method_selected"
-            :label="api_hints_enabled ? 'plg.aperture_method =' : 'Aperture masking method'"
-            :class="api_hints_enabled ? 'api-hint' : null"
-            :hint="'Extract '+resulting_product_name+' using an aperture masking method in place of the subset mask.'"
-            persistent-hint
-            ></v-select>
+        <plugin-select
+          :items="aperture_method_items.map(i => i.label)"
+          :selected.sync="aperture_method_selected"
+          label="Aperture masking method"
+          api_hint="plg.aperture_method ="
+          :api_hints_enabled="api_hints_enabled"
+          :hint="'Extract '+resulting_product_name+' using an aperture masking method in place of the subset mask.'"
+        >
           <j-docs-link>
             See the <j-external-link link='https://photutils.readthedocs.io/en/stable/aperture.html#aperture-and-pixel-overlap'
             linktext='photutils docs'></j-external-link>
             for more details on aperture masking methods.
           </j-docs-link>
-        </v-row>
+        </plugin-select>
       </div>
 
-      <v-row>
-        <v-select
-          attach
-          :items="function_items.map(i => i.label)"
-          v-model="function_selected"
-          :label="api_hints_enabled ? 'plg.function =' : 'Function'"
-          :class="api_hints_enabled ? 'api-hint' : null"
-          :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        :items="function_items.map(i => i.label)"
+        :selected.sync="function_selected"
+        label="Function"
+        api_hint="plg.function ="
+        :api_hints_enabled="api_hints_enabled"
+        :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
+      />
       <v-row v-if="conflicting_aperture_and_function">
         <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           {{conflicting_aperture_error_message}}

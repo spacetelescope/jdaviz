@@ -4,13 +4,19 @@
 New Features
 ------------
 
-* New design for viewer legend. [#3220, #3254, #3263]
+* New design for viewer legend and data-menu. [#3220, #3254, #3263, #3264, #3271, #3272, #3274, #3289, #3310]
+
+* Improve performance while importing multiple regions. [#3321]
 
 Cubeviz
 ^^^^^^^
 
 Imviz
 ^^^^^
+
+* Orientation plugin API now exposes create_north_up_east_left and create_north_up_east_right methods. [#3308]
+
+* Add Roman WFI and CGI footprints to the Footprints plugin. [#3322]
 
 Mosviz
 ^^^^^^
@@ -25,6 +31,14 @@ Specviz2d
 
 API Changes
 -----------
+- Removed API access to plugins that have passed the deprecation period: Links Control, Canvas Rotation, Export Plot. [#3270]
+  
+- Subset Tools plugin now exposes the ``subset``, ``combination_mode``, ``recenter_dataset``,
+  ``recenter``, ``get_center``, and ``set_center`` in the user API. [#3293, #3304, #3325]
+
+- Metadata plugin: ``metadata_plugin.metadata`` API has been deprecated; use
+  ``metadata_plugin.meta`` instead, which will return a Python dictionary instead of
+  list of tuples. [#3292]
 
 Cubeviz
 ^^^^^^^
@@ -43,6 +57,10 @@ Specviz2d
 
 Bug Fixes
 ---------
+
+- Fixed broken flux unit conversions in all plugins that respond to changes in flux unit changes. These cases
+  occured when certain flux-to flux-conversions occured, as well as certain conversions between flux and surface
+  brightness. This PR also fixed an issue with unit string formatting in the aperture photometry plugin. [#3228]
 
 Cubeviz
 ^^^^^^^
@@ -62,6 +80,8 @@ Specviz2d
 
 Other Changes and Additions
 ---------------------------
+- Added a short description of each plugin in the side menu, visible before the plugin is opened. Removes redundant descriptions above link
+  out to documentation when plugin is opened. Enable search on plugin description in addition to title. [#3268]
 
 4.0.1 (unreleased)
 ==================
@@ -74,8 +94,16 @@ Bug Fixes
 - Fixed Aperture Photometry radial profile fit crashing when NaN is present in
   aperture data for Cubeviz and Imviz. [#3246]
 
-- Prevent PluginMarks from converting y-range so they maintain their position 
+- Prevent PluginMarks from converting y-range so they maintain their position
   in the spectrum-viewer when spectral y units are converted. [#3242]
+
+- Added ``nbclassic`` dependency to fix ``solara``-based popouts. [#3282]
+
+- Fixed viewer widgets displaying improperly if initialized out of view in Jupyter Lab. [#3299]
+
+- Fixed width of sliders in plugins to use full-width of plugin. [#3303]
+
+- Raise an error when attempting to open in a popout or sidecar when not supported (i.e. within VSCode). [#3309]
 
 Cubeviz
 ^^^^^^^
@@ -84,10 +112,17 @@ Cubeviz
 
 - Fixed "spectrum at spaxel" tool so it no longer resets spectral axis zoom. [#3249]
 
+- Fixed initializing a Gaussian1D model component when ``Cube Fit`` is toggled on. [#3295]
+
 Imviz
 ^^^^^
 
 - Remove "From File.." option when running on an external server. [#3239]
+
+- Button in the footprints plugin to change the link-type now redirects to the orientation plugin
+  when the change fails due to the presence of subsets or markers. [#3276]
+
+- Updates UI language in the orientation plugin to better match API. [#3276]
 
 Mosviz
 ^^^^^^

@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Moment Maps"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Create a 2D image from a data cube.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#moment-maps'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"

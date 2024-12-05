@@ -16,8 +16,9 @@ def test_data_retrieval(cubeviz_helper):
     return the same spectrum values.
     """
     # This file is originally from
-    # https://data.sdss.org/sas/dr14/manga/spectro/redux/v2_1_2/7495/stack/manga-7495-12704-LOGCUBE.fits.gz
-    URL = 'https://stsci.box.com/shared/static/28a88k1qfipo4yxc4p4d40v4axtlal8y.fits'
+    # https://data.sdss.org/sas/dr17/manga/spectro/redux/v3_1_1/9862/stack/manga-9862-12703-LOGCUBE.fits.gz
+    # (Updated to a newer file 11/19/2024)
+    URL = 'https://stsci.box.com/shared/static/gts87zqt5265msuwi4w5u003b6typ6h0.gz'
 
     spectrum_viewer_reference_name = "spectrum-viewer"
     fn = download_file(URL, cache=True)

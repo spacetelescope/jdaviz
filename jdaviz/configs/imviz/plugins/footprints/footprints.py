@@ -20,6 +20,13 @@ from jdaviz.configs.imviz.plugins.footprints import preset_regions
 __all__ = ['Footprints']
 
 
+_available_instruments = {
+    display_name: {'label': display_name, 'siaf_name': siaf_name, 'observatory': observatory}
+    for observatory, instruments in preset_regions._instruments.items()
+    for display_name, siaf_name in instruments.items()
+}
+
+
 @tray_registry('imviz-footprints', label="Footprints")
 class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     """
@@ -100,6 +107,10 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         self._overlays = {}
 
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Show instrument footprints as overlays on image viewers.'
+
         self.viewer.multiselect = True  # multiselect always enabled
         # require a viewer's reference data to have WCS so that footprints can be mapped to sky
         self.viewer.add_filter('reference_has_wcs')
@@ -115,11 +126,13 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_remove=self._on_overlay_remove)
 
         if self.has_pysiaf:
-            preset_options = list(preset_regions._instruments.keys())
+            preset_options = list(_available_instruments.keys())
         else:
             preset_options = ['None']
+
         if not self.app.state.settings.get('server_is_remote', False):
             preset_options.append('From File...')
+
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
                                                       selected='preset_selected',
@@ -197,7 +210,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
         # call other plugin so that other options (wcs_fast_approximation, wcs_use_fallback)
         # are retained.  Remove this method if support for plotting footprints
         # when pixel-linked is reintroduced.
-        self.app._jdaviz_helper.plugins['Orientation'].align_by = 'WCS'
+        op = self.app._jdaviz_helper.plugins['Orientation']
+        if op._obj.need_clear_astrowidget_markers or op._obj.need_clear_subsets:
+            op.open_in_tray()
+        else:
+            op.align_by = 'WCS'
 
     def _ensure_first_overlay(self):
         if not len(self._overlays):
@@ -472,8 +489,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                     regs = [regs]
                 overlay['regions'] = regs
             regs = overlay.get('regions', [])
-        elif self.has_pysiaf and self.preset_selected in preset_regions._instruments:
-            regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
+        elif self.has_pysiaf and self.preset_selected in _available_instruments.keys():
+            regs = preset_regions.instrument_footprint(
+                _available_instruments[self.preset_selected]['observatory'],
+                self.preset_selected, **callable_kwargs
+            )
         else:  # pragma: no cover
             regs = []
         return regs

@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Collapse"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Collapse a spectral cube along one axis.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#collapse'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to">
@@ -18,17 +18,14 @@
       hint="Select the data set to collapse."
     />
 
-    <v-row>
-      <v-select
-        attach
-        :items="function_items.map(i => i.label)"
-        v-model="function_selected"
-        :label="api_hints_enabled ? 'plg.function =' : 'Function'"
-        :class="api_hints_enabled ? 'api-hint' : null"
-        hint="Function to use in the collapse."
-        persistent-hint
-      ></v-select>
-    </v-row>
+    <plugin-select
+      :items="function_items.map(i => i.label)"
+      :selected.sync="function_selected"
+      label="Function"
+      api_hint="plg.function ="
+      :api_hints_enabled="api_hints_enabled"
+      hint="Function to use in the collapse."
+    />
 
     <plugin-subset-select
       :items="spectral_subset_items"

@@ -6,7 +6,7 @@ from numpy.testing import assert_allclose
 from regions import PixCoord, CirclePixelRegion, RectanglePixelRegion
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
 
 
 def cubeviz_wcs_dict():

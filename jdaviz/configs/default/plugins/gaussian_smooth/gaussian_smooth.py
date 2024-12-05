@@ -1,6 +1,5 @@
 import numpy as np
 
-from astropy import units as u
 from astropy.convolution import convolve, Gaussian2DKernel
 from specutils import Spectrum1D
 from specutils.manipulation import gaussian_smooth
@@ -15,10 +14,6 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin, DatasetSelectMixin,
 from jdaviz.core.user_api import PluginUserApi
 
 __all__ = ['GaussianSmooth']
-
-
-spaxel = u.def_unit('spaxel', 1 * u.Unit(""))
-u.add_enabled_units([spaxel])
 
 
 @tray_registry('g-gaussian-smooth', label="Gaussian Smooth",
@@ -74,6 +69,9 @@ class GaussianSmooth(PluginTemplateMixin, DatasetSelectMixin, AddResultsMixin):
 
         # set the filter on the dataset and viewer options
         self._update_dataset_viewer_filters()
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Smooth data with a Gaussian kernel.'
 
     @property
     def _default_spectrum_viewer_reference_name(self):

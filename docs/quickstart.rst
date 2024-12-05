@@ -38,6 +38,8 @@ To see the syntax and usage, from a terminal, type::
 
     jdaviz --help
 
+.. jdavizclihelp::
+
 Typical usage to load a file into a desired configuration::
 
     jdaviz --layout=[imviz|specviz|cubeviz|mosviz|specviz2d] /path/to/data/file

@@ -35,7 +35,7 @@ def test_nonstandard_specviz_viewer_name(spectrum1d):
               'toolbar': ['g-data-tools', 'g-subset-tools'],
               'tray': ['g-metadata-viewer',
                        'g-plot-options',
-                       'g-subset-plugin',
+                       'g-subset-tools',
                        'g-gaussian-smooth',
                        'g-model-fitting',
                        'g-unit-conversion',
@@ -264,3 +264,20 @@ def test_to_unit(cubeviz_helper):
                        ([1, 2] * original_units)
                        .to_value(target_units,
                                  equivalencies=u.spectral_density(cube.spectral_axis[0])))
+
+
+def test_all_plugins_have_description(cubeviz_helper, specviz_helper,
+                                      mosviz_helper, imviz_helper,
+                                      rampviz_helper, specviz2d_helper):
+    """
+    Test that all plugins for all configs have a plugin_description
+    attribute, which controls what is displayed under the plugin title in the
+    tray. Doesn't test what they are, just that they are not empty.
+    """
+
+    config_helpers = [cubeviz_helper, specviz_helper, mosviz_helper,
+                      imviz_helper, rampviz_helper, specviz2d_helper]
+
+    for config_helper in config_helpers:
+        for item in config_helper.plugins:
+            assert config_helper.plugins[item]._obj.plugin_description != ''

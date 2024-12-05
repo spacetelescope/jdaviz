@@ -55,6 +55,11 @@
             <v-icon medium>mdi-help-box</v-icon>
           </v-btn>
         </j-tooltip>
+        <j-tooltip v-if="state.show_toolbar_buttons && checkNotebookContext()" tipid="app-api-hints">
+          <v-btn icon @click="state.show_api_hints = !state.show_api_hints" :class="{active : state.show_api_hints}">
+            <img :src="state.icons['api']" width="24" class="invert-if-dark" style="opacity: 1.0"/>
+          </v-btn>
+        </j-tooltip>
         <j-tooltip v-if="state.show_toolbar_buttons" tipid="app-snackbar-history">
           <v-btn icon @click="state.logger_overlay = !state.logger_overlay" :class="{active : state.logger_overlay}">
             <v-icon medium style="padding-top: 2px">mdi-message-reply-text</v-icon>
@@ -76,6 +81,7 @@
         <splitpanes>
           <pane size="75">
             <golden-layout
+              v-if="outputCellHasHeight"
               style="height: 100%;"
               :has-headers="state.settings.visible.tab_headers"
               @state="onLayoutChange"
@@ -112,10 +118,20 @@
               <v-expansion-panels accordion multiple focusable flat tile v-model="state.tray_items_open">
                 <v-expansion-panel v-for="(trayItem, index) in state.tray_items" :key="index">
                   <div v-if="trayItem.is_relevant && trayItemVisible(trayItem, state.tray_items_filter)">
-                    <v-expansion-panel-header >
-                      <j-tooltip :tipid="trayItem.name">
-                        {{ trayItem.label }}
-                      </j-tooltip>
+                    <v-expansion-panel-header class="plugin-header">
+                      <v-list-item style="display: grid; min-height: 6px" class="plugin-title">
+                        <v-list-item-title>
+                          <j-tooltip :tipid="trayItem.name">
+                            {{ trayItem.label }}
+                          </j-tooltip>
+                        </v-list-item-title>
+                        <v-list-item-subtitle v-if="state.show_api_hints" style="white-space: normal; font-size: 8pt; padding-top: 4px; padding-bottom: 4px" class="api-hint">
+                          <span class="api-hint" :style="state.tray_items_open.includes(index) ? 'font-weight: bold' : null">plg = {{  config }}.plugins['{{ trayItem.label }}']</span>
+                        </v-list-item-subtitle>
+                        <v-list-item-subtitle style="white-space: normal; font-size: 8pt">
+                          {{ trayItem.tray_item_description }}
+                        </v-list-item-subtitle>
+                      </v-list-item>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content style="margin-left: -12px; margin-right: -12px;">
                       <jupyter-widget v-if="state.tray_items_open.includes(index)" :widget="trayItem.widget"></jupyter-widget>
@@ -162,6 +178,11 @@
 
 <script>
 export default {
+  data() {
+    return {
+      outputCellHasHeight: false,
+    };
+  },
   methods: {
     checkNotebookContext() {
       this.notebook_context = document.getElementById("ipython-main-app")
@@ -174,7 +195,7 @@ export default {
         return true
       }
       // simple exact text search match on the plugin title for now.
-      return trayItem.label.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1
+      return trayItem.label.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1 || trayItem.tray_item_description.toLowerCase().indexOf(tray_items_filter.toLowerCase()) !== -1
     },
     onLayoutChange() {
       /* Workaround for #1677, can be removed when bqplot/bqplot#1531 is released */
@@ -188,6 +209,25 @@ export default {
     if (jpOutputElem) {
       jpOutputElem.classList.remove('jupyter-widgets');
     }
+    /* Workaround for Lab 4.2: cells outside the viewport get the style "display: none" which causes the content to not
+     * have height. This causes an error in size calculations of golden layout from which it doesn't recover.
+     */
+    new ResizeObserver(entries => {
+      this.outputCellHasHeight = entries[0].contentRect.height > 0;
+    }).observe(this.$refs.mainapp.$el);
+    this.outputCellHasHeight = this.$refs.mainapp.$el.offsetHeight > 0
   }
 };
 </script>
+
+<style scoped>
+.plugin-header.v-expansion-panel-header {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 4px;
+  padding-right: 12px;
+}
+.plugin-title.v-list-item:after {
+  display: none !important;
+}
+</style>

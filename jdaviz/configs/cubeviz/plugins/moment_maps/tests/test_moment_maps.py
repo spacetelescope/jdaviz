@@ -10,6 +10,8 @@ from astropy.wcs import WCS
 from numpy.testing import assert_allclose
 from specutils import SpectralRegion
 
+from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+
 
 @pytest.mark.parametrize("cube_type", ["Surface Brightness", "Flux"])
 def test_user_api(cubeviz_helper, spectrum1d_cube, spectrum1d_cube_sb_unit, cube_type):
@@ -229,8 +231,8 @@ def test_moment_frequency_unit_conversion(cubeviz_helper, spectrum1d_cube_larger
     mm = cubeviz_helper.plugins['Moment Maps']
 
     unit = u.Unit(uc.spectral_unit.selected)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(SpectralRegion(4.624e-07 * unit,
-                                                                             4.627e-07 * unit))
+    cubeviz_helper.plugins['Subset Tools'].import_region(
+        SpectralRegion(4.624e-07 * unit, 4.627e-07 * unit))
 
     uc.spectral_unit = 'Hz'
     mm.spectral_subset = 'Subset 1'
@@ -350,3 +352,80 @@ def test_correct_output_spectral_y_units(cubeviz_helper, spectrum1d_cube_custom_
 
     mm.calculate_moment()
     assert mm.moment.unit == moment_unit.replace('m', 'um')
+
+
+@pytest.mark.parametrize("flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS][1:2])
+@pytest.mark.parametrize("angle_unit", [u.sr, PIX2])
+@pytest.mark.parametrize("new_flux_unit", [u.Unit(x) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS][1:2])
+def test_moment_zero_unit_flux_conversions(cubeviz_helper,
+                                           spectrum1d_cube_custom_fluxunit,
+                                           flux_unit, angle_unit, new_flux_unit):
+    """
+    Test cubeviz moment maps with all possible unit conversions for
+    cubes in spectral/photon surface brightness units (e.g. Jy/sr, Jy/pix2).
+
+    The moment map plugin should respect the choice of flux and angle
+    unit selected in the Unit Conversion plugin, and inputs and results should
+    be converted based on selection. All conversions between units in the
+    flux dropdown menu in the unit conversion plugin should be supported
+    by moment maps.
+    """
+
+    if new_flux_unit == flux_unit:  # skip 'converting' to same unit
+        return
+    new_flux_unit_str = new_flux_unit.to_string()
+
+    cube_unit = flux_unit / angle_unit
+
+    sb_cube = spectrum1d_cube_custom_fluxunit(fluxunit=cube_unit)
+
+    # load surface brigtness cube
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="No observer defined on WCS.*")
+        cubeviz_helper.load_data(sb_cube, data_label='test')
+
+    # get plugins
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    mm = cubeviz_helper.plugins['Moment Maps']._obj
+
+    # and flux viewer for mouseover info
+    flux_viewer = cubeviz_helper.app.get_viewer(cubeviz_helper._default_flux_viewer_reference_name)
+    label_mouseover = cubeviz_helper.app.session.application._tools['g-coords-info']
+
+    # convert to new flux unit
+    uc.flux_unit.selected = new_flux_unit_str
+
+    new_mm_unit = (new_flux_unit * u.m / u.Unit(angle_unit)).to_string()
+    assert mm.output_unit_items[0]['label'] == 'Surface Brightness'
+    assert mm.output_unit_items[0]['unit_str'] == new_mm_unit
+
+    # calculate moment with new output label and plot in flux viewer
+    mm.add_results.label = new_flux_unit_str
+    mm.add_results.viewer.selected = cubeviz_helper._default_flux_viewer_reference_name
+    mm.calculate_moment()
+
+    assert mm.moment.unit == new_mm_unit
+
+    # make sure mouseover info in flux unit is new moment map unit
+    # which should be flux/sb unit times spectral axis unit (e.g. MJy m / sr)
+    label_mouseover._viewer_mouse_event(flux_viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 0, 'y': 0}})
+    m_orig = label_mouseover.as_text()[0]
+    assert ((new_flux_unit / angle_unit) * u.m).to_string() in m_orig
+
+    # 'jiggle' mouse so we can move it back and compare original coordinate
+    label_mouseover._viewer_mouse_event(flux_viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 1, 'y': 1}})
+
+    # when flux unit is changed, the mouseover unit conversion should be
+    # skipped so that the plotted moment map remains in its original
+    # unit. setting back to the original flux unit also ensures that
+    # each iteration begins on the same unit so that every comparison
+    # is tested
+    uc.flux_unit.selected = new_flux_unit_str
+    label_mouseover._viewer_mouse_event(flux_viewer,
+                                        {'event': 'mousemove',
+                                         'domain': {'x': 0, 'y': 0}})
+    assert m_orig == label_mouseover.as_text()[0]

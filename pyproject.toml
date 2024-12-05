@@ -38,6 +38,7 @@ dependencies = [
     "ipypopout>=2.0.0",
     "astroquery",
     "requests",
+    "nbclassic",
 ]
 dynamic = [
     "version",

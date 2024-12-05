@@ -8,13 +8,16 @@ from astropy.nddata import NDDataArray, StdDevUncertainty
 from astropy.table import QTable
 from astropy.tests.helper import assert_quantity_allclose
 from astropy.utils.exceptions import AstropyUserWarning
-
 from glue.core.roi import CircularROI, RectangularROI
 from numpy.testing import assert_allclose, assert_array_equal
 from regions import (CirclePixelRegion, CircleAnnulusPixelRegion, EllipsePixelRegion,
                      RectanglePixelRegion, PixCoord)
 from specutils import Spectrum1D
 from specutils.manipulation import FluxConservingResampler
+
+from jdaviz.core.custom_units_and_equivs import PIX2, SPEC_PHOTON_FLUX_DENSITY_UNITS
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               flux_conversion_general)
 
 calspec_url = "https://archive.stsci.edu/hlsps/reference-atlases/cdbs/current_calspec/"
 
@@ -83,7 +86,7 @@ def test_gauss_smooth_before_spec_extract(cubeviz_helper, spectrum1d_cube_with_u
         # two-pixel region:
         CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)
     ]
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(regions, combination_mode='new')
+    cubeviz_helper.plugins['Subset Tools'].import_region(regions, combination_mode='new')
 
     extract_plugin = cubeviz_helper.plugins['Spectral Extraction']
     extract_plugin.function = "Sum"
@@ -123,7 +126,7 @@ def test_subset(
     ]
 
     cubeviz_helper.load_data(spectrum1d_cube_with_uncerts)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(regions, combination_mode='new')
+    cubeviz_helper.plugins['Subset Tools'].import_region(regions, combination_mode='new')
 
     plg = cubeviz_helper.plugins['Spectral Extraction']
     plg.function = function
@@ -174,7 +177,7 @@ def test_extracted_file_in_export_plugin(cubeviz_helper, spectrum1d_cube_with_un
 def test_aperture_markers(cubeviz_helper, spectrum1d_cube):
 
     cubeviz_helper.load_data(spectrum1d_cube)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+    cubeviz_helper.plugins['Subset Tools'].import_region(
         [CirclePixelRegion(PixCoord(0.5, 0), radius=1.2)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
@@ -227,9 +230,9 @@ def test_cone_aperture_with_different_methods(cubeviz_helper, spectrum1d_cube_la
                                               expected_flux_2400):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     center = PixCoord(5, 10)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+    cubeviz_helper.plugins['Subset Tools'].import_region(
         CirclePixelRegion(center, radius=2.5), combination_mode='new')
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+    cubeviz_helper.plugins['Subset Tools'].import_region(
         EllipsePixelRegion(center, width=5, height=5), combination_mode='new')
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
@@ -260,7 +263,7 @@ def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_
                                                      subset, aperture_method, expected_flux_wav):
     cubeviz_helper.load_data(spectrum1d_cube_largest, data_label="test")
     center = PixCoord(5, 10)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region([
+    cubeviz_helper.plugins['Subset Tools'].import_region([
         CirclePixelRegion(center, radius=2.5),
         EllipsePixelRegion(center, width=5, height=5)], combination_mode='new')
 
@@ -284,7 +287,7 @@ def test_cylindrical_aperture_with_different_methods(cubeviz_helper, spectrum1d_
 # NOTE: Not as thorough as circle and ellipse above but good enough.
 def test_rectangle_aperture_with_exact(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+    cubeviz_helper.plugins['Subset Tools'].import_region(
         RectanglePixelRegion(PixCoord(5, 10), width=4, height=4))
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
@@ -312,7 +315,7 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
     spectrum1d_cube_largest = spectrum1d_cube_largest + 1 * u.Jy
 
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region([
+    cubeviz_helper.plugins['Subset Tools'].import_region([
         CirclePixelRegion(PixCoord(5, 10), radius=2.5),
         EllipsePixelRegion(PixCoord(13, 10), width=3, height=5)], combination_mode='new')
 
@@ -365,7 +368,7 @@ def test_background_subtraction(cubeviz_helper, spectrum1d_cube_largest):
 def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
     center = PixCoord(5, 10)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region([
+    cubeviz_helper.plugins['Subset Tools'].import_region([
         CirclePixelRegion(center, radius=2.5),
         CircleAnnulusPixelRegion(center, inner_radius=2.5, outer_radius=4)], combination_mode='new')
 
@@ -392,7 +395,7 @@ def test_cone_and_cylinder_errors(cubeviz_helper, spectrum1d_cube_largest):
 def test_cone_aperture_with_frequency_units(cubeviz_helper, spectral_cube_wcs):
     data = Spectrum1D(flux=np.ones((128, 129, 256)) * u.nJy, wcs=spectral_cube_wcs)
     cubeviz_helper.load_data(data, data_label="Test Flux")
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+    cubeviz_helper.plugins['Subset Tools'].import_region(
         [CirclePixelRegion(PixCoord(14, 15), radius=2.5)])
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
@@ -413,7 +416,7 @@ def test_cube_extraction_with_nan(cubeviz_helper, image_cube_hdu_obj):
     sp = extract_plg.extract()  # Default settings (sum)
     assert_allclose(sp.flux.value, 9.6E-16)  # (10 x 10) - 4
 
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+    cubeviz_helper.plugins['Subset Tools'].import_region(
         RectanglePixelRegion(PixCoord(1.5, 1.5), width=4, height=4))
     extract_plg.aperture = 'Subset 1'
     sp_subset = extract_plg.extract()  # Default settings but on Subset
@@ -422,7 +425,7 @@ def test_cube_extraction_with_nan(cubeviz_helper, image_cube_hdu_obj):
 
 def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
     cubeviz_helper.load_data(spectrum1d_cube_largest)
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(
+    cubeviz_helper.plugins['Subset Tools'].import_region(
         CircularROI(xc=5, yc=5, radius=2))
 
     extract_plg = cubeviz_helper.plugins['Spectral Extraction']
@@ -434,8 +437,8 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
 #    orig_med_flux = np.median(cubeviz_helper.get_data('extracted').flux)
 
     # replace Subset 1 with a larger subset, resulting fluxes should increase
-    cubeviz_helper.plugins['Subset Tools']._obj.combination_mode.selected = 'replace'
-    cubeviz_helper.plugins['Subset Tools']._obj.import_region(CircularROI(xc=5, yc=5, radius=3))
+    cubeviz_helper.plugins['Subset Tools'].combination_mode = 'replace'
+    cubeviz_helper.plugins['Subset Tools'].import_region(CircularROI(xc=5, yc=5, radius=3))
 
     # update should take place automatically, but since its async, we'll call manually to ensure
     # the update is complete before comparing results
@@ -449,7 +452,7 @@ def test_autoupdate_results(cubeviz_helper, spectrum1d_cube_largest):
 
 def test_aperture_composite_detection(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
 
     # create a rectangular subset with all spaxels:
@@ -463,7 +466,7 @@ def test_aperture_composite_detection(cubeviz_helper, spectrum1d_cube):
     # now remove from this subset a circular region in the center:
     circle = CircularROI(0.5, 1.5, 1)
 
-    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.combination_mode = 'andnot'
     subset_plugin.import_region(circle)
 
     # now the subset is composite:
@@ -473,14 +476,14 @@ def test_aperture_composite_detection(cubeviz_helper, spectrum1d_cube):
 def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
     cubeviz_helper.load_data(spectrum1d_cube)
 
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     spec_extr_plugin = cubeviz_helper.plugins['Spectral Extraction']._obj
 
     lower_aperture = RectangularROI(-0.5, 0.5, -0.5, 1.5)
     upper_aperture = RectangularROI(2.5, 3.5, -0.5, 1.5)
 
     subset_plugin.import_region(lower_aperture)
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(upper_aperture)
 
     spec_extr_plugin.aperture_selected = 'Subset 1'
@@ -491,13 +494,13 @@ def test_extraction_composite_subset(cubeviz_helper, spectrum1d_cube):
 
     rectangle = RectangularROI(-0.5, 3.5, -0.5, 1.5)
 
-    subset_plugin.combination_mode.selected = 'new'
+    subset_plugin.combination_mode = 'new'
     subset_plugin.import_region(rectangle)
 
-    subset_plugin.subset_selected = 'Subset 3'
+    subset_plugin._obj.subset_selected = 'Subset 3'
     circle = CircularROI(1.5, 0.5, 1.1)
 
-    subset_plugin.combination_mode.selected = 'andnot'
+    subset_plugin.combination_mode = 'andnot'
     subset_plugin.import_region(circle)
 
     spec_extr_plugin.aperture_selected = 'Subset 3'
@@ -533,7 +536,7 @@ def test_default_spectral_extraction(cubeviz_helper, spectrum1d_cube_fluxunit_jy
     # for non-science pixels in the sums:
     cubeviz_helper.load_data(spectrum1d_cube_fluxunit_jy_per_steradian)
 
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
 
     subset_plugin.import_region(CircularROI(1.5, 2, 5))
 
@@ -619,7 +622,7 @@ def test_spectral_extraction_scientific_validation(
         cubeviz_helper.load_data(uri, cache=True)
 
     # add a subset with an aperture centered on each source
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     subset_plugin.import_region(CircularROI(*aperture))
 
     # set the slice to the blue end of MIRI CH1
@@ -650,3 +653,68 @@ def test_spectral_extraction_scientific_validation(
         ).to_value(u.dimensionless_unscaled) - 1
     ))
     assert median_abs_relative_dev < expected_rtol
+
+
+@pytest.mark.parametrize("flux_angle_unit", [(u.Unit(x), u.sr) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS]  # noqa
+                                              + [(u.Unit(x), PIX2) for x in SPEC_PHOTON_FLUX_DENSITY_UNITS])  # noqa
+def test_spectral_extraction_flux_unit_conversions(cubeviz_helper,
+                                                   spectrum1d_cube_custom_fluxunit,
+                                                   flux_angle_unit):
+    """
+    Test that cubeviz spectral extraction plugin works with all possible
+    flux unit conversions for a cube loaded in units spectral/photon flux
+    density. The spectral extraction result will remain in the native
+    data unit, but the extraction preview should be converted to the
+    display unit.
+    """
+
+    flux_unit, angle_unit = flux_angle_unit
+
+    sb_cube = spectrum1d_cube_custom_fluxunit(fluxunit=flux_unit / angle_unit,
+                                              shape=(5, 4, 4),
+                                              with_uncerts=True)
+    cubeviz_helper.load_data(sb_cube)
+
+    spectrum_viewer = cubeviz_helper.app.get_viewer(
+        cubeviz_helper._default_spectrum_viewer_reference_name)
+
+    uc = cubeviz_helper.plugins["Unit Conversion"]
+    se = cubeviz_helper.plugins['Spectral Extraction']
+    se.keep_active = True  # keep active for access to preview markers
+
+    # equivalencies for unit conversion, for comparison of outputs
+    equivs = all_flux_unit_conversion_equivs(se.dataset.selected_obj.meta.get('PIXAR_SR', 1.0),
+                                             se.dataset.selected_obj.spectral_axis)
+
+    for new_flux_unit in SPEC_PHOTON_FLUX_DENSITY_UNITS:
+        if new_flux_unit != flux_unit:
+
+            uc.flux_unit.selected = flux_unit.to_string()
+            uc.spectral_y_type.selected = 'Flux'
+
+            # and set back to sum initially so units will always be flux not sb
+            se.function.selected = 'Sum'
+            se.extract()
+
+            original_sum_y_values = se._obj.marks['extract'].y
+
+            # set to new unit
+            uc.flux_unit.selected = new_flux_unit
+            assert spectrum_viewer.state.y_display_unit == new_flux_unit
+
+            # still using 'sum', results should be in flux
+            collapsed = se.extract()
+
+            # make sure extraction preview was translated to new display units
+            new_sum_y_values = se._obj.marks['extract'].y
+            new_converted_to_old_unit = flux_conversion_general(new_sum_y_values,
+                                                                u.Unit(new_flux_unit),
+                                                                u.Unit(flux_unit),
+                                                                equivs, with_unit=False)
+            np.testing.assert_allclose(original_sum_y_values, new_converted_to_old_unit)
+
+            # collapsed result will still have the native data flux unit
+            assert uc.spectral_y_type.selected == 'Flux'
+            assert collapsed.flux.unit == collapsed.uncertainty.unit == flux_unit
+            # but display units in spectrum viewer should reflect new flux unit selection
+            assert se._obj.spectrum_y_units == se._obj.results_units == new_flux_unit

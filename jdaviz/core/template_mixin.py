@@ -38,6 +38,7 @@ from traitlets import Any, Bool, Dict, Float, HasTraits, List, Unicode, observe
 
 from ipywidgets import widget_serialization
 from ipypopout import PopoutButton
+from ipypopout.popout_button import get_kernel_id
 
 from jdaviz.components.toolbar_nested import NestedJupyterToolbar
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
@@ -126,6 +127,8 @@ def show_widget(widget, loc, title):  # pragma: no cover
         display(widget)
 
     elif loc.startswith('sidecar'):
+        if not get_kernel_id():
+            raise RuntimeError(f"loc='{loc}' is not supported.  Use loc='inline' or run within a JupyterLab environment.")  # noqa
         from sidecar import Sidecar
 
         # Use default behavior if loc is exactly 'sidecar', else split anchor from the arg
@@ -136,6 +139,8 @@ def show_widget(widget, loc, title):  # pragma: no cover
             display(widget)
 
     elif loc.startswith('popout'):
+        if not get_kernel_id():
+            raise RuntimeError(f"loc='{loc}' is not supported.  Use loc='inline' or run within a JupyterLab environment.")  # noqa
         anchor = None if loc == 'popout' else loc.split(':')[1]
 
         # Default behavior (no anchor specified): display popout in new window
@@ -201,6 +206,7 @@ class WithCache:
 class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCache):
     config = Unicode("").tag(sync=True)
     vdocs = Unicode("").tag(sync=True)
+    api_hints_enabled = Bool(False).tag(sync=True)
     popout_button = Any().tag(sync=True, **widget_serialization)
 
     def __new__(cls, *args, **kwargs):
@@ -234,6 +240,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         self._viewer_callbacks = {}
         self.hub.subscribe(self, ViewerRemovedMessage,
                            handler=lambda msg: self._remove_viewer_callbacks(msg.viewer_id))
+
+        self.app.state.add_callback('show_api_hints', self._update_api_hints_enabled)
+        self._update_api_hints_enabled()
 
     @property
     def app(self):
@@ -286,6 +295,9 @@ class TemplateMixin(VuetifyTemplate, HubListener, ViewerPropertiesMixin, WithCac
         # assumed destroyed, so we do not need to remove the event callback itself from the viewer)
         self._viewer_callbacks = {k: v for k, v in self._viewer_callbacks.items()
                                   if k.split(':')[0] != viewer_id}
+
+    def _update_api_hints_enabled(self, *args):
+        self.api_hints_enabled = self.app.state.show_api_hints
 
 
 def skip_if_no_updates_since_last_active(skip_if_not_active=True):
@@ -397,13 +409,13 @@ class PluginTemplateMixin(TemplateMixin):
     plugin_key = Unicode("").tag(sync=True)  # noqa set to non-empty to override value in vue file (when supported by vue file)
     docs_link = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
     docs_description = Unicode("").tag(sync=True)  # set to non-empty to override value in vue file
+    _plugin_description = Unicode("").tag(sync=True)  # noqa shorter description of plugin, displayed below title in menu
     plugin_opened = Bool(False).tag(sync=True)  # noqa any instance of the plugin is open (recently sent an "alive" ping)
     uses_active_status = Bool(False).tag(sync=True)  # noqa whether the plugin has live-preview marks, set to True in plugins to expose keep_active switch
     keep_active = Bool(False).tag(sync=True)  # noqa whether the live-preview marks show regardless of active state, inapplicable unless uses_active_status is True
     is_active = Bool(False).tag(sync=True)  # noqa read-only: whether the previews should be shown according to plugin_opened and keep_active
     scroll_to = Bool(False).tag(sync=True)  # noqa once set to True, vue will scroll to the element and reset to False
     spinner = Bool(False).tag(sync=True)  # noqa use along-side @with_spinner() and <plugin-add-results :action_spinner="spinner">
-    api_hints_enabled = Bool(False).tag(sync=True)
     previews_temp_disabled = Bool(False).tag(sync=True)  # noqa use along-side @with_temp_disable() and <plugin-previews-temp-disabled :previews_temp_disabled.sync="previews_temp_disabled" :previews_last_time="previews_last_time" :show_live_preview.sync="show_live_preview"/>
     previews_last_time = Float(0).tag(sync=True)
     supports_auto_update = Bool(False).tag(sync=True)  # noqa whether this plugin supports auto-updating plugin results (requires __call__ method)
@@ -457,6 +469,29 @@ class PluginTemplateMixin(TemplateMixin):
         new = self.__class__(app=self.app)
         new._plugin_name = self._plugin_name
         return new
+
+    @property
+    def plugin_description(self):
+        return self._plugin_description
+
+    @plugin_description.setter
+    def plugin_description(self, description=''):
+        """
+        Overwrite plugin description displayed under plugin title in tray.
+        """
+
+        if len(self.app.state.tray_items) > 0:
+            self._plugin_description = description
+
+            # update text in tray item. this is not a dictionary
+            # so we have to search for the correct plugin in the list
+            for i, item in enumerate(self.app.state.tray_items):
+                if item['label'] == self._plugin_name:
+                    self.app.state.tray_items[i]['description'] = description
+                    break
+
+        else:  # not fully initialized, fall back on empty string
+            self._plugin_description = ''
 
     @property
     def user_api(self):
@@ -978,17 +1013,18 @@ class SelectPluginComponent(BasePluginComponent, HasTraits):
     def _selected_changed(self, event):
         self._selected_previous = event['old']
         self._clear_cache()
+        valid = self.labels
         if self.is_multiselect:
             if not isinstance(event['new'], list):
                 self.selected = [event['new']]
                 return
-            if not np.all([item in self.labels + [''] for item in event['new']]):
+            if not np.all([item in valid + [''] for item in event['new']]):
                 self.selected = event['old']
-                raise ValueError(f"not all items in {event['new']} are one of {self.labels}, reverting selection to {event['old']}")  # noqa
+                raise ValueError(f"not all items in {event['new']} are one of {valid}, reverting selection to {event['old']}")  # noqa
         else:
-            if event['new'] not in self.labels + ['']:
+            if event['new'] not in valid + ['']:
                 self.selected = event['old']
-                raise ValueError(f"{event['new']} not one of {self.labels}, reverting selection to {event['old']}")  # noqa
+                raise ValueError(f"\'{event['new']}\' not one of {valid}, reverting selection to \'{event['old']}\'")  # noqa
 
 
 class UnitSelectPluginComponent(SelectPluginComponent):
@@ -1407,6 +1443,7 @@ class LayerSelect(SelectPluginComponent):
         hint="Select layer."
       />
     """
+    sort_by = Unicode('icon').tag(sync=True)
 
     def __init__(self, plugin, items, selected, viewer,
                  multiselect=None,
@@ -1415,7 +1452,8 @@ class LayerSelect(SelectPluginComponent):
                  only_wcs_layers=False,
                  is_root=True,
                  has_children=False,
-                 is_child_of=None):
+                 is_child_of=None,
+                 sort_by='icon'):
         """
         Parameters
         ----------
@@ -1438,6 +1476,10 @@ class LayerSelect(SelectPluginComponent):
         default_mode : str, optional
             What mode to use when making the default selection.  Valid options: first, default_text,
             empty.
+        sort_by : str, optional
+            How to sort the ordering of items.  Valid options: zorder (top layers are first),
+            icon (alphabetical by icon, effectively by order in which layers were first
+            added and assigned an icon)
         """
         super().__init__(plugin,
                          items=items,
@@ -1460,6 +1502,7 @@ class LayerSelect(SelectPluginComponent):
         self.hub.subscribe(self, SubsetDeleteMessage,
                            handler=lambda _: self._update_layer_items())
 
+        self.sort_by = sort_by
         self.app.state.add_callback('layer_icons', self._update_layer_items)
         self.add_observe(viewer, self._on_viewer_selected_changed)
         self.add_observe(selected, self._update_layer_items)
@@ -1538,6 +1581,9 @@ class LayerSelect(SelectPluginComponent):
     def _layer_to_dict(self, layer_label):
         is_subset = None
         subset_type = None
+        zorder = None
+        from_plugin = None
+        live_plugin_results = None
         colors = []
         visibilities = []
         linewidths = []
@@ -1549,6 +1595,12 @@ class LayerSelect(SelectPluginComponent):
                                      (hasattr(layer, 'layer') and hasattr(layer.layer, 'subset_state')))  # noqa
                         if is_subset:
                             subset_type = get_subset_type(layer.layer)
+                    if zorder is None:
+                        zorder = layer.state.zorder
+                    if from_plugin is None:
+                        from_plugin = layer.layer.data.meta.get('Plugin', None)
+                    if live_plugin_results is None:
+                        live_plugin_results = layer.layer.data.meta.get('_update_live_plugin_results', None) is not None  # noqa
 
                     if (getattr(viewer.state, 'color_mode', None) == 'Colormaps'
                             and hasattr(layer.state, 'cmap')):
@@ -1563,6 +1615,9 @@ class LayerSelect(SelectPluginComponent):
         return {"label": layer_label,
                 "is_subset": is_subset,
                 "subset_type": subset_type,
+                "zorder": zorder,
+                "from_plugin": from_plugin,
+                "live_plugin_results": live_plugin_results,
                 "icon": self.app.state.layer_icons.get(layer_label),
                 "visible": visibilities[0] if len(list(set(visibilities))) == 1 else 'mixed',
                 "linewidth": linewidths[0] if len(list(set(linewidths))) == 1 else 'mixed',
@@ -1592,6 +1647,7 @@ class LayerSelect(SelectPluginComponent):
                     if is_wcs_only(layer.layer):
                         continue
                     layer.remove_callback('color', self._update_layer_items)
+                    layer.remove_callback('zorder', self._update_layer_items)
                     if hasattr(layer, 'cmap'):
                         layer.remove_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -1610,6 +1666,7 @@ class LayerSelect(SelectPluginComponent):
                     if is_wcs_only(layer.layer):
                         continue
                     layer.add_callback('color', self._update_layer_items)
+                    layer.add_callback('zorder', self._update_layer_items)
                     if hasattr(layer, 'cmap'):
                         layer.add_callback('cmap', self._update_layer_items)
                     if hasattr(layer, 'bitmap_visible'):
@@ -1654,7 +1711,7 @@ class LayerSelect(SelectPluginComponent):
 
         self._update_layer_items({'source': 'data_added'})
 
-    @observe('filters')
+    @observe('filters', 'sort_by')
     def _update_layer_items(self, msg={}):
         # NOTE: _on_layers_changed is passed without a msg object during init
         # TODO: Handle changes to just one item without recompiling the whole thing
@@ -1682,7 +1739,14 @@ class LayerSelect(SelectPluginComponent):
             icon = items_dict['icon']
             return icon if icon is not None else ''
 
-        layer_items.sort(key=_sort_by_icon)
+        def _sort_by_zorder(items_dict):
+            # NOTE: this works best if subscribed to a single viewer
+            return -1 * items_dict.get('zorder', 0)
+
+        if self.sort_by == 'zorder':
+            layer_items.sort(key=_sort_by_zorder)
+        else:  # icon
+            layer_items.sort(key=_sort_by_icon)
 
         self.items = manual_items + layer_items
 
@@ -1730,7 +1794,7 @@ class LayerSelect(SelectPluginComponent):
 
         layers = [[layer for layer in viewer.layers
                    if layer.layer.label in selected and self._is_valid_item(layer.layer)]
-                  for viewer in viewers]
+                  for viewer in viewers if viewer is not None]
 
         if not self.is_multiselect and len(layers) == 1:
             return layers[0]
@@ -2610,7 +2674,7 @@ class PluginTableSelect(SelectPluginComponent):
 
     Example template (label and hint are optional)::
 
-      <v-select
+      <plugin-select
         :items="table_items"
         :selected.sync="table_selected"
         label="Table"
@@ -2723,7 +2787,7 @@ class PluginPlotSelect(SelectPluginComponent):
 
     Example template (label and hint are optional)::
 
-      <v-select
+      <plugin-select
         :items="plot_items"
         :selected.sync="plot_selected"
         label="Plot"
@@ -3999,15 +4063,21 @@ class AddResults(BasePluginComponent):
             else:
                 this_replace = isinstance(this_viewer, BqplotImageView)
 
-            self.app.add_data_to_viewer(viewer_ref,
-                                        label,
-                                        visible=visible, clear_other_data=this_replace)
+            if self.app._jdaviz_helper._in_batch_load:
+                # NOTE: this currently only stores the viewer reference, and so
+                # will not handle preserving layer options if overwriting an existing
+                # entry.
+                self.app._jdaviz_helper._delayed_show_in_viewer_labels[label] = viewer_ref
+            else:
+                self.app.add_data_to_viewer(viewer_ref,
+                                            label,
+                                            visible=visible, clear_other_data=this_replace)
 
-            if preserved != {}:
-                layer_state = [layer.state for layer in this_viewer.layers if
-                               layer.layer.label == label][0]
-                for att in preserved:
-                    setattr(layer_state, att, preserved[att])
+                if preserved != {}:
+                    layer_state = [layer.state for layer in this_viewer.layers if
+                                   layer.layer.label == label][0]
+                    for att in preserved:
+                        setattr(layer_state, att, preserved[att])
 
         # update overwrite warnings, etc
         self._on_label_changed()

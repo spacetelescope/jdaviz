@@ -10,11 +10,10 @@ from astropy.time import Time
 from astropy.wcs import WCS
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units_and_equivs import PIX2, _eqv_flux_to_sb_pixel
 from jdaviz.core.registries import data_parser_registry
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
-from jdaviz.utils import (standardize_metadata, PRIHDR_KEY, download_uri_to_path,
-                          _eqv_flux_to_sb_pixel)
+from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
+from jdaviz.utils import standardize_metadata, PRIHDR_KEY, download_uri_to_path
 
 __all__ = ['parse_data']
 
@@ -204,6 +203,10 @@ def _return_spectrum_with_correct_units(flux, wcs, metadata, data_type=None,
     if (apply_pix2 and (data_type != "mask") and
             (not check_if_unit_is_per_solid_angle(flux.unit))):
         target_flux_unit = flux.unit / PIX2
+    elif check_if_unit_is_per_solid_angle(flux.unit, return_unit=True) == "spaxel":
+        # We need to convert spaxel to pixel squared, since spaxel isn't fully supported by astropy
+        # This is horribly ugly but just multiplying by u.Unit("spaxel") doesn't work
+        target_flux_unit = flux.unit * u.Unit('spaxel') / PIX2
 
     if target_wave_unit is None and hdulist is not None:
         found_target = False

@@ -1,6 +1,6 @@
-from traitlets import Bool, Float, Unicode, observe
+from traitlets import Bool, Unicode, observe
 
-from jdaviz.core.events import AddDataMessage, RemoveDataMessage, CanvasRotationChangedMessage
+from jdaviz.core.events import AddDataMessage, RemoveDataMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, ViewerSelectMixin,
                                         skip_if_no_updates_since_last_active)
@@ -30,15 +30,16 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
     icon = Unicode("").tag(sync=True)
     data_label = Unicode("").tag(sync=True)
     img_data = Unicode("").tag(sync=True)
-    canvas_angle = Float(0).tag(sync=True)  # set by canvas rotation plugin
-    canvas_flip_horizontal = Bool(False).tag(sync=True)  # set by canvas rotation plugin
+    flip_horizontal = Bool(False).tag(sync=True)  # set by canvas rotation plugin
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Show active data label, compass, and zoom box.'
+
         self.hub.subscribe(self, AddDataMessage, handler=self._on_viewer_data_changed)
         self.hub.subscribe(self, RemoveDataMessage, handler=self._on_viewer_data_changed)
-        self.hub.subscribe(self, CanvasRotationChangedMessage, handler=self._on_canvas_rotation_changed)  # noqa
 
     @property
     def user_api(self):
@@ -48,18 +49,6 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
         if self.viewer_selected:
             viewer = self.viewer.selected_obj
             viewer.on_limits_change()  # Force redraw
-
-    def _on_canvas_rotation_changed(self, msg=None):
-        viewer_id = msg.viewer_id
-        if viewer_id != self.viewer_selected:
-            return
-
-        self._set_compass_rotation()
-
-    def _set_compass_rotation(self):
-        viewer_item = self.app._viewer_item_by_id(self.viewer.selected_id)
-        self.canvas_angle = viewer_item.get('canvas_angle', 0)  # noqa
-        self.canvas_flip_horizontal = viewer_item.get('canvas_flip_horizontal', False)
 
     @observe("viewer_selected", "is_active")
     @skip_if_no_updates_since_last_active()
@@ -76,8 +65,6 @@ class Compass(PluginTemplateMixin, ViewerSelectMixin):
             if vid == self.viewer.selected_id:
                 viewer.compass = self
                 viewer.on_limits_change()  # Force redraw
-
-                self._set_compass_rotation()
             else:
                 viewer.compass = None
 

@@ -16,6 +16,7 @@ class BaseRegionHandler:
     """Test to see if region is loaded.
     Does not check if region is actually at the correct place in display.
     """
+
     def verify_region_loaded(self, region_label, count=2):
         n = 0
         for layer in self.viewer.state.layers:
@@ -198,7 +199,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
 
         self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.plugins['Subset Tools']._obj.import_region(
+        bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             self.region_file, combination_mode='new', return_bad_regions=True)
         assert len(bad_regions) == 1
 
@@ -213,7 +214,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
     def test_ds9_load_two_good(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.plugins['Subset Tools']._obj.import_region(
+        bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             self.region_file, combination_mode='new', max_num_regions=2, return_bad_regions=True)
         assert len(bad_regions) == 0
         subsets = imviz_helper.get_interactive_regions()
@@ -223,7 +224,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
     def test_ds9_load_one_bad(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.plugins['Subset Tools']._obj.import_region(
+        bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             self.raw_regions[6], return_bad_regions=True)
         assert len(bad_regions) == 1
         assert imviz_helper.get_interactive_regions() == {}
@@ -232,7 +233,7 @@ class TestLoadRegionsFromFile(BaseRegionHandler):
     def test_ds9_load_one_good_one_bad(self, imviz_helper):
         self.viewer = imviz_helper.default_viewer._obj
         imviz_helper.load_data(self.arr, data_label='my_image')
-        bad_regions = imviz_helper.plugins['Subset Tools']._obj.import_region(
+        bad_regions = imviz_helper.plugins['Subset Tools'].import_region(
             [self.raw_regions[3], self.raw_regions[6]], return_bad_regions=True)
         assert len(bad_regions) == 1
 

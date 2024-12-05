@@ -25,7 +25,7 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         with_spinner)
 from jdaviz.core.user_api import PluginUserApi
 from jdaviz.core.tools import ICON_DIR
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+from jdaviz.core.unit_conversion_utils import check_if_unit_is_per_solid_angle
 
 
 __all__ = ['LineAnalysis']
@@ -106,6 +106,9 @@ class LineAnalysis(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelect
     def __init__(self, *args, **kwargs):
 
         super().__init__(**kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Return statistics for spectral line.'
 
         self.update_results(None)
 

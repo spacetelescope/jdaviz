@@ -8,16 +8,16 @@ from specutils import Spectrum1D
 from traitlets import List, Unicode, observe, Bool
 
 from jdaviz.configs.default.plugins.viewers import JdavizProfileView
+from jdaviz.core.custom_units_and_equivs import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
 from jdaviz.core.events import GlobalDisplayUnitChanged, AddDataMessage, SliceValueUpdatedMessage
 from jdaviz.core.registries import tray_registry
 from jdaviz.core.template_mixin import (PluginTemplateMixin, UnitSelectPluginComponent,
                                         SelectPluginComponent, PluginUserApi)
-from jdaviz.core.validunits import (create_spectral_equivalencies_list,
-                                    create_flux_equivalencies_list,
-                                    check_if_unit_is_per_solid_angle,
-                                    create_angle_equivalencies_list,
-                                    supported_sq_angle_units)
-from jdaviz.utils import _eqv_flux_to_sb_pixel, _eqv_pixar_sr
+from jdaviz.core.unit_conversion_utils import (create_equivalent_spectral_axis_units_list,
+                                               create_equivalent_flux_units_list,
+                                               check_if_unit_is_per_solid_angle,
+                                               create_equivalent_angle_units_list,
+                                               supported_sq_angle_units)
 
 __all__ = ['UnitConversion']
 
@@ -41,12 +41,10 @@ def _valid_glue_display_unit(unit_str, sv, axis='x'):
 def _flux_to_sb_unit(flux_unit, angle_unit):
     if angle_unit not in supported_sq_angle_units(as_strings=True):
         sb_unit = flux_unit
-    elif '(' in flux_unit:
-        pos = flux_unit.rfind(')')
-        sb_unit = flux_unit[:pos] + ' ' + angle_unit + flux_unit[pos:]
     else:
-        # append angle if there are no parentheses
-        sb_unit = flux_unit + ' / ' + angle_unit
+        # str > unit > str to remove formatting inconsistencies with
+        # parentheses/order of units/etc
+        sb_unit = (u.Unit(flux_unit) / u.Unit(angle_unit)).to_string()
 
     return sb_unit
 
@@ -110,6 +108,9 @@ class UnitConversion(PluginTemplateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Convert the units of displayed physical quantities.'
+
         self._cached_properties = ['image_layers']
 
         if self.config not in ['specviz', 'cubeviz']:
@@ -130,7 +131,7 @@ class UnitConversion(PluginTemplateMixin):
         self.spectral_unit = UnitSelectPluginComponent(self,
                                                        items='spectral_unit_items',
                                                        selected='spectral_unit_selected')
-        self.spectral_unit.choices = create_spectral_equivalencies_list(u.Hz)
+        self.spectral_unit.choices = create_equivalent_spectral_axis_units_list(u.Hz)
 
         self.has_flux = self.config in ('specviz', 'cubeviz', 'specviz2d', 'mosviz')
         self.flux_unit = UnitSelectPluginComponent(self,
@@ -145,7 +146,7 @@ class UnitConversion(PluginTemplateMixin):
                                                     items='angle_unit_items',
                                                     selected='angle_unit_selected')
         # NOTE: will switch to pix2 only if first data loaded into viewer is in pix2 units
-        # initialize flux choices to empty list, will be populated when data is loaded
+        # initialize angle unit choices to empty list, will be populated when data is loaded
         self.angle_unit.choices = []
 
         self.has_sb = self.has_angle or self.config in ('imviz',)
@@ -225,14 +226,14 @@ class UnitConversion(PluginTemplateMixin):
                 flux_unit = data_obj.flux.unit if angle_unit is None else data_obj.flux.unit * angle_unit  # noqa
 
                 if not self.flux_unit_selected:
-                    self.flux_unit.choices = create_flux_equivalencies_list(flux_unit)
+                    self.flux_unit.choices = create_equivalent_flux_units_list(flux_unit)
                     try:
                         self.flux_unit.selected = str(flux_unit)
                     except ValueError:
                         self.flux_unit.selected = ''
 
                 if not self.angle_unit_selected:
-                    self.angle_unit.choices = create_angle_equivalencies_list(angle_unit)
+                    self.angle_unit.choices = create_equivalent_angle_units_list(angle_unit)
 
                     try:
                         if angle_unit is None:

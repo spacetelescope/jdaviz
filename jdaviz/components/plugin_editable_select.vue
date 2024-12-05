@@ -16,6 +16,17 @@
       item-value="label"
       persistent-hint
     >
+      <template slot="selection" slot-scope="data">
+        <div class="single-line" style="width: 100%">
+          <span :class="api_hints_enabled ? 'api-hint' : null">
+            {{ api_hints_enabled ?
+              '\'' + data.item.label + '\''
+              :
+              data.item.label
+            }}
+          </span>
+        </div>
+      </template>
       <template v-slot:append>
         <v-icon style="cursor: pointer">mdi-menu-down</v-icon>
         <j-tooltip tooltipcontent="rename">

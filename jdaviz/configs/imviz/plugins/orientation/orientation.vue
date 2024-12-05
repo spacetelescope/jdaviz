@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Orientation"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Rotate the viewer orientation or choose to align images by pixels.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#imviz-orientation'"
     :popout_button="popout_button"
     :scroll_to.sync="scroll_to"
@@ -23,12 +23,20 @@
         </v-alert>
 
         <v-alert
-          v-if="wcs_linking_available"
+          v-if="wcs_linking_available && !need_clear_astrowidget_markers && !need_clear_subsets"
           type='warning'
           class="ignore-api-hints"
           style="margin-left: -12px; margin-right: -12px"
         >
-          Switching link type will reset zoom.
+          Switching alignment will reset zoom.
+        </v-alert>
+
+        <v-alert
+          v-if="plugin_markers_exist && !need_clear_astrowidget_markers && !need_clear_subsets"
+          type='warning'
+          style="margin-left: -12px; margin-right: -12px"
+        >
+          Marker positions may not be pixel-perfect when changing alignment/linking options.
         </v-alert>
 
         <v-alert v-if="need_clear_astrowidget_markers" type='warning' style="margin-left: -12px; margin-right: -12px">
@@ -38,12 +46,9 @@
           </v-row>
         </v-alert>
 
-        <v-alert v-if="plugin_markers_exist" type='warning' style="margin-left: -12px; margin-right: -12px">
-          Marker positions may not be pixel-perfect when changing alignment/linking options.
-        </v-alert>
 
         <v-alert v-if="need_clear_subsets" type='warning' style="margin-left: -12px; margin-right: -12px">
-          Existing subsets will be deleted on changing alignment/linking options.
+          Existing subsets must be deleted before changing alignment/linking options.
           <v-row justify="end" style="margin-right: 2px; margin-top: 16px">
             <v-btn @click="delete_subsets">
               {{ api_hints_enabled ?
@@ -57,7 +62,7 @@
 
         <v-row class="row-min-bottom-padding">
           <v-radio-group
-            :label="api_hints_enabled ? 'plg.align_by =' : 'Align by'"
+            :label="api_hints_enabled ? 'plg.align_by = ' : 'Align by'"
             :class="api_hints_enabled ? 'api-hint' : null"
             hint="Align individual image layers by pixels or on the sky by WCS."
             v-model="align_by_selected"
@@ -68,7 +73,8 @@
             <v-radio
               v-for="item in align_by_items"
               :key="item.label"
-              :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : item.label"
+              :class="api_hints_enabled ? 'api-hint' : null"
+              :label="item.label == 'WCS' && !api_hints_enabled ? 'WCS (Sky)' : (api_hints_enabled ? '\''+item.label+'\'' : item.label)"
               :value="item.label"
             ></v-radio>
           </v-radio-group>
@@ -103,7 +109,7 @@
             :selected.sync="viewer_selected"
             :multiselect="false"
             label="Viewer"
-            api_hint="plg.viewer ="
+            api_hint="plg.viewer = "
             :api_hints_enabled="api_hints_enabled"
             :show_if_single_entry="multiselect"
             :hint="'Select the viewer to set orientation'"
@@ -115,7 +121,7 @@
             :icons="icons"
             :show_if_single_entry="true"
             label="Orientation in viewer"
-            api_hint="plg.orientation_layer ="
+            api_hint="plg.orientation = "
             :api_hints_enabled="api_hints_enabled"
             hint="Select the viewer orientation"
           />
@@ -123,18 +129,45 @@
             <span style="line-height: 36px">Presets:</span>
             <!-- NOTE: changes to icons here should be manually reflected in layer_icons in app.py -->
             <j-tooltip tooltipcontent="Default orientation">
-              <v-btn icon @click="select_default_orientation">
+              <v-btn
+                :icon="!api_hints_enabled"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                @click="select_default_orientation"
+              >
                 <v-icon>mdi-image-outline</v-icon>
+                {{ api_hints_enabled ?
+                  'plg.orientation = \''+base_wcs_layer_label+'\''
+                  :
+                  null
+                }}
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east left">
-              <v-btn icon @click="select_north_up_east_left">
+              <v-btn
+                :icon="!api_hints_enabled"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                @click="select_north_up_east_left"
+              >
                 <img :src="icons['nuel']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
+                {{ api_hints_enabled ?
+                  'plg.set_north_up_east_left()'
+                  :
+                  null
+                }}
               </v-btn>
             </j-tooltip>
             <j-tooltip tooltipcontent="north up, east right">
-              <v-btn icon @click="select_north_up_east_right">
+              <v-btn
+                :icon="!api_hints_enabled"
+                :class="api_hints_enabled ? 'api-hint' : null"
+                @click="select_north_up_east_right"
+              >
                 <img :src="icons['nuer']" width="24" class="invert-if-dark" style="opacity: 0.65"/>
+                {{ api_hints_enabled ?
+                  'plg.set_north_up_east_right()'
+                  :
+                  null
+                }}
               </v-btn>
             </j-tooltip>
           </v-row>

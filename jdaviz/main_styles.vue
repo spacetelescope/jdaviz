@@ -268,39 +268,56 @@ a:active {
 }
 
 span.api-hint, span.api-hint-header {
-  color: #c75109 !important;
+  color: #007BA1 !important;
   font-family: monospace;
   font-size: 12px;  
+  letter-spacing: -0.05em !important;
 }
 
 span.api-hint-header {
   font-weight: bold;
 }
 
-.api-hint :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
-    color: #c75109 !important;
-    font-family: monospace;
-    font-size: 10px !important;
-    overflow-wrap: break-word;
+.api-hint :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label, .api-hint .v-label {
+  color: #007BA1 !important;
+  font-family: monospace;
+  font-size: 10px !important;
+  overflow-wrap: break-word;
+  letter-spacing: -0.05em !important;
+  user-select: text !important;
 }
 
 .api-hint :is(.v-select__slot, .v-text-field__slot) > .v-label {
-    font-size: 13px !important;
+  font-size: 13px !important;
 }
 
-
 .api-hint .v-alert__content, .api-hint.slider-label {
-  color: #c75109 !important;
+  color: #007BA1 !important;
   font-family: monospace;
   font-size: 10px !important;
+  letter-spacing: -0.05em !important;
+  user-select: text !important;
 }
 
 .api-hint.v-btn {
-  color: #c75109 !important;
+  color: #007BA1 !important;
   font-family: monospace !important;
   font-size: 12px !important;
   overflow-wrap: break-word;
   text-transform: none !important;
+}
+
+.api-hint-invert-color span {
+  color: #C6F0FD !important;
+  filter: invert(1) !important;
+}
+
+.api-hint-invert-color :is(.v-select__slot, .v-text-field__slot, .v-input__slot, .v-input--radio-group__input) > .v-label {
+  filter: invert(1) !important;
+}
+
+.api-hint-invert-color :is(.v-select__slot) > .v-label {
+  color: #C6F0FD !important;
 }
 
 </style>

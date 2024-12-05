@@ -69,9 +69,15 @@ def test_view_dict(imviz_helper):
     assert mv.show_primary  # Make sure it sticks if possible
     assert mv.has_comments
     assert mv.metadata == [('APERTURE', '#TODO', 'Aperture'),
-                           ('BITPIX', '8', 'array data type'), ('EXTEND', 'True', ''),
+                           ('BITPIX', '8', 'array data type'),
+                           ('EXTEND', 'True', ''),
                            ('NAXIS', '0', 'number of array dimensions'),
                            ('SIMPLE', 'True', 'conforms to FITS standard')]
+    assert mv.meta == {'APERTURE': {"description": 'Aperture', "value": '#TODO'},
+                       'BITPIX': {"description": 'array data type', "value": '8'},
+                       'EXTEND': {"description": '', "value": 'True'},
+                       'NAXIS': {"description": 'number of array dimensions', "value": '0'},
+                       'SIMPLE': {"description": 'conforms to FITS standard', "value": 'True'}}
 
     mv.dataset_selected = 'no_meta'
     assert not mv.has_primary
@@ -79,6 +85,7 @@ def test_view_dict(imviz_helper):
     assert not mv.has_comments
     assert not mv.has_metadata
     assert mv.metadata == []
+    assert mv.meta == {}
 
 
 def test_view_invalid(imviz_helper):
@@ -94,3 +101,4 @@ def test_view_invalid(imviz_helper):
     assert not mv.has_comments
     assert not mv.has_metadata
     assert mv.metadata == []
+    assert mv.meta == {}

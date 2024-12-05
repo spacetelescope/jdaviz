@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Footprints"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Show instrument footprints as overlays on image viewers.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#footprints'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
@@ -91,7 +91,7 @@
 
       <j-plugin-section-header>Footprint Definition</j-plugin-section-header>
       <v-alert v-if="!has_pysiaf" type="warning" style="margin-left: -12px; margin-right: -12px">
-        To use JWST footprints, install pysiaf and restart jdaviz. This can be done by going to the command line
+        To use JWST or Roman footprints, install pysiaf and restart jdaviz. This can be done by going to the command line
         and running `pip install pysiaf` and then launching Jdaviz.
       </v-alert>
 

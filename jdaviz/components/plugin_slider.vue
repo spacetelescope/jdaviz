@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="width: 100%">
     <plugin-input-header
       :label="label"
       :api_hint="api_hint && api_hint + value"

@@ -20,10 +20,11 @@ from jdaviz.core.template_mixin import (PluginTemplateMixin,
                                         skip_if_no_updates_since_last_active,
                                         with_spinner, with_temp_disable)
 from jdaviz.core.user_api import PluginUserApi
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               flux_conversion_general,
+                                               check_if_unit_is_per_solid_angle)
 from jdaviz.configs.cubeviz.plugins.parsers import _return_spectrum_with_correct_units
 from jdaviz.configs.cubeviz.plugins.viewers import WithSliceIndicator
-from jdaviz.utils import _eqv_pixar_sr
 
 
 __all__ = ['SpectralExtraction']
@@ -123,6 +124,9 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Extract a spectrum from a spectral cube.'
 
         self.extracted_spec = None
 
@@ -559,9 +563,20 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         return extracted.spectral_axis
 
     def _preview_y_from_extracted(self, extracted):
-        # TODO: use extracted.meta.get('PIXAR_SR') once populated
-        return extracted.flux.to(self.spectrum_y_units,
-                                 equivalencies=_eqv_pixar_sr(self.dataset.selected_obj.meta.get('PIXAR_SR', 1.0)))  # noqa:
+        """
+        Convert y-axis units of extraction preview to display units,
+        if necessary.
+        """
+
+        if extracted.flux.unit != self.spectrum_y_units:
+
+            eqv = all_flux_unit_conversion_equivs(self.dataset.selected_obj.meta.get('PIXAR_SR', 1.0),  # noqa
+                                                  self.dataset.selected_obj.spectral_axis)
+
+            return flux_conversion_general(extracted.flux.value, extracted.flux.unit,
+                                           self.spectrum_y_units, eqv)
+
+        return extracted.flux
 
     @with_spinner()
     def extract(self, return_bg=False, add_data=True, **kwargs):

@@ -13,14 +13,15 @@ from jdaviz.configs.mosviz.plugins.viewers import (MosvizImageView, MosvizProfil
                                                    MosvizProfile2DView)
 from jdaviz.configs.rampviz.plugins.viewers import RampvizImageView, RampvizProfileView
 from jdaviz.configs.specviz.plugins.viewers import SpecvizProfileView
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.core.events import ViewerAddedMessage, GlobalDisplayUnitChanged
 from jdaviz.core.helpers import data_has_valid_wcs
 from jdaviz.core.marks import PluginScatter, PluginLine
 from jdaviz.core.registries import tool_registry
 from jdaviz.core.template_mixin import TemplateMixin, DatasetSelectMixin
-from jdaviz.core.validunits import check_if_unit_is_per_solid_angle
-from jdaviz.utils import flux_conversion, _eqv_pixar_sr
+from jdaviz.core.unit_conversion_utils import (all_flux_unit_conversion_equivs,
+                                               check_if_unit_is_per_solid_angle,
+                                               flux_conversion_general)
 
 __all__ = ['CoordsInfo']
 
@@ -487,44 +488,44 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
                     dq_attribute = associated_dq_layer.state.attribute
                     dq_data = associated_dq_layer.layer.get_data(dq_attribute)
                     dq_value = dq_data[int(round(y)), int(round(x))]
-                unit = image.get_component(attribute).units
+                unit = u.Unit(image.get_component(attribute).units)
             elif isinstance(viewer, (CubevizImageView, RampvizImageView)):
-                skip_spectral_density_eqv = False
                 arr = image.get_component(attribute).data
-                unit = image.get_component(attribute).units
+                unit = u.Unit(image.get_component(attribute).units)
                 value = self._get_cube_value(
                     image, arr, x, y, viewer
                 )
 
-                # We don't want to convert for things like moment maps, so check physical type
-                # If unit is flux per pix2, the type will be 'unknown' rather
-                # than surface brightness, so have to multiply the pix2 part out
-                # and check if the numerator is a spectral flux density
+                # We don't want to convert for things like moment maps, so check
+                # physical type If unit is flux per pix2, the type will be
+                # 'unknown' rather than surface brightness, so multiply out pix2
+                # and check if the numerator is a spectral/photon flux density
                 if check_if_unit_is_per_solid_angle(unit, return_unit=True) == PIX2:
-                    un = u.Unit(unit) * PIX2
-                    physical_type = un.physical_type
+                    physical_type = (unit * PIX2).physical_type
                 else:
-                    physical_type = u.Unit(unit).physical_type
+                    physical_type = unit.physical_type
 
-                if str(physical_type) not in ("spectral flux density",
-                                              "surface brightness"):
-                    skip_spectral_density_eqv = True
+                valid_physical_types = ["spectral flux density",
+                                        "surface brightness",
+                                        "surface brightness wav",
+                                        "photon surface brightness wav",
+                                        "photon surface brightness",
+                                        "power density/spectral flux density wav",
+                                        "photon flux density wav",
+                                        "photon flux density"]
 
-                if self.image_unit is not None and not skip_spectral_density_eqv:
-                    if 'PIXAR_SR' in self.app.data_collection[0].meta:
-                        # Need current slice value and associated unit to use to compute
-                        # spectral density equivalencies that enable Flux to Flux conversions.
-                        # This is needed for units that are not directly convertible/translatable.
-                        slice = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
+                if str(physical_type) in valid_physical_types and self.image_unit is not None:
 
-                        value = flux_conversion(value, unit, self.image_unit,
-                                                eqv=_eqv_pixar_sr(self.app.data_collection[0].meta['PIXAR_SR']),  # noqa: E501
-                                                slice=slice)
-                        unit = self.image_unit
+                    # Create list of potentially needed equivalencies for flux/sb unit conversions
+                    pixar_sr = self.app.data_collection[0].meta.get('PIXAR_SR', 1)
+                    cube_wave = viewer.slice_value * u.Unit(self.app._get_display_unit('spectral'))
 
-                    elif self.image_unit.is_equivalent(unit):
-                        value = (value * u.Unit(unit)).to_value(u.Unit(self.image_unit))
-                        unit = self.image_unit
+                    equivalencies = all_flux_unit_conversion_equivs(pixar_sr,
+                                                                    cube_wave)
+
+                    value = flux_conversion_general(value, unit, u.Unit(self.image_unit),
+                                                    equivalencies, with_unit=False)
+                    unit = self.image_unit
 
                 if associated_dq_layers is not None:
                     associated_dq_layer = associated_dq_layers[0]
@@ -627,11 +628,18 @@ class CoordsInfo(TemplateMixin, DatasetSelectMixin):
 
                 # temporarily here, may be removed after upstream units handling
                 # or will be generalized for any sb <-> flux
-                if '_pixel_scale_factor' in sp.meta:
-                    disp_flux = flux_conversion(sp.flux.value, sp.flux.unit, viewer.state.y_display_unit, spec=sp)  # noqa: E501
+                # Create list of potentially needed equivalencies for flux/sb unit conversions
+                pixar_sr = self.app.data_collection[0].meta.get('PIXAR_SR', 1)
+                equivalencies = all_flux_unit_conversion_equivs(pixar_sr,
+                                                                sp.spectral_axis)
+
+                if sp.flux.unit is not None and viewer.state.y_display_unit is not None:
+                    disp_flux = flux_conversion_general(sp.flux.value,
+                                                        sp.flux.unit,
+                                                        viewer.state.y_display_unit,
+                                                        equivalencies, with_unit=False)  # noqa: E501
                 else:
-                    disp_flux = sp.flux.to_value(viewer.state.y_display_unit,
-                                                 u.spectral_density(sp.spectral_axis))
+                    disp_flux = sp.flux
 
                 # Out of range in spectral axis.
                 if (self.dataset.selected != lyr.layer.label and

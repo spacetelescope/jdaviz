@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    :description="docs_description || 'Extract a '+resulting_product_name+' from a ramp cube.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#ramp-extraction'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
@@ -56,23 +56,30 @@
     <div @mouseover="() => active_step='extract'">
       <j-plugin-section-header :active="active_step==='extract'">Extract</j-plugin-section-header>
 
+      <v-row>
+        <span class="v-messages v-messages__message text--secondary">
+          Note: this plugin does not detecting defects in ramps, fit the ramps, or apply corrections. For details on
+          how rate images are derived from ramps, see the documentation for the
+          <j-external-link link='https://roman-pipeline.readthedocs.io/en/stable/roman/ramp_fitting/index.html' linktext='Roman pipeline'>
+          </j-external-link> or the
+          <j-external-link link='https://jwst-pipeline.readthedocs.io/en/stable/jwst/ramp_fitting/index.html#ramp-fitting-step' linktext='JWST pipeline'>
+          </j-external-link>.
+        </span>
+      </v-row>
+
       <v-row v-if="aperture_selected !== 'None' && !aperture_selected_validity.is_aperture">
         <span class="v-messages v-messages__message text--secondary">
             Aperture: '{{aperture_selected}}' does not support subpixel: {{aperture_selected_validity.aperture_message}}.
         </span>
       </v-row>
 
-      <v-row>
-        <v-select
-          :menu-props="{ left: true }"
-          attach
-          :items="function_items.map(i => i.label)"
-          v-model="function_selected"
-          label="Function"
-          :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
-          persistent-hint
-        ></v-select>
-      </v-row>
+      <plugin-select
+        :items="function_items.map(i => i.label)"
+        :selected.sync="function_selected"
+        label="Function"
+        :hint="'Function to apply to data in \''+aperture_selected+'\'.'"
+      />
+
       <v-row v-if="conflicting_aperture_and_function">
         <span class="v-messages v-messages__message text--secondary" style="color: red !important">
           {{conflicting_aperture_error_message}}

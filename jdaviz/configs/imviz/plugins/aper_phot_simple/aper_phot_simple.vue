@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    :description="docs_description || 'Perform aperture photometry for drawn regions.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#aperture-photometry'"
     :uses_active_status="uses_active_status"
     @plugin-ping="plugin_ping($event)"
@@ -144,17 +144,13 @@
           </span>
         </v-row>
 
-        <v-row v-if="!multiselect">
-          <v-select
-            :menu-props="{ left: true }"
-            attach
-            :items="plot_types"
-            v-model="current_plot_type"
-            label="Plot Type"
-            hint="Aperture photometry plot type"
-            persistent-hint
-          ></v-select>
-        </v-row>
+        <plugin-select
+          v-if="!multiselect"
+          :items="plot_types"
+          :selected.sync="current_plot_type"
+          label="Plot Type"
+          hint="Aperture photometry plot type"
+        />
 
         <v-row v-if="!multiselect && current_plot_type==='Radial Profile (Raw)' && aperture_area > 5000">
           <span class="v-messages v-messages__message text--secondary">

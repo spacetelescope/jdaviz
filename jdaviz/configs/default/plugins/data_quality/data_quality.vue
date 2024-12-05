@@ -3,7 +3,7 @@
     :config="config"
     plugin_key="Data Quality"
     :api_hints_enabled.sync="api_hints_enabled"
-    :description="docs_description || 'Data Quality layer visualization options.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#data-quality'"
     @plugin-ping="plugin_ping($event)"
     :popout_button="popout_button">
@@ -32,15 +32,11 @@
       :icons="icons"
     />
 
-    <v-row>
-    <v-select
-      attach
-      :menu-props="{ left: true }"
+    <plugin-select
       :items="flag_map_items"
-      v-model="flag_map_selected"
+      :selected.sync="flag_map_selected"
       label="Flag definitions"
-    ></v-select>
-    </v-row>
+    />
 
     <v-row class="row-no-padding">
       <v-col>

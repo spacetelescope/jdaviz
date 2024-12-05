@@ -43,7 +43,7 @@ def test_get_data_spatial_and_spectral(cubeviz_helper, spectrum1d_cube_larger):
     cubeviz_helper._apply_interactive_region('bqplot:ellipse', (0, 0), (9, 8))
 
     # Subset 2 (spectral)
-    subset_plugin = cubeviz_helper.plugins['Subset Tools']._obj
+    subset_plugin = cubeviz_helper.plugins['Subset Tools']
     unit = spectrum1d_cube_larger.spectral_axis.unit
     subset_plugin.import_region(SpectralRegion(4.62440061e-07 * unit, 4.62520112e-07 * unit))
 

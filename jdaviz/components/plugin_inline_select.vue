@@ -12,6 +12,7 @@
         @update:selected="$emit('update:selected', $event)"
         :multiselect="multiselect"
         :single_select_allow_blank="single_select_allow_blank"
+        :api_hints_enabled="api_hints_enabled"
       ></plugin-inline-select-item>
     </v-row>
   </div>

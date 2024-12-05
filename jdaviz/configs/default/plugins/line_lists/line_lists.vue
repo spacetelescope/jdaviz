@@ -1,6 +1,6 @@
 <template>
   <j-tray-plugin
-    :description="docs_description || 'Plot lines from preset or custom line lists.'"
+    :description="docs_description"
     :link="docs_link || 'https://jdaviz.readthedocs.io/en/'+vdocs+'/'+config+'/plugins.html#line-lists'"
     :disabled_msg="disabled_msg"
     :popout_button="popout_button"
@@ -172,14 +172,12 @@
 
               <v-row class="row-min-bottom-padding" style="display: block">
                 <j-tooltip tipid='plugin-line-lists-custom-unit'>
-                    <v-select
-                      :menu-props="{ left: true }"
-                      attach
+                    <plugin-select
                       :items="custom_unit_choices"
-                      v-model="custom_unit"
+                      :selected.sync="custom_unit"
                       label="Unit"
                       dense
-                    ></v-select>
+                    />
                 </j-tooltip>
               </v-row>
 

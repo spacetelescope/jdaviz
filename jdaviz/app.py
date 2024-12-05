@@ -52,15 +52,17 @@ from jdaviz.core.tools import ICON_DIR
 from jdaviz.utils import (SnackbarQueue, alpha_index, data_has_valid_wcs, layer_is_table_data,
                           MultiMaskSubsetState, _wcs_only_label, flux_conversion,
                           spectral_axis_conversion)
-from jdaviz.core.custom_units import SPEC_PHOTON_FLUX_DENSITY_UNITS
-from jdaviz.core.validunits import (check_if_unit_is_per_solid_angle,
-                                    combine_flux_and_angle_units,
-                                    supported_sq_angle_units)
+from jdaviz.core.custom_units_and_equivs import SPEC_PHOTON_FLUX_DENSITY_UNITS, enable_spaxel_unit
+from jdaviz.core.unit_conversion_utils import (check_if_unit_is_per_solid_angle,
+                                               combine_flux_and_angle_units,
+                                               supported_sq_angle_units)
 
 __all__ = ['Application', 'ALL_JDAVIZ_CONFIGS', 'UnitConverterWithSpectral']
 
 SplitPanes()
 GoldenLayout()
+
+enable_spaxel_unit()
 
 CONTAINER_TYPES = dict(row='gl-row', col='gl-col', stack='gl-stack')
 EXT_TYPES = dict(flux=['flux', 'sci'],
@@ -133,8 +135,11 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'j-plugin-popout': 'components/plugin_popout.vue',
                      'j-multiselect-toggle': 'components/multiselect_toggle.vue',
                      'j-subset-icon': 'components/subset_icon.vue',
+                     'j-plugin-live-results-icon': 'components/plugin_live_results_icon.vue',
+                     'j-child-layer-icon': 'components/child_layer_icon.vue',
                      'plugin-previews-temp-disabled': 'components/plugin_previews_temp_disabled.vue',  # noqa
                      'plugin-table': 'components/plugin_table.vue',
+                     'plugin-select': 'components/plugin_select.vue',
                      'plugin-dataset-select': 'components/plugin_dataset_select.vue',
                      'plugin-subset-select': 'components/plugin_subset_select.vue',
                      'plugin-viewer-select': 'components/plugin_viewer_select.vue',
@@ -152,7 +157,11 @@ custom_components = {'j-tooltip': 'components/tooltip.vue',
                      'plugin-color-picker': 'components/plugin_color_picker.vue',
                      'plugin-input-header': 'components/plugin_input_header.vue',
                      'glue-state-sync-wrapper': 'components/glue_state_sync_wrapper.vue',
-                     'data-menu-add-data': 'components/data_menu_add_data.vue'}
+                     'glue-state-select': 'components/glue_state_select.vue',
+                     'data-menu-add': 'components/data_menu_add.vue',
+                     'data-menu-remove': 'components/data_menu_remove.vue',
+                     'data-menu-subset-edit': 'components/data_menu_subset_edit.vue',
+                     'hover-api-hint': 'components/hover_api_hint.vue'}
 
 _verbosity_levels = ('debug', 'info', 'warning', 'error')
 
@@ -182,6 +191,8 @@ class ApplicationState(State):
         True, docstring="State of the plugins drawer.")
     show_toolbar_buttons = CallbackProperty(
         True, docstring="Whether to show app-level toolbar buttons (left of sidebar menu button).")
+    show_api_hints = CallbackProperty(
+        False, docstring="Whether to show API hints.")
     logger_overlay = CallbackProperty(
         False, docstring="State of the logger history overlay.")
 
@@ -223,7 +234,9 @@ class ApplicationState(State):
         'radialtocheck': read_icon(os.path.join(ICON_DIR, 'radialtocheck.svg'), 'svg+xml'),
         'checktoradial': read_icon(os.path.join(ICON_DIR, 'checktoradial.svg'), 'svg+xml'),
         'nuer': read_icon(os.path.join(ICON_DIR, 'right-east.svg'), 'svg+xml'),
-        'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml')
+        'nuel': read_icon(os.path.join(ICON_DIR, 'left-east.svg'), 'svg+xml'),
+        'api': read_icon(os.path.join(ICON_DIR, 'api.svg'), 'svg+xml'),
+        'api-lock': read_icon(os.path.join(ICON_DIR, 'api_lock.svg'), 'svg+xml'),
     }, docstring="Custom application icons")
 
     viewer_icons = DictCallbackProperty({}, docstring="Indexed icons (numbers) for viewers across the app")  # noqa
@@ -843,7 +856,11 @@ class Application(VuetifyTemplate, HubListener):
                     parser = data_parser_registry.members.get(data_parser)
 
             if parser is not None:
-                parser(self, file_obj, **kwargs)
+                with warnings.catch_warnings():
+                    # https://github.com/spacetelescope/gwcs/pull/522
+                    warnings.filterwarnings(
+                        "ignore", message="The bounding_box was set in C order.*")
+                    parser(self, file_obj, **kwargs)
             else:
                 self._application_handler.load_data(file_obj)
 
@@ -2126,6 +2143,10 @@ class Application(VuetifyTemplate, HubListener):
         if cid in self._viewer_store:
             del self._viewer_store[cid]
 
+        # clear from the viewer icons dictionary
+        if cid in self.state.viewer_icons:
+            del self.state.viewer_icons[cid]
+
         self.hub.broadcast(ViewerRemovedMessage(cid, sender=self))
 
     def vue_data_item_unload(self, event):
@@ -2287,7 +2308,7 @@ class Application(VuetifyTemplate, HubListener):
         data_label = event['item_name']
         data = self.data_collection[data_label]
         orientation_plugin = self._jdaviz_helper.plugins.get("Orientation")
-        if orientation_plugin is not None:
+        if orientation_plugin is not None and orientation_plugin.align_by == "WCS":
             from jdaviz.configs.imviz.plugins.orientation.orientation import base_wcs_layer_label
             orient = orientation_plugin.orientation.selected
             if orient == data_label:
@@ -2750,6 +2771,7 @@ class Application(VuetifyTemplate, HubListener):
             self._application_handler._tools[name] = tool
 
         for name in config.get('tray', []):
+
             tray = tray_registry.members.get(name)
 
             tray_item_instance = tray.get('cls')(app=self, tray_instance=True)
@@ -2758,10 +2780,13 @@ class Application(VuetifyTemplate, HubListener):
             # plugin itself
             tray_item_label = tray.get('label')
 
+            tray_item_description = tray_item_instance.plugin_description
+
             # NOTE: is_relevant is later updated by observing irrelevant_msg traitlet
             self.state.tray_items.append({
                 'name': name,
                 'label': tray_item_label,
+                'tray_item_description': tray_item_description,
                 'is_relevant': len(tray_item_instance.irrelevant_msg) == 0,
                 'widget': "IPY_MODEL_" + tray_item_instance.model_id
             })

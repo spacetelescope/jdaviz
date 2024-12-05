@@ -80,6 +80,10 @@ class DataQuality(PluginTemplateMixin, ViewerSelectMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # description displayed under plugin title in tray
+        self._plugin_description = 'Data Quality layer visualization options.'
+
         self.icons = {k: v for k, v in self.app.state.icons.items()}
 
         self.science_layer = LayerSelect(

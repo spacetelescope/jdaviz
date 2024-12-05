@@ -3,33 +3,14 @@
     class="tray-plugin"
     style="padding-left: 24px; padding-right: 24px; padding-top: 12px" >
     <v-row>
-      <div style="width: calc(100% - 64px)">
+      <div style="width: calc(100% - 32px)">
         <j-docs-link :link="link">{{ description }}</j-docs-link>
       </div>
-      <div style="width: 32px">
-        <j-tooltip tipid='plugin-api-hints'>
-          <v-btn
-            v-if="api_hints_enabled !== undefined && config && plugin_key && checkNotebookContext()" 
-            id="api-hints-button"
-            icon 
-            :class="api_hints_enabled ? 'api-hint' : null"
-            @click="() => {$emit('update:api_hints_enabled', !api_hints_enabled)}"
-          >
-            <v-icon>mdi-code-tags</v-icon>
-          </v-btn>
-        </j-tooltip>
 
-      </div>
       <div style="width: 32px">
         <j-plugin-popout :popout_button="popout_button"></j-plugin-popout>
       </div>
     </v-row>
-
-    <v-row v-if="api_hints_enabled">
-        <span class="api-hint-header">
-          plg = {{ config }}.plugins['{{ plugin_key }}']
-        </span>
-      </v-row>
 
     <v-row v-if="isDisabled()">
       <span> {{ getDisabledMsg() }}</span>

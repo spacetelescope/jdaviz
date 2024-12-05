@@ -10,7 +10,7 @@ from astropy.wcs import FITSFixedWarning
 from numpy.testing import assert_allclose
 from specutils import Spectrum1D
 
-from jdaviz.core.custom_units import PIX2
+from jdaviz.core.custom_units_and_equivs import PIX2
 from jdaviz.utils import (alpha_index, download_uri_to_path, flux_conversion,
                           _indirect_conversion, _eqv_pixar_sr)
 
@@ -210,6 +210,7 @@ def test_uri_to_download_specviz(specviz_helper, tmp_path):
     specviz_helper.load_data(uri, cache=True, local_path=local_path)
 
 
+@pytest.mark.skip(reason="FIXME: Find a file that is not missing from MAST")
 @pytest.mark.remote_data
 def test_uri_to_download_specviz2d(specviz2d_helper, tmp_path):
     uri = "mast:JWST/product/jw01324-o006_s00005_nirspec_f100lp-g140h_s2d.fits"

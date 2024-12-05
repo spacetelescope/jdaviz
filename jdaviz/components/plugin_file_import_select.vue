@@ -11,7 +11,17 @@
         :class="api_hints_enabled && api_hint ? 'api-hint' : null"
         :hint="hint"
         persistent-hint
-      ></v-select>
+      >
+        <template v-slot:selection="{ item }">
+          <span :class="api_hints_enabled ? 'api-hint' : null">
+            {{ api_hints_enabled ?
+              '\'' + item + '\''
+              :
+              item
+            }}
+          </span>
+        </template>
+      </v-select>
       <v-chip v-if="selected === 'From File...'"
         close
         close-icon="mdi-close"
