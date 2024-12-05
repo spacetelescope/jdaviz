@@ -500,7 +500,7 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
         # Also apply the cube's original mask array
         if mask_cube:
             snackbar_message = SnackbarMessage(
-                f"Note: Applied loaded mask cube during extraction",
+                "Note: Applied loaded mask cube during extraction",
                 color="warning",
                 sender=self)
             self.hub.broadcast(snackbar_message)
