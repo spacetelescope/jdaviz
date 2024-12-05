@@ -36,7 +36,7 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
     catalog_selected = Unicode("").tag(sync=True)
     results_available = Bool(False).tag(sync=True)
     number_of_results = Int(0).tag(sync=True)
-    max_gaia_sources = IntHandleEmpty(1000).tag(sync=True)
+    max_sources = IntHandleEmpty(1000).tag(sync=True)
 
     # setting the default table headers and values
     _default_table_values = {
@@ -159,6 +159,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                     zoom_radius = r_max
                 query_region_result = SDSS.query_region(skycoord_center, radius=zoom_radius,
                                                         data_release=17)
+                if len(query_region_result) > self.max_sources:
+                    query_region_result = query_region_result[:self.max_sources]
             except Exception as e:  # nosec
                 errmsg = (f"Failed to query {self.catalog_selected} with c={skycoord_center} and "
                           f"r={zoom_radius}: {repr(e)}")
@@ -184,7 +186,8 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         elif self.catalog_selected == 'Gaia':
             from astroquery.gaia import Gaia, conf
 
-            with conf.set_temp("ROW_LIMIT", self.max_gaia_sources):
+            with conf.set_temp("ROW_LIMIT", self.max_sources):
+                Gaia.ROW_LIMIT = self.max_sources
                 sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
                                             columns=('source_id', 'ra', 'dec'))
             self.app._catalog_source_table = sources
@@ -195,8 +198,10 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
             # but this exceptions might be raised here if setting from_file from the UI
             table = self.catalog.selected_obj
             self.app._catalog_source_table = table
-            skycoord_table = table['sky_centroid']
-
+            if len(table['sky_centroid']) > self.max_sources:
+                skycoord_table = table['sky_centroid'][:self.max_sources]
+            else:
+                skycoord_table = table['sky_centroid']
         else:
             self.results_available = False
             self.number_of_results = 0
@@ -243,6 +248,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         # NOTE: If performance becomes a problem, see
         # https://docs.astropy.org/en/stable/table/index.html#performance-tips
         if self.catalog_selected == 'From File...':
+            # for single source convert table information to lists for zipping
+            if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
+                table = [self.app._catalog_source_table]
+                x_coordinates = [x_coordinates]
+                y_coordinates = [y_coordinates]
+
             for row, x_coord, y_coord in zip(self.app._catalog_source_table,
                                              x_coordinates, y_coordinates):
                 # Check if the row contains the required keys
@@ -250,9 +261,9 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                             'Declination (degrees)': row['sky_centroid'].dec.deg,
                             'Object ID': str(row.get('label', 'N/A')),
                             'id': len(self.table),
-                            'x_coord': x_coord,
-                            'y_coord': y_coord}
-
+                            'x_coord': x_coord.item() if x_coord.size == 1 else x_coord,
+                            'y_coord': y_coord.item() if y_coord.size == 1 else y_coord
+                            }
                 self.table.add_item(row_info)
 
         filtered_skycoord_table = viewer.state.reference_data.coords.pixel_to_world(x_coordinates,
