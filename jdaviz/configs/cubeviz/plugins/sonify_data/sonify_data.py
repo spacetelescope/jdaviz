@@ -59,7 +59,7 @@ class SonifyData(PluginTemplateMixin, DatasetSelectMixin, SpectralSubsetSelectMi
                                  'can do this by running `pip install .[strauss]` in the command'
                                  ' line and then launching Jdaviz.')
 
-        if self.has_strauss:
+        else:
             devices, indexes = self.build_device_lists()
             self.sound_device_indexes = dict(zip(devices, indexes))
             self.sound_devices_items = devices
