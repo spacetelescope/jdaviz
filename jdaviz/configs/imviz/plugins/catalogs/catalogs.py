@@ -250,7 +250,6 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
         if self.catalog_selected == 'From File...':
             # for single source convert table information to lists for zipping
             if len(self.app._catalog_source_table) == 1 or self.max_sources == 1:
-                table = [self.app._catalog_source_table]
                 x_coordinates = [x_coordinates]
                 y_coordinates = [y_coordinates]
 
