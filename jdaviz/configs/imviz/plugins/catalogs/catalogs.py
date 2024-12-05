@@ -184,12 +184,12 @@ class Catalogs(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect, Tabl
                                       unit='deg')
 
         elif self.catalog_selected == 'Gaia':
-            from astroquery.gaia import Gaia, conf
+            from astroquery.gaia import Gaia
 
-            with conf.set_temp("ROW_LIMIT", self.max_sources):
-                Gaia.ROW_LIMIT = self.max_sources
-                sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
-                                            columns=('source_id', 'ra', 'dec'))
+            Gaia.ROW_LIMIT = self.max_sources
+            sources = Gaia.query_object(skycoord_center, radius=zoom_radius,
+                                        columns=('source_id', 'ra', 'dec')
+                                        )
             self.app._catalog_source_table = sources
             skycoord_table = SkyCoord(sources['ra'], sources['dec'], unit='deg')
 
