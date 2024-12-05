@@ -385,8 +385,6 @@ def _parse_jwst_s3d(app, hdulist, data_label, ext='SCI',
         app._jdaviz_helper._loaded_flux_cube = app.data_collection[data_label]
     elif data_type == 'uncert':
         app._jdaviz_helper._loaded_uncert_cube = app.data_collection[data_label]
-    elif data_type == 'mask':
-        app._jdaviz_helper._loaded_mask_cube = app.data_collection[data_label]
 
 
 def _parse_esa_s3d(app, hdulist, data_label, ext='DATA', flux_viewer_reference_name=None):
