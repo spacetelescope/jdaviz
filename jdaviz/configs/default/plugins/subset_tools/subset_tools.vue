@@ -65,11 +65,11 @@
           </v-expansion-panel-header>
           <v-expansion-panel-content class="plugin-expansion-panel-content">
             <plugin-dataset-select
-             :items="dataset_items"
-             :selected.sync="dataset_selected"
+             :items="recenter_dataset_items"
+             :selected.sync="recenter_dataset_selected"
              :show_if_single_entry="true"
              label="Data"
-             api_hint="plg.data ="
+             api_hint="plg.recenter_dataset ="
              :api_hints_enabled="api_hints_enabled"
              hint="Select the data for centroiding."
             />
