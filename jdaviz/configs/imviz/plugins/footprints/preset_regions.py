@@ -118,7 +118,7 @@ def instrument_footprint(
 
     # use different definitions of the center for JWST and Roman:
     if observatory == "Roman":
-        if instrument.startswith("WFI"):
+        if 'CGI' not in instrument:
             center = siaf_interface.apertures['WFI_CEN']
         else:
             center = siaf_interface.apertures['CGI_CEN']
