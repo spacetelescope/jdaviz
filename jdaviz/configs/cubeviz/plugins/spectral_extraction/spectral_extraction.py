@@ -499,6 +499,11 @@ class SpectralExtraction(PluginTemplateMixin, ApertureSubsetSelectMixin,
 
         # Also apply the cube's original mask array
         if mask_cube:
+            snackbar_message = SnackbarMessage(
+                f"Note: Applied loaded mask cube during extraction",
+                color="warning",
+                sender=self)
+            self.hub.broadcast(snackbar_message)
             mask_from_cube = mask_cube.get_component('flux').data.copy()
             # Some mask cubes have NaNs where they are not masked instead of 0
             mask_from_cube[np.where(np.isnan(mask_from_cube))] = 0
