@@ -402,6 +402,8 @@ def flux_conversion(values, original_units, target_units, spec=None, eqv=None, s
         image_data = True
         # Need this to convert Flux to Flux for complex conversions/translations of cube image data
         eqv += u.spectral_density(slice)
+    elif slice is not None:
+        eqv = u.spectral_density(slice)
 
     orig_units = u.Unit(original_units)
     targ_units = u.Unit(target_units)

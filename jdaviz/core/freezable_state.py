@@ -6,7 +6,6 @@ from astropy import units as u
 from glue.viewers.profile.state import ProfileViewerState
 from glue_jupyter.bqplot.image.state import BqplotImageViewerState
 from glue.viewers.matplotlib.state import DeferredDrawCallbackProperty as DDCProperty
-from specutils import Spectrum1D
 
 from jdaviz.utils import get_reference_image_data, flux_conversion
 
@@ -68,9 +67,7 @@ class FreezableProfileViewerState(ProfileViewerState, FreezableState):
 
             x_corners = np.array([self.x_min, self.x_min, self.x_max, self.x_max])
             y_corners = np.array([self.y_min, self.y_max, self.y_min, self.y_max])
-            spec = Spectrum1D(spectral_axis=x_corners * u.Unit(self.x_display_unit),
-                              flux=y_corners * u.Unit(old_unit))
-            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, spec)
+            y_corners_new = flux_conversion(y_corners, old_unit, new_unit, slice=x_corners*u.Unit(self.x_display_unit))  # noqa
 
             self.y_min = np.nanmin(y_corners_new)
             self.y_max = np.nanmax(y_corners_new)
