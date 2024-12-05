@@ -16,6 +16,8 @@ Imviz
 
 * Orientation plugin API now exposes create_north_up_east_left and create_north_up_east_right methods. [#3308]
 
+* Add Roman WFI and CGI footprints to the Footprints plugin. [#3322]
+
 Mosviz
 ^^^^^^
 

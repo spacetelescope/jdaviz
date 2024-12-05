@@ -20,6 +20,13 @@ from jdaviz.configs.imviz.plugins.footprints import preset_regions
 __all__ = ['Footprints']
 
 
+_available_instruments = {
+    display_name: {'label': display_name, 'siaf_name': siaf_name, 'observatory': observatory}
+    for observatory, instruments in preset_regions._instruments.items()
+    for display_name, siaf_name in instruments.items()
+}
+
+
 @tray_registry('imviz-footprints', label="Footprints")
 class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
     """
@@ -119,11 +126,13 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                                                      on_remove=self._on_overlay_remove)
 
         if self.has_pysiaf:
-            preset_options = list(preset_regions._instruments.keys())
+            preset_options = list(_available_instruments.keys())
         else:
             preset_options = ['None']
+
         if not self.app.state.settings.get('server_is_remote', False):
             preset_options.append('From File...')
+
         self.preset = FileImportSelectPluginComponent(self,
                                                       items='preset_items',
                                                       selected='preset_selected',
@@ -480,8 +489,11 @@ class Footprints(PluginTemplateMixin, ViewerSelectMixin, HasFileImportSelect):
                     regs = [regs]
                 overlay['regions'] = regs
             regs = overlay.get('regions', [])
-        elif self.has_pysiaf and self.preset_selected in preset_regions._instruments:
-            regs = preset_regions.jwst_footprint(self.preset_selected, **callable_kwargs)
+        elif self.has_pysiaf and self.preset_selected in _available_instruments.keys():
+            regs = preset_regions.instrument_footprint(
+                _available_instruments[self.preset_selected]['observatory'],
+                self.preset_selected, **callable_kwargs
+            )
         else:  # pragma: no cover
             regs = []
         return regs
