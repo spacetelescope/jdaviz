@@ -42,7 +42,7 @@ class TestLoadRegions(BaseRegionHandler):
             [my_reg], return_bad_regions=True)
         assert len(bad_regions) == 0
         self.verify_region_loaded('Subset 1', count=1)
-        assert len(self.cubeviz.get_interactive_regions()) == 1
+        assert len(self.cubeviz.plugins['Subset Tools']._obj.get_subsets_as_regions()) == 1
 
     def test_regions_sky_has_wcs(self):
         sky = SkyCoord(205.4397, 27.0035, unit='deg')
@@ -63,10 +63,14 @@ class TestLoadRegions(BaseRegionHandler):
                                                                           4.896 * unit))
         self.cubeviz.app.session.edit_subset_mode.edit_subset = None
 
-        # Get interactive spatial regions only.
-        spatial_subsets = self.cubeviz.get_interactive_regions()
-        assert list(spatial_subsets.keys()) == ['Subset 1'], spatial_subsets
-        assert isinstance(spatial_subsets['Subset 1'], EllipsePixelRegion)
+        # Get spatial regions only.
+        st = self.cubeviz.plugins['Subset Tools']._obj
+        spatial_subsets_as_regions = st.get_subsets_as_regions(region_type='spatial')
+        assert list(spatial_subsets_as_regions.keys()) == ['Subset 1'], spatial_subsets_as_regions
+        assert isinstance(spatial_subsets_as_regions['Subset 1'], EllipsePixelRegion)
+        # ensure agreement between app.get_subsets and subset_tools.get_subsets_as_regions
+        ss = self.cubeviz.app.get_subsets()
+        assert ss['Subset 1'][0]['region'] == spatial_subsets_as_regions['Subset 1']
 
         # NOTE: This does not test that spectrum from Subset is actually scientifically accurate.
         # Get spectral regions only.

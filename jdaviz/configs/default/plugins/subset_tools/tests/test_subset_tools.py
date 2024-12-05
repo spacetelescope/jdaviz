@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 from astropy.nddata import NDData
 import astropy.units as u
+from regions import CirclePixelRegion, PixCoord
 from specutils import SpectralRegion
 from glue.core.roi import EllipticalROI, CircularROI, CircularAnnulusROI, RectangularROI
 from glue.core.edit_subset_mode import ReplaceMode, OrMode
@@ -226,3 +227,28 @@ def test_import_spectral_regions_file(cubeviz_helper, spectrum1d_cube, tmp_path)
 
     with pytest.raises(ValueError, match='\'test\' not one of'):
         plg.combination_mode = 'test'
+
+
+def test_get_subsets_as_regions(cubeviz_helper, spectrum1d_cube):
+
+    cubeviz_helper.load_data(spectrum1d_cube)
+    plg = cubeviz_helper.plugins['Subset Tools']
+
+    # load one spectral region, which will become 'Subset 1'
+    plg.import_region(SpectralRegion(1* u.um, 2 * u.um))
+
+    # load one spatial region, which will become 'Subset 2'
+    spatial_reg = CirclePixelRegion(center=PixCoord(x=2, y=2), radius=2)
+    plg.import_region(spatial_reg)
+
+    # call get_subsets_as_regions, which by default for cubeviz will return both
+    # spatial and spectral regoins
+    all_regions = plg.get_subsets_as_regions()
+    # assert len(all_regions) == 2
+
+    # now specify region type
+    spatial_regions = plg.get_subsets_as_regions(region_type='spatial')
+    assert len(spatial_regions) == 1
+
+    spectral_regions = plg.get_subsets_as_regions(region_type='spectral')
+    assert len(spectral_regions) == 1
