@@ -120,7 +120,17 @@ class TestLink_WCS_WCS(BaseImviz_WCS_WCS, BaseLinkHandler):
 
         # Ensure subsets are still there.
         all_labels = [layer.layer.label for layer in self.viewer.state.layers]
-        assert sorted(self.imviz.get_interactive_regions()) == ['Subset 1', 'Subset 2']
+        # Retrieved subsets as sky regions from Subset plugin, and ensure they
+        # match what was loaded and that they are in sky coordinates.
+        subset_as_regions = self.imviz.plugins['Subset Tools']._obj.get_subsets_as_regions()
+        assert sorted(subset_as_regions) == ['Subset 1', 'Subset 2']
+        assert_allclose(subset_as_regions['Subset 1'].center.ra.deg, 337.519449)
+        assert_allclose(subset_as_regions['Subset 2'].center.ra.deg, 337.518498)
+        # ensure agreement between app.get_subsets and subset_tools.get_subsets_as_regions
+        ss = self.imviz.app.get_subsets(include_sky_region=True)
+        assert ss['Subset 1'][0]['sky_region'] == subset_as_regions['Subset 1']
+        assert ss['Subset 2'][0]['sky_region'] == subset_as_regions['Subset 2']
+
         assert 'MaskedSubset 1' in all_labels
         assert 'MaskedSubset 2' in all_labels
 
