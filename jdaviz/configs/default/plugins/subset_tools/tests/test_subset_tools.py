@@ -244,7 +244,8 @@ def test_get_subsets_as_regions(cubeviz_helper, spectrum1d_cube):
     # call get_subsets_as_regions, which by default for cubeviz will return both
     # spatial and spectral regoins
     all_regions = plg.get_subsets_as_regions()
-    # assert len(all_regions) == 2
+    assert len(all_regions) == 2
+
 
     # now specify region type
     spatial_regions = plg.get_subsets_as_regions(region_type='spatial')
